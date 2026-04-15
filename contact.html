@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Contact & Devis Mobilier Sur-Mesure — Kobo Design Bordeaux</title>
+  <meta name="description" content="Contactez Kobo Design pour un devis gratuit en mobilier sur-mesure ou architecture d'intérieur à Bordeaux. Réponse garantie sous 24h. Atelier au 76 Rue Mandron."/>
+  <meta name="keywords" content="contact kobo design, devis mobilier sur-mesure Bordeaux, devis architecture intérieur Bordeaux, atelier mobilier Bordeaux"/>
+  <link rel="canonical" href="https://www.kobo-design.fr/contact.html"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://www.kobo-design.fr/contact.html"/>
+  <meta property="og:title" content="Contact — Devis Gratuit — Kobo Design Bordeaux"/>
+  <meta property="og:description" content="Demandez votre devis gratuit en mobilier sur-mesure ou architecture d'intérieur. Atelier à Bordeaux. Réponse sous 24h ouvrées."/>
+  <meta property="og:image" content="https://www.kobo-design.fr/img/hero.jpeg"/>
+  <meta property="og:locale" content="fr_FR"/>
+  <meta property="og:site_name" content="Kobo Design"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Contact — Devis Gratuit — Kobo Design Bordeaux"/>
+  <meta name="twitter:description" content="Demandez votre devis gratuit en mobilier sur-mesure ou architecture d'intérieur. Atelier à Bordeaux. Réponse sous 24h ouvrées."/>
+  <meta name="twitter:image" content="https://www.kobo-design.fr/img/hero.jpeg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--accent:#CD3E00;--bg:#FFFAF0;--dark:#1A1A1A;--white:#FFFFFF;--mid:#F2EDE3;--font:'Poppins',sans-serif;--ease:cubic-bezier(0.16,1,0.3,1)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font);background:var(--bg);color:var(--dark);overflow-x:hidden;cursor:none}
+    a{text-decoration:none;color:inherit}
+
+    /* CURSEUR */
+    #cursor{position:fixed;width:12px;height:12px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .25s var(--ease),height .25s var(--ease),background .2s;mix-blend-mode:multiply}
+    #cursor.expand{width:52px;height:52px;background:rgba(205,62,0,.15);mix-blend-mode:normal}
+
+    /* HEADER */
+    header{position:fixed;top:0;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,72px);background:var(--bg);transition:box-shadow .35s}
+    header.shadow{box-shadow:0 1px 0 rgba(26,26,26,.08)}
+    .logo{display:flex;align-items:center;height:40px}
+    .logo svg{height:40px;width:auto}
+    .nav{display:flex;align-items:center;gap:clamp(14px,2vw,32px)}
+    .nav__link{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dark);position:relative;padding-bottom:2px}
+    .nav__link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .28s var(--ease)}
+    .nav__link:hover::after{width:100%}
+    .nav__link.active{color:var(--accent)}
+    .nav__link.active::after{width:100%}
+    .nav__cta{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:11px 22px;border-radius:4px;transition:background .22s,transform .18s}
+    .nav__cta:hover{background:#a83200;transform:translateY(-1px)}
+    .nav__login{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark);border:1.5px solid rgba(26,26,26,.18);border-radius:100px;padding:8px 16px 8px 12px;background:none;cursor:pointer;transition:border-color .22s,color .22s}
+    .nav__login:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* BURGER */
+    .burger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;width:32px;height:32px;padding:4px}
+    .burger span{display:block;width:22px;height:1.5px;background:var(--dark);border-radius:2px;transform-origin:center;transition:transform .3s var(--ease),opacity .2s,width .3s var(--ease)}
+    .burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+    .burger.open span:nth-child(2){opacity:0;width:0}
+    .burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+    /* MOBILE NAV */
+    .mobile-nav-overlay{position:fixed;inset:0;top:72px;z-index:470;background:rgba(26,26,26,.22);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .3s}
+    .mobile-nav-overlay.open{opacity:1;pointer-events:all}
+    .mobile-nav{position:fixed;top:72px;left:0;right:0;z-index:480;background:var(--bg);border-bottom:1px solid rgba(26,26,26,.08);transform:translateY(-10px);opacity:0;pointer-events:none;transition:transform .32s var(--ease),opacity .25s ease}
+    .mobile-nav.open{transform:translateY(0);opacity:1;pointer-events:all}
+    .mobile-nav__inner{padding:6px 0 12px}
+    .mobile-nav a{display:flex;align-items:center;justify-content:space-between;padding:13px clamp(20px,5vw,32px);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dark);border-bottom:1px solid rgba(26,26,26,.05);transition:color .18s,background .18s}
+    .mobile-nav a:last-of-type{border-bottom:none}
+    .mobile-nav a:hover{color:var(--accent);background:rgba(205,62,0,.03)}
+    .mobile-nav a::after{content:'\2192';font-size:11px;opacity:.25;transition:opacity .18s,transform .18s}
+    .mobile-nav a:hover::after{opacity:1;transform:translateX(3px)}
+    .mobile-nav__cta-wrap{padding:12px clamp(20px,5vw,32px) 6px}
+    .mobile-nav__cta{display:block;width:100%;text-align:center;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:13px 20px;border-radius:4px;transition:background .2s}
+    .mobile-nav__cta:hover{background:#a83200}
+    .mobile-nav__cta::after{display:none!important}
+
+    /* MODALE */
+    .modal-overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(26,26,26,.55);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--bg);width:min(480px,92vw);border-radius:12px;padding:48px clamp(28px,5vw,48px);position:relative;animation:modal-in .35s var(--ease) both}
+    @keyframes modal-in{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+    .modal__close{position:absolute;top:20px;right:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:rgba(26,26,26,.4);font-size:20px;border-radius:50%;transition:background .18s,color .18s}
+    .modal__close:hover{background:rgba(26,26,26,.06);color:var(--dark)}
+    .modal__eyebrow{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+    .modal__title{font-size:clamp(22px,4vw,30px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-bottom:8px}
+    .modal__sub{font-size:13px;font-weight:300;color:rgba(26,26,26,.55);margin-bottom:32px}
+    .modal__tabs{display:flex;border-bottom:1.5px solid rgba(26,26,26,.1);margin-bottom:28px}
+    .modal__tab{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:10px 20px;cursor:pointer;border:none;background:none;color:rgba(26,26,26,.4);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:color .2s,border-color .2s}
+    .modal__tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .modal__panel{display:none}
+    .modal__panel.active{display:block}
+
+    /* FORMS */
+    .form__group{margin-bottom:18px}
+    .form__label{display:block;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.5);margin-bottom:8px}
+    .form__input{width:100%;font-family:var(--font);font-size:14px;font-weight:300;color:var(--dark);border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:13px 16px;background:var(--white);transition:border-color .22s;outline:none}
+    .form__input:focus{border-color:var(--accent)}
+    .form__input.error{border-color:#e53935}
+    .form__error{font-size:11px;color:#e53935;margin-top:5px;display:none}
+    .form__error.show{display:block}
+    .form__btn{width:100%;margin-top:8px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--white);background:var(--accent);border:none;border-radius:6px;padding:16px;cursor:pointer;transition:background .22s,transform .18s}
+    .form__btn:hover{background:#a83200;transform:translateY(-1px)}
+    .form__forgot{display:block;text-align:right;font-size:11px;color:rgba(26,26,26,.4);margin-top:10px;transition:color .2s}
+    .form__forgot:hover{color:var(--accent)}
+
+    /* HERO */
+    .contact-hero{margin-top:72px;padding:clamp(64px,9vw,120px) clamp(24px,7vw,100px) 0;display:grid;grid-template-columns:1fr auto;align-items:flex-end;gap:32px;border-bottom:1px solid rgba(26,26,26,.07)}
+    .contact-hero__left{padding-bottom:clamp(40px,6vw,72px)}
+    .contact-hero__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;opacity:0;animation:rise .8s .1s var(--ease) forwards}
+    .contact-hero__title{font-size:clamp(52px,8vw,112px);font-weight:900;line-height:.95;letter-spacing:-.04em;opacity:0;animation:rise .9s .2s var(--ease) forwards}
+    .contact-hero__title em{font-style:italic;font-weight:300;color:rgba(26,26,26,.25)}
+    .contact-hero__right{padding-bottom:clamp(40px,6vw,72px);text-align:right;opacity:0;animation:rise .8s .35s var(--ease) forwards}
+    .contact-hero__stat{font-size:clamp(48px,6vw,80px);font-weight:900;color:var(--accent);line-height:1;letter-spacing:-.04em}
+    .contact-hero__stat-label{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(26,26,26,.3);margin-top:6px}
+
+    /* RÉASSURANCE */
+    .reassurance{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(26,26,26,.07)}
+    .reassurance__item{padding:clamp(20px,3vw,36px) clamp(24px,4vw,56px);display:flex;align-items:flex-start;gap:14px;border-right:1px solid rgba(26,26,26,.07)}
+    .reassurance__item:last-child{border-right:none}
+    .reassurance__icon{width:38px;height:38px;flex-shrink:0;border:1.5px solid rgba(205,62,0,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+    .reassurance__title{font-size:13px;font-weight:700;margin-bottom:3px}
+    .reassurance__desc{font-size:12px;font-weight:300;line-height:1.6;color:rgba(26,26,26,.5)}
+
+    /* CONTACT MAIN */
+    .contact-main{display:grid;grid-template-columns:1fr 1.5fr;align-items:stretch}
+
+    /* Colonne infos */
+    .contact-info{padding:clamp(48px,7vw,80px) clamp(24px,5vw,64px);border-right:1px solid rgba(26,26,26,.07);display:flex;flex-direction:column;gap:44px}
+    .contact-info__label{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(26,26,26,.3);margin-bottom:18px;display:block}
+    .info-item{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+    .info-item:last-child{margin-bottom:0}
+    .info-icon{width:36px;height:36px;flex-shrink:0;border:1.5px solid rgba(205,62,0,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+    .info-text{font-size:13px;font-weight:300;line-height:1.7;color:rgba(26,26,26,.7)}
+    .info-text strong{font-weight:600;color:var(--dark);display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+    .info-text a{color:var(--accent)}
+    .hours-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}
+    .hours-row{font-size:12px;font-weight:300;color:rgba(26,26,26,.6);line-height:1.6}
+    .hours-row span{font-weight:600;color:var(--dark);font-size:11px;display:block}
+    .socials{display:flex;flex-direction:column;gap:10px}
+    .social-link{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dark);transition:color .2s}
+    .social-link:hover{color:var(--accent)}
+    .social-icon{width:32px;height:32px;border:1.5px solid rgba(26,26,26,.12);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+    .social-link:hover .social-icon{border-color:var(--accent)}
+
+    /* Colonne formulaire */
+    .contact-form-wrap{padding:clamp(48px,7vw,80px) clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:center}
+
+    /* Étapes */
+    .steps-indicator{display:flex;align-items:center;gap:8px;margin-bottom:36px}
+    .step-dot{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(26,26,26,.18);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(26,26,26,.3);transition:background .3s,border-color .3s,color .3s;flex-shrink:0}
+    .step-dot.active{background:var(--accent);border-color:var(--accent);color:var(--white)}
+    .step-dot.done{background:rgba(205,62,0,.1);border-color:rgba(205,62,0,.3);color:var(--accent)}
+    .step-line{flex:1;height:1px;background:rgba(26,26,26,.1);max-width:48px}
+    .step-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.35)}
+    .form-title{font-size:clamp(20px,2.5vw,28px);font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+    .form-subtitle{font-size:13px;font-weight:300;color:rgba(26,26,26,.5);margin-bottom:32px;line-height:1.65}
+
+    /* Étapes form */
+    .form-step{display:none}
+    .form-step.active{display:block}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+    /* Radio cards */
+    .radio-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+    .radio-card{position:relative}
+    .radio-card input[type="radio"]{position:absolute;opacity:0;width:0;height:0}
+    .radio-card label{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;cursor:pointer;transition:border-color .2s,background .2s}
+    .radio-card input:checked+label{border-color:var(--accent);background:rgba(205,62,0,.04)}
+    .radio-card label:hover{border-color:rgba(26,26,26,.25)}
+    .radio-card__title{font-size:12px;font-weight:700;color:var(--dark)}
+    .radio-card__sub{font-size:11px;font-weight:300;color:rgba(26,26,26,.45)}
+
+    /* Textarea */
+    .form__textarea{width:100%;min-height:120px;resize:vertical;font-family:var(--font);font-size:14px;font-weight:300;color:var(--dark);border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:13px 16px;background:var(--white);transition:border-color .22s;outline:none}
+    .form__textarea:focus{border-color:var(--accent)}
+    .form__textarea.error{border-color:#e53935}
+
+    /* Budget */
+    .budget-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .budget-label{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.5)}
+    .budget-value{font-size:14px;font-weight:700;color:var(--accent)}
+    .budget-slider{width:100%;-webkit-appearance:none;appearance:none;height:3px;background:rgba(26,26,26,.1);border-radius:2px;outline:none;margin-bottom:18px;cursor:pointer}
+    .budget-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--white);box-shadow:0 0 0 1.5px var(--accent)}
+    .budget-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:none}
+
+    /* Boutons nav */
+    .form-nav{display:flex;gap:12px;margin-top:8px}
+    .btn-next{flex:1;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--white);background:var(--accent);border:none;border-radius:6px;padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .22s,transform .18s}
+    .btn-next:hover{background:#a83200;transform:translateY(-1px)}
+    .btn-next:disabled{opacity:.5;pointer-events:none;transform:none}
+    .btn-prev{font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.5);background:none;border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:16px 20px;cursor:pointer;transition:border-color .2s,color .2s}
+    .btn-prev:hover{border-color:var(--dark);color:var(--dark)}
+    .form-note{font-size:10px;color:rgba(26,26,26,.3);text-align:center;margin-top:14px;line-height:1.6}
+
+    /* Succès */
+    .success-state{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px;gap:20px}
+    .success-state.show{display:flex}
+    .success-check{width:64px;height:64px;border-radius:50%;background:rgba(205,62,0,.1);display:flex;align-items:center;justify-content:center;animation:pop .5s var(--ease) both}
+    @keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+    .success-title{font-size:24px;font-weight:800;letter-spacing:-.02em}
+    .success-desc{font-size:14px;font-weight:300;color:rgba(26,26,26,.55);line-height:1.7;max-width:360px}
+    .success-back{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid rgba(205,62,0,.3);padding-bottom:2px;margin-top:8px;transition:opacity .2s}
+    .success-back:hover{opacity:.7}
+
+    /* FAQ */
+    .faq-section{padding:clamp(64px,9vw,100px) clamp(24px,7vw,100px);background:var(--mid);border-top:1px solid rgba(26,26,26,.07)}
+    .faq-eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+    .faq-title{font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-.03em;line-height:1.08;margin-bottom:clamp(36px,5vw,56px)}
+    .faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+    .faq-item{background:var(--bg);padding:clamp(20px,3vw,28px);cursor:pointer}
+    .faq-item:nth-child(1){border-radius:8px 0 0 0}
+    .faq-item:nth-child(2){border-radius:0 8px 0 0}
+    .faq-item:nth-child(3){border-radius:0}
+    .faq-item:nth-child(4){border-radius:0}
+    .faq-item:nth-child(5){border-radius:0 0 0 8px}
+    .faq-item:nth-child(6){border-radius:0 0 8px 0}
+    .faq-q{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;font-size:14px;font-weight:600;color:var(--dark);line-height:1.4}
+    .faq-icon{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(26,26,26,.15);display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(26,26,26,.4);transition:background .2s,border-color .2s,transform .3s var(--ease);margin-top:1px}
+    .faq-item.open .faq-icon{background:var(--accent);border-color:var(--accent);color:var(--white);transform:rotate(45deg)}
+    .faq-a{font-size:13px;font-weight:300;color:rgba(26,26,26,.6);line-height:1.75;max-height:0;overflow:hidden;transition:max-height .4s var(--ease),padding-top .3s}
+    .faq-item.open .faq-a{max-height:200px;padding-top:12px}
+
+    /* FOOTER */
+    footer{background:var(--dark);color:var(--bg);padding:clamp(56px,8vw,96px) clamp(24px,7vw,100px) clamp(32px,4vw,48px);border-top:1px solid rgba(255,250,240,.07)}
+    .footer__top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:clamp(28px,5vw,64px);margin-bottom:clamp(48px,7vw,80px)}
+    .footer__brand p{font-size:13px;font-weight:300;line-height:1.75;color:rgba(255,250,240,.5);margin-top:20px;max-width:280px}
+    .footer__col h4{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,250,240,.35);margin-bottom:20px}
+    .footer__col ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .footer__col ul li a{font-size:14px;font-weight:300;color:rgba(255,250,240,.7);transition:color .2s}
+    .footer__col ul li a:hover{color:var(--accent)}
+    .footer__bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:28px;border-top:1px solid rgba(255,250,240,.07);flex-wrap:wrap}
+    .footer__copy{font-size:11px;font-weight:300;color:rgba(255,250,240,.3);letter-spacing:.06em}
+    .footer__socials{display:flex;gap:20px}
+    .footer__socials a{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,250,240,.4);transition:color .2s}
+    .footer__socials a:hover{color:var(--accent)}
+
+    /* UTILITAIRES */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .75s var(--ease),transform .75s var(--ease)}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    .reveal-d1{transition-delay:.12s}
+
+    @keyframes rise{to{opacity:1;transform:translateY(0)}}
+
+    /* RESPONSIVE */
+    @media(max-width:900px){
+      .contact-hero{grid-template-columns:1fr}
+      .contact-hero__right{text-align:left}
+      .reassurance{grid-template-columns:1fr}
+      .reassurance__item{border-right:none;border-bottom:1px solid rgba(26,26,26,.07)}
+      .reassurance__item:last-child{border-bottom:none}
+      .contact-main{grid-template-columns:1fr}
+      .contact-info{border-right:none;border-bottom:1px solid rgba(26,26,26,.07)}
+      .faq-grid{grid-template-columns:1fr}
+      .faq-item:nth-child(1){border-radius:8px 8px 0 0}
+      .faq-item:nth-child(2){border-radius:0}
+      .faq-item:nth-child(3){border-radius:0}
+      .faq-item:nth-child(4){border-radius:0 0 8px 8px}
+      .footer__top{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:640px){
+      .nav .nav__link,.nav .nav__cta{display:none}
+      .burger{display:flex}
+      .nav__login span{display:none}
+      .nav__login{padding:8px 12px}
+      .form-row{grid-template-columns:1fr}
+      .footer__top{grid-template-columns:1fr}
+    }
+    @media(max-width:430px){
+      .contact-hero__title{font-size:44px}
+      .radio-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:375px){
+      header{padding:0 16px}
+      .contact-hero,.contact-info,.contact-form-wrap,.faq-section,footer{padding-left:16px;padding-right:16px}
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- MODALE LOGIN -->
+<div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <button class="modal__close" onclick="closeLogin()">&#x2715;</button>
+    <p class="modal__eyebrow">Espace client</p>
+    <h2 class="modal__title">Bienvenue<br>chez K&#x14D;b&#x14D;</h2>
+    <p class="modal__sub">Suivez l'avancement de votre projet, vos documents et vos échanges.</p>
+    <div class="modal__tabs">
+      <button class="modal__tab active" onclick="switchTab('cx',this)">Connexion</button>
+      <button class="modal__tab" onclick="switchTab('in',this)">Créer un compte</button>
+    </div>
+    <div class="modal__panel active" id="panel-cx">
+      <div class="form__group"><label class="form__label">E-mail</label><input class="form__input" type="email" placeholder="vous@exemple.fr"/></div>
+      <div class="form__group"><label class="form__label">Mot de passe</label><input class="form__input" type="password" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"/></div>
+      <button class="form__btn">Se connecter &#x2192;</button>
+      <a href="#" class="form__forgot">Mot de passe oublié ?</a>
+    </div>
+    <div class="modal__panel" id="panel-in">
+      <div class="form__group"><label class="form__label">Nom complet</label><input class="form__input" type="text" placeholder="Jean Dupont"/></div>
+      <div class="form__group"><label class="form__label">E-mail</label><input class="form__input" type="email" placeholder="vous@exemple.fr"/></div>
+      <div class="form__group"><label class="form__label">Mot de passe</label><input class="form__input" type="password" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"/></div>
+      <button class="form__btn">Créer mon espace &#x2192;</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENU MOBILE -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
+<nav class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav__inner">
+    <a href="index.html" onclick="toggleMenu()">Accueil</a>
+    <a href="projets.html" onclick="toggleMenu()">Projets</a>
+    <a href="gamme.html" onclick="toggleMenu()">Gamme</a>
+    <a href="#" onclick="toggleMenu()">Contact</a>
+  </div>
+  <div class="mobile-nav__cta-wrap">
+    <a href="#formulaire" class="mobile-nav__cta" onclick="toggleMenu()">Demander un devis</a>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a href="index.html" class="logo" aria-label="K&#x14D;b&#x14D; &#x2014; Accueil">
+    <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+      <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </a>
+  <nav class="nav">
+    <a href="index.html" class="nav__link">Accueil</a>
+    <a href="projets.html" class="nav__link">Projets</a>
+    <a href="gamme.html" class="nav__link">Gamme</a>
+    <a href="#" class="nav__link active">Contact</a>
+    <a href="#formulaire" class="nav__cta">Devis &#x2192;</a>
+    <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Mon espace</span>
+    </button>
+    <div class="burger" id="burger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="contact-hero">
+  <div class="contact-hero__left">
+    <p class="contact-hero__eyebrow">Studio K&#x14D;b&#x14D; &#x2014; Bordeaux</p>
+    <h1 class="contact-hero__title">Parlons de<br><em>votre projet</em></h1>
+  </div>
+  <div class="contact-hero__right">
+    <p class="contact-hero__stat">&lt; 24h</p>
+    <p class="contact-hero__stat-label">Délai de réponse</p>
+  </div>
+</section>
+
+<!-- RÉASSURANCE -->
+<div class="reassurance reveal">
+  <div class="reassurance__item">
+    <div class="reassurance__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div><p class="reassurance__title">Sans engagement</p><p class="reassurance__desc">Premier échange gratuit, devis offert. Aucune obligation.</p></div>
+  </div>
+  <div class="reassurance__item">
+    <div class="reassurance__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#CD3E00" stroke-width="1.6"/><path d="M12 6v6l4 2" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+    <div><p class="reassurance__title">Réponse sous 24h</p><p class="reassurance__desc">Un membre de l'équipe vous contacte le jour ouvré suivant.</p></div>
+  </div>
+  <div class="reassurance__item">
+    <div class="reassurance__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#CD3E00" stroke-width="1.6"/><circle cx="12" cy="9" r="2.5" stroke="#CD3E00" stroke-width="1.6"/></svg></div>
+    <div><p class="reassurance__title">Atelier à Bordeaux</p><p class="reassurance__desc">Visite sur rendez-vous, 76 Rue Mandron, Bordeaux 33000.</p></div>
+  </div>
+</div>
+
+<!-- MAIN : INFOS + FORMULAIRE -->
+<div class="contact-main" id="formulaire">
+
+  <!-- Infos gauche -->
+  <aside class="contact-info reveal">
+    <div>
+      <span class="contact-info__label">Nous trouver</span>
+      <div class="info-item">
+        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#CD3E00" stroke-width="1.6"/><circle cx="12" cy="9" r="2.5" stroke="#CD3E00" stroke-width="1.6"/></svg></div>
+        <div class="info-text"><strong>Atelier</strong>76 Rue Mandron<br>Bordeaux 33000</div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="#CD3E00" stroke-width="1.6"/><path d="M2 8l10 7 10-7" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+        <div class="info-text"><strong>E-mail</strong><a href="mailto:contact@kobo-design.fr">contact@kobo-design.fr</a></div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2C7.42 21 3 16.58 3 11 3 7.13 3.43 5.33 5 4z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="info-text"><strong>Téléphone</strong><a href="tel:+33642899858">+33 6 42 89 98 58</a></div>
+      </div>
+    </div>
+    <div>
+      <span class="contact-info__label">Horaires d'atelier</span>
+      <div class="hours-grid">
+        <div class="hours-row"><span>Lun — Ven</span>9h – 18h</div>
+        <div class="hours-row"><span>Samedi</span>Sur RDV</div>
+        <div class="hours-row"><span>Dimanche</span>Fermé</div>
+        <div class="hours-row"><span>Jours fériés</span>Fermé</div>
+      </div>
+    </div>
+    <div>
+      <span class="contact-info__label">Nos réseaux</span>
+      <div class="socials">
+        <a href="https://www.instagram.com/kobodesign_bdx/" target="_blank" rel="noopener" class="social-link"><div class="social-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></div>Instagram</a>
+        <a href="https://www.linkedin.com/company/kobodesign" target="_blank" rel="noopener" class="social-link"><div class="social-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="9" width="4" height="12" stroke="currentColor" stroke-width="1.6"/><circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="1.6"/></svg></div>LinkedIn</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Formulaire droite — Formspree -->
+  <div class="contact-form-wrap">
+    <div class="steps-indicator">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-line"></div>
+      <span class="step-label">Vous</span>
+      <div class="step-line"></div>
+      <div class="step-dot" id="dot2">2</div>
+      <div class="step-line"></div>
+      <span class="step-label">Votre projet</span>
+    </div>
+
+    <!--
+      FORMSPREE : remplacez YOUR_FORM_ID par votre identifiant
+      1. Créez un compte sur formspree.io (gratuit, 50 soumissions/mois)
+      2. Créez un formulaire → copiez l'ID (ex: xpwzpkjn)
+      3. Remplacez YOUR_FORM_ID ci-dessous
+    -->
+    <form id="contactForm" action="https://formspree.io/f/mlgopeke" method="POST" novalidate>
+
+      <!-- Succès -->
+      <div class="success-state" id="successState">
+        <div class="success-check">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#CD3E00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2 class="success-title">Message envoyé !</h2>
+        <p class="success-desc">Merci pour votre message. Un membre de l'équipe K&#x14D;b&#x14D; vous répondra sous 24h ouvrées.</p>
+        <a href="index.html" class="success-back">Retour à l'accueil &#x2192;</a>
+      </div>
+
+      <!-- Étape 1 -->
+      <div class="form-step active" id="step1">
+        <h2 class="form-title">Qui êtes-vous ?</h2>
+        <p class="form-subtitle">Commençons par faire connaissance.</p>
+        <div class="form-row">
+          <div class="form__group">
+            <label class="form__label" for="prenom">Prénom *</label>
+            <input class="form__input" type="text" id="prenom" name="prenom" placeholder="Jean" autocomplete="given-name" required/>
+            <p class="form__error" id="err-prenom">Veuillez renseigner votre prénom.</p>
+          </div>
+          <div class="form__group">
+            <label class="form__label" for="nom">Nom *</label>
+            <input class="form__input" type="text" id="nom" name="nom" placeholder="Dupont" autocomplete="family-name" required/>
+            <p class="form__error" id="err-nom">Veuillez renseigner votre nom.</p>
+          </div>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="email">E-mail *</label>
+          <input class="form__input" type="email" id="email" name="email" placeholder="vous@exemple.fr" autocomplete="email" required/>
+          <p class="form__error" id="err-email">Veuillez entrer une adresse e-mail valide.</p>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="tel">Téléphone</label>
+          <input class="form__input" type="tel" id="tel" name="telephone" placeholder="+33 6 00 00 00 00" autocomplete="tel"/>
+        </div>
+        <div class="form-nav">
+          <button type="button" class="btn-next" onclick="goStep2()">Continuer <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Étape 2 -->
+      <div class="form-step" id="step2">
+        <h2 class="form-title">Votre projet</h2>
+        <p class="form-subtitle">Plus vous nous en dites, plus notre réponse sera précise.</p>
+
+        <div class="form__group">
+          <label class="form__label">Type de projet *</label>
+          <div class="radio-grid">
+            <div class="radio-card"><input type="radio" name="type_projet" id="r1" value="Mobilier sur-mesure" required/><label for="r1"><span class="radio-card__title">Mobilier</span><span class="radio-card__sub">Canapé, table, rangements…</span></label></div>
+            <div class="radio-card"><input type="radio" name="type_projet" id="r2" value="Architecture intérieur"/><label for="r2"><span class="radio-card__title">Architecture</span><span class="radio-card__sub">Rénovation, aménagement…</span></label></div>
+            <div class="radio-card"><input type="radio" name="type_projet" id="r3" value="Cuisine sur-mesure"/><label for="r3"><span class="radio-card__title">Cuisine</span><span class="radio-card__sub">Îlot, agencement complet…</span></label></div>
+            <div class="radio-card"><input type="radio" name="type_projet" id="r4" value="Autre"/><label for="r4"><span class="radio-card__title">Autre</span><span class="radio-card__sub">Bureau, chambre, dressing…</span></label></div>
+          </div>
+          <p class="form__error" id="err-type">Veuillez sélectionner un type de projet.</p>
+        </div>
+
+        <div class="form__group">
+          <div class="budget-row">
+            <label class="budget-label" for="budget">Budget estimé</label>
+            <span class="budget-value" id="budgetDisplay">15 000 €</span>
+          </div>
+          <input class="budget-slider" type="range" id="budget" name="budget_affiche" min="5000" max="100000" step="1000" value="15000" oninput="updateBudget(this.value)"/>
+          <input type="hidden" name="budget" id="budgetHidden" value="15 000 €"/>
+        </div>
+
+        <div class="form__group">
+          <label class="form__label" for="message">Décrivez votre projet *</label>
+          <textarea class="form__textarea" id="message" name="message" placeholder="Parlez-nous de votre espace, de vos envies, de vos contraintes…" required></textarea>
+          <p class="form__error" id="err-message">Veuillez décrire votre projet.</p>
+        </div>
+
+        <!-- Anti-spam honeypot -->
+        <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off"/>
+        <input type="hidden" name="_subject" value="Nouveau message — Kōbō Studio"/>
+
+        <div class="form-nav">
+          <button type="button" class="btn-prev" onclick="goStep1()">&#x2190; Retour</button>
+          <button type="submit" class="btn-next" id="btnSubmit">Envoyer le message <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <p class="form-note">Vos données ne sont jamais revendues. Réponse garantie sous 24h ouvrées.</p>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="reveal">
+    <p class="faq-eyebrow">Questions fréquentes</p>
+    <h2 class="faq-title">Avant de nous écrire,<br>quelques réponses.</h2>
+  </div>
+  <div class="faq-grid">
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q">Le premier contact est-il gratuit ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">Oui, totalement. L'échange initial, l'analyse de votre projet et le devis sont offerts et sans engagement. Aucune facturation sans validation de votre part.</div>
+    </div>
+    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
+      <div class="faq-q">Sous quel délai me répondez-vous ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">Nous nous engageons à répondre à chaque demande sous 24h ouvrées. En pratique, c'est souvent le jour même. Vous pouvez aussi nous appeler directement au 06 42 89 98 58.</div>
+    </div>
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q">Intervenez-vous en dehors de Bordeaux ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">Oui. Nous intervenons dans toute la Gironde et la région Nouvelle-Aquitaine (Bassin d'Arcachon, Biarritz, Périgord, Lot-et-Garonne). Pour les projets d'envergure, nous nous déplaçons partout en France.</div>
+    </div>
+    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
+      <div class="faq-q">Dois-je avoir un projet précis pour vous contacter ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">Non. Une idée floue, une photo d'inspiration ou simplement l'envie de changer quelque chose suffisent. C'est exactement pour ça qu'on est là : transformer une envie en projet concret.</div>
+    </div>
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q">Comment se passe un premier rendez-vous ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">On commence par un appel de 20 à 30 minutes pour comprendre votre projet. Si le projet correspond à nos compétences, on planifie une visite sur site pour la prise de cote ou une consultation à distance, selon votre préférence.</div>
+    </div>
+    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
+      <div class="faq-q">Quels types de projets ne faites-vous pas ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">Nous ne faisons pas de mobilier de série ni de projets nécessitant uniquement de la peinture ou du simple rafraîchissement. Nos projets impliquent toujours une dimension de conception et de fabrication sur-mesure.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+  <footer>
+    <div class="footer__top">
+      <div class="footer__brand">
+        <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:36px;width:auto;">
+          <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <line x1="36" y1="10" x2="48" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+          <path d="M62 6v36" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <line x1="101" y1="10" x2="113" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <p>Studio de mobilier sur-mesure et d'architecture d'intérieur, basé à Bordeaux depuis 2018.</p>
+      </div>
+      <div class="footer__col">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="projets.html">Nos projets</a></li>
+          <li><a href="gamme.html">Notre gamme</a></li>
+          <li><a href="mobilier.html">Mobilier sur-mesure</a></li>
+          <li><a href="architecture.html">Architecture d'intérieur</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="contact.html">Formulaire de contact</a></li>
+          <li><a href="tel:+33642899858">06 42 89 98 58</a></li>
+          <li>76 Rue Mandron</li>
+          <li>33000 Bordeaux</li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Légal</h4>
+        <ul>
+          <li><a href="mentions-legales.html">Mentions légales</a></li>
+          <li><a href="politique-confidentialite.html">Politique de confidentialité</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p class="footer__copy">© 2025 Kobo Design — Tous droits réservés</p>
+      <div class="footer__socials">
+        <a href="https://www.instagram.com/kobodesign_bdx/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.linkedin.com/company/kobodesign" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  /* Header */
+  const hdr = document.getElementById('site-header');
+  window.addEventListener('scroll', () => hdr.classList.toggle('shadow', scrollY > 10), {passive:true});
+
+  /* Curseur */
+  const cur = document.getElementById('cursor');
+  if(cur){
+    document.addEventListener('mousemove', e => { cur.style.left = e.clientX+'px'; cur.style.top = e.clientY+'px'; });
+    document.querySelectorAll('a,button,.radio-card label,.faq-item').forEach(el => {
+      el.addEventListener('mouseenter', () => cur.classList.add('expand'));
+      el.addEventListener('mouseleave', () => cur.classList.remove('expand'));
+    });
+  }
+
+  /* Menu mobile */
+  function toggleMenu(){
+    const nav=document.getElementById('mobileNav');
+    const overlay=document.getElementById('mobileNavOverlay');
+    const burger=document.getElementById('burger');
+    const isOpen=nav.classList.contains('open');
+    nav.classList.toggle('open',!isOpen);
+    overlay.classList.toggle('open',!isOpen);
+    burger.classList.toggle('open',!isOpen);
+    document.body.style.overflow=isOpen?'':'hidden';
+  }
+
+  /* Modal login */
+  function openLogin(){ document.getElementById('loginModal').classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeLogin(){ document.getElementById('loginModal').classList.remove('open'); document.body.style.overflow=''; }
+  document.getElementById('loginModal').addEventListener('click', function(e){ if(e.target===this)closeLogin(); });
+  document.addEventListener('keydown', e => { if(e.key==='Escape')closeLogin(); });
+  function switchTab(id,btn){
+    document.querySelectorAll('.modal__panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.modal__tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('panel-'+id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* Budget slider */
+  function updateBudget(val){
+    const v=parseInt(val);
+    const label=v>=100000?'100 000 €+':v.toLocaleString('fr-FR')+' €';
+    document.getElementById('budgetDisplay').textContent=label;
+    document.getElementById('budgetHidden').value=label;
+  }
+
+  /* Étape 1 → 2 avec validation */
+  function goStep2(){
+    let valid=true;
+    const prenom=document.getElementById('prenom');
+    const nom=document.getElementById('nom');
+    const email=document.getElementById('email');
+
+    if(!prenom.value.trim()){
+      prenom.classList.add('error'); document.getElementById('err-prenom').classList.add('show'); valid=false;
+    } else { prenom.classList.remove('error'); document.getElementById('err-prenom').classList.remove('show'); }
+
+    if(!nom.value.trim()){
+      nom.classList.add('error'); document.getElementById('err-nom').classList.add('show'); valid=false;
+    } else { nom.classList.remove('error'); document.getElementById('err-nom').classList.remove('show'); }
+
+    const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRe.test(email.value.trim())){
+      email.classList.add('error'); document.getElementById('err-email').classList.add('show'); valid=false;
+    } else { email.classList.remove('error'); document.getElementById('err-email').classList.remove('show'); }
+
+    if(!valid) return;
+
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+    document.getElementById('dot1').classList.remove('active');
+    document.getElementById('dot1').classList.add('done');
+    document.getElementById('dot2').classList.add('active');
+    document.getElementById('formulaire').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function goStep1(){
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step1').classList.add('active');
+    document.getElementById('dot2').classList.remove('active');
+    document.getElementById('dot1').classList.remove('done');
+    document.getElementById('dot1').classList.add('active');
+  }
+
+  /* Soumission Formspree */
+  document.getElementById('contactForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    let valid=true;
+
+    const types=document.querySelectorAll('input[name="type_projet"]');
+    if(![...types].some(r=>r.checked)){
+      document.getElementById('err-type').classList.add('show'); valid=false;
+    } else { document.getElementById('err-type').classList.remove('show'); }
+
+    const msg=document.getElementById('message');
+    if(!msg.value.trim()){
+      msg.classList.add('error'); document.getElementById('err-message').classList.add('show'); valid=false;
+    } else { msg.classList.remove('error'); document.getElementById('err-message').classList.remove('show'); }
+
+    if(!valid) return;
+
+    const btn=document.getElementById('btnSubmit');
+    btn.disabled=true;
+    btn.textContent='Envoi en cours…';
+
+    try{
+      const res=await fetch(this.action,{method:'POST',body:new FormData(this),headers:{'Accept':'application/json'}});
+      if(res.ok){
+        document.getElementById('step2').style.display='none';
+        document.querySelector('.steps-indicator').style.display='none';
+        document.getElementById('successState').classList.add('show');
+      } else {
+        btn.disabled=false;
+        btn.innerHTML='Réessayer &rarr;';
+        alert('Une erreur est survenue. Merci de réessayer ou de nous écrire directement à contact@kobo-design.fr');
+      }
+    } catch {
+      btn.disabled=false;
+      btn.innerHTML='Réessayer &rarr;';
+      alert('Connexion impossible. Vérifiez votre connexion internet et réessayez.');
+    }
+  });
+
+  /* FAQ */
+  function toggleFaq(item){
+    const isOpen=item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+    if(!isOpen) item.classList.add('open');
+  }
+
+  /* Scroll reveal */
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); } });
+  },{threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

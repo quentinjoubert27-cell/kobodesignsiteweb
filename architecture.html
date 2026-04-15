@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Architecte d'Intérieur Bordeaux — Kobo Design Studio</title>
+  <meta name="description" content="Architecte d'intérieur à Bordeaux. Kobo Design repense vos espaces de A à Z : plans 3D, mobilier sur-mesure dessiné par nos soins, coordination artisans et suivi de chantier. Devis gratuit."/>
+  <meta name="keywords" content="architecte intérieur Bordeaux, architecture intérieur Bordeaux, décoration intérieur Bordeaux, rénovation intérieur Bordeaux, aménagement intérieur Bordeaux, designer intérieur Bordeaux"/>
+  <link rel="canonical" href="https://www.kobo-design.fr/architecture.html"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://www.kobo-design.fr/architecture.html"/>
+  <meta property="og:title" content="Architecture d'Intérieur à Bordeaux — Kobo Design"/>
+  <meta property="og:description" content="Studio d'architecture d'intérieur à Bordeaux. On analyse votre espace, on dessine le mobilier sur-mesure, on coordonne les artisans. Clé en main."/>
+  <meta property="og:image" content="https://www.kobo-design.fr/img/cuisine-2.png"/>
+  <meta property="og:locale" content="fr_FR"/>
+  <meta property="og:site_name" content="Kobo Design"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Architecture d'Intérieur à Bordeaux — Kobo Design"/>
+  <meta name="twitter:description" content="Studio d'architecture d'intérieur à Bordeaux. On analyse votre espace, on dessine le mobilier sur-mesure, on coordonne les artisans. Clé en main."/>
+  <meta name="twitter:image" content="https://www.kobo-design.fr/img/cuisine-2.png"/>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Architecture d'Intérieur",
+  "provider": { "@type": "LocalBusiness", "name": "Kobo Design", "url": "https://www.kobo-design.fr", "telephone": "+33642899858", "address": { "@type": "PostalAddress", "streetAddress": "76 Rue Mandron", "addressLocality": "Bordeaux", "postalCode": "33000", "addressCountry": "FR" } },
+  "description": "Architecture d'intérieur à Bordeaux. Plans 3D, mobilier sur-mesure, coordination artisans.",
+  "areaServed": ["Bordeaux","Gironde","Nouvelle-Aquitaine"],
+  "serviceType": "Architecture d'intérieur"
+}
+</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--accent:#CD3E00;--bg:#FFFAF0;--dark:#1A1A1A;--white:#FFFFFF;--mid:#F0EBE0;--font:'Poppins',sans-serif;--ease:cubic-bezier(0.16,1,0.3,1)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font);background:var(--bg);color:var(--dark);overflow-x:hidden;cursor:none}
+    a{text-decoration:none;color:inherit}
+
+    /* CURSEUR */
+    #cursor{position:fixed;width:12px;height:12px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .25s var(--ease),height .25s var(--ease),background .2s;mix-blend-mode:multiply}
+    #cursor.expand{width:52px;height:52px;background:rgba(205,62,0,.15);mix-blend-mode:normal}
+
+    /* HEADER */
+    header{position:fixed;top:0;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,72px);background:var(--bg);transition:box-shadow .35s}
+    header.shadow{box-shadow:0 1px 0 rgba(26,26,26,.08)}
+    .logo{display:flex;align-items:center;height:40px}
+    .logo svg{height:40px;width:auto}
+    .nav{display:flex;align-items:center;gap:clamp(14px,2vw,32px)}
+    .nav__link{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dark);position:relative;padding-bottom:2px}
+    .nav__link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .28s var(--ease)}
+    .nav__link:hover::after{width:100%}
+    .nav__link.active{color:var(--accent)}.nav__link.active::after{width:100%}
+    .nav__cta{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:11px 22px;border-radius:4px;transition:background .22s,transform .18s}
+    .nav__cta:hover{background:#a83200;transform:translateY(-1px)}
+    .nav__login{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark);border:1.5px solid rgba(26,26,26,.18);border-radius:100px;padding:8px 16px 8px 12px;background:none;cursor:pointer;transition:border-color .22s,color .22s}
+    .nav__login:hover{border-color:var(--accent);color:var(--accent)}
+    .burger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;width:32px;height:32px;padding:4px}
+    .burger span{display:block;width:22px;height:1.5px;background:var(--dark);border-radius:2px;transform-origin:center;transition:transform .3s var(--ease),opacity .2s,width .3s var(--ease)}
+    .burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+    .burger.open span:nth-child(2){opacity:0;width:0}
+    .burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+    .mobile-nav-overlay{position:fixed;inset:0;top:72px;z-index:470;background:rgba(26,26,26,.22);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .3s}
+    .mobile-nav-overlay.open{opacity:1;pointer-events:all}
+    .mobile-nav{position:fixed;top:72px;left:0;right:0;z-index:480;background:var(--bg);border-bottom:1px solid rgba(26,26,26,.08);transform:translateY(-10px);opacity:0;pointer-events:none;transition:transform .32s var(--ease),opacity .25s ease}
+    .mobile-nav.open{transform:translateY(0);opacity:1;pointer-events:all}
+    .mobile-nav__inner{padding:6px 0 12px}
+    .mobile-nav a{display:flex;align-items:center;justify-content:space-between;padding:13px clamp(20px,5vw,32px);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dark);border-bottom:1px solid rgba(26,26,26,.05);transition:color .18s,background .18s}
+    .mobile-nav a:last-of-type{border-bottom:none}
+    .mobile-nav a:hover{color:var(--accent);background:rgba(205,62,0,.03)}
+    .mobile-nav a::after{content:'\2192';font-size:11px;opacity:.25}
+    .mobile-nav__cta-wrap{padding:12px clamp(20px,5vw,32px) 6px}
+    .mobile-nav__cta{display:block;width:100%;text-align:center;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:13px 20px;border-radius:4px}
+    .mobile-nav__cta::after{display:none!important}
+    .modal-overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(26,26,26,.55);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--bg);width:min(480px,92vw);border-radius:12px;padding:48px clamp(28px,5vw,48px);position:relative;animation:modal-in .35s var(--ease) both}
+    @keyframes modal-in{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+    .modal__close{position:absolute;top:20px;right:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:rgba(26,26,26,.4);font-size:20px;border-radius:50%}
+    .modal__eyebrow{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+    .modal__title{font-size:clamp(22px,4vw,30px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-bottom:8px}
+    .modal__sub{font-size:13px;font-weight:300;color:rgba(26,26,26,.55);margin-bottom:32px}
+    .modal__tabs{display:flex;border-bottom:1.5px solid rgba(26,26,26,.1);margin-bottom:28px}
+    .modal__tab{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:10px 20px;cursor:pointer;border:none;background:none;color:rgba(26,26,26,.4);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:color .2s,border-color .2s}
+    .modal__tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .modal__panel{display:none}.modal__panel.active{display:block}
+    .form__group{margin-bottom:18px}
+    .form__label{display:block;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.5);margin-bottom:8px}
+    .form__input{width:100%;font-family:var(--font);font-size:14px;font-weight:300;color:var(--dark);border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:13px 16px;background:var(--white);transition:border-color .22s;outline:none}
+    .form__input:focus{border-color:var(--accent)}
+    .form__btn{width:100%;margin-top:8px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--white);background:var(--accent);border:none;border-radius:6px;padding:16px;cursor:pointer}
+    .form__forgot{display:block;text-align:right;font-size:11px;color:rgba(26,26,26,.4);margin-top:10px}
+
+    /* ============================================================
+       HERO — split écran
+    ============================================================ */
+    .hero{margin-top:72px;display:grid;grid-template-columns:1fr 1fr;min-height:90vh}
+    .hero__left{background:var(--dark);padding:clamp(48px,8vw,100px) clamp(32px,5vw,80px);display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden}
+    .hero__left-bg{position:absolute;inset:0;background:url('img/cuisine-1.png') center/cover;opacity:.25;transition:transform 8s ease;transform:scale(1.04)}
+    .hero.loaded .hero__left-bg{transform:scale(1)}
+    .hero__left-content{position:relative;z-index:1}
+    .hero__breadcrumb{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:24px;opacity:0;animation:rise .7s .1s var(--ease) forwards}
+    .hero__breadcrumb a{color:rgba(255,255,255,.4);transition:color .2s}
+    .hero__breadcrumb a:hover{color:var(--white)}
+    .hero__breadcrumb-sep{color:rgba(255,255,255,.2)}
+    .hero__tag{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;opacity:0;animation:rise .7s .18s var(--ease) forwards}
+    .hero__h1{font-size:clamp(40px,6vw,88px);font-weight:900;line-height:.96;letter-spacing:-.04em;color:var(--white);opacity:0;animation:rise .9s .26s var(--ease) forwards}
+    .hero__h1 em{font-style:italic;font-weight:300;color:rgba(255,255,255,.45);display:block}
+    .hero__sub{font-size:14px;font-weight:300;line-height:1.75;color:rgba(255,255,255,.5);max-width:400px;margin-top:20px;opacity:0;animation:rise .8s .38s var(--ease) forwards}
+
+    /* Colonne droite — photos empilées */
+    .hero__right{display:grid;grid-template-rows:1fr 1fr}
+    .hero__img{overflow:hidden;position:relative}
+    .hero__img-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .7s var(--ease)}
+    .hero__img:hover .hero__img-bg{transform:scale(1.04)}
+    .hero__img-caption{position:absolute;bottom:16px;left:16px;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.5);background:rgba(0,0,0,.35);padding:6px 12px;border-radius:4px}
+
+    /* ============================================================
+       POUR QUI — 2 profils
+    ============================================================ */
+    /* INTRO — ce qu'on fait */
+    /* CE QU'ON EST */
+    .what-we-do{display:grid;grid-template-columns:1fr 1fr;gap:clamp(48px,8vw,100px);padding:clamp(64px,9vw,110px) clamp(24px,7vw,100px);border-bottom:1px solid rgba(26,26,26,.07);align-items:start}
+    .what-we-do__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+    .what-we-do__title{font-size:clamp(26px,3.5vw,44px);font-weight:900;letter-spacing:-.04em;line-height:1.05}
+    .what-we-do__title em{font-style:italic;font-weight:300;color:rgba(26,26,26,.25)}
+    .what-we-do__desc{font-size:14px;font-weight:300;line-height:1.85;color:rgba(26,26,26,.6);margin-bottom:18px}
+    .what-we-do__desc strong{font-weight:600;color:var(--dark)}
+    .what-we-do__tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+    .what-tag{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;border-radius:100px;border:1.5px solid rgba(26,26,26,.12);color:rgba(26,26,26,.5);transition:border-color .2s,color .2s}
+    .what-tag:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* MÉTHODE — 4 étapes vraie architecture d'intérieur */
+    .method{padding:clamp(72px,10vw,120px) clamp(24px,7vw,100px);background:var(--bg)}
+    .method__header{margin-bottom:clamp(48px,7vw,72px)}
+    .method__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+    .method__title{font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:-.04em;line-height:1.05}
+    .method__title em{font-style:italic;font-weight:300;color:rgba(26,26,26,.25)}
+    .method__steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+    .mstep{padding:clamp(28px,3.5vw,44px) clamp(20px,2.5vw,32px);border-top:3px solid rgba(26,26,26,.07);position:relative;transition:border-color .3s}
+    .mstep:hover{border-top-color:var(--accent)}
+    .mstep+.mstep{border-left:1px solid rgba(26,26,26,.07)}
+    .mstep:nth-child(even){background:var(--mid)}
+    .mstep__num{font-size:clamp(48px,5vw,72px);font-weight:900;color:rgba(205,62,0,.1);letter-spacing:-.04em;line-height:1;margin-bottom:16px}
+    .mstep__tag{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:block}
+    .mstep__title{font-size:clamp(14px,1.5vw,17px);font-weight:800;letter-spacing:-.01em;line-height:1.2;margin-bottom:10px;color:var(--dark)}
+    .mstep__desc{font-size:13px;font-weight:300;line-height:1.75;color:rgba(26,26,26,.55)}
+    .mstep__badge{display:inline-block;margin-top:14px;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);background:rgba(205,62,0,.08);padding:5px 10px;border-radius:100px}
+
+        .gallery{padding:clamp(72px,10vw,120px) clamp(24px,7vw,100px) 0;background:var(--bg)}
+    .gallery__header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:clamp(36px,5vw,52px);flex-wrap:wrap}
+    .gallery__title{font-size:clamp(26px,3.5vw,44px);font-weight:800;letter-spacing:-.03em}
+    .gallery__link{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);border-bottom:1.5px solid var(--accent);padding-bottom:2px;white-space:nowrap;transition:opacity .2s}
+    .gallery__link:hover{opacity:.7}
+    .gallery__mosaic{display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:auto auto;gap:10px;padding-bottom:clamp(72px,10vw,120px)}
+    .gitem{position:relative;overflow:hidden;border-radius:6px;cursor:pointer}
+    .gitem:nth-child(1){grid-column:1/8;height:clamp(260px,35vw,500px)}
+    .gitem:nth-child(2){grid-column:8/13;height:clamp(260px,35vw,500px)}
+    .gitem:nth-child(3){grid-column:1/5;height:clamp(220px,28vw,380px)}
+    .gitem:nth-child(4){grid-column:5/9;height:clamp(220px,28vw,380px)}
+    .gitem:nth-child(5){grid-column:9/13;height:clamp(220px,28vw,380px)}
+    .gitem__img{position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .7s var(--ease),filter .4s;filter:brightness(.85)}
+    .gitem:hover .gitem__img{transform:scale(1.06);filter:brightness(.55)}
+    .gitem__overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(205,62,0,.75) 0%,rgba(205,62,0,0) 55%);opacity:0;transition:opacity .35s}
+    .gitem:hover .gitem__overlay{opacity:1}
+    .gitem__info{position:absolute;bottom:0;left:0;right:0;padding:clamp(14px,2vw,22px);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+    .gitem:hover .gitem__info{opacity:1;transform:translateY(0)}
+    .gitem__name{font-size:clamp(14px,1.8vw,20px);font-weight:800;color:var(--white);letter-spacing:-.01em}
+    .gitem__loc{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:3px}
+
+    /* ============================================================
+       CE QU'ON ANALYSE — volumes, flux, rangement
+    ============================================================ */
+    .analyse{padding:clamp(72px,10vw,120px) clamp(24px,7vw,100px);background:var(--mid)}
+    .analyse__header{margin-bottom:clamp(48px,7vw,72px)}
+    .analyse__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+    .analyse__title{font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:-.04em;line-height:1.05}
+    .analyse__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,3vw,32px)}
+    .analyse__card{background:var(--bg);border-radius:10px;padding:clamp(24px,3vw,36px);position:relative;overflow:hidden}
+    .analyse__card-icon{width:52px;height:52px;border-radius:12px;background:rgba(205,62,0,.08);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+    .analyse__card-title{font-size:16px;font-weight:800;letter-spacing:-.01em;margin-bottom:10px}
+    .analyse__card-desc{font-size:13px;font-weight:300;line-height:1.75;color:rgba(26,26,26,.6)}
+    .analyse__card-example{margin-top:14px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(205,62,0,.5)}
+
+    /* ============================================================
+       CTA FINAL
+    ============================================================ */
+    .cta-section{padding:clamp(72px,10vw,120px) clamp(24px,7vw,100px);display:grid;grid-template-columns:1fr 1fr;gap:clamp(48px,8vw,100px);align-items:center;border-top:1px solid rgba(26,26,26,.07)}
+    .cta__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+    .cta__title{font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin-bottom:20px}
+    .cta__desc{font-size:14px;font-weight:300;line-height:1.8;color:rgba(26,26,26,.6);margin-bottom:32px}
+    .cta__list{display:flex;flex-direction:column;gap:10px}
+    .cta__item{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:300;color:rgba(26,26,26,.65)}
+    .cta__item::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+    .cta__box{background:var(--dark);border-radius:12px;padding:clamp(32px,4vw,52px);display:flex;flex-direction:column;gap:28px}
+    .cta__box-tag{font-size:9px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,250,240,.35)}
+    .cta__box-title{font-size:clamp(22px,3vw,30px);font-weight:800;color:var(--bg);line-height:1.15;letter-spacing:-.02em}
+    .cta__promises{display:flex;flex-direction:column;gap:10px}
+    .cta__promise{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:300;color:rgba(255,250,240,.5)}
+    .cta__promise::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+    .cta__btn{display:inline-flex;align-items:center;gap:12px;align-self:flex-start;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--white);background:var(--accent);border:none;border-radius:6px;padding:15px 28px;cursor:pointer;text-decoration:none;transition:background .22s,transform .18s}
+    .cta__btn:hover{background:#a83200;transform:translateY(-2px)}
+    .cta__btn svg{transition:transform .22s}
+    .cta__btn:hover svg{transform:translateX(4px)}
+    .cta__secondary{font-size:11px;color:rgba(255,250,240,.3);margin-top:-10px}
+
+
+    /* FAQ */
+    .faq-section{padding:clamp(64px,9vw,100px) clamp(24px,7vw,100px);background:var(--mid)}
+    .faq-eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+    .faq-title{font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-.03em;line-height:1.08;margin-bottom:clamp(36px,5vw,56px)}
+    .faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+    .faq-item{background:var(--bg);padding:clamp(20px,3vw,28px);cursor:pointer}
+    .faq-item:nth-child(1){border-radius:8px 0 0 0}
+    .faq-item:nth-child(2){border-radius:0 8px 0 0}
+    .faq-item:nth-child(3){border-radius:0}
+    .faq-item:nth-child(4){border-radius:0}
+    .faq-item:nth-child(5){border-radius:0 0 0 8px}
+    .faq-item:nth-child(6){border-radius:0 0 8px 0}
+    .faq-q{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;font-size:14px;font-weight:600;color:var(--dark);line-height:1.4}
+    .faq-icon{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(26,26,26,.15);display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(26,26,26,.4);transition:background .2s,border-color .2s,transform .3s}
+    .faq-item.open .faq-icon{background:var(--accent);border-color:var(--accent);color:var(--white);transform:rotate(45deg)}
+    .faq-a{font-size:13px;font-weight:300;color:rgba(26,26,26,.6);line-height:1.75;max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(0.16,1,0.3,1),padding-top .3s}
+    .faq-item.open .faq-a{max-height:220px;padding-top:12px}
+    @media(max-width:640px){.faq-grid{grid-template-columns:1fr}.faq-item:nth-child(n){border-radius:0}.faq-item:first-child{border-radius:8px 8px 0 0}.faq-item:last-child{border-radius:0 0 8px 8px}}
+    /* FOOTER */
+    footer{background:var(--dark);color:var(--bg);padding:clamp(56px,8vw,96px) clamp(24px,7vw,100px) clamp(32px,4vw,48px)}
+    .footer__top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:clamp(28px,5vw,64px);margin-bottom:clamp(48px,7vw,80px)}
+    .footer__brand p{font-size:13px;font-weight:300;line-height:1.75;color:rgba(255,250,240,.5);margin-top:20px;max-width:280px}
+    .footer__col h4{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,250,240,.35);margin-bottom:20px}
+    .footer__col ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .footer__col ul li a{font-size:14px;font-weight:300;color:rgba(255,250,240,.7);transition:color .2s}
+    .footer__col ul li a:hover{color:var(--accent)}
+    .footer__bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:28px;border-top:1px solid rgba(255,250,240,.07);flex-wrap:wrap}
+    .footer__copy{font-size:11px;font-weight:300;color:rgba(255,250,240,.3);letter-spacing:.06em}
+    .footer__socials{display:flex;gap:20px}
+    .footer__socials a{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,250,240,.4);transition:color .2s}
+    .footer__socials a:hover{color:var(--accent)}
+
+    /* UTILITAIRES */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .75s var(--ease),transform .75s var(--ease)}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    .reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}
+    @keyframes rise{to{opacity:1;transform:translateY(0)}}
+
+    /* RESPONSIVE */
+    @media(max-width:900px){
+      .hero{grid-template-columns:1fr}
+      .hero__right{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:300px}
+      .profiles{grid-template-columns:1fr}
+      .what-we-do{grid-template-columns:1fr}
+      .profile{border-right:none;border-bottom:1px solid rgba(26,26,26,.08)}
+      .method__phases{grid-template-columns:1fr}
+      .gallery__mosaic .gitem:nth-child(1),.gallery__mosaic .gitem:nth-child(2){grid-column:1/13}
+      .gallery__mosaic .gitem:nth-child(3),.gallery__mosaic .gitem:nth-child(4),.gallery__mosaic .gitem:nth-child(5){grid-column:span 4}
+      .analyse__grid{grid-template-columns:1fr 1fr}
+      .cta-section{grid-template-columns:1fr}
+      .footer__top{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:640px){
+      .nav .nav__link,.nav .nav__cta{display:none}.burger{display:flex}
+      .nav__login span{display:none}.nav__login{padding:8px 12px}
+      .hero__right{grid-template-columns:1fr;height:320px}
+      .hero__right .hero__img:last-child{display:none}
+      .gallery__mosaic .gitem:nth-child(3),.gallery__mosaic .gitem:nth-child(4),.gallery__mosaic .gitem:nth-child(5){grid-column:span 12}
+      .analyse__grid{grid-template-columns:1fr}
+      .footer__top{grid-template-columns:1fr}
+    }
+    @media(max-width:375px){
+      header{padding:0 16px}
+      .hero__left,.profiles .profile,.method,.gallery,.analyse,.cta-section,footer{padding-left:16px;padding-right:16px}
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- MODALE -->
+<div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <button class="modal__close" onclick="closeLogin()">&#x2715;</button>
+    <p class="modal__eyebrow">Espace client</p>
+    <h2 class="modal__title">Bienvenue<br>chez Kobo</h2>
+    <p class="modal__sub">Suivez l'avancement de votre projet, vos documents et vos échanges.</p>
+    <div class="modal__tabs">
+      <button class="modal__tab active" onclick="switchTab('cx',this)">Connexion</button>
+      <button class="modal__tab" onclick="switchTab('in',this)">Créer un compte</button>
+    </div>
+    <div class="modal__panel active" id="panel-cx">
+      <div class="form__group"><label class="form__label">E-mail</label><input class="form__input" type="email" placeholder="vous@exemple.fr"/></div>
+      <div class="form__group"><label class="form__label">Mot de passe</label><input class="form__input" type="password" placeholder="••••••••"/></div>
+      <button class="form__btn">Se connecter &#x2192;</button>
+      <a href="#" class="form__forgot">Mot de passe oublié ?</a>
+    </div>
+    <div class="modal__panel" id="panel-in">
+      <div class="form__group"><label class="form__label">Nom complet</label><input class="form__input" type="text" placeholder="Jean Dupont"/></div>
+      <div class="form__group"><label class="form__label">E-mail</label><input class="form__input" type="email" placeholder="vous@exemple.fr"/></div>
+      <div class="form__group"><label class="form__label">Mot de passe</label><input class="form__input" type="password" placeholder="••••••••"/></div>
+      <button class="form__btn">Créer mon espace &#x2192;</button>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
+<nav class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav__inner">
+    <a href="index.html" onclick="toggleMenu()">Accueil</a>
+    <a href="projets.html" onclick="toggleMenu()">Projets</a>
+    <a href="gamme.html" onclick="toggleMenu()">Gamme</a>
+    <a href="contact.html" onclick="toggleMenu()">Contact</a>
+  </div>
+  <div class="mobile-nav__cta-wrap">
+    <a href="contact.html" class="mobile-nav__cta" onclick="toggleMenu()">Demander un devis</a>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a href="index.html" class="logo" aria-label="Kobo Design — Accueil">
+    <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+      <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </a>
+  <nav class="nav">
+    <a href="index.html" class="nav__link">Accueil</a>
+    <a href="projets.html" class="nav__link">Projets</a>
+    <a href="gamme.html" class="nav__link">Gamme</a>
+    <a href="contact.html" class="nav__link">Contact</a>
+    <a href="contact.html" class="nav__cta">Devis &#x2192;</a>
+    <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Mon espace</span>
+    </button>
+    <div class="burger" id="burger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  </nav>
+</header>
+
+<!-- HERO SPLIT -->
+<section class="hero" id="hero">
+  <div class="hero__left">
+    <div class="hero__left-bg"></div>
+    <div class="hero__left-content">
+      <nav class="hero__breadcrumb">
+        <a href="index.html">Accueil</a><span class="hero__breadcrumb-sep">/</span><a href="index.html#expertise">Notre expertise</a><span class="hero__breadcrumb-sep">/</span>Architecture
+      </nav>
+      <p class="hero__tag">02 — Le Bureau de Création</p>
+      <h1 class="hero__h1">Architecture<em>d'Intérieur</em></h1>
+      <p class="hero__sub">Pour ceux qui partent d'une page blanche. Nos architectes analysent vos volumes, vos flux et vos besoins pour dessiner l'espace idéal.</p>
+    </div>
+  </div>
+  <div class="hero__right">
+    <div class="hero__img">
+      <div class="hero__img-bg" style="background-image:url('img/meuble-escalier.png')"></div>
+      <span class="hero__img-caption">Salon · Bordeaux 2024</span>
+    </div>
+    <div class="hero__img">
+      <div class="hero__img-bg" style="background-image:url('img/cuisine-2.png')"></div>
+      <span class="hero__img-caption">Cuisine · Cap-Ferret 2024</span>
+    </div>
+  </div>
+</section>
+
+<!-- CE QU'ON EST -->
+<div class="what-we-do">
+  <div class="what-we-do__left reveal">
+    <p class="what-we-do__eyebrow">Ce qu'on fait exactement</p>
+    <h2 class="what-we-do__title">On pense l'espace.<br>On dessine le mobilier.<br><em>On fait tout faire.</em></h2>
+  </div>
+  <div class="what-we-do__right reveal reveal-d1">
+    <p class="what-we-do__desc">
+      Kobo Design c'est un studio d'architecture d'intérieur. On part de votre espace — appartement, maison, bureau — et on dessine tout : la distribution des pièces, les ambiances, les matières, et le mobilier qui s'intègre parfaitement.
+    </p>
+    <p class="what-we-do__desc">
+      On ne fait pas dans le standard. <strong>Chaque meuble est dessiné par nos soins</strong>, puis confié à des artisans et ateliers sélectionnés pour leur savoir-faire. Aucune usine en série, aucun catalogue — que du sur-mesure pensé pour votre vie et fabriqué pour durer.
+    </p>
+    <div class="what-we-do__tags">
+      <span class="what-tag">Redistribution d'espaces</span>
+      <span class="what-tag">Mobilier dessiné sur-mesure</span>
+      <span class="what-tag">Choix des matériaux</span>
+      <span class="what-tag">Plans 3D &amp; ambiances</span>
+      <span class="what-tag">Coordination artisans</span>
+      <span class="what-tag">Suivi de chantier</span>
+    </div>
+  </div>
+</div>
+
+<!-- MÉTHODE — 4 phases -->
+<section class="method">
+  <div class="method__header reveal">
+    <p class="method__eyebrow">Comment on travaille</p>
+    <h2 class="method__title">De votre première idée<br><em>à un espace fini.</em></h2>
+  </div>
+  <div class="method__steps">
+
+    <div class="mstep reveal">
+      <p class="mstep__num">01</p>
+      <span class="mstep__tag">Écoute &amp; visite</span>
+      <h3 class="mstep__title">On vient chez vous.</h3>
+      <p class="mstep__desc">Visite sur site ou consultation à distance. On prend le temps de comprendre comment vous vivez, ce qui ne va pas, ce que vous aimeriez. Rien ne démarre avant qu'on ait tout compris.</p>
+      <span class="mstep__badge">Gratuit · Sans engagement</span>
+    </div>
+
+    <div class="mstep reveal reveal-d1">
+      <p class="mstep__num">02</p>
+      <span class="mstep__tag">Conception</span>
+      <h3 class="mstep__title">On dessine tout.</h3>
+      <p class="mstep__desc">Plans 2D, modélisation 3D, planches d'ambiance, choix des matériaux. Chaque meuble est dessiné au détail près — forme, dimensions, matière, finition. Tout est soumis à votre validation avant de partir en fabrication.</p>
+      <span class="mstep__badge">Plans 3D + mobilier dessiné</span>
+    </div>
+
+    <div class="mstep reveal">
+      <p class="mstep__num">03</p>
+      <span class="mstep__tag">Fabrication</span>
+      <h3 class="mstep__title">On fait faire par les meilleurs.</h3>
+      <p class="mstep__desc">Chaque pièce dessinée est confiée à des artisans et ateliers choisis pour leur savoir-faire. On supervise la fabrication, on contrôle la qualité, on s'assure que ce qui sort de l'atelier correspond exactement à ce qu'on a dessiné.</p>
+      <span class="mstep__badge">Artisans sélectionnés</span>
+    </div>
+
+    <div class="mstep reveal reveal-d1">
+      <p class="mstep__num">04</p>
+      <span class="mstep__tag">Pose &amp; réception</span>
+      <h3 class="mstep__title">On reste jusqu'à la fin.</h3>
+      <p class="mstep__desc">Coordination des intervenants, suivi de chantier, réception avec vous. On ne lâche pas le projet à la livraison — on s'assure que le résultat est exactement ce qu'on a promis, et on rectifie si nécessaire.</p>
+      <span class="mstep__badge">Suivi complet</span>
+    </div>
+
+  </div>
+</section>
+
+<section class="gallery">
+  <div class="gallery__header reveal">
+    <h2 class="gallery__title">Espaces réalisés</h2>
+    <a href="projets.html" class="gallery__link">Voir tous les projets</a>
+  </div>
+  <div class="gallery__mosaic">
+    <div class="gitem reveal">
+      <div class="gitem__img" style="background-image:url('img/chambre-armoires.jpg')"></div>
+      <div class="gitem__overlay"></div>
+      <div class="gitem__info"><p class="gitem__name">Chambre d'amis</p><p class="gitem__loc">Architecture complète</p></div>
+    </div>
+    <div class="gitem reveal reveal-d1">
+      <div class="gitem__img" style="background-image:url('img/bibliotheques.png')"></div>
+      <div class="gitem__overlay"></div>
+      <div class="gitem__info"><p class="gitem__name">Bibliotheque</p><p class="gitem__loc">Architecture &amp; mobilier</p></div>
+    </div>
+    <div class="gitem reveal">
+      <div class="gitem__img" style="background-image:url('img/cuisine-1.png')"></div>
+      <div class="gitem__overlay"></div>
+      <div class="gitem__info"><p class="gitem__name">Cuisine</p><p class="gitem__loc">Cuisine sur-mesure</p></div>
+    </div>
+    <div class="gitem reveal reveal-d1">
+      <div class="gitem__img" style="background-image:url('img/meuble-escalier.png')"></div>
+      <div class="gitem__overlay"></div>
+      <div class="gitem__info"><p class="gitem__name">Dressing et rangements</p><p class="gitem__loc">Dressing sur mesure</p></div>
+    </div>
+    <div class="gitem reveal reveal-d2">
+      <div class="gitem__img" style="background-image:url('img/meuble-tv-reel.jpg')"></div>
+      <div class="gitem__overlay"></div>
+      <div class="gitem__info"><p class="gitem__name">Meuble TV</p><p class="gitem__loc">Architecture complète</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CE QU'ON ANALYSE -->
+<section class="analyse">
+  <div class="analyse__header reveal">
+    <p class="analyse__eyebrow">Notre lecture de l'espace</p>
+    <h2 class="analyse__title">Volumes, flux, rangements.<br>On analyse tout.</h2>
+  </div>
+  <div class="analyse__grid">
+    <div class="analyse__card reveal">
+      <div class="analyse__card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="analyse__card-title">Les volumes</h3>
+      <p class="analyse__card-desc">Hauteurs sous plafond, proportions des pièces, angles, poutres, fenêtres. Nous lisons votre espace comme une partition avant d'y introduire quoi que ce soit.</p>
+      <p class="analyse__card-example">Hauteurs, surfaces, contraintes structurelles</p>
+    </div>
+    <div class="analyse__card reveal reveal-d1">
+      <div class="analyse__card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="analyse__card-title">Les flux de circulation</h3>
+      <p class="analyse__card-desc">Comment vous bougez dans votre espace, quels chemins vous empruntez le matin, quels espaces se croisent. L'aménagement doit s'effacer devant vos usages.</p>
+      <p class="analyse__card-example">Passages, zones de vie, dégagements</p>
+    </div>
+    <div class="analyse__card reveal reveal-d2">
+      <div class="analyse__card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#CD3E00" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="analyse__card-title">Les besoins de rangement</h3>
+      <p class="analyse__card-desc">Ce que vous possédez, ce que vous consultez souvent, ce que vous voulez cacher. Un bon rangement c'est un espace qui se range tout seul, naturellement.</p>
+      <p class="analyse__card-example">Penderies, bibliothèques, coin-cuisine, buanderie</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+
+<!-- FAQ ARCHITECTURE -->
+<section class="faq-section">
+  <div class="reveal">
+    <p class="faq-eyebrow">Vos questions sur l'architecture d'intérieur</p>
+    <h2 class="faq-title">Ce qu'on nous demande<br>le plus souvent.</h2>
+  </div>
+  <div class="faq-grid">
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q">Quelle est la différence entre un architecte d'intérieur et un décorateur ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">Un décorateur travaille sur l'ambiance et le mobilier existant. Un architecte d'intérieur peut toucher à la structure : abattre des cloisons, redistribuer les espaces, modifier les ouvertures. Chez Kobo Design, on fait les deux — et on dessine le mobilier sur-mesure qui va avec.</div>
+    </div>
+    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
+      <div class="faq-q">Est-ce que vous concevez aussi le mobilier ou seulement les plans ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">On conçoit tout. Chaque meuble est dessiné par nos soins — dimensions, matières, finitions. Pas de catalogue, pas de série : que du sur-mesure pensé pour votre espace.</div>
+    </div>
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q">Peut-on faire appel à vous pour une seule pièce ou faut-il un projet complet ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">On intervient aussi bien sur une pièce unique (une chambre, une cuisine, un bureau) que sur un logement entier. Il n'y a pas de surface minimum. Ce qui compte c'est que le projet nécessite une vraie réflexion de conception.</div>
+    </div>
+    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
+      <div class="faq-q">Comment se déroule la phase de conception ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">On commence par une visite sur site. On mesure, on photographie, on écoute. On revient avec des planches d'ambiance et des plans 2D. Après validation, on passe en 3D et on affine tous les détails avec vous. Rien ne part en fabrication sans votre accord.</div>
+    </div>
+    <div class="faq-item reveal" onclick="toggleFaq(this)">
+      <div class="faq-q">Combien de temps dure un projet d'architecture d'intérieur ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">De 3 à 6 mois en moyenne pour un projet complet (conception + fabrication + pose). Pour une pièce unique, comptez 6 à 10 semaines. Le planning exact est établi dès la validation du devis.</div>
+    </div>
+    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
+      <div class="faq-q">Est-ce que vous gérez le chantier à notre place ?<span class="faq-icon">+</span></div>
+      <div class="faq-a">Oui. On coordonne tous les intervenants : menuisiers, peintres, électriciens, plombiers selon les besoins. Vous avez un seul interlocuteur du début à la fin. On réceptionne le chantier avec vous et on gère les ajustements si nécessaire.</div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="reveal">
+    <p class="cta__eyebrow">Commençons</p>
+    <h2 class="cta__title">Votre espace<br>commence ici.</h2>
+    <p class="cta__desc">Partagez-nous votre espace — photos, plans ou simple description. Notre équipe revient vers vous sous 24h avec une première approche gratuite.</p>
+    <div class="cta__list">
+      <div class="cta__item">Premier échange gratuit, aucune obligation</div>
+      <div class="cta__item">Plans 3D et ambiances inclus dans le devis</div>
+      <div class="cta__item">Un seul interlocuteur de A à Z</div>
+      <div class="cta__item">Suivi post-livraison 12 mois</div>
+    </div>
+  </div>
+  <div class="cta__box reveal reveal-d1">
+    <p class="cta__box-tag">Démarrez votre projet</p>
+    <h3 class="cta__box-title">Décrivez votre espace<br>en 2 minutes.</h3>
+    <div class="cta__promises">
+      <span class="cta__promise">Première analyse offerte sous 24h</span>
+      <span class="cta__promise">Devis transparent, aucune surprise</span>
+      <span class="cta__promise">Aucun engagement à ce stade</span>
+    </div>
+    <a href="contact.html" class="cta__btn">
+      Accéder au formulaire
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <p class="cta__secondary">Ou directement : contact@kobo-design.fr</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+  <footer>
+    <div class="footer__top">
+      <div class="footer__brand">
+        <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:36px;width:auto;">
+          <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <line x1="36" y1="10" x2="48" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+          <path d="M62 6v36" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <line x1="101" y1="10" x2="113" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <p>Studio de mobilier sur-mesure et d'architecture d'intérieur, basé à Bordeaux depuis 2018.</p>
+      </div>
+      <div class="footer__col">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="projets.html">Nos projets</a></li>
+          <li><a href="gamme.html">Notre gamme</a></li>
+          <li><a href="mobilier.html">Mobilier sur-mesure</a></li>
+          <li><a href="architecture.html">Architecture d'intérieur</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="contact.html">Formulaire de contact</a></li>
+          <li><a href="tel:+33642899858">06 42 89 98 58</a></li>
+          <li>76 Rue Mandron</li>
+          <li>33000 Bordeaux</li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Légal</h4>
+        <ul>
+          <li><a href="mentions-legales.html">Mentions légales</a></li>
+          <li><a href="politique-confidentialite.html">Politique de confidentialité</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p class="footer__copy">© 2025 Kobo Design — Tous droits réservés</p>
+      <div class="footer__socials">
+        <a href="https://www.instagram.com/kobodesign_bdx/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.linkedin.com/company/kobodesign" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  const hdr=document.getElementById('site-header');
+  window.addEventListener('scroll',()=>hdr.classList.toggle('shadow',scrollY>10),{passive:true});
+  document.getElementById('hero').classList.add('loaded');
+  const cur=document.getElementById('cursor');
+  if(cur){
+    document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px'});
+    document.querySelectorAll('a,button,.gitem,.analyse__card,.phase,.profile').forEach(el=>{
+      el.addEventListener('mouseenter',()=>cur.classList.add('expand'));
+      el.addEventListener('mouseleave',()=>cur.classList.remove('expand'));
+    });
+  }
+  function toggleMenu(){
+    const nav=document.getElementById('mobileNav'),o=document.getElementById('mobileNavOverlay'),b=document.getElementById('burger');
+    const isOpen=nav.classList.contains('open');
+    nav.classList.toggle('open',!isOpen);o.classList.toggle('open',!isOpen);b.classList.toggle('open',!isOpen);
+    document.body.style.overflow=isOpen?'':'hidden';
+  }
+  function openLogin(){document.getElementById('loginModal').classList.add('open');document.body.style.overflow='hidden'}
+  function closeLogin(){document.getElementById('loginModal').classList.remove('open');document.body.style.overflow=''}
+  document.getElementById('loginModal').addEventListener('click',function(e){if(e.target===this)closeLogin()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLogin()});
+  function switchTab(id,btn){
+    document.querySelectorAll('.modal__panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.modal__tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('panel-'+id).classList.add('active');btn.classList.add('active');
+  }
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}});
+  },{threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  /* FAQ accordion */
+  function toggleFaq(item){
+    var isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(function(i){ i.classList.remove('open'); });
+    if(!isOpen) item.classList.add('open');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Gamme Mobilier Sur-Mesure Bordeaux — Bientôt Disponible — Kobo Design</title>
+  <meta name="description" content="Kobo Design prépare sa gamme de mobilier sur-mesure : salons, chambres, cuisines, bureaux. En attendant, contactez-nous pour votre projet sur-mesure — réponse sous 24h."/>
+  <meta name="keywords" content="gamme mobilier sur-mesure Bordeaux, collection meuble sur-mesure, mobilier design Bordeaux, meuble salon sur-mesure, meuble chambre sur-mesure"/>
+  <link rel="canonical" href="https://www.kobo-design.fr/gamme.html"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://www.kobo-design.fr/gamme.html"/>
+  <meta property="og:title" content="Gamme Mobilier Sur-Mesure — Bientôt Disponible — Kobo Design"/>
+  <meta property="og:description" content="4 univers en cours de création : salons, chambres, cuisines, bureaux. Votre projet reste réalisable sur-mesure dès maintenant."/>
+  <meta property="og:image" content="https://www.kobo-design.fr/img/bibliotheques.png"/>
+  <meta property="og:locale" content="fr_FR"/>
+  <meta property="og:site_name" content="Kobo Design"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Gamme Mobilier Sur-Mesure — Bientôt Disponible — Kobo Design"/>
+  <meta name="twitter:description" content="4 univers en cours de création : salons, chambres, cuisines, bureaux. Votre projet reste réalisable sur-mesure dès maintenant."/>
+  <meta name="twitter:image" content="https://www.kobo-design.fr/img/bibliotheques.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A;
+      --white:#FFFFFF; --mid:#F0EBE0;
+      --font:'Poppins',sans-serif; --ease:cubic-bezier(0.16,1,0.3,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font);background:var(--bg);color:var(--dark);overflow-x:hidden;cursor:none}
+    a{text-decoration:none;color:inherit}
+
+    /* CURSEUR */
+    #cursor{position:fixed;width:12px;height:12px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .25s var(--ease),height .25s var(--ease),background .2s;mix-blend-mode:multiply}
+    #cursor.expand{width:52px;height:52px;background:rgba(205,62,0,.15);mix-blend-mode:normal}
+
+    /* HEADER — identique au reste du site */
+    header{position:fixed;top:0;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,72px);background:var(--bg);transition:box-shadow .35s}
+    header.shadow{box-shadow:0 1px 0 rgba(26,26,26,.08)}
+    .logo{display:flex;align-items:center;height:40px;cursor:pointer}
+    .logo svg{height:40px;width:auto}
+    .nav{display:flex;align-items:center;gap:clamp(14px,2vw,32px)}
+    .nav__link{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dark);position:relative;padding-bottom:2px}
+    .nav__link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .28s var(--ease)}
+    .nav__link:hover::after{width:100%}
+    .nav__link.active{color:var(--accent)}.nav__link.active::after{width:100%}
+    .nav__cta{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:11px 22px;border-radius:4px;transition:background .22s,transform .18s}
+    .nav__cta:hover{background:#a83200;transform:translateY(-1px)}
+    .nav__login{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark);border:1.5px solid rgba(26,26,26,.18);border-radius:100px;padding:8px 16px 8px 12px;background:none;cursor:pointer;transition:border-color .22s,color .22s}
+    .nav__login:hover{border-color:var(--accent);color:var(--accent)}
+    .burger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;width:32px;height:32px;padding:4px}
+    .burger span{display:block;width:22px;height:1.5px;background:var(--dark);border-radius:2px;transform-origin:center;transition:transform .3s var(--ease),opacity .2s,width .3s var(--ease)}
+    .burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+    .burger.open span:nth-child(2){opacity:0;width:0}
+    .burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+    .mobile-nav-overlay{position:fixed;inset:0;top:72px;z-index:470;background:rgba(26,26,26,.22);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .3s}
+    .mobile-nav-overlay.open{opacity:1;pointer-events:all}
+    .mobile-nav{position:fixed;top:72px;left:0;right:0;z-index:480;background:var(--bg);border-bottom:1px solid rgba(26,26,26,.08);transform:translateY(-10px);opacity:0;pointer-events:none;transition:transform .32s var(--ease),opacity .25s ease}
+    .mobile-nav.open{transform:translateY(0);opacity:1;pointer-events:all}
+    .mobile-nav__inner{padding:6px 0 12px}
+    .mobile-nav a{display:flex;align-items:center;justify-content:space-between;padding:13px clamp(20px,5vw,32px);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dark);border-bottom:1px solid rgba(26,26,26,.05);transition:color .18s,background .18s}
+    .mobile-nav a:last-of-type{border-bottom:none}
+    .mobile-nav a:hover{color:var(--accent);background:rgba(205,62,0,.03)}
+    .mobile-nav a::after{content:'\2192';font-size:11px;opacity:.25;transition:opacity .18s,transform .18s}
+    .mobile-nav a:hover::after{opacity:1;transform:translateX(3px)}
+    .mobile-nav__cta-wrap{padding:12px clamp(20px,5vw,32px) 6px}
+    .mobile-nav__cta{display:block;width:100%;text-align:center;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:13px 20px;border-radius:4px;transition:background .2s}
+    .mobile-nav__cta:hover{background:#a83200}
+    .mobile-nav__cta::after{display:none!important}
+
+    /* MODALE */
+    .modal-overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(26,26,26,.55);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--bg);width:min(480px,92vw);border-radius:12px;padding:48px clamp(28px,5vw,48px);position:relative;animation:modal-in .35s var(--ease) both}
+    @keyframes modal-in{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+    .modal__close{position:absolute;top:20px;right:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:rgba(26,26,26,.4);font-size:20px;border-radius:50%;transition:background .18s,color .18s}
+    .modal__close:hover{background:rgba(26,26,26,.06);color:var(--dark)}
+    .modal__eyebrow{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+    .modal__title{font-size:clamp(22px,4vw,30px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-bottom:8px}
+    .modal__sub{font-size:13px;font-weight:300;color:rgba(26,26,26,.55);margin-bottom:32px}
+    .modal__tabs{display:flex;border-bottom:1.5px solid rgba(26,26,26,.1);margin-bottom:28px}
+    .modal__tab{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:10px 20px;cursor:pointer;border:none;background:none;color:rgba(26,26,26,.4);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:color .2s,border-color .2s}
+    .modal__tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .modal__panel{display:none}.modal__panel.active{display:block}
+    .form__group{margin-bottom:18px}
+    .form__label{display:block;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.5);margin-bottom:8px}
+    .form__input{width:100%;font-family:var(--font);font-size:14px;font-weight:300;color:var(--dark);border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:13px 16px;background:var(--white);transition:border-color .22s;outline:none}
+    .form__input:focus{border-color:var(--accent)}
+    .form__btn{width:100%;margin-top:8px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--white);background:var(--accent);border:none;border-radius:6px;padding:16px;cursor:pointer;transition:background .22s}
+    .form__btn:hover{background:#a83200}
+    .form__forgot{display:block;text-align:right;font-size:11px;color:rgba(26,26,26,.4);margin-top:10px;transition:color .2s}
+    .form__forgot:hover{color:var(--accent)}
+
+    /* ============================================================
+       HERO — sobre, éditorial
+       L'accent est sur le message "en cours", pas sur un produit.
+    ============================================================ */
+    .hero {
+      margin-top: 72px;
+      padding: clamp(72px,12vw,140px) clamp(24px,7vw,100px) clamp(56px,8vw,96px);
+      border-bottom: 1px solid rgba(26,26,26,.07);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(40px,8vw,120px);
+      align-items: end;
+    }
+    .hero__left {}
+    .hero__breadcrumb {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(26,26,26,.3); margin-bottom: 28px;
+      opacity: 0; animation: rise .7s .05s var(--ease) forwards;
+    }
+    .hero__breadcrumb a { color: rgba(26,26,26,.4); transition: color .2s }
+    .hero__breadcrumb a:hover { color: var(--accent) }
+    .hero__breadcrumb-sep { color: rgba(26,26,26,.2) }
+
+    /* Pill statut "En construction" */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--accent); border: 1.5px solid rgba(205,62,0,.25);
+      padding: 8px 16px; border-radius: 100px; margin-bottom: 24px;
+      opacity: 0; animation: rise .7s .12s var(--ease) forwards;
+    }
+    .status-pill__dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1) } 50% { opacity: .4; transform: scale(.7) } }
+
+    .hero__h1 {
+      font-size: clamp(48px,7.5vw,108px);
+      font-weight: 900; line-height: .95; letter-spacing: -.04em;
+      opacity: 0; animation: rise .9s .22s var(--ease) forwards;
+    }
+    .hero__h1 em { font-style: italic; font-weight: 300; color: rgba(26,26,26,.25); display: block }
+
+    .hero__right {
+      opacity: 0; animation: rise .8s .35s var(--ease) forwards;
+      padding-bottom: 8px;
+    }
+    .hero__desc {
+      font-size: clamp(14px,1.5vw,16px); font-weight: 300; line-height: 1.85;
+      color: rgba(26,26,26,.6); margin-bottom: 32px;
+    }
+    .hero__desc strong { font-weight: 600; color: var(--dark) }
+    .hero__cta {
+      display: inline-flex; align-items: center; gap: 12px;
+      font-family: var(--font); font-size: 12px; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase;
+      color: var(--white); background: var(--accent);
+      padding: 15px 28px; border-radius: 6px;
+      transition: background .22s, transform .2s;
+    }
+    .hero__cta:hover { background: #a83200; transform: translateY(-2px) }
+    .hero__cta svg { transition: transform .22s }
+    .hero__cta:hover svg { transform: translateX(4px) }
+    .hero__note {
+      margin-top: 16px; font-size: 11px; font-weight: 300;
+      color: rgba(26,26,26,.35); display: flex; align-items: center; gap: 8px;
+    }
+    .hero__note::before { content: ''; width: 20px; height: 1px; background: rgba(26,26,26,.2) }
+
+    /* ============================================================
+       BANDEAU CHIFFRES
+    ============================================================ */
+    .stats-strip {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      border-bottom: 1px solid rgba(26,26,26,.07);
+    }
+    .stat-item {
+      padding: clamp(28px,4vw,48px) clamp(24px,5vw,64px);
+      border-right: 1px solid rgba(26,26,26,.07);
+    }
+    .stat-item:last-child { border-right: none }
+    .stat-num {
+      font-size: clamp(40px,5vw,72px); font-weight: 900;
+      color: var(--accent); letter-spacing: -.04em; line-height: 1;
+    }
+    .stat-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .14em;
+      text-transform: uppercase; color: rgba(26,26,26,.4); margin-top: 8px;
+    }
+
+    /* ============================================================
+       4 GAMMES — cartes "en construction"
+    ============================================================ */
+    .gammes {
+      padding: clamp(72px,10vw,120px) clamp(24px,7vw,100px);
+      background: var(--bg);
+    }
+    .gammes__header { margin-bottom: clamp(48px,7vw,72px) }
+    .gammes__eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: .25em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+    }
+    .gammes__title {
+      font-size: clamp(28px,4vw,52px); font-weight: 900;
+      letter-spacing: -.04em; line-height: 1.05;
+    }
+    .gammes__title em { font-style: italic; font-weight: 300; color: rgba(26,26,26,.25) }
+
+    .gammes__grid {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 16px;
+    }
+
+    .gamme-card {
+      position: relative; overflow: hidden; border-radius: 10px;
+      background: var(--mid); padding: clamp(32px,4vw,52px);
+      min-height: clamp(280px,32vw,420px);
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: transform .35s var(--ease), box-shadow .35s;
+      cursor: default;
+    }
+    .gamme-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(26,26,26,.08) }
+
+    /* Numéro géant en fond */
+    .gamme-card__bg-num {
+      position: absolute; right: -10px; bottom: -20px;
+      font-size: clamp(120px,16vw,200px); font-weight: 900;
+      color: rgba(26,26,26,.04); letter-spacing: -.06em; line-height: 1;
+      pointer-events: none; user-select: none;
+    }
+
+    /* Variante sombre pour la 1ère carte */
+    .gamme-card--dark {
+      background: var(--dark);
+    }
+    .gamme-card--dark .gamme-card__bg-num { color: rgba(255,255,255,.04) }
+
+    .gamme-card__top {}
+    .gamme-card__num {
+      font-size: 10px; font-weight: 700; letter-spacing: .22em;
+      text-transform: uppercase; color: rgba(26,26,26,.3); margin-bottom: 20px;
+    }
+    .gamme-card--dark .gamme-card__num { color: rgba(255,250,240,.3) }
+
+    /* Badge "Bientôt disponible" */
+    .soon-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+      background: rgba(205,62,0,.1); color: var(--accent);
+      padding: 6px 12px; border-radius: 100px; margin-bottom: 20px;
+      border: 1px solid rgba(205,62,0,.2);
+    }
+    .soon-badge__dot {
+      width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    .gamme-card__title {
+      font-size: clamp(22px,3vw,36px); font-weight: 900;
+      letter-spacing: -.03em; line-height: 1.05; margin-bottom: 12px;
+    }
+    .gamme-card--dark .gamme-card__title { color: var(--bg) }
+
+    .gamme-card__desc {
+      font-size: 13px; font-weight: 300; line-height: 1.75;
+      color: rgba(26,26,26,.55); max-width: 320px;
+    }
+    .gamme-card--dark .gamme-card__desc { color: rgba(255,250,240,.5) }
+
+    .gamme-card__bottom {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+
+    /* Tags de pièces */
+    .gamme-card__tags { display: flex; flex-wrap: wrap; gap: 8px }
+    .tag {
+      font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+      padding: 5px 12px; border-radius: 100px; border: 1px solid rgba(26,26,26,.14);
+      color: rgba(26,26,26,.5);
+    }
+    .gamme-card--dark .tag { border-color: rgba(255,250,240,.12); color: rgba(255,250,240,.4) }
+
+    /* Flèche lien vers contact */
+    .gamme-card__link {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--accent); transition: gap .2s var(--ease);
+      white-space: nowrap;
+    }
+    .gamme-card__link:hover { gap: 14px }
+    .gamme-card__link svg { flex-shrink: 0 }
+
+    /* Barre de progression stylisée */
+    .progress-wrap { margin-top: 20px }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(26,26,26,.3); margin-bottom: 8px;
+    }
+    .gamme-card--dark .progress-label { color: rgba(255,250,240,.3) }
+    .progress-bar {
+      height: 2px; background: rgba(26,26,26,.08); border-radius: 2px; overflow: hidden;
+    }
+    .gamme-card--dark .progress-bar { background: rgba(255,250,240,.08) }
+    .progress-fill {
+      height: 100%; background: var(--accent); border-radius: 2px;
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 1.2s var(--ease);
+    }
+    .progress-fill.animated { transform: scaleX(1) }
+
+    /* ============================================================
+       SECTION "EN ATTENDANT" — CTA central
+    ============================================================ */
+    .waiting {
+      background: var(--dark);
+      padding: clamp(72px,10vw,120px) clamp(24px,7vw,100px);
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: clamp(48px,8vw,100px); align-items: center;
+    }
+    .waiting__left {}
+    .waiting__tag {
+      font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 20px;
+    }
+    .waiting__title {
+      font-size: clamp(28px,4.5vw,60px); font-weight: 900;
+      letter-spacing: -.04em; line-height: 1.0; color: var(--bg); margin-bottom: 20px;
+    }
+    .waiting__title em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.35) }
+    .waiting__desc {
+      font-size: 15px; font-weight: 300; line-height: 1.85;
+      color: rgba(255,250,240,.55); max-width: 440px;
+    }
+    .waiting__desc strong { font-weight: 600; color: rgba(255,250,240,.85) }
+
+    .waiting__right {}
+    .waiting__card {
+      background: rgba(255,250,240,.04); border: 1px solid rgba(255,250,240,.08);
+      border-radius: 12px; padding: clamp(32px,4vw,48px);
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .waiting__card-eyebrow {
+      font-size: 9px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase;
+      color: rgba(255,250,240,.3);
+    }
+    .waiting__card-title {
+      font-size: clamp(18px,2.5vw,26px); font-weight: 800;
+      color: var(--bg); letter-spacing: -.02em; line-height: 1.2;
+    }
+    .waiting__promises { display: flex; flex-direction: column; gap: 12px }
+    .waiting__promise {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 13px; font-weight: 300; color: rgba(255,250,240,.55);
+    }
+    .waiting__promise-check {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid rgba(205,62,0,.4);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .waiting__email {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,250,240,.06); border-radius: 8px; padding: 16px 20px;
+      border: 1px solid rgba(255,250,240,.08);
+    }
+    .waiting__email-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(205,62,0,.15); display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: var(--accent);
+    }
+    .waiting__email-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,250,240,.3); margin-bottom: 2px }
+    .waiting__email-addr {
+      font-size: 15px; font-weight: 600; color: var(--bg); letter-spacing: -.01em;
+      transition: color .2s;
+    }
+    .waiting__email-addr:hover { color: var(--accent) }
+    .waiting__btn {
+      display: inline-flex; align-items: center; gap: 12px;
+      font-family: var(--font); font-size: 12px; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase;
+      color: var(--white); background: var(--accent);
+      border: none; border-radius: 6px; padding: 16px 28px; cursor: pointer;
+      text-decoration: none; transition: background .22s, transform .2s;
+    }
+    .waiting__btn:hover { background: #a83200; transform: translateY(-2px) }
+    .waiting__btn svg { transition: transform .22s }
+    .waiting__btn:hover svg { transform: translateX(4px) }
+    .waiting__sub {
+      font-size: 11px; color: rgba(255,250,240,.25); margin-top: -8px;
+    }
+
+    /* ============================================================
+       FOOTER — identique au reste du site
+    ============================================================ */
+    footer{background:var(--dark);color:var(--bg);padding:clamp(56px,8vw,96px) clamp(24px,7vw,100px) clamp(32px,4vw,48px);border-top:1px solid rgba(255,250,240,.07)}
+    .footer__top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:clamp(28px,5vw,64px);margin-bottom:clamp(48px,7vw,80px)}
+    .footer__brand p{font-size:13px;font-weight:300;line-height:1.75;color:rgba(255,250,240,.5);margin-top:20px;max-width:280px}
+    .footer__col h4{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,250,240,.35);margin-bottom:20px}
+    .footer__col ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .footer__col ul li a{font-size:14px;font-weight:300;color:rgba(255,250,240,.7);transition:color .2s}
+    .footer__col ul li a:hover{color:var(--accent)}
+    .footer__bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:28px;border-top:1px solid rgba(255,250,240,.07);flex-wrap:wrap}
+    .footer__copy{font-size:11px;font-weight:300;color:rgba(255,250,240,.3);letter-spacing:.06em}
+    .footer__socials{display:flex;gap:20px}
+    .footer__socials a{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,250,240,.4);transition:color .2s}
+    .footer__socials a:hover{color:var(--accent)}
+
+    /* UTILITAIRES */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .75s var(--ease),transform .75s var(--ease)}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    .reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}
+    @keyframes rise{to{opacity:1;transform:translateY(0)}}
+
+    /* RESPONSIVE */
+    @media(max-width:900px){
+      .hero{grid-template-columns:1fr}
+      .stats-strip{grid-template-columns:1fr 1fr}
+      .stats-strip .stat-item:nth-child(3){grid-column:1/3;border-right:none;border-top:1px solid rgba(26,26,26,.07)}
+      .gammes__grid{grid-template-columns:1fr}
+      .waiting{grid-template-columns:1fr}
+      .footer__top{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:640px){
+      .nav .nav__link,.nav .nav__cta{display:none}.burger{display:flex}
+      .nav__login span{display:none}.nav__login{padding:8px 12px}
+      .stats-strip{grid-template-columns:1fr}
+      .stats-strip .stat-item:nth-child(3){grid-column:auto;border-top:1px solid rgba(26,26,26,.07)}
+      .footer__top{grid-template-columns:1fr}
+    }
+    @media(max-width:375px){
+      header{padding:0 16px}
+      .hero,.gammes,.waiting,footer{padding-left:16px;padding-right:16px}
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- MODALE ESPACE CLIENT -->
+<div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-label="Espace client">
+  <div class="modal">
+    <button class="modal__close" onclick="closeLogin()" aria-label="Fermer">✕</button>
+    <p class="modal__eyebrow">Espace client</p>
+    <h2 class="modal__title">Bienvenue<br>chez Kōbō</h2>
+    <p class="modal__sub">Suivez l'avancement de votre projet, vos documents et vos échanges.</p>
+    <div class="modal__tabs">
+      <button class="modal__tab active" onclick="switchTab('connexion',this)">Connexion</button>
+      <button class="modal__tab" onclick="switchTab('inscription',this)">Créer un compte</button>
+    </div>
+    <div class="modal__panel active" id="panel-connexion">
+      <div class="form__group"><label class="form__label" for="l-email">Adresse e-mail</label><input class="form__input" type="email" id="l-email" placeholder="vous@exemple.fr" autocomplete="email"/></div>
+      <div class="form__group"><label class="form__label" for="l-pw">Mot de passe</label><input class="form__input" type="password" id="l-pw" placeholder="••••••••" autocomplete="current-password"/></div>
+      <button class="form__btn">Se connecter →</button>
+      <a href="#" class="form__forgot">Mot de passe oublié ?</a>
+    </div>
+    <div class="modal__panel" id="panel-inscription">
+      <div class="form__group"><label class="form__label" for="r-name">Nom complet</label><input class="form__input" type="text" id="r-name" placeholder="Jean Dupont" autocomplete="name"/></div>
+      <div class="form__group"><label class="form__label" for="r-email">Adresse e-mail</label><input class="form__input" type="email" id="r-email" placeholder="vous@exemple.fr" autocomplete="email"/></div>
+      <div class="form__group"><label class="form__label" for="r-pw">Mot de passe</label><input class="form__input" type="password" id="r-pw" placeholder="••••••••" autocomplete="new-password"/></div>
+      <button class="form__btn">Créer mon espace →</button>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
+<nav class="mobile-nav" id="mobileNav" aria-label="Navigation mobile">
+  <div class="mobile-nav__inner">
+    <a href="index.html" onclick="toggleMenu()">Accueil</a>
+    <a href="projets.html" onclick="toggleMenu()">Projets</a>
+    <a href="gamme.html" onclick="toggleMenu()">Gamme</a>
+    <a href="contact.html" onclick="toggleMenu()">Contact</a>
+  </div>
+  <div class="mobile-nav__cta-wrap">
+    <a href="contact.html" class="mobile-nav__cta" onclick="toggleMenu()">Demander un devis</a>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a href="index.html" class="logo" aria-label="Kōbō — Accueil">
+    <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+      <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </a>
+  <nav class="nav">
+    <a href="index.html" class="nav__link">Accueil</a>
+    <a href="projets.html" class="nav__link">Projets</a>
+    <a href="gamme.html" class="nav__link active">Gamme</a>
+    <a href="contact.html" class="nav__link">Contact</a>
+    <a href="contact.html" class="nav__cta">Devis →</a>
+    <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Mon espace</span>
+    </button>
+    <div class="burger" id="burger" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></div>
+  </nav>
+</header>
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+<section class="hero">
+  <div class="hero__left">
+    <nav class="hero__breadcrumb">
+      <a href="index.html">Accueil</a>
+      <span class="hero__breadcrumb-sep">/</span>
+      Notre Gamme
+    </nav>
+    <div class="status-pill">
+      <span class="status-pill__dot"></span>
+      En cours de création
+    </div>
+    <h1 class="hero__h1">Notre<br><em>Gamme</em></h1>
+  </div>
+  <div class="hero__right">
+    <p class="hero__desc">
+      Nos collections de mobilier sur-mesure prêt-à-monter sont <strong>en cours de conception dans notre atelier bordelais</strong>. Chaque pièce est pensée, testée et perfectionnée avant d'être proposée.
+      <br><br>
+      En attendant leur lancement, chaque projet reste entièrement réalisable sur demande — c'est même notre spécialité.
+    </p>
+    <a href="contact.html" class="hero__cta">
+      Discuter de mon projet
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <p class="hero__note">Réponse garantie sous 24h ouvrées</p>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat-item reveal">
+    <p class="stat-num">+4</p>
+    <p class="stat-label">Gammes à venir</p>
+  </div>
+  <div class="stat-item reveal reveal-d1">
+    <p class="stat-num">2026</p>
+    <p class="stat-label">Lancement prévu</p>
+  </div>
+  <div class="stat-item reveal reveal-d2">
+    <p class="stat-num">&lt; 24h</p>
+    <p class="stat-label">Délai de réponse</p>
+  </div>
+</div>
+
+<!-- ============================================================
+     4 GAMMES
+============================================================ -->
+<section class="gammes">
+  <div class="gammes__header reveal">
+    <p class="gammes__eyebrow">Ce qui arrive</p>
+    <h2 class="gammes__title">Quatre univers,<br><em>un seul savoir-faire.</em></h2>
+  </div>
+
+  <div class="gammes__grid">
+
+    <!-- Carte 1 — Salons & Séjours -->
+    <div class="gamme-card gamme-card--dark reveal">
+      <span class="gamme-card__bg-num">01</span>
+      <div class="gamme-card__top">
+        <p class="gamme-card__num">Gamme 01</p>
+        <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
+        <h3 class="gamme-card__title">Salons<br>&amp; Séjours</h3>
+        <p class="gamme-card__desc">Meubles TV sur-mesure, bibliothèques encastrées, consoles et buffets. Des pièces pensées pour devenir le cœur de votre espace de vie.</p>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Conception</span><span>En cours</span></div>
+          <div class="progress-bar"><div class="progress-fill" data-width="0.72"></div></div>
+        </div>
+      </div>
+      <div class="gamme-card__bottom">
+        <div class="gamme-card__tags">
+          <span class="tag">Meuble TV</span>
+          <span class="tag">Bibliothèque</span>
+          <span class="tag">Buffet</span>
+          <span class="tag">Console</span>
+        </div>
+        <a href="contact.html" class="gamme-card__link">
+          Me prévenir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Carte 2 — Chambres & Dressing -->
+    <div class="gamme-card reveal reveal-d1">
+      <span class="gamme-card__bg-num">02</span>
+      <div class="gamme-card__top">
+        <p class="gamme-card__num">Gamme 02</p>
+        <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
+        <h3 class="gamme-card__title">Chambres<br>&amp; Dressing</h3>
+        <p class="gamme-card__desc">Têtes de lit intégrées, dressings sur-mesure, chevets flottants. Chaque millimètre optimisé pour votre espace de repos.</p>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Conception</span><span>En cours</span></div>
+          <div class="progress-bar"><div class="progress-fill" data-width="0.58"></div></div>
+        </div>
+      </div>
+      <div class="gamme-card__bottom">
+        <div class="gamme-card__tags">
+          <span class="tag">Dressing</span>
+          <span class="tag">Tête de lit</span>
+          <span class="tag">Chevet</span>
+          <span class="tag">Armoire</span>
+        </div>
+        <a href="contact.html" class="gamme-card__link">
+          Me prévenir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Carte 3 — Cuisines & Îlots -->
+    <div class="gamme-card reveal reveal-d1">
+      <span class="gamme-card__bg-num">03</span>
+      <div class="gamme-card__top">
+        <p class="gamme-card__num">Gamme 03</p>
+        <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
+        <h3 class="gamme-card__title">Cuisines<br>&amp; Îlots</h3>
+        <p class="gamme-card__desc">Caissons de cuisine, îlots centraux, colonnes de rangement. Une cuisine pensée à partir de vos habitudes et de votre espace réel.</p>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Conception</span><span>En cours</span></div>
+          <div class="progress-bar"><div class="progress-fill" data-width="0.45"></div></div>
+        </div>
+      </div>
+      <div class="gamme-card__bottom">
+        <div class="gamme-card__tags">
+          <span class="tag">Îlot central</span>
+          <span class="tag">Caissons</span>
+          <span class="tag">Colonne</span>
+          <span class="tag">Plan de travail</span>
+        </div>
+        <a href="contact.html" class="gamme-card__link">
+          Me prévenir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Carte 4 — Bureaux & Bibliothèques -->
+    <div class="gamme-card reveal reveal-d2">
+      <span class="gamme-card__bg-num">04</span>
+      <div class="gamme-card__top">
+        <p class="gamme-card__num">Gamme 04</p>
+        <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
+        <h3 class="gamme-card__title">Bureaux<br>&amp; Bibliothèques</h3>
+        <p class="gamme-card__desc">Bureaux intégrés, bibliothèques du sol au plafond, espaces de travail modulables. Pour ceux qui veulent un coin bureau qui ne ressemble à aucun autre.</p>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Conception</span><span>En cours</span></div>
+          <div class="progress-bar"><div class="progress-fill" data-width="0.62"></div></div>
+        </div>
+      </div>
+      <div class="gamme-card__bottom">
+        <div class="gamme-card__tags">
+          <span class="tag">Bureau</span>
+          <span class="tag">Bibliothèque</span>
+          <span class="tag">Rangement</span>
+          <span class="tag">Home office</span>
+        </div>
+        <a href="contact.html" class="gamme-card__link">
+          Me prévenir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     EN ATTENDANT — CTA email
+============================================================ -->
+<section class="waiting">
+  <div class="waiting__left reveal">
+    <p class="waiting__tag">En attendant le lancement</p>
+    <h2 class="waiting__title">Votre projet<br>n'attend <em>pas.</em></h2>
+    <p class="waiting__desc">
+      Les gammes arrivent, mais <strong>chaque projet Kobo est déjà réalisable sur-mesure</strong> dès aujourd'hui. Envoyez-nous vos dimensions, vos envies, une photo de votre espace — on vous répond sous 24h avec une première approche.
+    </p>
+  </div>
+  <div class="waiting__right reveal reveal-d1">
+    <div class="waiting__card">
+      <p class="waiting__card-eyebrow">Contact direct</p>
+      <h3 class="waiting__card-title">Un message suffit<br>pour démarrer.</h3>
+      <div class="waiting__promises">
+        <div class="waiting__promise">
+          <div class="waiting__promise-check">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#CD3E00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          Premier échange gratuit, sans engagement
+        </div>
+        <div class="waiting__promise">
+          <div class="waiting__promise-check">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#CD3E00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          Réponse garantie sous 24h ouvrées
+        </div>
+        <div class="waiting__promise">
+          <div class="waiting__promise-check">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#CD3E00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          Devis détaillé et transparent offert
+        </div>
+      </div>
+      <div class="waiting__email">
+        <div class="waiting__email-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="#CD3E00" stroke-width="1.6"/><path d="M2 8l10 7 10-7" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <p class="waiting__email-label">E-mail direct</p>
+          <a href="mailto:contact@kobo-design.fr" class="waiting__email-addr">contact@kobo-design.fr</a>
+        </div>
+      </div>
+      <a href="contact.html" class="waiting__btn">
+        Accéder au formulaire
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <p class="waiting__sub">Ou appelez-nous : +33 6 42 89 98 58</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+  <footer>
+    <div class="footer__top">
+      <div class="footer__brand">
+        <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:36px;width:auto;">
+          <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <line x1="36" y1="10" x2="48" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+          <path d="M62 6v36" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <line x1="101" y1="10" x2="113" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <p>Studio de mobilier sur-mesure et d'architecture d'intérieur, basé à Bordeaux depuis 2018.</p>
+      </div>
+      <div class="footer__col">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="projets.html">Nos projets</a></li>
+          <li><a href="gamme.html">Notre gamme</a></li>
+          <li><a href="mobilier.html">Mobilier sur-mesure</a></li>
+          <li><a href="architecture.html">Architecture d'intérieur</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="contact.html">Formulaire de contact</a></li>
+          <li><a href="tel:+33642899858">06 42 89 98 58</a></li>
+          <li>76 Rue Mandron</li>
+          <li>33000 Bordeaux</li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Légal</h4>
+        <ul>
+          <li><a href="mentions-legales.html">Mentions légales</a></li>
+          <li><a href="politique-confidentialite.html">Politique de confidentialité</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p class="footer__copy">© 2025 Kobo Design — Tous droits réservés</p>
+      <div class="footer__socials">
+        <a href="https://www.instagram.com/kobodesign_bdx/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.linkedin.com/company/kobodesign" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  /* Header shadow */
+  const hdr = document.getElementById('site-header');
+  window.addEventListener('scroll', () => hdr.classList.toggle('shadow', scrollY > 10), { passive: true });
+
+  /* Curseur */
+  const cur = document.getElementById('cursor');
+  if (cur) {
+    document.addEventListener('mousemove', e => { cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px'; });
+    document.querySelectorAll('a, button, .gamme-card').forEach(el => {
+      el.addEventListener('mouseenter', () => cur.classList.add('expand'));
+      el.addEventListener('mouseleave', () => cur.classList.remove('expand'));
+    });
+  }
+
+  /* Menu mobile */
+  function toggleMenu() {
+    const nav = document.getElementById('mobileNav');
+    const overlay = document.getElementById('mobileNavOverlay');
+    const burger = document.getElementById('burger');
+    const isOpen = nav.classList.contains('open');
+    nav.classList.toggle('open', !isOpen);
+    overlay.classList.toggle('open', !isOpen);
+    burger.classList.toggle('open', !isOpen);
+    document.body.style.overflow = isOpen ? '' : 'hidden';
+  }
+
+  /* Modal */
+  function openLogin() { document.getElementById('loginModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeLogin() { document.getElementById('loginModal').classList.remove('open'); document.body.style.overflow = ''; }
+  document.getElementById('loginModal').addEventListener('click', function(e) { if (e.target === this) closeLogin(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLogin(); });
+  function switchTab(id, btn) {
+    document.querySelectorAll('.modal__panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.modal__tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* Scroll reveal + animation barres de progression */
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        /* Animer les barres de progression dans cette carte */
+        e.target.querySelectorAll('.progress-fill').forEach(bar => {
+          const w = bar.dataset.width || 0.5;
+          bar.style.transform = `scaleX(${w})`;
+          bar.classList.add('animated');
+        });
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
