@@ -127,6 +127,10 @@
     /* ============================================================
        DILEMME — Section positionnement (3 colonnes)
     ============================================================ */
+    .dilemme__header{padding:clamp(48px,7vw,80px) clamp(24px,7vw,100px) clamp(24px,4vw,40px);text-align:center}
+    .dilemme__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+    .dilemme__heading{font-size:clamp(28px,4vw,48px);font-weight:900;letter-spacing:-.04em;line-height:1.05}
+    .dilemme__heading em{font-style:italic;font-weight:300;color:rgba(26,26,26,.25)}
     .dilemme{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;align-items:stretch;border-bottom:1px solid rgba(26,26,26,.08)}
     .dilemme__sep{background:rgba(26,26,26,.08)}
     .dilemme__col{padding:clamp(40px,6vw,72px) clamp(24px,4vw,56px)}
@@ -154,7 +158,7 @@
     /* Timeline */
     .timeline{position:relative}
     .timeline::before{content:'';position:absolute;top:36px;left:clamp(32px,4vw,56px);right:clamp(32px,4vw,56px);height:2px;background:rgba(26,26,26,.08);z-index:0}
-    .timeline__track{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;position:relative;z-index:1}
+    .timeline__track{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;position:relative;z-index:1}
 
     .tstep{display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer}
     .tstep__num-wrap{width:72px;height:72px;border-radius:50%;background:var(--bg);border:2px solid rgba(26,26,26,.12);display:flex;align-items:center;justify-content:center;margin-bottom:28px;transition:background .3s,border-color .3s;position:relative}
@@ -214,24 +218,7 @@
     /* ============================================================
        ASSEMBLAGE — section simplicité
     ============================================================ */
-    .assembly{padding:clamp(72px,10vw,120px) clamp(24px,7vw,100px);background:var(--bg)}
-    .assembly__grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(48px,8vw,100px);align-items:center}
-    .assembly__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
-    .assembly__title{font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin-bottom:20px}
-    .assembly__body{font-size:14px;font-weight:300;line-height:1.85;color:rgba(26,26,26,.6);margin-bottom:36px}
-    .assembly__pillars{display:flex;flex-direction:column;gap:0}
-    .pillar{display:flex;align-items:flex-start;gap:20px;padding:20px 0;border-bottom:1px solid rgba(26,26,26,.07)}
-    .pillar:last-child{border-bottom:none}
-    .pillar__num{font-size:clamp(32px,4vw,48px);font-weight:900;color:rgba(205,62,0,.15);letter-spacing:-.04em;line-height:1;flex-shrink:0;width:56px}
-    .pillar__title{font-size:14px;font-weight:800;margin-bottom:5px}
-    .pillar__desc{font-size:13px;font-weight:300;line-height:1.7;color:rgba(26,26,26,.55)}
     /* Visual côté droit */
-    .assembly__visual{position:relative}
-    .assembly__img{height:clamp(380px,50vw,640px);border-radius:12px;overflow:hidden;position:relative}
-    .assembly__img-bg{position:absolute;inset:0;background:url('img/meuble-escalier.png') center/cover}
-    .assembly__badge{position:absolute;bottom:24px;left:24px;background:var(--dark);border-radius:8px;padding:16px 20px}
-    .assembly__badge-text{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--bg);margin-bottom:4px}
-    .assembly__badge-sub{font-size:11px;font-weight:300;color:rgba(255,250,240,.4)}
 
     /* ============================================================
        POSE — option service
@@ -316,7 +303,6 @@
       .detail__img{min-height:220px}
       .kit__header{grid-template-columns:1fr}
       .kit__cards{grid-template-columns:1fr 1fr}
-      .assembly__grid{grid-template-columns:1fr}
       .pose{grid-template-columns:1fr}
       .cta-section{grid-template-columns:1fr}
       .footer__top{grid-template-columns:1fr 1fr}
@@ -330,7 +316,7 @@
     }
     @media(max-width:375px){
       header{padding:0 16px}
-      .hero__inner,.dilemme__col,.process,.kit,.assembly,.pose,.cta-section,footer{padding-left:16px;padding-right:16px}
+      .hero__inner,.dilemme__col,.process,.kit,
     }
   </style>
 </head>
@@ -370,6 +356,7 @@
     <a href="index.html" onclick="toggleMenu()">Accueil</a>
     <a href="projets.html" onclick="toggleMenu()">Projets</a>
     <a href="gamme.html" onclick="toggleMenu()">Gamme</a>
+    <a href="architecture.html" onclick="toggleMenu()">Architecture</a>
     <a href="contact.html" onclick="toggleMenu()">Contact</a>
   </div>
   <div class="mobile-nav__cta-wrap">
@@ -394,6 +381,7 @@
     <a href="index.html" class="nav__link">Accueil</a>
     <a href="projets.html" class="nav__link">Projets</a>
     <a href="gamme.html" class="nav__link">Gamme</a>
+    <a href="architecture.html" class="nav__link">Architecture</a>
     <a href="contact.html" class="nav__link">Contact</a>
     <a href="contact.html" class="nav__cta">Devis &#x2192;</a>
     <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
@@ -424,8 +412,12 @@
 </section>
 
 <!-- ============================================================
-     LE DILEMME — 3 colonnes de positionnement
+     ÉTAT DU MARCHÉ — 3 colonnes de positionnement
 ============================================================ -->
+<div class="dilemme__header reveal">
+  <p class="dilemme__eyebrow">État du marché</p>
+  <h2 class="dilemme__heading">Pourquoi choisir<br><em>une troisième voie ?</em></h2>
+</div>
 <div class="dilemme reveal">
   <!-- Colonne 1 : Grande distribution -->
   <div class="dilemme__col">
@@ -467,7 +459,7 @@
 <section class="process">
   <div class="process__header reveal">
     <p class="process__eyebrow">Comment ça marche</p>
-    <h2 class="process__title">4 étapes vers<br><em>votre meuble unique</em></h2>
+    <h2 class="process__title">5 étapes vers<br><em>votre meuble unique</em></h2>
   </div>
 
   <div class="timeline reveal">
@@ -492,14 +484,22 @@
       <div class="tstep" onclick="showStep(2)">
         <div class="tstep__num-wrap">
           <span class="tstep__num tstep__num-default">03</span>
+          <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 class="tstep__title">Validation</h3>
+        <p class="tstep__sub">Vous approuvez le devis et les plans avant lancement</p>
+      </div>
+      <div class="tstep" onclick="showStep(3)">
+        <div class="tstep__num-wrap">
+          <span class="tstep__num tstep__num-default">04</span>
           <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="white" stroke-width="1.8"/></svg>
         </div>
         <h3 class="tstep__title">Réception du kit</h3>
         <p class="tstep__sub">Le colis arrive chez vous, tout usiné au millimètre</p>
       </div>
-      <div class="tstep" onclick="showStep(3)">
+      <div class="tstep" onclick="showStep(4)">
         <div class="tstep__num-wrap">
-          <span class="tstep__num tstep__num-default">04</span>
+          <span class="tstep__num tstep__num-default">05</span>
           <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
         </div>
         <h3 class="tstep__title">Montage</h3>
@@ -526,7 +526,7 @@
       <div class="detail__panel" id="dp1">
         <p class="detail__tag">Étape 02 — Étude technique &amp; chiffrage</p>
         <h3 class="detail__title">Votre dessin<br>devient réalité.</h3>
-        <p class="detail__body">Notre Bureau d'Études Technique (BET) prend le relais. Nous analysons chaque jonction, chaque portée de tablette, chaque contrainte de poids. Résultat : un devis transparent incluant fabrication et livraison.</p>
+        <p class="detail__body">Notre Bureau d'Études Technique (BET) prend le relais. Nous analysons chaque jonction, chaque portée de tablette, chaque contrainte de poids. Résultat : un devis détaillé incluant fabrication et livraison.</p>
         <div class="detail__list">
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vérification des cotes :</strong> Contrôle de cohérence par rapport aux standards (profondeurs caissons, jeux de fonctionnement).</p></div>
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Optimisation matière :</strong> Nos algorithmes minimisent les chutes pour réduire votre facture.</p></div>
@@ -535,22 +535,35 @@
       </div>
       <div class="detail__img" id="di1" style="background-image:url('img/meuble-tv-reel.jpg')"></div>
 
-      <!-- Étape 3 -->
+      <!-- Étape 3 : Validation -->
       <div class="detail__panel" id="dp2">
-        <p class="detail__tag">Étape 03 — Réception du kit</p>
+        <p class="detail__tag">Étape 03 — Validation de la commande</p>
+        <h3 class="detail__title">Votre accord<br>avant tout lancement.</h3>
+        <p class="detail__body">Rien ne part en fabrication sans votre validation explicite. Vous recevez un devis détaillé incluant fabrication et livraison, accompagné des plans techniques finaux. Vous approuvez, on lance.</p>
+        <div class="detail__list">
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Devis détaillé :</strong> Prix ferme et définitif incluant fabrication, matériaux et livraison. Aucune surprise.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Plans techniques finaux :</strong> Vous visualisez exactement ce qui va être fabriqué avant de donner votre feu vert.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro engagement avant :</strong> Jusqu'à cette étape, tout est gratuit et sans obligation.</p></div>
+        </div>
+      </div>
+      <div class="detail__img" id="di2" style="background-image:url('img/meuble-escalier.png')"></div>
+
+      <!-- Étape 4 : Réception du kit -->
+      <div class="detail__panel" id="dp3">
+        <p class="detail__tag">Étape 04 — Réception du kit</p>
         <h3 class="detail__title">L'industrie<br>s'invite chez vous.</h3>
         <p class="detail__body">Oubliez l'image du kit bricolage. Recevoir un projet Kobo Design, c'est recevoir un produit fini de menuiserie. Chaque panneau a été usiné, les chants sont plaqués, tous les perçages sont déjà faits.</p>
         <div class="detail__list">
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Panneaux structurels :</strong> Chacun identifié par une étiquette (ex: "Montant Gauche — Pièce A4").</p></div>
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Visserie triée :</strong> Conditionnée en sachets séparés par étape. Aucune confusion possible.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Hardware premium :</strong> Charnières avec amortisseurs, coulisses à sortie totale, taquets bloquants.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Accessoire premium :</strong> Charnières avec amortisseurs, coulisses à sortie totale, taquets bloquants.</p></div>
         </div>
       </div>
       <div class="detail__img" id="di2" style="background-image:url('img/armoires-enfant-1.jpg')"></div>
 
-      <!-- Étape 4 -->
-      <div class="detail__panel" id="dp3">
-        <p class="detail__tag">Étape 04 — Le montage</p>
+      <!-- Étape 5 -->
+      <div class="detail__panel" id="dp4">
+        <p class="detail__tag">Étape 05 — Le montage</p>
         <h3 class="detail__title">Une notice<br>unique par meuble.</h3>
         <p class="detail__body">Nous ne fournissons pas une notice générique. Le Livret d'Assemblage Personnalisé est généré automatiquement par notre bureau d'études en même temps que les fichiers de fabrication.</p>
         <div class="detail__list">
@@ -559,7 +572,7 @@
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro outil complexe :</strong> Tournevis (ou visseuse) et maillet. C'est tout.</p></div>
         </div>
       </div>
-      <div class="detail__img" id="di3" style="background-image:url('img/bibliotheques.png')"></div>
+      <div class="detail__img" id="di4" style="background-image:url('img/bibliotheques.png')"></div>
     </div>
   </div>
 </section>
@@ -586,7 +599,7 @@
       </div>
       <div class="kit__item">
         <div class="kit__item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div><p class="kit__item-title">Hardware premium</p><p class="kit__item-desc">Charnières avec amortisseurs intégrés, coulisses à sortie totale, taquets d'étagères bloquants.</p></div>
+        <div><p class="kit__item-title">Accessoire premium</p><p class="kit__item-desc">Charnières avec amortisseurs intégrés, coulisses à sortie totale, taquets d'étagères bloquants.</p></div>
       </div>
     </div>
   </div>
@@ -606,42 +619,6 @@
       <p class="kit__card-num">03</p>
       <h3 class="kit__card-title">Structure rigide garantie</h3>
       <p class="kit__card-desc">Nous utilisons des connecteurs professionnels qui garantissent un serrage puissant et une structure rigide, identique à celle d'un meuble installé par un menuisier.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     ASSEMBLAGE — 3 piliers
-============================================================ -->
-<section class="assembly">
-  <div class="assembly__grid">
-    <div class="reveal">
-      <p class="assembly__eyebrow">L'assemblage guidé</p>
-      <h2 class="assembly__title">L'expertise technique<br>rendue accessible.</h2>
-      <p class="assembly__body">La plus grande crainte du sur-mesure en kit est le montage. Chez Kobo Design, nous avons transformé cette étape en formalité. Parce que chaque meuble est unique, sa notice l'est aussi.</p>
-      <div class="assembly__pillars">
-        <div class="pillar">
-          <p class="pillar__num">I</p>
-          <div><h4 class="pillar__title">Vues isométriques claires</h4><p class="pillar__desc">Des dessins en 3D, épurés, montrant l'emplacement exact de chaque pièce et chaque vis dans votre meuble spécifique.</p></div>
-        </div>
-        <div class="pillar">
-          <p class="pillar__num">II</p>
-          <div><h4 class="pillar__title">Système step-by-step</h4><p class="pillar__desc">Une progression logique qui évite d'avoir à manipuler des charges lourdes inutilement. On pense à tout.</p></div>
-        </div>
-        <div class="pillar">
-          <p class="pillar__num">III</p>
-          <div><h4 class="pillar__title">Zéro outil complexe</h4><p class="pillar__desc">Tout est pensé pour être assemblé avec un tournevis (ou une visseuse) et un maillet. Rien d'autre.</p></div>
-        </div>
-      </div>
-    </div>
-    <div class="assembly__visual reveal reveal-d1">
-      <div class="assembly__img">
-        <div class="assembly__img-bg"></div>
-        <div class="assembly__badge">
-          <p class="assembly__badge-text">Notice personnalisée</p>
-          <p class="assembly__badge-sub">Générée pour chaque meuble unique</p>
-        </div>
-      </div>
     </div>
   </div>
 </section>
@@ -718,7 +695,7 @@
     <p class="cta__desc">Envoyez-nous vos plans, cotes ou simplement une idée. Notre bureau d'études revient vers vous sous 24h avec une analyse technique gratuite.</p>
     <div class="cta__list">
       <div class="cta__item">Premier échange gratuit, aucune obligation</div>
-      <div class="cta__item">Devis transparent fabrication + livraison</div>
+      <div class="cta__item">Devis détaillé fabrication + livraison</div>
       <div class="cta__item">Livraison nationale depuis Bordeaux</div>
       <div class="cta__item">Garantie 2 ans pièces et main-d'œuvre</div>
     </div>

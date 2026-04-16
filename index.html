@@ -489,9 +489,23 @@
     .expertises__col-cta--secondary { color: rgba(26,26,26,.5); border-bottom-color: rgba(26,26,26,.15); }
     .expertises__col-cta--secondary:hover { color: var(--dark); border-color: rgba(26,26,26,.4); }
 
+    /* INTRO STRIP */
+    .intro-strip { background: var(--dark); padding: 14px clamp(24px,7vw,100px); display: flex; align-items: center; justify-content: center; }
+    .intro-strip__text { font-size: 13px; font-weight: 300; color: rgba(255,250,240,.65); text-align: center; line-height: 1.6; }
+    .intro-strip__text strong { font-weight: 700; color: var(--bg); }
+    .intro-strip__link { font-weight: 600; color: var(--accent); margin-left: 8px; white-space: nowrap; transition: opacity .2s; }
+    .intro-strip__link:hover { opacity: .75; }
+
     /* ================================================================
        RESPONSIVE
-    ================================================================ */    /* ================================================================
+    ================================================================ */    /* INTRO STRIP */
+    .intro-strip { background: var(--dark); padding: 14px clamp(24px,7vw,100px); display: flex; align-items: center; justify-content: center; }
+    .intro-strip__text { font-size: 13px; font-weight: 300; color: rgba(255,250,240,.65); text-align: center; line-height: 1.6; }
+    .intro-strip__text strong { font-weight: 700; color: var(--bg); }
+    .intro-strip__link { font-weight: 600; color: var(--accent); margin-left: 8px; white-space: nowrap; transition: opacity .2s; }
+    .intro-strip__link:hover { opacity: .75; }
+
+    /* ================================================================
        RESPONSIVE
     ================================================================ */
     /* — Tablette paysage — */
@@ -658,6 +672,7 @@
       <a href="#" class="nav__link">Accueil</a>
       <a href="projets.html" class="nav__link">Projets</a>
       <a href="gamme.html" class="nav__link">Gamme</a>
+      <a href="architecture.html" class="nav__link">Architecture</a>
       <a href="contact.html" class="nav__link">Contact</a>
       <a href="contact.html" class="nav__cta">Devis →</a>
       <!-- Pill "Mon espace" : discret, positionné en dernier à droite -->
@@ -708,6 +723,14 @@
   <!-- ================================================================
        GAMME DE MOBILIER
   ================================================================ -->
+  <!-- INTRO RAPIDE avant la gamme -->
+  <div class="intro-strip reveal">
+    <p class="intro-strip__text">
+      <strong>Kobo Design</strong> crée du mobilier sur-mesure prêt-à-monter et propose un service d'architecture d'intérieur à Bordeaux.
+      <a href="#expertise" class="intro-strip__link">Découvrir nos services&nbsp;→</a>
+    </p>
+  </div>
+
   <section class="gamme" id="gamme" aria-label="Notre gamme de mobilier">
     <div class="gamme__header">
       <div>
@@ -717,11 +740,11 @@
       <p class="gamme__desc reveal reveal-delay-2">Chaque pièce est conçue dans notre atelier bordelais. Choisissez votre univers, nous l'adaptons à votre espace.</p>
     </div>
     <div class="gamme__grid">
-      <a href="gamme.html" class="gamme__card reveal" tabindex="0" aria-label="Voir la gamme Salons &amp; Séjours">
+      <a href="gamme.html" class="gamme__card reveal" tabindex="0" aria-label="Voir la gamme Pièce de vie">
         <div class="gamme__card-img" style="background-image:url('img/meuble-tv.png')"></div>
         <div class="gamme__card-body">
           <p class="gamme__card-tag">Collection 01</p>
-          <h3 class="gamme__card-name">Salons &amp;<br>Séjours</h3>
+          <h3 class="gamme__card-name">Pièce<br>de vie</h3>
           <p class="gamme__card-count">24 pièces disponibles</p>
         </div>
       </a>
@@ -733,11 +756,11 @@
           <p class="gamme__card-count">18 pièces disponibles</p>
         </div>
       </a>
-      <a href="gamme.html" class="gamme__card reveal reveal-delay-2" tabindex="0" aria-label="Voir la gamme Cuisines &amp; Îlots">
+      <a href="gamme.html" class="gamme__card reveal reveal-delay-2" tabindex="0" aria-label="Voir la gamme Cuisine et salle de bain">
         <div class="gamme__card-img" style="background-image:url('img/vasque.png')"></div>
         <div class="gamme__card-body">
           <p class="gamme__card-tag">Collection 03</p>
-          <h3 class="gamme__card-name">Cuisines &amp;<br>Îlots</h3>
+          <h3 class="gamme__card-name">Cuisine &amp;<br>Salle de bain</h3>
           <p class="gamme__card-count">12 configurations</p>
         </div>
       </a>
