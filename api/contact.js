@@ -1,4 +1,4 @@
-// api/contact.js — Fonction serverless Vercel (CommonJS)
+// api/contact.js — Vercel serverless, sans fichiers (gérés côté client)
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,7 +7,6 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Debug temporaire — à supprimer après
   if (req.method === 'GET') {
     return res.status(200).json({
       supabase_url: process.env.SUPABASE_URL ? 'OK' : 'MANQUANT',
@@ -38,6 +37,7 @@ module.exports = async function handler(req, res) {
     const type_projet = (body.type_projet || '').toString().slice(0, 100);
     const budget      = (body.budget_affiche || body.budget || '').toString().slice(0, 50);
     const message     = (body.message || '').toString().slice(0, 5000);
+    const fichiers    = (body.fichiers || '').toString().slice(0, 1000); // noms des fichiers uploadés
 
     if (!prenom || !email || !message) {
       return res.status(400).json({ error: 'Champs obligatoires manquants.' });
@@ -45,21 +45,16 @@ module.exports = async function handler(req, res) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Email invalide.' });
     }
-    if (body.botcheck) {
-      return res.status(200).json({ success: true });
-    }
+    if (body.botcheck) return res.status(200).json({ success: true });
 
     // Enregistrer dans Supabase
     const { error: dbError } = await supabase
       .from('demandes')
-      .insert([{ prenom, nom, email, telephone, type_projet, budget, message }]);
+      .insert([{ prenom, nom, email, telephone, type_projet, budget, message, fichiers }]);
 
-    if (dbError) {
-      console.error('Supabase error:', dbError);
-      throw dbError;
-    }
+    if (dbError) throw dbError;
 
-    // Envoyer email via Resend
+    // Email via Resend
     await resend.emails.send({
       from: 'Kobo Design <onboarding@resend.dev>',
       to: process.env.CONTACT_EMAIL,
@@ -78,6 +73,7 @@ module.exports = async function handler(req, res) {
               <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Téléphone</td><td style="padding:8px 0;font-size:14px;">${telephone || '—'}</td></tr>
               <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Type de projet</td><td style="padding:8px 0;font-size:14px;">${type_projet || '—'}</td></tr>
               <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Budget</td><td style="padding:8px 0;font-size:14px;">${budget || '—'}</td></tr>
+              ${fichiers ? `<tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Fichiers</td><td style="padding:8px 0;font-size:14px;">${fichiers}</td></tr>` : ''}
             </table>
             <div style="margin-top:24px;padding:20px;background:white;border-radius:6px;border-left:3px solid #CD3E00;">
               <p style="font-size:12px;color:#666;font-weight:700;margin:0 0 8px;">Message</p>
@@ -95,7 +91,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ success: true });
 
   } catch (err) {
-    console.error('Erreur contact:', err);
-    return res.status(500).json({ error: err.message || 'Une erreur est survenue.' });
+    console.error('Erreur:', err);
+    return res.status(500).json({ error: err.message || 'Erreur serveur.' });
   }
 };
