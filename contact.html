@@ -429,7 +429,7 @@
     </div>
 
     <!-- WEB3FORMS -->
-    <form id="contactForm" action="https://api.web3forms.com/submit" method="POST" novalidate enctype="multipart/form-data">
+    <form id="contactForm" action="https://api.web3forms.com/submit" method="POST" novalidate>
       <input type="hidden" name="access_key" value="e7bd42fc-72c0-4783-b0e6-85580b93c72e"/>
       <input type="hidden" name="subject" value="Nouveau projet — Kobo Design"/>
       <input type="hidden" name="from_name" value="Kobo Design Website"/>
@@ -504,19 +504,6 @@
           <label class="form__label" for="message">Décrivez votre projet *</label>
           <textarea class="form__textarea" id="message" name="message" placeholder="Parlez-nous de votre espace, de vos envies, de vos contraintes…" required></textarea>
           <p class="form__error" id="err-message">Veuillez décrire votre projet.</p>
-        </div>
-
-        <div class="form__group">
-          <label class="form__label">Vos fichiers <span class="form__optional">(facultatif)</span></label>
-          <label class="file-drop" for="fichiers" id="fileDrop">
-            <div class="file-drop__icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 8 12 3 7 8" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </div>
-            <p class="file-drop__text">Glissez vos fichiers ici ou <span class="file-drop__link">parcourir</span></p>
-            <p class="file-drop__hint">Photos, plans, croquis, PDF — max 10 Mo par fichier</p>
-            <div class="file-drop__list" id="fileList"></div>
-          </label>
-          <input type="file" id="fichiers" name="fichiers" multiple accept="image/*,.pdf,.dwg,.dxf" style="display:none" onchange="handleFiles(this.files)"/>
         </div>
 
         <!-- Anti-spam honeypot Web3Forms -->
@@ -726,10 +713,6 @@
 
     try{
       const formData = new FormData(this);
-      // Ajouter les fichiers sélectionnés
-      if(selectedFiles && selectedFiles.length > 0){
-        selectedFiles.forEach((file, i) => formData.append('attachment_'+i, file));
-      }
       const res=await fetch(this.action,{method:'POST',body:formData});
       const data=await res.json();
       if(data.success){
@@ -747,37 +730,6 @@
       alert('Connexion impossible. Vérifiez votre connexion internet et réessayez.');
     }
   });
-
-  /* FILE UPLOAD */
-  let selectedFiles = [];
-  function handleFiles(files){
-    Array.from(files).forEach(file=>{
-      if(file.size > 10*1024*1024){ alert(file.name+' dépasse 10 Mo.'); return; }
-      if(!selectedFiles.find(f=>f.name===file.name && f.size===file.size)){
-        selectedFiles.push(file);
-      }
-    });
-    renderFileList();
-  }
-  function renderFileList(){
-    const list=document.getElementById('fileList');
-    list.innerHTML='';
-    selectedFiles.forEach((f,i)=>{
-      const chip=document.createElement('span');
-      chip.className='file-chip';
-      chip.innerHTML=f.name+' <span class="file-chip__remove" onclick="removeFile('+i+')">×</span>';
-      list.appendChild(chip);
-    });
-  }
-  function removeFile(i){ selectedFiles.splice(i,1); renderFileList(); }
-
-  // Drag & drop
-  const drop=document.getElementById('fileDrop');
-  if(drop){
-    drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
-    drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
-    drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');handleFiles(e.dataTransfer.files);});
-  }
 
   /* FAQ */
   function toggleFaq(item){
