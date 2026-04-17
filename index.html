@@ -1132,7 +1132,7 @@
     async function resetFromModal(e) {
       e.preventDefault();
       const email = document.getElementById('l-email').value.trim();
-      if (!email) return alert('Entrez votre email d'abord.');
+      if (!email) return alert("Entrez votre email d'abord.");
       await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/espace-client.html' });
       alert('Email de réinitialisation envoyé !');
     }
