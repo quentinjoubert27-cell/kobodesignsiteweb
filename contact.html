@@ -428,12 +428,8 @@
       <span class="step-label">Votre projet</span>
     </div>
 
-    <!-- WEB3FORMS -->
-    <form id="contactForm" action="https://api.web3forms.com/submit" method="POST" novalidate>
-      <input type="hidden" name="access_key" value="e7bd42fc-72c0-4783-b0e6-85580b93c72e"/>
-      <input type="hidden" name="subject" value="Nouveau projet — Kobo Design"/>
-      <input type="hidden" name="from_name" value="Kobo Design Website"/>
-      <input type="hidden" name="redirect" value="false"/>
+    <!-- FORMSPREE -->
+    <form id="contactForm" action="https://formspree.io/f/mlgopeke" method="POST" novalidate>
 
       <!-- Succès -->
       <div class="success-state" id="successState">
@@ -506,8 +502,9 @@
           <p class="form__error" id="err-message">Veuillez décrire votre projet.</p>
         </div>
 
-        <!-- Anti-spam honeypot Web3Forms -->
-        <input type="checkbox" name="botcheck" style="display:none"/>
+        <!-- Anti-spam honeypot -->
+        <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off"/>
+        <input type="hidden" name="_subject" value="Nouveau message — Kobo Design"/>
 
         <div class="form-nav">
           <button type="button" class="btn-prev" onclick="goStep1()">&#x2190; Retour</button>
@@ -712,10 +709,8 @@
     btn.textContent='Envoi en cours…';
 
     try{
-      const formData = new FormData(this);
-      const res=await fetch(this.action,{method:'POST',body:formData});
-      const data=await res.json();
-      if(data.success){
+      const res=await fetch(this.action,{method:'POST',body:new FormData(this),headers:{'Accept':'application/json'}});
+      if(res.ok){
         document.getElementById('step2').style.display='none';
         document.querySelector('.steps-indicator').style.display='none';
         document.getElementById('successState').classList.add('show');

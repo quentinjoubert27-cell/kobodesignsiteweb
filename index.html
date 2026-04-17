@@ -446,7 +446,7 @@
     /* ================================================================
        EXPERTISES — section unifiée PAM + Architecture
     ================================================================ */
-    .expertises { padding: clamp(72px,10vw,120px) clamp(24px,7vw,100px); background: var(--bg); border-top: 1px solid rgba(26,26,26,.07); }
+    .expertises { padding: clamp(72px,10vw,120px) clamp(24px,7vw,100px); background: var(--bg); }
     .expertises__header { margin-bottom: clamp(48px,7vw,72px); }
     .expertises__eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
     .expertises__title { font-size: clamp(30px,4.5vw,56px); font-weight: 900; letter-spacing: -.04em; line-height: 1.0; }
@@ -723,75 +723,12 @@
   <!-- ================================================================
        GAMME DE MOBILIER
   ================================================================ -->
-  <!-- INTRO RAPIDE avant la gamme -->
-  <div class="intro-strip reveal">
-    <p class="intro-strip__text">
-      <strong>Kobo Design</strong> crée du mobilier sur-mesure prêt-à-monter et propose un service d'architecture d'intérieur à Bordeaux.
-      <a href="#expertise" class="intro-strip__link">Découvrir nos services&nbsp;→</a>
-    </p>
-  </div>
-
-  <section class="gamme" id="gamme" aria-label="Notre gamme de mobilier">
-    <div class="gamme__header">
-      <div>
-        <p class="section-label reveal" style="color:rgba(205,62,0,.85)">Notre Gamme</p>
-        <h2 class="gamme__title reveal reveal-delay-1">Des collections<br><em>pensées pour vous.</em></h2>
-      </div>
-      <p class="gamme__desc reveal reveal-delay-2">Chaque pièce est conçue dans notre atelier bordelais. Choisissez votre univers, nous l'adaptons à votre espace.</p>
-    </div>
-    <div class="gamme__grid">
-      <a href="gamme.html" class="gamme__card reveal" tabindex="0" aria-label="Voir la gamme Pièce de vie">
-        <div class="gamme__card-img" style="background-image:url('img/meuble-tv.png')"></div>
-        <div class="gamme__card-body">
-          <p class="gamme__card-tag">Collection 01</p>
-          <h3 class="gamme__card-name">Pièce<br>de vie</h3>
-          <p class="gamme__card-count">24 pièces disponibles</p>
-        </div>
-      </a>
-      <a href="gamme.html" class="gamme__card reveal reveal-delay-1" tabindex="0" aria-label="Voir la gamme Chambres &amp; Dressing">
-        <div class="gamme__card-img" style="background-image:url('img/meuble-escalier.png')"></div>
-        <div class="gamme__card-body">
-          <p class="gamme__card-tag">Collection 02</p>
-          <h3 class="gamme__card-name">Chambres &amp;<br>Dressing</h3>
-          <p class="gamme__card-count">18 pièces disponibles</p>
-        </div>
-      </a>
-      <a href="gamme.html" class="gamme__card reveal reveal-delay-2" tabindex="0" aria-label="Voir la gamme Cuisine et salle de bain">
-        <div class="gamme__card-img" style="background-image:url('img/vasque.png')"></div>
-        <div class="gamme__card-body">
-          <p class="gamme__card-tag">Collection 03</p>
-          <h3 class="gamme__card-name">Cuisine &amp;<br>Salle de bain</h3>
-          <p class="gamme__card-count">12 configurations</p>
-        </div>
-      </a>
-      <a href="gamme.html" class="gamme__card reveal reveal-delay-3" tabindex="0" aria-label="Voir la gamme Bureaux &amp; Bibliothèques">
-        <div class="gamme__card-img" style="background-image:url('img/bureau-bibliotheque-1.png')"></div>
-        <div class="gamme__card-body">
-          <p class="gamme__card-tag">Collection 04</p>
-          <h3 class="gamme__card-name">Bureaux &amp;<br>Bibliothèques</h3>
-          <p class="gamme__card-count">16 pièces disponibles</p>
-        </div>
-      </a>
-    </div>
-    <a href="gamme.html" class="gamme__cta reveal">
-      Voir toute la gamme
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-  </section>
-
-  <!-- ================================================================
-       NOS DEUX EXPERTISES — Structure claire, pas de répétition
-       UX : une section = une idée.
-       Gauche : PAM expliqué en 4 étapes (cœur de métier)
-       Droite : Architecture d'intérieur = service indépendant
-       Bas : 2 cartes cliquables vers les pages dédiées
-  ================================================================ -->
   <section class="expertises" id="expertise" aria-label="Nos expertises">
 
     <!-- En-tête -->
     <div class="expertises__header reveal">
-      <p class="expertises__eyebrow">Deux services distincts</p>
-      <h2 class="expertises__title">Ce qu'on fait,<br><em>et comment.</em></h2>
+      <p class="expertises__eyebrow">Notre activité</p>
+      <h2 class="expertises__title">Que faisons-nous<br><em>exactement ?</em></h2>
     </div>
 
     <!-- Grille principale : PAM + Archi côte à côte -->
@@ -892,7 +829,63 @@
 
   </section>
 
-    <!-- ================================================================
+  
+  <section class="gamme" id="gamme" aria-label="Notre gamme de mobilier">
+    <div class="gamme__header">
+      <div>
+        <p class="section-label reveal" style="color:rgba(205,62,0,.85)">Notre Gamme</p>
+        <h2 class="gamme__title reveal reveal-delay-1">Des collections<br><em>pour chaque espace.</em></h2>
+      </div>
+      <p class="gamme__desc reveal reveal-delay-2">Chaque pièce est conçue dans notre atelier bordelais. Choisissez votre univers, nous l'adaptons à votre espace.</p>
+    </div>
+    <div class="gamme__grid">
+      <a href="gamme.html" class="gamme__card reveal" tabindex="0" aria-label="Voir la gamme Pièce de vie">
+        <div class="gamme__card-img" style="background-image:url('img/meuble-tv.png')"></div>
+        <div class="gamme__card-body">
+          <p class="gamme__card-tag">Collection 01</p>
+          <h3 class="gamme__card-name">Pièce<br>de vie</h3>
+          <p class="gamme__card-count">24 pièces disponibles</p>
+        </div>
+      </a>
+      <a href="gamme.html" class="gamme__card reveal reveal-delay-1" tabindex="0" aria-label="Voir la gamme Chambres &amp; Dressing">
+        <div class="gamme__card-img" style="background-image:url('img/meuble-escalier.png')"></div>
+        <div class="gamme__card-body">
+          <p class="gamme__card-tag">Collection 02</p>
+          <h3 class="gamme__card-name">Chambres &amp;<br>Dressing</h3>
+          <p class="gamme__card-count">18 pièces disponibles</p>
+        </div>
+      </a>
+      <a href="gamme.html" class="gamme__card reveal reveal-delay-2" tabindex="0" aria-label="Voir la gamme Cuisine et salle de bain">
+        <div class="gamme__card-img" style="background-image:url('img/vasque.png')"></div>
+        <div class="gamme__card-body">
+          <p class="gamme__card-tag">Collection 03</p>
+          <h3 class="gamme__card-name">Cuisine &amp;<br>Salle de bain</h3>
+          <p class="gamme__card-count">12 configurations</p>
+        </div>
+      </a>
+      <a href="gamme.html" class="gamme__card reveal reveal-delay-3" tabindex="0" aria-label="Voir la gamme Bureaux &amp; Bibliothèques">
+        <div class="gamme__card-img" style="background-image:url('img/bureau-bibliotheque-1.png')"></div>
+        <div class="gamme__card-body">
+          <p class="gamme__card-tag">Collection 04</p>
+          <h3 class="gamme__card-name">Bureaux &amp;<br>Bibliothèques</h3>
+          <p class="gamme__card-count">16 pièces disponibles</p>
+        </div>
+      </a>
+    </div>
+    <a href="gamme.html" class="gamme__cta reveal">
+      Voir toute la gamme
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </section>
+
+  <!-- ================================================================
+       NOS DEUX EXPERTISES — Structure claire, pas de répétition
+       UX : une section = une idée.
+       Gauche : PAM expliqué en 4 étapes (cœur de métier)
+       Droite : Architecture d'intérieur = service indépendant
+       Bas : 2 cartes cliquables vers les pages dédiées
+  ================================================================ -->
+  <!-- ================================================================
        PROJETS RÉCENTS
   ================================================================ -->
   <section class="projects" id="projets" aria-label="Projets récents">
