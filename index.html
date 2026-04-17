@@ -616,8 +616,8 @@
           <label class="form__label" for="l-pw">Mot de passe</label>
           <input class="form__input" type="password" id="l-pw" placeholder="••••••••" autocomplete="current-password" />
         </div>
-        <button class="form__btn">Se connecter →</button>
-        <a href="#" class="form__forgot">Mot de passe oublié ?</a>
+        <button class="form__btn" onclick="loginFromModal()">Se connecter →</button>
+        <a href="#" class="form__forgot" onclick="resetFromModal(event)">Mot de passe oublié ?</a>
       </div>
       <div class="modal__panel" id="panel-inscription">
         <div class="form__group">
@@ -632,7 +632,7 @@
           <label class="form__label" for="r-pw">Mot de passe</label>
           <input class="form__input" type="password" id="r-pw" placeholder="••••••••" autocomplete="new-password" />
         </div>
-        <button class="form__btn">Créer mon espace →</button>
+        <button class="form__btn" onclick="registerFromModal()">Créer mon espace →</button>
       </div>
     </div>
   </div>
@@ -1090,6 +1090,52 @@
       });
     }, { threshold: 0.5 });
     document.querySelectorAll('.stat__number').forEach(s => sIo.observe(s));
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://odbkmtuoflpfzgcrzsrl.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_2krwuNXKJCHMSJvnnp9tOQ_mkz6Bxaj';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Vérifier si déjà connecté
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        const btn = document.querySelector('.nav__login');
+        if (btn) { btn.querySelector('span') && (btn.querySelector('span').textContent = 'Mon espace'); }
+      }
+    })();
+
+    async function loginFromModal() {
+      const email = document.getElementById('l-email').value.trim();
+      const pw = document.getElementById('l-pw').value;
+      if (!email || !pw) return alert('Veuillez remplir tous les champs.');
+      const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+      if (error) return alert('Email ou mot de passe incorrect.');
+      window.location.href = 'espace-client.html';
+    }
+
+    async function registerFromModal() {
+      const name = document.getElementById('r-name').value.trim();
+      const email = document.getElementById('r-email').value.trim();
+      const pw = document.getElementById('r-pw').value;
+      if (!name || !email || !pw) return alert('Veuillez remplir tous les champs.');
+      const prenom = name.split(' ')[0];
+      const nom = name.split(' ').slice(1).join(' ') || '';
+      const { data, error } = await sb.auth.signUp({ email, password: pw });
+      if (error) return alert(error.message);
+      if (data?.user) await sb.from('clients').upsert({ id: data.user.id, prenom, nom, email });
+      alert('Compte créé ! Vérifiez votre email puis connectez-vous.');
+      closeLogin();
+    }
+
+    async function resetFromModal(e) {
+      e.preventDefault();
+      const email = document.getElementById('l-email').value.trim();
+      if (!email) return alert('Entrez votre email d'abord.');
+      await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/espace-client.html' });
+      alert('Email de réinitialisation envoyé !');
+    }
   </script>
 </body>
 </html>

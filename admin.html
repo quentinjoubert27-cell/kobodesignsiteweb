@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Kobo Design</title>
+  <meta name="robots" content="noindex"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --accent: #CD3E00;
+      --bg: #FFFAF0;
+      --dark: #1A1A1A;
+      --mid: #F0EBE0;
+      --white: #fff;
+      --font: 'Poppins', sans-serif;
+      --ease: cubic-bezier(0.16,1,0.3,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: #0F0F0F; color: var(--bg); min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+
+    /* AUTH */
+    .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .auth-box { background: #1A1A1A; border: 1px solid rgba(255,250,240,.08); border-radius: 16px; padding: 48px; width: 100%; max-width: 400px; }
+    .auth-eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .auth-title { font-size: 28px; font-weight: 900; letter-spacing: -.03em; margin-bottom: 4px; }
+    .auth-sub { font-size: 12px; font-weight: 300; color: rgba(255,250,240,.4); margin-bottom: 32px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,250,240,.35); margin-bottom: 6px; }
+    .form-input { width: 100%; padding: 12px 14px; border: 1px solid rgba(255,250,240,.1); border-radius: 8px; font-family: var(--font); font-size: 14px; background: rgba(255,250,240,.04); color: var(--bg); transition: border-color .2s; }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-btn { width: 100%; padding: 13px; background: var(--accent); color: white; border: none; border-radius: 8px; font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; margin-top: 8px; transition: background .2s; }
+    .form-btn:hover { background: #a83200; }
+    .auth-msg { font-size: 12px; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; display: none; }
+    .auth-msg.error { background: rgba(220,38,38,.15); color: #fca5a5; display: block; }
+
+    /* LAYOUT */
+    .app { display: none; min-height: 100vh; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; width: 240px; height: 100vh;
+      background: #1A1A1A; border-right: 1px solid rgba(255,250,240,.06);
+      padding: 28px 20px; display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-logo { margin-bottom: 36px; }
+    .sidebar-logo svg { height: 28px; }
+    .sidebar-badge { display: inline-block; background: var(--accent); color: white; font-size: 8px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; margin-bottom: 24px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; cursor: pointer; font-size: 13px; color: rgba(255,250,240,.45); transition: background .2s, color .2s; margin-bottom: 2px; }
+    .nav-item:hover { background: rgba(255,250,240,.06); color: rgba(255,250,240,.85); }
+    .nav-item.active { background: var(--accent); color: white; font-weight: 600; }
+    .sidebar-bottom { margin-top: auto; border-top: 1px solid rgba(255,250,240,.06); padding-top: 20px; }
+    .admin-name { font-size: 12px; font-weight: 600; color: rgba(255,250,240,.7); margin-bottom: 2px; }
+    .admin-email { font-size: 11px; color: rgba(255,250,240,.3); margin-bottom: 12px; }
+    .btn-logout { width: 100%; padding: 8px; border: 1px solid rgba(255,250,240,.1); border-radius: 6px; background: none; color: rgba(255,250,240,.35); font-family: var(--font); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+    .btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+
+    .main { margin-left: 240px; padding: 40px 40px 40px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-header { margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .page-title { font-size: 26px; font-weight: 900; letter-spacing: -.03em; }
+    .page-eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+
+    /* Boutons */
+    .btn-primary { padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 8px; font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: background .2s; }
+    .btn-primary:hover { background: #a83200; }
+    .btn-secondary { padding: 9px 18px; border: 1px solid rgba(255,250,240,.12); border-radius: 8px; background: none; color: rgba(255,250,240,.6); font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+    .stat { background: #1A1A1A; border: 1px solid rgba(255,250,240,.06); border-radius: 10px; padding: 20px; }
+    .stat__label { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,250,240,.3); margin-bottom: 8px; }
+    .stat__value { font-size: 32px; font-weight: 900; letter-spacing: -.04em; }
+    .stat__sub { font-size: 11px; color: rgba(255,250,240,.3); margin-top: 2px; }
+
+    /* Table */
+    .table-wrap { background: #1A1A1A; border: 1px solid rgba(255,250,240,.06); border-radius: 12px; overflow: hidden; }
+    .table-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(255,250,240,.06); }
+    .table-title { font-size: 13px; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px 20px; font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,250,240,.3); border-bottom: 1px solid rgba(255,250,240,.06); }
+    td { padding: 14px 20px; font-size: 13px; border-bottom: 1px solid rgba(255,250,240,.04); color: rgba(255,250,240,.75); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,250,240,.02); }
+    .client-name { font-weight: 600; color: var(--bg); }
+    .client-email { font-size: 11px; color: rgba(255,250,240,.35); }
+
+    /* Status */
+    .status-select { background: transparent; border: 1px solid rgba(255,250,240,.12); color: var(--bg); font-family: var(--font); font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+    .status-select:focus { outline: none; border-color: var(--accent); }
+
+    /* Messages admin */
+    .msg-panel { display: grid; grid-template-columns: 280px 1fr; gap: 0; background: #1A1A1A; border: 1px solid rgba(255,250,240,.06); border-radius: 12px; overflow: hidden; height: 600px; }
+    .msg-sidebar { border-right: 1px solid rgba(255,250,240,.06); overflow-y: auto; }
+    .msg-sidebar-item { padding: 14px 16px; border-bottom: 1px solid rgba(255,250,240,.04); cursor: pointer; transition: background .15s; }
+    .msg-sidebar-item:hover { background: rgba(255,250,240,.04); }
+    .msg-sidebar-item.active { background: rgba(205,62,0,.12); border-left: 2px solid var(--accent); }
+    .msg-sidebar-item__name { font-size: 13px; font-weight: 600; color: rgba(255,250,240,.85); margin-bottom: 2px; }
+    .msg-sidebar-item__project { font-size: 11px; color: rgba(255,250,240,.35); }
+    .msg-sidebar-item__unread { display: inline-block; background: var(--accent); color: white; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 100px; float: right; }
+    .msg-main { display: flex; flex-direction: column; }
+    .msg-main-header { padding: 16px 20px; border-bottom: 1px solid rgba(255,250,240,.06); }
+    .msg-main-name { font-size: 14px; font-weight: 700; }
+    .msg-main-project { font-size: 11px; color: rgba(255,250,240,.35); }
+    .messages-list { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .msg { max-width: 70%; }
+    .msg--client { align-self: flex-start; }
+    .msg--kobo { align-self: flex-end; }
+    .msg__bubble { padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 300; line-height: 1.6; }
+    .msg--client .msg__bubble { background: rgba(255,250,240,.08); }
+    .msg--kobo .msg__bubble { background: var(--accent); color: white; }
+    .msg__meta { font-size: 10px; color: rgba(255,250,240,.3); margin-top: 3px; }
+    .msg--kobo .msg__meta { text-align: right; }
+    .msg-input-wrap { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid rgba(255,250,240,.06); }
+    .msg-input { flex: 1; padding: 10px 14px; border: 1px solid rgba(255,250,240,.1); border-radius: 8px; font-family: var(--font); font-size: 13px; background: rgba(255,250,240,.04); color: var(--bg); resize: none; height: 42px; }
+    .msg-input:focus { outline: none; border-color: var(--accent); }
+    .msg-send { padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: 8px; font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500; display: none; align-items: center; justify-content: center; padding: 24px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1A1A1A; border: 1px solid rgba(255,250,240,.08); border-radius: 14px; padding: 36px; width: 100%; max-width: 500px; }
+    .modal-title { font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 24px; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+    .loading { text-align: center; padding: 40px; color: rgba(255,250,240,.3); font-size: 13px; }
+    .empty { text-align: center; padding: 40px; color: rgba(255,250,240,.3); font-size: 13px; }
+
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #2A2A2A; color: var(--bg); padding: 12px 20px; border-radius: 8px; font-size: 13px; z-index: 9999; transform: translateY(80px); opacity: 0; transition: transform .3s var(--ease), opacity .3s; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-left: 3px solid #22c55e; }
+    .toast.error { border-left: 3px solid #ef4444; }
+
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <div style="margin-bottom:28px;">
+      <svg viewBox="0 0 140 48" fill="none" style="height:28px;">
+        <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+        <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+        <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+        <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+        <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <p class="auth-eyebrow">Accès réservé</p>
+    <h2 class="auth-title">Administration</h2>
+    <p class="auth-sub">Espace de gestion Kobo Design — équipe uniquement.</p>
+    <div id="auth-msg" class="auth-msg"></div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="a-email" placeholder="admin@kobo-design.fr"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mot de passe</label>
+      <input class="form-input" type="password" id="a-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"/>
+    </div>
+    <button class="form-btn" onclick="login()">Accéder →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 140 48" fill="none">
+        <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+        <line x1="36" y1="10" x2="48" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+        <path d="M62 6v36" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+        <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+        <line x1="101" y1="10" x2="113" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="sidebar-badge">Admin</span>
+    <div>
+      <div class="nav-item active" onclick="showPage('dashboard', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/></svg>
+        Vue d'ensemble
+      </div>
+      <div class="nav-item" onclick="showPage('clients', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
+        Clients
+      </div>
+      <div class="nav-item" onclick="showPage('projets', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Projets
+      </div>
+      <div class="nav-item" onclick="showPage('messages', this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Messages
+        <span id="admin-unread" style="display:none;margin-left:auto;background:var(--accent);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:100px;"></span>
+      </div>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="admin-name" id="admin-name">—</div>
+      <div class="admin-email" id="admin-email">—</div>
+      <button class="btn-logout" onclick="logout()">Déconnexion</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <p class="page-eyebrow">Kobo Design</p>
+          <h1 class="page-title">Vue d'ensemble</h1>
+        </div>
+        <button class="btn-primary" onclick="openModal('modal-projet')">+ Nouveau projet</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat__label">Clients</div><div class="stat__value" id="s-clients">—</div></div>
+        <div class="stat"><div class="stat__label">Projets actifs</div><div class="stat__value" id="s-projets">—</div></div>
+        <div class="stat"><div class="stat__label">Documents</div><div class="stat__value" id="s-docs">—</div></div>
+        <div class="stat"><div class="stat__label">Messages non lus</div><div class="stat__value" id="s-msgs">—</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><div class="table-title">Projets récents</div></div>
+        <div id="recent-projets"><div class="loading">Chargement...</div></div>
+      </div>
+    </div>
+
+    <!-- Clients -->
+    <div class="page" id="page-clients">
+      <div class="page-header">
+        <div><p class="page-eyebrow">Gestion</p><h1 class="page-title">Clients</h1></div>
+        <button class="btn-primary" onclick="openModal('modal-client')">+ Ajouter un client</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Email</th><th>Téléphone</th><th>Projets</th><th>Depuis</th></tr></thead>
+          <tbody id="clients-tbody"><tr><td colspan="5" class="loading">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Projets -->
+    <div class="page" id="page-projets">
+      <div class="page-header">
+        <div><p class="page-eyebrow">Suivi</p><h1 class="page-title">Tous les projets</h1></div>
+        <button class="btn-primary" onclick="openModal('modal-projet')">+ Nouveau projet</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Projet</th><th>Client</th><th>Statut</th><th>Documents</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="projets-tbody"><tr><td colspan="6" class="loading">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="page" id="page-messages">
+      <div class="page-header"><div><p class="page-eyebrow">Communication</p><h1 class="page-title">Messages clients</h1></div></div>
+      <div class="msg-panel">
+        <div class="msg-sidebar" id="msg-convs"><div class="loading">Chargement...</div></div>
+        <div class="msg-main" id="msg-main" style="display:none;">
+          <div class="msg-main-header">
+            <div class="msg-main-name" id="msg-main-name">—</div>
+            <div class="msg-main-project" id="msg-main-project">—</div>
+          </div>
+          <div class="messages-list" id="messages-list"></div>
+          <div class="msg-input-wrap">
+            <textarea class="msg-input" id="admin-msg-input" placeholder="Répondre au client…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminMessage();}"></textarea>
+            <button class="msg-send" onclick="sendAdminMessage()">Envoyer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODALS -->
+<!-- Nouveau client -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <h2 class="modal-title">Ajouter un client</h2>
+    <p style="font-size:12px;color:rgba(255,250,240,.4);margin-bottom:20px;">Le client recevra un email pour créer son mot de passe.</p>
+    <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" id="nc-prenom" placeholder="Jean"/></div>
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="nc-nom" placeholder="Dupont"/></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="nc-email" type="email" placeholder="jean@exemple.fr"/></div>
+    <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="nc-tel" placeholder="06 00 00 00 00"/></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-client')">Annuler</button>
+      <button class="btn-primary" onclick="createClient()">Créer le client</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nouveau projet -->
+<div class="modal-overlay" id="modal-projet">
+  <div class="modal">
+    <h2 class="modal-title">Nouveau projet</h2>
+    <div class="form-group"><label class="form-label">Client</label><select class="form-input" id="np-client" style="cursor:pointer;"></select></div>
+    <div class="form-group"><label class="form-label">Nom du projet</label><input class="form-input" id="np-nom" placeholder="Bibliothèque salon — Bordeaux"/></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="np-desc" placeholder="Détails du projet…" style="height:80px;resize:none;"></textarea></div>
+    <div class="form-group"><label class="form-label">Statut initial</label>
+      <select class="form-input" id="np-statut" style="cursor:pointer;">
+        <option value="En étude">En étude</option>
+        <option value="Fabrication">Fabrication</option>
+        <option value="Livraison">Livraison</option>
+        <option value="Terminé">Terminé</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-projet')">Annuler</button>
+      <button class="btn-primary" onclick="createProjet()">Créer le projet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload document -->
+<div class="modal-overlay" id="modal-doc">
+  <div class="modal">
+    <h2 class="modal-title">Envoyer un document</h2>
+    <input type="hidden" id="doc-projet-id"/>
+    <div class="form-group"><label class="form-label">Nom du document</label><input class="form-input" id="doc-nom" placeholder="Notice de montage v2"/></div>
+    <div class="form-group"><label class="form-label">Type</label>
+      <select class="form-input" id="doc-type" style="cursor:pointer;">
+        <option value="Notice">Notice de montage</option>
+        <option value="Devis">Devis</option>
+        <option value="Plan">Plan technique</option>
+        <option value="Contrat">Contrat</option>
+        <option value="Autre">Autre</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Fichier</label><input class="form-input" type="file" id="doc-file" accept=".pdf,.png,.jpg,.jpeg,.dwg,.dxf"/></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-doc')">Annuler</button>
+      <button class="btn-primary" onclick="uploadDocument()">Envoyer au client</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://odbkmtuoflpfzgcrzsrl.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_2krwuNXKJCHMSJvnnp9tOQ_mkz6Bxaj';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let currentAdmin = null;
+  let allClients = [];
+  let currentMsgProjet = null;
+
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentAdmin = session.user;
+      const isAdmin = await checkAdmin(currentAdmin.id);
+      if (isAdmin) showApp();
+      else { await sb.auth.signOut(); showMsg('Accès non autorisé.'); }
+    }
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        currentAdmin = session.user;
+        const isAdmin = await checkAdmin(currentAdmin.id);
+        if (isAdmin) showApp();
+        else { await sb.auth.signOut(); showMsg('Accès non autorisé.'); }
+      }
+    });
+  })();
+
+  async function checkAdmin(uid) {
+    const { data } = await sb.from('admins').select('id').eq('id', uid).single();
+    return !!data;
+  }
+
+  async function login() {
+    const email = document.getElementById('a-email').value.trim();
+    const pw = document.getElementById('a-pw').value;
+    if (!email || !pw) return showMsg('Champs manquants.');
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) showMsg('Email ou mot de passe incorrect.');
+  }
+
+  async function logout() {
+    await sb.auth.signOut();
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('authScreen').style.display = 'flex';
+  }
+
+  function showMsg(msg) {
+    const el = document.getElementById('auth-msg');
+    el.textContent = msg;
+    el.className = 'auth-msg error';
+  }
+
+  async function showApp() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('admin-email').textContent = currentAdmin.email;
+    document.getElementById('admin-name').textContent = 'Admin Kobo';
+    await loadStats();
+    await loadClients();
+    await loadProjets();
+    await loadConversations();
+  }
+
+  function showPage(page, navItem) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-'+page).classList.add('active');
+    navItem.classList.add('active');
+  }
+
+  async function loadStats() {
+    const [{ count: cc }, { count: pc }, { count: dc }, { count: mc }] = await Promise.all([
+      sb.from('clients').select('*', {count:'exact',head:true}),
+      sb.from('projets').select('*', {count:'exact',head:true}),
+      sb.from('documents').select('*', {count:'exact',head:true}),
+      sb.from('messages').select('*', {count:'exact',head:true}).eq('lu', false).eq('expediteur', 'client'),
+    ]);
+    document.getElementById('s-clients').textContent = cc || 0;
+    document.getElementById('s-projets').textContent = pc || 0;
+    document.getElementById('s-docs').textContent = dc || 0;
+    document.getElementById('s-msgs').textContent = mc || 0;
+    if (mc > 0) {
+      const badge = document.getElementById('admin-unread');
+      badge.textContent = mc; badge.style.display = 'inline';
+    }
+
+    // Projets récents
+    const { data: projets } = await sb.from('projets').select('*, clients(prenom,nom)').order('created_at', {ascending:false}).limit(5);
+    document.getElementById('recent-projets').innerHTML = projets?.length ? `
+      <table><thead><tr><th>Projet</th><th>Client</th><th>Statut</th><th>Date</th></tr></thead>
+      <tbody>${(projets||[]).map(p=>`<tr>
+        <td class="client-name">${p.nom}</td>
+        <td>${p.clients?.prenom||''} ${p.clients?.nom||''}</td>
+        <td>${statusBadge(p.statut)}</td>
+        <td>${new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
+      </tr>`).join('')}</tbody></table>` : '<div class="empty">Aucun projet</div>';
+  }
+
+  async function loadClients() {
+    const { data } = await sb.from('clients').select('*').order('created_at', {ascending:false});
+    allClients = data || [];
+
+    // Alimenter les selects
+    const sel = document.getElementById('np-client');
+    sel.innerHTML = '<option value="">Choisir un client…</option>' +
+      allClients.map(c => `<option value="${c.id}">${c.prenom} ${c.nom} — ${c.email}</option>`).join('');
+
+    // Table clients
+    document.getElementById('clients-tbody').innerHTML = allClients.length ?
+      allClients.map(c => `<tr>
+        <td><div class="client-name">${c.prenom||''} ${c.nom||''}</div></td>
+        <td><div class="client-email">${c.email||''}</div></td>
+        <td>${c.telephone||'—'}</td>
+        <td>—</td>
+        <td>${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
+      </tr>`).join('') : '<tr><td colspan="5" class="empty">Aucun client</td></tr>';
+  }
+
+  async function loadProjets() {
+    const { data } = await sb.from('projets').select('*, clients(prenom,nom)').order('created_at', {ascending:false});
+    document.getElementById('projets-tbody').innerHTML = data?.length ?
+      data.map(p => `<tr>
+        <td class="client-name">${p.nom}</td>
+        <td>${p.clients?.prenom||''} ${p.clients?.nom||''}</td>
+        <td>
+          <select class="status-select" onchange="updateStatut('${p.id}', this.value)">
+            ${['En étude','Fabrication','Livraison','Terminé'].map(s => `<option value="${s}"${p.statut===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </td>
+        <td><button class="btn-secondary" onclick="openDocModal('${p.id}')" style="font-size:10px;padding:5px 10px;">+ Document</button></td>
+        <td>${new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn-secondary" onclick="deleteProjet('${p.id}')" style="font-size:10px;padding:5px 10px;border-color:rgba(239,68,68,.3);color:rgba(239,68,68,.7);">Supprimer</button></td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">Aucun projet</td></tr>';
+  }
+
+  async function loadConversations() {
+    const { data: projets } = await sb.from('projets').select('*, clients(prenom,nom)').order('created_at', {ascending:false});
+    const sidebar = document.getElementById('msg-convs');
+    if (!projets || projets.length === 0) { sidebar.innerHTML = '<div class="empty">Aucune conversation</div>'; return; }
+
+    // Compter non lus par projet
+    const items = await Promise.all(projets.map(async p => {
+      const { count } = await sb.from('messages').select('*',{count:'exact',head:true}).eq('projet_id',p.id).eq('lu',false).eq('expediteur','client');
+      return { ...p, unread: count || 0 };
+    }));
+
+    sidebar.innerHTML = items.map(p => `
+      <div class="msg-sidebar-item" onclick="openConversation('${p.id}','${p.clients?.prenom||''} ${p.clients?.nom||''}','${p.nom}')">
+        <div class="msg-sidebar-item__name">${p.clients?.prenom||''} ${p.clients?.nom||''}</div>
+        <div class="msg-sidebar-item__project">${p.nom}</div>
+        ${p.unread > 0 ? `<span class="msg-sidebar-item__unread">${p.unread}</span>` : ''}
+      </div>`).join('');
+  }
+
+  async function openConversation(projetId, clientName, projetName) {
+    currentMsgProjet = projetId;
+    document.getElementById('msg-main').style.display = 'flex';
+    document.getElementById('msg-main-name').textContent = clientName;
+    document.getElementById('msg-main-project').textContent = projetName;
+
+    // Marquer comme lus
+    await sb.from('messages').update({lu:true}).eq('projet_id', projetId).eq('expediteur','client');
+
+    const { data: msgs } = await sb.from('messages').select('*').eq('projet_id', projetId).order('created_at',{ascending:true});
+    renderMessages(msgs || []);
+  }
+
+  function renderMessages(msgs) {
+    const list = document.getElementById('messages-list');
+    list.innerHTML = msgs.length ? msgs.map(m => `
+      <div class="msg msg--${m.expediteur === 'client' ? 'client' : 'kobo'}">
+        <div class="msg__bubble">${m.contenu}</div>
+        <div class="msg__meta">${m.expediteur === 'client' ? 'Client' : 'Kobo Design'} · ${new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`).join('') : '<div class="empty">Aucun message</div>';
+    list.scrollTop = list.scrollHeight;
+  }
+
+  async function sendAdminMessage() {
+    if (!currentMsgProjet) return;
+    const input = document.getElementById('admin-msg-input');
+    const contenu = input.value.trim();
+    if (!contenu) return;
+    input.value = '';
+    await sb.from('messages').insert([{ projet_id: currentMsgProjet, expediteur: 'kobo', contenu, lu: false }]);
+    await openConversation(currentMsgProjet, document.getElementById('msg-main-name').textContent, document.getElementById('msg-main-project').textContent);
+  }
+
+  async function updateStatut(projetId, statut) {
+    const { error } = await sb.from('projets').update({ statut, updated_at: new Date() }).eq('id', projetId);
+    if (!error) showToast('Statut mis à jour ✓');
+    else showToast('Erreur', 'error');
+  }
+
+  async function deleteProjet(id) {
+    if (!confirm('Supprimer ce projet ? Cette action est irréversible.')) return;
+    await sb.from('messages').delete().eq('projet_id', id);
+    await sb.from('documents').delete().eq('projet_id', id);
+    await sb.from('projets').delete().eq('id', id);
+    showToast('Projet supprimé');
+    await loadProjets();
+    await loadStats();
+  }
+
+  async function createClient() {
+    const prenom = document.getElementById('nc-prenom').value.trim();
+    const nom = document.getElementById('nc-nom').value.trim();
+    const email = document.getElementById('nc-email').value.trim();
+    const telephone = document.getElementById('nc-tel').value.trim();
+    if (!prenom || !nom || !email) return showToast('Champs obligatoires manquants', 'error');
+
+    // Créer via Supabase Auth admin invite
+    const { data, error } = await sb.auth.signUp({ email, password: Math.random().toString(36).slice(2) + 'Aa1!' });
+    if (error && !error.message.includes('already')) return showToast(error.message, 'error');
+
+    if (data?.user) {
+      await sb.from('clients').upsert({ id: data.user.id, prenom, nom, email, telephone });
+    }
+    showToast('Client créé — il recevra un email de confirmation');
+    closeModal('modal-client');
+    await loadClients();
+    await loadStats();
+  }
+
+  async function createProjet() {
+    const client_id = document.getElementById('np-client').value;
+    const nom = document.getElementById('np-nom').value.trim();
+    const description = document.getElementById('np-desc').value.trim();
+    const statut = document.getElementById('np-statut').value;
+    if (!client_id || !nom) return showToast('Client et nom obligatoires', 'error');
+
+    const { error } = await sb.from('projets').insert([{ client_id, nom, description, statut }]);
+    if (error) return showToast(error.message, 'error');
+    showToast('Projet créé ✓');
+    closeModal('modal-projet');
+    await loadProjets();
+    await loadStats();
+  }
+
+  function openDocModal(projetId) {
+    document.getElementById('doc-projet-id').value = projetId;
+    openModal('modal-doc');
+  }
+
+  async function uploadDocument() {
+    const projetId = document.getElementById('doc-projet-id').value;
+    const nom = document.getElementById('doc-nom').value.trim();
+    const type = document.getElementById('doc-type').value;
+    const fileInput = document.getElementById('doc-file');
+    const file = fileInput.files[0];
+
+    if (!nom || !file) return showToast('Nom et fichier obligatoires', 'error');
+
+    // Upload vers Supabase Storage
+    const path = `${projetId}/${Date.now()}-${file.name}`;
+    const { data: uploadData, error: uploadError } = await sb.storage.from('fichiers-demandes').upload(path, file);
+    if (uploadError) return showToast('Erreur upload: ' + uploadError.message, 'error');
+
+    // URL publique
+    const { data: { publicUrl } } = sb.storage.from('fichiers-demandes').getPublicUrl(path);
+
+    // Enregistrer en base
+    const { error } = await sb.from('documents').insert([{ projet_id: projetId, nom, type, url: publicUrl }]);
+    if (error) return showToast(error.message, 'error');
+
+    showToast('Document envoyé au client ✓');
+    closeModal('modal-doc');
+    await loadStats();
+  }
+
+  function statusBadge(s) {
+    const colors = { 'En étude': '#f59e0b', 'Fabrication': '#3b82f6', 'Livraison': '#22c55e', 'Terminé': '#6b7280' };
+    return `<span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${colors[s]||'#f59e0b'}">${s||'En étude'}</span>`;
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+  function showToast(msg, type='success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 3000);
+  }
+</script>
+</body>
+</html>
