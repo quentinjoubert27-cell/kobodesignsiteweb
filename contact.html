@@ -314,7 +314,6 @@
     <a href="index.html" onclick="toggleMenu()">Accueil</a>
     <a href="projets.html" onclick="toggleMenu()">Projets</a>
     <a href="gamme.html" onclick="toggleMenu()">Gamme</a>
-    <a href="architecture.html" onclick="toggleMenu()">Architecture</a>
     <a href="#" onclick="toggleMenu()">Contact</a>
   </div>
   <div class="mobile-nav__cta-wrap">
@@ -339,7 +338,6 @@
     <a href="index.html" class="nav__link">Accueil</a>
     <a href="projets.html" class="nav__link">Projets</a>
     <a href="gamme.html" class="nav__link">Gamme</a>
-    <a href="architecture.html" class="nav__link">Architecture</a>
     <a href="#" class="nav__link active">Contact</a>
     <a href="#formulaire" class="nav__cta">Devis &#x2192;</a>
     <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
@@ -428,8 +426,13 @@
       <span class="step-label">Votre projet</span>
     </div>
 
-    <!-- API KOBO DESIGN -->
-    <form id="contactForm" action="/api/contact" method="POST" novalidate enctype="multipart/form-data">
+    <!--
+      FORMSPREE : remplacez YOUR_FORM_ID par votre identifiant
+      1. Créez un compte sur formspree.io (gratuit, 50 soumissions/mois)
+      2. Créez un formulaire → copiez l'ID (ex: xpwzpkjn)
+      3. Remplacez YOUR_FORM_ID ci-dessous
+    -->
+    <form id="contactForm" action="https://formspree.io/f/mlgopeke" method="POST" novalidate>
 
       <!-- Succès -->
       <div class="success-state" id="successState">
@@ -502,21 +505,9 @@
           <p class="form__error" id="err-message">Veuillez décrire votre projet.</p>
         </div>
 
-        <div class="form__group">
-          <label class="form__label">Vos fichiers <span class="form__optional">(facultatif)</span></label>
-          <label class="file-drop" for="fichiers" id="fileDrop">
-            <div class="file-drop__icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 8 12 3 7 8" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </div>
-            <p class="file-drop__text">Glissez vos fichiers ici ou <span class="file-drop__link">parcourir</span></p>
-            <p class="file-drop__hint">Photos, plans, croquis, PDF — max 10 Mo · 5 fichiers maximum</p>
-            <div class="file-drop__list" id="fileList"></div>
-          </label>
-          <input type="file" id="fichiers" name="fichiers" multiple accept="image/*,.pdf,.dwg,.dxf" style="display:none" onchange="handleFiles(this.files)"/>
-        </div>
-
         <!-- Anti-spam honeypot -->
-        <input type="text" name="botcheck" style="display:none" tabindex="-1" autocomplete="off"/>
+        <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off"/>
+        <input type="hidden" name="_subject" value="Nouveau message — Kōbō Studio"/>
 
         <div class="form-nav">
           <button type="button" class="btn-prev" onclick="goStep1()">&#x2190; Retour</button>
@@ -721,20 +712,15 @@
     btn.textContent='Envoi en cours…';
 
     try{
-      const formData = new FormData(this);
-      if(typeof selectedFiles !== 'undefined' && selectedFiles.length > 0){
-        selectedFiles.forEach(file => formData.append('fichiers', file));
-      }
-      const res=await fetch(this.action,{method:'POST',body:formData});
-      const data=await res.json();
-      if(data.success){
+      const res=await fetch(this.action,{method:'POST',body:new FormData(this),headers:{'Accept':'application/json'}});
+      if(res.ok){
         document.getElementById('step2').style.display='none';
         document.querySelector('.steps-indicator').style.display='none';
         document.getElementById('successState').classList.add('show');
       } else {
         btn.disabled=false;
         btn.innerHTML='Réessayer &rarr;';
-        alert(data.error || 'Une erreur est survenue. Appelez-nous au 06 42 89 98 58.');
+        alert('Une erreur est survenue. Merci de réessayer ou de nous écrire directement à contact@kobo-design.fr');
       }
     } catch {
       btn.disabled=false;
@@ -742,37 +728,6 @@
       alert('Connexion impossible. Vérifiez votre connexion internet et réessayez.');
     }
   });
-
-  /* FILE UPLOAD */
-  let selectedFiles = [];
-  function handleFiles(files){
-    Array.from(files).forEach(file=>{
-      if(file.size > 10*1024*1024){ alert(file.name+' dépasse 10 Mo.'); return; }
-      if(selectedFiles.length >= 5){ alert('Maximum 5 fichiers.'); return; }
-      if(!selectedFiles.find(f=>f.name===file.name && f.size===file.size)){
-        selectedFiles.push(file);
-      }
-    });
-    renderFileList();
-  }
-  function renderFileList(){
-    const list=document.getElementById('fileList');
-    if(!list) return;
-    list.innerHTML='';
-    selectedFiles.forEach((f,i)=>{
-      const chip=document.createElement('span');
-      chip.className='file-chip';
-      chip.innerHTML=f.name+' <span class="file-chip__remove" onclick="removeFile('+i+')">×</span>';
-      list.appendChild(chip);
-    });
-  }
-  function removeFile(i){ selectedFiles.splice(i,1); renderFileList(); }
-  const drop=document.getElementById('fileDrop');
-  if(drop){
-    drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
-    drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
-    drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');handleFiles(e.dataTransfer.files);});
-  }
 
   /* FAQ */
   function toggleFaq(item){
