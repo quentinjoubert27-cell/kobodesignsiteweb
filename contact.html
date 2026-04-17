@@ -428,13 +428,12 @@
       <span class="step-label">Votre projet</span>
     </div>
 
-    <!--
-      FORMSPREE : remplacez YOUR_FORM_ID par votre identifiant
-      1. Créez un compte sur formspree.io (gratuit, 50 soumissions/mois)
-      2. Créez un formulaire → copiez l'ID (ex: xpwzpkjn)
-      3. Remplacez YOUR_FORM_ID ci-dessous
-    -->
-    <form id="contactForm" action="https://formspree.io/f/mlgopeke" method="POST" novalidate>
+    <!-- WEB3FORMS -->
+    <form id="contactForm" action="https://api.web3forms.com/submit" method="POST" novalidate enctype="multipart/form-data">
+      <input type="hidden" name="access_key" value="e7bd42fc-72c0-4783-b0e6-85580b93c72e"/>
+      <input type="hidden" name="subject" value="Nouveau projet — Kobo Design"/>
+      <input type="hidden" name="from_name" value="Kobo Design Website"/>
+      <input type="hidden" name="redirect" value="false"/>
 
       <!-- Succès -->
       <div class="success-state" id="successState">
@@ -520,9 +519,8 @@
           <input type="file" id="fichiers" name="fichiers" multiple accept="image/*,.pdf,.dwg,.dxf" style="display:none" onchange="handleFiles(this.files)"/>
         </div>
 
-        <!-- Anti-spam honeypot -->
-        <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off"/>
-        <input type="hidden" name="_subject" value="Nouveau message — Kōbō Studio"/>
+        <!-- Anti-spam honeypot Web3Forms -->
+        <input type="checkbox" name="botcheck" style="display:none"/>
 
         <div class="form-nav">
           <button type="button" class="btn-prev" onclick="goStep1()">&#x2190; Retour</button>
@@ -727,15 +725,21 @@
     btn.textContent='Envoi en cours…';
 
     try{
-      const res=await fetch(this.action,{method:'POST',body:new FormData(this),headers:{'Accept':'application/json'}});
-      if(res.ok){
+      const formData = new FormData(this);
+      // Ajouter les fichiers sélectionnés
+      if(selectedFiles && selectedFiles.length > 0){
+        selectedFiles.forEach((file, i) => formData.append('attachment_'+i, file));
+      }
+      const res=await fetch(this.action,{method:'POST',body:formData});
+      const data=await res.json();
+      if(data.success){
         document.getElementById('step2').style.display='none';
         document.querySelector('.steps-indicator').style.display='none';
         document.getElementById('successState').classList.add('show');
       } else {
         btn.disabled=false;
         btn.innerHTML='Réessayer &rarr;';
-        alert('Une erreur est survenue. Merci de réessayer ou de nous écrire directement à contact@kobo-design.fr');
+        alert('Une erreur est survenue. Merci de réessayer ou de nous appeler au 06 42 89 98 58.');
       }
     } catch {
       btn.disabled=false;
