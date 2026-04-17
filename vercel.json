@@ -1,7 +1,6 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-
   "headers": [
     {
       "source": "/(.*)",
@@ -32,7 +31,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://formspree.io https://code.tidio.co https://widget.tidio.co https://app.crisp.chat https://client.crisp.chat; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://formspree.io https://socket.tidio.co https://socket.crisp.chat; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self' https://formspree.io; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://formspree.io https://code.tidio.co https://widget.tidio.co https://app.crisp.chat https://client.crisp.chat; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://formspree.io https://*.supabase.co https://socket.tidio.co https://socket.crisp.chat; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
         }
       ]
     },
@@ -77,7 +76,6 @@
       ]
     }
   ],
-
   "redirects": [
     {
       "source": "/index.html",
