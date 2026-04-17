@@ -1,23 +1,34 @@
 // api/contact.js — Fonction serverless Vercel (CommonJS)
 
-const { createClient } = require('@supabase/supabase-js');
-const { Resend } = require('resend');
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS, GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Debug temporaire — à supprimer après
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      supabase_url: process.env.SUPABASE_URL ? 'OK' : 'MANQUANT',
+      supabase_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MANQUANT',
+      resend_key: process.env.RESEND_API_KEY ? 'OK' : 'MANQUANT',
+      contact_email: process.env.CONTACT_EMAIL ? 'OK' : 'MANQUANT',
+    });
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
+    const { createClient } = require('@supabase/supabase-js');
+    const { Resend } = require('resend');
+
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     const body = req.body;
 
     const prenom      = (body.prenom || '').toString().slice(0, 100);
@@ -85,6 +96,6 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     console.error('Erreur contact:', err);
-    return res.status(500).json({ error: 'Une erreur est survenue. Appelez-nous au 06 42 89 98 58.' });
+    return res.status(500).json({ error: err.message || 'Une erreur est survenue.' });
   }
 };
