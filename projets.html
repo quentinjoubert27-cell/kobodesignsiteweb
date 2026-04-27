@@ -415,6 +415,52 @@
        RESPONSIVE
     ============================================================ */
     /* — Tablette portrait — */
+    /* ── LIGHTBOX ── */
+    .lb-overlay {
+      position: fixed; inset: 0; background: rgba(15,15,15,.95);
+      z-index: 2000; display: none; align-items: center; justify-content: center;
+      padding: 24px; opacity: 0; transition: opacity .3s;
+    }
+    .lb-overlay.open { display: flex; opacity: 1; }
+    .lb-inner { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 16px; }
+    .lb-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .lb-cat { font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: rgba(255,250,240,.35); margin-bottom: 4px; }
+    .lb-title { font-size: clamp(20px,3vw,32px); font-weight: 900; letter-spacing: -.03em; color: #FFFAF0; }
+    .lb-close {
+      width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid rgba(255,250,240,.15);
+      background: none; color: rgba(255,250,240,.6); font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: border-color .2s, color .2s;
+    }
+    .lb-close:hover { border-color: #CD3E00; color: #CD3E00; }
+    .lb-main { position: relative; }
+    .lb-main-img {
+      width: 100%; max-height: 60vh; object-fit: contain; border-radius: 8px;
+      background: rgba(255,250,240,.04);
+    }
+    .lb-main-img[src=""] { display: none; }
+    .lb-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(15,15,15,.7); border: 1.5px solid rgba(255,250,240,.15);
+      color: #FFFAF0; font-size: 18px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; transition: background .2s, border-color .2s;
+    }
+    .lb-nav:hover { background: #CD3E00; border-color: #CD3E00; }
+    .lb-prev { left: 12px; }
+    .lb-next { right: 12px; }
+    .lb-counter { text-align: center; font-size: 11px; color: rgba(255,250,240,.3); margin-top: 4px; }
+    .lb-thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .lb-thumb {
+      width: 72px; height: 56px; object-fit: cover; border-radius: 6px;
+      cursor: pointer; opacity: .5; transition: opacity .2s; flex-shrink: 0;
+      border: 2px solid transparent;
+    }
+    .lb-thumb.active { opacity: 1; border-color: #CD3E00; }
+    .lb-info { font-size: 13px; font-weight: 300; color: rgba(255,250,240,.45); line-height: 1.7; }
+    .lb-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .lb-chip { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255,250,240,.12); color: rgba(255,250,240,.4); }
+
     @media (max-width: 900px) {
       .col-7, .col-5, .col-8, .col-4 { grid-column: span 6; }
       .col-12 { grid-column: span 12; }
@@ -595,7 +641,7 @@
 
       <!-- Rangée 1 : grande + petite -->
       <div class="proj-card-wrap col-7" data-cat="chambre">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/chambre-amis.jpg')"></div>
           <span class="proj-card__num">01</span>
           <div class="proj-card__overlay"></div>
@@ -609,14 +655,14 @@
       </div>
 
       <div class="proj-card-wrap col-5" data-cat="chambre">
-        <div class="proj-card" tabindex="0">
-          <div class="proj-card__img" style="background-image:url('img/chambre-suite.jpg')"></div>
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
+          <div class="proj-card__img" style="background-image:url('img/armoires-enfant-1.jpg')"></div>
           <span class="proj-card__num">02</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
-            <p class="proj-card__cat">Chambre · Dressing</p>
-            <h3 class="proj-card__name">Suite Hôtel Particulier</h3>
-            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span><span class="proj-card__chip">28 m²</span><span class="proj-card__chip">2024</span></div>
+            <p class="proj-card__cat">Rangement · Dressing</p>
+            <h3 class="proj-card__name">Dressing</h3>
+            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span><span class="proj-card__chip"></span><span class="proj-card__chip">2024</span></div>
           </div>
           <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
@@ -624,7 +670,7 @@
 
       <!-- Rangée 2 : trois colonnes égales -->
       <div class="proj-card-wrap col-4" data-cat="cuisine">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/cuisine-1.png')"></div>
           <span class="proj-card__num">03</span>
           <div class="proj-card__overlay"></div>
@@ -638,7 +684,7 @@
       </div>
 
       <div class="proj-card-wrap col-4" data-cat="salon">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/meuble-escalier.png')"></div>
           <span class="proj-card__num">04</span>
           <div class="proj-card__overlay"></div>
@@ -652,7 +698,7 @@
       </div>
 
       <div class="proj-card-wrap col-4" data-cat="salon">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/bibliotheque.png')"></div>
           <span class="proj-card__num">05</span>
           <div class="proj-card__overlay"></div>
@@ -667,9 +713,10 @@
 
       <!-- Rangée 3 : pleine largeur — projet signature -->
       <div class="proj-card-wrap col-12" data-cat="cuisine">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/cuisine-2.png'); background-position: center 40%;"></div>
-          <span class="proj-card__num">06 — Projet Signature</span>
+          <span class="proj-card__num">06</span>
+          <span style="position:absolute;top:20px;left:60px;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);">Projet Signature</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
             <p class="proj-card__cat">Cuisine · Sur-mesure</p>
@@ -682,7 +729,7 @@
 
       <!-- Rangée 4 : petite + grande -->
       <div class="proj-card-wrap col-5" data-cat="bain">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/vasque.png')"></div>
           <span class="proj-card__num">07</span>
           <div class="proj-card__overlay"></div>
@@ -696,7 +743,7 @@
       </div>
 
       <div class="proj-card-wrap col-7" data-cat="salon">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/porte-coulissante.png')"></div>
           <span class="proj-card__num">08</span>
           <div class="proj-card__overlay"></div>
@@ -711,7 +758,7 @@
 
       <!-- Rangée 5 : deux moitiés -->
       <div class="proj-card-wrap col-6" data-cat="salon">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/meuble-escalier.png')"></div>
           <span class="proj-card__num">09</span>
           <div class="proj-card__overlay"></div>
@@ -725,7 +772,7 @@
       </div>
 
       <div class="proj-card-wrap col-6" data-cat="salon">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/meuble-tv.png')"></div>
           <span class="proj-card__num">10</span>
           <div class="proj-card__overlay"></div>
@@ -740,7 +787,7 @@
 
       <!-- Rangée 6 : grande + petite inversée -->
       <div class="proj-card-wrap col-8" data-cat="bibliotheque">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/bibliotheques.png')"></div>
           <span class="proj-card__num">11</span>
           <div class="proj-card__overlay"></div>
@@ -754,7 +801,7 @@
       </div>
 
       <div class="proj-card-wrap col-4" data-cat="cuisine">
-        <div class="proj-card" tabindex="0">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/cuisine-1.png')"></div>
           <span class="proj-card__num">12</span>
           <div class="proj-card__overlay"></div>
@@ -973,5 +1020,254 @@
     }, { threshold: 0.1 });
     document.querySelectorAll('.reveal').forEach(el => io.observe(el));
   </script>
+<!-- ── LIGHTBOX ── -->
+<div class="lb-overlay" id="lb" role="dialog" aria-modal="true" onclick="lbBgClose(event)">
+  <div class="lb-inner">
+    <div class="lb-header">
+      <div class="lb-title-block">
+        <p class="lb-cat" id="lb-cat">—</p>
+        <h2 class="lb-title" id="lb-title">—</h2>
+      </div>
+      <button class="lb-close" onclick="closeLb()" aria-label="Fermer">✕</button>
+    </div>
+    <div class="lb-main">
+      <img class="lb-main-img" id="lb-main-img" src="" alt=""/>
+      <button class="lb-nav lb-prev" onclick="lbNav(-1)" aria-label="Précédent">‹</button>
+      <button class="lb-nav lb-next" onclick="lbNav(1)" aria-label="Suivant">›</button>
+    </div>
+    <p class="lb-counter" id="lb-counter"></p>
+    <div class="lb-thumbs" id="lb-thumbs"></div>
+    <div>
+      <p class="lb-info" id="lb-info"></p>
+      <div class="lb-chips" id="lb-chips"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── DONNÉES PROJETS ────────────────────────────────────────────
+     Pour chaque projet, ajoute tes photos dans le tableau "photos".
+     Format : 'img/nom-du-fichier.jpg'
+     Tu peux mettre autant de photos que tu veux.
+  ─────────────────────────────────────────────────────────────── */
+  const PROJETS = [
+    {
+      num: '01',
+      cat: 'Chambre · Sur-mesure',
+      title: "Chambre d'amis",
+      chips: ['Bordeaux', '2024'],
+      info: "Création d'une chambre d'amis sur-mesure. Mobilier intégré, tête de lit et rangements encastrés.",
+      photos: [
+        'img/chambre-amis.jpg',
+        // Ajoute tes photos ici :
+        // 'img/chambre-amis-2.jpg',
+        // 'img/chambre-amis-3.jpg',
+      ]
+    },
+    {
+      num: '02',
+      cat: 'Chambre · Dressing',
+      title: 'rangement sur-mesure',
+      chips: ['Bordeaux', '2024'],
+      info: "Dressing intégré sur-mesure",
+      photos: [
+        'img/armoires-enfant-1.jpg',
+        'img/armoires-enfant2.JPG',
+        'img/armoire-enfant3 2.png',
+      ]
+    },
+    {
+      num: '03',
+      cat: 'Cuisine · Sur-mesure',
+      title: 'Cuisine sur-mesure',
+      chips: ['Bordeaux'],
+      info: "Cuisine entièrement sur-mesure avec îlot central. Matériaux sélectionnés, quincaillerie premium.",
+      photos: [
+        'img/cuisine-1.png',
+        // 'img/cuisine-1-detail.jpg',
+      ]
+    },
+    {
+      num: '04',
+      cat: 'Salon · Sur-mesure',
+      title: 'Rangement sous escalier',
+      chips: ['Bordeaux'],
+      info: "Optimisation de l'espace sous escalier avec rangements sur-mesure intégrés.",
+      photos: [
+        'img/meuble-escalier.png',
+        // 'img/meuble-escalier-2.jpg',
+      ]
+    },
+    {
+      num: '05',
+      cat: 'Salon · Bibliothèque',
+      title: 'Bibliothèque sur-mesure',
+      chips: ['Bordeaux'],
+      info: "Bibliothèque encastrée du sol au plafond, dessinée sur-mesure pour l'espace.",
+      photos: [
+        'img/bibliotheque.png',
+        'img/bibliothéquevide 2.png',
+      ]
+    },
+    {
+      num: '06',
+      cat: 'Cuisine · Sur-mesure',
+      title: 'Cuisine sur-mesure',
+      chips: ['Bordeaux'],
+      info: "Cuisine ouverte sur-mesure avec finitions soignées et matériaux haut de gamme.",
+      photos: [
+        'img/cuisine-2.png',
+        // 'img/cuisine-2-detail.jpg',
+      ]
+    },
+    {
+      num: '07',
+      cat: 'Salle de bain · Sur-mesure',
+      title: 'Vasque sur-mesure',
+      chips: ['Bordeaux'],
+      info: "Meuble vasque sur-mesure en bois massif avec plan de travail en pierre naturelle.",
+      photos: [
+        'img/vasque.png',
+        // 'img/vasque-2.jpg',
+      ]
+    },
+    {
+      num: '08',
+      cat: 'Salon · Sur-mesure',
+      title: 'Porte coulissante sur-mesure',
+      chips: ['Bordeaux'],
+      info: "Porte coulissante sur-mesure en bois avec système à galandage intégré.",
+      photos: [
+        'img/porte-coulissante.png',
+        'img/portebois 2.png',
+        'img/portebois2 2.png',
+      ]
+    },
+    {
+      num: '09',
+      cat: 'Salon · Rangement',
+      title: 'Rangement sous escalier',
+      chips: ['Bordeaux'],
+      info: "Rangements intégrés sous escalier avec portes coulissantes et éclairage LED.",
+      photos: [
+        'img/meuble-escalier.png',
+        // 'img/meuble-escalier-3.jpg',
+      ]
+    },
+    {
+      num: '10',
+      cat: 'Salon · Mobilier TV',
+      title: 'Meuble TV sur-mesure',
+      chips: ['Bordeaux'],
+      info: "Meuble TV sur-mesure avec niches et rangements cachés.",
+      photos: [
+        'img/meuble-tv.png',
+         'img/salleTV-canape.png',
+        'img/salleTV-canape2 2.png',
+        'img/salleTV-canape3 2.png',
+        'img/salleTV3.jpg',
+      ]
+    },
+    {
+      num: '11',
+      cat: 'Bibliothèque · Sur-mesure',
+      title: 'Bibliothèques sur-mesure',
+      chips: ['Bordeaux'],
+      info: "Ensemble de bibliothèques sur-mesure couvrant un pan de mur entier.",
+      photos: [
+        'img/bibliotheques.png',
+        'img/Bibliothèquesbois2.png',
+        'img/Bibliothèquesbois .png',
+        'img/Bibliothèquesbois3.png',
+      ]
+    },
+    {
+      num: '12',
+      cat: 'Cuisine · Sur-mesure',
+      title: 'Cuisine sur-mesure',
+      chips: ['Bordeaux'],
+      info: "Cuisine compacte sur-mesure optimisant chaque centimètre de l'espace disponible.",
+      photos: [
+        'img/cuisine-1.png',
+        // 'img/cuisine-detail.jpg',
+      ]
+    },
+  ];
+
+  /* ── LIGHTBOX ENGINE ──────────────────────────────────────────── */
+  let lbPhotos = [];
+  let lbIdx = 0;
+
+  function openLb(numStr) {
+    const projet = PROJETS.find(p => p.num === numStr);
+    if (!projet) return;
+
+    lbPhotos = projet.photos.filter(p => !p.includes('//'));
+    lbIdx = 0;
+
+    document.getElementById('lb-cat').textContent = projet.cat;
+    document.getElementById('lb-title').textContent = projet.title;
+    document.getElementById('lb-info').textContent = projet.info;
+    document.getElementById('lb-chips').innerHTML = projet.chips.map(c => `<span class="lb-chip">${c}</span>`).join('');
+
+    renderLb();
+
+    const lb = document.getElementById('lb');
+    lb.style.display = 'flex';
+    requestAnimationFrame(() => lb.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+
+    // Fermer avec Échap
+    document.addEventListener('keydown', lbKeyHandler);
+  }
+
+  function renderLb() {
+    const img = document.getElementById('lb-main-img');
+    const thumbs = document.getElementById('lb-thumbs');
+    const counter = document.getElementById('lb-counter');
+
+    img.src = lbPhotos[lbIdx];
+    img.style.display = lbPhotos.length > 0 ? 'block' : 'none';
+    counter.textContent = lbPhotos.length > 1 ? `${lbIdx + 1} / ${lbPhotos.length}` : '';
+
+    // Flèches
+    document.querySelector('.lb-prev').style.display = lbPhotos.length > 1 ? 'flex' : 'none';
+    document.querySelector('.lb-next').style.display = lbPhotos.length > 1 ? 'flex' : 'none';
+
+    // Miniatures
+    thumbs.innerHTML = lbPhotos.map((p, i) =>
+      `<img class="lb-thumb${i === lbIdx ? ' active' : ''}" src="${p}" alt="" onclick="lbGoto(${i})" loading="lazy"/>`
+    ).join('');
+  }
+
+  function lbNav(dir) {
+    lbIdx = (lbIdx + dir + lbPhotos.length) % lbPhotos.length;
+    renderLb();
+  }
+
+  function lbGoto(i) {
+    lbIdx = i;
+    renderLb();
+  }
+
+  function closeLb() {
+    const lb = document.getElementById('lb');
+    lb.classList.remove('open');
+    setTimeout(() => { lb.style.display = 'none'; }, 300);
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', lbKeyHandler);
+  }
+
+  function lbBgClose(e) {
+    if (e.target === document.getElementById('lb')) closeLb();
+  }
+
+  function lbKeyHandler(e) {
+    if (e.key === 'Escape') closeLb();
+    if (e.key === 'ArrowLeft') lbNav(-1);
+    if (e.key === 'ArrowRight') lbNav(1);
+  }
+</script>
+
 </body>
 </html>
