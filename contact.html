@@ -204,6 +204,19 @@
     .success-back{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid rgba(205,62,0,.3);padding-bottom:2px;margin-top:8px;transition:opacity .2s}
     .success-back:hover{opacity:.7}
 
+    /* FILE UPLOAD */
+    .form__optional { font-size:10px;font-weight:400;color:rgba(26,26,26,.4);margin-left:6px }
+    .file-drop { display:block;border:1.5px dashed rgba(26,26,26,.2);border-radius:10px;padding:28px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:var(--bg) }
+    .file-drop:hover,.file-drop.drag { border-color:var(--accent);background:rgba(205,62,0,.03) }
+    .file-drop__icon { margin-bottom:12px }
+    .file-drop__text { font-size:13px;color:rgba(26,26,26,.6);margin-bottom:4px }
+    .file-drop__link { color:var(--accent);font-weight:600;text-decoration:underline }
+    .file-drop__hint { font-size:11px;color:rgba(26,26,26,.35) }
+    .file-drop__list { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;justify-content:center }
+    .file-chip { display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;background:var(--mid);color:var(--dark);padding:4px 10px;border-radius:100px }
+    .file-chip__remove { cursor:pointer;color:rgba(26,26,26,.4);font-size:14px;line-height:1;transition:color .2s }
+    .file-chip__remove:hover { color:var(--accent) }
+
     /* FAQ */
     .faq-section{padding:clamp(64px,9vw,100px) clamp(24px,7vw,100px);background:var(--mid);border-top:1px solid rgba(26,26,26,.07)}
     .faq-eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
@@ -432,7 +445,7 @@
       2. Créez un formulaire → copiez l'ID (ex: xpwzpkjn)
       3. Remplacez YOUR_FORM_ID ci-dessous
     -->
-    <form id="contactForm" action="https://formspree.io/f/mwvaoprv" method="POST" novalidate>
+    <form id="contactForm" action="/api/contact" method="POST" novalidate enctype="multipart/form-data">
 
       <!-- Succès -->
       <div class="success-state" id="successState">
@@ -503,6 +516,20 @@
           <label class="form__label" for="message">Décrivez votre projet *</label>
           <textarea class="form__textarea" id="message" name="message" placeholder="Parlez-nous de votre espace, de vos envies, de vos contraintes…" required></textarea>
           <p class="form__error" id="err-message">Veuillez décrire votre projet.</p>
+        </div>
+
+        <!-- Upload fichiers -->
+        <div class="form__group">
+          <label class="form__label">Vos fichiers <span class="form__optional">(facultatif)</span></label>
+          <label class="file-drop" for="fichiers" id="fileDrop">
+            <div class="file-drop__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 8 12 3 7 8" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <p class="file-drop__text">Glissez vos fichiers ici ou <span class="file-drop__link">parcourir</span></p>
+            <p class="file-drop__hint">Photos, plans, croquis, PDF — max 20 Mo · 5 fichiers</p>
+            <div class="file-drop__list" id="fileList"></div>
+          </label>
+          <input type="file" id="fichiers" name="fichiers" multiple accept="image/*,.pdf,.dwg,.dxf" style="display:none" onchange="handleFiles(this.files)"/>
         </div>
 
         <!-- Anti-spam honeypot -->
@@ -712,8 +739,48 @@
     btn.textContent='Envoi en cours…';
 
     try{
-      const res=await fetch(this.action,{method:'POST',body:new FormData(this),headers:{'Accept':'application/json'}});
-      if(res.ok){
+      // 1. Upload fichiers vers Supabase Storage
+      const SUPABASE_URL = 'https://odbkmtuoflpfzgcrzsrl.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_2krwuNXKJCHMSJvnnp9tOQ_mkz6Bxaj';
+      const uploadedFiles = [];
+
+      if (selectedFiles && selectedFiles.length > 0) {
+        const demandeId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        for (const file of selectedFiles) {
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const path = demandeId + '/' + safeName;
+          const uploadRes = await fetch(
+            SUPABASE_URL + '/storage/v1/object/fichiers-demandes/' + path,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
+                'Content-Type': file.type || 'application/octet-stream',
+                'x-upsert': 'false'
+              },
+              body: file
+            }
+          );
+          if (uploadRes.ok) {
+            const fileUrl = SUPABASE_URL + '/storage/v1/object/public/fichiers-demandes/' + path;
+            uploadedFiles.push(file.name + ' → ' + fileUrl);
+          }
+        }
+      }
+
+      // 2. Envoyer les données du formulaire en JSON
+      const formData = new FormData(this);
+      const payload = Object.fromEntries(formData.entries());
+      payload.fichiers = uploadedFiles.join('
+');
+
+      const res = await fetch(this.action, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
         document.getElementById('step2').style.display='none';
         document.querySelector('.steps-indicator').style.display='none';
         document.getElementById('successState').classList.add('show');
@@ -728,6 +795,37 @@
       alert('Connexion impossible. Vérifiez votre connexion internet et réessayez.');
     }
   });
+
+  /* FILE UPLOAD */
+  let selectedFiles = [];
+  function handleFiles(files) {
+    Array.from(files).forEach(file => {
+      if (file.size > 20 * 1024 * 1024) { alert(file.name + ' dépasse 20 Mo.'); return; }
+      if (selectedFiles.length >= 5) { alert('Maximum 5 fichiers.'); return; }
+      if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+        selectedFiles.push(file);
+      }
+    });
+    renderFileList();
+  }
+  function renderFileList() {
+    const list = document.getElementById('fileList');
+    if (!list) return;
+    list.innerHTML = '';
+    selectedFiles.forEach((f, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'file-chip';
+      chip.innerHTML = f.name + ' <span class="file-chip__remove" onclick="removeFile(' + i + ')">×</span>';
+      list.appendChild(chip);
+    });
+  }
+  function removeFile(i) { selectedFiles.splice(i, 1); renderFileList(); }
+  const dropEl = document.getElementById('fileDrop');
+  if (dropEl) {
+    dropEl.addEventListener('dragover', e => { e.preventDefault(); dropEl.classList.add('drag'); });
+    dropEl.addEventListener('dragleave', () => dropEl.classList.remove('drag'));
+    dropEl.addEventListener('drop', e => { e.preventDefault(); dropEl.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+  }
 
   /* FAQ */
   function toggleFaq(item){
