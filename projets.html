@@ -610,7 +610,7 @@
       <h1 class="page-hero__title">Nos<br><em>Projets</em></h1>
     </div>
     <div class="page-hero__right">
-      <p class="page-hero__count" id="heroCount">12</p>
+      <p class="page-hero__count" id="heroCount">10</p>
       <p class="page-hero__count-label">Réalisations</p>
     </div>
   </section>
@@ -628,7 +628,7 @@
       <button class="filter-btn" onclick="doFilter('bain', this)">Salle de bain</button>
       <button class="filter-btn" onclick="doFilter('bibliotheque', this)">Bibliothèques</button>
     </div>
-    <div class="filters__total"><strong id="countDisplay">12</strong> projets</div>
+    <div class="filters__total"><strong id="countDisplay">10</strong> projets</div>
   </div>
 
   <!-- ============================================================
@@ -640,6 +640,7 @@
     <div class="proj-grid" id="projGrid">
 
       <!-- Rangée 1 : grande + petite -->
+      
       <div class="proj-card-wrap col-7" data-cat="chambre">
         <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/chambre-amis.jpg')"></div>
@@ -668,11 +669,39 @@
         </div>
       </div>
 
-      <!-- Rangée 2 : trois colonnes égales -->
+      <div class="proj-card-wrap col-12" data-cat="cuisine">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
+          <div class="proj-card__img" style="background-image:url('img/cuisine-2.png'); background-position: center 40%;"></div>
+          <span class="proj-card__num">03</span>
+          <span style="position:absolute;top:20px;left:60px;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);">Projet Signature</span>
+          <div class="proj-card__overlay"></div>
+          <div class="proj-card__body">
+            <p class="proj-card__cat">Cuisine · Sur-mesure</p>
+            <h3 class="proj-card__name">Cuisine sur-mesure</h3>
+            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span></div>
+          </div>
+          <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </div>
+
+      <div class="proj-card-wrap col-4" data-cat="bain">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
+          <div class="proj-card__img" style="background-image:url('img/vasque.png')"></div>
+          <span class="proj-card__num">04</span>
+          <div class="proj-card__overlay"></div>
+          <div class="proj-card__body">
+            <p class="proj-card__cat">Salle de bain · Sur-mesure</p>
+            <h3 class="proj-card__name">Vasque sur-mesure</h3>
+            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span></div>
+          </div>
+          <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </div>
+
       <div class="proj-card-wrap col-4" data-cat="cuisine">
         <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/cuisine-1.png')"></div>
-          <span class="proj-card__num">03</span>
+          <span class="proj-card__num">05</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
             <p class="proj-card__cat">Cuisine · Sur-mesure</p>
@@ -686,7 +715,7 @@
       <div class="proj-card-wrap col-4" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/meuble-escalier.png')"></div>
-          <span class="proj-card__num">04</span>
+          <span class="proj-card__num">06</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
             <p class="proj-card__cat">Salon · Sur-mesure</p>
@@ -700,7 +729,7 @@
       <div class="proj-card-wrap col-4" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/bibliotheque.png')"></div>
-          <span class="proj-card__num">05</span>
+          <span class="proj-card__num">07</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
             <p class="proj-card__cat">Salon · Bibliothèque</p>
@@ -711,70 +740,10 @@
         </div>
       </div>
 
-      <!-- Rangée 3 : pleine largeur — projet signature -->
-      <div class="proj-card-wrap col-12" data-cat="cuisine">
-        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/cuisine-2.png'); background-position: center 40%;"></div>
-          <span class="proj-card__num">06</span>
-          <span style="position:absolute;top:20px;left:60px;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);">Projet Signature</span>
-          <div class="proj-card__overlay"></div>
-          <div class="proj-card__body">
-            <p class="proj-card__cat">Cuisine · Sur-mesure</p>
-            <h3 class="proj-card__name">Cuisine sur-mesure</h3>
-            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span></div>
-          </div>
-          <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-      </div>
-
-      <!-- Rangée 4 : petite + grande -->
-      <div class="proj-card-wrap col-5" data-cat="bain">
-        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/vasque.png')"></div>
-          <span class="proj-card__num">07</span>
-          <div class="proj-card__overlay"></div>
-          <div class="proj-card__body">
-            <p class="proj-card__cat">Salle de bain · Sur-mesure</p>
-            <h3 class="proj-card__name">Vasque sur-mesure</h3>
-            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span></div>
-          </div>
-          <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-      </div>
-
-      <div class="proj-card-wrap col-7" data-cat="salon">
-        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/porte-coulissante.png')"></div>
-          <span class="proj-card__num">08</span>
-          <div class="proj-card__overlay"></div>
-          <div class="proj-card__body">
-            <p class="proj-card__cat">Salon · Sur-mesure</p>
-            <h3 class="proj-card__name">Porte coulissante sur-mesure</h3>
-            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span></div>
-          </div>
-          <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-      </div>
-
-      <!-- Rangée 5 : deux moitiés -->
-      <div class="proj-card-wrap col-6" data-cat="salon">
-        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/meuble-escalier.png')"></div>
-          <span class="proj-card__num">09</span>
-          <div class="proj-card__overlay"></div>
-          <div class="proj-card__body">
-            <p class="proj-card__cat">Salon · Rangement</p>
-            <h3 class="proj-card__name">Rangement sous escalier</h3>
-            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span></div>
-          </div>
-          <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-      </div>
-
-      <div class="proj-card-wrap col-6" data-cat="salon">
+      <div class="proj-card-wrap col-4" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/meuble-tv.png')"></div>
-          <span class="proj-card__num">10</span>
+          <span class="proj-card__num">08</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
             <p class="proj-card__cat">Salon · Mobilier TV</p>
@@ -785,11 +754,24 @@
         </div>
       </div>
 
-      <!-- Rangée 6 : grande + petite inversée -->
-      <div class="proj-card-wrap col-8" data-cat="bibliotheque">
+      <div class="proj-card-wrap col-4" data-cat="salon">
+        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
+          <div class="proj-card__img" style="background-image:url('img/porte-coulissante.png')"></div>
+          <span class="proj-card__num">09</span>
+          <div class="proj-card__overlay"></div>
+          <div class="proj-card__body">
+            <p class="proj-card__cat">Salon · Sur-mesure</p>
+            <h3 class="proj-card__name">Porte coulissante sur-mesure</h3>
+            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span></div>
+          </div>
+          <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </div>
+
+      <div class="proj-card-wrap col-12" data-cat="bibliotheque">
         <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
           <div class="proj-card__img" style="background-image:url('img/bibliotheques.png')"></div>
-          <span class="proj-card__num">11</span>
+          <span class="proj-card__num">10</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
             <p class="proj-card__cat">Bibliothèque · Sur-mesure</p>
@@ -800,19 +782,9 @@
         </div>
       </div>
 
-      <div class="proj-card-wrap col-4" data-cat="cuisine">
-        <div class="proj-card" tabindex="0" onclick="openLb(this.querySelector('.proj-card__num').textContent.trim().padStart(2,'0'))" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/cuisine-1.png')"></div>
-          <span class="proj-card__num">12</span>
-          <div class="proj-card__overlay"></div>
-          <div class="proj-card__body">
-            <p class="proj-card__cat">Chambre · Dressing</p>
-            <h3 class="proj-card__name">Cuisine sur-mesure</h3>
-            <div class="proj-card__chips"><span class="proj-card__chip">Bordeaux</span><span class="proj-card__chip">130 m²</span></div>
-          </div>
-          <div class="proj-card__arrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-      </div>
+    
+
+      
 
     </div><!-- /proj-grid -->
   </section>
@@ -1077,7 +1049,7 @@
       ]
     },
     {
-      num: '03',
+      num: '05',
       cat: 'Cuisine · Sur-mesure',
       title: 'Cuisine sur-mesure',
       chips: ['Bordeaux'],
@@ -1088,7 +1060,7 @@
       ]
     },
     {
-      num: '04',
+      num: '06',
       cat: 'Salon · Sur-mesure',
       title: 'Rangement sous escalier',
       chips: ['Bordeaux'],
@@ -1099,7 +1071,7 @@
       ]
     },
     {
-      num: '05',
+      num: '07',
       cat: 'Salon · Bibliothèque',
       title: 'Bibliothèque sur-mesure',
       chips: ['Bordeaux'],
@@ -1110,7 +1082,7 @@
       ]
     },
     {
-      num: '06',
+      num: '03',
       cat: 'Cuisine · Sur-mesure',
       title: 'Cuisine sur-mesure',
       chips: ['Bordeaux'],
@@ -1121,7 +1093,7 @@
       ]
     },
     {
-      num: '07',
+      num: '04',
       cat: 'Salle de bain · Sur-mesure',
       title: 'Vasque sur-mesure',
       chips: ['Bordeaux'],
@@ -1132,7 +1104,7 @@
       ]
     },
     {
-      num: '08',
+      num: '09',
       cat: 'Salon · Sur-mesure',
       title: 'Porte coulissante sur-mesure',
       chips: ['Bordeaux'],
@@ -1143,19 +1115,9 @@
         'img/portebois2 2.png',
       ]
     },
+
     {
-      num: '09',
-      cat: 'Salon · Rangement',
-      title: 'Rangement sous escalier',
-      chips: ['Bordeaux'],
-      info: "Rangements intégrés sous escalier avec portes coulissantes et éclairage LED.",
-      photos: [
-        'img/meuble-escalier.png',
-        // 'img/meuble-escalier-3.jpg',
-      ]
-    },
-    {
-      num: '10',
+      num: '08',
       cat: 'Salon · Mobilier TV',
       title: 'Meuble TV sur-mesure',
       chips: ['Bordeaux'],
@@ -1169,7 +1131,7 @@
       ]
     },
     {
-      num: '11',
+      num: '10',
       cat: 'Bibliothèque · Sur-mesure',
       title: 'Bibliothèques sur-mesure',
       chips: ['Bordeaux'],
@@ -1181,17 +1143,7 @@
         'img/Bibliothèquesbois3.png',
       ]
     },
-    {
-      num: '12',
-      cat: 'Cuisine · Sur-mesure',
-      title: 'Cuisine sur-mesure',
-      chips: ['Bordeaux'],
-      info: "Cuisine compacte sur-mesure optimisant chaque centimètre de l'espace disponible.",
-      photos: [
-        'img/cuisine-1.png',
-        // 'img/cuisine-detail.jpg',
-      ]
-    },
+
   ];
 
   /* ── LIGHTBOX ENGINE ──────────────────────────────────────────── */

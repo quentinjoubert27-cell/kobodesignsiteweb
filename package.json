@@ -2,8 +2,14 @@
   "name": "kobo-design-site",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "18.x"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "resend": "^3.2.0"
+  },
+  "scripts": {
+    "build": "echo 'static site'"
   }
 }

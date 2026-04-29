@@ -496,6 +496,76 @@
     .intro-strip__link { font-weight: 600; color: var(--accent); margin-left: 8px; white-space: nowrap; transition: opacity .2s; }
     .intro-strip__link:hover { opacity: .75; }
 
+
+    /* ── HERO DUAL CTA ── */
+    .hero__ctas { display: flex; align-items: center; gap: 16px; margin-top: 36px; flex-wrap: wrap; }
+    .hero__cta-primary {
+      display: inline-flex; align-items: center;
+      font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      background: var(--accent); color: var(--white);
+      padding: 15px 28px; border-radius: 6px;
+      transition: background .2s, transform .18s;
+    }
+    .hero__cta-primary:hover { background: #a83200; transform: translateY(-2px); }
+    .hero__cta-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,250,240,.7);
+      border-bottom: 1.5px solid rgba(255,250,240,.25); padding-bottom: 2px;
+      transition: color .2s, border-color .2s;
+    }
+    .hero__cta-secondary:hover { color: var(--white); border-color: rgba(255,250,240,.6); }
+
+    /* ── BANDE RÉASSURANCE ── */
+    .reassurance-band {
+      display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+      gap: 0; background: var(--dark);
+      padding: 18px clamp(24px,7vw,100px);
+    }
+    .reassurance-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 500; color: rgba(255,250,240,.65);
+      padding: 8px 24px;
+    }
+    .reassurance-sep { width: 1px; height: 24px; background: rgba(255,250,240,.1); }
+    @media(max-width:640px) {
+      .reassurance-sep { display: none; }
+      .reassurance-item { padding: 6px 16px; font-size: 11px; }
+    }
+
+    /* ── PROCESSUS 3 ÉTAPES ── */
+    .quick-process {
+      padding: clamp(64px,9vw,100px) clamp(24px,7vw,100px);
+      background: var(--dark); text-align: center;
+    }
+    .quick-process__eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .quick-process__title { font-size: clamp(28px,4vw,48px); font-weight: 900; letter-spacing: -.04em; line-height: 1.05; color: var(--bg); margin-bottom: clamp(48px,7vw,72px); }
+    .quick-process__title em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.25); }
+    .quick-process__steps { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: clamp(48px,6vw,64px); }
+    .quick-process__step { flex: 1; max-width: 280px; padding: 0 24px; }
+    .quick-process__num { font-size: 48px; font-weight: 900; color: rgba(205,62,0,.2); letter-spacing: -.04em; line-height: 1; margin-bottom: 16px; }
+    .quick-process__icon { width: 56px; height: 56px; background: rgba(205,62,0,.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+    .quick-process__step-title { font-size: 16px; font-weight: 800; color: var(--bg); margin-bottom: 10px; letter-spacing: -.01em; }
+    .quick-process__step-desc { font-size: 13px; font-weight: 300; color: rgba(255,250,240,.45); line-height: 1.75; }
+    .quick-process__arrow { font-size: 24px; color: rgba(205,62,0,.4); padding-top: 80px; flex-shrink: 0; }
+    .quick-process__cta { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .quick-process__btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      background: var(--accent); color: var(--white);
+      padding: 16px 32px; border-radius: 6px;
+      transition: background .2s, transform .18s;
+    }
+    .quick-process__btn:hover { background: #a83200; transform: translateY(-2px); }
+    .quick-process__btn svg { transition: transform .2s; }
+    .quick-process__btn:hover svg { transform: translateX(4px); }
+    .quick-process__note { font-size: 11px; color: rgba(255,250,240,.3); font-weight: 300; letter-spacing: .08em; }
+    @media(max-width:768px) {
+      .quick-process__steps { flex-direction: column; align-items: center; gap: 32px; }
+      .quick-process__arrow { display: none; }
+      .quick-process__step { max-width: 100%; padding: 0; }
+    }
+
     /* ================================================================
        RESPONSIVE
     ================================================================ */    /* INTRO STRIP */
@@ -504,6 +574,76 @@
     .intro-strip__text strong { font-weight: 700; color: var(--bg); }
     .intro-strip__link { font-weight: 600; color: var(--accent); margin-left: 8px; white-space: nowrap; transition: opacity .2s; }
     .intro-strip__link:hover { opacity: .75; }
+
+
+    /* ── HERO DUAL CTA ── */
+    .hero__ctas { display: flex; align-items: center; gap: 16px; margin-top: 36px; flex-wrap: wrap; }
+    .hero__cta-primary {
+      display: inline-flex; align-items: center;
+      font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      background: var(--accent); color: var(--white);
+      padding: 15px 28px; border-radius: 6px;
+      transition: background .2s, transform .18s;
+    }
+    .hero__cta-primary:hover { background: #a83200; transform: translateY(-2px); }
+    .hero__cta-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,250,240,.7);
+      border-bottom: 1.5px solid rgba(255,250,240,.25); padding-bottom: 2px;
+      transition: color .2s, border-color .2s;
+    }
+    .hero__cta-secondary:hover { color: var(--white); border-color: rgba(255,250,240,.6); }
+
+    /* ── BANDE RÉASSURANCE ── */
+    .reassurance-band {
+      display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+      gap: 0; background: var(--dark);
+      padding: 18px clamp(24px,7vw,100px);
+    }
+    .reassurance-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 500; color: rgba(255,250,240,.65);
+      padding: 8px 24px;
+    }
+    .reassurance-sep { width: 1px; height: 24px; background: rgba(255,250,240,.1); }
+    @media(max-width:640px) {
+      .reassurance-sep { display: none; }
+      .reassurance-item { padding: 6px 16px; font-size: 11px; }
+    }
+
+    /* ── PROCESSUS 3 ÉTAPES ── */
+    .quick-process {
+      padding: clamp(64px,9vw,100px) clamp(24px,7vw,100px);
+      background: var(--dark); text-align: center;
+    }
+    .quick-process__eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .quick-process__title { font-size: clamp(28px,4vw,48px); font-weight: 900; letter-spacing: -.04em; line-height: 1.05; color: var(--bg); margin-bottom: clamp(48px,7vw,72px); }
+    .quick-process__title em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.25); }
+    .quick-process__steps { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: clamp(48px,6vw,64px); }
+    .quick-process__step { flex: 1; max-width: 280px; padding: 0 24px; }
+    .quick-process__num { font-size: 48px; font-weight: 900; color: rgba(205,62,0,.2); letter-spacing: -.04em; line-height: 1; margin-bottom: 16px; }
+    .quick-process__icon { width: 56px; height: 56px; background: rgba(205,62,0,.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+    .quick-process__step-title { font-size: 16px; font-weight: 800; color: var(--bg); margin-bottom: 10px; letter-spacing: -.01em; }
+    .quick-process__step-desc { font-size: 13px; font-weight: 300; color: rgba(255,250,240,.45); line-height: 1.75; }
+    .quick-process__arrow { font-size: 24px; color: rgba(205,62,0,.4); padding-top: 80px; flex-shrink: 0; }
+    .quick-process__cta { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .quick-process__btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--font); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      background: var(--accent); color: var(--white);
+      padding: 16px 32px; border-radius: 6px;
+      transition: background .2s, transform .18s;
+    }
+    .quick-process__btn:hover { background: #a83200; transform: translateY(-2px); }
+    .quick-process__btn svg { transition: transform .2s; }
+    .quick-process__btn:hover svg { transform: translateX(4px); }
+    .quick-process__note { font-size: 11px; color: rgba(255,250,240,.3); font-weight: 300; letter-spacing: .08em; }
+    @media(max-width:768px) {
+      .quick-process__steps { flex-direction: column; align-items: center; gap: 32px; }
+      .quick-process__arrow { display: none; }
+      .quick-process__step { max-width: 100%; padding: 0; }
+    }
 
     /* ================================================================
        RESPONSIVE
@@ -697,10 +837,10 @@
     <div class="hero__inner">
       <span class="hero__label">Studio Kōbō — Bordeaux, France</span>
       <h1 class="hero__h1">Votre intérieur,<br><em>ne ressemble à aucun autre.</em></h1>
-      <a href="projets.html" class="hero__cta">
-        Découvrir nos projets
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
+      <div class="hero__ctas">
+            <a href="contact.html" class="hero__cta-primary">Déposer mon projet →</a>
+            <a href="projets.html" class="hero__cta-secondary">Voir nos réalisations</a>
+          </div>
     </div>
     <div class="hero__scroll" aria-hidden="true">
       <span>Scroll</span>
@@ -723,6 +863,29 @@
   <!-- ================================================================
        GAMME DE MOBILIER
   ================================================================ -->
+  <!-- BANDE RÉASSURANCE -->
+  <div class="reassurance-band">
+    <div class="reassurance-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Devis gratuit · Sans engagement</span>
+    </div>
+    <div class="reassurance-sep"></div>
+    <div class="reassurance-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#CD3E00" stroke-width="1.6"/><path d="M12 6v6l4 2" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Réponse sous 24h</span>
+    </div>
+    <div class="reassurance-sep"></div>
+    <div class="reassurance-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Prix ferme · Aucune surprise</span>
+    </div>
+    <div class="reassurance-sep"></div>
+    <div class="reassurance-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#CD3E00" stroke-width="1.6"/></svg>
+      <span>+50 projets à Bordeaux</span>
+    </div>
+  </div>
+
   <section class="expertises" id="expertise" aria-label="Nos expertises">
 
     <!-- En-tête -->
@@ -830,6 +993,49 @@
   </section>
 
   
+  <!-- PROCESSUS 3 ÉTAPES -->
+  <section class="quick-process">
+    <div class="quick-process__header reveal">
+      <p class="quick-process__eyebrow">C'est simple</p>
+      <h2 class="quick-process__title">Déposez votre projet<br><em>en 3 étapes.</em></h2>
+    </div>
+    <div class="quick-process__steps">
+      <div class="quick-process__step reveal">
+        <div class="quick-process__num">01</div>
+        <div class="quick-process__icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 class="quick-process__step-title">Décrivez votre projet</h3>
+        <p class="quick-process__step-desc">Un croquis, une photo, une idée floue — c'est suffisant. Notre formulaire prend 2 minutes.</p>
+      </div>
+      <div class="quick-process__arrow" aria-hidden="true">→</div>
+      <div class="quick-process__step reveal reveal-delay-1">
+        <div class="quick-process__num">02</div>
+        <div class="quick-process__icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.5 11.5a19.79 19.79 0 01-3.07-8.67A2 2 0 013.4 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.91 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 class="quick-process__step-title">On vous rappelle</h3>
+        <p class="quick-process__step-desc">Sous 24h ouvrées, un membre de l'équipe vous contacte pour affiner votre projet ensemble.</p>
+      </div>
+      <div class="quick-process__arrow" aria-hidden="true">→</div>
+      <div class="quick-process__step reveal reveal-delay-2">
+        <div class="quick-process__num">03</div>
+        <div class="quick-process__icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/><line x1="16" y1="13" x2="8" y2="13" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="quick-process__step-title">Vous recevez votre devis</h3>
+        <p class="quick-process__step-desc">Devis détaillé, prix ferme, délais précis. Gratuit et sans engagement jusqu'à votre validation.</p>
+      </div>
+    </div>
+    <div class="quick-process__cta reveal">
+      <a href="contact.html" class="quick-process__btn">
+        Déposer mon projet maintenant
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <p class="quick-process__note">Gratuit · Sans engagement · Réponse sous 24h</p>
+    </div>
+  </section>
+
   <section class="gamme" id="gamme" aria-label="Notre gamme de mobilier">
     <div class="gamme__header">
       <div>
