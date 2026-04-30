@@ -1078,7 +1078,7 @@
       scene.background = new THREE.Color(0xFAF7F2);
 
       camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
-      camera.position.set(0, 0.5, 2.5);
+      camera.position.set(0, 0, 3.5);
 
       renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
       renderer.setSize(viewer.clientWidth, viewer.clientHeight);
@@ -1112,9 +1112,12 @@
           console.log('Max dim:', maxDim.toFixed(2));
           
           // Centrer et scaler
-          model.position.sub(center);
-          var scale = 1.8 / Math.max(maxDim, 0.001);
+          // Centrer le modèle correctement
+          model.position.set(-center.x, -center.y, -center.z);
+          var scale = 2.2 / Math.max(maxDim, 0.001);
           model.scale.setScalar(scale);
+          // Ajuster position après scale
+          model.position.multiplyScalar(scale);
           
           console.log('Scale applied:', scale.toFixed(4));
           scene.add(model);
