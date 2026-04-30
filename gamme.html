@@ -815,31 +815,31 @@
         </p>
         <div class="config__presets" id="presetsWood">
           <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/BOIS_CHENE.png')"></span>
+            <span class="preset-swatch" style="background-image:url('/img/BOIS_CHENE.jpg')"></span>
             <span class="preset-name">Chêne</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="noyer" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/NOYER.png')"></span>
+            <span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>
             <span class="preset-name">Noyer</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="chene_fonce" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/CHENE_FONCE.png')"></span>
+            <span class="preset-swatch" style="background-image:url('/img/CHENE_FONCE.jpg')"></span>
             <span class="preset-name">Chêne foncé</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="sapelli" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.png')"></span>
+            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.jpg')"></span>
             <span class="preset-name">Sapelli</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="vert_sauge" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background:#bebdab"></span>
+            <span class="preset-swatch" style="background-image:url('/img/VERT_SAUGE.jpg')"></span>
             <span class="preset-name">Vert sauge</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="brun_rose" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background:#8f695e"></span>
+            <span class="preset-swatch" style="background-image:url('/img/BRUN_ROSE.jpg')"></span>
             <span class="preset-name">Brun rosé</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="gris_ardoise" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background:#545c5e"></span>
+            <span class="preset-swatch" style="background-image:url('/img/GRIS_ARDOISE.jpg')"></span>
             <span class="preset-name">Gris ardoise</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="blanc_mate" onclick="setMaterial('wood', this)">
@@ -861,31 +861,31 @@
         </p>
         <div class="config__presets" id="presetsBody">
           <button class="preset-btn active" data-type="body" data-value="chene" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/BOIS_CHENE.png')"></span>
+            <span class="preset-swatch" style="background-image:url('/img/BOIS_CHENE.jpg')"></span>
             <span class="preset-name">Chêne</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="noyer" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/NOYER.png')"></span>
+            <span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>
             <span class="preset-name">Noyer</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="chene_fonce" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/CHENE_FONCE.png')"></span>
+            <span class="preset-swatch" style="background-image:url('/img/CHENE_FONCE.jpg')"></span>
             <span class="preset-name">Chêne foncé</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="sapelli" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.png')"></span>
+            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.jpg')"></span>
             <span class="preset-name">Sapelli</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="vert_sauge" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background:#bebdab"></span>
+            <span class="preset-swatch" style="background-image:url('/img/VERT_SAUGE.jpg')"></span>
             <span class="preset-name">Vert sauge</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="brun_rose" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background:#8f695e"></span>
+            <span class="preset-swatch" style="background-image:url('/img/BRUN_ROSE.jpg')"></span>
             <span class="preset-name">Brun rosé</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="gris_ardoise" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background:#545c5e"></span>
+            <span class="preset-swatch" style="background-image:url('/img/GRIS_ARDOISE.jpg')"></span>
             <span class="preset-name">Gris ardoise</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="blanc_mate" onclick="setMaterial('body', this)">
@@ -1040,13 +1040,13 @@
 
     // Présets matières — chaque préset garde la texture originale et applique une teinte
     var MAT_OPTIONS = {
-      chene:        { label:'Chêne',        texture: '/img/BOIS_CHENE.png' },
-      noyer:        { label:'Noyer',        texture: '/img/NOYER.png' },
-      chene_fonce:  { label:'Chêne foncé',  texture: '/img/CHENE_FONCE.png' },
-      sapelli:      { label:'Sapelli',      texture: '/img/SAPELLI.png' },
-      vert_sauge:   { label:'Vert sauge',   texture: null, r:0.745, g:0.741, b:0.671 },
-      brun_rose:    { label:'Brun rosé',    texture: null, r:0.561, g:0.412, b:0.369 },
-      gris_ardoise: { label:'Gris ardoise', texture: null, r:0.329, g:0.361, b:0.369 },
+      chene:        { label:'Chêne',        texture: '/img/BOIS_CHENE.jpg' },
+      noyer:        { label:'Noyer',        texture: '/img/NOYER.jpg' },
+      chene_fonce:  { label:'Chêne foncé',  texture: '/img/CHENE_FONCE.jpg' },
+      sapelli:      { label:'Sapelli',      texture: '/img/SAPELLI.jpg' },
+      vert_sauge:   { label:'Vert sauge',   texture: '/img/VERT_SAUGE.jpg' },
+      brun_rose:    { label:'Brun rosé',    texture: '/img/BRUN_ROSE.jpg' },
+      gris_ardoise: { label:'Gris ardoise', texture: '/img/GRIS_ARDOISE.jpg' },
       blanc_mate:   { label:'Blanc maté',   texture: null, r:0.95,  g:0.94,  b:0.92  },
       noir_mate:    { label:'Noir maté',    texture: null, r:0.08,  g:0.08,  b:0.08  },
     };
@@ -1100,15 +1100,15 @@
       renderer.setSize(viewer.clientWidth, viewer.clientHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.9;
+      renderer.toneMappingExposure = 0.7;
       try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
       catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
 
-      scene.add(new THREE.AmbientLight(0xFFFAF0, 0.7));
-      var key = new THREE.DirectionalLight(0xFFFAF0, 0.9);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+      var key = new THREE.DirectionalLight(0xffffff, 0.6);
       key.position.set(3, 5, 3);
       scene.add(key);
-      var fill = new THREE.DirectionalLight(0xFFF5E6, 0.4);
+      var fill = new THREE.DirectionalLight(0xffffff, 0.2);
       fill.position.set(-3, 2, -2);
       scene.add(fill);
 
@@ -1135,7 +1135,7 @@
           saveOriginalMaterials();
 
           // Appliquer la texture noyer par défaut
-          loadTexture('/img/BOIS_CHENE.png', function(tex) {
+          loadTexture('/img/BOIS_CHENE.jpg', function(tex) {
             model.traverse(function(child) {
               if (!child.isMesh || !child.material) return;
               if (true) {
