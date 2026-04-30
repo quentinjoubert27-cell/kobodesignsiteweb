@@ -997,38 +997,43 @@
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
 
-  <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
-    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
+  <script>
+    // Chargement séquentiel Three.js UMD + GLTFLoader UMD
+    function loadScript(src, cb) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = cb;
+      s.onerror = function() { console.error('Erreur chargement:', src); };
+      document.head.appendChild(s);
+    }
 
-    // Couleurs des présets
-    const WOOD_COLORS = {
-      noyer:    new THREE.Color(0.266, 0.188, 0.105),
-      chene:    new THREE.Color(0.784, 0.663, 0.431),
-      wenge:    new THREE.Color(0.110, 0.063, 0.039),
-      frene:    new THREE.Color(0.910, 0.835, 0.710),
+    var WOOD_COLORS = {
+      noyer:    [0.266, 0.188, 0.105],
+      chene:    [0.784, 0.663, 0.431],
+      wenge:    [0.110, 0.063, 0.039],
+      frene:    [0.910, 0.835, 0.710],
     };
-    const BODY_COLORS = {
-      beige:      new THREE.Color(0.600, 0.397, 0.194),
-      blanc:      new THREE.Color(0.961, 0.941, 0.910),
-      anthracite: new THREE.Color(0.228, 0.228, 0.228),
-      noir:       new THREE.Color(0.102, 0.102, 0.102),
-      sauge:      new THREE.Color(0.478, 0.549, 0.455),
-      terracotta: new THREE.Color(0.804, 0.243, 0.000),
+    var BODY_COLORS = {
+      beige:      [0.600, 0.397, 0.194],
+      blanc:      [0.961, 0.941, 0.910],
+      anthracite: [0.228, 0.228, 0.228],
+      noir:       [0.102, 0.102, 0.102],
+      sauge:      [0.478, 0.549, 0.455],
+      terracotta: [0.804, 0.243, 0.000],
     };
-    const PRESET_NAMES = {
+    var PRESET_NAMES = {
       noyer:'Noyer', chene:'Chêne', wenge:'Wengé', frene:'Frêne',
       beige:'Beige', blanc:'Blanc', anthracite:'Anthracite',
       noir:'Noir', sauge:'Sauge', terracotta:'Terracotta',
     };
 
-    let currentWood = 'noyer', currentBody = 'beige';
-    let scene, camera, renderer, model;
-    let isDragging = false, prevX = 0, prevY = 0, rotY = 0, rotX = 0;
+    var currentWood = 'noyer', currentBody = 'beige';
+    var scene, camera, renderer, model;
+    var isDragging = false, prevX = 0, prevY = 0, rotY = 0, rotX = 0;
 
-    function init() {
-      const canvas = document.getElementById('threeCanvas');
-      const viewer = document.getElementById('viewer3d');
+    function initThree() {
+      var canvas = document.getElementById('threeCanvas');
+      var viewer = document.getElementById('viewer3d');
       if (!canvas || !viewer) return;
 
       scene = new THREE.Scene();
@@ -1037,72 +1042,74 @@
       camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
       camera.position.set(0, 0.5, 2.5);
 
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
       renderer.setSize(viewer.clientWidth, viewer.clientHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.2;
+      try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
+      catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
 
-      // Lumières
-      scene.add(new THREE.AmbientLight(0xfff5e6, 0.6));
-      const key = new THREE.DirectionalLight(0xffffff, 1.2);
+      scene.add(new THREE.AmbientLight(0xfff5e6, 0.8));
+      var key = new THREE.DirectionalLight(0xffffff, 1.5);
       key.position.set(3, 5, 3);
       scene.add(key);
-      const fill = new THREE.DirectionalLight(0xfff0d0, 0.4);
+      var fill = new THREE.DirectionalLight(0xfff0d0, 0.5);
       fill.position.set(-3, 2, -2);
       scene.add(fill);
 
-      // Charger GLB
-      const loader = new GLTFLoader();
+      var loader = new THREE.GLTFLoader();
       loader.load(
-        'bureau.glb',
-        (gltf) => {
+        '/bureau.glb',
+        function(gltf) {
           model = gltf.scene;
-          const box = new THREE.Box3().setFromObject(model);
-          const center = box.getCenter(new THREE.Vector3());
-          const size = box.getSize(new THREE.Vector3());
+          var box = new THREE.Box3().setFromObject(model);
+          var center = box.getCenter(new THREE.Vector3());
+          var size = box.getSize(new THREE.Vector3());
           model.position.sub(center);
-          model.scale.setScalar(1.8 / Math.max(size.x, size.y, size.z));
+          var maxDim = Math.max(size.x, size.y, size.z);
+          model.scale.setScalar(1.8 / maxDim);
           scene.add(model);
-          document.getElementById('viewerLoading').classList.add('hidden');
+          var loading = document.getElementById('viewerLoading');
+          if (loading) loading.classList.add('hidden');
           animate();
         },
-        undefined,
-        (err) => {
+        function(xhr) {
+          console.log('GLB:', Math.round(xhr.loaded / xhr.total * 100) + '%');
+        },
+        function(err) {
           console.error('GLB error:', err);
-          const el = document.getElementById('viewerLoading');
-          if (el) el.innerHTML = '<p style="color:rgba(255,80,80,.8);padding:20px">Erreur: ' + err.message + '</p>';
+          var el = document.getElementById('viewerLoading');
+          if (el) el.innerHTML = '<p style="color:rgba(255,80,80,.8);padding:20px">Erreur chargement 3D</p>';
         }
       );
 
-      // Resize
-      window.addEventListener('resize', () => {
+      window.addEventListener('resize', function() {
         camera.aspect = viewer.clientWidth / viewer.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(viewer.clientWidth, viewer.clientHeight);
       });
 
-      // Drag
-      canvas.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
-      window.addEventListener('mouseup', () => isDragging = false);
-      window.addEventListener('mousemove', e => {
+      canvas.addEventListener('mousedown', function(e) { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+      window.addEventListener('mouseup', function() { isDragging = false; });
+      window.addEventListener('mousemove', function(e) {
         if (!isDragging || !model) return;
         rotY += (e.clientX - prevX) * 0.008;
         rotX = Math.max(-0.5, Math.min(0.5, rotX + (e.clientY - prevY) * 0.004));
         model.rotation.set(rotX, rotY, 0);
         prevX = e.clientX; prevY = e.clientY;
       });
-      canvas.addEventListener('touchstart', e => { isDragging = true; prevX = e.touches[0].clientX; });
-      canvas.addEventListener('touchend', () => isDragging = false);
-      canvas.addEventListener('touchmove', e => {
+      canvas.addEventListener('touchstart', function(e) { isDragging = true; prevX = e.touches[0].clientX; });
+      canvas.addEventListener('touchend', function() { isDragging = false; });
+      canvas.addEventListener('touchmove', function(e) {
         if (!isDragging || !model) return;
         rotY += (e.touches[0].clientX - prevX) * 0.008;
         model.rotation.y = rotY;
         prevX = e.touches[0].clientX;
       });
 
-      document.getElementById('btnReset')?.addEventListener('click', () => {
+      var btnReset = document.getElementById('btnReset');
+      if (btnReset) btnReset.addEventListener('click', function() {
         if (!model) return;
         rotX = 0; rotY = 0;
         model.rotation.set(0, 0, 0);
@@ -1115,11 +1122,10 @@
       renderer.render(scene, camera);
     }
 
-    // Changer matériaux — exposé globalement
     window.setMaterial = function(type, btn) {
-      const value = btn.dataset.value;
-      const group = type === 'wood' ? 'presetsWood' : 'presetsBody';
-      document.querySelectorAll('#' + group + ' .preset-btn').forEach(b => b.classList.remove('active'));
+      var value = btn.dataset.value;
+      var group = type === 'wood' ? 'presetsWood' : 'presetsBody';
+      document.querySelectorAll('#' + group + ' .preset-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
 
       if (type === 'wood') {
@@ -1130,32 +1136,36 @@
         document.getElementById('recapBody').textContent = PRESET_NAMES[value];
       }
 
-      if (!model) return;
-      const colorMap = type === 'wood' ? WOOD_COLORS : BODY_COLORS;
-      const targetNames = type === 'wood'
-        ? ['Plateau_noyer', 'tiroir_noyer', 'tiroir_noyer.']
-        : ['caisson_beige'];
+      if (model) {
+        var colorMap = type === 'wood' ? WOOD_COLORS : BODY_COLORS;
+        var col = colorMap[value];
+        var targetNames = type === 'wood'
+          ? ['Plateau_noyer', 'tiroir_noyer', 'tiroir_noyer.']
+          : ['caisson_beige'];
 
-      model.traverse(child => {
-        if (child.isMesh && child.material) {
-          if (targetNames.includes(child.material.name)) {
+        model.traverse(function(child) {
+          if (child.isMesh && child.material && targetNames.indexOf(child.material.name) > -1) {
             child.material = child.material.clone();
-            child.material.color.copy(colorMap[value]);
+            child.material.color.setRGB(col[0], col[1], col[2]);
             child.material.map = null;
             child.material.needsUpdate = true;
           }
-        }
-      });
+        });
+      }
 
-      // CTA avec config
-      const cta = document.getElementById('configCta');
+      var cta = document.getElementById('configCta');
       if (cta) {
-        const params = new URLSearchParams({ wood: PRESET_NAMES[currentWood], body: PRESET_NAMES[currentBody], produit: 'Bureau sur-mesure' });
+        var params = new URLSearchParams({ wood: PRESET_NAMES[currentWood], body: PRESET_NAMES[currentBody], produit: 'Bureau sur-mesure' });
         cta.href = 'contact.html?' + params.toString();
       }
     };
 
-    init();
+    // Charger Three.js r128 (stable, supporte GLTFLoader UMD)
+    loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js', function() {
+      loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js', function() {
+        initThree();
+      });
+    });
   </script>
 </body>
 </html>
