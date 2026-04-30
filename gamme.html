@@ -433,47 +433,47 @@
     }
   
     /* ── CONFIGURATEUR 3D ── */
-    .configurateur { padding: clamp(64px,9vw,100px) clamp(24px,7vw,100px); background: var(--dark); }
+    .configurateur { padding: clamp(64px,9vw,100px) clamp(24px,7vw,100px); background: var(--bg); border-top: 1px solid rgba(26,26,26,.07); }
     .configurateur__header { text-align: center; margin-bottom: clamp(40px,6vw,64px); }
     .configurateur__eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
-    .configurateur__title { font-size: clamp(28px,4vw,48px); font-weight: 900; letter-spacing: -.04em; line-height: 1.05; color: var(--bg); margin-bottom: 12px; }
-    .configurateur__title em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.25); }
-    .configurateur__sub { font-size: 14px; font-weight: 300; color: rgba(255,250,240,.45); max-width: 500px; margin: 0 auto; }
+    .configurateur__title { font-size: clamp(28px,4vw,48px); font-weight: 900; letter-spacing: -.04em; line-height: 1.05; color: var(--dark); margin-bottom: 12px; }
+    .configurateur__title em { font-style: italic; font-weight: 300; color: rgba(26,26,26,.2); }
+    .configurateur__sub { font-size: 14px; font-weight: 300; color: rgba(26,26,26,.5); max-width: 500px; margin: 0 auto; }
 
     .configurateur__wrap { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
 
     /* Viewer */
-    .configurateur__viewer { position: relative; border-radius: 12px; overflow: hidden; background: rgba(255,250,240,.03); border: 1px solid rgba(255,250,240,.08); aspect-ratio: 4/3; }
+    .configurateur__viewer { position: relative; border-radius: 12px; overflow: hidden; background: #FAF7F2; border: 1px solid rgba(26,26,26,.1); aspect-ratio: 4/3; box-shadow: 0 4px 32px rgba(26,26,26,.08); }
     #threeCanvas { width: 100%; height: 100%; display: block; }
     .viewer__controls { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; }
-    .viewer__btn { width: 36px; height: 36px; border-radius: 8px; background: rgba(26,26,26,.7); border: 1px solid rgba(255,250,240,.1); color: rgba(255,250,240,.6); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; backdrop-filter: blur(8px); }
+    .viewer__btn { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.8); border: 1px solid rgba(26,26,26,.1); color: rgba(26,26,26,.5); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; backdrop-filter: blur(8px); }
     .viewer__btn:hover { background: rgba(205,62,0,.8); border-color: var(--accent); color: white; }
-    .viewer__hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,250,240,.3); white-space: nowrap; pointer-events: none; }
-    .viewer__loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(26,26,26,.9); transition: opacity .4s; }
+    .viewer__hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(26,26,26,.3); white-space: nowrap; pointer-events: none; }
+    .viewer__loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(250,247,242,.95); transition: opacity .4s; }
     .viewer__loading.hidden { opacity: 0; pointer-events: none; }
     .viewer__spinner { width: 32px; height: 32px; border: 2px solid rgba(255,250,240,.1); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
-    .viewer__loading p { font-size: 12px; color: rgba(255,250,240,.4); }
+    .viewer__loading p { font-size: 12px; color: rgba(26,26,26,.4); }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Panel */
     .configurateur__panel { display: flex; flex-direction: column; gap: 24px; }
-    .config__group { background: rgba(255,250,240,.04); border: 1px solid rgba(255,250,240,.07); border-radius: 10px; padding: 20px; }
-    .config__label { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,250,240,.4); margin-bottom: 14px; }
+    .config__group { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(26,26,26,.04); }
+    .config__label { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 14px; }
     .config__presets { display: flex; flex-wrap: wrap; gap: 8px; }
-    .preset-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1.5px solid rgba(255,250,240,.1); background: none; cursor: pointer; color: rgba(255,250,240,.6); font-family: var(--font); font-size: 12px; font-weight: 500; transition: all .2s; }
-    .preset-btn:hover { border-color: rgba(255,250,240,.3); color: rgba(255,250,240,.9); }
+    .preset-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1.5px solid rgba(26,26,26,.12); background: none; cursor: pointer; color: rgba(26,26,26,.6); font-family: var(--font); font-size: 12px; font-weight: 500; transition: all .2s; }
+    .preset-btn:hover { border-color: rgba(26,26,26,.3); color: rgba(26,26,26,.9); }
     .preset-btn.active { border-color: var(--accent); color: white; background: rgba(205,62,0,.12); }
     .preset-swatch { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; }
 
     /* Récap */
-    .config__summary { background: rgba(205,62,0,.08); border: 1px solid rgba(205,62,0,.2); border-radius: 10px; padding: 20px; }
+    .config__summary { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(26,26,26,.04); }
     .config__recap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
     .config__recap-item { display: flex; justify-content: space-between; align-items: center; }
-    .config__recap-label { font-size: 11px; color: rgba(255,250,240,.4); font-weight: 500; }
-    .config__recap-val { font-size: 13px; font-weight: 700; color: var(--bg); }
+    .config__recap-label { font-size: 11px; color: rgba(26,26,26,.4); font-weight: 500; }
+    .config__recap-val { font-size: 13px; font-weight: 700; color: var(--dark); }
     .config__cta { display: block; text-align: center; padding: 13px 20px; background: var(--accent); color: white; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em; transition: background .2s, transform .15s; }
     .config__cta:hover { background: #a83200; transform: translateY(-1px); }
-    .config__note { text-align: center; font-size: 10px; color: rgba(255,250,240,.25); margin-top: 10px; }
+    .config__note { text-align: center; font-size: 10px; color: rgba(26,26,26,.3); margin-top: 10px; }
 
     @media (max-width: 900px) {
       .configurateur__wrap { grid-template-columns: 1fr; }
@@ -1005,9 +1005,9 @@
     // Présets matières — chaque préset garde la texture originale et applique une teinte
     var PRESETS = {
       wood: {
-        noyer:  { label:'Noyer',  texture: '/img/noyer.jpg' },
-        chene:  { label:'Chêne',  texture: '/img/chene.png' },
-        marbre: { label:'Marbre', texture: '/img/marbre.png' },
+        noyer:  { label:'Noyer',  texture: '/img/noyer.jpg',  r:0.421, g:0.308, b:0.241 },
+        chene:  { label:'Chêne',  texture: '/img/chene.png',  r:0.844, g:0.705, b:0.533 },
+        marbre: { label:'Marbre', texture: '/img/marbre.png', r:0.940, g:0.938, b:0.932 },
       },
       body: {
         beige:      { label:'Beige',      r:0.831, g:0.682, b:0.537, texture: null },
@@ -1058,7 +1058,7 @@
       if (!canvas || !viewer) return;
 
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x111111);
+      scene.background = new THREE.Color(0xFAF7F2);
 
       camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
       camera.position.set(0, 0.5, 2.5);
@@ -1067,15 +1067,15 @@
       renderer.setSize(viewer.clientWidth, viewer.clientHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.2;
+      renderer.toneMappingExposure = 0.9;
       try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
       catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
 
-      scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-      var key = new THREE.DirectionalLight(0xffffff, 1.5);
+      scene.add(new THREE.AmbientLight(0xFFFAF0, 0.7));
+      var key = new THREE.DirectionalLight(0xFFFAF0, 0.9);
       key.position.set(3, 5, 3);
       scene.add(key);
-      var fill = new THREE.DirectionalLight(0xffffff, 0.5);
+      var fill = new THREE.DirectionalLight(0xFFF5E6, 0.4);
       fill.position.set(-3, 2, -2);
       scene.add(fill);
 
@@ -1108,7 +1108,7 @@
               var woodMats = ['Plateau_noyer', 'tiroir_noyer', 'tiroir_noyer.'];
               if (woodMats.indexOf(child.material.name) > -1) {
                 child.material.map = tex;
-                child.material.color.setRGB(1, 1, 1);
+                child.material.color.setRGB(0.421, 0.308, 0.241); // teinte noyer fidèle
                 child.material.needsUpdate = true;
               }
             });
@@ -1199,9 +1199,9 @@
           }
 
           if (tex) {
-            // Appliquer la vraie texture
+            // Appliquer la vraie texture avec teinte fidèle à la couleur réelle
             child.material.map = tex;
-            child.material.color.setRGB(1, 1, 1); // couleur neutre pour ne pas teinter
+            child.material.color.setRGB(preset.r || 1, preset.g || 1, preset.b || 1);
           } else {
             // Couleur unie
             child.material.map = null;
