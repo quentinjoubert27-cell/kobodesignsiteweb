@@ -1070,6 +1070,7 @@
           var maxDim = Math.max(size.x, size.y, size.z);
           model.scale.setScalar(1.8 / maxDim);
           scene.add(model);
+          saveOriginalMaterials(); // Sauvegarder les matériaux originaux avec leurs textures
           var loading = document.getElementById('viewerLoading');
           if (loading) loading.classList.add('hidden');
           animate();
@@ -1122,6 +1123,21 @@
       renderer.render(scene, camera);
     }
 
+    // Stocker les matériaux originaux au chargement
+    var originalMaterials = {};
+
+    function saveOriginalMaterials() {
+      if (!model) return;
+      model.traverse(function(child) {
+        if (child.isMesh && child.material) {
+          var name = child.material.name;
+          if (!originalMaterials[name]) {
+            originalMaterials[name] = child.material.clone();
+          }
+        }
+      });
+    }
+
     window.setMaterial = function(type, btn) {
       var value = btn.dataset.value;
       var group = type === 'wood' ? 'presetsWood' : 'presetsBody';
@@ -1145,9 +1161,15 @@
 
         model.traverse(function(child) {
           if (child.isMesh && child.material && targetNames.indexOf(child.material.name) > -1) {
-            child.material = child.material.clone();
+            var matName = child.material.name;
+            // Repartir du matériau original pour ne pas perdre la texture
+            var orig = originalMaterials[matName];
+            if (orig) {
+              child.material = orig.clone();
+              child.material.name = matName;
+            }
+            // Appliquer la couleur comme teinte (color * texture)
             child.material.color.setRGB(col[0], col[1], col[2]);
-            child.material.map = null;
             child.material.needsUpdate = true;
           }
         });
