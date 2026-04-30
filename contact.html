@@ -734,8 +734,8 @@
 
     try{
       // 1. Upload fichiers vers Supabase Storage
-      const SUPABASE_URL = 'https://altapnuofrddotydgplj.supabase.co';
-      const SUPABASE_KEY = 'sb_publishable_Zqo5iC4TWGBMiranzmi3_Q_UwYYXl86';
+      const SUPABASE_URL = 'https://auzcbtipzqxmllkzdxls.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1emNidGlwenF4bWxsa3pkeGxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MTA1MDAsImV4cCI6MjA5MzA4NjUwMH0.SBApqHI7Fg2eN77ahmK7mtvwi56fvYOTfZecaBBc3I4';
       const uploadedFiles = [];
 
       if (selectedFiles && selectedFiles.length > 0) {
@@ -746,6 +746,7 @@
           const uploadRes = await fetch(
             SUPABASE_URL + '/storage/v1/object/fichiers-formsdemandes/' + path,
             {
+              
               method: 'POST',
               headers: {
                 'Authorization': 'Bearer ' + SUPABASE_KEY,
@@ -756,7 +757,7 @@
             }
           );
           if (uploadRes.ok) {
-            const fileUrl = SUPABASE_URL + '/storage/v1/object/public/fichiers-demandes/' + path;
+            const fileUrl = SUPABASE_URL + '/storage/v1/object/public/fichiers-formsdemandes/' + path;
             uploadedFiles.push(file.name + ' → ' + fileUrl);
           }
         }
