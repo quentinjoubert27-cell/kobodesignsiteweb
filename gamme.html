@@ -663,7 +663,7 @@
         <p class="gamme-card__num">Gamme 03</p>
         <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
         <h3 class="gamme-card__title">Cuisines<br>&amp; Îlots</h3>
-        <p class="gamme-card__desc">Caissons de cuisine, îlots centraux, colonnes de rangement. Une cuisine pensée à partir de vos habitudes et de votre espace réel.</p>
+        <p class="gamme-card__desc">Fond & Détailss de cuisine, îlots centraux, colonnes de rangement. Une cuisine pensée à partir de vos habitudes et de votre espace réel.</p>
         <div class="progress-wrap">
           <div class="progress-label"><span>Conception</span><span>En cours</span></div>
           <div class="progress-bar"><div class="progress-fill" data-width="0.45"></div></div>
@@ -672,7 +672,7 @@
       <div class="gamme-card__bottom">
         <div class="gamme-card__tags">
           <span class="tag">Îlot central</span>
-          <span class="tag">Caissons</span>
+          <span class="tag">Fond & Détailss</span>
           <span class="tag">Colonne</span>
           <span class="tag">Plan de travail</span>
         </div>
@@ -773,8 +773,8 @@
 <section class="configurateur" id="configurateur">
   <div class="configurateur__header reveal">
     <p class="configurateur__eyebrow">Configurateur</p>
-    <h2 class="configurateur__title">Visualisez votre<br><em>bureau sur-mesure.</em></h2>
-    <p class="configurateur__sub">Faites tourner le meuble, changez les matières et envoyez-nous votre sélection.</p>
+    <h2 class="configurateur__title">Visualisez votre<br><em>bibliothèque sur-mesure.</em></h2>
+    <p class="configurateur__sub">Faites tourner la bibliothèque, changez les matières et envoyez-nous votre sélection.</p>
   </div>
 
   <div class="configurateur__wrap">
@@ -803,7 +803,7 @@
       <div class="config__group">
         <p class="config__label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M3 15h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Plateau & Tiroirs
+          Structure & Étagères
         </p>
         <div class="config__presets" id="presetsWood">
           <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood', this)">
@@ -845,11 +845,11 @@
         </div>
       </div>
 
-      <!-- Caisson -->
+      <!-- Fond & Détails -->
       <div class="config__group">
         <p class="config__label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Caisson
+          Fond & Détails
         </p>
         <div class="config__presets" id="presetsBody">
           <button class="preset-btn active" data-type="body" data-value="chene" onclick="setMaterial('body', this)">
@@ -895,11 +895,11 @@
       <div class="config__summary">
         <div class="config__recap">
           <div class="config__recap-item">
-            <span class="config__recap-label">Plateau & Tiroirs</span>
+            <span class="config__recap-label">Corps principal</span>
             <span class="config__recap-val" id="recapWood">Chêne</span>
           </div>
           <div class="config__recap-item">
-            <span class="config__recap-label">Caisson</span>
+            <span class="config__recap-label">Façades</span>
             <span class="config__recap-val" id="recapBody">Chêne</span>
           </div>
         </div>
@@ -917,7 +917,7 @@
   <footer>
     <div class="footer__top">
       <div class="footer__brand">
-        <img src="img/logo-koboblanc.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
+        <img src="img/logo-kobo-blanc.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
         <p>Studio de mobilier sur-mesure et d'architecture d'intérieur, basé à Bordeaux depuis 2018.</p>
       </div>
       <div class="footer__col">
@@ -1098,7 +1098,7 @@
 
       var loader = new THREE.GLTFLoader();
       loader.load(
-        '/bureau.glb',
+        '/Bibliotheque.glb',
         function(gltf) {
           model = gltf.scene;
 
@@ -1198,9 +1198,10 @@
 
       if (!model) return;
 
+      // Les deux matériaux de la bibliothèque
       var targetNames = type === 'wood'
-        ? ['Plateau_noyer', 'tiroir_noyer', 'tiroir_noyer.']
-        : ['caisson_beige'];
+        ? ['Mat\u00e9riau']
+        : ['Mat\u00e9riau.001'];
 
       function applyToMeshes(tex) {
         model.traverse(function(child) {
@@ -1238,7 +1239,7 @@
         var params = new URLSearchParams({
           plateau: PRESETS.wood[currentWood].label,
           caisson: PRESETS.body[currentBody].label,
-          produit: 'Bureau sur-mesure'
+          produit: 'Bibliothèque sur-mesure'
         });
         cta.href = 'contact.html?' + params.toString();
       }
