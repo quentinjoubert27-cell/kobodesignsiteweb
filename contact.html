@@ -744,7 +744,7 @@
           const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
           const path = demandeId + '/' + safeName;
           const uploadRes = await fetch(
-            SUPABASE_URL + '/storage/v1/object/fichiers-demandes/' + path,
+            SUPABASE_URL + '/storage/v1/object/fichiers-formsdemandes/' + path,
             {
               method: 'POST',
               headers: {
