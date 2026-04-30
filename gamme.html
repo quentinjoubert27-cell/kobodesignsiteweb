@@ -997,164 +997,127 @@
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
 
-  <script>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
 
-  /* ── CONFIGURATEUR 3D THREE.JS ── */
-  (function() {
     // Couleurs des présets
     const WOOD_COLORS = {
-      noyer:    { r: 0.266, g: 0.188, b: 0.105 },
-      chene:    { r: 0.784, g: 0.663, b: 0.431 },
-      wenge:    { r: 0.110, g: 0.063, b: 0.039 },
-      frene:    { r: 0.910, g: 0.835, b: 0.710 },
+      noyer:    new THREE.Color(0.266, 0.188, 0.105),
+      chene:    new THREE.Color(0.784, 0.663, 0.431),
+      wenge:    new THREE.Color(0.110, 0.063, 0.039),
+      frene:    new THREE.Color(0.910, 0.835, 0.710),
     };
     const BODY_COLORS = {
-      beige:      { r: 0.600, g: 0.397, b: 0.194 },
-      blanc:      { r: 0.961, g: 0.941, b: 0.910 },
-      anthracite: { r: 0.228, g: 0.228, b: 0.228 },
-      noir:       { r: 0.102, g: 0.102, b: 0.102 },
-      sauge:      { r: 0.478, g: 0.549, b: 0.455 },
-      terracotta: { r: 0.804, g: 0.243, b: 0.000 },
+      beige:      new THREE.Color(0.600, 0.397, 0.194),
+      blanc:      new THREE.Color(0.961, 0.941, 0.910),
+      anthracite: new THREE.Color(0.228, 0.228, 0.228),
+      noir:       new THREE.Color(0.102, 0.102, 0.102),
+      sauge:      new THREE.Color(0.478, 0.549, 0.455),
+      terracotta: new THREE.Color(0.804, 0.243, 0.000),
     };
-
     const PRESET_NAMES = {
-      noyer: 'Noyer', chene: 'Chêne', wenge: 'Wengé', frene: 'Frêne',
-      beige: 'Beige', blanc: 'Blanc', anthracite: 'Anthracite',
-      noir: 'Noir', sauge: 'Sauge', terracotta: 'Terracotta',
+      noyer:'Noyer', chene:'Chêne', wenge:'Wengé', frene:'Frêne',
+      beige:'Beige', blanc:'Blanc', anthracite:'Anthracite',
+      noir:'Noir', sauge:'Sauge', terracotta:'Terracotta',
     };
 
-    let currentWood = 'noyer';
-    let currentBody = 'beige';
+    let currentWood = 'noyer', currentBody = 'beige';
     let scene, camera, renderer, model;
-    let isDragging = false, prevX = 0, prevY = 0;
-    let rotX = 0, rotY = 0;
-    let isLoaded = false;
+    let isDragging = false, prevX = 0, prevY = 0, rotY = 0, rotX = 0;
 
-    // Initialiser Three.js
-    function initThree() {
+    function init() {
       const canvas = document.getElementById('threeCanvas');
       const viewer = document.getElementById('viewer3d');
       if (!canvas || !viewer) return;
 
-      const W = viewer.clientWidth;
-      const H = viewer.clientHeight;
-
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x111111);
 
-      camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
+      camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
       camera.position.set(0, 0.5, 2.5);
 
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-      renderer.setSize(W, H);
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(viewer.clientWidth, viewer.clientHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.2;
-      renderer.shadowMap.enabled = true;
 
       // Lumières
-      const ambient = new THREE.AmbientLight(0xfff5e6, 0.6);
-      scene.add(ambient);
-
+      scene.add(new THREE.AmbientLight(0xfff5e6, 0.6));
       const key = new THREE.DirectionalLight(0xffffff, 1.2);
       key.position.set(3, 5, 3);
-      key.castShadow = true;
       scene.add(key);
-
       const fill = new THREE.DirectionalLight(0xfff0d0, 0.4);
       fill.position.set(-3, 2, -2);
       scene.add(fill);
 
-      const rim = new THREE.DirectionalLight(0xffddbb, 0.3);
-      rim.position.set(0, -2, -4);
-      scene.add(rim);
-
-      // Charger le modèle GLB
-      const loader = new THREE.GLTFLoader();
+      // Charger GLB
+      const loader = new GLTFLoader();
       loader.load(
         'bureau.glb',
-        function(gltf) {
+        (gltf) => {
           model = gltf.scene;
-
-          // Centrer le modèle
           const box = new THREE.Box3().setFromObject(model);
           const center = box.getCenter(new THREE.Vector3());
           const size = box.getSize(new THREE.Vector3());
           model.position.sub(center);
-          
-          const maxDim = Math.max(size.x, size.y, size.z);
-          const scale = 1.8 / maxDim;
-          model.scale.setScalar(scale);
-
+          model.scale.setScalar(1.8 / Math.max(size.x, size.y, size.z));
           scene.add(model);
-          isLoaded = true;
-
-          // Cacher le loader
           document.getElementById('viewerLoading').classList.add('hidden');
-
           animate();
         },
-        function(xhr) {
-          // Progress
-        },
-        function(error) {
-          console.error('Erreur chargement GLB:', error);
+        undefined,
+        (err) => {
+          console.error('GLB error:', err);
           const el = document.getElementById('viewerLoading');
-          if(el) el.innerHTML = '<p style="color:rgba(255,80,80,.8);padding:20px;text-align:center">Erreur: ' + (error.message || error) + '</p>';
+          if (el) el.innerHTML = '<p style="color:rgba(255,80,80,.8);padding:20px">Erreur: ' + err.message + '</p>';
         }
       );
 
       // Resize
-      window.addEventListener('resize', function() {
-        const W2 = viewer.clientWidth;
-        const H2 = viewer.clientHeight;
-        camera.aspect = W2 / H2;
+      window.addEventListener('resize', () => {
+        camera.aspect = viewer.clientWidth / viewer.clientHeight;
         camera.updateProjectionMatrix();
-        renderer.setSize(W2, H2);
+        renderer.setSize(viewer.clientWidth, viewer.clientHeight);
       });
 
-      // Drag to rotate
+      // Drag
       canvas.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
       window.addEventListener('mouseup', () => isDragging = false);
       window.addEventListener('mousemove', e => {
         if (!isDragging || !model) return;
-        const dx = e.clientX - prevX;
-        const dy = e.clientY - prevY;
-        rotY += dx * 0.008;
-        rotX += dy * 0.004;
-        rotX = Math.max(-0.5, Math.min(0.5, rotX));
-        model.rotation.y = rotY;
-        model.rotation.x = rotX;
-        prevX = e.clientX;
-        prevY = e.clientY;
+        rotY += (e.clientX - prevX) * 0.008;
+        rotX = Math.max(-0.5, Math.min(0.5, rotX + (e.clientY - prevY) * 0.004));
+        model.rotation.set(rotX, rotY, 0);
+        prevX = e.clientX; prevY = e.clientY;
       });
-
-      // Touch support
-      canvas.addEventListener('touchstart', e => { isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; });
+      canvas.addEventListener('touchstart', e => { isDragging = true; prevX = e.touches[0].clientX; });
       canvas.addEventListener('touchend', () => isDragging = false);
       canvas.addEventListener('touchmove', e => {
         if (!isDragging || !model) return;
-        const dx = e.touches[0].clientX - prevX;
-        rotY += dx * 0.008;
+        rotY += (e.touches[0].clientX - prevX) * 0.008;
         model.rotation.y = rotY;
         prevX = e.touches[0].clientX;
+      });
+
+      document.getElementById('btnReset')?.addEventListener('click', () => {
+        if (!model) return;
+        rotX = 0; rotY = 0;
+        model.rotation.set(0, 0, 0);
       });
     }
 
     function animate() {
       requestAnimationFrame(animate);
-      if (model && !isDragging) {
-        model.rotation.y += 0.003;
-      }
+      if (model && !isDragging) model.rotation.y += 0.003;
       renderer.render(scene, camera);
     }
 
-    // Changer les matériaux
+    // Changer matériaux — exposé globalement
     window.setMaterial = function(type, btn) {
       const value = btn.dataset.value;
-
-      // Mettre à jour les boutons actifs
       const group = type === 'wood' ? 'presetsWood' : 'presetsBody';
       document.querySelectorAll('#' + group + ' .preset-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -1167,68 +1130,32 @@
         document.getElementById('recapBody').textContent = PRESET_NAMES[value];
       }
 
-      // Appliquer au modèle 3D
       if (!model) return;
       const colorMap = type === 'wood' ? WOOD_COLORS : BODY_COLORS;
-      const col = colorMap[value];
       const targetNames = type === 'wood'
         ? ['Plateau_noyer', 'tiroir_noyer', 'tiroir_noyer.']
         : ['caisson_beige'];
 
       model.traverse(child => {
         if (child.isMesh && child.material) {
-          const matName = child.material.name;
-          if (targetNames.includes(matName)) {
-            child.material.color.setRGB(col.r, col.g, col.b);
-            if (type === 'wood') {
-              child.material.map = null; // Enlever la texture, couleur unie
-              child.material.needsUpdate = true;
-            }
+          if (targetNames.includes(child.material.name)) {
+            child.material = child.material.clone();
+            child.material.color.copy(colorMap[value]);
+            child.material.map = null;
+            child.material.needsUpdate = true;
           }
         }
       });
 
-      // Mettre à jour le lien CTA avec la config
-      updateCta();
-    };
-
-    function updateCta() {
+      // CTA avec config
       const cta = document.getElementById('configCta');
       if (cta) {
-        const params = new URLSearchParams({
-          wood: PRESET_NAMES[currentWood],
-          body: PRESET_NAMES[currentBody],
-          produit: 'Bureau sur-mesure'
-        });
+        const params = new URLSearchParams({ wood: PRESET_NAMES[currentWood], body: PRESET_NAMES[currentBody], produit: 'Bureau sur-mesure' });
         cta.href = 'contact.html?' + params.toString();
       }
-    }
+    };
 
-    // Reset vue
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('btnReset')?.addEventListener('click', function() {
-        if (!model) return;
-        rotX = 0;
-        rotY = 0;
-        model.rotation.set(0, 0, 0);
-      });
-    });
-
-    // Charger Three.js et GLTFLoader puis initialiser
-    function loadScript(src, cb) {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = cb;
-      document.head.appendChild(s);
-    }
-
-    loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js', function() {
-      loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js', function() {
-        initThree();
-      });
-    });
-  })();
-
+    init();
   </script>
 </body>
 </html>
