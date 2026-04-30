@@ -431,6 +431,54 @@
       header{padding:0 16px}
       .hero,.gammes,.waiting,footer{padding-left:16px;padding-right:16px}
     }
+  
+    /* ── CONFIGURATEUR 3D ── */
+    .configurateur { padding: clamp(64px,9vw,100px) clamp(24px,7vw,100px); background: var(--dark); }
+    .configurateur__header { text-align: center; margin-bottom: clamp(40px,6vw,64px); }
+    .configurateur__eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .configurateur__title { font-size: clamp(28px,4vw,48px); font-weight: 900; letter-spacing: -.04em; line-height: 1.05; color: var(--bg); margin-bottom: 12px; }
+    .configurateur__title em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.25); }
+    .configurateur__sub { font-size: 14px; font-weight: 300; color: rgba(255,250,240,.45); max-width: 500px; margin: 0 auto; }
+
+    .configurateur__wrap { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
+
+    /* Viewer */
+    .configurateur__viewer { position: relative; border-radius: 12px; overflow: hidden; background: rgba(255,250,240,.03); border: 1px solid rgba(255,250,240,.08); aspect-ratio: 4/3; }
+    #threeCanvas { width: 100%; height: 100%; display: block; }
+    .viewer__controls { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; }
+    .viewer__btn { width: 36px; height: 36px; border-radius: 8px; background: rgba(26,26,26,.7); border: 1px solid rgba(255,250,240,.1); color: rgba(255,250,240,.6); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; backdrop-filter: blur(8px); }
+    .viewer__btn:hover { background: rgba(205,62,0,.8); border-color: var(--accent); color: white; }
+    .viewer__hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,250,240,.3); white-space: nowrap; pointer-events: none; }
+    .viewer__loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(26,26,26,.9); transition: opacity .4s; }
+    .viewer__loading.hidden { opacity: 0; pointer-events: none; }
+    .viewer__spinner { width: 32px; height: 32px; border: 2px solid rgba(255,250,240,.1); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    .viewer__loading p { font-size: 12px; color: rgba(255,250,240,.4); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Panel */
+    .configurateur__panel { display: flex; flex-direction: column; gap: 24px; }
+    .config__group { background: rgba(255,250,240,.04); border: 1px solid rgba(255,250,240,.07); border-radius: 10px; padding: 20px; }
+    .config__label { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,250,240,.4); margin-bottom: 14px; }
+    .config__presets { display: flex; flex-wrap: wrap; gap: 8px; }
+    .preset-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1.5px solid rgba(255,250,240,.1); background: none; cursor: pointer; color: rgba(255,250,240,.6); font-family: var(--font); font-size: 12px; font-weight: 500; transition: all .2s; }
+    .preset-btn:hover { border-color: rgba(255,250,240,.3); color: rgba(255,250,240,.9); }
+    .preset-btn.active { border-color: var(--accent); color: white; background: rgba(205,62,0,.12); }
+    .preset-swatch { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; }
+
+    /* Récap */
+    .config__summary { background: rgba(205,62,0,.08); border: 1px solid rgba(205,62,0,.2); border-radius: 10px; padding: 20px; }
+    .config__recap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .config__recap-item { display: flex; justify-content: space-between; align-items: center; }
+    .config__recap-label { font-size: 11px; color: rgba(255,250,240,.4); font-weight: 500; }
+    .config__recap-val { font-size: 13px; font-weight: 700; color: var(--bg); }
+    .config__cta { display: block; text-align: center; padding: 13px 20px; background: var(--accent); color: white; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em; transition: background .2s, transform .15s; }
+    .config__cta:hover { background: #a83200; transform: translateY(-1px); }
+    .config__note { text-align: center; font-size: 10px; color: rgba(255,250,240,.25); margin-top: 10px; }
+
+    @media (max-width: 900px) {
+      .configurateur__wrap { grid-template-columns: 1fr; }
+    }
+
   </style>
 </head>
 <body>
@@ -726,6 +774,121 @@
   </div>
 </section>
 
+
+<!-- ================================================================
+     CONFIGURATEUR 3D
+================================================================ -->
+<section class="configurateur" id="configurateur">
+  <div class="configurateur__header reveal">
+    <p class="configurateur__eyebrow">Configurateur</p>
+    <h2 class="configurateur__title">Visualisez votre<br><em>bureau sur-mesure.</em></h2>
+    <p class="configurateur__sub">Faites tourner le meuble, changez les matières et envoyez-nous votre sélection.</p>
+  </div>
+
+  <div class="configurateur__wrap">
+    <!-- Viewer 3D -->
+    <div class="configurateur__viewer" id="viewer3d">
+      <canvas id="threeCanvas"></canvas>
+      <div class="viewer__controls">
+        <button class="viewer__btn" id="btnReset" title="Réinitialiser la vue">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="viewer__hint">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Cliquez et faites glisser pour faire tourner
+      </div>
+      <div class="viewer__loading" id="viewerLoading">
+        <div class="viewer__spinner"></div>
+        <p>Chargement du modèle…</p>
+      </div>
+    </div>
+
+    <!-- Panneau de configuration -->
+    <div class="configurateur__panel">
+
+      <!-- Partie bois (plateau + tiroirs) -->
+      <div class="config__group">
+        <p class="config__label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M3 15h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Plateau & Tiroirs
+        </p>
+        <div class="config__presets" id="presetsWood">
+          <button class="preset-btn active" data-type="wood" data-value="noyer" onclick="setMaterial('wood', this)">
+            <span class="preset-swatch" style="background:linear-gradient(135deg,#6b4c2a,#8b6340,#5c3d1e)"></span>
+            <span class="preset-name">Noyer</span>
+          </button>
+          <button class="preset-btn" data-type="wood" data-value="chene" onclick="setMaterial('wood', this)">
+            <span class="preset-swatch" style="background:linear-gradient(135deg,#c8a96e,#d4b483,#b8955a)"></span>
+            <span class="preset-name">Chêne</span>
+          </button>
+          <button class="preset-btn" data-type="wood" data-value="wenge" onclick="setMaterial('wood', this)">
+            <span class="preset-swatch" style="background:linear-gradient(135deg,#2c1810,#3d2418,#1e100a)"></span>
+            <span class="preset-name">Wengé</span>
+          </button>
+          <button class="preset-btn" data-type="wood" data-value="frene" onclick="setMaterial('wood', this)">
+            <span class="preset-swatch" style="background:linear-gradient(135deg,#e8d5b5,#f0dfc0,#dcc8a5)"></span>
+            <span class="preset-name">Frêne</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Caisson -->
+      <div class="config__group">
+        <p class="config__label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Caisson
+        </p>
+        <div class="config__presets" id="presetsBody">
+          <button class="preset-btn active" data-type="body" data-value="beige" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#D4B896"></span>
+            <span class="preset-name">Beige</span>
+          </button>
+          <button class="preset-btn" data-type="body" data-value="blanc" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#F5F0E8;border:1px solid rgba(0,0,0,.08)"></span>
+            <span class="preset-name">Blanc</span>
+          </button>
+          <button class="preset-btn" data-type="body" data-value="anthracite" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#3A3A3A"></span>
+            <span class="preset-name">Anthracite</span>
+          </button>
+          <button class="preset-btn" data-type="body" data-value="noir" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#1A1A1A"></span>
+            <span class="preset-name">Noir</span>
+          </button>
+          <button class="preset-btn" data-type="body" data-value="sauge" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#7A8C74"></span>
+            <span class="preset-name">Sauge</span>
+          </button>
+          <button class="preset-btn" data-type="body" data-value="terracotta" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#CD3E00"></span>
+            <span class="preset-name">Terracotta</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Récap + CTA -->
+      <div class="config__summary">
+        <div class="config__recap">
+          <div class="config__recap-item">
+            <span class="config__recap-label">Plateau & Tiroirs</span>
+            <span class="config__recap-val" id="recapWood">Noyer</span>
+          </div>
+          <div class="config__recap-item">
+            <span class="config__recap-label">Caisson</span>
+            <span class="config__recap-val" id="recapBody">Beige</span>
+          </div>
+        </div>
+        <a href="contact.html" class="config__cta" id="configCta">
+          Demander un devis avec cette configuration →
+        </a>
+        <p class="config__note">Votre sélection sera transmise avec votre demande.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER -->
   <footer>
     <div class="footer__top">
@@ -833,5 +996,238 @@
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
+
+  <script>
+
+  /* ── CONFIGURATEUR 3D THREE.JS ── */
+  (function() {
+    // Couleurs des présets
+    const WOOD_COLORS = {
+      noyer:    { r: 0.266, g: 0.188, b: 0.105 },
+      chene:    { r: 0.784, g: 0.663, b: 0.431 },
+      wenge:    { r: 0.110, g: 0.063, b: 0.039 },
+      frene:    { r: 0.910, g: 0.835, b: 0.710 },
+    };
+    const BODY_COLORS = {
+      beige:      { r: 0.600, g: 0.397, b: 0.194 },
+      blanc:      { r: 0.961, g: 0.941, b: 0.910 },
+      anthracite: { r: 0.228, g: 0.228, b: 0.228 },
+      noir:       { r: 0.102, g: 0.102, b: 0.102 },
+      sauge:      { r: 0.478, g: 0.549, b: 0.455 },
+      terracotta: { r: 0.804, g: 0.243, b: 0.000 },
+    };
+
+    const PRESET_NAMES = {
+      noyer: 'Noyer', chene: 'Chêne', wenge: 'Wengé', frene: 'Frêne',
+      beige: 'Beige', blanc: 'Blanc', anthracite: 'Anthracite',
+      noir: 'Noir', sauge: 'Sauge', terracotta: 'Terracotta',
+    };
+
+    let currentWood = 'noyer';
+    let currentBody = 'beige';
+    let scene, camera, renderer, model;
+    let isDragging = false, prevX = 0, prevY = 0;
+    let rotX = 0, rotY = 0;
+    let isLoaded = false;
+
+    // Initialiser Three.js
+    function initThree() {
+      const canvas = document.getElementById('threeCanvas');
+      const viewer = document.getElementById('viewer3d');
+      if (!canvas || !viewer) return;
+
+      const W = viewer.clientWidth;
+      const H = viewer.clientHeight;
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x111111);
+
+      camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
+      camera.position.set(0, 0.5, 2.5);
+
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
+      renderer.shadowMap.enabled = true;
+
+      // Lumières
+      const ambient = new THREE.AmbientLight(0xfff5e6, 0.6);
+      scene.add(ambient);
+
+      const key = new THREE.DirectionalLight(0xffffff, 1.2);
+      key.position.set(3, 5, 3);
+      key.castShadow = true;
+      scene.add(key);
+
+      const fill = new THREE.DirectionalLight(0xfff0d0, 0.4);
+      fill.position.set(-3, 2, -2);
+      scene.add(fill);
+
+      const rim = new THREE.DirectionalLight(0xffddbb, 0.3);
+      rim.position.set(0, -2, -4);
+      scene.add(rim);
+
+      // Charger le modèle GLB
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        'bureau.glb',
+        function(gltf) {
+          model = gltf.scene;
+
+          // Centrer le modèle
+          const box = new THREE.Box3().setFromObject(model);
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          model.position.sub(center);
+          
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scale = 1.8 / maxDim;
+          model.scale.setScalar(scale);
+
+          scene.add(model);
+          isLoaded = true;
+
+          // Cacher le loader
+          document.getElementById('viewerLoading').classList.add('hidden');
+
+          animate();
+        },
+        function(xhr) {
+          // Progress
+        },
+        function(error) {
+          console.error('Erreur chargement GLB:', error);
+          document.getElementById('viewerLoading').innerHTML = '<p style="color:rgba(255,80,80,.8)">Erreur de chargement</p>';
+        }
+      );
+
+      // Resize
+      window.addEventListener('resize', function() {
+        const W2 = viewer.clientWidth;
+        const H2 = viewer.clientHeight;
+        camera.aspect = W2 / H2;
+        camera.updateProjectionMatrix();
+        renderer.setSize(W2, H2);
+      });
+
+      // Drag to rotate
+      canvas.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+      window.addEventListener('mouseup', () => isDragging = false);
+      window.addEventListener('mousemove', e => {
+        if (!isDragging || !model) return;
+        const dx = e.clientX - prevX;
+        const dy = e.clientY - prevY;
+        rotY += dx * 0.008;
+        rotX += dy * 0.004;
+        rotX = Math.max(-0.5, Math.min(0.5, rotX));
+        model.rotation.y = rotY;
+        model.rotation.x = rotX;
+        prevX = e.clientX;
+        prevY = e.clientY;
+      });
+
+      // Touch support
+      canvas.addEventListener('touchstart', e => { isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; });
+      canvas.addEventListener('touchend', () => isDragging = false);
+      canvas.addEventListener('touchmove', e => {
+        if (!isDragging || !model) return;
+        const dx = e.touches[0].clientX - prevX;
+        rotY += dx * 0.008;
+        model.rotation.y = rotY;
+        prevX = e.touches[0].clientX;
+      });
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (model && !isDragging) {
+        model.rotation.y += 0.003;
+      }
+      renderer.render(scene, camera);
+    }
+
+    // Changer les matériaux
+    window.setMaterial = function(type, btn) {
+      const value = btn.dataset.value;
+
+      // Mettre à jour les boutons actifs
+      const group = type === 'wood' ? 'presetsWood' : 'presetsBody';
+      document.querySelectorAll('#' + group + ' .preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (type === 'wood') {
+        currentWood = value;
+        document.getElementById('recapWood').textContent = PRESET_NAMES[value];
+      } else {
+        currentBody = value;
+        document.getElementById('recapBody').textContent = PRESET_NAMES[value];
+      }
+
+      // Appliquer au modèle 3D
+      if (!model) return;
+      const colorMap = type === 'wood' ? WOOD_COLORS : BODY_COLORS;
+      const col = colorMap[value];
+      const targetNames = type === 'wood'
+        ? ['Plateau_noyer', 'tiroir_noyer', 'tiroir_noyer.']
+        : ['caisson_beige'];
+
+      model.traverse(child => {
+        if (child.isMesh && child.material) {
+          const matName = child.material.name;
+          if (targetNames.includes(matName)) {
+            child.material.color.setRGB(col.r, col.g, col.b);
+            if (type === 'wood') {
+              child.material.map = null; // Enlever la texture, couleur unie
+              child.material.needsUpdate = true;
+            }
+          }
+        }
+      });
+
+      // Mettre à jour le lien CTA avec la config
+      updateCta();
+    };
+
+    function updateCta() {
+      const cta = document.getElementById('configCta');
+      if (cta) {
+        const params = new URLSearchParams({
+          wood: PRESET_NAMES[currentWood],
+          body: PRESET_NAMES[currentBody],
+          produit: 'Bureau sur-mesure'
+        });
+        cta.href = 'contact.html?' + params.toString();
+      }
+    }
+
+    // Reset vue
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('btnReset')?.addEventListener('click', function() {
+        if (!model) return;
+        rotX = 0;
+        rotY = 0;
+        model.rotation.set(0, 0, 0);
+      });
+    });
+
+    // Charger Three.js et GLTFLoader puis initialiser
+    function loadScript(src, cb) {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = cb;
+      document.head.appendChild(s);
+    }
+
+    loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js', function() {
+      loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js', function() {
+        initThree();
+      });
+    });
+  })();
+
+  </script>
 </body>
 </html>
