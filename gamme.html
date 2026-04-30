@@ -1048,7 +1048,7 @@
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
       renderer.setSize(W, H);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.2;
       renderer.shadowMap.enabled = true;
@@ -1100,7 +1100,8 @@
         },
         function(error) {
           console.error('Erreur chargement GLB:', error);
-          document.getElementById('viewerLoading').innerHTML = '<p style="color:rgba(255,80,80,.8)">Erreur de chargement</p>';
+          const el = document.getElementById('viewerLoading');
+          if(el) el.innerHTML = '<p style="color:rgba(255,80,80,.8);padding:20px;text-align:center">Erreur: ' + (error.message || error) + '</p>';
         }
       );
 
