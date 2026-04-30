@@ -463,7 +463,7 @@
     .preset-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1.5px solid rgba(26,26,26,.12); background: none; cursor: pointer; color: rgba(26,26,26,.6); font-family: var(--font); font-size: 12px; font-weight: 500; transition: all .2s; }
     .preset-btn:hover { border-color: rgba(26,26,26,.3); color: rgba(26,26,26,.9); }
     .preset-btn.active { border-color: var(--accent); color: white; background: rgba(205,62,0,.12); }
-    .preset-swatch { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; }
+    .preset-swatch { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
 
     /* Récap */
     .config__summary { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(26,26,26,.04); }
@@ -815,20 +815,32 @@
         </p>
         <div class="config__presets" id="presetsWood">
           <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/BOIS_CHENE.png');background-size:cover"></span>
+            <span class="preset-swatch" style="background-image:url('/img/BOIS_CHENE.png')"></span>
             <span class="preset-name">Chêne</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="noyer" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/NOYER.png');background-size:cover"></span>
+            <span class="preset-swatch" style="background-image:url('/img/NOYER.png')"></span>
             <span class="preset-name">Noyer</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="chene_fonce" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/CHENE_FONCE.png');background-size:cover"></span>
+            <span class="preset-swatch" style="background-image:url('/img/CHENE_FONCE.png')"></span>
             <span class="preset-name">Chêne foncé</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="sapelli" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.png');background-size:cover"></span>
+            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.png')"></span>
             <span class="preset-name">Sapelli</span>
+          </button>
+          <button class="preset-btn" data-type="wood" data-value="vert_sauge" onclick="setMaterial('wood', this)">
+            <span class="preset-swatch" style="background:#bebdab"></span>
+            <span class="preset-name">Vert sauge</span>
+          </button>
+          <button class="preset-btn" data-type="wood" data-value="brun_rose" onclick="setMaterial('wood', this)">
+            <span class="preset-swatch" style="background:#8f695e"></span>
+            <span class="preset-name">Brun rosé</span>
+          </button>
+          <button class="preset-btn" data-type="wood" data-value="gris_ardoise" onclick="setMaterial('wood', this)">
+            <span class="preset-swatch" style="background:#545c5e"></span>
+            <span class="preset-name">Gris ardoise</span>
           </button>
           <button class="preset-btn" data-type="wood" data-value="blanc_mate" onclick="setMaterial('wood', this)">
             <span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>
@@ -849,20 +861,32 @@
         </p>
         <div class="config__presets" id="presetsBody">
           <button class="preset-btn active" data-type="body" data-value="chene" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/BOIS_CHENE.png');background-size:cover"></span>
+            <span class="preset-swatch" style="background-image:url('/img/BOIS_CHENE.png')"></span>
             <span class="preset-name">Chêne</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="noyer" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/NOYER.png');background-size:cover"></span>
+            <span class="preset-swatch" style="background-image:url('/img/NOYER.png')"></span>
             <span class="preset-name">Noyer</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="chene_fonce" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/CHENE_FONCE.png');background-size:cover"></span>
+            <span class="preset-swatch" style="background-image:url('/img/CHENE_FONCE.png')"></span>
             <span class="preset-name">Chêne foncé</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="sapelli" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.png');background-size:cover"></span>
+            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.png')"></span>
             <span class="preset-name">Sapelli</span>
+          </button>
+          <button class="preset-btn" data-type="body" data-value="vert_sauge" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#bebdab"></span>
+            <span class="preset-name">Vert sauge</span>
+          </button>
+          <button class="preset-btn" data-type="body" data-value="brun_rose" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#8f695e"></span>
+            <span class="preset-name">Brun rosé</span>
+          </button>
+          <button class="preset-btn" data-type="body" data-value="gris_ardoise" onclick="setMaterial('body', this)">
+            <span class="preset-swatch" style="background:#545c5e"></span>
+            <span class="preset-name">Gris ardoise</span>
           </button>
           <button class="preset-btn" data-type="body" data-value="blanc_mate" onclick="setMaterial('body', this)">
             <span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>
@@ -1016,12 +1040,15 @@
 
     // Présets matières — chaque préset garde la texture originale et applique une teinte
     var MAT_OPTIONS = {
-      chene:       { label:'Chêne',       texture: '/img/BOIS_CHENE.png' },
-      noyer:       { label:'Noyer',       texture: '/img/NOYER.png' },
-      chene_fonce: { label:'Chêne foncé', texture: '/img/CHENE_FONCE.png' },
-      sapelli:     { label:'Sapelli',     texture: '/img/SAPELLI.png' },
-      blanc_mate:  { label:'Blanc maté',  texture: null, r:0.95, g:0.94, b:0.92 },
-      noir_mate:   { label:'Noir maté',   texture: null, r:0.08, g:0.08, b:0.08 },
+      chene:        { label:'Chêne',        texture: '/img/BOIS_CHENE.png' },
+      noyer:        { label:'Noyer',        texture: '/img/NOYER.png' },
+      chene_fonce:  { label:'Chêne foncé',  texture: '/img/CHENE_FONCE.png' },
+      sapelli:      { label:'Sapelli',      texture: '/img/SAPELLI.png' },
+      vert_sauge:   { label:'Vert sauge',   texture: null, r:0.745, g:0.741, b:0.671 },
+      brun_rose:    { label:'Brun rosé',    texture: null, r:0.561, g:0.412, b:0.369 },
+      gris_ardoise: { label:'Gris ardoise', texture: null, r:0.329, g:0.361, b:0.369 },
+      blanc_mate:   { label:'Blanc maté',   texture: null, r:0.95,  g:0.94,  b:0.92  },
+      noir_mate:    { label:'Noir maté',    texture: null, r:0.08,  g:0.08,  b:0.08  },
     };
     var PRESETS = { wood: MAT_OPTIONS, body: MAT_OPTIONS };
 
