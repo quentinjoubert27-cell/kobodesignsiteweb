@@ -1140,13 +1140,11 @@
 <script>
     function loadScript(src, cb) {
       var s = document.createElement('script');
-      s.src = src;
-      s.onload = cb;
-      s.onerror = function() { console.error('Erreur chargement:', src); };
+      s.src = src; s.onload = cb;
+      s.onerror = function() { console.error('Erreur:', src); };
       document.head.appendChild(s);
     }
 
-    // Présets matières — chaque préset garde la texture originale et applique une teinte
     var MAT_OPTIONS = {
       chene:        { label:'Chêne',        texture: '/img/BOISCHENE.jpg' },
       noyer:        { label:'Noyer',        texture: '/img/NOYER.jpg' },
@@ -1158,10 +1156,212 @@
       blanc_mate:   { label:'Blanc maté',   texture: null, r:0.95, g:0.94, b:0.92 },
       noir_mate:    { label:'Noir maté',    texture: null, r:0.08, g:0.08, b:0.08 },
     };
-    var PRESETS = { wood: MAT_OPTIONS, body: MAT_OPTIONS };
 
-    // Cache des textures chargées
     var textureCache = {};
+    var currentWood = 'chene', currentBody = 'chene';
+    var scene, camera, renderer, model;
+    var isDragging = false, prevX = 0, prevY = 0, rotX = 0, rotY = 0;
+    var originalMaterials = {};
+    var modalRenderer = null;
+
+    /* ── PREVIEWS 3D ── */
+    function initPreviews() {
+      var configs = [
+        { id: 'canvas-1', glb: '/Bibliotheque.glb' },
+        { id: 'canvas-2', glb: '/bibliotheque_portes_hautes.glb' },
+        { id: 'canvas-3', glb: '/biblio_portes_basses.glb' },
+      ];
+      configs.forEach(function(cfg) {
+        var canvas = document.getElementById(cfg.id);
+        if (!canvas) return;
+        var parent = canvas.parentElement;
+        var W = parent.clientWidth || 400, H = parent.clientHeight || 300;
+
+        var sc = new THREE.Scene();
+        sc.background = new THREE.Color(0x222222);
+        var cam = new THREE.PerspectiveCamera(45, W/H, 0.1, 100);
+        cam.position.set(0, 0, 3.5);
+        var ren = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        ren.setSize(W, H);
+        ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        try { ren.outputColorSpace = THREE.SRGBColorSpace; } catch(e) { ren.outputEncoding = THREE.sRGBEncoding; }
+
+        sc.add(new THREE.AmbientLight(0xffffff, 0.6));
+        var key = new THREE.DirectionalLight(0xffffff, 0.9);
+        key.position.set(3, 5, 3);
+        sc.add(key);
+
+        var previewModel = null;
+        var loader = new THREE.GLTFLoader();
+        loader.load(cfg.glb, function(gltf) {
+          previewModel = gltf.scene;
+          var box = new THREE.Box3().setFromObject(previewModel);
+          var center = box.getCenter(new THREE.Vector3());
+          var size = box.getSize(new THREE.Vector3());
+          var scale = 2.0 / Math.max(size.x, size.y, size.z, 0.001);
+          previewModel.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+          previewModel.scale.setScalar(scale);
+          sc.add(previewModel);
+        });
+
+        var ry = 0;
+        (function loop() {
+          requestAnimationFrame(loop);
+          if (previewModel) { ry += 0.005; previewModel.rotation.y = ry; }
+          ren.render(sc, cam);
+        })();
+      });
+    }
+
+    /* ── MODAL CONFIGURATEUR ── */
+    window.openConfig = function(glbFile, title) {
+      document.getElementById('configModalTitle').textContent = title;
+      document.getElementById('configModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      currentWood = 'chene'; currentBody = 'chene';
+      document.getElementById('recapWood').textContent = 'Chêne';
+      document.getElementById('recapBody').textContent = 'Chêne';
+      document.querySelectorAll('.preset-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.value === 'chene');
+      });
+
+      var loading = document.getElementById('viewerLoading');
+      loading.classList.remove('hidden');
+      loading.style.display = '';
+
+      if (!modalRenderer) {
+        initModalRenderer();
+      } else {
+        if (model) { scene.remove(model); model = null; }
+        originalMaterials = {};
+      }
+
+      loadGLB('/' + glbFile);
+    };
+
+    window.closeConfig = function() {
+      document.getElementById('configModal').classList.remove('open');
+      document.body.style.overflow = '';
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var modal = document.getElementById('configModal');
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) closeConfig();
+        });
+      }
+      var btnReset = document.getElementById('btnReset');
+      if (btnReset) {
+        btnReset.addEventListener('click', function() {
+          if (!model) return;
+          rotX = 0; rotY = 0;
+          model.rotation.set(0, 0, 0);
+        });
+      }
+    });
+
+    function initModalRenderer() {
+      var canvas = document.getElementById('threeCanvas');
+      var viewer = document.getElementById('viewer3d');
+      var W = viewer.clientWidth || 600, H = viewer.clientHeight || 450;
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xFAF7F2);
+
+      camera = new THREE.PerspectiveCamera(45, W/H, 0.1, 100);
+      camera.position.set(0, 0, 3.5);
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 0.85;
+      try { renderer.outputColorSpace = THREE.SRGBColorSpace; } catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+      var key = new THREE.DirectionalLight(0xffffff, 0.8);
+      key.position.set(3, 5, 3);
+      scene.add(key);
+      var fill = new THREE.DirectionalLight(0xffffff, 0.3);
+      fill.position.set(-3, 2, -2);
+      scene.add(fill);
+
+      canvas.addEventListener('mousedown', function(e) { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+      window.addEventListener('mouseup', function() { isDragging = false; });
+      window.addEventListener('mousemove', function(e) {
+        if (!isDragging || !model) return;
+        rotY += (e.clientX - prevX) * 0.008;
+        rotX = Math.max(-0.5, Math.min(0.5, rotX + (e.clientY - prevY) * 0.004));
+        model.rotation.set(rotX, rotY, 0);
+        prevX = e.clientX; prevY = e.clientY;
+      });
+      canvas.addEventListener('touchstart', function(e) { isDragging = true; prevX = e.touches[0].clientX; }, {passive:true});
+      canvas.addEventListener('touchend', function() { isDragging = false; });
+      canvas.addEventListener('touchmove', function(e) {
+        if (!isDragging || !model) return;
+        rotY += (e.touches[0].clientX - prevX) * 0.008;
+        model.rotation.y = rotY;
+        prevX = e.touches[0].clientX;
+      }, {passive:true});
+
+      window.addEventListener('resize', function() {
+        if (!viewer || !renderer) return;
+        var W2 = viewer.clientWidth, H2 = viewer.clientHeight;
+        camera.aspect = W2/H2;
+        camera.updateProjectionMatrix();
+        renderer.setSize(W2, H2);
+      });
+
+      modalRenderer = renderer;
+      (function loop() {
+        requestAnimationFrame(loop);
+        if (renderer) renderer.render(scene, camera);
+      })();
+    }
+
+    function loadGLB(path) {
+      if (model) { scene.remove(model); model = null; }
+      originalMaterials = {};
+      rotX = 0; rotY = 0;
+
+      var loader = new THREE.GLTFLoader();
+      loader.load(path, function(gltf) {
+        model = gltf.scene;
+        var box = new THREE.Box3().setFromObject(model);
+        var center = box.getCenter(new THREE.Vector3());
+        var size = box.getSize(new THREE.Vector3());
+        var scale = 2.0 / Math.max(size.x, size.y, size.z, 0.001);
+        model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+        model.scale.setScalar(scale);
+        scene.add(model);
+
+        model.traverse(function(child) {
+          if (child.isMesh && child.material && !originalMaterials[child.material.name]) {
+            originalMaterials[child.material.name] = child.material.clone();
+          }
+        });
+
+        loadTexture('/img/BOISCHENE.jpg', function(tex) {
+          if (!model) return;
+          model.traverse(function(child) {
+            if (!child.isMesh || !child.material) return;
+            child.material.map = tex;
+            child.material.color.setRGB(1, 1, 1);
+            child.material.needsUpdate = true;
+          });
+        });
+
+        var loading = document.getElementById('viewerLoading');
+        if (loading) loading.classList.add('hidden');
+
+      }, undefined, function(err) {
+        console.error('GLB error:', err);
+        var el = document.getElementById('viewerLoading');
+        if (el) el.innerHTML = '<p style="color:rgba(255,80,80,.8);padding:20px">Erreur de chargement</p>';
+      });
+    }
 
     function loadTexture(url, cb) {
       if (textureCache[url]) { cb(textureCache[url]); return; }
@@ -1175,134 +1375,6 @@
       });
     }
 
-    var currentWood = 'chene', currentBody = 'beige';
-    var scene, camera, renderer, model;
-    var isDragging = false, prevX = 0, prevY = 0, rotY = 0, rotX = 0;
-    var originalMaterials = {};
-
-    function saveOriginalMaterials() {
-      if (!model) return;
-      model.traverse(function(child) {
-        if (child.isMesh && child.material) {
-          var name = child.material.name;
-          if (!originalMaterials[name]) {
-            originalMaterials[name] = child.material.clone();
-            console.log('Matériau sauvegardé:', name, '- texture:', !!child.material.map);
-          }
-        }
-      });
-    }
-
-    function initThree() {
-      var canvas = document.getElementById('threeCanvas');
-      var viewer = document.getElementById('viewer3d');
-      if (!canvas || !viewer) return;
-
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xFAF7F2);
-
-      camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
-      camera.position.set(0, 0.5, 2.5);
-
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-      renderer.setSize(viewer.clientWidth, viewer.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.7;
-      try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
-      catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
-
-      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-      var key = new THREE.DirectionalLight(0xffffff, 0.6);
-      key.position.set(3, 5, 3);
-      scene.add(key);
-      var fill = new THREE.DirectionalLight(0xffffff, 0.2);
-      fill.position.set(-3, 2, -2);
-      scene.add(fill);
-
-      var loader = new THREE.GLTFLoader();
-      loader.load(
-        '/bureau.glb',
-        function(gltf) {
-          model = gltf.scene;
-
-          // Log tous les matériaux trouvés
-          model.traverse(function(child) {
-            if (child.isMesh) {
-              console.log('Mesh:', child.name, '- Matériau:', child.material.name, '- Texture:', !!child.material.map);
-            }
-          });
-
-          var box = new THREE.Box3().setFromObject(model);
-          var center = box.getCenter(new THREE.Vector3());
-          var size = box.getSize(new THREE.Vector3());
-          model.position.sub(center);
-          model.scale.setScalar(1.8 / Math.max(size.x, size.y, size.z));
-          scene.add(model);
-
-          saveOriginalMaterials();
-
-          // Appliquer la texture noyer par défaut
-          loadTexture('/img/BOISCHENE.jpg', function(tex) {
-            model.traverse(function(child) {
-              if (!child.isMesh || !child.material) return;
-              if (true) {
-                child.material.map = tex;
-                child.material.color.setRGB(0.421, 0.308, 0.241); // teinte noyer fidèle
-                child.material.needsUpdate = true;
-              }
-            });
-          });
-
-          var loading = document.getElementById('viewerLoading');
-          if (loading) loading.classList.add('hidden');
-          animate();
-        },
-        undefined,
-        function(err) {
-          console.error('GLB error:', err);
-          var el = document.getElementById('viewerLoading');
-          if (el) el.innerHTML = '<p style="color:rgba(255,80,80,.8);padding:20px">Erreur: ' + (err.message||err) + '</p>';
-        }
-      );
-
-      window.addEventListener('resize', function() {
-        camera.aspect = viewer.clientWidth / viewer.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(viewer.clientWidth, viewer.clientHeight);
-      });
-
-      canvas.addEventListener('mousedown', function(e) { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
-      window.addEventListener('mouseup', function() { isDragging = false; });
-      window.addEventListener('mousemove', function(e) {
-        if (!isDragging || !model) return;
-        rotY += (e.clientX - prevX) * 0.008;
-        rotX = Math.max(-0.5, Math.min(0.5, rotX + (e.clientY - prevY) * 0.004));
-        model.rotation.set(rotX, rotY, 0);
-        prevX = e.clientX; prevY = e.clientY;
-      });
-      canvas.addEventListener('touchstart', function(e) { isDragging = true; prevX = e.touches[0].clientX; });
-      canvas.addEventListener('touchend', function() { isDragging = false; });
-      canvas.addEventListener('touchmove', function(e) {
-        if (!isDragging || !model) return;
-        rotY += (e.touches[0].clientX - prevX) * 0.008;
-        model.rotation.y = rotY;
-        prevX = e.touches[0].clientX;
-      });
-
-      var btnReset = document.getElementById('btnReset');
-      if (btnReset) btnReset.addEventListener('click', function() {
-        if (!model) return;
-        rotX = 0; rotY = 0;
-        model.rotation.set(0, 0, 0);
-      });
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    }
-
     window.setMaterial = function(type, btn) {
       var value = btn.dataset.value;
       var group = type === 'wood' ? 'presetsWood' : 'presetsBody';
@@ -1312,65 +1384,42 @@
       var preset = MAT_OPTIONS[value];
       if (!preset) return;
 
-      if (type === 'wood') {
-        currentWood = value;
-        document.getElementById('recapWood').textContent = preset.label;
-      } else {
-        currentBody = value;
-        document.getElementById('recapBody').textContent = preset.label;
-      }
+      if (type === 'wood') { currentWood = value; document.getElementById('recapWood').textContent = preset.label; }
+      else { currentBody = value; document.getElementById('recapBody').textContent = preset.label; }
 
       if (!model) return;
+      var targetNames = type === 'wood' ? ['Matériau'] : ['Matériau.001'];
 
-      var targetNames = type === 'wood'
-        ? ['Plateau_noyer', 'tiroir_noyer', 'tiroir_noyer.']
-        : ['caisson_beige'];
-
-      function applyToMeshes(tex) {
+      function apply(tex) {
         model.traverse(function(child) {
           if (!child.isMesh || !child.material) return;
           if (targetNames.indexOf(child.material.name) === -1) return;
-
           var orig = originalMaterials[child.material.name];
-          if (orig) {
-            child.material = orig.clone();
-            child.material.name = child.material.name;
-          }
-
-          if (tex) {
-            // Appliquer la vraie texture avec teinte fidèle à la couleur réelle
-            child.material.map = tex;
-            child.material.color.setRGB(preset.r || 1, preset.g || 1, preset.b || 1);
-          } else {
-            // Couleur unie
-            child.material.map = null;
-            child.material.color.setRGB(preset.r, preset.g, preset.b);
-          }
+          if (orig) { child.material = orig.clone(); child.material.name = child.material.name; }
+          if (tex) { child.material.map = tex; child.material.color.setRGB(1, 1, 1); }
+          else { child.material.map = null; child.material.color.setRGB(preset.r, preset.g, preset.b); }
           child.material.needsUpdate = true;
         });
-        renderer.render(scene, camera);
       }
 
-      if (preset.texture) {
-        loadTexture(preset.texture, applyToMeshes);
-      } else {
-        applyToMeshes(null);
-      }
+      if (preset.texture) loadTexture(preset.texture, apply);
+      else apply(null);
 
       var cta = document.getElementById('configCta');
       if (cta) {
         var params = new URLSearchParams({
-          plateau: PRESETS.wood[currentWood].label,
-          caisson: PRESETS.body[currentBody].label,
-          produit: 'Bureau sur-mesure'
+          modele: document.getElementById('configModalTitle').textContent,
+          structure: MAT_OPTIONS[currentWood].label,
+          fond: MAT_OPTIONS[currentBody].label
         });
         cta.href = 'contact.html?' + params.toString();
       }
     };
 
+    /* ── INIT ── */
     loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js', function() {
       loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js', function() {
-        initThree();
+        initPreviews();
       });
     });
   </script>
