@@ -3,29 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-  <title>Gamme Mobilier Sur-Mesure Bordeaux — Bientôt Disponible — Kobo Design</title>
-  <meta name="description" content="Kobo Design prépare sa gamme de mobilier sur-mesure : salons, chambres, cuisines, bureaux. En attendant, contactez-nous pour votre projet sur-mesure — réponse sous 24h."/>
-  <meta name="keywords" content="gamme mobilier sur-mesure Bordeaux, collection meuble sur-mesure, mobilier design Bordeaux, meuble salon sur-mesure, meuble chambre sur-mesure"/>
-  <link rel="canonical" href="https://www.kobo-design.fr/gamme.html"/>
-
-  <!-- Open Graph -->
-  <meta property="og:type" content="website"/>
-  <meta property="og:url" content="https://www.kobo-design.fr/gamme.html"/>
-  <meta property="og:title" content="Gamme Mobilier Sur-Mesure — Bientôt Disponible — Kobo Design"/>
-  <meta property="og:description" content="4 univers en cours de création : salons, chambres, cuisines, bureaux. Votre projet reste réalisable sur-mesure dès maintenant."/>
-  <meta property="og:image" content="https://www.kobo-design.fr/img/bibliotheques.png"/>
-  <meta property="og:locale" content="fr_FR"/>
-  <meta property="og:site_name" content="Kobo Design"/>
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="Gamme Mobilier Sur-Mesure — Bientôt Disponible — Kobo Design"/>
-  <meta name="twitter:description" content="4 univers en cours de création : salons, chambres, cuisines, bureaux. Votre projet reste réalisable sur-mesure dès maintenant."/>
-  <meta name="twitter:image" content="https://www.kobo-design.fr/img/bibliotheques.png"/>
+  <title>Gamme Mobilier Sur-Mesure — Kōbō Design Bordeaux</title>
+  <meta name="description" content="Découvrez notre gamme de mobilier sur-mesure : bibliothèques, bureaux, cuisines et dressings. Studio Kōbō Design, Bordeaux."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300;1,800&display=swap" rel="stylesheet"/>
   <style>
     :root {
       --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A;
@@ -479,9 +461,285 @@
       .configurateur__wrap { grid-template-columns: 1fr; }
     }
 
+    :root {
+      --accent: #CD3E00;
+      --bg: #FFFAF0;
+      --dark: #1A1A1A;
+      --white: #FFFFFF;
+      --mid: #F0EBE0;
+      --font: 'Poppins', sans-serif;
+      --ease: cubic-bezier(0.16,1,0.3,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--bg); color: var(--dark); overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+
+    /* ── REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .2s; }
+    .reveal-delay-3 { transition-delay: .3s; }
+
+    /* ── HERO GAMME ── */
+    .gamme-hero {
+      min-height: 55vh;
+      background: var(--dark);
+      display: flex; align-items: flex-end;
+      padding: clamp(48px,8vw,100px) clamp(24px,7vw,100px);
+      position: relative; overflow: hidden;
+    }
+    .gamme-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(205,62,0,.15) 0%, transparent 70%);
+    }
+    .gamme-hero__inner { position: relative; z-index: 1; max-width: 700px; }
+    .gamme-hero__label {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 10px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 20px;
+    }
+    .gamme-hero__label::before { content: ''; width: 32px; height: 1.5px; background: var(--accent); }
+    .gamme-hero__h1 {
+      font-size: clamp(42px,7vw,96px); font-weight: 900; letter-spacing: -.05em;
+      line-height: .95; color: var(--bg);
+    }
+    .gamme-hero__h1 em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.3); }
+    .gamme-hero__sub {
+      margin-top: 24px; font-size: clamp(14px,1.6vw,17px); font-weight: 300;
+      color: rgba(255,250,240,.5); line-height: 1.7; max-width: 460px;
+    }
+    .gamme-hero__scroll {
+      position: absolute; right: clamp(24px,5vw,72px); bottom: 40px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      font-size: 9px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+      color: rgba(255,250,240,.25); writing-mode: vertical-rl;
+    }
+
+    /* ── BANDE MARQUEE ── */
+    .marquee-wrap { overflow: hidden; background: var(--accent); padding: clamp(10px,1.5vw,16px) 0; }
+    .marquee-track { display: flex; width: max-content; animation: scroll-left 20s linear infinite; }
+    .marquee-track:hover { animation-play-state: paused; }
+    .marquee-item { display: flex; align-items: center; gap: clamp(24px,4vw,48px); padding: 0 clamp(24px,4vw,48px); white-space: nowrap; }
+    .marquee-text { font-size: clamp(11px,1.2vw,13px); font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: white; }
+    .marquee-sep { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.4); }
+    @keyframes scroll-left { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ── INTRO ÉDITORIAL ── */
+    .gamme-intro {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid rgba(26,26,26,.07);
+    }
+    .gamme-intro__left {
+      padding: clamp(64px,8vw,100px) clamp(32px,6vw,80px);
+      border-right: 1px solid rgba(26,26,26,.07);
+    }
+    .gamme-intro__eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+    .gamme-intro__title {
+      font-size: clamp(28px,3.5vw,44px); font-weight: 900; letter-spacing: -.04em;
+      line-height: 1.05; margin-bottom: 20px;
+    }
+    .gamme-intro__title em { font-style: italic; font-weight: 300; color: rgba(26,26,26,.2); }
+    .gamme-intro__text { font-size: 14px; font-weight: 300; line-height: 1.85; color: rgba(26,26,26,.6); }
+    .gamme-intro__right {
+      padding: clamp(64px,8vw,100px) clamp(32px,6vw,80px);
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .gamme-intro__stats { display: flex; flex-direction: column; gap: 32px; }
+    .gamme-stat { }
+    .gamme-stat__num { font-size: clamp(40px,6vw,72px); font-weight: 900; letter-spacing: -.05em; line-height: 1; color: var(--accent); }
+    .gamme-stat__label { font-size: 12px; font-weight: 300; color: rgba(26,26,26,.45); margin-top: 4px; letter-spacing: .06em; }
+    @media(max-width:768px){ .gamme-intro{grid-template-columns:1fr} .gamme-intro__left{border-right:none;border-bottom:1px solid rgba(26,26,26,.07)} }
+
+    /* ── SECTION CATÉGORIE ── */
+    .gamme-cat {
+      padding: clamp(80px,10vw,120px) clamp(24px,7vw,100px);
+    }
+    .gamme-cat--dark { background: var(--dark); }
+    .gamme-cat--light { background: var(--bg); }
+    .gamme-cat--mid { background: var(--mid); }
+
+    .gamme-cat__header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: clamp(40px,6vw,64px); border-bottom: 1px solid; padding-bottom: 24px; }
+    .gamme-cat--dark .gamme-cat__header { border-color: rgba(255,250,240,.08); }
+    .gamme-cat--light .gamme-cat__header, .gamme-cat--mid .gamme-cat__header { border-color: rgba(26,26,26,.08); }
+    .gamme-cat__num { font-size: clamp(48px,8vw,96px); font-weight: 900; letter-spacing: -.06em; line-height: 1; opacity: .08; }
+    .gamme-cat--dark .gamme-cat__num { color: white; }
+    .gamme-cat__title-wrap { }
+    .gamme-cat__eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .gamme-cat__title { font-size: clamp(28px,4vw,52px); font-weight: 900; letter-spacing: -.04em; }
+    .gamme-cat--dark .gamme-cat__title { color: var(--bg); }
+    .gamme-cat__count { font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }
+    .gamme-cat--dark .gamme-cat__count { color: rgba(255,250,240,.3); }
+    .gamme-cat--light .gamme-cat__count, .gamme-cat--mid .gamme-cat__count { color: rgba(26,26,26,.35); }
+
+    /* ── GRILLE PRODUITS ── */
+    .produits-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media(max-width:900px){ .produits-grid{grid-template-columns:1fr 1fr} }
+    @media(max-width:600px){ .produits-grid{grid-template-columns:1fr} }
+
+    .produit-card {
+      cursor: pointer; border-radius: 10px; overflow: hidden;
+      position: relative;
+      transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+    }
+    .produit-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+    .produit-card__canvas-wrap {
+      position: relative; aspect-ratio: 3/4;
+      background: #FAF7F2;
+    }
+    .gamme-cat--dark .produit-card__canvas-wrap { background: #222; }
+    .produit-canvas { width: 100%; height: 100%; display: block; }
+
+    .produit-card__overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(205,62,0,.85) 0%, rgba(205,62,0,.2) 40%, transparent 70%);
+      opacity: 0; transition: opacity .3s;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 24px;
+    }
+    .produit-card:hover .produit-card__overlay { opacity: 1; }
+    .produit-card__overlay-cta {
+      font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+      color: white; display: flex; align-items: center; gap: 8px;
+    }
+    .produit-card__overlay-cta::after { content: "→"; transition: transform .2s; }
+    .produit-card:hover .produit-card__overlay-cta::after { transform: translateX(4px); }
+
+    .produit-card__info {
+      padding: 16px 20px 20px;
+    }
+    .gamme-cat--dark .produit-card__info { background: rgba(255,250,240,.04); }
+    .gamme-cat--light .produit-card__info, .gamme-cat--mid .produit-card__info { background: white; }
+    .produit-card__name {
+      font-size: 15px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 4px;
+    }
+    .gamme-cat--dark .produit-card__name { color: var(--bg); }
+    .produit-card__desc { font-size: 12px; font-weight: 300; line-height: 1.5; }
+    .gamme-cat--dark .produit-card__desc { color: rgba(255,250,240,.35); }
+    .gamme-cat--light .produit-card__desc, .gamme-cat--mid .produit-card__desc { color: rgba(26,26,26,.4); }
+    .produit-card__tag {
+      display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .18em;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 100px;
+      background: rgba(205,62,0,.1); color: var(--accent); margin-top: 8px;
+    }
+
+    /* ── CTA SECTION ── */
+    .gamme-cta {
+      background: var(--accent);
+      padding: clamp(64px,9vw,100px) clamp(24px,7vw,100px);
+      display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px;
+    }
+    .gamme-cta__title { font-size: clamp(28px,4vw,52px); font-weight: 900; letter-spacing: -.04em; color: white; line-height: 1.05; }
+    .gamme-cta__sub { font-size: 15px; font-weight: 300; color: rgba(255,255,255,.7); max-width: 480px; }
+    .gamme-cta__btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 36px; background: white; color: var(--accent);
+      border-radius: 6px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      transition: transform .2s var(--ease), box-shadow .2s;
+    }
+    .gamme-cta__btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+
+    /* ── MODAL CONFIGURATEUR ── */
+    .config-modal {
+      position: fixed; inset: 0; background: rgba(10,10,10,.8); z-index: 2000;
+      display: none; align-items: center; justify-content: center; padding: 24px;
+      backdrop-filter: blur(6px);
+    }
+    .config-modal.open { display: flex; }
+    .config-modal__inner {
+      background: var(--bg); border-radius: 16px; width: 100%;
+      max-width: 1100px; max-height: 92vh; overflow-y: auto;
+      box-shadow: 0 32px 80px rgba(0,0,0,.4);
+    }
+    .config-modal__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 32px; border-bottom: 1px solid rgba(26,26,26,.07); position: sticky; top: 0; background: var(--bg); z-index: 1;
+    }
+    .config-modal__eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+    .config-modal__title { font-size: 20px; font-weight: 900; letter-spacing: -.02em; }
+    .config-modal__close {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1.5px solid rgba(26,26,26,.15); background: none;
+      font-size: 16px; cursor: pointer; color: rgba(26,26,26,.5);
+      transition: all .2s; display: flex; align-items: center; justify-content: center;
+    }
+    .config-modal__close:hover { border-color: var(--accent); color: var(--accent); }
+    .config-modal__body {
+      display: grid; grid-template-columns: 1fr 340px; gap: 24px;
+      padding: 24px 32px 32px;
+    }
+    @media(max-width:768px){ .config-modal__body{grid-template-columns:1fr} }
+
+    /* ── VIEWER 3D ── */
+    .configurateur__viewer {
+      position: relative; border-radius: 12px; overflow: hidden;
+      background: #FAF7F2; border: 1px solid rgba(26,26,26,.08);
+      aspect-ratio: 4/3; box-shadow: 0 4px 24px rgba(26,26,26,.06);
+    }
+    #threeCanvas { width: 100%; height: 100%; display: block; }
+    .viewer__controls { position: absolute; top: 14px; right: 14px; }
+    .viewer__btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: rgba(255,255,255,.85); border: 1px solid rgba(26,26,26,.1);
+      color: rgba(26,26,26,.5); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all .2s; backdrop-filter: blur(8px);
+    }
+    .viewer__btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+    .viewer__hint {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 6px; font-size: 10px;
+      color: rgba(26,26,26,.3); white-space: nowrap; pointer-events: none;
+    }
+    .viewer__loading {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      background: rgba(250,247,242,.95);
+    }
+    .viewer__loading.hidden { display: none; }
+    .viewer__spinner {
+      width: 28px; height: 28px; border: 2px solid rgba(26,26,26,.1);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    .viewer__loading p { font-size: 11px; color: rgba(26,26,26,.4); }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── PANEL MATIÈRES ── */
+    .configurateur__panel { display: flex; flex-direction: column; gap: 16px; }
+    .config__group { background: white; border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(26,26,26,.04); }
+    .config__label { display: flex; align-items: center; gap: 8px; font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 12px; }
+    .config__presets { display: flex; flex-wrap: wrap; gap: 7px; }
+    .preset-btn {
+      display: flex; align-items: center; gap: 7px; padding: 7px 11px;
+      border-radius: 8px; border: 1.5px solid rgba(26,26,26,.1); background: none;
+      cursor: pointer; color: rgba(26,26,26,.6); font-family: var(--font); font-size: 11px; font-weight: 500;
+      transition: all .2s;
+    }
+    .preset-btn:hover { border-color: rgba(26,26,26,.25); color: var(--dark); }
+    .preset-btn.active { border-color: var(--accent); color: var(--dark); background: rgba(205,62,0,.06); }
+    .preset-swatch { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
+    .config__summary { background: white; border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 18px; }
+    .config__recap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .config__recap-item { display: flex; justify-content: space-between; align-items: center; }
+    .config__recap-label { font-size: 10px; color: rgba(26,26,26,.4); font-weight: 500; }
+    .config__recap-val { font-size: 12px; font-weight: 700; color: var(--dark); }
+    .config__cta {
+      display: block; text-align: center; padding: 13px 16px;
+      background: var(--accent); color: white; border-radius: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      transition: background .2s, transform .15s;
+    }
+    .config__cta:hover { background: #a83200; transform: translateY(-1px); }
+    .config__note { text-align: center; font-size: 10px; color: rgba(26,26,26,.3); margin-top: 10px; }
   </style>
 </head>
 <body>
+
+
 
 <div id="cursor"></div>
 
@@ -526,9 +784,19 @@
 </nav>
 
 <!-- HEADER -->
+
+
 <header id="site-header">
   <a href="index.html" class="logo" aria-label="Kōbō — Accueil">
-    <img src="img/logo-kobo.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
+    <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+      <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+    </svg>
   </a>
   <nav class="nav">
     <a href="index.html" class="nav__link">Accueil</a>
@@ -545,379 +813,155 @@
   </nav>
 </header>
 
-<!-- ============================================================
-     HERO
-============================================================ -->
-<section class="hero">
-  <div class="hero__left">
-    <nav class="hero__breadcrumb">
-      <a href="index.html">Accueil</a>
-      <span class="hero__breadcrumb-sep">/</span>
-      Notre Gamme
-    </nav>
-    <div class="status-pill">
-      <span class="status-pill__dot"></span>
-      En cours de création
-    </div>
-    <h1 class="hero__h1">Notre<br><em>Gamme</em></h1>
+<!-- ── HERO ── -->
+<section class="gamme-hero">
+  <div class="gamme-hero__inner">
+    <p class="gamme-hero__label reveal">Notre gamme</p>
+    <h1 class="gamme-hero__h1 reveal reveal-delay-1">Chaque meuble,<br><em>pensé pour durer.</em></h1>
+    <p class="gamme-hero__sub reveal reveal-delay-2">Du mobilier sur-mesure conçu et fabriqué à Bordeaux. Choisissez votre modèle, configurez vos matières, recevez votre devis sous 24h.</p>
   </div>
-  <div class="hero__right">
-    <p class="hero__desc">
-      Nos collections de mobilier sur-mesure prêt-à-monter sont <strong>en cours de design dans notre atelier bordelais</strong>. Chaque pièce est pensée, réalisée et optimisée avant d'être proposée.
-      <br><br>
-      En attendant leur lancement, chaque projet reste entièrement réalisable sur demande — c'est même notre spécialité.
-    </p>
-    <a href="contact.html" class="hero__cta">
-      Discuter de mon projet
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-    <p class="hero__note">Réponse garantie sous 24h ouvrées</p>
-  </div>
+  <div class="gamme-hero__scroll">Scroll</div>
 </section>
 
-<!-- STATS -->
-<div class="stats-strip">
-  <div class="stat-item reveal">
-    <p class="stat-num">+4</p>
-    <p class="stat-label">Gammes à venir</p>
-  </div>
-  <div class="stat-item reveal reveal-d1">
-    <p class="stat-num">2026</p>
-    <p class="stat-label">Lancement prévu</p>
-  </div>
-  <div class="stat-item reveal reveal-d2">
-    <p class="stat-num">&lt; 24h</p>
-    <p class="stat-label">Délai de réponse</p>
+<!-- ── MARQUEE ── -->
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="marquee-track">
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
   </div>
 </div>
 
-<!-- ============================================================
-     4 GAMMES
-============================================================ -->
-<section class="gammes">
-  <div class="gammes__header reveal">
-    <p class="gammes__eyebrow">Ce qui arrive</p>
-    <h2 class="gammes__title">Quatre univers,<br><em>un seul savoir-faire.</em></h2>
+<!-- ── INTRO ÉDITORIAL ── -->
+<div class="gamme-intro">
+  <div class="gamme-intro__left">
+    <p class="gamme-intro__eyebrow reveal">Le principe</p>
+    <h2 class="gamme-intro__title reveal reveal-delay-1">On conçoit.<br>On fabrique.<br><em>On livre.</em></h2>
+    <p class="gamme-intro__text reveal reveal-delay-2">Chaque modèle de notre gamme est disponible dans les matières et coloris de votre choix. Configurez-le en 2 minutes, recevez un devis détaillé et un prix ferme. Pas de mauvaise surprise.</p>
+  </div>
+  <div class="gamme-intro__right">
+    <div class="gamme-intro__stats">
+      <div class="gamme-stat reveal">
+        <div class="gamme-stat__num">+120</div>
+        <div class="gamme-stat__label">projets réalisés</div>
+      </div>
+      <div class="gamme-stat reveal reveal-delay-1">
+        <div class="gamme-stat__num">24h</div>
+        <div class="gamme-stat__label">pour recevoir votre devis</div>
+      </div>
+      <div class="gamme-stat reveal reveal-delay-2">
+        <div class="gamme-stat__num">9</div>
+        <div class="gamme-stat__label">finitions disponibles</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     CATÉGORIE 1 — BIBLIOTHÈQUES
+════════════════════════════════════════════════════════ -->
+<section class="gamme-cat gamme-cat--dark" id="bibliotheques">
+  <div class="gamme-cat__header">
+    <div class="gamme-cat__num reveal">01</div>
+    <div class="gamme-cat__title-wrap">
+      <p class="gamme-cat__eyebrow">Rangement</p>
+      <h2 class="gamme-cat__title reveal">Bibliothèques</h2>
+    </div>
+    <div class="gamme-cat__count reveal">3 modèles</div>
   </div>
 
-  <div class="gammes__grid">
+  <div class="produits-grid">
 
-    <!-- Carte 1 — Salons & Séjours -->
-    <div class="gamme-card gamme-card--dark reveal">
-      <span class="gamme-card__bg-num">01</span>
-      <div class="gamme-card__top">
-        <p class="gamme-card__num">Gamme 01</p>
-        <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
-        <h3 class="gamme-card__title">Salons<br>&amp; Séjours</h3>
-        <p class="gamme-card__desc">Meubles TV sur-mesure, bibliothèques encastrées, consoles et buffets. Des pièces pensées pour devenir le cœur de votre espace de vie.</p>
-        <div class="progress-wrap">
-          <div class="progress-label"><span>Conception</span><span>En cours</span></div>
-          <div class="progress-bar"><div class="progress-fill" data-width="0.72"></div></div>
+    <!-- Produit 1 -->
+    <div class="produit-card reveal" onclick="openConfig('Bibliotheque.glb', 'Bibliothèque')">
+      <div class="produit-card__canvas-wrap">
+        <canvas class="produit-canvas" id="canvas-1"></canvas>
+        <div class="produit-card__overlay">
+          <span class="produit-card__overlay-cta">Personnaliser</span>
         </div>
       </div>
-      <div class="gamme-card__bottom">
-        <div class="gamme-card__tags">
-          <span class="tag">Meuble TV</span>
-          <span class="tag">Bibliothèque</span>
-          <span class="tag">Buffet</span>
-          <span class="tag">Console</span>
-        </div>
-        <a href="contact.html" class="gamme-card__link">
-          Me prévenir
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+      <div class="produit-card__info">
+        <div class="produit-card__name">Bibliothèque</div>
+        <div class="produit-card__desc">Structure ouverte, modulable du sol au plafond.</div>
+        <span class="produit-card__tag">Configurer →</span>
       </div>
     </div>
 
-    <!-- Carte 2 — Chambres & Dressing -->
-    <div class="gamme-card reveal reveal-d1">
-      <span class="gamme-card__bg-num">02</span>
-      <div class="gamme-card__top">
-        <p class="gamme-card__num">Gamme 02</p>
-        <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
-        <h3 class="gamme-card__title">Chambres<br>&amp; Dressing</h3>
-        <p class="gamme-card__desc">Têtes de lit intégrées, dressings sur-mesure, chevets flottants. Chaque millimètre optimisé pour votre espace de repos.</p>
-        <div class="progress-wrap">
-          <div class="progress-label"><span>Conception</span><span>En cours</span></div>
-          <div class="progress-bar"><div class="progress-fill" data-width="0.58"></div></div>
+    <!-- Produit 2 -->
+    <div class="produit-card reveal reveal-delay-1" onclick="openConfig('bibliotheque_portes_hautes.glb', 'Bibliothèque portes hautes')">
+      <div class="produit-card__canvas-wrap">
+        <canvas class="produit-canvas" id="canvas-2"></canvas>
+        <div class="produit-card__overlay">
+          <span class="produit-card__overlay-cta">Personnaliser</span>
         </div>
       </div>
-      <div class="gamme-card__bottom">
-        <div class="gamme-card__tags">
-          <span class="tag">Dressing</span>
-          <span class="tag">Tête de lit</span>
-          <span class="tag">Chevet</span>
-          <span class="tag">Armoire</span>
-        </div>
-        <a href="contact.html" class="gamme-card__link">
-          Me prévenir
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+      <div class="produit-card__info">
+        <div class="produit-card__name">Bibliothèque portes hautes</div>
+        <div class="produit-card__desc">Rangements fermés en partie haute, étagères ouvertes en bas.</div>
+        <span class="produit-card__tag">Configurer →</span>
       </div>
     </div>
 
-    <!-- Carte 3 — Cuisines & Îlots -->
-    <div class="gamme-card reveal reveal-d1">
-      <span class="gamme-card__bg-num">03</span>
-      <div class="gamme-card__top">
-        <p class="gamme-card__num">Gamme 03</p>
-        <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
-        <h3 class="gamme-card__title">Cuisines<br>&amp; Îlots</h3>
-        <p class="gamme-card__desc">Fond & Détailss de cuisine, îlots centraux, colonnes de rangement. Une cuisine pensée à partir de vos habitudes et de votre espace réel.</p>
-        <div class="progress-wrap">
-          <div class="progress-label"><span>Conception</span><span>En cours</span></div>
-          <div class="progress-bar"><div class="progress-fill" data-width="0.45"></div></div>
+    <!-- Produit 3 -->
+    <div class="produit-card reveal reveal-delay-2" onclick="openConfig('biblio_portes_basses.glb', 'Bibliothèque portes basses')">
+      <div class="produit-card__canvas-wrap">
+        <canvas class="produit-canvas" id="canvas-3"></canvas>
+        <div class="produit-card__overlay">
+          <span class="produit-card__overlay-cta">Personnaliser</span>
         </div>
       </div>
-      <div class="gamme-card__bottom">
-        <div class="gamme-card__tags">
-          <span class="tag">Îlot central</span>
-          <span class="tag">Fond & Détailss</span>
-          <span class="tag">Colonne</span>
-          <span class="tag">Plan de travail</span>
-        </div>
-        <a href="contact.html" class="gamme-card__link">
-          Me prévenir
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-      </div>
-    </div>
-
-    <!-- Carte 4 — Bureaux & Bibliothèques -->
-    <div class="gamme-card reveal reveal-d2">
-      <span class="gamme-card__bg-num">04</span>
-      <div class="gamme-card__top">
-        <p class="gamme-card__num">Gamme 04</p>
-        <div class="soon-badge"><span class="soon-badge__dot"></span> Bientôt disponible</div>
-        <h3 class="gamme-card__title">Bureaux<br>&amp; Bibliothèques</h3>
-        <p class="gamme-card__desc">Bureaux intégrés, bibliothèques du sol au plafond, espaces de travail modulables. Pour ceux qui veulent un coin bureau qui ne ressemble à aucun autre.</p>
-        <div class="progress-wrap">
-          <div class="progress-label"><span>Conception</span><span>En cours</span></div>
-          <div class="progress-bar"><div class="progress-fill" data-width="0.62"></div></div>
-        </div>
-      </div>
-      <div class="gamme-card__bottom">
-        <div class="gamme-card__tags">
-          <span class="tag">Bureau</span>
-          <span class="tag">Bibliothèque</span>
-          <span class="tag">Rangement</span>
-          <span class="tag">Home office</span>
-        </div>
-        <a href="contact.html" class="gamme-card__link">
-          Me prévenir
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+      <div class="produit-card__info">
+        <div class="produit-card__name">Bibliothèque portes basses</div>
+        <div class="produit-card__desc">Rangements fermés en bas, étagères ouvertes en hauteur.</div>
+        <span class="produit-card__tag">Configurer →</span>
       </div>
     </div>
 
   </div>
 </section>
 
-<!-- ============================================================
-     EN ATTENDANT — CTA email
-============================================================ -->
-<section class="waiting">
-  <div class="waiting__left reveal">
-    <p class="waiting__tag">En attendant le lancement</p>
-    <h2 class="waiting__title">Votre projet<br>n'attend <em>pas.</em></h2>
-    <p class="waiting__desc">
-      Les gammes arrivent, mais <strong>chaque projet Kobo est déjà réalisable sur-mesure</strong> dès aujourd'hui. Envoyez-nous vos dimensions, vos envies, une photo de votre espace — on vous répond sous 24h avec une première approche.
-    </p>
-  </div>
-  <div class="waiting__right reveal reveal-d1">
-    <div class="waiting__card">
-      <p class="waiting__card-eyebrow">Contact direct</p>
-      <h3 class="waiting__card-title">Un message suffit<br>pour démarrer.</h3>
-      <div class="waiting__promises">
-        <div class="waiting__promise">
-          <div class="waiting__promise-check">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#CD3E00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          Premier échange gratuit, sans engagement
-        </div>
-        <div class="waiting__promise">
-          <div class="waiting__promise-check">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#CD3E00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          Réponse garantie sous 24h ouvrées
-        </div>
-        <div class="waiting__promise">
-          <div class="waiting__promise-check">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#CD3E00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          Devis détaillé et transparent offert
-        </div>
-      </div>
-      <div class="waiting__email">
-        <div class="waiting__email-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="#CD3E00" stroke-width="1.6"/><path d="M2 8l10 7 10-7" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </div>
-        <div>
-          <p class="waiting__email-label">E-mail direct</p>
-          <a href="mailto:contact@kobo-design.fr" class="waiting__email-addr">contact@kobo-design.fr</a>
-        </div>
-      </div>
-      <a href="contact.html" class="waiting__btn">
-        Accéder au formulaire
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
-      <p class="waiting__sub">Ou appelez-nous : +33 6 42 89 98 58</p>
+<!-- ════════════════════════════════════════════════════════
+     CATÉGORIES À VENIR
+════════════════════════════════════════════════════════ -->
+<section class="gamme-cat gamme-cat--light" id="bureaux" style="opacity:.5;pointer-events:none;">
+  <div class="gamme-cat__header">
+    <div class="gamme-cat__num">02</div>
+    <div class="gamme-cat__title-wrap">
+      <p class="gamme-cat__eyebrow">Espace de travail</p>
+      <h2 class="gamme-cat__title">Bureaux</h2>
     </div>
+    <div class="gamme-cat__count" style="font-size:10px;background:rgba(26,26,26,.06);padding:6px 14px;border-radius:100px;">Bientôt disponible</div>
+  </div>
+  <div class="produits-grid">
+    <div style="aspect-ratio:3/4;background:rgba(26,26,26,.04);border-radius:10px;"></div>
+    <div style="aspect-ratio:3/4;background:rgba(26,26,26,.04);border-radius:10px;"></div>
+    <div style="aspect-ratio:3/4;background:rgba(26,26,26,.04);border-radius:10px;"></div>
   </div>
 </section>
 
-
-<!-- ================================================================
-     CONFIGURATEUR 3D
-================================================================ -->
-<section class="configurateur" id="configurateur">
-  <div class="configurateur__header reveal">
-    <p class="configurateur__eyebrow">Configurateur</p>
-    <h2 class="configurateur__title">Visualisez votre<br><em>bibliothèque sur-mesure.</em></h2>
-    <p class="configurateur__sub">Faites tourner la bibliothèque, changez les matières et envoyez-nous votre sélection.</p>
-  </div>
-
-  <div class="configurateur__wrap">
-    <!-- Viewer 3D -->
-    <div class="configurateur__viewer" id="viewer3d">
-      <canvas id="threeCanvas"></canvas>
-      <div class="viewer__controls">
-        <button class="viewer__btn" id="btnReset" title="Réinitialiser la vue">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-      <div class="viewer__hint">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        Cliquez et faites glisser pour faire tourner
-      </div>
-      <div class="viewer__loading" id="viewerLoading">
-        <div class="viewer__spinner"></div>
-        <p>Chargement du modèle…</p>
-      </div>
-    </div>
-
-    <!-- Panneau de configuration -->
-    <div class="configurateur__panel">
-
-      <!-- Partie bois (plateau + tiroirs) -->
-      <div class="config__group">
-        <p class="config__label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M3 15h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Structure & Étagères
-        </p>
-        <div class="config__presets" id="presetsWood">
-          <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/BOISCHENE.jpg')"></span>
-            <span class="preset-name">Chêne</span>
-          </button>
-          <button class="preset-btn" data-type="wood" data-value="noyer" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>
-            <span class="preset-name">Noyer</span>
-          </button>
-          <button class="preset-btn" data-type="wood" data-value="chene_fonce" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/CHENEFONCE.jpg')"></span>
-            <span class="preset-name">Chêne foncé</span>
-          </button>
-          <button class="preset-btn" data-type="wood" data-value="sapelli" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.jpg')"></span>
-            <span class="preset-name">Sapelli</span>
-          </button>
-          <button class="preset-btn" data-type="wood" data-value="vert_sauge" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/VERTSAUGE.jpg')"></span>
-            <span class="preset-name">Vert sauge</span>
-          </button>
-          <button class="preset-btn" data-type="wood" data-value="brun_rose" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/BRUNROSE.jpg')"></span>
-            <span class="preset-name">Brun rosé</span>
-          </button>
-          <button class="preset-btn" data-type="wood" data-value="gris_ardoise" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background-image:url('/img/GRISARDOISE.jpg')"></span>
-            <span class="preset-name">Gris ardoise</span>
-          </button>
-          <button class="preset-btn" data-type="wood" data-value="blanc_mate" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>
-            <span class="preset-name">Blanc maté</span>
-          </button>
-          <button class="preset-btn" data-type="wood" data-value="noir_mate" onclick="setMaterial('wood', this)">
-            <span class="preset-swatch" style="background:#141414"></span>
-            <span class="preset-name">Noir maté</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Fond & Détails -->
-      <div class="config__group">
-        <p class="config__label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Fond & Détails
-        </p>
-        <div class="config__presets" id="presetsBody">
-          <button class="preset-btn active" data-type="body" data-value="chene" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/BOISCHENE.jpg')"></span>
-            <span class="preset-name">Chêne</span>
-          </button>
-          <button class="preset-btn" data-type="body" data-value="noyer" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>
-            <span class="preset-name">Noyer</span>
-          </button>
-          <button class="preset-btn" data-type="body" data-value="chene_fonce" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/CHENEFONCE.jpg')"></span>
-            <span class="preset-name">Chêne foncé</span>
-          </button>
-          <button class="preset-btn" data-type="body" data-value="sapelli" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/SAPELLI.jpg')"></span>
-            <span class="preset-name">Sapelli</span>
-          </button>
-          <button class="preset-btn" data-type="body" data-value="vert_sauge" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/VERTSAUGE.jpg')"></span>
-            <span class="preset-name">Vert sauge</span>
-          </button>
-          <button class="preset-btn" data-type="body" data-value="brun_rose" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/BRUNROSE.jpg')"></span>
-            <span class="preset-name">Brun rosé</span>
-          </button>
-          <button class="preset-btn" data-type="body" data-value="gris_ardoise" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background-image:url('/img/GRISARDOISE.jpg')"></span>
-            <span class="preset-name">Gris ardoise</span>
-          </button>
-          <button class="preset-btn" data-type="body" data-value="blanc_mate" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>
-            <span class="preset-name">Blanc maté</span>
-          </button>
-          <button class="preset-btn" data-type="body" data-value="noir_mate" onclick="setMaterial('body', this)">
-            <span class="preset-swatch" style="background:#141414"></span>
-            <span class="preset-name">Noir maté</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Récap + CTA -->
-      <div class="config__summary">
-        <div class="config__recap">
-          <div class="config__recap-item">
-            <span class="config__recap-label">Corps principal</span>
-            <span class="config__recap-val" id="recapWood">Chêne</span>
-          </div>
-          <div class="config__recap-item">
-            <span class="config__recap-label">Façades</span>
-            <span class="config__recap-val" id="recapBody">Chêne</span>
-          </div>
-        </div>
-        <a href="contact.html" class="config__cta" id="configCta">
-          Demander un devis avec cette configuration →
-        </a>
-        <p class="config__note">Votre sélection sera transmise avec votre demande.</p>
-      </div>
-
-    </div>
-  </div>
+<!-- ── CTA FINAL ── -->
+<section class="gamme-cta">
+  <h2 class="gamme-cta__title reveal">Votre projet<br>ne ressemble à aucun autre.</h2>
+  <p class="gamme-cta__sub reveal reveal-delay-1">Déposez votre idée en 2 minutes. On vous rappelle sous 24h avec un devis détaillé et un prix ferme.</p>
+  <a href="contact.html" class="gamme-cta__btn reveal reveal-delay-2">
+    Déposer mon projet
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
 </section>
 
-<!-- FOOTER -->
-  <footer>
+<footer>
     <div class="footer__top">
       <div class="footer__brand">
-        <img src="img/logo-koboblanc.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
+        <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:36px;width:auto;">
+          <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <line x1="36" y1="10" x2="48" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+          <path d="M62 6v36" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+          <line x1="101" y1="10" x2="113" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+        </svg>
         <p>Studio de mobilier sur-mesure et d'architecture d'intérieur, basé à Bordeaux depuis 2018.</p>
       </div>
       <div class="footer__col">
@@ -955,6 +999,77 @@
       </div>
     </div>
   </footer>
+
+<!-- ════════════════════════════════════════════════════════
+     MODAL CONFIGURATEUR
+════════════════════════════════════════════════════════ -->
+<div class="config-modal" id="configModal">
+  <div class="config-modal__inner">
+    <div class="config-modal__header">
+      <div>
+        <p class="config-modal__eyebrow">Configurateur</p>
+        <h3 class="config-modal__title" id="configModalTitle">Bibliothèque</h3>
+      </div>
+      <button class="config-modal__close" onclick="closeConfig()">✕</button>
+    </div>
+    <div class="config-modal__body">
+      <div class="configurateur__viewer" id="viewer3d">
+        <canvas id="threeCanvas"></canvas>
+        <div class="viewer__controls">
+          <button class="viewer__btn" id="btnReset" title="Réinitialiser">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="viewer__hint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/></svg>
+          Faites glisser pour tourner
+        </div>
+        <div class="viewer__loading" id="viewerLoading">
+          <div class="viewer__spinner"></div>
+          <p>Chargement…</p>
+        </div>
+      </div>
+      <div class="configurateur__panel">
+        <div class="config__group">
+          <p class="config__label">Structure &amp; Étagères</p>
+          <div class="config__presets" id="presetsWood">
+            <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/BOISCHENE.jpg')"></span>Chêne</button>
+            <button class="preset-btn" data-type="wood" data-value="noyer" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>Noyer</button>
+            <button class="preset-btn" data-type="wood" data-value="chene_fonce" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/CHENEFONCE.jpg')"></span>Chêne foncé</button>
+            <button class="preset-btn" data-type="wood" data-value="sapelli" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/SAPELLI.jpg')"></span>Sapelli</button>
+            <button class="preset-btn" data-type="wood" data-value="vert_sauge" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/VERTSAUGE.jpg')"></span>Vert sauge</button>
+            <button class="preset-btn" data-type="wood" data-value="brun_rose" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/BRUNROSE.jpg')"></span>Brun rosé</button>
+            <button class="preset-btn" data-type="wood" data-value="gris_ardoise" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/GRISARDOISE.jpg')"></span>Gris ardoise</button>
+            <button class="preset-btn" data-type="wood" data-value="blanc_mate" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>Blanc maté</button>
+            <button class="preset-btn" data-type="wood" data-value="noir_mate" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background:#141414"></span>Noir maté</button>
+          </div>
+        </div>
+        <div class="config__group">
+          <p class="config__label">Fond &amp; Détails</p>
+          <div class="config__presets" id="presetsBody">
+            <button class="preset-btn active" data-type="body" data-value="chene" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/BOISCHENE.jpg')"></span>Chêne</button>
+            <button class="preset-btn" data-type="body" data-value="noyer" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>Noyer</button>
+            <button class="preset-btn" data-type="body" data-value="chene_fonce" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/CHENEFONCE.jpg')"></span>Chêne foncé</button>
+            <button class="preset-btn" data-type="body" data-value="sapelli" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/SAPELLI.jpg')"></span>Sapelli</button>
+            <button class="preset-btn" data-type="body" data-value="vert_sauge" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/VERTSAUGE.jpg')"></span>Vert sauge</button>
+            <button class="preset-btn" data-type="body" data-value="brun_rose" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/BRUNROSE.jpg')"></span>Brun rosé</button>
+            <button class="preset-btn" data-type="body" data-value="gris_ardoise" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/GRISARDOISE.jpg')"></span>Gris ardoise</button>
+            <button class="preset-btn" data-type="body" data-value="blanc_mate" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>Blanc maté</button>
+            <button class="preset-btn" data-type="body" data-value="noir_mate" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background:#141414"></span>Noir maté</button>
+          </div>
+        </div>
+        <div class="config__summary">
+          <div class="config__recap">
+            <div class="config__recap-item"><span class="config__recap-label">Structure</span><span class="config__recap-val" id="recapWood">Chêne</span></div>
+            <div class="config__recap-item"><span class="config__recap-label">Fond</span><span class="config__recap-val" id="recapBody">Chêne</span></div>
+          </div>
+          <a href="contact.html" class="config__cta" id="configCta">Demander un devis →</a>
+          <p class="config__note">Gratuit · Sans engagement · 24h</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
   /* Header shadow */
@@ -1013,7 +1128,16 @@
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
 
-  <script>
+<script>
+  /* ── REVEAL ── */
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => revealObs.observe(el));
+</script>
+
+<script>
     function loadScript(src, cb) {
       var s = document.createElement('script');
       s.src = src;
@@ -1078,7 +1202,7 @@
       scene.background = new THREE.Color(0xFAF7F2);
 
       camera = new THREE.PerspectiveCamera(45, viewer.clientWidth / viewer.clientHeight, 0.1, 100);
-      camera.position.set(0, 0, 3.5);
+      camera.position.set(0, 0.5, 2.5);
 
       renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
       renderer.setSize(viewer.clientWidth, viewer.clientHeight);
@@ -1098,28 +1222,22 @@
 
       var loader = new THREE.GLTFLoader();
       loader.load(
-        '/Bibliotheque.glb',
+        '/bureau.glb',
         function(gltf) {
           model = gltf.scene;
+
+          // Log tous les matériaux trouvés
+          model.traverse(function(child) {
+            if (child.isMesh) {
+              console.log('Mesh:', child.name, '- Matériau:', child.material.name, '- Texture:', !!child.material.map);
+            }
+          });
 
           var box = new THREE.Box3().setFromObject(model);
           var center = box.getCenter(new THREE.Vector3());
           var size = box.getSize(new THREE.Vector3());
-          var maxDim = Math.max(size.x, size.y, size.z);
-          
-          console.log('GLB size:', size.x.toFixed(2), size.y.toFixed(2), size.z.toFixed(2));
-          console.log('GLB center:', center.x.toFixed(2), center.y.toFixed(2), center.z.toFixed(2));
-          console.log('Max dim:', maxDim.toFixed(2));
-          
-          // Centrer et scaler
-          // Centrer le modèle correctement
-          model.position.set(-center.x, -center.y, -center.z);
-          var scale = 2.2 / Math.max(maxDim, 0.001);
-          model.scale.setScalar(scale);
-          // Ajuster position après scale
-          model.position.multiplyScalar(scale);
-          
-          console.log('Scale applied:', scale.toFixed(4));
+          model.position.sub(center);
+          model.scale.setScalar(1.8 / Math.max(size.x, size.y, size.z));
           scene.add(model);
 
           saveOriginalMaterials();
@@ -1204,10 +1322,9 @@
 
       if (!model) return;
 
-      // Les deux matériaux de la bibliothèque
       var targetNames = type === 'wood'
-        ? ['Mat\u00e9riau']
-        : ['Mat\u00e9riau.001'];
+        ? ['Plateau_noyer', 'tiroir_noyer', 'tiroir_noyer.']
+        : ['caisson_beige'];
 
       function applyToMeshes(tex) {
         model.traverse(function(child) {
@@ -1245,7 +1362,7 @@
         var params = new URLSearchParams({
           plateau: PRESETS.wood[currentWood].label,
           caisson: PRESETS.body[currentBody].label,
-          produit: 'Bibliothèque sur-mesure'
+          produit: 'Bureau sur-mesure'
         });
         cta.href = 'contact.html?' + params.toString();
       }
@@ -1257,5 +1374,6 @@
       });
     });
   </script>
+
 </body>
 </html>
