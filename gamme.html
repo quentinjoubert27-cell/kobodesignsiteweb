@@ -733,7 +733,358 @@
     }
     .config__cta:hover { background: #a83200; transform: translateY(-1px); }
     .config__note { text-align: center; font-size: 10px; color: rgba(26,26,26,.3); margin-top: 10px; }
-  </style>
+      /* ═══════════════════════════════════════════════════════════
+       SECTION SHOWCASE SALLE DE BAIN (dans gamme.html)
+       ═══════════════════════════════════════════════════════════ */
+    .sdb-showcase {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: clamp(32px, 5vw, 80px);
+      align-items: center;
+    }
+    .sdb-showcase__visual {
+      position: relative;
+      aspect-ratio: 4/3;
+      width: 100%;
+    }
+    .sdb-showcase__visual-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 250, 240, 0.06);
+    }
+    .sdb-showcase__canvas {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      display: block;
+    }
+    .sdb-showcase__canvas:active { cursor: grabbing; }
+    .sdb-showcase__visual-loader {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .sdb-showcase__visual-loader.hidden { opacity: 0; }
+    .sdb-showcase__visual-spinner {
+      width: 36px;
+      height: 36px;
+      border: 2.5px solid rgba(205, 62, 0, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .sdb-showcase__visual-tag {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(26, 26, 26, 0.7);
+      backdrop-filter: blur(6px);
+      padding: 6px 12px;
+      border-radius: 100px;
+      border: 1px solid rgba(205, 62, 0, 0.25);
+      pointer-events: none;
+    }
+
+    .sdb-showcase__content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .sdb-showcase__eyebrow {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .sdb-showcase__title {
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 900;
+      letter-spacing: -0.045em;
+      line-height: 0.95;
+      color: var(--bg);
+      margin-bottom: 24px;
+    }
+    .sdb-showcase__title em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--accent);
+    }
+    .sdb-showcase__txt {
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.65;
+      color: rgba(255, 250, 240, 0.6);
+      margin-bottom: 28px;
+      max-width: 460px;
+    }
+    .sdb-showcase__txt strong {
+      font-weight: 600;
+      color: rgba(255, 250, 240, 0.85);
+    }
+
+    .sdb-showcase__list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 36px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .sdb-showcase__list li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 250, 240, 0.08);
+    }
+    .sdb-showcase__list li:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .sdb-showcase__list-num {
+      flex: 0 0 32px;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(205, 62, 0, 0.12);
+      border: 1px solid rgba(205, 62, 0, 0.3);
+      color: var(--accent);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .sdb-showcase__list li > div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sdb-showcase__list strong {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--bg);
+      letter-spacing: 0.01em;
+    }
+    .sdb-showcase__list span {
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(255, 250, 240, 0.45);
+      letter-spacing: 0.02em;
+    }
+
+    .sdb-showcase__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--white);
+      background: var(--accent);
+      border: none;
+      padding: 18px 36px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.22s, transform 0.18s, box-shadow 0.25s;
+    }
+    .sdb-showcase__cta:hover {
+      background: #a83200;
+      transform: translateY(-1px);
+      box-shadow: 0 14px 36px -10px rgba(205, 62, 0, 0.4);
+    }
+    .sdb-showcase__cta svg {
+      transition: transform 0.2s;
+    }
+    .sdb-showcase__cta:hover svg {
+      transform: translateX(4px);
+    }
+
+    @media (max-width: 900px) {
+      .sdb-showcase {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .sdb-showcase__visual {
+        aspect-ratio: 1/1;
+        max-width: 480px;
+        margin: 0 auto;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CONFIGURATEUR SDB — MODAL FULLSCREEN
+       ═══════════════════════════════════════════════════════════ */
+
+    .sdb-config{position:fixed;inset:0;z-index:900;background:var(--bg);display:none;flex-direction:column;overflow:hidden}
+    .sdb-config.open{display:flex;animation:sdb-fade .35s var(--ease)}
+    @keyframes sdb-fade{from{opacity:0}to{opacity:1}}
+
+    /* HEADER fixe avec stepper */
+    .sdb-config__header{flex:0 0 auto;display:flex;align-items:center;gap:clamp(20px,3vw,40px);padding:18px clamp(20px,4vw,40px);background:var(--bg);border-bottom:1px solid rgba(26,26,26,.08);position:relative;z-index:5}
+    .sdb-config__title{display:flex;flex-direction:column;min-width:0;flex:1}
+    .sdb-config__eyebrow{font-size:9px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+    .sdb-config__h{font-size:clamp(18px,2vw,24px);font-weight:800;letter-spacing:-.02em;color:var(--dark);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    .sdb-stepper{display:flex;align-items:center;gap:8px}
+    .sdb-stepper__item{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:100px;background:rgba(26,26,26,.05);font-size:11px;font-weight:600;letter-spacing:.06em;color:rgba(26,26,26,.45);transition:background .25s,color .25s}
+    .sdb-stepper__item.active{background:var(--accent);color:var(--white)}
+    .sdb-stepper__item.done{background:rgba(205,62,0,.12);color:var(--accent)}
+    .sdb-stepper__num{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(26,26,26,.12);font-size:10px;font-weight:700}
+    .sdb-stepper__item.active .sdb-stepper__num{background:rgba(255,255,255,.25)}
+    .sdb-stepper__item.done .sdb-stepper__num{background:rgba(205,62,0,.25)}
+    .sdb-stepper__line{width:24px;height:1px;background:rgba(26,26,26,.12)}
+    .sdb-stepper__line.done{background:var(--accent)}
+    .sdb-stepper__lbl{display:inline}
+    .sdb-config__close{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(26,26,26,.15);background:none;border-radius:50%;cursor:pointer;color:rgba(26,26,26,.5);transition:background .18s,color .18s,border-color .18s;flex-shrink:0}
+    .sdb-config__close:hover{background:rgba(26,26,26,.06);color:var(--dark);border-color:var(--dark)}
+    .sdb-config__close svg{width:16px;height:16px}
+
+    /* BODY */
+    .sdb-config__body{flex:1;display:grid;grid-template-columns:1fr 420px;min-height:0;overflow:hidden}
+
+    /* VIEWER */
+    .sdb-viewer{position:relative;background:linear-gradient(135deg,#F5EFE3 0%,#EDE5D5 100%);overflow:hidden}
+    .sdb-viewer__canvas{width:100%;height:100%;display:block;cursor:grab}
+    .sdb-viewer__canvas:active{cursor:grabbing}
+    .sdb-viewer__loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#F5EFE3 0%,#EDE5D5 100%);z-index:3;transition:opacity .3s}
+    .sdb-viewer__loading.hidden{opacity:0;pointer-events:none}
+    .sdb-viewer__spinner{width:36px;height:36px;border:2.5px solid rgba(205,62,0,.18);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .sdb-viewer__loading-txt{margin-top:14px;font-size:12px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,26,26,.5)}
+    .sdb-viewer__hint{position:absolute;bottom:20px;left:0;right:0;text-align:center;font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:rgba(26,26,26,.32);pointer-events:none;z-index:2}
+    .sdb-viewer__reset{position:absolute;top:18px;right:18px;width:36px;height:36px;background:rgba(255,250,240,.88);backdrop-filter:blur(8px);border:1px solid rgba(26,26,26,.1);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(26,26,26,.55);transition:background .18s,color .18s,transform .25s;z-index:2}
+    .sdb-viewer__reset:hover{background:var(--white);color:var(--accent);transform:rotate(-60deg)}
+    .sdb-viewer__reset svg{width:16px;height:16px}
+
+    /* SIDEBAR */
+    .sdb-sidebar{background:var(--bg);border-left:1px solid rgba(26,26,26,.08);display:flex;flex-direction:column;min-height:0}
+    .sdb-sidebar__scroll{flex:1;overflow-y:auto;padding:32px 28px 24px;-webkit-overflow-scrolling:touch}
+    .sdb-sidebar__scroll::-webkit-scrollbar{width:6px}
+    .sdb-sidebar__scroll::-webkit-scrollbar-track{background:transparent}
+    .sdb-sidebar__scroll::-webkit-scrollbar-thumb{background:rgba(26,26,26,.15);border-radius:3px}
+
+    .sdb-sidebar__footer{flex:0 0 auto;padding:20px 28px;background:var(--mid);border-top:1px solid rgba(26,26,26,.08)}
+
+    /* SECTION dans la sidebar */
+    .sdb-sect{margin-bottom:32px}
+    .sdb-sect:last-child{margin-bottom:0}
+    .sdb-sect__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .sdb-sect__lbl{font-size:9px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:rgba(26,26,26,.5)}
+    .sdb-sect__val{font-size:12px;font-weight:700;color:var(--dark)}
+
+    /* GRID DE VASQUES (étape 1) — 7 vasques, 2 par ligne */
+    .sdb-vasques{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .sdb-vasque{position:relative;aspect-ratio:1.2/1;border:1.5px solid rgba(26,26,26,.1);background:#F8F2E5;border-radius:8px;cursor:pointer;transition:border-color .2s,transform .2s,background .2s;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8px}
+    .sdb-vasque:hover{border-color:rgba(26,26,26,.3);transform:translateY(-1px)}
+    .sdb-vasque.active{border-color:var(--accent);background:rgba(205,62,0,.06);border-width:2px}
+    .sdb-vasque__canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+    .sdb-vasque__lbl{position:relative;z-index:1;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--dark);background:rgba(255,250,240,.85);backdrop-filter:blur(4px);padding:4px 8px;border-radius:4px}
+    .sdb-vasque.active .sdb-vasque__lbl{color:var(--accent)}
+
+    /* GRID MEUBLES (étape 2) — 4 meubles, 2 par ligne */
+    .sdb-meubles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .sdb-meuble{position:relative;aspect-ratio:1/1;border:1.5px solid rgba(26,26,26,.1);background:#F8F2E5;border-radius:8px;cursor:pointer;transition:border-color .2s,transform .2s,background .2s;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8px}
+    .sdb-meuble:hover{border-color:rgba(26,26,26,.3);transform:translateY(-1px)}
+    .sdb-meuble.active{border-color:var(--accent);background:rgba(205,62,0,.06);border-width:2px}
+    .sdb-meuble__canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+    .sdb-meuble__lbl{position:relative;z-index:1;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--dark);background:rgba(255,250,240,.85);backdrop-filter:blur(4px);padding:4px 8px;border-radius:4px}
+    .sdb-meuble.active .sdb-meuble__lbl{color:var(--accent)}
+
+    /* TOGGLES (1v/2v, 1l/2l) */
+    .sdb-toggles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .sdb-toggle{display:flex;flex-direction:column;gap:8px}
+    .sdb-toggle__buttons{display:flex;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;overflow:hidden;background:var(--white)}
+    .sdb-toggle__btn{flex:1;padding:11px 8px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.06em;color:rgba(26,26,26,.55);background:none;border:none;cursor:pointer;transition:background .2s,color .2s}
+    .sdb-toggle__btn:hover:not(.active){color:var(--dark);background:rgba(26,26,26,.04)}
+    .sdb-toggle__btn.active{background:var(--accent);color:var(--white)}
+
+    /* MATIÈRES (textures) — bois meuble */
+    .sdb-mats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .sdb-mat{display:flex;align-items:center;gap:9px;padding:7px 10px;border:1.5px solid rgba(26,26,26,.1);border-radius:7px;background:var(--white);cursor:pointer;transition:border-color .2s,background .2s;font-family:var(--font)}
+    .sdb-mat:hover{border-color:rgba(26,26,26,.3)}
+    .sdb-mat.active{border-color:var(--accent);border-width:2px;padding:6px 9px}
+    .sdb-mat__sw{width:22px;height:22px;border-radius:5px;flex-shrink:0;background-size:cover;background-position:center;border:1px solid rgba(26,26,26,.08)}
+    .sdb-mat__lbl{font-size:11px;font-weight:600;color:var(--dark);line-height:1.1}
+
+    /* MATIÈRES VASQUE — groupé par famille (dekton / silestone) */
+    .sdb-fams{display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid rgba(26,26,26,.08);padding-bottom:0}
+    .sdb-fam{padding:8px 14px;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.45);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;font-family:var(--font)}
+    .sdb-fam.active{color:var(--accent);border-color:var(--accent)}
+    .sdb-fam:hover:not(.active){color:var(--dark)}
+
+    .sdb-vasque-mats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .sdb-vasque-mat{position:relative;aspect-ratio:1/1;border:1.5px solid rgba(26,26,26,.1);border-radius:7px;cursor:pointer;overflow:hidden;background-size:cover;background-position:center;transition:border-color .2s,transform .2s}
+    .sdb-vasque-mat:hover{border-color:rgba(26,26,26,.3);transform:translateY(-1px)}
+    .sdb-vasque-mat.active{border-color:var(--accent);border-width:2.5px}
+    .sdb-vasque-mat::after{content:attr(data-name);position:absolute;bottom:3px;left:3px;right:3px;font-size:8px;font-weight:700;letter-spacing:.08em;color:var(--dark);background:rgba(255,250,240,.88);padding:2px 5px;border-radius:3px;text-align:center;line-height:1.1;text-transform:capitalize}
+
+    /* NAV bas (Suivant / Précédent) */
+    .sdb-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .sdb-nav__back{padding:13px 18px;border:1.5px solid rgba(26,26,26,.15);background:var(--white);border-radius:7px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dark);cursor:pointer;transition:border-color .2s,color .2s;flex:0 0 auto}
+    .sdb-nav__back:hover{border-color:var(--accent);color:var(--accent)}
+    .sdb-nav__back:disabled{opacity:.35;cursor:not-allowed}
+    .sdb-nav__next{flex:1;padding:14px 18px;background:var(--accent);color:var(--white);border:none;border-radius:7px;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .2s,transform .18s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .sdb-nav__next:hover{background:#a83200;transform:translateY(-1px)}
+    .sdb-nav__next:disabled{background:rgba(26,26,26,.15);cursor:not-allowed;transform:none}
+
+    /* RÉCAP étape 3 */
+    .sdb-recap{padding:18px;background:var(--mid);border-radius:10px;margin-bottom:24px}
+    .sdb-recap__row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(26,26,26,.1)}
+    .sdb-recap__row:last-child{border-bottom:0}
+    .sdb-recap__lbl{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,26,26,.5)}
+    .sdb-recap__val{font-size:13px;font-weight:700;color:var(--dark)}
+
+    /* DEVIS CTA grand */
+    .sdb-devis{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+    .sdb-devis__btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:17px;background:var(--accent);color:var(--white);border:none;border-radius:8px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:background .2s,transform .18s;text-decoration:none}
+    .sdb-devis__btn:hover{background:#a83200;transform:translateY(-1px)}
+    .sdb-devis__sub{text-align:center;font-size:10px;font-weight:500;letter-spacing:.12em;color:rgba(26,26,26,.45);text-transform:uppercase;margin-top:2px}
+
+    /* PANELS d'étapes */
+    .sdb-step-panel{display:none}
+    .sdb-step-panel.active{display:block}
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px){
+      .sdb-config__body{grid-template-columns:1fr;grid-template-rows:minmax(280px,40vh) 1fr}
+      .sdb-sidebar{border-left:0;border-top:1px solid rgba(26,26,26,.08)}
+      .sdb-sidebar__scroll{padding:20px}
+      .sdb-stepper__lbl{display:none}
+      .sdb-stepper__item{padding:6px 8px}
+    }
+    @media (max-width: 768px){
+      body{cursor:auto}
+      #cursor{display:none}
+      .sdb-hero__inner{grid-template-columns:1fr;gap:32px;align-items:start}
+      .sdb-stats{grid-template-columns:repeat(2,1fr)}
+      .sdb-stat:nth-child(2){border-right:0}
+      .sdb-stat:nth-child(-n+2){border-bottom:1px solid rgba(26,26,26,.08);padding-bottom:24px;margin-bottom:24px}
+      .sdb-steps-intro__top{grid-template-columns:1fr;gap:24px}
+      .sdb-steps-grid{grid-template-columns:1fr;gap:16px}
+      .sdb-config__h{font-size:14px}
+      .sdb-config__eyebrow{font-size:8px}
+    }
+
+</style>
   <style>
     /* ── REVEAL ── */
     .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(0.16,1,0.3,1),transform .7s cubic-bezier(0.16,1,0.3,1)}
@@ -987,10 +1338,10 @@
 <!-- ── MARQUEE ── -->
 <div class="marquee-wrap" aria-hidden="true">
   <div class="marquee-track">
-    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Rangements</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
-    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Rangements</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
-    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Rangements</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
-    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Rangements</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Salles de bain</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Salles de bain</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Salles de bain</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Salles de bain</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
   </div>
 </div>
 
@@ -1084,6 +1435,48 @@
     </div>
   </div>
 </section>
+
+<!-- ── SALLES DE BAIN ── -->
+<section class="gamme-cat gamme-cat--dark" id="salles-de-bain">
+  <div class="gamme-cat__header">
+    <div class="gamme-cat__num reveal">02</div>
+    <div>
+      <p class="gamme-cat__eyebrow">Sanitaire · Vasques</p>
+      <h2 class="gamme-cat__title reveal">Salles de bain</h2>
+    </div>
+    <div class="gamme-cat__count reveal">7 vasques × 4 meubles · personnalisables</div>
+  </div>
+
+  <div class="sdb-showcase">
+    <div class="sdb-showcase__visual reveal">
+      <div class="sdb-showcase__visual-inner">
+        <canvas class="sdb-showcase__canvas" id="sdb-showcase-canvas"></canvas>
+        <div class="sdb-showcase__visual-loader" id="sdb-showcase-loader">
+          <div class="sdb-showcase__visual-spinner"></div>
+        </div>
+        <div class="sdb-showcase__visual-tag">✦ Aperçu interactif</div>
+      </div>
+    </div>
+
+    <div class="sdb-showcase__content">
+      <p class="sdb-showcase__eyebrow reveal">Configurateur 3 étapes</p>
+      <h3 class="sdb-showcase__title reveal reveal-delay-1">Composez<br><em>votre vasque.</em></h3>
+      <p class="sdb-showcase__txt reveal reveal-delay-2">7 modèles de vasques en céramique haut de gamme, 14 matériaux nobles — <strong>Dekton, Silestone</strong> — et 9 essences de bois pour le meuble. Tout est fabriqué sur-mesure dans notre atelier bordelais.</p>
+
+      <ul class="sdb-showcase__list reveal reveal-delay-3">
+        <li><span class="sdb-showcase__list-num">1</span><div><strong>Choisissez votre vasque</strong><span>7 modèles × 14 matières</span></div></li>
+        <li><span class="sdb-showcase__list-num">2</span><div><strong>Composez votre meuble</strong><span>4 designs · 1 ou 2 vasques · 9 essences</span></div></li>
+        <li><span class="sdb-showcase__list-num">3</span><div><strong>Validez votre devis</strong><span>Gratuit · sans engagement · 24h</span></div></li>
+      </ul>
+
+      <button class="sdb-showcase__cta reveal reveal-delay-3" onclick="openSdbConfig()">
+        Lancer le configurateur
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
 
 <!-- ── BIENTÔT DISPONIBLES ── -->
 <div class="bientot-section">
@@ -1578,6 +1971,892 @@
         initPreviews();
       });
     });
+  </script>
+
+
+<!-- ── CONFIGURATEUR (modal fullscreen) ── -->
+<div class="sdb-config" id="sdbConfig" aria-modal="true" role="dialog">
+  <!-- Header configurateur -->
+  <div class="sdb-config__header">
+    <div class="sdb-config__title">
+      <span class="sdb-config__eyebrow" id="sdbStepEyebrow">Étape 1 sur 3</span>
+      <span class="sdb-config__h" id="sdbStepTitle">Choisissez votre vasque</span>
+    </div>
+    <div class="sdb-stepper">
+      <div class="sdb-stepper__item active" id="sdbStep1"><span class="sdb-stepper__num">1</span><span class="sdb-stepper__lbl">Vasque</span></div>
+      <div class="sdb-stepper__line" id="sdbLine12"></div>
+      <div class="sdb-stepper__item" id="sdbStep2"><span class="sdb-stepper__num">2</span><span class="sdb-stepper__lbl">Meuble</span></div>
+      <div class="sdb-stepper__line" id="sdbLine23"></div>
+      <div class="sdb-stepper__item" id="sdbStep3"><span class="sdb-stepper__num">3</span><span class="sdb-stepper__lbl">Récap</span></div>
+    </div>
+    <button class="sdb-config__close" onclick="closeSdbConfig()" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="sdb-config__body">
+    <!-- Viewer 3D principal -->
+    <div class="sdb-viewer">
+      <canvas class="sdb-viewer__canvas" id="sdbCanvas"></canvas>
+      <div class="sdb-viewer__loading" id="sdbLoading">
+        <div class="sdb-viewer__spinner"></div>
+        <p class="sdb-viewer__loading-txt">Chargement…</p>
+      </div>
+      <button class="sdb-viewer__reset" onclick="sdbResetView()" aria-label="Recentrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>
+      </button>
+      <p class="sdb-viewer__hint">✦ Glissez pour tourner ✦</p>
+    </div>
+
+    <!-- Sidebar choix -->
+    <div class="sdb-sidebar">
+      <div class="sdb-sidebar__scroll">
+
+        <!-- ÉTAPE 1 : choix vasque + matière vasque -->
+        <div class="sdb-step-panel active" id="sdbPanel1">
+
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Modèle de vasque</span>
+              <span class="sdb-sect__val" id="sdbVasqueLabel">Vasque 1</span>
+            </div>
+            <div class="sdb-vasques" id="sdbVasquesGrid"></div>
+          </div>
+
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Matière de la vasque</span>
+              <span class="sdb-sect__val" id="sdbVasqueMatLabel">Céramique blanche</span>
+            </div>
+            <div class="sdb-fams">
+              <button class="sdb-fam active" data-fam="default" onclick="sdbSwitchFam('default')">Standard</button>
+              <button class="sdb-fam" data-fam="dekton" onclick="sdbSwitchFam('dekton')">Dekton</button>
+              <button class="sdb-fam" data-fam="silestone" onclick="sdbSwitchFam('silestone')">Silestone</button>
+            </div>
+            <div class="sdb-vasque-mats" id="sdbVasqueMats"></div>
+          </div>
+
+        </div>
+
+        <!-- ÉTAPE 2 : choix meuble + variantes + bois -->
+        <div class="sdb-step-panel" id="sdbPanel2">
+
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Design du meuble</span>
+              <span class="sdb-sect__val" id="sdbMeubleLabel">Design A</span>
+            </div>
+            <div class="sdb-meubles" id="sdbMeublesGrid"></div>
+          </div>
+
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Configuration</span>
+            </div>
+            <div class="sdb-toggles">
+              <div class="sdb-toggle">
+                <span class="sdb-sect__lbl" style="font-size:8px">Vasques</span>
+                <div class="sdb-toggle__buttons">
+                  <button class="sdb-toggle__btn active" data-vc="1" onclick="sdbSetVC(1)">1 vasque</button>
+                  <button class="sdb-toggle__btn" data-vc="2" onclick="sdbSetVC(2)">2 vasques</button>
+                </div>
+              </div>
+              <div class="sdb-toggle">
+                <span class="sdb-sect__lbl" style="font-size:8px">Lavabos</span>
+                <div class="sdb-toggle__buttons">
+                  <button class="sdb-toggle__btn active" data-lc="1" onclick="sdbSetLC(1)">1 lavabo</button>
+                  <button class="sdb-toggle__btn" data-lc="2" onclick="sdbSetLC(2)">2 lavabos</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Essence du bois</span>
+              <span class="sdb-sect__val" id="sdbBoisLabel">Chêne</span>
+            </div>
+            <div class="sdb-mats" id="sdbBoisGrid"></div>
+          </div>
+
+        </div>
+
+        <!-- ÉTAPE 3 : récap + modifications -->
+        <div class="sdb-step-panel" id="sdbPanel3">
+
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Votre configuration</span>
+            </div>
+            <div class="sdb-recap">
+              <div class="sdb-recap__row"><span class="sdb-recap__lbl">Vasque</span><span class="sdb-recap__val" id="sdbRecapVasque">—</span></div>
+              <div class="sdb-recap__row"><span class="sdb-recap__lbl">Matière vasque</span><span class="sdb-recap__val" id="sdbRecapVasqueMat">—</span></div>
+              <div class="sdb-recap__row"><span class="sdb-recap__lbl">Meuble</span><span class="sdb-recap__val" id="sdbRecapMeuble">—</span></div>
+              <div class="sdb-recap__row"><span class="sdb-recap__lbl">Configuration</span><span class="sdb-recap__val" id="sdbRecapConfig">—</span></div>
+              <div class="sdb-recap__row"><span class="sdb-recap__lbl">Bois</span><span class="sdb-recap__val" id="sdbRecapBois">—</span></div>
+            </div>
+          </div>
+
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Changer la matière de la vasque</span>
+              <span class="sdb-sect__val" id="sdbRecapVasqueMat2">—</span>
+            </div>
+            <div class="sdb-fams">
+              <button class="sdb-fam active" data-fam="default" onclick="sdbSwitchFam('default')">Standard</button>
+              <button class="sdb-fam" data-fam="dekton" onclick="sdbSwitchFam('dekton')">Dekton</button>
+              <button class="sdb-fam" data-fam="silestone" onclick="sdbSwitchFam('silestone')">Silestone</button>
+            </div>
+            <div class="sdb-vasque-mats" id="sdbVasqueMats2"></div>
+          </div>
+
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Changer l'essence du bois</span>
+              <span class="sdb-sect__val" id="sdbRecapBois2">—</span>
+            </div>
+            <div class="sdb-mats" id="sdbBoisGrid2"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Footer sidebar -->
+      <div class="sdb-sidebar__footer">
+        <div id="sdbNavWrap">
+          <div class="sdb-nav">
+            <button class="sdb-nav__back" id="sdbBack" onclick="sdbPrev()" disabled>← Retour</button>
+            <button class="sdb-nav__next" id="sdbNext" onclick="sdbNext()">Suivant : Choisir le meuble →</button>
+          </div>
+        </div>
+        <div id="sdbDevisWrap" style="display:none">
+          <div class="sdb-devis">
+            <a class="sdb-devis__btn" id="sdbDevisLink" href="contact.html">Demander un devis →</a>
+            <p class="sdb-devis__sub">Gratuit · Sans engagement · 24h</p>
+            <button class="sdb-nav__back" style="margin-top:12px" onclick="sdbPrev()">← Modifier le meuble</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       JS — CONFIGURATEUR SALLE DE BAIN
+       ═══════════════════════════════════════════════════════════ -->
+  <script>
+  (function(){
+    'use strict';
+
+    /* ─────── DONNÉES ─────── */
+    var BOIS = {
+      chene:        { label:'Chêne',        texture:'img/BOISCHENE.jpg' },
+      noyer:        { label:'Noyer',        texture:'img/NOYER.jpg' },
+      chene_fonce:  { label:'Chêne foncé',  texture:'img/CHENEFONCE.jpg' },
+      sapelli:      { label:'Sapelli',      texture:'img/SAPELLI.jpg' },
+      vert_sauge:   { label:'Vert sauge',   texture:'img/VERTSAUGE.jpg' },
+      brun_rose:    { label:'Brun rosé',    texture:'img/BRUNROSE.jpg' },
+      gris_ardoise: { label:'Gris ardoise', texture:'img/GRISARDOISE.jpg' },
+      blanc_mate:   { label:'Blanc maté',   texture:null, color:{r:0.95,g:0.94,b:0.92} },
+      noir_mate:    { label:'Noir maté',    texture:null, color:{r:0.08,g:0.08,b:0.08} },
+    };
+
+    var VASQUE_MATS = {
+      // famille "default" = standard céramique blanche / noire / grise (couleurs sans texture)
+      default: [
+        { id:'blanc',  label:'Blanc',         color:{r:0.95,g:0.94,b:0.92} },
+        { id:'noir',   label:'Noir',          color:{r:0.10,g:0.10,b:0.10} },
+        { id:'gris',   label:'Gris perle',    color:{r:0.72,g:0.72,b:0.72} },
+      ],
+      dekton: [
+        { id:'evok',   label:'Evok',   texture:'texture-vasque/dekton/evok.png' },
+        { id:'kedar',  label:'Kedar',  texture:'texture-vasque/dekton/kedar.png' },
+        { id:'keena',  label:'Keena',  texture:'texture-vasque/dekton/keena.png' },
+        { id:'thala',  label:'Thala',  texture:'texture-vasque/dekton/thala.png' },
+        { id:'zira',   label:'Zira',   texture:'texture-vasque/dekton/zira.png' },
+      ],
+      silestone: [
+        { id:'ardenblue',      label:'Arden Blue',      texture:'texture-vasque/silestone/ardenblue.png' },
+        { id:'blancelysee',    label:'Blanc Elysée',    texture:'texture-vasque/silestone/blancelysee.png' },
+        { id:'calacattagold',  label:'Calacatta Gold',  texture:'texture-vasque/silestone/calacattagold.png' },
+        { id:'chateaubrown',   label:'Château Brown',   texture:'texture-vasque/silestone/chateaubrown.png' },
+        { id:'elmarquina',     label:'El Marquina',     texture:'texture-vasque/silestone/elmarquina.png' },
+        { id:'jardinemerald',  label:'Jardin Emerald',  texture:'texture-vasque/silestone/jardinemerald.png' },
+        { id:'linencream',     label:'Linen Cream',     texture:'texture-vasque/silestone/linencream.png' },
+        { id:'miamiwhite',     label:'Miami White',     texture:'texture-vasque/silestone/miamiwhite.png' },
+        { id:'whitearabesque', label:'White Arabesque', texture:'texture-vasque/silestone/whitearabesque.png' },
+      ],
+    };
+
+    var MEUBLE_NAMES = ['Design A', 'Design B', 'Design C', 'Design D'];
+
+    // Construit le chemin GLB d'un meuble selon vasque (1-7), variante (1-4) et toggles vc/lc
+    // Meuble 1 a un schéma sans le préfixe "1_", les autres ont "N_"
+    function getMeubleGlb(vasqueNum, vc, lc){
+      var prefix = vasqueNum === 1 ? '' : (vasqueNum + '_');
+      var fname = prefix + vc + 'v_' + lc + 'l.glb';
+      return 'sdb/meuble' + vasqueNum + '/' + fname;
+    }
+
+    /* ─────── ÉTAT ─────── */
+    var state = {
+      step: 1,
+      vasque: 1,          // 1-7
+      vasqueFam: 'default',
+      vasqueMatId: 'blanc',
+      meubleVariant: 1,   // 1-4 (Design A-D)
+      vc: 1,              // 1 ou 2 vasques
+      lc: 1,              // 1 ou 2 lavabos
+      bois: 'chene',
+    };
+
+    /* ─────── THREE.JS ─────── */
+    var scene, camera, renderer, currentModel = null;
+    var canvas, container;
+    var isDragging = false, prevX = 0, prevY = 0, rotX = 0, rotY = 0;
+    var autoRotate = false, lastInteraction = 0;
+    var textureCache = {};
+    var pendingLoadId = 0;  // pour invalider les chargements obsolètes
+    // matériaux ciblés
+    var MAT_BOIS = 'FrontColor';     // bois du meuble
+    var MAT_VASQUE = 'Mati_re10';    // céramique vasque
+    var MAT_ROBINET = 'Capture_d_e_cran_2026_02_27_a__09_51_00'; // robinet (NE PAS toucher)
+
+    function loadScript(src, cb){
+      var s = document.createElement('script');
+      s.src = src; s.onload = cb;
+      s.onerror = function(){ console.error('[SDB] Erreur chargement script:', src); };
+      document.head.appendChild(s);
+    }
+
+    function initThree(){
+      canvas = document.getElementById('sdbCanvas');
+      container = canvas.parentElement;
+      var w = container.clientWidth || 800;
+      var h = container.clientHeight || 600;
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(38, w/h, 0.01, 100);
+      camera.position.set(0, 0, 3.2);
+      camera.lookAt(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:true });
+      renderer.setSize(w, h, false);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+
+      // Lumières
+      scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+      var key = new THREE.DirectionalLight(0xffffff, 0.85);
+      key.position.set(2, 4, 3);
+      scene.add(key);
+      var rim = new THREE.DirectionalLight(0xfff1d6, 0.4);
+      rim.position.set(-3, 2, -2);
+      scene.add(rim);
+      var fill = new THREE.DirectionalLight(0xffe9c4, 0.25);
+      fill.position.set(0, -2, 1);
+      scene.add(fill);
+
+      // Drag controls
+      canvas.addEventListener('mousedown', function(e){
+        isDragging = true; prevX = e.clientX; prevY = e.clientY; autoRotate = false;
+      });
+      canvas.addEventListener('mousemove', function(e){
+        if(!isDragging) return;
+        var dx = e.clientX - prevX, dy = e.clientY - prevY;
+        rotY += dx * 0.008; rotX += dy * 0.008;
+        rotX = Math.max(-1.2, Math.min(1.2, rotX));
+        prevX = e.clientX; prevY = e.clientY;
+        lastInteraction = Date.now();
+      });
+      window.addEventListener('mouseup', function(){ isDragging = false; });
+      // Touch
+      canvas.addEventListener('touchstart', function(e){
+        if(!e.touches[0]) return;
+        isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; autoRotate = false;
+      }, {passive:true});
+      canvas.addEventListener('touchmove', function(e){
+        if(!isDragging || !e.touches[0]) return;
+        var dx = e.touches[0].clientX - prevX, dy = e.touches[0].clientY - prevY;
+        rotY += dx * 0.008; rotX += dy * 0.008;
+        rotX = Math.max(-1.2, Math.min(1.2, rotX));
+        prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+      }, {passive:true});
+      canvas.addEventListener('touchend', function(){ isDragging = false; });
+
+      // Resize observer
+      var ro = new ResizeObserver(function(){
+        var w = container.clientWidth, h = container.clientHeight;
+        if(w > 0 && h > 0){
+          camera.aspect = w/h; camera.updateProjectionMatrix();
+          renderer.setSize(w, h, false);
+        }
+      });
+      ro.observe(container);
+
+      animate();
+    }
+
+    function animate(){
+      requestAnimationFrame(animate);
+      if(!renderer || !scene || !camera) return;
+      if(currentModel){
+        currentModel.rotation.x = rotX;
+        currentModel.rotation.y = rotY;
+      }
+      renderer.render(scene, camera);
+    }
+
+    function sdbResetView(){
+      rotX = 0; rotY = 0;
+    }
+    window.sdbResetView = sdbResetView;
+
+    function loadTexture(url, cb){
+      if(textureCache[url]){ cb(textureCache[url]); return; }
+      var loader = new THREE.TextureLoader();
+      loader.load(url, function(tex){
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.encoding = THREE.sRGBEncoding;
+        textureCache[url] = tex;
+        cb(tex);
+      }, undefined, function(err){
+        console.warn('[SDB] Texture introuvable:', url);
+      });
+    }
+
+    /* ─────── CHARGEMENT GLB ─────── */
+    // Charge un GLB et applique : texture bois (sur FrontColor), texture vasque (sur Mati_re10)
+    // Le robinet (Capture_..._09_51_00) reste intact
+    function loadModel(path){
+      var thisLoadId = ++pendingLoadId;
+      var loading = document.getElementById('sdbLoading');
+      if(loading) loading.classList.remove('hidden');
+
+      console.log('[SDB] Loading:', path);
+      var loader = new THREE.GLTFLoader();
+      loader.load(path, function(gltf){
+        if(thisLoadId !== pendingLoadId) return; // obsolète, ignorer
+
+        if(currentModel){ scene.remove(currentModel); currentModel = null; }
+
+        currentModel = gltf.scene;
+
+        // Centrer et adapter à la vue
+        var box = new THREE.Box3().setFromObject(currentModel);
+        var center = box.getCenter(new THREE.Vector3());
+        var size = box.getSize(new THREE.Vector3());
+        var maxDim = Math.max(size.x, size.y, size.z, 0.001);
+        var scale = 2.0 / maxDim;
+        currentModel.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+        currentModel.scale.setScalar(scale);
+        scene.add(currentModel);
+
+        // Appliquer les matières en respectant les exclusions
+        applyMaterials();
+
+        if(loading) loading.classList.add('hidden');
+        console.log('[SDB] OK:', path);
+      }, function(progress){
+        if(progress.lengthComputable){
+          var pct = Math.round((progress.loaded / progress.total) * 100);
+          if(pct % 25 === 0) console.log('[SDB] Progress:', pct + '%');
+        }
+      }, function(err){
+        console.error('[SDB] ERREUR:', path, err);
+        if(loading){
+          loading.innerHTML = '<div style="padding:24px;text-align:center"><p style="color:#CD3E00;font-weight:600;font-size:14px;margin-bottom:8px">Fichier introuvable</p><p style="color:rgba(26,26,26,.5);font-size:11px;font-family:monospace">'+path+'</p></div>';
+        }
+      });
+    }
+
+    // Applique les textures actuelles à `currentModel`
+    function applyMaterials(){
+      if(!currentModel) return;
+
+      // 1) Bois (FrontColor) — depuis state.bois
+      var boisPreset = BOIS[state.bois];
+      if(boisPreset.texture){
+        loadTexture(boisPreset.texture, function(tex){
+          if(!currentModel) return;
+          applyToMaterial(MAT_BOIS, { map:tex, color:{r:1,g:1,b:1} });
+        });
+      } else if(boisPreset.color){
+        applyToMaterial(MAT_BOIS, { map:null, color:boisPreset.color });
+      }
+
+      // 2) Vasque (Mati_re10) — depuis state.vasqueMatId et state.vasqueFam
+      var vMat = findVasqueMat(state.vasqueFam, state.vasqueMatId);
+      if(vMat){
+        if(vMat.texture){
+          loadTexture(vMat.texture, function(tex){
+            if(!currentModel) return;
+            applyToMaterial(MAT_VASQUE, { map:tex, color:{r:1,g:1,b:1} });
+          });
+        } else if(vMat.color){
+          applyToMaterial(MAT_VASQUE, { map:null, color:vMat.color });
+        }
+      }
+
+      // Robinet : on ne touche jamais MAT_ROBINET → reste sur sa texture d'origine
+    }
+
+    // Helper : appliquer un changement à toutes les meshes utilisant un matériau donné
+    function applyToMaterial(matName, change){
+      if(!currentModel) return;
+      currentModel.traverse(function(child){
+        if(!child.isMesh || !child.material) return;
+        var mats = Array.isArray(child.material) ? child.material : [child.material];
+        for(var i=0; i<mats.length; i++){
+          var m = mats[i];
+          if(!m) continue;
+          // Comparer en strippant les suffixes ".001" etc.
+          var baseName = (m.name || '').replace(/\.\d+$/, '');
+          if(baseName === matName){
+            if('map' in change) m.map = change.map;
+            if(change.color){ m.color.setRGB(change.color.r, change.color.g, change.color.b); }
+            m.needsUpdate = true;
+          }
+        }
+      });
+    }
+
+    function findVasqueMat(fam, id){
+      var list = VASQUE_MATS[fam] || [];
+      for(var i=0; i<list.length; i++) if(list[i].id === id) return list[i];
+      return null;
+    }
+
+    /* ─────── BUILD UI : GRIDS ─────── */
+    function buildVasquesGrid(){
+      var grid = document.getElementById('sdbVasquesGrid');
+      grid.innerHTML = '';
+      for(var i=1; i<=7; i++){
+        (function(n){
+          var div = document.createElement('div');
+          div.className = 'sdb-vasque' + (n === state.vasque ? ' active' : '');
+          div.dataset.v = n;
+          div.innerHTML = '<canvas class="sdb-vasque__canvas" id="sdbVasqueThumb'+n+'"></canvas><span class="sdb-vasque__lbl">Vasque '+n+'</span>';
+          div.addEventListener('click', function(){ selectVasque(n); });
+          grid.appendChild(div);
+        })(i);
+      }
+    }
+
+    function buildMeublesGrid(){
+      var grid = document.getElementById('sdbMeublesGrid');
+      grid.innerHTML = '';
+      for(var i=1; i<=4; i++){
+        (function(n){
+          var div = document.createElement('div');
+          div.className = 'sdb-meuble' + (n === state.meubleVariant ? ' active' : '');
+          div.dataset.m = n;
+          div.innerHTML = '<canvas class="sdb-meuble__canvas" id="sdbMeubleThumb'+n+'"></canvas><span class="sdb-meuble__lbl">'+MEUBLE_NAMES[n-1]+'</span>';
+          div.addEventListener('click', function(){ selectMeubleVariant(n); });
+          grid.appendChild(div);
+        })(i);
+      }
+    }
+
+    function buildVasqueMats(targetId){
+      var target = document.getElementById(targetId);
+      target.innerHTML = '';
+      var list = VASQUE_MATS[state.vasqueFam] || [];
+      list.forEach(function(mat){
+        var div = document.createElement('div');
+        div.className = 'sdb-vasque-mat' + (mat.id === state.vasqueMatId ? ' active' : '');
+        div.dataset.id = mat.id;
+        div.dataset.name = mat.label;
+        if(mat.texture){
+          div.style.backgroundImage = "url('"+mat.texture+"')";
+        } else if(mat.color){
+          // swatch CSS pour les options sans texture (céramique)
+          var c = mat.color;
+          var r = Math.round(c.r*255), g = Math.round(c.g*255), b = Math.round(c.b*255);
+          div.style.backgroundColor = 'rgb('+r+','+g+','+b+')';
+        }
+        div.addEventListener('click', function(){ selectVasqueMat(mat.id); });
+        target.appendChild(div);
+      });
+    }
+
+    function buildBoisGrid(targetId){
+      var target = document.getElementById(targetId);
+      target.innerHTML = '';
+      Object.keys(BOIS).forEach(function(key){
+        var b = BOIS[key];
+        var div = document.createElement('div');
+        div.className = 'sdb-mat' + (key === state.bois ? ' active' : '');
+        div.dataset.id = key;
+        var sw = '<div class="sdb-mat__sw"';
+        if(b.texture){
+          sw += ' style="background-image:url(\''+b.texture+'\')"';
+        } else if(b.color){
+          var c = b.color;
+          var r = Math.round(c.r*255), g = Math.round(c.g*255), bb = Math.round(c.b*255);
+          sw += ' style="background-color:rgb('+r+','+g+','+bb+')"';
+        }
+        sw += '></div>';
+        div.innerHTML = sw + '<span class="sdb-mat__lbl">'+b.label+'</span>';
+        div.addEventListener('click', function(){ selectBois(key); });
+        target.appendChild(div);
+      });
+    }
+
+    /* ─────── SÉLECTIONS ─────── */
+    function selectVasque(n){
+      state.vasque = n;
+      document.querySelectorAll('.sdb-vasque').forEach(function(el){
+        el.classList.toggle('active', parseInt(el.dataset.v) === n);
+      });
+      document.getElementById('sdbVasqueLabel').textContent = 'Vasque ' + n;
+      // On recharge le modèle vasque seul (étape 1)
+      loadModel('sdb/vasque/vasque' + n + '.glb');
+    }
+
+    function selectMeubleVariant(n){
+      state.meubleVariant = n;
+      document.querySelectorAll('.sdb-meuble').forEach(function(el){
+        el.classList.toggle('active', parseInt(el.dataset.m) === n);
+      });
+      document.getElementById('sdbMeubleLabel').textContent = MEUBLE_NAMES[n-1];
+      loadCurrentMeuble();
+    }
+
+    function sdbSetVC(v){
+      state.vc = v;
+      document.querySelectorAll('.sdb-toggle__btn[data-vc]').forEach(function(b){
+        b.classList.toggle('active', parseInt(b.dataset.vc) === v);
+      });
+      loadCurrentMeuble();
+    }
+    window.sdbSetVC = sdbSetVC;
+
+    function sdbSetLC(l){
+      state.lc = l;
+      document.querySelectorAll('.sdb-toggle__btn[data-lc]').forEach(function(b){
+        b.classList.toggle('active', parseInt(b.dataset.lc) === l);
+      });
+      loadCurrentMeuble();
+    }
+    window.sdbSetLC = sdbSetLC;
+
+    function loadCurrentMeuble(){
+      // Variant 1 = première combinaison (1v_1l), variant 2 = 1v_2l etc.
+      // Mais on a aussi les toggles. On charge le fichier qui correspond aux toggles vc/lc.
+      var path = getMeubleGlb(state.vasque, state.vc, state.lc);
+      loadModel(path);
+    }
+
+    function selectBois(key){
+      state.bois = key;
+      document.querySelectorAll('#sdbBoisGrid .sdb-mat, #sdbBoisGrid2 .sdb-mat').forEach(function(el){
+        el.classList.toggle('active', el.dataset.id === key);
+      });
+      var lbl = BOIS[key].label;
+      var el1 = document.getElementById('sdbBoisLabel'); if(el1) el1.textContent = lbl;
+      var el2 = document.getElementById('sdbRecapBois2'); if(el2) el2.textContent = lbl;
+      // Appliquer en live si on est en étape 2 ou 3 (modèle meuble chargé)
+      if(state.step !== 1) applyMaterials();
+    }
+
+    function selectVasqueMat(id){
+      state.vasqueMatId = id;
+      document.querySelectorAll('.sdb-vasque-mat').forEach(function(el){
+        el.classList.toggle('active', el.dataset.id === id);
+      });
+      var mat = findVasqueMat(state.vasqueFam, id);
+      var lbl = mat ? mat.label : '—';
+      var e1 = document.getElementById('sdbVasqueMatLabel'); if(e1) e1.textContent = lbl;
+      var e2 = document.getElementById('sdbRecapVasqueMat2'); if(e2) e2.textContent = lbl;
+      // Live update si modèle chargé
+      applyMaterials();
+    }
+
+    function sdbSwitchFam(fam){
+      state.vasqueFam = fam;
+      document.querySelectorAll('.sdb-fam').forEach(function(b){
+        b.classList.toggle('active', b.dataset.fam === fam);
+      });
+      // Reset le mat sélectionné au premier de la famille
+      var list = VASQUE_MATS[fam] || [];
+      if(list.length){ state.vasqueMatId = list[0].id; }
+      buildVasqueMats('sdbVasqueMats');
+      buildVasqueMats('sdbVasqueMats2');
+      var mat = list[0];
+      var lbl = mat ? mat.label : '—';
+      var e1 = document.getElementById('sdbVasqueMatLabel'); if(e1) e1.textContent = lbl;
+      var e2 = document.getElementById('sdbRecapVasqueMat2'); if(e2) e2.textContent = lbl;
+      applyMaterials();
+    }
+    window.sdbSwitchFam = sdbSwitchFam;
+
+    /* ─────── NAVIGATION ENTRE ÉTAPES ─────── */
+    function setStep(n){
+      state.step = n;
+      // Panels
+      document.querySelectorAll('.sdb-step-panel').forEach(function(p, i){
+        p.classList.toggle('active', i === n-1);
+      });
+      // Stepper
+      ['sdbStep1','sdbStep2','sdbStep3'].forEach(function(id, i){
+        var el = document.getElementById(id);
+        el.classList.remove('active','done');
+        if(i+1 === n) el.classList.add('active');
+        else if(i+1 < n) el.classList.add('done');
+      });
+      document.getElementById('sdbLine12').classList.toggle('done', n >= 2);
+      document.getElementById('sdbLine23').classList.toggle('done', n >= 3);
+      // Header titre
+      var titles = ['Choisissez votre vasque', 'Composez votre meuble', 'Récapitulatif'];
+      document.getElementById('sdbStepEyebrow').textContent = 'Étape ' + n + ' sur 3';
+      document.getElementById('sdbStepTitle').textContent = titles[n-1];
+      // Nav buttons
+      document.getElementById('sdbBack').disabled = (n === 1);
+      var next = document.getElementById('sdbNext');
+      if(n === 1) next.innerHTML = 'Suivant : Choisir le meuble →';
+      else if(n === 2) next.innerHTML = 'Suivant : Récapitulatif →';
+      // Devis wrap visible étape 3
+      document.getElementById('sdbNavWrap').style.display = (n === 3) ? 'none' : 'block';
+      document.getElementById('sdbDevisWrap').style.display = (n === 3) ? 'block' : 'none';
+
+      // Actions liées à l'étape
+      if(n === 1){
+        loadModel('sdb/vasque/vasque' + state.vasque + '.glb');
+      } else if(n === 2){
+        loadCurrentMeuble();
+      } else if(n === 3){
+        // Le modèle meuble reste, on met à jour le récap et les sélecteurs
+        updateRecap();
+        // Rebuild les sélecteurs de l'étape 3 (vasque mat & bois)
+        buildVasqueMats('sdbVasqueMats2');
+        buildBoisGrid('sdbBoisGrid2');
+        // Mettre à jour le lien devis
+        var p = new URLSearchParams({
+          gamme: 'salle-de-bain',
+          vasque: 'Vasque ' + state.vasque,
+          matiere_vasque: (findVasqueMat(state.vasqueFam, state.vasqueMatId) || {}).label || '',
+          meuble: MEUBLE_NAMES[state.meubleVariant-1],
+          config: state.vc + ' vasque(s) · ' + state.lc + ' lavabo(s)',
+          bois: BOIS[state.bois].label
+        });
+        document.getElementById('sdbDevisLink').href = 'contact.html?' + p.toString();
+      }
+    }
+
+    function updateRecap(){
+      var vMat = findVasqueMat(state.vasqueFam, state.vasqueMatId);
+      document.getElementById('sdbRecapVasque').textContent = 'Vasque ' + state.vasque;
+      document.getElementById('sdbRecapVasqueMat').textContent = vMat ? vMat.label : '—';
+      document.getElementById('sdbRecapMeuble').textContent = MEUBLE_NAMES[state.meubleVariant-1];
+      document.getElementById('sdbRecapConfig').textContent = state.vc + ' vasque(s) · ' + state.lc + ' lavabo(s)';
+      document.getElementById('sdbRecapBois').textContent = BOIS[state.bois].label;
+      document.getElementById('sdbRecapVasqueMat2').textContent = vMat ? vMat.label : '—';
+      document.getElementById('sdbRecapBois2').textContent = BOIS[state.bois].label;
+    }
+
+    function sdbNext(){
+      if(state.step < 3) setStep(state.step + 1);
+    }
+    function sdbPrev(){
+      if(state.step > 1) setStep(state.step - 1);
+    }
+    window.sdbNext = sdbNext;
+    window.sdbPrev = sdbPrev;
+
+    /* ─────── OUVERTURE / FERMETURE ─────── */
+    var threeReady = false;
+    var threeLoading = false;
+    var threePendingCbs = [];
+    function ensureThreeLoaded(cb){
+      // Déjà prêt (vérifie aussi si une autre partie de la page a chargé THREE)
+      if(threeReady || (typeof THREE !== 'undefined' && THREE.GLTFLoader)){
+        threeReady = true;
+        cb(); return;
+      }
+      // En cours de chargement par nous → empiler le callback
+      threePendingCbs.push(cb);
+      if(threeLoading) return;
+      threeLoading = true;
+      // Si THREE est déjà chargé mais pas GLTFLoader, ne charger que GLTFLoader
+      var loadCore = (typeof THREE === 'undefined');
+      function loadLoader(){
+        loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js', function(){
+          threeReady = true;
+          threeLoading = false;
+          var cbs = threePendingCbs.slice();
+          threePendingCbs.length = 0;
+          cbs.forEach(function(fn){ try{ fn(); } catch(e){ console.error(e); } });
+        });
+      }
+      if(loadCore){
+        loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js', loadLoader);
+      } else {
+        loadLoader();
+      }
+    }
+
+    function openSdbConfig(){
+      var modal = document.getElementById('sdbConfig');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      ensureThreeLoaded(function(){
+        if(!renderer) initThree();
+        // Build des grilles si pas déjà fait
+        if(!document.getElementById('sdbVasquesGrid').children.length){
+          buildVasquesGrid();
+          buildMeublesGrid();
+          buildVasqueMats('sdbVasqueMats');
+          buildVasqueMats('sdbVasqueMats2');
+          buildBoisGrid('sdbBoisGrid');
+          buildBoisGrid('sdbBoisGrid2');
+        }
+        setStep(1);
+      });
+    }
+    window.openSdbConfig = openSdbConfig;
+
+    function closeSdbConfig(){
+      var modal = document.getElementById('sdbConfig');
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    window.closeSdbConfig = closeSdbConfig;
+
+    // ESC pour fermer
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){
+        var modal = document.getElementById('sdbConfig');
+        if(modal && modal.classList.contains('open')) closeSdbConfig();
+      }
+    });
+
+
+    /* ─────── SHOWCASE MINI-VIEWER (section gamme.html) ─────── */
+    function initShowcase(){
+      var canvas = document.getElementById('sdb-showcase-canvas');
+      if(!canvas) return;
+      var container = canvas.parentElement;
+      var w = container.clientWidth, h = container.clientHeight;
+      if(w === 0 || h === 0){
+        // pas encore visible, retry
+        setTimeout(initShowcase, 200);
+        return;
+      }
+
+      var sScene = new THREE.Scene();
+      var sCam = new THREE.PerspectiveCamera(38, w/h, 0.01, 100);
+      sCam.position.set(0, 0, 3.0);
+
+      var sRenderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:true });
+      sRenderer.setSize(w, h, false);
+      sRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      sRenderer.outputEncoding = THREE.sRGBEncoding;
+
+      sScene.add(new THREE.AmbientLight(0xffffff, 0.65));
+      var key = new THREE.DirectionalLight(0xffffff, 0.85); key.position.set(2,4,3); sScene.add(key);
+      var rim = new THREE.DirectionalLight(0xfff1d6, 0.45); rim.position.set(-3,2,-2); sScene.add(rim);
+      var fill = new THREE.DirectionalLight(0xffe9c4, 0.3); fill.position.set(0,-2,1); sScene.add(fill);
+
+      var showcaseModel = null;
+      var sRotY = 0, sRotX = 0;
+      var sDragging = false, sPrevX = 0, sPrevY = 0;
+      var lastDrag = 0;
+
+      canvas.addEventListener('mousedown', function(e){ sDragging = true; sPrevX = e.clientX; sPrevY = e.clientY; lastDrag = Date.now(); });
+      canvas.addEventListener('mousemove', function(e){
+        if(!sDragging) return;
+        sRotY += (e.clientX - sPrevX) * 0.008;
+        sRotX += (e.clientY - sPrevY) * 0.008;
+        sRotX = Math.max(-1.0, Math.min(1.0, sRotX));
+        sPrevX = e.clientX; sPrevY = e.clientY; lastDrag = Date.now();
+      });
+      window.addEventListener('mouseup', function(){ sDragging = false; });
+
+      // Touch
+      canvas.addEventListener('touchstart', function(e){ if(!e.touches[0]) return; sDragging = true; sPrevX = e.touches[0].clientX; sPrevY = e.touches[0].clientY; lastDrag = Date.now(); }, {passive:true});
+      canvas.addEventListener('touchmove', function(e){
+        if(!sDragging || !e.touches[0]) return;
+        sRotY += (e.touches[0].clientX - sPrevX) * 0.008;
+        sRotX += (e.touches[0].clientY - sPrevY) * 0.008;
+        sRotX = Math.max(-1.0, Math.min(1.0, sRotX));
+        sPrevX = e.touches[0].clientX; sPrevY = e.touches[0].clientY; lastDrag = Date.now();
+      }, {passive:true});
+      canvas.addEventListener('touchend', function(){ sDragging = false; });
+
+      // Resize
+      var ro = new ResizeObserver(function(){
+        var w = container.clientWidth, h = container.clientHeight;
+        if(w > 0 && h > 0){ sCam.aspect = w/h; sCam.updateProjectionMatrix(); sRenderer.setSize(w, h, false); }
+      });
+      ro.observe(container);
+
+      function sAnimate(){
+        requestAnimationFrame(sAnimate);
+        if(showcaseModel){
+          // Auto-rotation lente si pas de drag récent
+          if(!sDragging && Date.now() - lastDrag > 1500){
+            sRotY += 0.004;
+          }
+          showcaseModel.rotation.x = sRotX;
+          showcaseModel.rotation.y = sRotY;
+        }
+        sRenderer.render(sScene, sCam);
+      }
+      sAnimate();
+
+      // Charge vasque1
+      var loader = new THREE.GLTFLoader();
+      loader.load('sdb/vasque/vasque1.glb', function(gltf){
+        showcaseModel = gltf.scene;
+        var box = new THREE.Box3().setFromObject(showcaseModel);
+        var center = box.getCenter(new THREE.Vector3());
+        var size = box.getSize(new THREE.Vector3());
+        var scale = 1.7 / Math.max(size.x, size.y, size.z, 0.001);
+        showcaseModel.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+        showcaseModel.scale.setScalar(scale);
+        sScene.add(showcaseModel);
+        // Cacher loader
+        var l = document.getElementById('sdb-showcase-loader');
+        if(l) l.classList.add('hidden');
+        console.log('[SDB Showcase] Loaded vasque1');
+      }, undefined, function(err){
+        console.error('[SDB Showcase] Erreur chargement:', err);
+        var l = document.getElementById('sdb-showcase-loader');
+        if(l) l.innerHTML = '<div style="color:rgba(205,62,0,.8);font-size:11px;letter-spacing:.16em;text-transform:uppercase">Modèle indisponible</div>';
+      });
+    }
+
+    // Lance le showcase quand sa section devient visible (lazy)
+    function initShowcaseWhenVisible(){
+      var canvas = document.getElementById('sdb-showcase-canvas');
+      if(!canvas) return;
+      var started = false;
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if(en.isIntersecting && !started){
+            started = true;
+            io.disconnect();
+            ensureThreeLoaded(function(){ initShowcase(); });
+          }
+        });
+      }, { rootMargin: '200px' });
+      io.observe(canvas);
+    }
+    // Lance après que le DOM est fini de charger
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', initShowcaseWhenVisible);
+    } else {
+      initShowcaseWhenVisible();
+    }
+
+  })();
   </script>
 
 </body>
