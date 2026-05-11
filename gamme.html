@@ -4,11 +4,11 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Gamme Mobilier Sur-Mesure — Kōbō Design Bordeaux</title>
-  <meta name="description" content="Découvrez notre gamme de mobilier sur-mesure : bibliothèques, bureaux, cuisines et dressings. Studio Kōbō Design, Bordeaux."/>
+  <meta name="description" content="Exemples de réalisations sur-mesure : bibliothèques, bureaux, cuisines. Studio Kōbō Design, Bordeaux — chaque projet est unique."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300;1,800&display=swap" rel="stylesheet"/>
-  <style>
+<style>
     :root {
       --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A;
       --white:#FFFFFF; --mid:#F0EBE0;
@@ -736,8 +736,156 @@
     .config__cta:hover { background: #a83200; transform: translateY(-1px); }
     .config__note { text-align: center; font-size: 10px; color: rgba(26,26,26,.3); margin-top: 10px; }
   </style>
+  <style>
+    /* ── REVEAL ── */
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(0.16,1,0.3,1),transform .7s cubic-bezier(0.16,1,0.3,1)}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    .reveal-delay-1{transition-delay:.1s}.reveal-delay-2{transition-delay:.2s}.reveal-delay-3{transition-delay:.3s}
+
+    /* ── HERO SPLIT ── */
+    .g-hero { min-height: 100vh; display: grid; grid-template-rows: 1fr auto; background: var(--dark); position: relative; overflow: hidden; }
+    .g-hero::after { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 100% 80% at 80% 20%, rgba(205,62,0,.18) 0%, transparent 65%); pointer-events:none; }
+    .g-hero__top { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 0; padding: clamp(120px,15vw,180px) clamp(32px,7vw,100px) clamp(48px,6vw,80px); position: relative; z-index: 1; }
+    .g-hero__left { }
+    .g-hero__pill { display: inline-flex; align-items: center; gap: 8px; font-size: 9px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--accent); background: rgba(205,62,0,.1); border: 1px solid rgba(205,62,0,.25); padding: 6px 14px; border-radius: 100px; margin-bottom: 24px; }
+    .g-hero__h1 { font-size: clamp(48px,7vw,100px); font-weight: 900; letter-spacing: -.06em; line-height: .92; color: var(--bg); }
+    .g-hero__h1 em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.25); display: block; }
+    .g-hero__right { padding-left: clamp(24px,4vw,60px); border-left: 1px solid rgba(255,250,240,.08); }
+    .g-hero__manifeste { font-size: clamp(13px,1.4vw,16px); font-weight: 300; line-height: 1.8; color: rgba(255,250,240,.55); margin-bottom: 28px; }
+    .g-hero__manifeste strong { color: var(--bg); font-weight: 600; }
+    .g-hero__cta-wrap { display: flex; gap: 12px; flex-wrap: wrap; }
+    .g-hero__cta-p { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; background: var(--accent); color: white; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; transition: background .2s, transform .15s; }
+    .g-hero__cta-p:hover { background: #a83200; transform: translateY(-2px); }
+    .g-hero__cta-s { display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; border: 1.5px solid rgba(255,250,240,.2); color: rgba(255,250,240,.7); border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; transition: border-color .2s, color .2s; }
+    .g-hero__cta-s:hover { border-color: rgba(255,250,240,.5); color: var(--bg); }
+    .g-hero__bottom { padding: 0 clamp(32px,7vw,100px) clamp(32px,4vw,48px); display: flex; align-items: center; gap: clamp(32px,5vw,64px); position: relative; z-index: 1; border-top: 1px solid rgba(255,250,240,.06); padding-top: clamp(24px,3vw,36px); }
+    .g-hero__stat { text-align: center; }
+    .g-hero__stat-num { font-size: clamp(28px,4vw,48px); font-weight: 900; letter-spacing: -.05em; color: var(--accent); line-height: 1; }
+    .g-hero__stat-label { font-size: 10px; font-weight: 400; color: rgba(255,250,240,.3); margin-top: 4px; letter-spacing: .08em; }
+    .g-hero__stat-div { width: 1px; height: 40px; background: rgba(255,250,240,.08); flex-shrink: 0; }
+    @media(max-width:900px) { .g-hero__top{grid-template-columns:1fr;gap:32px} .g-hero__right{border-left:none;padding-left:0} }
+
+    /* ── MARQUEE ── */
+    .marquee-wrap{overflow:hidden;background:var(--accent);padding:clamp(10px,1.5vw,16px) 0}
+    .marquee-track{display:flex;width:max-content;animation:scroll-left 22s linear infinite}
+    .marquee-track:hover{animation-play-state:paused}
+    .marquee-item{display:flex;align-items:center;gap:clamp(24px,4vw,48px);padding:0 clamp(24px,4vw,48px);white-space:nowrap}
+    .marquee-text{font-size:clamp(11px,1.2vw,13px);font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:white}
+    .marquee-sep{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.35)}
+    @keyframes scroll-left{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ── BANDEAU "CE QU'ON FAIT VRAIMENT" ── */
+    .g-manifeste { display: grid; grid-template-columns: 5fr 7fr; background: var(--bg); border-bottom: 1px solid rgba(26,26,26,.07); }
+    .g-manifeste__left { padding: clamp(64px,8vw,100px) clamp(32px,6vw,80px); border-right: 1px solid rgba(26,26,26,.07); }
+    .g-manifeste__eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+    .g-manifeste__title { font-size: clamp(26px,3.2vw,40px); font-weight: 900; letter-spacing: -.04em; line-height: 1.1; margin-bottom: 20px; }
+    .g-manifeste__title em { font-style: italic; font-weight: 300; color: rgba(26,26,26,.2); }
+    .g-manifeste__text { font-size: 14px; font-weight: 300; line-height: 1.85; color: rgba(26,26,26,.6); margin-bottom: 24px; }
+    .g-manifeste__link { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+    .g-manifeste__link::after { content: "→"; transition: transform .2s; }
+    .g-manifeste__link:hover::after { transform: translateX(4px); }
+    .g-manifeste__right { padding: clamp(64px,8vw,100px) clamp(32px,6vw,80px); display: flex; flex-direction: column; gap: 24px; justify-content: center; }
+    .g-manifeste__item { display: flex; gap: 20px; align-items: flex-start; }
+    .g-manifeste__item-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(205,62,0,.08); border: 1px solid rgba(205,62,0,.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent); }
+    .g-manifeste__item-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .g-manifeste__item-text { font-size: 12px; font-weight: 300; color: rgba(26,26,26,.5); line-height: 1.6; }
+    @media(max-width:768px){.g-manifeste{grid-template-columns:1fr}.g-manifeste__left{border-right:none;border-bottom:1px solid rgba(26,26,26,.07)}}
+
+    /* ── INTRO EXEMPLES ── */
+    .g-examples-intro { padding: clamp(64px,8vw,100px) clamp(32px,7vw,100px) clamp(32px,4vw,48px); background: var(--dark); }
+    .g-examples-intro__inner { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; }
+    .g-examples-intro__label { font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .g-examples-intro__title { font-size: clamp(32px,5vw,64px); font-weight: 900; letter-spacing: -.05em; line-height: .95; color: var(--bg); }
+    .g-examples-intro__title em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.2); }
+    .g-examples-intro__note { max-width: 320px; font-size: 13px; font-weight: 300; color: rgba(255,250,240,.4); line-height: 1.7; text-align: right; }
+    .g-examples-intro__note strong { color: rgba(255,250,240,.7); font-weight: 600; }
+    @media(max-width:768px){.g-examples-intro__inner{flex-direction:column}.g-examples-intro__note{text-align:left}}
+
+    /* ── GAMME CATEGORY ── */
+    .gamme-cat { padding: 0 clamp(32px,7vw,100px) clamp(80px,10vw,120px); background: var(--dark); }
+    .gamme-cat__header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: clamp(32px,4vw,48px); padding-top: clamp(48px,6vw,72px); border-top: 1px solid rgba(255,250,240,.07); }
+    .gamme-cat__num { font-size: clamp(48px,8vw,96px); font-weight: 900; letter-spacing: -.06em; line-height: 1; color: rgba(255,250,240,.06); }
+    .gamme-cat__eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .gamme-cat__title { font-size: clamp(24px,3.5vw,44px); font-weight: 900; letter-spacing: -.04em; color: var(--bg); }
+    .gamme-cat__count { font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,250,240,.25); }
+
+    /* ── PRODUIT CARDS ── */
+    .produits-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media(max-width:900px){.produits-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:600px){.produits-grid{grid-template-columns:1fr}}
+    .produit-card { cursor: pointer; border-radius: 12px; overflow: hidden; background: rgba(255,250,240,.04); border: 1px solid rgba(255,250,240,.07); transition: border-color .3s, transform .3s cubic-bezier(0.16,1,0.3,1), box-shadow .3s; }
+    .produit-card:hover { border-color: var(--accent); transform: translateY(-6px); box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+    .produit-card__canvas-wrap { position: relative; aspect-ratio: 3/4; background: #1e1e1e; overflow: hidden; }
+    .produit-canvas { width: 100%; height: 100%; display: block; }
+    .produit-card__overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(205,62,0,.9) 0%, rgba(205,62,0,.3) 35%, transparent 65%); opacity: 0; transition: opacity .3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; }
+    .produit-card:hover .produit-card__overlay { opacity: 1; }
+    .produit-card__overlay-label { font-size: 9px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.7); margin-bottom: 4px; }
+    .produit-card__overlay-cta { font-size: 16px; font-weight: 900; color: white; letter-spacing: -.01em; }
+    .produit-card__info { padding: 16px 20px 20px; }
+    .produit-card__name { font-size: 14px; font-weight: 800; letter-spacing: -.01em; color: var(--bg); margin-bottom: 4px; }
+    .produit-card__desc { font-size: 11px; font-weight: 300; color: rgba(255,250,240,.35); line-height: 1.5; }
+    .produit-card__tag { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; background: rgba(205,62,0,.12); color: var(--accent); border: 1px solid rgba(205,62,0,.2); margin-top: 10px; }
+
+    /* ── BIENTOT ── */
+    .bientot-section { padding: clamp(48px,6vw,80px) clamp(32px,7vw,100px); background: var(--dark); border-top: 1px solid rgba(255,250,240,.05); }
+    .bientot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media(max-width:768px){.bientot-grid{grid-template-columns:1fr 1fr}}
+    .bientot-card { border: 1px solid rgba(255,250,240,.07); border-radius: 10px; padding: 24px 20px; display: flex; flex-direction: column; gap: 8px; opacity: .5; }
+    .bientot-card__label { font-size: 8px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,250,240,.3); }
+    .bientot-card__name { font-size: 16px; font-weight: 800; color: rgba(255,250,240,.6); letter-spacing: -.01em; }
+    .bientot-card__tag { display: inline-flex; font-size: 8px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; border: 1px solid rgba(255,250,240,.12); color: rgba(255,250,240,.25); width: fit-content; }
+
+    /* ── CTA FINAL ── */
+    .g-cta-final { padding: clamp(80px,10vw,120px) clamp(32px,7vw,100px); background: var(--accent); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 40px; }
+    .g-cta-final__title { font-size: clamp(28px,4vw,56px); font-weight: 900; letter-spacing: -.05em; line-height: .95; color: white; }
+    .g-cta-final__title em { font-style: italic; font-weight: 300; color: rgba(255,255,255,.35); }
+    .g-cta-final__sub { font-size: 14px; font-weight: 300; color: rgba(255,255,255,.65); margin-top: 12px; max-width: 460px; }
+    .g-cta-final__btn { display: inline-flex; align-items: center; gap: 10px; padding: 18px 36px; background: white; color: var(--accent); border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; transition: transform .2s, box-shadow .2s; }
+    .g-cta-final__btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+    @media(max-width:768px){.g-cta-final{grid-template-columns:1fr}.g-cta-final__btn{width:fit-content}}
+
+    /* ── MODAL ── */
+    .config-modal{position:fixed;inset:0;background:rgba(10,10,10,.85);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
+    .config-modal.open{display:flex}
+    .config-modal__inner{background:var(--bg);border-radius:16px;width:100%;max-width:1040px;max-height:92vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.5)}
+    .config-modal__header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid rgba(26,26,26,.07);position:sticky;top:0;background:var(--bg);z-index:1}
+    .config-modal__eyebrow{font-size:9px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+    .config-modal__title{font-size:18px;font-weight:900;letter-spacing:-.02em}
+    .config-modal__close{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(26,26,26,.15);background:none;font-size:15px;cursor:pointer;color:rgba(26,26,26,.5);transition:all .2s;display:flex;align-items:center;justify-content:center}
+    .config-modal__close:hover{border-color:var(--accent);color:var(--accent)}
+    .config-modal__body{display:grid;grid-template-columns:1fr 300px;gap:20px;padding:20px 28px 28px}
+    @media(max-width:768px){.config-modal__body{grid-template-columns:1fr}}
+    .configurateur__viewer{position:relative;border-radius:10px;overflow:hidden;background:#FAF7F2;border:1px solid rgba(26,26,26,.08);aspect-ratio:4/3}
+    #threeCanvas{width:100%;height:100%;display:block}
+    .viewer__controls{position:absolute;top:12px;right:12px}
+    .viewer__btn{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.9);border:1px solid rgba(26,26,26,.1);color:rgba(26,26,26,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .viewer__btn:hover{background:var(--accent);border-color:var(--accent);color:white}
+    .viewer__hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(26,26,26,.3);white-space:nowrap;pointer-events:none}
+    .viewer__loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(250,247,242,.96)}
+    .viewer__loading.hidden{display:none}
+    .viewer__spinner{width:26px;height:26px;border:2px solid rgba(26,26,26,.1);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+    .viewer__loading p{font-size:11px;color:rgba(26,26,26,.4)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .configurateur__panel{display:flex;flex-direction:column;gap:14px}
+    .config__group{background:white;border:1px solid rgba(26,26,26,.08);border-radius:10px;padding:16px}
+    .config__label{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:12px}
+    .config__presets{display:flex;flex-wrap:wrap;gap:6px}
+    .preset-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:1.5px solid rgba(26,26,26,.1);background:none;cursor:pointer;color:rgba(26,26,26,.6);font-family:var(--font);font-size:11px;font-weight:500;transition:all .2s}
+    .preset-btn:hover{border-color:rgba(26,26,26,.25);color:var(--dark)}
+    .preset-btn.active{border-color:var(--accent);color:var(--dark);background:rgba(205,62,0,.06)}
+    .preset-swatch{width:16px;height:16px;border-radius:4px;flex-shrink:0;background-size:cover;background-position:center}
+    .config__summary{background:white;border:1px solid rgba(26,26,26,.08);border-radius:10px;padding:16px}
+    .config__recap{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+    .config__recap-item{display:flex;justify-content:space-between;align-items:center}
+    .config__recap-label{font-size:10px;color:rgba(26,26,26,.4);font-weight:500}
+    .config__recap-val{font-size:12px;font-weight:700;color:var(--dark)}
+    .config__cta{display:block;text-align:center;padding:12px 16px;background:var(--accent);color:white;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:background .2s,transform .15s}
+    .config__cta:hover{background:#a83200;transform:translateY(-1px)}
+    .config__note{text-align:center;font-size:10px;color:rgba(26,26,26,.3);margin-top:8px}
+  </style>
 </head>
 <body>
+
 
 
 
@@ -814,141 +962,157 @@
 </header>
 
 <!-- ── HERO ── -->
-<section class="gamme-hero">
-  <div class="gamme-hero__inner">
-    <p class="gamme-hero__label reveal">Notre gamme</p>
-    <h1 class="gamme-hero__h1 reveal reveal-delay-1">Chaque meuble,<br><em>pensé pour durer.</em></h1>
-    <p class="gamme-hero__sub reveal reveal-delay-2">Du mobilier sur-mesure conçu et fabriqué à Bordeaux. Choisissez votre modèle, configurez vos matières, recevez votre devis sous 24h.</p>
+<section class="g-hero">
+  <div class="g-hero__top">
+    <div class="g-hero__left">
+      <p class="g-hero__pill reveal">✦ Exemples de réalisations</p>
+      <h1 class="g-hero__h1 reveal reveal-delay-1">Inspirez-vous.<br><em>On crée le vôtre.</em></h1>
+    </div>
+    <div class="g-hero__right reveal reveal-delay-2">
+      <p class="g-hero__manifeste">Ces modèles sont des <strong>exemples de ce que nous savons faire</strong>. Chaque projet est unique — dimensions, matières, configurations : tout est pensé pour votre espace et votre usage.</p>
+      <div class="g-hero__cta-wrap">
+        <a href="contact.html" class="g-hero__cta-p">Déposer mon projet →</a>
+        <a href="#bibliotheques" class="g-hero__cta-s">Voir les exemples</a>
+      </div>
+    </div>
   </div>
-  <div class="gamme-hero__scroll">Scroll</div>
+  <div class="g-hero__bottom">
+    <div class="g-hero__stat reveal"><div class="g-hero__stat-num">+120</div><div class="g-hero__stat-label">projets réalisés</div></div>
+    <div class="g-hero__stat-div"></div>
+    <div class="g-hero__stat reveal reveal-delay-1"><div class="g-hero__stat-num">100%</div><div class="g-hero__stat-label">sur-mesure</div></div>
+    <div class="g-hero__stat-div"></div>
+    <div class="g-hero__stat reveal reveal-delay-2"><div class="g-hero__stat-num">24h</div><div class="g-hero__stat-label">pour votre devis</div></div>
+    <div class="g-hero__stat-div"></div>
+    <div class="g-hero__stat reveal reveal-delay-3"><div class="g-hero__stat-num">9</div><div class="g-hero__stat-label">finitions disponibles</div></div>
+  </div>
 </section>
 
 <!-- ── MARQUEE ── -->
 <div class="marquee-wrap" aria-hidden="true">
   <div class="marquee-track">
-    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
-    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
-    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
-    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Rangements</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Rangements</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Rangements</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
+    <div class="marquee-item"><span class="marquee-text">Bibliothèques</span><span class="marquee-sep"></span><span class="marquee-text">Bureaux</span><span class="marquee-sep"></span><span class="marquee-text">Cuisines</span><span class="marquee-sep"></span><span class="marquee-text">Dressings</span><span class="marquee-sep"></span><span class="marquee-text">Meubles TV</span><span class="marquee-sep"></span><span class="marquee-text">Rangements</span><span class="marquee-sep"></span><span class="marquee-text">Sur-mesure</span><span class="marquee-sep"></span></div>
   </div>
 </div>
 
-<!-- ── INTRO ÉDITORIAL ── -->
-<div class="gamme-intro">
-  <div class="gamme-intro__left">
-    <p class="gamme-intro__eyebrow reveal">Le principe</p>
-    <h2 class="gamme-intro__title reveal reveal-delay-1">On conçoit.<br>On fabrique.<br><em>On livre.</em></h2>
-    <p class="gamme-intro__text reveal reveal-delay-2">Chaque modèle de notre gamme est disponible dans les matières et coloris de votre choix. Configurez-le en 2 minutes, recevez un devis détaillé et un prix ferme. Pas de mauvaise surprise.</p>
+<!-- ── CE QU'ON FAIT VRAIMENT ── -->
+<div class="g-manifeste">
+  <div class="g-manifeste__left">
+    <p class="g-manifeste__eyebrow reveal">Notre approche</p>
+    <h2 class="g-manifeste__title reveal reveal-delay-1">Ce n'est pas<br>un catalogue.<br><em>C'est un point de départ.</em></h2>
+    <p class="g-manifeste__text reveal reveal-delay-2">Chez Kōbō, chaque meuble est pensé pour un espace précis, une personne précise. Les modèles que vous voyez ici illustrent notre savoir-faire — ils peuvent être reproduits à l'identique ou devenir le point de départ d'une création entièrement personnalisée.</p>
+    <a href="contact.html" class="g-manifeste__link reveal reveal-delay-3">Parler de mon projet</a>
   </div>
-  <div class="gamme-intro__right">
-    <div class="gamme-intro__stats">
-      <div class="gamme-stat reveal">
-        <div class="gamme-stat__num">+120</div>
-        <div class="gamme-stat__label">projets réalisés</div>
-      </div>
-      <div class="gamme-stat reveal reveal-delay-1">
-        <div class="gamme-stat__num">24h</div>
-        <div class="gamme-stat__label">pour recevoir votre devis</div>
-      </div>
-      <div class="gamme-stat reveal reveal-delay-2">
-        <div class="gamme-stat__num">9</div>
-        <div class="gamme-stat__label">finitions disponibles</div>
-      </div>
+  <div class="g-manifeste__right">
+    <div class="g-manifeste__item reveal">
+      <div class="g-manifeste__item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><div class="g-manifeste__item-title">Dimensions sur-mesure</div><div class="g-manifeste__item-text">Chaque meuble est fabriqué aux dimensions exactes de votre espace. Pas de compromis, pas de découpe approximative.</div></div>
+    </div>
+    <div class="g-manifeste__item reveal reveal-delay-1">
+      <div class="g-manifeste__item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      <div><div class="g-manifeste__item-title">Matières au choix</div><div class="g-manifeste__item-text">Bois massifs, laques, teintes — configurez les finitions directement sur les modèles 3D et visualisez le rendu avant de commander.</div></div>
+    </div>
+    <div class="g-manifeste__item reveal reveal-delay-2">
+      <div class="g-manifeste__item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><div class="g-manifeste__item-title">Prix ferme garanti</div><div class="g-manifeste__item-text">Devis gratuit sous 24h. Une fois validé, le prix ne bouge plus. Aucune mauvaise surprise à la livraison.</div></div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════
-     CATÉGORIE 1 — BIBLIOTHÈQUES
-════════════════════════════════════════════════════════ -->
-<section class="gamme-cat gamme-cat--dark" id="bibliotheques">
+<!-- ── EXEMPLES INTRO ── -->
+<div class="g-examples-intro">
+  <div class="g-examples-intro__inner">
+    <div>
+      <p class="g-examples-intro__label reveal">Exemples configurables</p>
+      <h2 class="g-examples-intro__title reveal reveal-delay-1">Explorez,<br><em>personnalisez.</em></h2>
+    </div>
+    <p class="g-examples-intro__note reveal reveal-delay-2">Cliquez sur un modèle pour changer les matières en temps réel. <strong>Chaque configuration génère automatiquement votre devis.</strong></p>
+  </div>
+</div>
+
+<!-- ── BIBLIOTHÈQUES ── -->
+<section class="gamme-cat" id="bibliotheques">
   <div class="gamme-cat__header">
     <div class="gamme-cat__num reveal">01</div>
-    <div class="gamme-cat__title-wrap">
+    <div>
       <p class="gamme-cat__eyebrow">Rangement</p>
       <h2 class="gamme-cat__title reveal">Bibliothèques</h2>
     </div>
-    <div class="gamme-cat__count reveal">3 modèles</div>
+    <div class="gamme-cat__count reveal">3 modèles — personnalisables</div>
   </div>
-
   <div class="produits-grid">
-
-    <!-- Produit 1 -->
     <div class="produit-card reveal" onclick="openConfig('Bibliotheque.glb', 'Bibliothèque')">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-1"></canvas>
         <div class="produit-card__overlay">
-          <span class="produit-card__overlay-cta">Personnaliser</span>
+          <div class="produit-card__overlay-label">Cliquez pour configurer</div>
+          <div class="produit-card__overlay-cta">Personnaliser →</div>
         </div>
       </div>
       <div class="produit-card__info">
         <div class="produit-card__name">Bibliothèque</div>
         <div class="produit-card__desc">Structure ouverte, modulable du sol au plafond.</div>
-        <span class="produit-card__tag">Configurer →</span>
+        <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
-
-    <!-- Produit 2 -->
     <div class="produit-card reveal reveal-delay-1" onclick="openConfig('bibliotheque_portes_hautes.glb', 'Bibliothèque portes hautes')">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-2"></canvas>
         <div class="produit-card__overlay">
-          <span class="produit-card__overlay-cta">Personnaliser</span>
+          <div class="produit-card__overlay-label">Cliquez pour configurer</div>
+          <div class="produit-card__overlay-cta">Personnaliser →</div>
         </div>
       </div>
       <div class="produit-card__info">
         <div class="produit-card__name">Bibliothèque portes hautes</div>
         <div class="produit-card__desc">Rangements fermés en partie haute, étagères ouvertes en bas.</div>
-        <span class="produit-card__tag">Configurer →</span>
+        <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
-
-    <!-- Produit 3 -->
     <div class="produit-card reveal reveal-delay-2" onclick="openConfig('biblio_portes_basses.glb', 'Bibliothèque portes basses')">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-3"></canvas>
         <div class="produit-card__overlay">
-          <span class="produit-card__overlay-cta">Personnaliser</span>
+          <div class="produit-card__overlay-label">Cliquez pour configurer</div>
+          <div class="produit-card__overlay-cta">Personnaliser →</div>
         </div>
       </div>
       <div class="produit-card__info">
         <div class="produit-card__name">Bibliothèque portes basses</div>
         <div class="produit-card__desc">Rangements fermés en bas, étagères ouvertes en hauteur.</div>
-        <span class="produit-card__tag">Configurer →</span>
+        <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
-
   </div>
 </section>
 
-<!-- ════════════════════════════════════════════════════════
-     CATÉGORIES À VENIR
-════════════════════════════════════════════════════════ -->
-<section class="gamme-cat gamme-cat--light" id="bureaux" style="opacity:.5;pointer-events:none;">
-  <div class="gamme-cat__header">
-    <div class="gamme-cat__num">02</div>
-    <div class="gamme-cat__title-wrap">
-      <p class="gamme-cat__eyebrow">Espace de travail</p>
-      <h2 class="gamme-cat__title">Bureaux</h2>
-    </div>
-    <div class="gamme-cat__count" style="font-size:10px;background:rgba(26,26,26,.06);padding:6px 14px;border-radius:100px;">Bientôt disponible</div>
+<!-- ── BIENTÔT DISPONIBLES ── -->
+<div class="bientot-section">
+  <p style="font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,250,240,.25);margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+    <span style="display:inline-block;width:28px;height:1px;background:rgba(255,250,240,.15)"></span>
+    Prochainement configurables
+  </p>
+  <div class="bientot-grid">
+    <div class="bientot-card"><div class="bientot-card__label">Espace de travail</div><div class="bientot-card__name">Bureaux</div><div class="bientot-card__tag">En cours</div></div>
+    <div class="bientot-card"><div class="bientot-card__label">Cuisine</div><div class="bientot-card__name">Cuisines</div><div class="bientot-card__tag">En cours</div></div>
+    <div class="bientot-card"><div class="bientot-card__label">Chambre</div><div class="bientot-card__name">Dressings</div><div class="bientot-card__tag">En cours</div></div>
+    <div class="bientot-card"><div class="bientot-card__label">Séjour</div><div class="bientot-card__name">Meubles TV</div><div class="bientot-card__tag">En cours</div></div>
   </div>
-  <div class="produits-grid">
-    <div style="aspect-ratio:3/4;background:rgba(26,26,26,.04);border-radius:10px;"></div>
-    <div style="aspect-ratio:3/4;background:rgba(26,26,26,.04);border-radius:10px;"></div>
-    <div style="aspect-ratio:3/4;background:rgba(26,26,26,.04);border-radius:10px;"></div>
-  </div>
-</section>
+</div>
 
 <!-- ── CTA FINAL ── -->
-<section class="gamme-cta">
-  <h2 class="gamme-cta__title reveal">Votre projet<br>ne ressemble à aucun autre.</h2>
-  <p class="gamme-cta__sub reveal reveal-delay-1">Déposez votre idée en 2 minutes. On vous rappelle sous 24h avec un devis détaillé et un prix ferme.</p>
-  <a href="contact.html" class="gamme-cta__btn reveal reveal-delay-2">
+<div class="g-cta-final">
+  <div>
+    <h2 class="g-cta-final__title reveal">Votre projet<br><em>n'existe pas encore.</em></h2>
+    <p class="g-cta-final__sub reveal reveal-delay-1">Décrivez-le nous en 2 minutes. On vous rappelle sous 24h avec un devis détaillé et un prix ferme.</p>
+  </div>
+  <a href="contact.html" class="g-cta-final__btn reveal reveal-delay-2">
     Déposer mon projet
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </a>
-</section>
+</div>
 
 <footer>
     <div class="footer__top">
@@ -1000,14 +1164,12 @@
     </div>
   </footer>
 
-<!-- ════════════════════════════════════════════════════════
-     MODAL CONFIGURATEUR
-════════════════════════════════════════════════════════ -->
+<!-- ── MODAL CONFIGURATEUR ── -->
 <div class="config-modal" id="configModal">
   <div class="config-modal__inner">
     <div class="config-modal__header">
       <div>
-        <p class="config-modal__eyebrow">Configurateur</p>
+        <p class="config-modal__eyebrow">Exemple configurable</p>
         <h3 class="config-modal__title" id="configModalTitle">Bibliothèque</h3>
       </div>
       <button class="config-modal__close" onclick="closeConfig()">✕</button>
@@ -1017,13 +1179,10 @@
         <canvas id="threeCanvas"></canvas>
         <div class="viewer__controls">
           <button class="viewer__btn" id="btnReset" title="Réinitialiser">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
         </div>
-        <div class="viewer__hint">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/></svg>
-          Faites glisser pour tourner
-        </div>
+        <div class="viewer__hint">⟳ Glissez pour tourner</div>
         <div class="viewer__loading" id="viewerLoading">
           <div class="viewer__spinner"></div>
           <p>Chargement…</p>
@@ -1031,7 +1190,7 @@
       </div>
       <div class="configurateur__panel">
         <div class="config__group">
-          <p class="config__label">Structure &amp; Étagères</p>
+          <p class="config__label">Choisissez la matière</p>
           <div class="config__presets" id="presetsWood">
             <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/BOISCHENE.jpg')"></span>Chêne</button>
             <button class="preset-btn" data-type="wood" data-value="noyer" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>Noyer</button>
@@ -1044,24 +1203,9 @@
             <button class="preset-btn" data-type="wood" data-value="noir_mate" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background:#141414"></span>Noir maté</button>
           </div>
         </div>
-        <div class="config__group">
-          <p class="config__label">Fond &amp; Détails</p>
-          <div class="config__presets" id="presetsBody">
-            <button class="preset-btn active" data-type="body" data-value="chene" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/BOISCHENE.jpg')"></span>Chêne</button>
-            <button class="preset-btn" data-type="body" data-value="noyer" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>Noyer</button>
-            <button class="preset-btn" data-type="body" data-value="chene_fonce" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/CHENEFONCE.jpg')"></span>Chêne foncé</button>
-            <button class="preset-btn" data-type="body" data-value="sapelli" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/SAPELLI.jpg')"></span>Sapelli</button>
-            <button class="preset-btn" data-type="body" data-value="vert_sauge" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/VERTSAUGE.jpg')"></span>Vert sauge</button>
-            <button class="preset-btn" data-type="body" data-value="brun_rose" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/BRUNROSE.jpg')"></span>Brun rosé</button>
-            <button class="preset-btn" data-type="body" data-value="gris_ardoise" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background-image:url('/img/GRISARDOISE.jpg')"></span>Gris ardoise</button>
-            <button class="preset-btn" data-type="body" data-value="blanc_mate" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>Blanc maté</button>
-            <button class="preset-btn" data-type="body" data-value="noir_mate" onclick="setMaterial('body',this)"><span class="preset-swatch" style="background:#141414"></span>Noir maté</button>
-          </div>
-        </div>
         <div class="config__summary">
           <div class="config__recap">
-            <div class="config__recap-item"><span class="config__recap-label">Structure</span><span class="config__recap-val" id="recapWood">Chêne</span></div>
-            <div class="config__recap-item"><span class="config__recap-label">Fond</span><span class="config__recap-val" id="recapBody">Chêne</span></div>
+            <div class="config__recap-item"><span class="config__recap-label">Matière sélectionnée</span><span class="config__recap-val" id="recapWood">Chêne</span></div>
           </div>
           <a href="contact.html" class="config__cta" id="configCta">Demander un devis →</a>
           <p class="config__note">Gratuit · Sans engagement · 24h</p>
@@ -1129,12 +1273,11 @@
 </script>
 
 <script>
-  /* ── REVEAL ── */
   const revealEls = document.querySelectorAll('.reveal');
-  const revealObs = new IntersectionObserver(entries => {
-    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
-  }, { threshold: 0.1 });
-  revealEls.forEach(el => revealObs.observe(el));
+  const ro = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');ro.unobserve(e.target);} });
+  },{threshold:0.1});
+  revealEls.forEach(el => ro.observe(el));
 </script>
 
 <script>
@@ -1385,10 +1528,10 @@
       if (!preset) return;
 
       if (type === 'wood') { currentWood = value; document.getElementById('recapWood').textContent = preset.label; }
-      else { currentBody = value; document.getElementById('recapBody').textContent = preset.label; }
+      else { currentBody = value; // pas de recapBody }
 
       if (!model) return;
-      var targetNames = type === 'wood' ? ['Matériau'] : ['Matériau.001'];
+      var targetNames = ['Matériau', 'Matériau.001']; // Tout le meuble
 
       function apply(tex) {
         model.traverse(function(child) {
