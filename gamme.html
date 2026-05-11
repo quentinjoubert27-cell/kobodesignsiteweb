@@ -1307,9 +1307,9 @@
     /* ── PREVIEWS 3D ── */
     function initPreviews() {
       var configs = [
-        { id: 'canvas-1', glb: '/bibliotheque.glb' },
-        { id: 'canvas-2', glb: '/bibliotheque_portes_hautes.glb' },
-        { id: 'canvas-3', glb: '/biblio_portes_basses.glb' },
+        { id: 'canvas-1', glb: 'bibliotheque.glb' },
+        { id: 'canvas-2', glb: 'bibliotheque_portes_hautes.glb' },
+        { id: 'canvas-3', glb: 'biblio_portes_basses.glb' },
       ];
       configs.forEach(function(cfg) {
         var canvas = document.getElementById(cfg.id);
@@ -1360,8 +1360,10 @@
       document.body.style.overflow = 'hidden';
 
       currentWood = 'chene'; currentBody = 'chene';
-      document.getElementById('recapWood').textContent = 'Chêne';
-      document.getElementById('recapBody').textContent = 'Chêne';
+      var rW = document.getElementById('recapWood');
+      if (rW) rW.textContent = 'Chêne';
+      var rB = document.getElementById('recapBody');
+      if (rB) rB.textContent = 'Chêne';
       document.querySelectorAll('.preset-btn').forEach(function(b) {
         b.classList.toggle('active', b.dataset.value === 'chene');
       });
@@ -1377,7 +1379,7 @@
         originalMaterials = {};
       }
 
-      loadGLB('/' + glbFile);
+      loadGLB(glbFile);
     };
 
     window.closeConfig = function() {
@@ -1466,8 +1468,11 @@
       originalMaterials = {};
       rotX = 0; rotY = 0;
 
+      console.log('[GLB] Loading:', path);
+
       var loader = new THREE.GLTFLoader();
       loader.load(path, function(gltf) {
+        console.log('[GLB] OK:', path);
         model = gltf.scene;
         var box = new THREE.Box3().setFromObject(model);
         var center = box.getCenter(new THREE.Vector3());
@@ -1483,7 +1488,7 @@
           }
         });
 
-        loadTexture('/img/BOISCHENE.jpg', function(tex) {
+        loadTexture('img/BOISCHENE.jpg', function(tex) {
           if (!model) return;
           model.traverse(function(child) {
             if (!child.isMesh || !child.material) return;
@@ -1496,10 +1501,21 @@
         var loading = document.getElementById('viewerLoading');
         if (loading) loading.classList.add('hidden');
 
-      }, undefined, function(err) {
-        console.error('GLB error:', err);
+      }, function(progress) {
+        if (progress.lengthComputable) {
+          var pct = Math.round((progress.loaded / progress.total) * 100);
+          console.log('[GLB] Progress:', pct + '%');
+        }
+      }, function(err) {
+        console.error('[GLB] ERROR loading', path, err);
         var el = document.getElementById('viewerLoading');
-        if (el) el.innerHTML = '<p style="color:rgba(255,80,80,.8);padding:20px">Erreur de chargement</p>';
+        if (el) {
+          el.innerHTML = '<div style="padding:20px;text-align:center">' +
+            '<p style="color:#CD3E00;font-weight:600;margin-bottom:8px">Modèle introuvable</p>' +
+            '<p style="color:rgba(0,0,0,.5);font-size:12px;font-family:monospace">' + path + '</p>' +
+            '<p style="color:rgba(0,0,0,.4);font-size:11px;margin-top:12px">Vérifie la console (F12)</p>' +
+          '</div>';
+        }
       });
     }
 
