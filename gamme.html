@@ -996,6 +996,9 @@
     .sdb-vasque{position:relative;aspect-ratio:1.2/1;border:1.5px solid rgba(26,26,26,.1);background:#F8F2E5;border-radius:8px;cursor:pointer;transition:border-color .2s,transform .2s,background .2s;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8px}
     .sdb-vasque:hover{border-color:rgba(26,26,26,.3);transform:translateY(-1px)}
     .sdb-vasque.active{border-color:var(--accent);background:rgba(205,62,0,.06);border-width:2px}
+    .sdb-vasque__svg{position:absolute;top:8px;left:0;right:0;bottom:24px;display:flex;align-items:center;justify-content:center;color:rgba(26,26,26,.5);transition:color .2s}
+    .sdb-vasque__svg svg{width:70%;height:70%;max-width:90px}
+    .sdb-vasque.active .sdb-vasque__svg{color:var(--accent)}
     .sdb-vasque__canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     .sdb-vasque__lbl{position:relative;z-index:1;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--dark);background:rgba(255,250,240,.85);backdrop-filter:blur(4px);padding:4px 8px;border-radius:4px}
     .sdb-vasque.active .sdb-vasque__lbl{color:var(--accent)}
@@ -2039,20 +2042,12 @@
 
         </div>
 
-        <!-- ÉTAPE 2 : choix meuble + variantes + bois -->
+        <!-- ÉTAPE 2 : configuration meuble + bois -->
         <div class="sdb-step-panel" id="sdbPanel2">
 
           <div class="sdb-sect">
             <div class="sdb-sect__head">
-              <span class="sdb-sect__lbl">✦ Design du meuble</span>
-              <span class="sdb-sect__val" id="sdbMeubleLabel">Design A</span>
-            </div>
-            <div class="sdb-meubles" id="sdbMeublesGrid"></div>
-          </div>
-
-          <div class="sdb-sect">
-            <div class="sdb-sect__head">
-              <span class="sdb-sect__lbl">✦ Configuration</span>
+              <span class="sdb-sect__lbl">✦ Configuration du meuble</span>
             </div>
             <div class="sdb-toggles">
               <div class="sdb-toggle">
@@ -2063,10 +2058,10 @@
                 </div>
               </div>
               <div class="sdb-toggle">
-                <span class="sdb-sect__lbl" style="font-size:8px">Lavabos</span>
+                <span class="sdb-sect__lbl" style="font-size:8px">Étagères</span>
                 <div class="sdb-toggle__buttons">
-                  <button class="sdb-toggle__btn active" data-lc="1" onclick="sdbSetLC(1)">1 lavabo</button>
-                  <button class="sdb-toggle__btn" data-lc="2" onclick="sdbSetLC(2)">2 lavabos</button>
+                  <button class="sdb-toggle__btn active" data-lc="1" onclick="sdbSetLC(1)">1 étagère</button>
+                  <button class="sdb-toggle__btn" data-lc="2" onclick="sdbSetLC(2)">2 étagères</button>
                 </div>
               </div>
             </div>
@@ -2077,6 +2072,7 @@
               <span class="sdb-sect__lbl">✦ Essence du bois</span>
               <span class="sdb-sect__val" id="sdbBoisLabel">Chêne</span>
             </div>
+            <p style="font-size:11px;color:rgba(26,26,26,.45);margin-bottom:12px;line-height:1.45">L'essence sélectionnée sera utilisée pour le caisson du meuble. Le rendu 3D affiche un meuble neutre.</p>
             <div class="sdb-mats" id="sdbBoisGrid"></div>
           </div>
 
@@ -2192,7 +2188,10 @@
       ],
     };
 
-    var MEUBLE_NAMES = ['Design A', 'Design B', 'Design C', 'Design D'];
+    // Note : on n'a plus de "Design A/B/C/D" — on génère le nom dynamiquement à partir de la config
+    function getMeubleName(){
+      return state.vc + ' vasque' + (state.vc > 1 ? 's' : '') + ' · ' + state.lc + ' étagère' + (state.lc > 1 ? 's' : '');
+    }
 
     // Construit le chemin GLB d'un meuble selon vasque (1-7), variante (1-4) et toggles vc/lc
     // Meuble 1 a un schéma sans le préfixe "1_", les autres ont "N_"
@@ -2208,7 +2207,7 @@
       vasque: 1,          // 1-7
       vasqueFam: 'default',
       vasqueMatId: 'blanc',
-      meubleVariant: 1,   // 1-4 (Design A-D)
+      meubleVariant: 1,   // unused now, kept for backward compat
       vc: 1,              // 1 ou 2 vasques
       lc: 1,              // 1 ou 2 lavabos
       bois: 'chene',
@@ -2221,10 +2220,22 @@
     var autoRotate = false, lastInteraction = 0;
     var textureCache = {};
     var pendingLoadId = 0;  // pour invalider les chargements obsolètes
-    // matériaux ciblés
-    var MAT_BOIS = 'FrontColor';     // bois du meuble
-    var MAT_VASQUE = 'Mati_re10';    // céramique vasque
-    var MAT_ROBINET = 'Capture_d_e_cran_2026_02_27_a__09_51_00'; // robinet (NE PAS toucher)
+
+    // ─── IDENTIFICATION DES MATÉRIAUX ─────────────────────────
+    // Après analyse des GLB :
+    //   - 'Mati_re10' regroupe LE MEUBLE (grande mesh) + LE ROBINET (petites meshes)
+    //     → On filtre par taille (size.x > 0.5 = meuble, sinon = robinet)
+    //   - 'FrontColor' = serviette/déco verticale, ne JAMAIS toucher
+    //   - 'lello_towel' = serviette, ne JAMAIS toucher
+    //   - 'porte_douche', 'Capture_..._09_59_44' = mur/cabine, ne JAMAIS toucher
+    //   - 'Capture_..._09_51_00' = miroir (et robinet de vasque seule), ne JAMAIS toucher
+    //   - 'aesop_*', 'M_04hua*', 'M_02f_taocibai', 'ground2', 'Color_M00', '_30' = décors, ne JAMAIS toucher
+    var MAT_TARGET = 'Mati_re10';   // matériau ciblé (vasque + meuble)
+    var ROBINET_MAX_SIZE = 0.5;     // si size.x < 0.5, c'est le robinet → ignorer
+
+    // Couleur du robinet : chrome / gris mate, ne change jamais
+    var ROBINET_COLOR = { r: 0.55, g: 0.55, b: 0.58 };  // gris légèrement bleuté
+    var ROBINET_ROUGHNESS = 0.25; // métallique mate
 
     function loadScript(src, cb){
       var s = document.createElement('script');
@@ -2249,17 +2260,24 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.outputEncoding = THREE.sRGBEncoding;
 
-      // Lumières
-      scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-      var key = new THREE.DirectionalLight(0xffffff, 0.85);
-      key.position.set(2, 4, 3);
+      // Lumières — éclairage studio pour bien voir les couleurs/textures
+      scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+      // Lumière principale (en haut à droite)
+      var key = new THREE.DirectionalLight(0xffffff, 1.4);
+      key.position.set(3, 5, 4);
       scene.add(key);
-      var rim = new THREE.DirectionalLight(0xfff1d6, 0.4);
-      rim.position.set(-3, 2, -2);
+      // Lumière de contour (gauche-arrière, légèrement chaude)
+      var rim = new THREE.DirectionalLight(0xfff4dd, 0.7);
+      rim.position.set(-4, 3, -2);
       scene.add(rim);
-      var fill = new THREE.DirectionalLight(0xffe9c4, 0.25);
-      fill.position.set(0, -2, 1);
+      // Lumière de bas/fill (légèrement froide)
+      var fill = new THREE.DirectionalLight(0xe8f0ff, 0.45);
+      fill.position.set(0, -3, 2);
       scene.add(fill);
+      // Spot frontal supplémentaire pour révéler la matière
+      var front = new THREE.DirectionalLight(0xffffff, 0.6);
+      front.position.set(0, 1, 5);
+      scene.add(front);
 
       // Drag controls
       canvas.addEventListener('mousedown', function(e){
@@ -2324,9 +2342,10 @@
         tex.wrapT = THREE.RepeatWrapping;
         tex.encoding = THREE.sRGBEncoding;
         textureCache[url] = tex;
+        console.log('[SDB] Texture OK:', url);
         cb(tex);
       }, undefined, function(err){
-        console.warn('[SDB] Texture introuvable:', url);
+        console.error('[SDB] Texture introuvable:', url, err);
       });
     }
 
@@ -2375,55 +2394,98 @@
       });
     }
 
-    // Applique les textures actuelles à `currentModel`
+    // Applique la matière vasque actuelle au modèle (avec filtre robinet vs meuble)
+    // ATTENTION : le bois (state.bois) n'est PAS appliqué sur la 3D — c'est uniquement pour le devis
+    // Raison : dans ces GLB, le "bois" n'existe pas séparément (le meuble et la vasque partagent le même mesh)
     function applyMaterials(){
       if(!currentModel) return;
 
-      // 1) Bois (FrontColor) — depuis state.bois
-      var boisPreset = BOIS[state.bois];
-      if(boisPreset.texture){
-        loadTexture(boisPreset.texture, function(tex){
-          if(!currentModel) return;
-          applyToMaterial(MAT_BOIS, { map:tex, color:{r:1,g:1,b:1} });
-        });
-      } else if(boisPreset.color){
-        applyToMaterial(MAT_BOIS, { map:null, color:boisPreset.color });
-      }
-
-      // 2) Vasque (Mati_re10) — depuis state.vasqueMatId et state.vasqueFam
       var vMat = findVasqueMat(state.vasqueFam, state.vasqueMatId);
-      if(vMat){
-        if(vMat.texture){
-          loadTexture(vMat.texture, function(tex){
-            if(!currentModel) return;
-            applyToMaterial(MAT_VASQUE, { map:tex, color:{r:1,g:1,b:1} });
-          });
-        } else if(vMat.color){
-          applyToMaterial(MAT_VASQUE, { map:null, color:vMat.color });
-        }
-      }
+      if(!vMat) return;
 
-      // Robinet : on ne touche jamais MAT_ROBINET → reste sur sa texture d'origine
+      if(vMat.texture){
+        loadTexture(vMat.texture, function(tex){
+          if(!currentModel) return;
+          applyToMaterialFiltered(MAT_TARGET, { map: tex, color:{r:1,g:1,b:1} });
+        });
+      } else if(vMat.color){
+        applyToMaterialFiltered(MAT_TARGET, { map: null, color: vMat.color });
+      }
     }
 
-    // Helper : appliquer un changement à toutes les meshes utilisant un matériau donné
-    function applyToMaterial(matName, change){
+    // Helper : applique un changement aux meshes utilisant `matName`,
+    // EN FILTRANT par taille pour distinguer le meuble (grand) du robinet (petit).
+    //   - Si la mesh est grande (bbox.size.x >= ROBINET_MAX_SIZE) → applique le `change` (= matière vasque)
+    //   - Sinon (robinet) → applique la couleur grise ROBINET_COLOR, sans texture
+    function applyToMaterialFiltered(matName, change){
       if(!currentModel) return;
       currentModel.traverse(function(child){
         if(!child.isMesh || !child.material) return;
         var mats = Array.isArray(child.material) ? child.material : [child.material];
+        // Pour chaque mesh, on a besoin de sa bbox pour distinguer robinet vs meuble
+        if(!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+        var bb = child.geometry.boundingBox;
+        var sizeX = bb ? Math.abs(bb.max.x - bb.min.x) : 0;
+        var isRobinet = sizeX < ROBINET_MAX_SIZE;
+
         for(var i=0; i<mats.length; i++){
           var m = mats[i];
           if(!m) continue;
-          // Comparer en strippant les suffixes ".001" etc.
           var baseName = (m.name || '').replace(/\.\d+$/, '');
-          if(baseName === matName){
-            if('map' in change) m.map = change.map;
+          if(baseName !== matName) continue;
+
+          if(isRobinet){
+            // ROBINET : couleur grise fixe, jamais de texture
+            m.map = null;
+            m.color.setRGB(ROBINET_COLOR.r, ROBINET_COLOR.g, ROBINET_COLOR.b);
+            if('roughness' in m) m.roughness = ROBINET_ROUGHNESS;
+            if('metalness' in m) m.metalness = 0.85;
+            m.needsUpdate = true;
+          } else {
+            // MEUBLE/VASQUE : applique la matière choisie
+            if('map' in change){
+              if(change.map){
+                // Clone la texture et ajuste son repeat selon les UV de cette mesh
+                var newTex = change.map.clone();
+                newTex.needsUpdate = true;
+                newTex.wrapS = THREE.RepeatWrapping;
+                newTex.wrapT = THREE.RepeatWrapping;
+                newTex.encoding = THREE.sRGBEncoding;
+                // Calculer le repeat optimal en fonction de la plage UV
+                var uvAttr = child.geometry.attributes.uv;
+                if(uvAttr){
+                  var arr = uvAttr.array;
+                  var uMin = Infinity, uMax = -Infinity, vMin = Infinity, vMax = -Infinity;
+                  for(var k=0; k<arr.length; k+=2){
+                    if(arr[k] < uMin) uMin = arr[k];
+                    if(arr[k] > uMax) uMax = arr[k];
+                    if(arr[k+1] < vMin) vMin = arr[k+1];
+                    if(arr[k+1] > vMax) vMax = arr[k+1];
+                  }
+                  var uRange = uMax - uMin || 1;
+                  var vRange = vMax - vMin || 1;
+                  // On vise environ 2 répétitions visibles sur la surface
+                  // (pour les textures marbre/dekton, motif large)
+                  newTex.repeat.set(2 / uRange, 2 / vRange);
+                  newTex.offset.set(-uMin * (2 / uRange), -vMin * (2 / vRange));
+                }
+                m.map = newTex;
+              } else {
+                m.map = null;
+              }
+            }
             if(change.color){ m.color.setRGB(change.color.r, change.color.g, change.color.b); }
+            if('roughness' in m) m.roughness = 0.4;
+            if('metalness' in m) m.metalness = 0.05;
             m.needsUpdate = true;
           }
         }
       });
+    }
+
+    // Ancien helper conservé pour compat (utilisé nulle part directement maintenant)
+    function applyToMaterial(matName, change){
+      applyToMaterialFiltered(matName, change);
     }
 
     function findVasqueMat(fam, id){
@@ -2433,6 +2495,17 @@
     }
 
     /* ─────── BUILD UI : GRIDS ─────── */
+    // SVG silhouettes stylisées pour chaque vasque (7 styles visuellement distincts)
+    var VASQUE_SVGS = {
+      1: '<svg viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="38" rx="26" ry="12" stroke="currentColor" stroke-width="1.6"/><path d="M14 38v4c0 7 12 12 26 12s26-5 26-12v-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M40 14v18M37 14h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+      2: '<svg viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="32" width="52" height="20" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M40 14v18M37 14h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="20" y1="36" x2="60" y2="36" stroke="currentColor" stroke-width="1" opacity="0.4"/></svg>',
+      3: '<svg viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 38c0-8 11-14 24-14s24 6 24 14v4c0 7-11 12-24 12s-24-5-24-12v-4z" stroke="currentColor" stroke-width="1.6"/><path d="M40 12v18M37 12h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+      4: '<svg viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="14" stroke="currentColor" stroke-width="1.6"/><path d="M40 14v18M37 14h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+      5: '<svg viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="32" width="52" height="20" rx="10" stroke="currentColor" stroke-width="1.6"/><path d="M40 12v20M36 12h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+      6: '<svg viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 32h52v8a12 12 0 01-12 12H26a12 12 0 01-12-12v-8z" stroke="currentColor" stroke-width="1.6"/><path d="M40 14v18M37 14h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+      7: '<svg viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="40" rx="22" ry="10" stroke="currentColor" stroke-width="1.6"/><ellipse cx="40" cy="40" rx="14" ry="6" stroke="currentColor" stroke-width="1" opacity="0.5"/><path d="M40 14v22M37 14h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    };
+
     function buildVasquesGrid(){
       var grid = document.getElementById('sdbVasquesGrid');
       grid.innerHTML = '';
@@ -2441,23 +2514,8 @@
           var div = document.createElement('div');
           div.className = 'sdb-vasque' + (n === state.vasque ? ' active' : '');
           div.dataset.v = n;
-          div.innerHTML = '<canvas class="sdb-vasque__canvas" id="sdbVasqueThumb'+n+'"></canvas><span class="sdb-vasque__lbl">Vasque '+n+'</span>';
+          div.innerHTML = '<div class="sdb-vasque__svg">' + VASQUE_SVGS[n] + '</div><span class="sdb-vasque__lbl">Vasque '+n+'</span>';
           div.addEventListener('click', function(){ selectVasque(n); });
-          grid.appendChild(div);
-        })(i);
-      }
-    }
-
-    function buildMeublesGrid(){
-      var grid = document.getElementById('sdbMeublesGrid');
-      grid.innerHTML = '';
-      for(var i=1; i<=4; i++){
-        (function(n){
-          var div = document.createElement('div');
-          div.className = 'sdb-meuble' + (n === state.meubleVariant ? ' active' : '');
-          div.dataset.m = n;
-          div.innerHTML = '<canvas class="sdb-meuble__canvas" id="sdbMeubleThumb'+n+'"></canvas><span class="sdb-meuble__lbl">'+MEUBLE_NAMES[n-1]+'</span>';
-          div.addEventListener('click', function(){ selectMeubleVariant(n); });
           grid.appendChild(div);
         })(i);
       }
@@ -2517,15 +2575,6 @@
       document.getElementById('sdbVasqueLabel').textContent = 'Vasque ' + n;
       // On recharge le modèle vasque seul (étape 1)
       loadModel('sdb/vasque/vasque' + n + '.glb');
-    }
-
-    function selectMeubleVariant(n){
-      state.meubleVariant = n;
-      document.querySelectorAll('.sdb-meuble').forEach(function(el){
-        el.classList.toggle('active', parseInt(el.dataset.m) === n);
-      });
-      document.getElementById('sdbMeubleLabel').textContent = MEUBLE_NAMES[n-1];
-      loadCurrentMeuble();
     }
 
     function sdbSetVC(v){
@@ -2641,8 +2690,8 @@
           gamme: 'salle-de-bain',
           vasque: 'Vasque ' + state.vasque,
           matiere_vasque: (findVasqueMat(state.vasqueFam, state.vasqueMatId) || {}).label || '',
-          meuble: MEUBLE_NAMES[state.meubleVariant-1],
-          config: state.vc + ' vasque(s) · ' + state.lc + ' lavabo(s)',
+          meuble: 'Meuble ' + state.vasque + ' · ' + getMeubleName(),
+          config: state.vc + ' vasque(s) · ' + state.lc + ' étagère(s)',
           bois: BOIS[state.bois].label
         });
         document.getElementById('sdbDevisLink').href = 'contact.html?' + p.toString();
@@ -2653,8 +2702,8 @@
       var vMat = findVasqueMat(state.vasqueFam, state.vasqueMatId);
       document.getElementById('sdbRecapVasque').textContent = 'Vasque ' + state.vasque;
       document.getElementById('sdbRecapVasqueMat').textContent = vMat ? vMat.label : '—';
-      document.getElementById('sdbRecapMeuble').textContent = MEUBLE_NAMES[state.meubleVariant-1];
-      document.getElementById('sdbRecapConfig').textContent = state.vc + ' vasque(s) · ' + state.lc + ' lavabo(s)';
+      document.getElementById('sdbRecapMeuble').textContent = 'Meuble ' + state.vasque + ' · ' + getMeubleName();
+      document.getElementById('sdbRecapConfig').textContent = state.vc + ' vasque(s) · ' + state.lc + ' étagère(s)';
       document.getElementById('sdbRecapBois').textContent = BOIS[state.bois].label;
       document.getElementById('sdbRecapVasqueMat2').textContent = vMat ? vMat.label : '—';
       document.getElementById('sdbRecapBois2').textContent = BOIS[state.bois].label;
@@ -2711,7 +2760,6 @@
         // Build des grilles si pas déjà fait
         if(!document.getElementById('sdbVasquesGrid').children.length){
           buildVasquesGrid();
-          buildMeublesGrid();
           buildVasqueMats('sdbVasqueMats');
           buildVasqueMats('sdbVasqueMats2');
           buildBoisGrid('sdbBoisGrid');
