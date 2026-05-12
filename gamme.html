@@ -1286,31 +1286,29 @@
 
 
 <header id="site-header">
-  <a href="index.html" class="logo" aria-label="Kōbō — Accueil">
-    <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-      <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
-      <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
-      <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-      <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-      <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
-    </svg>
-  </a>
-  <nav class="nav">
-    <a href="index.html" class="nav__link">Accueil</a>
-    <a href="projets.html" class="nav__link">Projets</a>
-    <a href="gamme.html" class="nav__link active">Gamme</a>
-    <a href="architecture.html" class="nav__link">Architecture</a>
-    <a href="contact.html" class="nav__link">Contact</a>
-    <a href="contact.html" class="nav__cta">Devis →</a>
-    <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>Mon espace</span>
-    </button>
-    <div class="burger" id="burger" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></div>
-  </nav>
-</header>
+    <a href="#" class="logo" aria-label="Kōbō">
+      <img src="img/logo-kobo.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
+    </a>
+    <nav class="nav">
+      <a href="#" class="nav__link">Accueil</a>
+      <a href="projets.html" class="nav__link ">Projets</a>
+      <a href="gamme.html" class="nav__link active">Gamme</a>
+      <a href="architecture.html" class="nav__link">Architecture</a>
+      <a href="contact.html" class="nav__link">Contact</a>
+      <a href="contact.html" class="nav__cta">Devis →</a>
+      <!-- Pill "Mon espace" : discret, positionné en dernier à droite -->
+      <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span>Mon espace</span>
+      </button>
+      <div class="burger" id="burger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </div>
+    </nav>
+  </header>
 
 <!-- ── HERO ── -->
 <section class="g-hero">
@@ -2268,25 +2266,29 @@
       renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:true });
       renderer.setSize(w, h, false);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.outputEncoding = THREE.sRGBEncoding;
+      // Tone mapping ACES pour gérer la dynamique des couleurs claires
+      // (sans ça, les textures blanches/cream perdent leur détail et apparaissent surex)
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.25;
+      try { renderer.outputColorSpace = THREE.SRGBColorSpace; } catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
 
-      // Lumières — éclairage doux pour bien voir TOUTES les couleurs (claires comme sombres)
-      // Pas trop fort sinon les textures claires (marbre blanc, linen cream) deviennent surex
-      scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+      // Lumières — équilibrées : assez fortes pour bien voir, mais le tone mapping
+      // empêche les textures claires de surex
+      scene.add(new THREE.AmbientLight(0xffffff, 0.65));
       // Lumière principale (en haut à droite)
-      var key = new THREE.DirectionalLight(0xffffff, 0.75);
+      var key = new THREE.DirectionalLight(0xffffff, 0.9);
       key.position.set(3, 5, 4);
       scene.add(key);
       // Lumière de contour (gauche-arrière, légèrement chaude)
-      var rim = new THREE.DirectionalLight(0xfff4dd, 0.4);
+      var rim = new THREE.DirectionalLight(0xfff4dd, 0.45);
       rim.position.set(-4, 3, -2);
       scene.add(rim);
       // Lumière de bas/fill (légèrement froide)
-      var fill = new THREE.DirectionalLight(0xe8f0ff, 0.25);
+      var fill = new THREE.DirectionalLight(0xe8f0ff, 0.3);
       fill.position.set(0, -3, 2);
       scene.add(fill);
       // Spot frontal supplémentaire pour révéler la matière
-      var front = new THREE.DirectionalLight(0xffffff, 0.35);
+      var front = new THREE.DirectionalLight(0xffffff, 0.4);
       front.position.set(0, 1, 5);
       scene.add(front);
 
