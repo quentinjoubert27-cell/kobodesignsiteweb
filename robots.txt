@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
 
+Disallow: /admin.html
+Disallow: /espace-client.html
 Disallow: /mentions-legales.html
 Disallow: /politique-confidentialite.html
 

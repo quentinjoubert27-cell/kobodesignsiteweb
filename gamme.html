@@ -3,8 +3,49 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gamme Mobilier Sur-Mesure — Kōbō Design Bordeaux</title>
-  <meta name="description" content="Exemples de réalisations sur-mesure : bibliothèques, bureaux, cuisines. Studio Kōbō Design, Bordeaux — chaque projet est unique."/>
+  <title>Configurateur Mobilier Sur-Mesure 3D — Bibliothèques & Meubles SDB — Kobo Design Bordeaux</title>
+  <meta name="description" content="Configurez votre mobilier sur-mesure en 3D : bibliothèques, meubles de salle de bain, vasques Dekton & Silestone. Studio Kobo Design à Bordeaux. Devis gratuit sous 24h."/>
+  <meta name="keywords" content="bibliothèque sur-mesure Bordeaux, meuble salle de bain sur-mesure Bordeaux, vasque sur-mesure Bordeaux, configurateur meuble 3D, meuble sur-mesure Bordeaux, bibliothèque bois sur-mesure"/>
+  <link rel="canonical" href="https://www.kobo-design.fr/gamme.html"/>
+  <meta name="robots" content="index, follow"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://www.kobo-design.fr/gamme.html"/>
+  <meta property="og:title" content="Configurateur Mobilier Sur-Mesure 3D — Kobo Design Bordeaux"/>
+  <meta property="og:description" content="Visualisez et configurez votre meuble sur-mesure en 3D. Bibliothèques, meubles de salle de bain et vasques Dekton & Silestone. Devis gratuit."/>
+  <meta property="og:image" content="https://www.kobo-design.fr/img/bibliotheques.png"/>
+  <meta property="og:locale" content="fr_FR"/>
+  <meta property="og:site_name" content="Kobo Design"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Configurateur Mobilier Sur-Mesure 3D — Kobo Design Bordeaux"/>
+  <meta name="twitter:description" content="Visualisez et configurez votre meuble sur-mesure en 3D. Bibliothèques, meubles SDB et vasques. Devis gratuit."/>
+  <meta name="twitter:image" content="https://www.kobo-design.fr/img/bibliotheques.png"/>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Gamme mobilier sur-mesure Kobo Design",
+  "description": "Bibliothèques et meubles de salle de bain sur-mesure configurables en 3D, fabriqués à Bordeaux.",
+  "url": "https://www.kobo-design.fr/gamme.html",
+  "provider": {
+    "@type": "LocalBusiness",
+    "name": "Kobo Design",
+    "url": "https://www.kobo-design.fr",
+    "telephone": "+33642899858",
+    "address": { "@type": "PostalAddress", "streetAddress": "76 Rue Mandron", "addressLocality": "Bordeaux", "postalCode": "33000", "addressCountry": "FR" }
+  },
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Bibliothèque sur-mesure", "url": "https://www.kobo-design.fr/gamme.html#bibliotheques" },
+    { "@type": "ListItem", "position": 2, "name": "Meuble de salle de bain sur-mesure", "url": "https://www.kobo-design.fr/gamme.html#salle-de-bain" },
+    { "@type": "ListItem", "position": 3, "name": "Vasque Dekton & Silestone sur-mesure", "url": "https://www.kobo-design.fr/gamme.html#vasques" }
+  ]
+}
+</script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300;1,800&display=swap" rel="stylesheet"/>
@@ -1524,7 +1565,7 @@
     <div class="gamme-cat__count reveal">3 modèles — personnalisables</div>
   </div>
   <div class="produits-grid">
-    <div class="produit-card reveal" onclick="openConfig('bibliotheque.glb', 'Bibliothèque')">
+    <div class="produit-card reveal" onclick="openConfig('models/bibliotheque/bibliotheque.glb', 'Bibliothèque')">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-1"></canvas>
         <div class="produit-card__overlay">
@@ -1538,7 +1579,7 @@
         <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
-    <div class="produit-card reveal reveal-delay-1" onclick="openConfig('bibliotheque_portes_hautes.glb', 'Bibliothèque portes hautes')">
+    <div class="produit-card reveal reveal-delay-1" onclick="openConfig('models/bibliotheque/bibliotheque_portes_hautes.glb', 'Bibliothèque portes hautes')">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-2"></canvas>
         <div class="produit-card__overlay">
@@ -1552,7 +1593,7 @@
         <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
-    <div class="produit-card reveal reveal-delay-2" onclick="openConfig('biblio_portes_basses.glb', 'Bibliothèque portes basses')">
+    <div class="produit-card reveal reveal-delay-2" onclick="openConfig('models/bibliotheque/biblio_portes_basses.glb', 'Bibliothèque portes basses')">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-3"></canvas>
         <div class="produit-card__overlay">
@@ -1715,13 +1756,13 @@
         <div class="config__group">
           <p class="config__label">Choisissez la matière</p>
           <div class="config__presets" id="presetsWood">
-            <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/BOISCHENE.jpg')"></span>Chêne</button>
-            <button class="preset-btn" data-type="wood" data-value="noyer" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/NOYER.jpg')"></span>Noyer</button>
-            <button class="preset-btn" data-type="wood" data-value="chene_fonce" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/CHENEFONCE.jpg')"></span>Chêne foncé</button>
-            <button class="preset-btn" data-type="wood" data-value="sapelli" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/SAPELLI.jpg')"></span>Sapelli</button>
-            <button class="preset-btn" data-type="wood" data-value="vert_sauge" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/VERTSAUGE.jpg')"></span>Vert sauge</button>
-            <button class="preset-btn" data-type="wood" data-value="brun_rose" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/BRUNROSE.jpg')"></span>Brun rosé</button>
-            <button class="preset-btn" data-type="wood" data-value="gris_ardoise" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('/img/GRISARDOISE.jpg')"></span>Gris ardoise</button>
+            <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/BOISCHENE.jpg')"></span>Chêne</button>
+            <button class="preset-btn" data-type="wood" data-value="noyer" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/NOYER.jpg')"></span>Noyer</button>
+            <button class="preset-btn" data-type="wood" data-value="chene_fonce" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/CHENEFONCE.jpg')"></span>Chêne foncé</button>
+            <button class="preset-btn" data-type="wood" data-value="sapelli" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/SAPELLI.jpg')"></span>Sapelli</button>
+            <button class="preset-btn" data-type="wood" data-value="vert_sauge" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/VERTSAUGE.jpg')"></span>Vert sauge</button>
+            <button class="preset-btn" data-type="wood" data-value="brun_rose" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/BRUNROSE.jpg')"></span>Brun rosé</button>
+            <button class="preset-btn" data-type="wood" data-value="gris_ardoise" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/GRISARDOISE.jpg')"></span>Gris ardoise</button>
             <button class="preset-btn" data-type="wood" data-value="blanc_mate" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>Blanc maté</button>
             <button class="preset-btn" data-type="wood" data-value="noir_mate" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background:#141414"></span>Noir maté</button>
           </div>
@@ -1812,13 +1853,13 @@
     }
 
     var MAT_OPTIONS = {
-      chene:        { label:'Chêne',        texture: '/img/BOISCHENE.jpg' },
-      noyer:        { label:'Noyer',        texture: '/img/NOYER.jpg' },
-      chene_fonce:  { label:'Chêne foncé',  texture: '/img/CHENEFONCE.jpg' },
-      sapelli:      { label:'Sapelli',      texture: '/img/SAPELLI.jpg' },
-      vert_sauge:   { label:'Vert sauge',   texture: '/img/VERTSAUGE.jpg' },
-      brun_rose:    { label:'Brun rosé',    texture: '/img/BRUNROSE.jpg' },
-      gris_ardoise: { label:'Gris ardoise', texture: '/img/GRISARDOISE.jpg' },
+      chene:        { label:'Chêne',        texture: 'img/BOISCHENE.jpg' },
+      noyer:        { label:'Noyer',        texture: 'img/NOYER.jpg' },
+      chene_fonce:  { label:'Chêne foncé',  texture: 'img/CHENEFONCE.jpg' },
+      sapelli:      { label:'Sapelli',      texture: 'img/SAPELLI.jpg' },
+      vert_sauge:   { label:'Vert sauge',   texture: 'img/VERTSAUGE.jpg' },
+      brun_rose:    { label:'Brun rosé',    texture: 'img/BRUNROSE.jpg' },
+      gris_ardoise: { label:'Gris ardoise', texture: 'img/GRISARDOISE.jpg' },
       blanc_mate:   { label:'Blanc maté',   texture: null, r:0.95, g:0.94, b:0.92 },
       noir_mate:    { label:'Noir maté',    texture: null, r:0.08, g:0.08, b:0.08 },
     };
@@ -1833,9 +1874,9 @@
     /* ── PREVIEWS 3D ── */
     function initPreviews() {
       var configs = [
-        { id: 'canvas-1', glb: 'bibliotheque.glb' },
-        { id: 'canvas-2', glb: 'bibliotheque_portes_hautes.glb' },
-        { id: 'canvas-3', glb: 'biblio_portes_basses.glb' },
+        { id: 'canvas-1', glb: 'models/bibliotheque/bibliotheque.glb' },
+        { id: 'canvas-2', glb: 'models/bibliotheque/bibliotheque_portes_hautes.glb' },
+        { id: 'canvas-3', glb: 'models/bibliotheque/biblio_portes_basses.glb' },
       ];
       configs.forEach(function(cfg) {
         var canvas = document.getElementById(cfg.id);
@@ -2216,7 +2257,7 @@
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
             </svg>
-            <span>Nuancier Consentino complet</span>
+            <span>Nuancier Cosentino complet</span>
             <span class="sdb-nuancier-btn__arrow">→</span>
           </button>
 
@@ -2308,22 +2349,22 @@
         { id:'gris',   label:'Gris perle',    color:{r:0.72,g:0.72,b:0.72} },
       ],
       dekton: [
-        { id:'evok',   label:'Evok',   texture:'texture-vasque/dekton/evok.png' },
-        { id:'kedar',  label:'Kedar',  texture:'texture-vasque/dekton/kedar.png' },
-        { id:'keena',  label:'Keena',  texture:'texture-vasque/dekton/keena.png' },
-        { id:'thala',  label:'Thala',  texture:'texture-vasque/dekton/thala.png' },
-        { id:'zira',   label:'Zira',   texture:'texture-vasque/dekton/zira.png' },
+        { id:'evok',   label:'Evok',   texture:'textures/dekton/evok.png' },
+        { id:'kedar',  label:'Kedar',  texture:'textures/dekton/kedar.png' },
+        { id:'keena',  label:'Keena',  texture:'textures/dekton/keena.png' },
+        { id:'thala',  label:'Thala',  texture:'textures/dekton/thala.png' },
+        { id:'zira',   label:'Zira',   texture:'textures/dekton/zira.png' },
       ],
       silestone: [
-        { id:'ardenblue',      label:'Arden Blue',      texture:'texture-vasque/silestone/ardenblue.png' },
-        { id:'blancelysee',    label:'Blanc Elysée',    texture:'texture-vasque/silestone/blancelysee.png' },
-        { id:'calacattagold',  label:'Calacatta Gold',  texture:'texture-vasque/silestone/calacattagold.png' },
-        { id:'chateaubrown',   label:'Château Brown',   texture:'texture-vasque/silestone/chateaubrown.png' },
-        { id:'elmarquina',     label:'El Marquina',     texture:'texture-vasque/silestone/elmarquina.png' },
-        { id:'jardinemerald',  label:'Jardin Emerald',  texture:'texture-vasque/silestone/jardinemerald.png' },
-        { id:'linencream',     label:'Linen Cream',     texture:'texture-vasque/silestone/linencream.png' },
-        { id:'miamiwhite',     label:'Miami White',     texture:'texture-vasque/silestone/miamiwhite.png' },
-        { id:'whitearabesque', label:'White Arabesque', texture:'texture-vasque/silestone/whitearabesque.png' },
+        { id:'ardenblue',      label:'Arden Blue',      texture:'textures/silestone/ardenblue.png' },
+        { id:'blancelysee',    label:'Blanc Elysée',    texture:'textures/silestone/blancelysee.png' },
+        { id:'calacattagold',  label:'Calacatta Gold',  texture:'textures/silestone/calacattagold.png' },
+        { id:'chateaubrown',   label:'Château Brown',   texture:'textures/silestone/chateaubrown.png' },
+        { id:'elmarquina',     label:'El Marquina',     texture:'textures/silestone/elmarquina.png' },
+        { id:'jardinemerald',  label:'Jardin Emerald',  texture:'textures/silestone/jardinemerald.png' },
+        { id:'linencream',     label:'Linen Cream',     texture:'textures/silestone/linencream.png' },
+        { id:'miamiwhite',     label:'Miami White',     texture:'textures/silestone/miamiwhite.png' },
+        { id:'whitearabesque', label:'White Arabesque', texture:'textures/silestone/whitearabesque.png' },
       ],
     };
 
@@ -2337,7 +2378,7 @@
     function getMeubleGlb(vasqueNum, vc, lc){
       var prefix = vasqueNum === 1 ? '' : (vasqueNum + '_');
       var fname = prefix + vc + 'v_' + lc + 'l.glb';
-      return 'sdb/meuble' + vasqueNum + '/' + fname;
+      return 'models/sdb/meuble' + vasqueNum + '/' + fname;
     }
 
     /* ─────── ÉTAT ─────── */
@@ -2861,7 +2902,7 @@
       });
       document.getElementById('sdbVasqueLabel').textContent = 'Vasque ' + n;
       // On recharge le modèle vasque seul (étape 1)
-      loadModel('sdb/vasque/vasque' + n + '.glb');
+      loadModel('models/sdb/vasque/vasque' + n + '.glb');
     }
 
     function sdbSetVC(v){
@@ -2963,7 +3004,7 @@
 
       // Actions liées à l'étape
       if(n === 1){
-        loadModel('sdb/vasque/vasque' + state.vasque + '.glb');
+        loadModel('models/sdb/vasque/vasque' + state.vasque + '.glb');
       } else if(n === 2){
         loadCurrentMeuble();
       } else if(n === 3){
@@ -3148,7 +3189,7 @@
 
       // Charge vasque1
       var loader = new THREE.GLTFLoader();
-      loader.load('sdb/vasque/vasque1.glb', function(gltf){
+      loader.load('models/sdb/vasque/vasque1.glb', function(gltf){
         showcaseModel = gltf.scene;
         var box = new THREE.Box3().setFromObject(showcaseModel);
         var center = box.getCenter(new THREE.Vector3());
@@ -3201,7 +3242,7 @@
     <div class="nuancier-modal__header">
       <div class="nuancier-modal__title">
         <span class="nuancier-modal__eyebrow">✦ Documentation</span>
-        <span class="nuancier-modal__h" id="nuancierTitle">Nuancier Consentino complet</span>
+        <span class="nuancier-modal__h" id="nuancierTitle">Nuancier Cosentino complet</span>
       </div>
       <div class="nuancier-modal__actions">
         <a class="nuancier-modal__download" href="docs/nuancier-cosentino.pdf" download="nuancier-cosentino.pdf">
