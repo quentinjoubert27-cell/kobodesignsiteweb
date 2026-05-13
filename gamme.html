@@ -1066,6 +1066,136 @@
     .sdb-step-panel{display:none}
     .sdb-step-panel.active{display:block}
 
+    /* ═══════════════════════════════════════════════════════════
+       BOUTON NUANCIER (sidebar étape 3)
+       ═══════════════════════════════════════════════════════════ */
+    .sdb-nuancier-btn{
+      display:flex;align-items:center;gap:10px;width:100%;
+      padding:14px 16px;margin-bottom:24px;
+      background:var(--dark);color:var(--bg);
+      border:none;border-radius:10px;
+      font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.04em;
+      cursor:pointer;
+      transition:background .22s,transform .18s,box-shadow .25s;
+      position:relative;overflow:hidden;
+    }
+    .sdb-nuancier-btn::before{
+      content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+      background:linear-gradient(90deg,transparent,rgba(205,62,0,.4),transparent);
+      transition:left .6s;
+    }
+    .sdb-nuancier-btn:hover{background:#0a0a0a;transform:translateY(-1px);box-shadow:0 8px 24px -8px rgba(26,26,26,.4)}
+    .sdb-nuancier-btn:hover::before{left:100%}
+    .sdb-nuancier-btn svg{flex-shrink:0;color:var(--accent)}
+    .sdb-nuancier-btn span:first-of-type{flex:1;text-align:left}
+    .sdb-nuancier-btn__arrow{color:var(--accent);font-size:16px;transition:transform .2s}
+    .sdb-nuancier-btn:hover .sdb-nuancier-btn__arrow{transform:translateX(4px)}
+
+    /* ═══════════════════════════════════════════════════════════
+       MODALE NUANCIER FLIPBOOK
+       ═══════════════════════════════════════════════════════════ */
+    .nuancier-modal{
+      position:fixed;inset:0;z-index:1000;
+      background:rgba(10,10,10,.92);backdrop-filter:blur(12px);
+      display:none;align-items:center;justify-content:center;
+      flex-direction:column;padding:0;
+    }
+    .nuancier-modal.open{display:flex;animation:nuancier-fade .35s ease}
+    @keyframes nuancier-fade{from{opacity:0}to{opacity:1}}
+
+    .nuancier-modal__header{
+      flex:0 0 auto;width:100%;padding:18px clamp(20px,4vw,40px);
+      display:flex;align-items:center;justify-content:space-between;gap:20px;
+      color:var(--bg);
+    }
+    .nuancier-modal__title{display:flex;flex-direction:column;min-width:0}
+    .nuancier-modal__eyebrow{font-size:9px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+    .nuancier-modal__h{font-size:clamp(18px,2vw,22px);font-weight:800;letter-spacing:-.01em;color:var(--bg);line-height:1.1}
+
+    .nuancier-modal__actions{display:flex;align-items:center;gap:10px}
+    .nuancier-modal__download{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 18px;background:var(--accent);color:var(--white);
+      border:none;border-radius:7px;
+      font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+      text-decoration:none;cursor:pointer;
+      transition:background .2s,transform .18s;
+    }
+    .nuancier-modal__download:hover{background:#a83200;transform:translateY(-1px)}
+    .nuancier-modal__download svg{width:14px;height:14px}
+    .nuancier-modal__close{
+      width:40px;height:40px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(255,250,240,.08);border:1px solid rgba(255,250,240,.15);
+      color:var(--bg);border-radius:50%;cursor:pointer;
+      transition:background .18s,border-color .18s,transform .2s;
+    }
+    .nuancier-modal__close:hover{background:rgba(255,250,240,.18);border-color:rgba(255,250,240,.35);transform:rotate(90deg)}
+    .nuancier-modal__close svg{width:16px;height:16px}
+
+    .nuancier-modal__body{
+      flex:1;width:100%;min-height:0;
+      display:flex;align-items:center;justify-content:center;
+      padding:0 clamp(20px,4vw,60px) clamp(20px,3vw,40px);
+      position:relative;
+    }
+
+    .nuancier-flipbook-wrap{
+      width:100%;max-width:1400px;height:100%;max-height:80vh;
+      display:flex;align-items:center;justify-content:center;
+      position:relative;
+    }
+    .nuancier-flipbook{
+      width:100%;height:100%;
+      /* StPageFlip injects its own elements here */
+    }
+    .nuancier-flipbook canvas{display:block}
+
+    .nuancier-loading{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      color:var(--bg);font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+      gap:18px;
+    }
+    .nuancier-loading__spinner{
+      width:42px;height:42px;
+      border:2.5px solid rgba(255,250,240,.18);
+      border-top-color:var(--accent);border-radius:50%;
+      animation:spin 1s linear infinite;
+    }
+
+    /* Navigation flèches */
+    .nuancier-nav{
+      position:absolute;top:50%;transform:translateY(-50%);
+      width:50px;height:50px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(255,250,240,.1);backdrop-filter:blur(6px);
+      border:1px solid rgba(255,250,240,.15);
+      color:var(--bg);border-radius:50%;cursor:pointer;
+      transition:background .18s,transform .2s;
+      z-index:10;
+    }
+    .nuancier-nav:hover{background:rgba(255,250,240,.2);transform:translateY(-50%) scale(1.05)}
+    .nuancier-nav--prev{left:clamp(8px,2vw,24px)}
+    .nuancier-nav--next{right:clamp(8px,2vw,24px)}
+    .nuancier-nav svg{width:20px;height:20px}
+    .nuancier-nav:disabled{opacity:.3;cursor:not-allowed}
+
+    /* Indicateur page */
+    .nuancier-page-info{
+      position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+      padding:8px 16px;background:rgba(255,250,240,.08);
+      border:1px solid rgba(255,250,240,.12);border-radius:100px;
+      color:var(--bg);font-size:11px;font-weight:600;letter-spacing:.12em;
+    }
+    .nuancier-page-info strong{color:var(--accent);font-weight:700}
+
+    @media (max-width: 768px){
+      .nuancier-modal__h{font-size:14px}
+      .nuancier-modal__download span{display:none}
+      .nuancier-modal__download{padding:10px 14px}
+      .nuancier-nav{width:40px;height:40px}
+    }
+
     /* RESPONSIVE */
     @media (max-width: 1024px){
       .sdb-config__body{grid-template-columns:1fr;grid-template-rows:minmax(280px,40vh) 1fr}
@@ -1286,29 +1416,31 @@
 
 
 <header id="site-header">
-    <a href="#" class="logo" aria-label="Kōbō">
-      <img src="img/logo-kobo.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
-    </a>
-    <nav class="nav">
-      <a href="#" class="nav__link">Accueil</a>
-      <a href="projets.html" class="nav__link ">Projets</a>
-      <a href="gamme.html" class="nav__link active">Gamme</a>
-      <a href="architecture.html" class="nav__link">Architecture</a>
-      <a href="contact.html" class="nav__link">Contact</a>
-      <a href="contact.html" class="nav__cta">Devis →</a>
-      <!-- Pill "Mon espace" : discret, positionné en dernier à droite -->
-      <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
-          <path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
-        <span>Mon espace</span>
-      </button>
-      <div class="burger" id="burger" onclick="toggleMenu()" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </div>
-    </nav>
-  </header>
+  <a href="index.html" class="logo" aria-label="Kōbō — Accueil">
+    <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+      <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+      <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </a>
+  <nav class="nav">
+    <a href="index.html" class="nav__link">Accueil</a>
+    <a href="projets.html" class="nav__link">Projets</a>
+    <a href="gamme.html" class="nav__link active">Gamme</a>
+    <a href="architecture.html" class="nav__link">Architecture</a>
+    <a href="contact.html" class="nav__link">Contact</a>
+    <a href="contact.html" class="nav__cta">Devis →</a>
+    <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Mon espace</span>
+    </button>
+    <div class="burger" id="burger" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></div>
+  </nav>
+</header>
 
 <!-- ── HERO ── -->
 <section class="g-hero">
@@ -2079,6 +2211,15 @@
         <!-- ÉTAPE 3 : récap + modifications -->
         <div class="sdb-step-panel" id="sdbPanel3">
 
+          <button class="sdb-nuancier-btn" onclick="openNuancier()" aria-label="Consulter le nuancier complet">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            <span>Nuancier Consentino complet</span>
+            <span class="sdb-nuancier-btn__arrow">→</span>
+          </button>
+
           <div class="sdb-sect">
             <div class="sdb-sect__head">
               <span class="sdb-sect__lbl">✦ Votre configuration</span>
@@ -2559,6 +2700,12 @@
           newTex.wrapS = THREE.RepeatWrapping;
           newTex.wrapT = THREE.RepeatWrapping;
           newTex.encoding = THREE.sRGBEncoding;
+          // Filtrage de qualité pour la netteté même quand la texture tile beaucoup
+          newTex.minFilter = THREE.LinearMipmapLinearFilter;
+          newTex.magFilter = THREE.LinearFilter;
+          newTex.anisotropy = renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 16;
+          newTex.generateMipmaps = true;
+
           var uvAttr = child.geometry.attributes.uv;
           if(uvAttr){
             var arr = uvAttr.array;
@@ -2568,8 +2715,28 @@
               if(arr[k+1]<vMin)vMin=arr[k+1]; if(arr[k+1]>vMax)vMax=arr[k+1];
             }
             var uR = uMax-uMin || 1, vR = vMax-vMin || 1;
-            newTex.repeat.set(2/uR, 2/vR);
-            newTex.offset.set(-uMin*(2/uR), -vMin*(2/vR));
+
+            if(tag === 'meuble'){
+              // MEUBLE — détection des UV pré-tilées dans Blender :
+              // - UV range > 5 : Blender a déjà multiplié les UV (cas 1v_1l caisson)
+              //   → on respecte ces UV avec repeat=(1,1), offset=(0,0)
+              // - UV range normal : on calcule un repeat pour 1 répétition visible
+              if(uR > 5 || vR > 5){
+                newTex.repeat.set(1, 1);
+                newTex.offset.set(0, 0);
+              } else {
+                var effectiveUR_m = Math.max(uR, 0.5);
+                var effectiveVR_m = Math.max(vR, 0.5);
+                newTex.repeat.set(1 / effectiveUR_m, 1 / effectiveVR_m);
+                newTex.offset.set(-uMin * (1 / effectiveUR_m), -vMin * (1 / effectiveVR_m));
+              }
+            } else {
+              // VASQUE — comportement original qui marchait bien : 2 répétitions visibles
+              var effectiveUR = Math.max(uR, 0.5);
+              var effectiveVR = Math.max(vR, 0.5);
+              newTex.repeat.set(2 / effectiveUR, 2 / effectiveVR);
+              newTex.offset.set(-uMin * (2 / effectiveUR), -vMin * (2 / effectiveVR));
+            }
           }
           m.map = newTex;
           m.color.setRGB(1, 1, 1);
@@ -3023,6 +3190,262 @@
     } else {
       initShowcaseWhenVisible();
     }
+
+  })();
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MODALE NUANCIER COSENTINO — FLIPBOOK
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="nuancier-modal" id="nuancierModal" role="dialog" aria-modal="true" aria-labelledby="nuancierTitle">
+    <div class="nuancier-modal__header">
+      <div class="nuancier-modal__title">
+        <span class="nuancier-modal__eyebrow">✦ Documentation</span>
+        <span class="nuancier-modal__h" id="nuancierTitle">Nuancier Consentino complet</span>
+      </div>
+      <div class="nuancier-modal__actions">
+        <a class="nuancier-modal__download" href="docs/nuancier-cosentino.pdf" download="nuancier-cosentino.pdf">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span>Télécharger le PDF</span>
+        </a>
+        <button class="nuancier-modal__close" onclick="closeNuancier()" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="nuancier-modal__body">
+      <button class="nuancier-nav nuancier-nav--prev" id="nuancierPrev" onclick="nuancierFlipPrev()" aria-label="Page précédente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+
+      <div class="nuancier-flipbook-wrap">
+        <div class="nuancier-loading" id="nuancierLoading">
+          <div class="nuancier-loading__spinner"></div>
+          <span>Chargement du nuancier…</span>
+        </div>
+        <div class="nuancier-flipbook" id="nuancierFlipbook" style="display:none"></div>
+      </div>
+
+      <button class="nuancier-nav nuancier-nav--next" id="nuancierNext" onclick="nuancierFlipNext()" aria-label="Page suivante">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <div class="nuancier-page-info" id="nuancierPageInfo" style="display:none">
+        Page <strong id="nuancierCurrentPage">1</strong> / <span id="nuancierTotalPages">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       JS — FLIPBOOK NUANCIER (PDF.js + StPageFlip)
+       ═══════════════════════════════════════════════════════════ -->
+  <script>
+  (function(){
+    'use strict';
+
+    var PDF_URL = 'docs/nuancier-cosentino.pdf';
+    var pageFlipInstance = null;
+    var nuancierLoaded = false;
+    var libsLoading = false;
+    var pendingOpen = false;
+
+    function loadScript(src){
+      return new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = function(){ reject(new Error('Échec chargement: ' + src)); };
+        document.head.appendChild(s);
+      });
+    }
+
+    // Charger PDF.js et StPageFlip
+    function ensureLibsLoaded(){
+      if(window.pdfjsLib && window.St && window.St.PageFlip) return Promise.resolve();
+      if(libsLoading) return new Promise(function(resolve){
+        var iv = setInterval(function(){
+          if(window.pdfjsLib && window.St && window.St.PageFlip){
+            clearInterval(iv); resolve();
+          }
+        }, 100);
+      });
+      libsLoading = true;
+      return Promise.all([
+        loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js').then(function(){
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+        }),
+        loadScript('https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js')
+      ]);
+    }
+
+    // Render le PDF en images PNG (1 par page)
+    function renderPdfToImages(url){
+      return window.pdfjsLib.getDocument(url).promise.then(function(pdf){
+        var pageCount = pdf.numPages;
+        var promises = [];
+        for(var i = 1; i <= pageCount; i++){
+          promises.push(renderPage(pdf, i));
+        }
+        return Promise.all(promises);
+      });
+    }
+
+    function renderPage(pdf, pageNum){
+      return pdf.getPage(pageNum).then(function(page){
+        var viewport = page.getViewport({ scale: 2.0 }); // bonne résolution
+        var canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        var ctx = canvas.getContext('2d');
+        return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function(){
+          return {
+            src: canvas.toDataURL('image/jpeg', 0.85),
+            width: viewport.width,
+            height: viewport.height,
+          };
+        });
+      });
+    }
+
+    // Crée le flipbook avec les images rendues
+    function createFlipbook(images){
+      var container = document.getElementById('nuancierFlipbook');
+      container.innerHTML = '';
+
+      // Crée un élément image pour chaque page
+      var aspectRatio = images[0].width / images[0].height;
+      var wrapEl = container.parentElement;
+      var availableW = wrapEl.clientWidth;
+      var availableH = wrapEl.clientHeight;
+      // Cible : 2 pages côte à côte
+      var maxPagesW = availableW * 0.95;
+      var maxPagesH = availableH * 0.92;
+      // Chaque page fait (totalWidth/2) × (totalHeight)
+      // On veut : pageW / pageH = aspectRatio  ET  2*pageW <= maxPagesW  ET  pageH <= maxPagesH
+      var pageW1 = maxPagesW / 2;
+      var pageH1 = pageW1 / aspectRatio;
+      var pageH2 = maxPagesH;
+      var pageW2 = pageH2 * aspectRatio;
+      var pageW, pageH;
+      if(pageH1 <= maxPagesH){
+        pageW = pageW1; pageH = pageH1;
+      } else {
+        pageW = pageW2; pageH = pageH2;
+      }
+      pageW = Math.floor(pageW); pageH = Math.floor(pageH);
+
+      // Génère les pages
+      images.forEach(function(img){
+        var pageDiv = document.createElement('div');
+        pageDiv.style.cssText = 'background:#fff;overflow:hidden;';
+        var imgEl = document.createElement('img');
+        imgEl.src = img.src;
+        imgEl.style.cssText = 'width:100%;height:100%;display:block;object-fit:contain';
+        imgEl.draggable = false;
+        pageDiv.appendChild(imgEl);
+        container.appendChild(pageDiv);
+      });
+
+      container.style.display = 'block';
+
+      // Détecter mobile pour single page
+      var isMobile = window.innerWidth < 768;
+
+      pageFlipInstance = new window.St.PageFlip(container, {
+        width: pageW,
+        height: pageH,
+        size: 'fixed',
+        minWidth: 200,
+        maxWidth: 1200,
+        minHeight: 300,
+        maxHeight: 1600,
+        showCover: false,
+        usePortrait: isMobile,
+        mobileScrollSupport: false,
+        maxShadowOpacity: 0.5,
+        flippingTime: 800,
+        startPage: 0,
+      });
+
+      pageFlipInstance.loadFromHTML(container.querySelectorAll('div'));
+
+      // Page info
+      var pageInfo = document.getElementById('nuancierPageInfo');
+      var currentSpan = document.getElementById('nuancierCurrentPage');
+      var totalSpan = document.getElementById('nuancierTotalPages');
+      totalSpan.textContent = images.length;
+      currentSpan.textContent = 1;
+      pageInfo.style.display = '';
+
+      pageFlipInstance.on('flip', function(e){
+        currentSpan.textContent = (e.data + 1);
+        updateNavButtons();
+      });
+
+      function updateNavButtons(){
+        var curr = pageFlipInstance.getCurrentPageIndex();
+        var total = pageFlipInstance.getPageCount();
+        document.getElementById('nuancierPrev').disabled = (curr <= 0);
+        document.getElementById('nuancierNext').disabled = (curr >= total - 1);
+      }
+      updateNavButtons();
+    }
+
+    window.nuancierFlipPrev = function(){
+      if(pageFlipInstance) pageFlipInstance.flipPrev();
+    };
+    window.nuancierFlipNext = function(){
+      if(pageFlipInstance) pageFlipInstance.flipNext();
+    };
+
+    window.openNuancier = function(){
+      var modal = document.getElementById('nuancierModal');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if(nuancierLoaded){
+        return;
+      }
+
+      var loading = document.getElementById('nuancierLoading');
+      loading.style.display = 'flex';
+
+      ensureLibsLoaded()
+        .then(function(){
+          return renderPdfToImages(PDF_URL);
+        })
+        .then(function(images){
+          loading.style.display = 'none';
+          createFlipbook(images);
+          nuancierLoaded = true;
+        })
+        .catch(function(err){
+          console.error('[Nuancier] Erreur:', err);
+          loading.innerHTML = '<div style="text-align:center;color:rgba(255,250,240,.8);padding:20px"><p style="font-size:14px;font-weight:600;margin-bottom:8px">Impossible de charger le nuancier</p><p style="font-size:11px;font-family:monospace;color:rgba(255,250,240,.5)">' + PDF_URL + '</p><p style="font-size:11px;margin-top:14px;color:rgba(255,250,240,.5)">Vérifiez que le fichier existe et que vous êtes connecté à Internet.</p></div>';
+        });
+    };
+
+    window.closeNuancier = function(){
+      var modal = document.getElementById('nuancierModal');
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    };
+
+    // ESC ferme le nuancier
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){
+        var modal = document.getElementById('nuancierModal');
+        if(modal && modal.classList.contains('open')){
+          closeNuancier();
+        }
+      }
+      // Flèches gauche/droite pour naviguer dans le flipbook
+      if(document.getElementById('nuancierModal').classList.contains('open')){
+        if(e.key === 'ArrowLeft') nuancierFlipPrev();
+        if(e.key === 'ArrowRight') nuancierFlipNext();
+      }
+    });
 
   })();
   </script>

@@ -31,7 +31,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://formspree.io https://cdn.jsdelivr.net https://code.tidio.co https://widget.tidio.co https://app.crisp.chat https://client.crisp.chat; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' blob: https://formspree.io https://odbkmtuoflpfzgcrzsrl.supabase.co https://*.supabase.co https://socket.tidio.co https://socket.crisp.chat; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://formspree.io https://cdn.jsdelivr.net https://code.tidio.co https://widget.tidio.co https://app.crisp.chat https://client.crisp.chat; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' blob: https://formspree.io https://odbkmtuoflpfzgcrzsrl.supabase.co https://*.supabase.co https://socket.tidio.co https://socket.crisp.chat; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self' blob: https://cdn.jsdelivr.net; upgrade-insecure-requests"
         }
       ]
     },
