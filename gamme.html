@@ -2111,12 +2111,10 @@
       else { currentBody = value; /* pas de recapBody */ }
 
       if (!model) return;
-      var targetNames = ['Matériau', 'Matériau.001']; // Tout le meuble
 
       function apply(tex) {
         model.traverse(function(child) {
           if (!child.isMesh || !child.material) return;
-          if (targetNames.indexOf(child.material.name) === -1) return;
           var orig = originalMaterials[child.material.name];
           if (orig) { child.material = orig.clone(); child.material.name = child.material.name; }
           if (tex) { child.material.map = tex; child.material.color.setRGB(1, 1, 1); }
