@@ -548,13 +548,18 @@ function onSlider() {
   );
 
   // ── Repositionner les robinets ─────────────────────────
-  // vasqueGroup scale à partir de l'origine (0,0,0) dans l'espace de raw.
-  // Le centre X d'une vasque après scaling = vasqueInitLocalCx × ratioVL.
-  // On place le robinet exactement à ce X → taille fixe, suit la vasque.
+  // La rotation initiale de raw mélange X et Z → on ne peut pas
+  // utiliser une formule proportionnelle simple.
+  // On force la mise à jour des matrices APRÈS le scale, puis on
+  // recalcule le vrai centre monde de chaque vasque via Box3.
   if (robinetGroup && robinetData.length) {
-    var ratioVL = vl / VL_DEF;
+    scene.updateMatrixWorld(true);
     robinetData.forEach(function(rd) {
-      rd.obj.position.x = rd.vasqueInitLocalCx * ratioVL;
+      var vBox        = new THREE.Box3().setFromObject(rd.vasqueNode);
+      var vCenterWorld = vBox.getCenter(new THREE.Vector3());
+      // Convertir le centre monde → espace local de robinetGroup
+      // (matrices à jour ici → conversion exacte)
+      rd.obj.position.x = robinetGroup.worldToLocal(vCenterWorld.clone()).x;
     });
   }
 
