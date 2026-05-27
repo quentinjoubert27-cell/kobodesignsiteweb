@@ -452,34 +452,26 @@ function loadModel() {
       });
 
       // Associer chaque robinet à la vasque la plus proche (par X)
-      // et stocker le centre initial de la vasque en espace LOCAL de robinetGroup.
-      // En onSlider, on calculera : robinet.x = vasqueInitLocalCx * ratioVL
-      // (la vasqueGroup scale à partir de l'origine → proportionnel au ratio)
+      // Comparaison en espace MONDE pour les deux (robinet + vasque) → distances fiables.
+      // En onSlider, on recalcule dynamiquement le centre monde de chaque vasque via Box3.
       robinetData = [];
       robinetGroup.children.slice().forEach(function(rob) {
-        var robBox = new THREE.Box3().setFromObject(rob);
-        var robCx  = robBox.getCenter(new THREE.Vector3()).x;
+        var robBox     = new THREE.Box3().setFromObject(rob);
+        var robWorldCx = robBox.getCenter(new THREE.Vector3()).x; // monde X
 
-        var bestVasque = null, bestDist = Infinity, bestVasqueLocalCx = 0;
+        var bestVasque = null, bestDist = Infinity;
         vasqueNodes.forEach(function(v) {
           var vBox     = new THREE.Box3().setFromObject(v);
-          var vWorldCx = vBox.getCenter(new THREE.Vector3());
-          // Centre vasque en espace local de robinetGroup (matrices à jour → fiable)
-          var vLocalCx = robinetGroup.worldToLocal(vWorldCx.clone()).x;
-          var d = Math.abs(robCx - vLocalCx);
+          var vWorldCx = vBox.getCenter(new THREE.Vector3()).x;   // monde X aussi
+          var d = Math.abs(robWorldCx - vWorldCx);                // même espace ✓
           if (d < bestDist) {
-            bestDist = d;
+            bestDist   = d;
             bestVasque = v;
-            bestVasqueLocalCx = vLocalCx; // stocké une seule fois, à init
           }
         });
 
         if (bestVasque) {
-          robinetData.push({
-            obj:              rob,
-            vasqueNode:       bestVasque,
-            vasqueInitLocalCx: bestVasqueLocalCx // centre X au ratio 1:1
-          });
+          robinetData.push({ obj: rob, vasqueNode: bestVasque });
         }
       });
 
