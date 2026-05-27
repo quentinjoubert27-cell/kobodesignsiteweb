@@ -3,747 +3,499 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Configurateur Vasque Composée — Kobo Design (Local Preview)</title>
-  <link rel="icon" type="image/png" href="favicon.png"/>
   <meta name="robots" content="noindex, nofollow"/>
+  <title>Configurateur Vasque Composée — Kobo Design</title>
+  <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900&display=swap" rel="stylesheet"/>
 
   <style>
     :root {
-      --accent: #CD3E00;
-      --bg: #FFFAF0;
-      --dark: #1A1A1A;
-      --white: #FFFFFF;
-      --mid: #F0EBE0;
-      --font: 'Poppins', sans-serif;
-      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A;
+      --white:#FFFFFF; --font:'Poppins',sans-serif;
+      --ease:cubic-bezier(0.16,1,0.3,1);
     }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font);background:var(--bg);color:var(--dark);min-height:100vh}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { font-family: var(--font); background: var(--bg); color: var(--dark); min-height: 100vh; }
+    /* HEADER */
+    header{height:64px;display:flex;align-items:center;justify-content:space-between;
+      padding:0 clamp(20px,5vw,72px);background:var(--bg);
+      border-bottom:1px solid rgba(26,26,26,.08)}
+    .logo img{height:32px;width:auto;display:block}
+    .badge{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+      color:var(--accent);background:rgba(205,62,0,.08);
+      border:1px solid rgba(205,62,0,.2);border-radius:100px;padding:6px 14px}
 
-    /* ── HEADER ── */
-    header {
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 clamp(20px, 5vw, 72px);
-      background: var(--bg);
-      border-bottom: 1px solid rgba(26,26,26,.08);
-    }
-    .logo img { height: 32px; width: auto; display: block; }
-    .header-badge {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      color: var(--accent);
-      background: rgba(205,62,0,.08);
-      border: 1px solid rgba(205,62,0,.2);
-      border-radius: 100px;
-      padding: 6px 14px;
-    }
+    /* PAGE */
+    .page{max-width:1280px;margin:0 auto;padding:clamp(32px,5vw,64px) clamp(20px,5vw,72px)}
+    .page__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;
+      color:var(--accent);margin-bottom:12px}
+    .page__title{font-size:clamp(32px,5vw,60px);font-weight:900;letter-spacing:-.04em;
+      line-height:1;margin-bottom:10px}
+    .page__title em{font-style:italic;font-weight:300;color:rgba(26,26,26,.25)}
+    .page__sub{font-size:14px;font-weight:300;color:rgba(26,26,26,.5);margin-bottom:40px}
 
-    /* ── MAIN LAYOUT ── */
-    .page {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: clamp(32px, 5vw, 64px) clamp(20px, 5vw, 72px);
-    }
+    /* GRID */
+    .config-wrap{display:grid;grid-template-columns:1fr 340px;gap:32px;align-items:start}
+    @media(max-width:900px){.config-wrap{grid-template-columns:1fr}}
 
-    .page__header {
-      margin-bottom: 40px;
-    }
-    .page__eyebrow {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .25em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-    .page__title {
-      font-size: clamp(32px, 5vw, 60px);
-      font-weight: 900;
-      letter-spacing: -.04em;
-      line-height: 1;
-      margin-bottom: 10px;
-    }
-    .page__title em {
-      font-style: italic;
-      font-weight: 300;
-      color: rgba(26,26,26,.25);
-    }
-    .page__sub {
-      font-size: 14px;
-      font-weight: 300;
-      color: rgba(26,26,26,.5);
-    }
+    /* VIEWER */
+    .viewer-wrap{position:relative;border-radius:16px;overflow:hidden;
+      background:#FAF7F2;border:1px solid rgba(26,26,26,.1);
+      aspect-ratio:4/3;box-shadow:0 8px 48px rgba(26,26,26,.1)}
+    #composedCanvas{width:100%;height:100%;display:block;cursor:grab}
+    #composedCanvas:active{cursor:grabbing}
 
-    /* ── CONFIGURATEUR GRID ── */
-    .config-wrap {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 32px;
-      align-items: start;
-    }
+    .viewer-loader{position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;background:#FAF7F2;z-index:10;
+      transition:opacity .5s}
+    .viewer-loader.hidden{opacity:0;pointer-events:none}
+    .spinner{width:40px;height:40px;border:3px solid rgba(205,62,0,.15);
+      border-top-color:var(--accent);border-radius:50%;
+      animation:spin .7s linear infinite;margin-bottom:16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loader-txt{font-size:11px;font-weight:600;letter-spacing:.15em;
+      text-transform:uppercase;color:rgba(26,26,26,.4)}
+    .loader-progress{font-size:10px;color:var(--accent);margin-top:6px;font-weight:700}
 
-    /* ── VIEWER 3D ── */
-    .viewer-wrap {
-      position: relative;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #FAF7F2;
-      border: 1px solid rgba(26,26,26,.1);
-      aspect-ratio: 4/3;
-      box-shadow: 0 8px 48px rgba(26,26,26,.1);
-    }
-    #composedCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      cursor: grab;
-    }
-    #composedCanvas:active { cursor: grabbing; }
+    .viewer-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+      font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+      color:rgba(26,26,26,.35);background:rgba(255,250,240,.85);
+      padding:6px 14px;border-radius:100px;pointer-events:none;white-space:nowrap}
 
-    /* Loader */
-    .viewer-loader {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #FAF7F2;
-      z-index: 10;
-      transition: opacity .4s;
-    }
-    .viewer-loader.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .loader-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(205,62,0,.15);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      margin-bottom: 16px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .15em;
-      text-transform: uppercase;
-      color: rgba(26,26,26,.4);
-    }
+    .dims-badge{position:absolute;top:16px;left:16px;font-size:11px;font-weight:600;
+      color:var(--dark);background:rgba(255,250,240,.9);
+      border:1px solid rgba(26,26,26,.1);border-radius:8px;
+      padding:8px 14px;line-height:1.8;pointer-events:none}
+    .dims-badge__label{font-size:9px;font-weight:700;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--accent);display:block;margin-bottom:2px}
 
-    /* Hint drag */
-    .viewer-hint {
-      position: absolute;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: rgba(26,26,26,.35);
-      background: rgba(255,250,240,.8);
-      backdrop-filter: blur(6px);
-      padding: 6px 14px;
-      border-radius: 100px;
-      pointer-events: none;
-      white-space: nowrap;
-    }
+    /* PANEL */
+    .ctrl-panel{display:flex;flex-direction:column;gap:20px}
 
-    /* Dimensions badge */
-    .dims-badge {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--dark);
-      background: rgba(255,250,240,.88);
-      backdrop-filter: blur(6px);
-      border: 1px solid rgba(26,26,26,.1);
-      border-radius: 8px;
-      padding: 8px 14px;
-      line-height: 1.6;
-      pointer-events: none;
-    }
-    .dims-badge span {
-      display: block;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 2px;
-    }
-
-    /* ── PANEL CONTROLES ── */
-    .ctrl-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
-
-    .ctrl-card {
-      background: var(--white);
-      border: 1px solid rgba(26,26,26,.09);
-      border-radius: 12px;
-      padding: 24px;
-    }
-    .ctrl-card__title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color: rgba(26,26,26,.4);
-      margin-bottom: 20px;
-    }
+    .ctrl-card{background:var(--white);border:1px solid rgba(26,26,26,.09);
+      border-radius:12px;padding:22px}
+    .ctrl-card__label{font-size:10px;font-weight:700;letter-spacing:.22em;
+      text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:18px;
+      display:flex;align-items:center;gap:8px}
+    .ctrl-card__label-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .dot-meuble{background:#1A1A1A}
+    .dot-vasque{background:var(--accent)}
 
     /* Slider */
-    .slider-group { margin-bottom: 20px; }
-    .slider-group:last-child { margin-bottom: 0; }
+    .slider-group{margin-bottom:18px}
+    .slider-group:last-child{margin-bottom:0}
+    .slider-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+    .slider-name{font-size:13px;font-weight:600;color:var(--dark)}
+    .slider-val{font-size:22px;font-weight:900;color:var(--accent);letter-spacing:-.03em;line-height:1}
+    .slider-unit{font-size:10px;font-weight:600;color:rgba(26,26,26,.35);margin-left:2px}
 
-    .slider-label {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .slider-label__name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--dark);
-    }
-    .slider-label__icon {
-      font-size: 11px;
-      color: rgba(26,26,26,.35);
-      margin-right: 4px;
-    }
-    .slider-label__value {
-      font-size: 20px;
-      font-weight: 900;
-      color: var(--accent);
-      letter-spacing: -.03em;
-      line-height: 1;
-    }
-    .slider-label__unit {
-      font-size: 10px;
-      font-weight: 600;
-      color: rgba(26,26,26,.35);
-      margin-left: 2px;
-    }
+    .track-wrap{position:relative;margin-bottom:5px}
+    .track-fill{position:absolute;top:50%;left:0;height:4px;border-radius:2px 0 0 2px;
+      background:var(--accent);transform:translateY(-50%);pointer-events:none;
+      transition:width .05s}
+    input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;
+      border-radius:2px;background:rgba(26,26,26,.1);outline:none;cursor:pointer;
+      position:relative}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
+      border-radius:50%;background:var(--accent);box-shadow:0 2px 8px rgba(205,62,0,.35);
+      cursor:pointer;transition:transform .15s,box-shadow .15s}
+    input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2);
+      box-shadow:0 4px 16px rgba(205,62,0,.45)}
+    input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;
+      background:var(--accent);border:none;cursor:pointer}
+    .slider-limits{display:flex;justify-content:space-between;font-size:9px;
+      font-weight:600;letter-spacing:.1em;color:rgba(26,26,26,.28);text-transform:uppercase}
 
-    /* Range input styling */
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(26,26,26,.1);
-      outline: none;
-      cursor: pointer;
-      position: relative;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 2px 8px rgba(205,62,0,.35);
-      cursor: pointer;
-      transition: transform .15s var(--ease), box-shadow .15s;
-    }
-    input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-      box-shadow: 0 4px 16px rgba(205,62,0,.45);
-    }
-    input[type="range"]::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--accent);
-      border: none;
-      box-shadow: 0 2px 8px rgba(205,62,0,.35);
-      cursor: pointer;
-    }
+    .divider{height:1px;background:rgba(26,26,26,.07);margin:14px 0}
 
-    .slider-track-wrap {
-      position: relative;
-      margin-bottom: 6px;
-    }
-    .slider-track-fill {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      height: 4px;
-      border-radius: 2px 0 0 2px;
-      background: var(--accent);
-      transform: translateY(-50%);
-      pointer-events: none;
-    }
+    /* Boutons */
+    .btn{width:100%;font-family:var(--font);font-size:10px;font-weight:700;
+      letter-spacing:.18em;text-transform:uppercase;border-radius:8px;
+      padding:13px;cursor:pointer;display:flex;align-items:center;
+      justify-content:center;gap:8px;transition:.2s}
+    .btn-outline{background:none;color:rgba(26,26,26,.5);
+      border:1.5px solid rgba(26,26,26,.12)}
+    .btn-outline:hover{border-color:var(--accent);color:var(--accent);
+      background:rgba(205,62,0,.03)}
+    .btn-solid{background:var(--accent);color:var(--white);border:none}
+    .btn-solid:hover{background:#a83200;transform:translateY(-2px)}
+    .btn + .btn{margin-top:10px}
 
-    .slider-minmax {
-      display: flex;
-      justify-content: space-between;
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: .12em;
-      color: rgba(26,26,26,.3);
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-
-    /* Separateur */
-    .ctrl-divider {
-      height: 1px;
-      background: rgba(26,26,26,.07);
-      margin: 4px 0;
-    }
-
-    /* Bouton reset */
-    .btn-reset {
-      width: 100%;
-      font-family: var(--font);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: rgba(26,26,26,.5);
-      background: none;
-      border: 1.5px solid rgba(26,26,26,.12);
-      border-radius: 8px;
-      padding: 12px;
-      cursor: pointer;
-      transition: border-color .2s, color .2s, background .2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-reset:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: rgba(205,62,0,.03);
-    }
-
-    /* Bouton devis */
-    .btn-devis {
-      width: 100%;
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .15em;
-      text-transform: uppercase;
-      color: var(--white);
-      background: var(--accent);
-      border: none;
-      border-radius: 8px;
-      padding: 15px;
-      cursor: pointer;
-      transition: background .2s, transform .18s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-    .btn-devis:hover { background: #a83200; transform: translateY(-2px); }
-
-    /* Info card */
-    .info-card {
-      background: rgba(205,62,0,.05);
-      border: 1px solid rgba(205,62,0,.15);
-      border-radius: 10px;
-      padding: 16px 18px;
-    }
-    .info-card__title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-    .info-card__text {
-      font-size: 12px;
-      font-weight: 300;
-      line-height: 1.7;
-      color: rgba(26,26,26,.6);
-    }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      .config-wrap {
-        grid-template-columns: 1fr;
-      }
-      .ctrl-panel {
-        order: -1;
-      }
-    }
+    /* Info */
+    .info-card{background:rgba(205,62,0,.05);border:1px solid rgba(205,62,0,.15);
+      border-radius:10px;padding:16px 18px}
+    .info-card__title{font-size:10px;font-weight:700;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+    .info-card__text{font-size:12px;font-weight:300;line-height:1.7;
+      color:rgba(26,26,26,.6)}
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <a href="gamme.html" class="logo">
-      <img src="img/logo-kobo.png" alt="Kōbō Design"/>
-    </a>
-    <div class="header-badge">Aperçu local</div>
-  </header>
+<header>
+  <a href="gamme.html" class="logo">
+    <img src="img/logo-kobo.png" alt="Kōbō Design"/>
+  </a>
+  <div class="badge">Aperçu interne</div>
+</header>
 
-  <!-- PAGE -->
-  <div class="page">
-    <div class="page__header">
-      <p class="page__eyebrow">Salle de bain · Sur-mesure</p>
-      <h1 class="page__title">Vasque <em>composée</em></h1>
-      <p class="page__sub">Ajustez les dimensions de votre ensemble vasque + meuble en temps réel.</p>
+<div class="page">
+  <p class="page__eyebrow">Salle de bain · Sur-mesure</p>
+  <h1 class="page__title">Vasque <em>composée</em></h1>
+  <p class="page__sub">Ajustez les dimensions du meuble et de la vasque indépendamment.</p>
+
+  <div class="config-wrap">
+
+    <!-- VIEWER 3D -->
+    <div class="viewer-wrap">
+      <canvas id="composedCanvas"></canvas>
+
+      <div class="viewer-loader" id="viewerLoader">
+        <div class="spinner"></div>
+        <p class="loader-txt">Chargement…</p>
+        <p class="loader-progress" id="loaderPct"></p>
+      </div>
+
+      <div class="dims-badge" id="dimsBadge" style="display:none">
+        <span class="dims-badge__label">Meuble</span>
+        <span id="dimsMetxt">L — cm · l — cm</span>
+        <br>
+        <span class="dims-badge__label" style="margin-top:6px">Vasque</span>
+        <span id="dimsVatxt">— %</span>
+      </div>
+
+      <div class="viewer-hint">Cliquer-glisser pour pivoter</div>
     </div>
 
-    <div class="config-wrap">
+    <!-- CONTRÔLES -->
+    <div class="ctrl-panel">
 
-      <!-- VIEWER -->
-      <div class="viewer-wrap">
-        <canvas id="composedCanvas"></canvas>
-
-        <!-- Loader -->
-        <div class="viewer-loader" id="viewerLoader">
-          <div class="loader-spinner"></div>
-          <p class="loader-text">Chargement du modèle…</p>
+      <!-- Meuble -->
+      <div class="ctrl-card">
+        <div class="ctrl-card__label">
+          <span class="ctrl-card__label-dot dot-meuble"></span>
+          Meuble
         </div>
 
-        <!-- Dimensions badge -->
-        <div class="dims-badge" id="dimsBadge">
-          <span>Dimensions</span>
-          <div id="dimsText">L — cm &nbsp;·&nbsp; l — cm &nbsp;·&nbsp; H — cm</div>
+        <div class="slider-group">
+          <div class="slider-row">
+            <span class="slider-name">↔ Longueur</span>
+            <span><span class="slider-val" id="valML">120</span><span class="slider-unit">cm</span></span>
+          </div>
+          <div class="track-wrap">
+            <div class="track-fill" id="fillML"></div>
+            <input type="range" id="slML" min="80" max="240" step="1" value="120" oninput="onSlider()"/>
+          </div>
+          <div class="slider-limits"><span>80 cm</span><span>240 cm</span></div>
         </div>
 
-        <!-- Hint -->
-        <div class="viewer-hint">Cliquer-glisser pour pivoter</div>
+        <div class="divider"></div>
+
+        <div class="slider-group" style="margin-top:14px">
+          <div class="slider-row">
+            <span class="slider-name">↕ Profondeur</span>
+            <span><span class="slider-val" id="valMP">50</span><span class="slider-unit">cm</span></span>
+          </div>
+          <div class="track-wrap">
+            <div class="track-fill" id="fillMP"></div>
+            <input type="range" id="slMP" min="35" max="75" step="1" value="50" oninput="onSlider()"/>
+          </div>
+          <div class="slider-limits"><span>35 cm</span><span>75 cm</span></div>
+        </div>
       </div>
 
-      <!-- CONTROLS -->
-      <div class="ctrl-panel">
+      <!-- Vasque -->
+      <div class="ctrl-card">
+        <div class="ctrl-card__label">
+          <span class="ctrl-card__label-dot dot-vasque"></span>
+          Vasques
+        </div>
 
-        <!-- Longueur -->
-        <div class="ctrl-card">
-          <div class="ctrl-card__title">Dimensions</div>
-
-          <!-- Longueur -->
-          <div class="slider-group">
-            <div class="slider-label">
-              <div>
-                <span class="slider-label__icon">↔</span>
-                <span class="slider-label__name">Longueur</span>
-              </div>
-              <div>
-                <span class="slider-label__value" id="valLongueur">100</span>
-                <span class="slider-label__unit">cm</span>
-              </div>
-            </div>
-            <div class="slider-track-wrap">
-              <div class="slider-track-fill" id="fillLongueur" style="width:50%"></div>
-              <input type="range" id="sliderLongueur"
-                     min="60" max="200" step="1" value="100"
-                     oninput="onSliderChange()"/>
-            </div>
-            <div class="slider-minmax"><span>60 cm</span><span>200 cm</span></div>
+        <div class="slider-group">
+          <div class="slider-row">
+            <span class="slider-name">⊙ Taille</span>
+            <span><span class="slider-val" id="valVT">100</span><span class="slider-unit">%</span></span>
           </div>
-
-          <div class="ctrl-divider"></div>
-
-          <!-- Largeur -->
-          <div class="slider-group" style="margin-top:20px">
-            <div class="slider-label">
-              <div>
-                <span class="slider-label__icon">↕</span>
-                <span class="slider-label__name">Largeur (profondeur)</span>
-              </div>
-              <div>
-                <span class="slider-label__value" id="valLargeur">50</span>
-                <span class="slider-label__unit">cm</span>
-              </div>
-            </div>
-            <div class="slider-track-wrap">
-              <div class="slider-track-fill" id="fillLargeur" style="width:50%"></div>
-              <input type="range" id="sliderLargeur"
-                     min="35" max="80" step="1" value="50"
-                     oninput="onSliderChange()"/>
-            </div>
-            <div class="slider-minmax"><span>35 cm</span><span>80 cm</span></div>
+          <div class="track-wrap">
+            <div class="track-fill" id="fillVT"></div>
+            <input type="range" id="slVT" min="60" max="150" step="1" value="100" oninput="onSlider()"/>
           </div>
+          <div class="slider-limits"><span>60 %</span><span>150 %</span></div>
         </div>
-
-        <!-- Actions -->
-        <div class="ctrl-card">
-          <div class="ctrl-card__title">Actions</div>
-          <button class="btn-reset" onclick="resetDimensions()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-            Réinitialiser
-          </button>
-          <div style="height:12px"></div>
-          <button class="btn-devis" onclick="window.location.href='contact.html'">
-            Demander un devis
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
-        </div>
-
-        <!-- Info -->
-        <div class="info-card">
-          <div class="info-card__title">Fabrication sur-mesure</div>
-          <p class="info-card__text">
-            Toutes les dimensions sont ajustables dans notre atelier à Bordeaux.
-            Ce configurateur donne un aperçu visuel — les cotes finales sont validées avec vous lors du devis.
-          </p>
-        </div>
-
       </div>
+
+      <!-- Actions -->
+      <div class="ctrl-card">
+        <button class="btn btn-outline" onclick="resetAll()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Réinitialiser
+        </button>
+        <button class="btn btn-solid" onclick="window.location.href='contact.html'">
+          Demander un devis
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card__title">Fabrication sur-mesure</div>
+        <p class="info-card__text">
+          Les dimensions sont ajustables dans notre atelier à Bordeaux.
+          Ce configurateur donne un aperçu visuel — les cotes finales sont validées avec vous lors du devis.
+        </p>
+      </div>
+
     </div>
   </div>
+</div>
 
-  <!-- THREE.JS -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/GLTFLoader.js"></script>
+<!-- ── THREE.JS (même version que le reste du site) ── -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
-  <script>
-  // ─────────────────────────────────────────────
-  //  CONFIG
-  // ─────────────────────────────────────────────
-  var GLB_PATH = 'models/sdb/essai_compose.glb';
+<script>
+// ─────────────────────────────────────────────────────────
+//  CONSTANTES
+// ─────────────────────────────────────────────────────────
+var GLB = 'models/sdb/essai_compose.glb';
 
-  // Plages de dimensions (cm) pour chaque axe
-  // Longueur → axe X du modèle
-  // Largeur  → axe Z du modèle (profondeur)
-  var LONGUEUR_MIN = 60,  LONGUEUR_MAX = 200, LONGUEUR_DEFAULT = 100;
-  var LARGEUR_MIN  = 35,  LARGEUR_MAX  = 80,  LARGEUR_DEFAULT  = 50;
+// Valeurs par défaut (correspondent au modèle tel qu'exporté)
+var ML_DEF = 120, ML_MIN = 80,  ML_MAX = 240;
+var MP_DEF = 50,  MP_MIN = 35,  MP_MAX = 75;
+var VT_DEF = 100, VT_MIN = 60,  VT_MAX = 150;
 
-  // ─────────────────────────────────────────────
-  //  THREE.JS setup
-  // ─────────────────────────────────────────────
-  var canvas  = document.getElementById('composedCanvas');
-  var wrapper = canvas.parentElement;
+// Noms des nœuds correspondant aux vasques dans le GLB
+var VASQUE_NAMES = ['Decor_Linha_Argan1', 'Decor_Linha_Argan2'];
 
-  var scene, camera, renderer, model;
-  var baseScaleX = 1, baseScaleY = 1, baseScaleZ = 1; // échelle de normalisation
-  var isDragging = false, prevX = 0, prevY = 0;
-  var rotX = 0, rotY = 0.4; // léger angle initial
+// ─────────────────────────────────────────────────────────
+//  THREE.JS
+// ─────────────────────────────────────────────────────────
+var canvas  = document.getElementById('composedCanvas');
+var wrapper = canvas.parentElement;
 
-  function initScene() {
-    var W = wrapper.clientWidth  || 800;
-    var H = wrapper.clientHeight || 600;
+var scene, camera, renderer;
+var rootModel   = null;  // groupe racine (centré + normalisé)
+var meubleGroup = null;  // pièces du meuble
+var vasqueGroup = null;  // pièces des vasques
+var baseScaleMe = 1;     // échelle de normalisation commune
+var baseScaleVa = 1;
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xFAF7F2);
+var isDragging = false, prevX = 0, prevY = 0;
+var rotX = 0.08, rotY = 0.35; // légère rotation initiale
 
-    camera = new THREE.PerspectiveCamera(42, W / H, 0.01, 200);
-    camera.position.set(0, 0.5, 4);
+// ─────────────────────────────────────────────────────────
+//  INIT SCÈNE
+// ─────────────────────────────────────────────────────────
+function initScene() {
+  var W = wrapper.clientWidth  || 800;
+  var H = wrapper.clientHeight || 600;
 
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-    renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.9;
-    try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
-    catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xFAF7F2);
 
-    // Lumières
-    var ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
+  camera = new THREE.PerspectiveCamera(40, W / H, 0.01, 200);
+  camera.position.set(0, 0.3, 4.5);
 
-    var key = new THREE.DirectionalLight(0xffffff, 0.9);
-    key.position.set(4, 6, 4);
-    scene.add(key);
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.9;
+  try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
+  catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
 
-    var fill = new THREE.DirectionalLight(0xfffde8, 0.35);
-    fill.position.set(-4, 2, -3);
-    scene.add(fill);
+  // Lumières
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  var key = new THREE.DirectionalLight(0xffffff, 0.9);
+  key.position.set(4, 6, 4); scene.add(key);
+  var fill = new THREE.DirectionalLight(0xfffde8, 0.35);
+  fill.position.set(-4, 2, -3); scene.add(fill);
+  var back = new THREE.DirectionalLight(0xffffff, 0.18);
+  back.position.set(0, -3, -4); scene.add(back);
 
-    var back = new THREE.DirectionalLight(0xffffff, 0.2);
-    back.position.set(0, -3, -4);
-    scene.add(back);
-
-    // Interactions souris
-    canvas.addEventListener('mousedown', function(e) {
-      isDragging = true;
-      prevX = e.clientX;
-      prevY = e.clientY;
-    });
-    window.addEventListener('mouseup', function() { isDragging = false; });
-    window.addEventListener('mousemove', function(e) {
-      if (!isDragging || !model) return;
-      rotY += (e.clientX - prevX) * 0.008;
-      rotX = Math.max(-0.45, Math.min(0.45, rotX + (e.clientY - prevY) * 0.004));
-      model.rotation.set(rotX, rotY, 0);
-      prevX = e.clientX;
-      prevY = e.clientY;
-    });
-
-    // Touch
-    canvas.addEventListener('touchstart', function(e) {
-      isDragging = true;
-      prevX = e.touches[0].clientX;
-    }, { passive: true });
-    canvas.addEventListener('touchend', function() { isDragging = false; });
-    canvas.addEventListener('touchmove', function(e) {
-      if (!isDragging || !model) return;
-      rotY += (e.touches[0].clientX - prevX) * 0.008;
-      model.rotation.y = rotY;
-      prevX = e.touches[0].clientX;
-    }, { passive: true });
-
-    // Resize
-    window.addEventListener('resize', function() {
-      var W2 = wrapper.clientWidth;
-      var H2 = wrapper.clientHeight;
-      camera.aspect = W2 / H2;
-      camera.updateProjectionMatrix();
-      renderer.setSize(W2, H2);
-    });
-
-    // Boucle rendu
-    (function loop() {
-      requestAnimationFrame(loop);
-      if (renderer) renderer.render(scene, camera);
-    })();
-
-    // Charger le GLB
-    loadModel();
-  }
-
-  function loadModel() {
-    var loader = new THREE.GLTFLoader();
-    loader.load(
-      GLB_PATH,
-      function(gltf) {
-        model = gltf.scene;
-
-        // Normaliser : centrer + mettre à l'échelle pour remplir la vue
-        var box    = new THREE.Box3().setFromObject(model);
-        var center = box.getCenter(new THREE.Vector3());
-        var size   = box.getSize(new THREE.Vector3());
-
-        // Stocker les dimensions réelles du modèle pour le scaling relatif
-        // On va référencer LONGUEUR_DEFAULT → size.x du modèle original
-        var maxDim = Math.max(size.x, size.y, size.z, 0.001);
-        var normScale = 2.2 / maxDim;
-
-        // Positions de base (centrées)
-        model.position.set(
-          -center.x * normScale,
-          -center.y * normScale,
-          -center.z * normScale
-        );
-        model.scale.set(normScale, normScale, normScale);
-
-        // Mémoriser l'échelle de base pour pouvoir modifier X et Z indépendamment
-        baseScaleX = normScale;
-        baseScaleY = normScale;
-        baseScaleZ = normScale;
-
-        // Rotation initiale légère
-        model.rotation.set(rotX, rotY, 0);
-
-        scene.add(model);
-
-        // Cacher loader
-        var loader = document.getElementById('viewerLoader');
-        if (loader) loader.classList.add('hidden');
-
-        // Mise à jour initiale de l'affichage
-        updateDimsBadge();
-      },
-      undefined,
-      function(err) {
-        console.error('[GLB] Erreur chargement:', err);
-        var loaderEl = document.getElementById('viewerLoader');
-        if (loaderEl) {
-          loaderEl.querySelector('.loader-text').textContent = 'Erreur de chargement du modèle.';
-        }
-      }
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  //  SLIDERS → SCALING
-  // ─────────────────────────────────────────────
-  function onSliderChange() {
-    var slL = document.getElementById('sliderLongueur');
-    var slW = document.getElementById('sliderLargeur');
-
-    var longueur = parseInt(slL.value, 10); // cm
-    var largeur  = parseInt(slW.value, 10); // cm
-
-    // Afficher les valeurs
-    document.getElementById('valLongueur').textContent = longueur;
-    document.getElementById('valLargeur').textContent  = largeur;
-
-    // Mettre à jour les fills des sliders
-    updateSliderFill('fillLongueur', slL, LONGUEUR_MIN, LONGUEUR_MAX);
-    updateSliderFill('fillLargeur',  slW, LARGEUR_MIN,  LARGEUR_MAX);
-
-    // Appliquer le scaling au modèle
-    if (!model) return;
-
-    var ratioX = longueur / LONGUEUR_DEFAULT;   // ratio longueur
-    var ratioZ = largeur  / LARGEUR_DEFAULT;    // ratio largeur/profondeur
-    // Y reste inchangé (hauteur fixe)
-
-    model.scale.set(
-      baseScaleX * ratioX,
-      baseScaleY,          // hauteur fixe
-      baseScaleZ * ratioZ
-    );
-
-    updateDimsBadge();
-  }
-
-  function updateSliderFill(fillId, input, min, max) {
-    var pct = ((parseFloat(input.value) - min) / (max - min)) * 100;
-    document.getElementById(fillId).style.width = pct + '%';
-  }
-
-  function updateDimsBadge() {
-    var longueur = parseInt(document.getElementById('sliderLongueur').value, 10);
-    var largeur  = parseInt(document.getElementById('sliderLargeur').value, 10);
-    // Hauteur fixe (on l'affiche comme une valeur fixe à définir selon le modèle)
-    document.getElementById('dimsText').textContent =
-      'L ' + longueur + ' cm  ·  l ' + largeur + ' cm  ·  H — cm';
-  }
-
-  function resetDimensions() {
-    document.getElementById('sliderLongueur').value = LONGUEUR_DEFAULT;
-    document.getElementById('sliderLargeur').value  = LARGEUR_DEFAULT;
-    onSliderChange();
-  }
-
-  // ─────────────────────────────────────────────
-  //  INIT
-  // ─────────────────────────────────────────────
-  window.addEventListener('DOMContentLoaded', function() {
-    // Initialiser les fills des sliders
-    updateSliderFill('fillLongueur',
-      document.getElementById('sliderLongueur'), LONGUEUR_MIN, LONGUEUR_MAX);
-    updateSliderFill('fillLargeur',
-      document.getElementById('sliderLargeur'), LARGEUR_MIN, LARGEUR_MAX);
-
-    // Lancer Three.js
-    initScene();
+  // Drag souris
+  canvas.addEventListener('mousedown', function(e) {
+    isDragging = true; prevX = e.clientX; prevY = e.clientY;
   });
-  </script>
+  window.addEventListener('mouseup', function() { isDragging = false; });
+  window.addEventListener('mousemove', function(e) {
+    if (!isDragging || !rootModel) return;
+    rotY += (e.clientX - prevX) * 0.008;
+    rotX = Math.max(-0.45, Math.min(0.45, rotX + (e.clientY - prevY) * 0.004));
+    rootModel.rotation.set(rotX, rotY, 0);
+    prevX = e.clientX; prevY = e.clientY;
+  });
 
+  // Touch
+  canvas.addEventListener('touchstart', function(e) {
+    isDragging = true; prevX = e.touches[0].clientX;
+  }, { passive: true });
+  canvas.addEventListener('touchend', function() { isDragging = false; });
+  canvas.addEventListener('touchmove', function(e) {
+    if (!isDragging || !rootModel) return;
+    rotY += (e.touches[0].clientX - prevX) * 0.008;
+    rootModel.rotation.y = rotY;
+    prevX = e.touches[0].clientX;
+  }, { passive: true });
+
+  // Resize
+  window.addEventListener('resize', function() {
+    var W2 = wrapper.clientWidth, H2 = wrapper.clientHeight;
+    camera.aspect = W2 / H2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W2, H2);
+  });
+
+  // Boucle rendu
+  (function loop() {
+    requestAnimationFrame(loop);
+    renderer.render(scene, camera);
+  })();
+
+  loadModel();
+}
+
+// ─────────────────────────────────────────────────────────
+//  CHARGEMENT GLB
+// ─────────────────────────────────────────────────────────
+function loadModel() {
+  var loader = new THREE.GLTFLoader();
+  loader.load(
+    GLB,
+    function onLoad(gltf) {
+      var raw = gltf.scene;
+
+      // ── Normaliser ──────────────────────────────────────
+      var box    = new THREE.Box3().setFromObject(raw);
+      var center = box.getCenter(new THREE.Vector3());
+      var size   = box.getSize(new THREE.Vector3());
+      var normScale = 2.4 / Math.max(size.x, size.y, size.z, 0.001);
+
+      raw.position.set(-center.x * normScale, -center.y * normScale, -center.z * normScale);
+      raw.scale.setScalar(normScale);
+      raw.rotation.set(rotX, rotY, 0);
+
+      // Créer un pivot racine (rotation + normalisation)
+      rootModel = new THREE.Group();
+      scene.add(rootModel);
+      rootModel.add(raw);
+
+      // ── Séparer vasques / meuble ──────────────────────
+      meubleGroup = new THREE.Group();
+      vasqueGroup = new THREE.Group();
+      raw.add(meubleGroup);
+      raw.add(vasqueGroup);
+
+      // Identifier et déplacer les enfants directs du nœud "Model"
+      // (enfants de raw.children[0] = le nœud racine du GLB)
+      var modelRoot = raw.children[0] || raw; // nœud GLB racine
+
+      var toProcess = Array.from(modelRoot.children);
+      toProcess.forEach(function(child) {
+        var name = child.name || '';
+        if (VASQUE_NAMES.indexOf(name) !== -1) {
+          // → vasqueGroup (en préservant la transform monde)
+          vasqueGroup.attach(child);
+        } else {
+          // → meubleGroup (meuble + robinets + accessoires)
+          meubleGroup.attach(child);
+        }
+      });
+
+      // Mémoriser les échelles de base (= 1 après attach car raw est déjà normalisé)
+      baseScaleMe = 1;
+      baseScaleVa = 1;
+
+      // Cacher loader, afficher badge
+      document.getElementById('viewerLoader').classList.add('hidden');
+      document.getElementById('dimsBadge').style.display = '';
+
+      // Appliquer les valeurs initiales des sliders
+      onSlider();
+    },
+    function onProgress(xhr) {
+      if (xhr.lengthComputable) {
+        var pct = Math.round((xhr.loaded / xhr.total) * 100);
+        var el = document.getElementById('loaderPct');
+        if (el) el.textContent = pct + '%';
+      }
+    },
+    function onError(err) {
+      console.error('[GLB] Erreur:', err);
+      var el = document.querySelector('.loader-txt');
+      if (el) el.textContent = 'Erreur de chargement.';
+    }
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+//  SLIDERS
+// ─────────────────────────────────────────────────────────
+function onSlider() {
+  var ml = parseInt(document.getElementById('slML').value, 10);
+  var mp = parseInt(document.getElementById('slMP').value, 10);
+  var vt = parseInt(document.getElementById('slVT').value, 10);
+
+  // Affichage valeurs
+  document.getElementById('valML').textContent = ml;
+  document.getElementById('valMP').textContent = mp;
+  document.getElementById('valVT').textContent = vt;
+
+  // Fills
+  setFill('fillML', ml, ML_MIN, ML_MAX);
+  setFill('fillMP', mp, MP_MIN, MP_MAX);
+  setFill('fillVT', vt, VT_MIN, VT_MAX);
+
+  // Appliquer au modèle
+  if (!meubleGroup || !vasqueGroup) return;
+
+  var ratioX = ml / ML_DEF;   // longueur
+  var ratioZ = mp / MP_DEF;   // profondeur
+  var ratioV = vt / VT_DEF;   // taille vasque
+
+  // Meuble : scale sur X (longueur) et Z (profondeur), Y inchangé
+  meubleGroup.scale.set(
+    baseScaleMe * ratioX,
+    baseScaleMe,
+    baseScaleMe * ratioZ
+  );
+
+  // Vasques : scale uniforme (la taille du bac)
+  vasqueGroup.scale.set(
+    baseScaleVa * ratioV,
+    baseScaleVa * ratioV,
+    baseScaleVa * ratioV
+  );
+
+  // Badge dimensions
+  document.getElementById('dimsMetxt').textContent =
+    'L ' + ml + ' cm · l ' + mp + ' cm';
+  document.getElementById('dimsVatxt').textContent = vt + ' %';
+}
+
+function setFill(id, val, min, max) {
+  var pct = ((val - min) / (max - min)) * 100;
+  document.getElementById(id).style.width = pct + '%';
+}
+
+function resetAll() {
+  document.getElementById('slML').value = ML_DEF;
+  document.getElementById('slMP').value = MP_DEF;
+  document.getElementById('slVT').value = VT_DEF;
+  onSlider();
+}
+
+// ─────────────────────────────────────────────────────────
+//  START
+// ─────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  setFill('fillML', ML_DEF, ML_MIN, ML_MAX);
+  setFill('fillMP', MP_DEF, MP_MIN, MP_MAX);
+  setFill('fillVT', VT_DEF, VT_MIN, VT_MAX);
+  initScene();
+});
+</script>
 </body>
 </html>
