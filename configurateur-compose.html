@@ -288,11 +288,13 @@ var canvas  = document.getElementById('composedCanvas');
 var wrapper = canvas.parentElement;
 
 var scene, camera, renderer;
-var rootModel   = null;  // groupe racine (centré + normalisé)
-var meubleGroup = null;  // pièces du meuble
-var vasqueGroup = null;  // pièces des vasques
-var baseScaleMe = 1;     // échelle de normalisation commune
-var baseScaleVa = 1;
+var rootModel    = null;  // groupe racine (centré + normalisé)
+var meubleGroup  = null;  // pièces du meuble
+var vasqueGroup  = null;  // pièces des vasques
+var robinetGroup = null;  // robinets (taille fixe, suivent les vasques en X)
+var robinetData  = [];    // [{obj, vasqueNode}]
+var baseScaleMe  = 1;
+var baseScaleVa  = 1;
 
 var isDragging = false, prevX = 0, prevY = 0;
 var rotX = 0.08, rotY = 0.35; // légère rotation initiale
@@ -421,6 +423,45 @@ function loadModel() {
         }
       });
 
+      // ── Extraire les robinets dans leur propre groupe ─────
+      // Ils gardent leur taille fixe et ne doivent pas scaler
+      // avec le meuble ou la vasque.
+      // Containers de robinets identifiés dans la structure GLB :
+      //   Glas_28_1     → contient Robinet_mural1
+      //   Robinet_mural2 → robinet direct
+      robinetGroup = new THREE.Group();
+      raw.add(robinetGroup);
+
+      var robinetContainers = ['Glas_28_1', 'Robinet_mural2'];
+      robinetContainers.forEach(function(name) {
+        var obj = raw.getObjectByName(name);
+        if (obj) robinetGroup.attach(obj); // détache du groupe actuel, préserve la transform
+      });
+
+      // Trouver les nœuds vasque pour le pairing X
+      var vasqueNodes = [];
+      ['Decor_Linha_Argan1', 'Decor_Linha_Argan2'].forEach(function(name) {
+        var v = raw.getObjectByName(name);
+        if (v) vasqueNodes.push(v);
+      });
+
+      // Associer chaque robinet à la vasque la plus proche (par distance X)
+      robinetData = [];
+      robinetGroup.children.slice().forEach(function(rob) {
+        var robBox = new THREE.Box3().setFromObject(rob);
+        var robCx  = robBox.getCenter(new THREE.Vector3()).x;
+
+        var bestVasque = null, bestDist = Infinity;
+        vasqueNodes.forEach(function(v) {
+          var vBox = new THREE.Box3().setFromObject(v);
+          var vCx  = vBox.getCenter(new THREE.Vector3()).x;
+          var d    = Math.abs(robCx - vCx);
+          if (d < bestDist) { bestDist = d; bestVasque = v; }
+        });
+
+        if (bestVasque) robinetData.push({ obj: rob, vasqueNode: bestVasque });
+      });
+
       // Mémoriser les échelles de base (= 1 après attach)
       baseScaleMe = 1;
       baseScaleVa = 1;
@@ -484,6 +525,21 @@ function onSlider() {
     baseScaleVa,
     baseScaleVa * (vw / VW_DEF)
   );
+
+  // ── Repositionner les robinets ─────────────────────────
+  // Taille fixe, mais ils suivent le centre X de leur vasque
+  if (robinetGroup && robinetData.length) {
+    raw.updateMatrixWorld(true);
+    robinetData.forEach(function(rd) {
+      // Centre monde de la vasque après scaling
+      var vBox      = new THREE.Box3().setFromObject(rd.vasqueNode);
+      var vCenterW  = vBox.getCenter(new THREE.Vector3());
+      // Convertir en espace local de robinetGroup (pas de scale → ≈ espace de raw)
+      var localPos  = robinetGroup.worldToLocal(vCenterW.clone());
+      // Centrer le robinet en X sur la vasque ; Y et Z restent inchangés
+      rd.obj.position.x = localPos.x;
+    });
+  }
 
   // Badge dimensions
   document.getElementById('dimsMetxt').textContent =
