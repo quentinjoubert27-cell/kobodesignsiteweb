@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="shortcut icon" href="favicon.png"/>
 
   <title>Nos Réalisations — Mobilier & Architecture d'Intérieur Bordeaux — Kobo Design</title>
   <meta name="description" content="Découvrez les réalisations de Kobo Design : cuisines sur-mesure, bibliothèques, meubles TV, dressings, portes coulissantes et projets d'architecture d'intérieur à Bordeaux."/>
@@ -68,34 +70,33 @@
     ============================================================ */
     #cursor {
       position: fixed;
+      top: 0; left: 0;
       width: 12px; height: 12px;
       background: var(--accent);
       border-radius: 50%;
       pointer-events: none;
       z-index: 9999;
-      transform: translate(-50%, -50%);
+      will-change: transform;
       transition: width .25s var(--ease), height .25s var(--ease), background .2s;
-      mix-blend-mode: multiply;
     }
     #cursor.expand {
       width: 52px; height: 52px;
       background: rgba(205,62,0,.15);
-      mix-blend-mode: normal;
     }
     /* Mode "VOIR" au survol des cartes projets */
     #cursor.view {
       width: 72px; height: 72px;
       background: var(--dark);
-      mix-blend-mode: normal;
     }
     #cursor-text {
       position: fixed;
+      top: 0; left: 0;
       pointer-events: none;
       z-index: 10000;
       font-size: 9px; font-weight: 700;
       letter-spacing: .18em; text-transform: uppercase;
       color: var(--white);
-      transform: translate(-50%, -50%);
+      will-change: transform;
       opacity: 0;
       transition: opacity .2s;
     }
@@ -148,7 +149,7 @@
 
     .mobile-nav-overlay {
       position: fixed; inset: 0; top: 72px; z-index: 470;
-      background: rgba(26,26,26,.22); backdrop-filter: blur(2px);
+      background: rgba(26,26,26,.32);
       opacity: 0; pointer-events: none; transition: opacity .3s ease;
     }
     .mobile-nav-overlay.open { opacity: 1; pointer-events: all; }
@@ -186,7 +187,7 @@
     /* ============================================================
        MODALE ESPACE CLIENT — identique landing
     ============================================================ */
-    .modal-overlay { display: none; position: fixed; inset: 0; z-index: 800; background: rgba(26,26,26,.55); backdrop-filter: blur(6px); align-items: center; justify-content: center; }
+    .modal-overlay { display: none; position: fixed; inset: 0; z-index: 800; background: rgba(26,26,26,.65); align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal { background: var(--bg); width: min(480px,92vw); border-radius: 12px; padding: 48px clamp(28px,5vw,48px); position: relative; animation: modal-in .35s var(--ease) both; }
     @keyframes modal-in { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: none; } }
@@ -306,10 +307,16 @@
     .proj-card__img {
       position: absolute; inset: 0;
       background-size: cover; background-position: center;
-      transition: transform .75s var(--ease), filter .45s;
-      filter: brightness(.85);
+      transition: transform .75s var(--ease);
     }
-    .proj-card:hover .proj-card__img { transform: scale(1.06); filter: brightness(.55); }
+    .proj-card__img::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.15);
+      transition: background .45s;
+    }
+    .proj-card:hover .proj-card__img { transform: scale(1.06); }
+    .proj-card:hover .proj-card__img::after { background: rgba(0,0,0,.45); }
 
     /* Numéro flottant */
     .proj-card__num {
@@ -909,22 +916,29 @@
     const cur = document.getElementById('cursor');
     const curText = document.getElementById('cursor-text');
 
-    if (cur) {
+    /* Désactive le curseur custom sur Safari — cursor:none + JS causent des repaints constants */
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+
+    if (cur && !isSafari) {
+      let rafId = null, mx = 0, my = 0, half = 6;
       document.addEventListener('mousemove', e => {
-        cur.style.left    = e.clientX + 'px';
-        cur.style.top     = e.clientY + 'px';
-        curText.style.left = e.clientX + 'px';
-        curText.style.top  = e.clientY + 'px';
-      });
+        mx = e.clientX; my = e.clientY;
+        if (rafId) return;
+        rafId = requestAnimationFrame(() => {
+          cur.style.transform     = 'translate(' + (mx - half) + 'px,' + (my - half) + 'px)';
+          curText.style.transform = 'translate(' + (mx - 20) + 'px,' + (my - 8) + 'px)';
+          rafId = null;
+        });
+      }, { passive: true });
 
       /* Cartes projets → mode "VOIR" */
       document.querySelectorAll('.proj-card').forEach(el => {
         el.addEventListener('mouseenter', () => {
-          cur.classList.add('view');
+          cur.classList.add('view'); half = 36;
           curText.classList.add('show');
         });
         el.addEventListener('mouseleave', () => {
-          cur.classList.remove('view');
+          cur.classList.remove('view'); half = 6;
           curText.classList.remove('show');
         });
       });
@@ -932,10 +946,16 @@
       /* Liens et boutons → expand */
       document.querySelectorAll('a, button, .nav__login').forEach(el => {
         el.addEventListener('mouseenter', () => {
-          if (!cur.classList.contains('view')) cur.classList.add('expand');
+          if (!cur.classList.contains('view')) { cur.classList.add('expand'); half = 26; }
         });
-        el.addEventListener('mouseleave', () => cur.classList.remove('expand'));
+        el.addEventListener('mouseleave', () => { cur.classList.remove('expand'); half = 6; });
       });
+
+    } else if (isSafari) {
+      /* Safari : curseur système natif, zéro repaint */
+      document.body.style.cursor = 'auto';
+      if (cur) cur.style.display = 'none';
+      if (curText) curText.style.display = 'none';
     }
 
     /* ---- Mobile menu ---- */

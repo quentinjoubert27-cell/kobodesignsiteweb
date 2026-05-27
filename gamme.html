@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="shortcut icon" href="favicon.png"/>
   <title>Configurateur Mobilier Sur-Mesure 3D — Bibliothèques & Meubles SDB — Kobo Design Bordeaux</title>
   <meta name="description" content="Configurez votre mobilier sur-mesure en 3D : bibliothèques, meubles de salle de bain, vasques Dekton & Silestone. Studio Kobo Design à Bordeaux. Devis gratuit sous 24h."/>
   <meta name="keywords" content="bibliothèque sur-mesure Bordeaux, meuble salle de bain sur-mesure Bordeaux, vasque sur-mesure Bordeaux, configurateur meuble 3D, meuble sur-mesure Bordeaux, bibliothèque bois sur-mesure"/>
@@ -61,8 +63,8 @@
     a{text-decoration:none;color:inherit}
 
     /* CURSEUR */
-    #cursor{position:fixed;width:12px;height:12px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .25s var(--ease),height .25s var(--ease),background .2s;mix-blend-mode:multiply}
-    #cursor.expand{width:52px;height:52px;background:rgba(205,62,0,.15);mix-blend-mode:normal}
+    #cursor{position:fixed;width:12px;height:12px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .25s var(--ease),height .25s var(--ease),background .2s}
+    #cursor.expand{width:52px;height:52px;background:rgba(205,62,0,.15)}
 
     /* HEADER — identique au reste du site */
     header{position:fixed;top:0;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,72px);background:var(--bg);transition:box-shadow .35s}
@@ -1458,15 +1460,7 @@
 
 <header id="site-header">
   <a href="index.html" class="logo" aria-label="Kōbō — Accueil">
-    <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-      <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
-      <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
-      <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-      <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-      <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
-    </svg>
+    <img src="img/logo-kobo.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
   </a>
   <nav class="nav">
     <a href="index.html" class="nav__link">Accueil</a>
@@ -1681,15 +1675,7 @@
 <footer>
     <div class="footer__top">
       <div class="footer__brand">
-        <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:36px;width:auto;">
-          <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
-          <line x1="36" y1="10" x2="48" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
-          <path d="M62 6v36" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round"/>
-          <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
-          <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
-          <line x1="101" y1="10" x2="113" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
-        </svg>
+        <img src="img/logo-koboblanc.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
         <p>Studio de mobilier sur-mesure et d'architecture d'intérieur, basé à Bordeaux depuis 2018.</p>
       </div>
       <div class="footer__col">
