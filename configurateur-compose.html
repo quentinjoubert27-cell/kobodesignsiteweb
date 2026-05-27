@@ -382,29 +382,34 @@ function loadModel() {
       scene.add(rootModel);
       rootModel.add(raw);
 
-      // ── Séparer vasques / meuble ──────────────────────
+      // ── Séparer vasques / meuble par position Y ────────
+      // La vasque = partie HAUTE du modèle (Y > seuil)
+      // Le meuble = partie BASSE du modèle (Y ≤ seuil)
       meubleGroup = new THREE.Group();
       vasqueGroup = new THREE.Group();
       raw.add(meubleGroup);
       raw.add(vasqueGroup);
 
-      // Identifier et déplacer les enfants directs du nœud "Model"
-      // (enfants de raw.children[0] = le nœud racine du GLB)
-      var modelRoot = raw.children[0] || raw; // nœud GLB racine
+      // Calculer la boîte globale du modèle normalisé
+      var fullBox = new THREE.Box3().setFromObject(raw);
+      // Seuil à 63% depuis le bas → sépare haut/bas naturellement
+      var splitY = fullBox.min.y + (fullBox.max.y - fullBox.min.y) * 0.63;
+
+      // Nœud racine GLB (premier enfant de raw)
+      var modelRoot = raw.children[0] || raw;
 
       var toProcess = Array.from(modelRoot.children);
       toProcess.forEach(function(child) {
-        var name = child.name || '';
-        if (VASQUE_NAMES.indexOf(name) !== -1) {
-          // → vasqueGroup (en préservant la transform monde)
-          vasqueGroup.attach(child);
+        var childBox = new THREE.Box3().setFromObject(child);
+        var centerY  = (childBox.min.y + childBox.max.y) / 2;
+        if (centerY > splitY) {
+          vasqueGroup.attach(child);  // partie haute = vasque
         } else {
-          // → meubleGroup (meuble + robinets + accessoires)
-          meubleGroup.attach(child);
+          meubleGroup.attach(child);  // partie basse = meuble
         }
       });
 
-      // Mémoriser les échelles de base (= 1 après attach car raw est déjà normalisé)
+      // Mémoriser les échelles de base (= 1 après attach)
       baseScaleMe = 1;
       baseScaleVa = 1;
 
@@ -451,18 +456,18 @@ function onSlider() {
   // Appliquer au modèle
   if (!meubleGroup || !vasqueGroup) return;
 
-  var ratioX = ml / ML_DEF;   // longueur
-  var ratioZ = mp / MP_DEF;   // profondeur
+  var ratioX = ml / ML_DEF;   // longueur meuble
+  var ratioZ = mp / MP_DEF;   // profondeur meuble
   var ratioV = vt / VT_DEF;   // taille vasque
 
-  // Meuble : scale sur X (longueur) et Z (profondeur), Y inchangé
+  // Meuble (bas) : s'étire en X (longueur) et Z (profondeur), hauteur fixe
   meubleGroup.scale.set(
     baseScaleMe * ratioX,
     baseScaleMe,
     baseScaleMe * ratioZ
   );
 
-  // Vasques : scale uniforme (la taille du bac)
+  // Vasque (haut) : scale uniforme, indépendant du meuble
   vasqueGroup.scale.set(
     baseScaleVa * ratioV,
     baseScaleVa * ratioV,
