@@ -432,34 +432,55 @@ function loadModel() {
       robinetGroup = new THREE.Group();
       raw.add(robinetGroup);
 
+      // Extraire les robinets (containers identifiés via analyse du GLB)
       var robinetContainers = ['Glas_28_1', 'Robinet_mural2'];
       robinetContainers.forEach(function(name) {
         var obj = raw.getObjectByName(name);
-        if (obj) robinetGroup.attach(obj); // détache du groupe actuel, préserve la transform
+        if (obj) robinetGroup.attach(obj);
       });
 
-      // Trouver les nœuds vasque pour le pairing X
+      // ── CRITIQUE : forcer la mise à jour de TOUTES les matrices
+      // avant de calculer les positions (aucun render n'a encore eu lieu)
+      raw.updateMatrix();
+      scene.updateMatrixWorld(true);
+
+      // Trouver les nœuds vasque pour le pairing
       var vasqueNodes = [];
       ['Decor_Linha_Argan1', 'Decor_Linha_Argan2'].forEach(function(name) {
         var v = raw.getObjectByName(name);
         if (v) vasqueNodes.push(v);
       });
 
-      // Associer chaque robinet à la vasque la plus proche (par distance X)
+      // Associer chaque robinet à la vasque la plus proche (par X)
+      // et stocker le centre initial de la vasque en espace LOCAL de robinetGroup.
+      // En onSlider, on calculera : robinet.x = vasqueInitLocalCx * ratioVL
+      // (la vasqueGroup scale à partir de l'origine → proportionnel au ratio)
       robinetData = [];
       robinetGroup.children.slice().forEach(function(rob) {
         var robBox = new THREE.Box3().setFromObject(rob);
         var robCx  = robBox.getCenter(new THREE.Vector3()).x;
 
-        var bestVasque = null, bestDist = Infinity;
+        var bestVasque = null, bestDist = Infinity, bestVasqueLocalCx = 0;
         vasqueNodes.forEach(function(v) {
-          var vBox = new THREE.Box3().setFromObject(v);
-          var vCx  = vBox.getCenter(new THREE.Vector3()).x;
-          var d    = Math.abs(robCx - vCx);
-          if (d < bestDist) { bestDist = d; bestVasque = v; }
+          var vBox     = new THREE.Box3().setFromObject(v);
+          var vWorldCx = vBox.getCenter(new THREE.Vector3());
+          // Centre vasque en espace local de robinetGroup (matrices à jour → fiable)
+          var vLocalCx = robinetGroup.worldToLocal(vWorldCx.clone()).x;
+          var d = Math.abs(robCx - vLocalCx);
+          if (d < bestDist) {
+            bestDist = d;
+            bestVasque = v;
+            bestVasqueLocalCx = vLocalCx; // stocké une seule fois, à init
+          }
         });
 
-        if (bestVasque) robinetData.push({ obj: rob, vasqueNode: bestVasque });
+        if (bestVasque) {
+          robinetData.push({
+            obj:              rob,
+            vasqueNode:       bestVasque,
+            vasqueInitLocalCx: bestVasqueLocalCx // centre X au ratio 1:1
+          });
+        }
       });
 
       // Mémoriser les échelles de base (= 1 après attach)
@@ -527,17 +548,13 @@ function onSlider() {
   );
 
   // ── Repositionner les robinets ─────────────────────────
-  // Taille fixe, mais ils suivent le centre X de leur vasque
+  // vasqueGroup scale à partir de l'origine (0,0,0) dans l'espace de raw.
+  // Le centre X d'une vasque après scaling = vasqueInitLocalCx × ratioVL.
+  // On place le robinet exactement à ce X → taille fixe, suit la vasque.
   if (robinetGroup && robinetData.length) {
-    raw.updateMatrixWorld(true);
+    var ratioVL = vl / VL_DEF;
     robinetData.forEach(function(rd) {
-      // Centre monde de la vasque après scaling
-      var vBox      = new THREE.Box3().setFromObject(rd.vasqueNode);
-      var vCenterW  = vBox.getCenter(new THREE.Vector3());
-      // Convertir en espace local de robinetGroup (pas de scale → ≈ espace de raw)
-      var localPos  = robinetGroup.worldToLocal(vCenterW.clone());
-      // Centrer le robinet en X sur la vasque ; Y et Z restent inchangés
-      rd.obj.position.x = localPos.x;
+      rd.obj.position.x = rd.vasqueInitLocalCx * ratioVL;
     });
   }
 
