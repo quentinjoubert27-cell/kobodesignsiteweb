@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Configurateur Vasque Composée — Kobo Design (Local Preview)</title>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --accent: #CD3E00;
+      --bg: #FFFAF0;
+      --dark: #1A1A1A;
+      --white: #FFFFFF;
+      --mid: #F0EBE0;
+      --font: 'Poppins', sans-serif;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--bg); color: var(--dark); min-height: 100vh; }
+
+    /* ── HEADER ── */
+    header {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(20px, 5vw, 72px);
+      background: var(--bg);
+      border-bottom: 1px solid rgba(26,26,26,.08);
+    }
+    .logo img { height: 32px; width: auto; display: block; }
+    .header-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(205,62,0,.08);
+      border: 1px solid rgba(205,62,0,.2);
+      border-radius: 100px;
+      padding: 6px 14px;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: clamp(32px, 5vw, 64px) clamp(20px, 5vw, 72px);
+    }
+
+    .page__header {
+      margin-bottom: 40px;
+    }
+    .page__eyebrow {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .page__title {
+      font-size: clamp(32px, 5vw, 60px);
+      font-weight: 900;
+      letter-spacing: -.04em;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .page__title em {
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(26,26,26,.25);
+    }
+    .page__sub {
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(26,26,26,.5);
+    }
+
+    /* ── CONFIGURATEUR GRID ── */
+    .config-wrap {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 32px;
+      align-items: start;
+    }
+
+    /* ── VIEWER 3D ── */
+    .viewer-wrap {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #FAF7F2;
+      border: 1px solid rgba(26,26,26,.1);
+      aspect-ratio: 4/3;
+      box-shadow: 0 8px 48px rgba(26,26,26,.1);
+    }
+    #composedCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+    #composedCanvas:active { cursor: grabbing; }
+
+    /* Loader */
+    .viewer-loader {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #FAF7F2;
+      z-index: 10;
+      transition: opacity .4s;
+    }
+    .viewer-loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loader-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(205,62,0,.15);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: rgba(26,26,26,.4);
+    }
+
+    /* Hint drag */
+    .viewer-hint {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(26,26,26,.35);
+      background: rgba(255,250,240,.8);
+      backdrop-filter: blur(6px);
+      padding: 6px 14px;
+      border-radius: 100px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* Dimensions badge */
+    .dims-badge {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dark);
+      background: rgba(255,250,240,.88);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(26,26,26,.1);
+      border-radius: 8px;
+      padding: 8px 14px;
+      line-height: 1.6;
+      pointer-events: none;
+    }
+    .dims-badge span {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+
+    /* ── PANEL CONTROLES ── */
+    .ctrl-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .ctrl-card {
+      background: var(--white);
+      border: 1px solid rgba(26,26,26,.09);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .ctrl-card__title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(26,26,26,.4);
+      margin-bottom: 20px;
+    }
+
+    /* Slider */
+    .slider-group { margin-bottom: 20px; }
+    .slider-group:last-child { margin-bottom: 0; }
+
+    .slider-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .slider-label__name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    .slider-label__icon {
+      font-size: 11px;
+      color: rgba(26,26,26,.35);
+      margin-right: 4px;
+    }
+    .slider-label__value {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: -.03em;
+      line-height: 1;
+    }
+    .slider-label__unit {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(26,26,26,.35);
+      margin-left: 2px;
+    }
+
+    /* Range input styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(26,26,26,.1);
+      outline: none;
+      cursor: pointer;
+      position: relative;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 2px 8px rgba(205,62,0,.35);
+      cursor: pointer;
+      transition: transform .15s var(--ease), box-shadow .15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 4px 16px rgba(205,62,0,.45);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      box-shadow: 0 2px 8px rgba(205,62,0,.35);
+      cursor: pointer;
+    }
+
+    .slider-track-wrap {
+      position: relative;
+      margin-bottom: 6px;
+    }
+    .slider-track-fill {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      height: 4px;
+      border-radius: 2px 0 0 2px;
+      background: var(--accent);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .slider-minmax {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      color: rgba(26,26,26,.3);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Separateur */
+    .ctrl-divider {
+      height: 1px;
+      background: rgba(26,26,26,.07);
+      margin: 4px 0;
+    }
+
+    /* Bouton reset */
+    .btn-reset {
+      width: 100%;
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(26,26,26,.5);
+      background: none;
+      border: 1.5px solid rgba(26,26,26,.12);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color .2s, color .2s, background .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-reset:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(205,62,0,.03);
+    }
+
+    /* Bouton devis */
+    .btn-devis {
+      width: 100%;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--white);
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      padding: 15px;
+      cursor: pointer;
+      transition: background .2s, transform .18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-devis:hover { background: #a83200; transform: translateY(-2px); }
+
+    /* Info card */
+    .info-card {
+      background: rgba(205,62,0,.05);
+      border: 1px solid rgba(205,62,0,.15);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .info-card__title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .info-card__text {
+      font-size: 12px;
+      font-weight: 300;
+      line-height: 1.7;
+      color: rgba(26,26,26,.6);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .config-wrap {
+        grid-template-columns: 1fr;
+      }
+      .ctrl-panel {
+        order: -1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <a href="gamme.html" class="logo">
+      <img src="img/logo-kobo.png" alt="Kōbō Design"/>
+    </a>
+    <div class="header-badge">Aperçu local</div>
+  </header>
+
+  <!-- PAGE -->
+  <div class="page">
+    <div class="page__header">
+      <p class="page__eyebrow">Salle de bain · Sur-mesure</p>
+      <h1 class="page__title">Vasque <em>composée</em></h1>
+      <p class="page__sub">Ajustez les dimensions de votre ensemble vasque + meuble en temps réel.</p>
+    </div>
+
+    <div class="config-wrap">
+
+      <!-- VIEWER -->
+      <div class="viewer-wrap">
+        <canvas id="composedCanvas"></canvas>
+
+        <!-- Loader -->
+        <div class="viewer-loader" id="viewerLoader">
+          <div class="loader-spinner"></div>
+          <p class="loader-text">Chargement du modèle…</p>
+        </div>
+
+        <!-- Dimensions badge -->
+        <div class="dims-badge" id="dimsBadge">
+          <span>Dimensions</span>
+          <div id="dimsText">L — cm &nbsp;·&nbsp; l — cm &nbsp;·&nbsp; H — cm</div>
+        </div>
+
+        <!-- Hint -->
+        <div class="viewer-hint">Cliquer-glisser pour pivoter</div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="ctrl-panel">
+
+        <!-- Longueur -->
+        <div class="ctrl-card">
+          <div class="ctrl-card__title">Dimensions</div>
+
+          <!-- Longueur -->
+          <div class="slider-group">
+            <div class="slider-label">
+              <div>
+                <span class="slider-label__icon">↔</span>
+                <span class="slider-label__name">Longueur</span>
+              </div>
+              <div>
+                <span class="slider-label__value" id="valLongueur">100</span>
+                <span class="slider-label__unit">cm</span>
+              </div>
+            </div>
+            <div class="slider-track-wrap">
+              <div class="slider-track-fill" id="fillLongueur" style="width:50%"></div>
+              <input type="range" id="sliderLongueur"
+                     min="60" max="200" step="1" value="100"
+                     oninput="onSliderChange()"/>
+            </div>
+            <div class="slider-minmax"><span>60 cm</span><span>200 cm</span></div>
+          </div>
+
+          <div class="ctrl-divider"></div>
+
+          <!-- Largeur -->
+          <div class="slider-group" style="margin-top:20px">
+            <div class="slider-label">
+              <div>
+                <span class="slider-label__icon">↕</span>
+                <span class="slider-label__name">Largeur (profondeur)</span>
+              </div>
+              <div>
+                <span class="slider-label__value" id="valLargeur">50</span>
+                <span class="slider-label__unit">cm</span>
+              </div>
+            </div>
+            <div class="slider-track-wrap">
+              <div class="slider-track-fill" id="fillLargeur" style="width:50%"></div>
+              <input type="range" id="sliderLargeur"
+                     min="35" max="80" step="1" value="50"
+                     oninput="onSliderChange()"/>
+            </div>
+            <div class="slider-minmax"><span>35 cm</span><span>80 cm</span></div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="ctrl-card">
+          <div class="ctrl-card__title">Actions</div>
+          <button class="btn-reset" onclick="resetDimensions()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Réinitialiser
+          </button>
+          <div style="height:12px"></div>
+          <button class="btn-devis" onclick="window.location.href='contact.html'">
+            Demander un devis
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+
+        <!-- Info -->
+        <div class="info-card">
+          <div class="info-card__title">Fabrication sur-mesure</div>
+          <p class="info-card__text">
+            Toutes les dimensions sont ajustables dans notre atelier à Bordeaux.
+            Ce configurateur donne un aperçu visuel — les cotes finales sont validées avec vous lors du devis.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- THREE.JS -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <script>
+  // ─────────────────────────────────────────────
+  //  CONFIG
+  // ─────────────────────────────────────────────
+  var GLB_PATH = 'models/sdb/essai_compose.glb';
+
+  // Plages de dimensions (cm) pour chaque axe
+  // Longueur → axe X du modèle
+  // Largeur  → axe Z du modèle (profondeur)
+  var LONGUEUR_MIN = 60,  LONGUEUR_MAX = 200, LONGUEUR_DEFAULT = 100;
+  var LARGEUR_MIN  = 35,  LARGEUR_MAX  = 80,  LARGEUR_DEFAULT  = 50;
+
+  // ─────────────────────────────────────────────
+  //  THREE.JS setup
+  // ─────────────────────────────────────────────
+  var canvas  = document.getElementById('composedCanvas');
+  var wrapper = canvas.parentElement;
+
+  var scene, camera, renderer, model;
+  var baseScaleX = 1, baseScaleY = 1, baseScaleZ = 1; // échelle de normalisation
+  var isDragging = false, prevX = 0, prevY = 0;
+  var rotX = 0, rotY = 0.4; // léger angle initial
+
+  function initScene() {
+    var W = wrapper.clientWidth  || 800;
+    var H = wrapper.clientHeight || 600;
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xFAF7F2);
+
+    camera = new THREE.PerspectiveCamera(42, W / H, 0.01, 200);
+    camera.position.set(0, 0.5, 4);
+
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.9;
+    try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
+    catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
+
+    // Lumières
+    var ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambient);
+
+    var key = new THREE.DirectionalLight(0xffffff, 0.9);
+    key.position.set(4, 6, 4);
+    scene.add(key);
+
+    var fill = new THREE.DirectionalLight(0xfffde8, 0.35);
+    fill.position.set(-4, 2, -3);
+    scene.add(fill);
+
+    var back = new THREE.DirectionalLight(0xffffff, 0.2);
+    back.position.set(0, -3, -4);
+    scene.add(back);
+
+    // Interactions souris
+    canvas.addEventListener('mousedown', function(e) {
+      isDragging = true;
+      prevX = e.clientX;
+      prevY = e.clientY;
+    });
+    window.addEventListener('mouseup', function() { isDragging = false; });
+    window.addEventListener('mousemove', function(e) {
+      if (!isDragging || !model) return;
+      rotY += (e.clientX - prevX) * 0.008;
+      rotX = Math.max(-0.45, Math.min(0.45, rotX + (e.clientY - prevY) * 0.004));
+      model.rotation.set(rotX, rotY, 0);
+      prevX = e.clientX;
+      prevY = e.clientY;
+    });
+
+    // Touch
+    canvas.addEventListener('touchstart', function(e) {
+      isDragging = true;
+      prevX = e.touches[0].clientX;
+    }, { passive: true });
+    canvas.addEventListener('touchend', function() { isDragging = false; });
+    canvas.addEventListener('touchmove', function(e) {
+      if (!isDragging || !model) return;
+      rotY += (e.touches[0].clientX - prevX) * 0.008;
+      model.rotation.y = rotY;
+      prevX = e.touches[0].clientX;
+    }, { passive: true });
+
+    // Resize
+    window.addEventListener('resize', function() {
+      var W2 = wrapper.clientWidth;
+      var H2 = wrapper.clientHeight;
+      camera.aspect = W2 / H2;
+      camera.updateProjectionMatrix();
+      renderer.setSize(W2, H2);
+    });
+
+    // Boucle rendu
+    (function loop() {
+      requestAnimationFrame(loop);
+      if (renderer) renderer.render(scene, camera);
+    })();
+
+    // Charger le GLB
+    loadModel();
+  }
+
+  function loadModel() {
+    var loader = new THREE.GLTFLoader();
+    loader.load(
+      GLB_PATH,
+      function(gltf) {
+        model = gltf.scene;
+
+        // Normaliser : centrer + mettre à l'échelle pour remplir la vue
+        var box    = new THREE.Box3().setFromObject(model);
+        var center = box.getCenter(new THREE.Vector3());
+        var size   = box.getSize(new THREE.Vector3());
+
+        // Stocker les dimensions réelles du modèle pour le scaling relatif
+        // On va référencer LONGUEUR_DEFAULT → size.x du modèle original
+        var maxDim = Math.max(size.x, size.y, size.z, 0.001);
+        var normScale = 2.2 / maxDim;
+
+        // Positions de base (centrées)
+        model.position.set(
+          -center.x * normScale,
+          -center.y * normScale,
+          -center.z * normScale
+        );
+        model.scale.set(normScale, normScale, normScale);
+
+        // Mémoriser l'échelle de base pour pouvoir modifier X et Z indépendamment
+        baseScaleX = normScale;
+        baseScaleY = normScale;
+        baseScaleZ = normScale;
+
+        // Rotation initiale légère
+        model.rotation.set(rotX, rotY, 0);
+
+        scene.add(model);
+
+        // Cacher loader
+        var loader = document.getElementById('viewerLoader');
+        if (loader) loader.classList.add('hidden');
+
+        // Mise à jour initiale de l'affichage
+        updateDimsBadge();
+      },
+      undefined,
+      function(err) {
+        console.error('[GLB] Erreur chargement:', err);
+        var loaderEl = document.getElementById('viewerLoader');
+        if (loaderEl) {
+          loaderEl.querySelector('.loader-text').textContent = 'Erreur de chargement du modèle.';
+        }
+      }
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  //  SLIDERS → SCALING
+  // ─────────────────────────────────────────────
+  function onSliderChange() {
+    var slL = document.getElementById('sliderLongueur');
+    var slW = document.getElementById('sliderLargeur');
+
+    var longueur = parseInt(slL.value, 10); // cm
+    var largeur  = parseInt(slW.value, 10); // cm
+
+    // Afficher les valeurs
+    document.getElementById('valLongueur').textContent = longueur;
+    document.getElementById('valLargeur').textContent  = largeur;
+
+    // Mettre à jour les fills des sliders
+    updateSliderFill('fillLongueur', slL, LONGUEUR_MIN, LONGUEUR_MAX);
+    updateSliderFill('fillLargeur',  slW, LARGEUR_MIN,  LARGEUR_MAX);
+
+    // Appliquer le scaling au modèle
+    if (!model) return;
+
+    var ratioX = longueur / LONGUEUR_DEFAULT;   // ratio longueur
+    var ratioZ = largeur  / LARGEUR_DEFAULT;    // ratio largeur/profondeur
+    // Y reste inchangé (hauteur fixe)
+
+    model.scale.set(
+      baseScaleX * ratioX,
+      baseScaleY,          // hauteur fixe
+      baseScaleZ * ratioZ
+    );
+
+    updateDimsBadge();
+  }
+
+  function updateSliderFill(fillId, input, min, max) {
+    var pct = ((parseFloat(input.value) - min) / (max - min)) * 100;
+    document.getElementById(fillId).style.width = pct + '%';
+  }
+
+  function updateDimsBadge() {
+    var longueur = parseInt(document.getElementById('sliderLongueur').value, 10);
+    var largeur  = parseInt(document.getElementById('sliderLargeur').value, 10);
+    // Hauteur fixe (on l'affiche comme une valeur fixe à définir selon le modèle)
+    document.getElementById('dimsText').textContent =
+      'L ' + longueur + ' cm  ·  l ' + largeur + ' cm  ·  H — cm';
+  }
+
+  function resetDimensions() {
+    document.getElementById('sliderLongueur').value = LONGUEUR_DEFAULT;
+    document.getElementById('sliderLargeur').value  = LARGEUR_DEFAULT;
+    onSliderChange();
+  }
+
+  // ─────────────────────────────────────────────
+  //  INIT
+  // ─────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les fills des sliders
+    updateSliderFill('fillLongueur',
+      document.getElementById('sliderLongueur'), LONGUEUR_MIN, LONGUEUR_MAX);
+    updateSliderFill('fillLargeur',
+      document.getElementById('sliderLargeur'), LARGEUR_MIN, LARGEUR_MAX);
+
+    // Lancer Three.js
+    initScene();
+  });
+  </script>
+
+</body>
+</html>
