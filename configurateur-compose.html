@@ -216,14 +216,28 @@
 
         <div class="slider-group">
           <div class="slider-row">
-            <span class="slider-name">⊙ Taille</span>
-            <span><span class="slider-val" id="valVT">100</span><span class="slider-unit">%</span></span>
+            <span class="slider-name">↔ Longueur</span>
+            <span><span class="slider-val" id="valVL">60</span><span class="slider-unit">cm</span></span>
           </div>
           <div class="track-wrap">
-            <div class="track-fill" id="fillVT"></div>
-            <input type="range" id="slVT" min="60" max="150" step="1" value="100" oninput="onSlider()"/>
+            <div class="track-fill" id="fillVL"></div>
+            <input type="range" id="slVL" min="30" max="120" step="1" value="60" oninput="onSlider()"/>
           </div>
-          <div class="slider-limits"><span>60 %</span><span>150 %</span></div>
+          <div class="slider-limits"><span>30 cm</span><span>120 cm</span></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="slider-group" style="margin-top:14px">
+          <div class="slider-row">
+            <span class="slider-name">↕ Largeur</span>
+            <span><span class="slider-val" id="valVW">40</span><span class="slider-unit">cm</span></span>
+          </div>
+          <div class="track-wrap">
+            <div class="track-fill" id="fillVW"></div>
+            <input type="range" id="slVW" min="25" max="70" step="1" value="40" oninput="onSlider()"/>
+          </div>
+          <div class="slider-limits"><span>25 cm</span><span>70 cm</span></div>
         </div>
       </div>
 
@@ -262,12 +276,10 @@
 var GLB = 'models/sdb/essai_compose.glb';
 
 // Valeurs par défaut (correspondent au modèle tel qu'exporté)
-var ML_DEF = 120, ML_MIN = 80,  ML_MAX = 240;
-var MP_DEF = 50,  MP_MIN = 35,  MP_MAX = 75;
-var VT_DEF = 100, VT_MIN = 60,  VT_MAX = 150;
-
-// Noms des nœuds correspondant aux vasques dans le GLB
-var VASQUE_NAMES = ['Decor_Linha_Argan1', 'Decor_Linha_Argan2'];
+var ML_DEF = 120, ML_MIN = 80,  ML_MAX = 240;  // meuble longueur
+var MP_DEF = 50,  MP_MIN = 35,  MP_MAX = 75;   // meuble profondeur
+var VL_DEF = 60,  VL_MIN = 30,  VL_MAX = 120;  // vasque longueur
+var VW_DEF = 40,  VW_MIN = 25,  VW_MAX = 70;   // vasque largeur
 
 // ─────────────────────────────────────────────────────────
 //  THREE.JS
@@ -441,43 +453,43 @@ function loadModel() {
 function onSlider() {
   var ml = parseInt(document.getElementById('slML').value, 10);
   var mp = parseInt(document.getElementById('slMP').value, 10);
-  var vt = parseInt(document.getElementById('slVT').value, 10);
+  var vl = parseInt(document.getElementById('slVL').value, 10);
+  var vw = parseInt(document.getElementById('slVW').value, 10);
 
   // Affichage valeurs
   document.getElementById('valML').textContent = ml;
   document.getElementById('valMP').textContent = mp;
-  document.getElementById('valVT').textContent = vt;
+  document.getElementById('valVL').textContent = vl;
+  document.getElementById('valVW').textContent = vw;
 
   // Fills
   setFill('fillML', ml, ML_MIN, ML_MAX);
   setFill('fillMP', mp, MP_MIN, MP_MAX);
-  setFill('fillVT', vt, VT_MIN, VT_MAX);
+  setFill('fillVL', vl, VL_MIN, VL_MAX);
+  setFill('fillVW', vw, VW_MIN, VW_MAX);
 
   // Appliquer au modèle
   if (!meubleGroup || !vasqueGroup) return;
 
-  var ratioX = ml / ML_DEF;   // longueur meuble
-  var ratioZ = mp / MP_DEF;   // profondeur meuble
-  var ratioV = vt / VT_DEF;   // taille vasque
-
-  // Meuble (bas) : s'étire en X (longueur) et Z (profondeur), hauteur fixe
+  // Meuble (bas) : longueur sur X, profondeur sur Z, hauteur fixe
   meubleGroup.scale.set(
-    baseScaleMe * ratioX,
+    baseScaleMe * (ml / ML_DEF),
     baseScaleMe,
-    baseScaleMe * ratioZ
+    baseScaleMe * (mp / MP_DEF)
   );
 
-  // Vasque (haut) : scale uniforme, indépendant du meuble
+  // Vasque (haut) : longueur sur X, largeur sur Z, hauteur fixe
   vasqueGroup.scale.set(
-    baseScaleVa * ratioV,
-    baseScaleVa * ratioV,
-    baseScaleVa * ratioV
+    baseScaleVa * (vl / VL_DEF),
+    baseScaleVa,
+    baseScaleVa * (vw / VW_DEF)
   );
 
   // Badge dimensions
   document.getElementById('dimsMetxt').textContent =
     'L ' + ml + ' cm · l ' + mp + ' cm';
-  document.getElementById('dimsVatxt').textContent = vt + ' %';
+  document.getElementById('dimsVatxt').textContent =
+    'L ' + vl + ' cm · l ' + vw + ' cm';
 }
 
 function setFill(id, val, min, max) {
@@ -488,7 +500,8 @@ function setFill(id, val, min, max) {
 function resetAll() {
   document.getElementById('slML').value = ML_DEF;
   document.getElementById('slMP').value = MP_DEF;
-  document.getElementById('slVT').value = VT_DEF;
+  document.getElementById('slVL').value = VL_DEF;
+  document.getElementById('slVW').value = VW_DEF;
   onSlider();
 }
 
@@ -498,7 +511,8 @@ function resetAll() {
 window.addEventListener('DOMContentLoaded', function() {
   setFill('fillML', ML_DEF, ML_MIN, ML_MAX);
   setFill('fillMP', MP_DEF, MP_MIN, MP_MAX);
-  setFill('fillVT', VT_DEF, VT_MIN, VT_MAX);
+  setFill('fillVL', VL_DEF, VL_MIN, VL_MAX);
+  setFill('fillVW', VW_DEF, VW_MIN, VW_MAX);
   initScene();
 });
 </script>
