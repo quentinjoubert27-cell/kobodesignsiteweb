@@ -238,7 +238,9 @@ var GLB = 'models/sdb/essai_compose.glb';
 var ML_DEF = 120, ML_MIN = 80, ML_MAX = 240;  // longueur
 var MP_DEF = 50,  MP_MIN = 35, MP_MAX = 75;   // profondeur
 
-// Nœuds à taille FIXE (jamais scalés) — identifiés via analyse du GLB
+// Nœuds à taille FIXE — identifiés via analyse du GLB
+// Ces nœuds restent dans ensembleGroup pour suivre le plan de travail en position,
+// mais reçoivent une compensation d'échelle inverse pour ne pas changer de taille.
 var FIXED_NAMES = ['Decor_Linha_Argan1', 'Decor_Linha_Argan2', // vasques
                    'Glas_28_1', 'Robinet_mural2'];             // robinets
 
@@ -249,9 +251,9 @@ var canvas  = document.getElementById('composedCanvas');
 var wrapper = canvas.parentElement;
 
 var scene, camera, renderer;
-var rootModel    = null;
-var ensembleGroup = null;  // meuble + plan de travail → scale avec les sliders
-var fixedGroup    = null;  // vasques + robinets → jamais scalé
+var rootModel     = null;
+var ensembleGroup = null;  // tout le modèle → scale avec les sliders
+var fixedNodes    = [];    // vasques + robinets : suivent en position, taille compensée
 var baseScale = 1;
 
 var isDragging = false, prevX = 0, prevY = 0;
@@ -348,24 +350,23 @@ function loadModel() {
       scene.add(rootModel);
       rootModel.add(raw);
 
-      // Créer les deux groupes
+      // Tout le modèle → ensembleGroup (meuble + plan de travail + vasques + robinets)
       ensembleGroup = new THREE.Group();
-      fixedGroup    = new THREE.Group();
       raw.add(ensembleGroup);
-      raw.add(fixedGroup);
 
-      // 1. Tout le modèle → ensembleGroup
       var modelRoot = raw.children[0] || raw;
       Array.from(modelRoot.children).forEach(function(child) {
         ensembleGroup.attach(child);
       });
 
-      // 2. Extraire vasques + robinets → fixedGroup (jamais scalés)
-      // getObjectByName parcourt tout le sous-arbre → fonctionne peu importe
-      // la profondeur d'imbrication dans le GLB.
+      // Mémoriser les nœuds à taille fixe (vasques + robinets).
+      // Ils restent dans ensembleGroup → leur POSITION suit le plan de travail
+      // quand il s'étire. On leur applique une compensation d'échelle inverse
+      // en onSlider pour qu'ils ne changent PAS de taille.
+      fixedNodes = [];
       FIXED_NAMES.forEach(function(name) {
         var obj = raw.getObjectByName(name);
-        if (obj) fixedGroup.attach(obj);
+        if (obj) fixedNodes.push(obj);
       });
 
       baseScale = 1;
@@ -405,13 +406,17 @@ function onSlider() {
 
   if (!ensembleGroup) return;
 
-  // Meuble + plan de travail scalent ensemble
-  // Vasques et robinets (fixedGroup) restent intouchables
-  ensembleGroup.scale.set(
-    baseScale * (ml / ML_DEF),
-    baseScale,
-    baseScale * (mp / MP_DEF)
-  );
+  var scaleX = baseScale * (ml / ML_DEF);
+  var scaleZ = baseScale * (mp / MP_DEF);
+
+  // Tout le modèle s'étire (meuble + plan de travail + vasques en position)
+  ensembleGroup.scale.set(scaleX, baseScale, scaleZ);
+
+  // Compensation inverse sur vasques + robinets :
+  // leur position suit le plan de travail, mais leur taille reste identique.
+  fixedNodes.forEach(function(node) {
+    node.scale.set(1 / scaleX, 1, 1 / scaleZ);
+  });
 
   document.getElementById('dimsTxt').textContent =
     'L ' + ml + ' cm · p ' + mp + ' cm';
