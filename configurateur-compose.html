@@ -161,10 +161,10 @@
 
       <div class="dims-badge" id="dimsBadge" style="display:none">
         <span class="dims-badge__label">Meuble</span>
-        <span id="dimsMetxt">L — cm · l — cm</span>
+        <span id="dimsMetxt">L — cm · p — cm</span>
         <br>
-        <span class="dims-badge__label" style="margin-top:6px">Vasque</span>
-        <span id="dimsVatxt">— %</span>
+        <span class="dims-badge__label" style="margin-top:6px">Plan de travail</span>
+        <span id="dimsVatxt">L — cm · l — cm</span>
       </div>
 
       <div class="viewer-hint">Cliquer-glisser pour pivoter</div>
@@ -207,23 +207,23 @@
         </div>
       </div>
 
-      <!-- Vasque -->
+      <!-- Plan de travail -->
       <div class="ctrl-card">
         <div class="ctrl-card__label">
           <span class="ctrl-card__label-dot dot-vasque"></span>
-          Vasques
+          Plan de travail
         </div>
 
         <div class="slider-group">
           <div class="slider-row">
             <span class="slider-name">↔ Longueur</span>
-            <span><span class="slider-val" id="valVL">60</span><span class="slider-unit">cm</span></span>
+            <span><span class="slider-val" id="valPL">120</span><span class="slider-unit">cm</span></span>
           </div>
           <div class="track-wrap">
-            <div class="track-fill" id="fillVL"></div>
-            <input type="range" id="slVL" min="30" max="120" step="1" value="60" oninput="onSlider()"/>
+            <div class="track-fill" id="fillPL"></div>
+            <input type="range" id="slPL" min="80" max="240" step="1" value="120" oninput="onSlider()"/>
           </div>
-          <div class="slider-limits"><span>30 cm</span><span>120 cm</span></div>
+          <div class="slider-limits"><span>80 cm</span><span>240 cm</span></div>
         </div>
 
         <div class="divider"></div>
@@ -231,13 +231,13 @@
         <div class="slider-group" style="margin-top:14px">
           <div class="slider-row">
             <span class="slider-name">↕ Largeur</span>
-            <span><span class="slider-val" id="valVW">40</span><span class="slider-unit">cm</span></span>
+            <span><span class="slider-val" id="valPW">50</span><span class="slider-unit">cm</span></span>
           </div>
           <div class="track-wrap">
-            <div class="track-fill" id="fillVW"></div>
-            <input type="range" id="slVW" min="25" max="70" step="1" value="40" oninput="onSlider()"/>
+            <div class="track-fill" id="fillPW"></div>
+            <input type="range" id="slPW" min="35" max="75" step="1" value="50" oninput="onSlider()"/>
           </div>
-          <div class="slider-limits"><span>25 cm</span><span>70 cm</span></div>
+          <div class="slider-limits"><span>35 cm</span><span>75 cm</span></div>
         </div>
       </div>
 
@@ -278,8 +278,17 @@ var GLB = 'models/sdb/essai_compose.glb';
 // Valeurs par défaut (correspondent au modèle tel qu'exporté)
 var ML_DEF = 120, ML_MIN = 80,  ML_MAX = 240;  // meuble longueur
 var MP_DEF = 50,  MP_MIN = 35,  MP_MAX = 75;   // meuble profondeur
-var VL_DEF = 60,  VL_MIN = 30,  VL_MAX = 120;  // vasque longueur
-var VW_DEF = 40,  VW_MIN = 25,  VW_MAX = 70;   // vasque largeur
+var PL_DEF = 120, PL_MIN = 80,  PL_MAX = 240;  // plan de travail longueur
+var PW_DEF = 50,  PW_MIN = 35,  PW_MAX = 75;   // plan de travail largeur
+
+// Nœuds par groupe (identifiés via analyse de la structure GLB)
+// Plan de travail (haut, Ymid ≈ +0.01) : plaques de surface
+var PLAN_NAMES   = ['Group1','Group2','Group8','Group12'];
+// Meuble (bas, Ymid ≈ -0.23) : caissons, tiroirs, façades
+var MEUBLE_NAMES = ['Group3','Group4','Group5','Group6','Group7','Group9',
+                    'Group10','Group11','Group13','Group14','Group15',
+                    'Group16','Group17','Group18','Mesh75','Mesh75.001'];
+// Tout le reste → fixedGroup (vasques + robinets + déco, taille fixe)
 
 // ─────────────────────────────────────────────────────────
 //  THREE.JS
@@ -288,13 +297,11 @@ var canvas  = document.getElementById('composedCanvas');
 var wrapper = canvas.parentElement;
 
 var scene, camera, renderer;
-var rootModel    = null;  // groupe racine (centré + normalisé)
-var meubleGroup  = null;  // pièces du meuble
-var vasqueGroup  = null;  // pièces des vasques
-var robinetGroup = null;  // robinets (taille fixe, suivent les vasques en X)
-var robinetData  = [];    // [{obj, vasqueNode}]
-var baseScaleMe  = 1;
-var baseScaleVa  = 1;
+var rootModel  = null;   // groupe racine (centré + normalisé)
+var meubleGroup = null;  // pièces du meuble (bas)
+var planGroup   = null;  // plan de travail (haut, scalable)
+var baseScaleMe = 1;
+var baseScalePl = 1;
 
 var isDragging = false, prevX = 0, prevY = 0;
 var rotX = 0.08, rotY = 0.35; // légère rotation initiale
@@ -396,88 +403,33 @@ function loadModel() {
       scene.add(rootModel);
       rootModel.add(raw);
 
-      // ── Séparer vasques / meuble par position Y ────────
-      // La vasque = partie HAUTE du modèle (Y > seuil)
-      // Le meuble = partie BASSE du modèle (Y ≤ seuil)
-      meubleGroup = new THREE.Group();
-      vasqueGroup = new THREE.Group();
-      raw.add(meubleGroup);
-      raw.add(vasqueGroup);
-
-      // Calculer la boîte globale du modèle normalisé
-      var fullBox = new THREE.Box3().setFromObject(raw);
-      // Seuil à 63% depuis le bas → sépare haut/bas naturellement
-      var splitY = fullBox.min.y + (fullBox.max.y - fullBox.min.y) * 0.63;
-
-      // Nœud racine GLB (premier enfant de raw)
+      // ── Répartir les nœuds GLB dans leurs groupes ──────
+      // Nœud racine GLB = premier enfant de raw (le nœud "Model")
       var modelRoot = raw.children[0] || raw;
-
       var toProcess = Array.from(modelRoot.children);
+
+      // Créer les groupes APRÈS avoir capturé la liste des enfants
+      meubleGroup  = new THREE.Group();
+      planGroup    = new THREE.Group();
+      var fixedGroup = new THREE.Group();  // vasques + robinets + déco (taille fixe)
+      raw.add(meubleGroup);
+      raw.add(planGroup);
+      raw.add(fixedGroup);
+
       toProcess.forEach(function(child) {
-        var childBox = new THREE.Box3().setFromObject(child);
-        var centerY  = (childBox.min.y + childBox.max.y) / 2;
-        if (centerY > splitY) {
-          vasqueGroup.attach(child);  // partie haute = vasque
+        var name = child.name;
+        if (PLAN_NAMES.indexOf(name) !== -1) {
+          planGroup.attach(child);    // plan de travail → scalable
+        } else if (MEUBLE_NAMES.indexOf(name) !== -1) {
+          meubleGroup.attach(child);  // caisson meuble → scalable
         } else {
-          meubleGroup.attach(child);  // partie basse = meuble
-        }
-      });
-
-      // ── Extraire les robinets dans leur propre groupe ─────
-      // Ils gardent leur taille fixe et ne doivent pas scaler
-      // avec le meuble ou la vasque.
-      // Containers de robinets identifiés dans la structure GLB :
-      //   Glas_28_1     → contient Robinet_mural1
-      //   Robinet_mural2 → robinet direct
-      robinetGroup = new THREE.Group();
-      raw.add(robinetGroup);
-
-      // Extraire les robinets (containers identifiés via analyse du GLB)
-      var robinetContainers = ['Glas_28_1', 'Robinet_mural2'];
-      robinetContainers.forEach(function(name) {
-        var obj = raw.getObjectByName(name);
-        if (obj) robinetGroup.attach(obj);
-      });
-
-      // ── CRITIQUE : forcer la mise à jour de TOUTES les matrices
-      // avant de calculer les positions (aucun render n'a encore eu lieu)
-      raw.updateMatrix();
-      scene.updateMatrixWorld(true);
-
-      // Trouver les nœuds vasque pour le pairing
-      var vasqueNodes = [];
-      ['Decor_Linha_Argan1', 'Decor_Linha_Argan2'].forEach(function(name) {
-        var v = raw.getObjectByName(name);
-        if (v) vasqueNodes.push(v);
-      });
-
-      // Associer chaque robinet à la vasque la plus proche (par X)
-      // Comparaison en espace MONDE pour les deux (robinet + vasque) → distances fiables.
-      // En onSlider, on recalcule dynamiquement le centre monde de chaque vasque via Box3.
-      robinetData = [];
-      robinetGroup.children.slice().forEach(function(rob) {
-        var robBox     = new THREE.Box3().setFromObject(rob);
-        var robWorldCx = robBox.getCenter(new THREE.Vector3()).x; // monde X
-
-        var bestVasque = null, bestDist = Infinity;
-        vasqueNodes.forEach(function(v) {
-          var vBox     = new THREE.Box3().setFromObject(v);
-          var vWorldCx = vBox.getCenter(new THREE.Vector3()).x;   // monde X aussi
-          var d = Math.abs(robWorldCx - vWorldCx);                // même espace ✓
-          if (d < bestDist) {
-            bestDist   = d;
-            bestVasque = v;
-          }
-        });
-
-        if (bestVasque) {
-          robinetData.push({ obj: rob, vasqueNode: bestVasque });
+          fixedGroup.attach(child);   // vasques, robinets, déco → taille fixe
         }
       });
 
       // Mémoriser les échelles de base (= 1 après attach)
       baseScaleMe = 1;
-      baseScaleVa = 1;
+      baseScalePl = 1;
 
       // Cacher loader, afficher badge
       document.getElementById('viewerLoader').classList.add('hidden');
@@ -507,23 +459,23 @@ function loadModel() {
 function onSlider() {
   var ml = parseInt(document.getElementById('slML').value, 10);
   var mp = parseInt(document.getElementById('slMP').value, 10);
-  var vl = parseInt(document.getElementById('slVL').value, 10);
-  var vw = parseInt(document.getElementById('slVW').value, 10);
+  var pl = parseInt(document.getElementById('slPL').value, 10);
+  var pw = parseInt(document.getElementById('slPW').value, 10);
 
   // Affichage valeurs
   document.getElementById('valML').textContent = ml;
   document.getElementById('valMP').textContent = mp;
-  document.getElementById('valVL').textContent = vl;
-  document.getElementById('valVW').textContent = vw;
+  document.getElementById('valPL').textContent = pl;
+  document.getElementById('valPW').textContent = pw;
 
   // Fills
   setFill('fillML', ml, ML_MIN, ML_MAX);
   setFill('fillMP', mp, MP_MIN, MP_MAX);
-  setFill('fillVL', vl, VL_MIN, VL_MAX);
-  setFill('fillVW', vw, VW_MIN, VW_MAX);
+  setFill('fillPL', pl, PL_MIN, PL_MAX);
+  setFill('fillPW', pw, PW_MIN, PW_MAX);
 
   // Appliquer au modèle
-  if (!meubleGroup || !vasqueGroup) return;
+  if (!meubleGroup || !planGroup) return;
 
   // Meuble (bas) : longueur sur X, profondeur sur Z, hauteur fixe
   meubleGroup.scale.set(
@@ -532,34 +484,19 @@ function onSlider() {
     baseScaleMe * (mp / MP_DEF)
   );
 
-  // Vasque (haut) : longueur sur X, largeur sur Z, hauteur fixe
-  vasqueGroup.scale.set(
-    baseScaleVa * (vl / VL_DEF),
-    baseScaleVa,
-    baseScaleVa * (vw / VW_DEF)
+  // Plan de travail (haut) : longueur sur X, largeur sur Z, hauteur fixe
+  // Les vasques (Decor_Linha_Argan1/2) sont dans fixedGroup → taille inchangée
+  planGroup.scale.set(
+    baseScalePl * (pl / PL_DEF),
+    baseScalePl,
+    baseScalePl * (pw / PW_DEF)
   );
-
-  // ── Repositionner les robinets ─────────────────────────
-  // La rotation initiale de raw mélange X et Z → on ne peut pas
-  // utiliser une formule proportionnelle simple.
-  // On force la mise à jour des matrices APRÈS le scale, puis on
-  // recalcule le vrai centre monde de chaque vasque via Box3.
-  if (robinetGroup && robinetData.length) {
-    scene.updateMatrixWorld(true);
-    robinetData.forEach(function(rd) {
-      var vBox        = new THREE.Box3().setFromObject(rd.vasqueNode);
-      var vCenterWorld = vBox.getCenter(new THREE.Vector3());
-      // Convertir le centre monde → espace local de robinetGroup
-      // (matrices à jour ici → conversion exacte)
-      rd.obj.position.x = robinetGroup.worldToLocal(vCenterWorld.clone()).x;
-    });
-  }
 
   // Badge dimensions
   document.getElementById('dimsMetxt').textContent =
-    'L ' + ml + ' cm · l ' + mp + ' cm';
+    'L ' + ml + ' cm · p ' + mp + ' cm';
   document.getElementById('dimsVatxt').textContent =
-    'L ' + vl + ' cm · l ' + vw + ' cm';
+    'L ' + pl + ' cm · l ' + pw + ' cm';
 }
 
 function setFill(id, val, min, max) {
@@ -570,8 +507,8 @@ function setFill(id, val, min, max) {
 function resetAll() {
   document.getElementById('slML').value = ML_DEF;
   document.getElementById('slMP').value = MP_DEF;
-  document.getElementById('slVL').value = VL_DEF;
-  document.getElementById('slVW').value = VW_DEF;
+  document.getElementById('slPL').value = PL_DEF;
+  document.getElementById('slPW').value = PW_DEF;
   onSlider();
 }
 
@@ -581,8 +518,8 @@ function resetAll() {
 window.addEventListener('DOMContentLoaded', function() {
   setFill('fillML', ML_DEF, ML_MIN, ML_MAX);
   setFill('fillMP', MP_DEF, MP_MIN, MP_MAX);
-  setFill('fillVL', VL_DEF, VL_MIN, VL_MAX);
-  setFill('fillVW', VW_DEF, VW_MIN, VW_MAX);
+  setFill('fillPL', PL_DEF, PL_MIN, PL_MAX);
+  setFill('fillPW', PW_DEF, PW_MIN, PW_MAX);
   initScene();
 });
 </script>
