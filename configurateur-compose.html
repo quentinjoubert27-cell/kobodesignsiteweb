@@ -142,8 +142,8 @@
 
 <div class="page">
   <p class="page__eyebrow">Salle de bain · Sur-mesure</p>
-  <h1 class="page__title">Meuble <em>composé</em></h1>
-  <p class="page__sub">Ajustez les dimensions du meuble et du plan de travail. Les vasques restent à taille fixe.</p>
+  <h1 class="page__title">Vasque <em>Mathilde</em></h1>
+  <p class="page__sub">Ajustez les dimensions du meuble. La vasque reste à taille fixe.</p>
 
   <div class="config-wrap">
 
@@ -234,15 +234,14 @@
 // ─────────────────────────────────────────────────────────
 //  CONSTANTES
 // ─────────────────────────────────────────────────────────
-var GLB = 'models/sdb/essai_compose.glb';
-var ML_DEF = 120, ML_MIN = 80, ML_MAX = 240;  // longueur
+var GLB = 'models/sdb/vasquemathilde.glb';
+var ML_DEF = 120, ML_MIN = 60, ML_MAX = 200;  // longueur
 var MP_DEF = 50,  MP_MIN = 35, MP_MAX = 75;   // profondeur
 
-// Nœuds à taille FIXE — identifiés via analyse du GLB
-// Ces nœuds restent dans ensembleGroup pour suivre le plan de travail en position,
-// mais reçoivent une compensation d'échelle inverse pour ne pas changer de taille.
-var FIXED_NAMES = ['Decor_Linha_Argan1', 'Decor_Linha_Argan2', // vasques
-                   'Glas_28_1', 'Robinet_mural2'];             // robinets
+// Structure du GLB vasquemathilde :
+//   Model (racine) → Group1 (vasque, centre) + Group2 (panneau gauche) + Mesh3 (panneau droit)
+// Group1 reçoit une compensation d'échelle inverse → taille fixe, position suit le meuble.
+var FIXED_NAMES = ['Group1'];
 
 // ─────────────────────────────────────────────────────────
 //  THREE.JS
