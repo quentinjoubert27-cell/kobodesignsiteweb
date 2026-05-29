@@ -31,40 +31,33 @@
     .layout{display:grid;grid-template-columns:1fr 320px;gap:32px;align-items:start}
     @media(max-width:860px){.layout{grid-template-columns:1fr}}
 
-    /* Viewer */
     .viewer{position:relative;border-radius:16px;overflow:hidden;background:#FAF7F2;
-      border:1px solid rgba(26,26,26,.1);aspect-ratio:4/3;
-      box-shadow:0 8px 48px rgba(26,26,26,.1)}
+      border:1px solid rgba(26,26,26,.1);aspect-ratio:4/3;box-shadow:0 8px 48px rgba(26,26,26,.1)}
     canvas{width:100%;height:100%;display:block;cursor:grab}
     canvas:active{cursor:grabbing}
 
-    .loader{position:absolute;inset:0;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;background:#FAF7F2;
-      z-index:10;transition:opacity .5s}
+    .loader{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;background:#FAF7F2;z-index:10;transition:opacity .5s}
     .loader.hidden{opacity:0;pointer-events:none}
     .spin{width:40px;height:40px;border:3px solid rgba(205,62,0,.15);
-      border-top-color:var(--accent);border-radius:50%;
-      animation:spin .7s linear infinite;margin-bottom:16px}
+      border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:16px}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .loader-label{font-size:11px;font-weight:600;letter-spacing:.15em;
-      text-transform:uppercase;color:rgba(26,26,26,.4)}
+    .loader-lbl{font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(26,26,26,.4)}
     .loader-pct{font-size:10px;color:var(--accent);margin-top:6px;font-weight:700}
 
-    .hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
-      font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
-      color:rgba(26,26,26,.35);background:rgba(255,250,240,.85);
-      padding:6px 14px;border-radius:100px;pointer-events:none;white-space:nowrap}
+    .hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:10px;
+      font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.35);
+      background:rgba(255,250,240,.85);padding:6px 14px;border-radius:100px;
+      pointer-events:none;white-space:nowrap}
 
     .dims{position:absolute;top:16px;left:16px;font-size:11px;font-weight:600;
       background:rgba(255,250,240,.92);border:1px solid rgba(26,26,26,.1);
-      border-radius:8px;padding:8px 14px;pointer-events:none;line-height:1.9}
+      border-radius:8px;padding:8px 14px;pointer-events:none}
     .dims-lbl{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--accent);display:block}
+      color:var(--accent);display:block;margin-bottom:2px}
 
-    /* Panel */
     .panel{display:flex;flex-direction:column;gap:20px}
-    .card{background:var(--white);border:1px solid rgba(26,26,26,.09);
-      border-radius:12px;padding:22px}
+    .card{background:var(--white);border:1px solid rgba(26,26,26,.09);border-radius:12px;padding:22px}
     .card-title{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
       color:rgba(26,26,26,.4);margin-bottom:18px;display:flex;align-items:center;gap:8px}
     .dot{width:7px;height:7px;border-radius:50%;background:#1A1A1A;flex-shrink:0}
@@ -81,28 +74,24 @@
     input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;
       background:rgba(26,26,26,.1);outline:none;cursor:pointer}
     input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
-      border-radius:50%;background:var(--accent);box-shadow:0 2px 8px rgba(205,62,0,.35);
-      cursor:pointer;transition:transform .15s}
+      border-radius:50%;background:var(--accent);box-shadow:0 2px 8px rgba(205,62,0,.35);cursor:pointer;transition:transform .15s}
     input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
-    input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;
-      background:var(--accent);border:none;cursor:pointer}
+    input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);border:none;cursor:pointer}
     .sl-limits{display:flex;justify-content:space-between;font-size:9px;font-weight:600;
       letter-spacing:.1em;color:rgba(26,26,26,.28);text-transform:uppercase}
     .divider{height:1px;background:rgba(26,26,26,.07);margin:14px 0}
 
-    .btn{width:100%;font-family:var(--font);font-size:10px;font-weight:700;
-      letter-spacing:.18em;text-transform:uppercase;border-radius:8px;padding:13px;
-      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
+    .btn{width:100%;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:.18em;
+      text-transform:uppercase;border-radius:8px;padding:13px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
     .btn+.btn{margin-top:10px}
     .btn-out{background:none;color:rgba(26,26,26,.5);border:1.5px solid rgba(26,26,26,.12)}
     .btn-out:hover{border-color:var(--accent);color:var(--accent)}
     .btn-fill{background:var(--accent);color:#fff;border:none}
     .btn-fill:hover{background:#a83200;transform:translateY(-2px)}
 
-    .info{background:rgba(205,62,0,.05);border:1px solid rgba(205,62,0,.15);
-      border-radius:10px;padding:16px 18px}
-    .info-title{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--accent);margin-bottom:8px}
+    .info{background:rgba(205,62,0,.05);border:1px solid rgba(205,62,0,.15);border-radius:10px;padding:16px 18px}
+    .info-title{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
     .info-text{font-size:12px;font-weight:300;line-height:1.7;color:rgba(26,26,26,.6)}
   </style>
 </head>
@@ -116,29 +105,25 @@
 <div class="page">
   <p class="eyebrow">Salle de bain · Sur-mesure</p>
   <h1>Vasque <em>Mathilde</em></h1>
-  <p class="sub">Ajustez les dimensions du meuble. La vasque reste à taille fixe.</p>
+  <p class="sub">Ajustez la longueur du meuble. La vasque reste toujours à taille fixe.</p>
 
   <div class="layout">
 
     <div class="viewer">
       <canvas id="c"></canvas>
-
       <div class="loader" id="loader">
         <div class="spin"></div>
-        <p class="loader-label">Chargement…</p>
+        <p class="loader-lbl">Chargement…</p>
         <p class="loader-pct" id="pct"></p>
       </div>
-
       <div class="dims" id="dims" style="display:none">
-        <span class="dims-lbl">Meuble</span>
-        <span id="dimsTxt">— cm × — cm</span>
+        <span class="dims-lbl">Longueur meuble</span>
+        <span id="dimsTxt">— cm</span>
       </div>
-
       <p class="hint">Cliquer-glisser pour pivoter</p>
     </div>
 
     <div class="panel">
-
       <div class="card">
         <div class="card-title"><span class="dot"></span>Meuble</div>
 
@@ -149,23 +134,9 @@
           </div>
           <div class="track">
             <div class="fill" id="fL"></div>
-            <input type="range" id="sL" min="60" max="200" step="1" value="120" oninput="update()"/>
+            <input type="range" id="sL" min="60" max="240" step="1" value="120" oninput="update()"/>
           </div>
-          <div class="sl-limits"><span>60 cm</span><span>200 cm</span></div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="sl-group" style="margin-top:14px">
-          <div class="sl-row">
-            <span class="sl-name">↕ Profondeur</span>
-            <span><span class="sl-val" id="vP">50</span><span class="sl-unit">cm</span></span>
-          </div>
-          <div class="track">
-            <div class="fill" id="fP"></div>
-            <input type="range" id="sP" min="35" max="75" step="1" value="50" oninput="update()"/>
-          </div>
-          <div class="sl-limits"><span>35 cm</span><span>75 cm</span></div>
+          <div class="sl-limits"><span>60 cm</span><span>240 cm</span></div>
         </div>
       </div>
 
@@ -184,7 +155,6 @@
         <div class="info-title">Fabrication sur-mesure</div>
         <p class="info-text">Dimensions ajustables dans notre atelier à Bordeaux. Cet aperçu est indicatif — les cotes finales sont validées avec vous lors du devis.</p>
       </div>
-
     </div>
   </div>
 </div>
@@ -192,38 +162,43 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-// ── Constantes ──────────────────────────────────────────────────────────────
-var GLB    = 'models/sdb/vasquemathilde.glb';
-var L_DEF  = 120, L_MIN = 60,  L_MAX = 200;   // longueur meuble (cm)
-var P_DEF  = 50,  P_MIN = 35,  P_MAX = 75;    // profondeur meuble (cm)
+// ─── Constantes ──────────────────────────────────────────────────────────────
+var GLB   = 'models/sdb/vasquemathilde.glb';
+var L_DEF = 120, L_MIN = 60, L_MAX = 240;
 
-// Nœud de la vasque dans le GLB (taille fixe, position suit le meuble)
-var VASQUE_NAME = 'Group1';
+// ─── Nœuds GLB ───────────────────────────────────────────────────────────────
+// Structure du fichier (extraite via analyse) :
+//   Model (racine) → Group1 (vasque centre) + Group2 (panneau gauche) + Mesh3 (panneau droit)
+// Les 3 blocs occupent X : [0–0.25], [0.25–0.75], [0.75–1] en espace Model local
+// → le bloc central (vasque) ne change JAMAIS de taille
+// → les blocs latéraux s'étirent vers l'extérieur, bord intérieur toujours collé à la vasque
+var node1 = null;   // Group1 = vasque (jamais modifié)
+var node2 = null;   // Group2 = panneau gauche
+var node3 = null;   // Mesh3  = panneau droit
 
-// ── État Three.js ────────────────────────────────────────────────────────────
-var canvas   = document.getElementById('c');
-var wrapper  = canvas.parentElement;
+// Valeurs initiales stockées au chargement
+var sx0  = 0;        // scale.x initial des panneaux (= scale de "Model" dans le GLB)
+var vL   = 0;        // bord gauche de la vasque en espace raw local
+var vR   = 0;        // bord droit  de la vasque en espace raw local
+var g2mx = 0.25;     // géometrie max X de Group2 dans son espace local (depuis JSON du GLB)
+var m3mn = 0.75;     // géometrie min X de Mesh3  dans son espace local (depuis JSON du GLB)
+
+// ─── Three.js ────────────────────────────────────────────────────────────────
+var canvas  = document.getElementById('c');
+var wrapper = canvas.parentElement;
 var scene, camera, renderer, rootModel;
-
-// Groupes
-var meubleGroup = null;   // Group2 + Mesh3 → scalent avec les sliders
-var vasqueNode  = null;   // Group1 → taille fixe, position suit le meuble
-var vasqueInitScale = null; // échelle initiale de la vasque (après attach)
-
-// Rotation 3D (drag)
 var rotX = 0.15, rotY = 0.4;
-var dragging = false, prevX = 0, prevY = 0;
+var drag = false, px = 0, py = 0;
 
-// ── Initialisation scène ─────────────────────────────────────────────────────
 function initScene() {
-  var W = wrapper.clientWidth  || 800;
+  var W = wrapper.clientWidth || 800;
   var H = wrapper.clientHeight || 600;
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xFAF7F2);
 
   camera = new THREE.PerspectiveCamera(38, W / H, 0.01, 100);
-  camera.position.set(0, 0.4, 4.5);
+  camera.position.set(0, 0.3, 4.5);
 
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -233,7 +208,6 @@ function initScene() {
   try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
   catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
 
-  // Lumières
   scene.add(new THREE.AmbientLight(0xffffff, 0.65));
   var key = new THREE.DirectionalLight(0xffffff, 0.9);
   key.position.set(3, 6, 4); scene.add(key);
@@ -242,127 +216,115 @@ function initScene() {
   var back = new THREE.DirectionalLight(0xffffff, 0.15);
   back.position.set(0, -2, -5); scene.add(back);
 
-  // Drag souris
-  canvas.addEventListener('mousedown',  function(e){ dragging=true; prevX=e.clientX; prevY=e.clientY; });
-  window.addEventListener('mouseup',    function(){ dragging=false; });
+  canvas.addEventListener('mousedown',  function(e){ drag=true; px=e.clientX; py=e.clientY; });
+  window.addEventListener('mouseup',    function(){ drag=false; });
   window.addEventListener('mousemove',  function(e){
-    if (!dragging || !rootModel) return;
-    rotY += (e.clientX - prevX) * 0.007;
-    rotX  = Math.max(-0.4, Math.min(0.4, rotX + (e.clientY - prevY) * 0.004));
+    if (!drag || !rootModel) return;
+    rotY += (e.clientX - px) * 0.007;
+    rotX  = Math.max(-0.4, Math.min(0.4, rotX + (e.clientY - py) * 0.004));
     rootModel.rotation.set(rotX, rotY, 0);
-    prevX = e.clientX; prevY = e.clientY;
+    px = e.clientX; py = e.clientY;
   });
-
-  // Drag tactile
-  canvas.addEventListener('touchstart', function(e){ dragging=true; prevX=e.touches[0].clientX; }, {passive:true});
-  canvas.addEventListener('touchend',   function(){ dragging=false; });
+  canvas.addEventListener('touchstart', function(e){ drag=true; px=e.touches[0].clientX; }, {passive:true});
+  canvas.addEventListener('touchend',   function(){ drag=false; });
   canvas.addEventListener('touchmove',  function(e){
-    if (!dragging || !rootModel) return;
-    rotY += (e.touches[0].clientX - prevX) * 0.007;
+    if (!drag || !rootModel) return;
+    rotY += (e.touches[0].clientX - px) * 0.007;
     rootModel.rotation.y = rotY;
-    prevX = e.touches[0].clientX;
+    px = e.touches[0].clientX;
   }, {passive:true});
 
-  // Resize
   window.addEventListener('resize', function(){
     var w = wrapper.clientWidth, h = wrapper.clientHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
   });
 
-  // Boucle de rendu
   (function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); })();
-
   loadModel();
 }
 
-// ── Chargement du GLB ────────────────────────────────────────────────────────
 function loadModel() {
-  new THREE.GLTFLoader().load(
-    GLB,
-
+  new THREE.GLTFLoader().load(GLB,
     function onLoad(gltf) {
-      var raw = gltf.scene;   // nœud racine de la scène glTF
+      var raw = gltf.scene;
 
-      // 1. Normaliser : centrer + cadrer dans une boîte de taille 2.4
+      // 1. Normaliser raw (centre + cadrage, sans rotation — la rotation est sur rootModel)
       var box  = new THREE.Box3().setFromObject(raw);
       var size = box.getSize(new THREE.Vector3());
       var ctr  = box.getCenter(new THREE.Vector3());
       var norm = 2.4 / Math.max(size.x, size.y, size.z, 0.001);
       raw.scale.setScalar(norm);
       raw.position.set(-ctr.x * norm, -ctr.y * norm, -ctr.z * norm);
-      // NB : pas de rotation sur raw — la rotation de vue est portée par rootModel
 
-      // 2. rootModel = pivot de rotation 3D (drag)
+      // 2. rootModel = pivot de rotation 3D
       rootModel = new THREE.Group();
       rootModel.rotation.set(rotX, rotY, 0);
       scene.add(rootModel);
       rootModel.add(raw);
 
-      // 3. Créer meubleGroup (parts scalables) et y déplacer tous les enfants du GLB
-      meubleGroup = new THREE.Group();
-      raw.add(meubleGroup);
-
-      var modelNode = raw.children[0]; // nœud "Model" dans le GLB
-      // Copier la liste avant de modifier l'arbre
+      // 3. Récupérer le nœud racine du GLB ("Model") et rattacher ses enfants à raw
+      //    directement (raw.attach préserve le transform monde de chaque enfant)
+      var modelNode = raw.children[0];
       Array.from(modelNode.children).forEach(function(child) {
-        meubleGroup.attach(child);
+        raw.attach(child);
       });
 
-      // 4. Extraire la vasque (Group1) hors de meubleGroup → elle ne sera pas scalée
-      vasqueNode = raw.getObjectByName(VASQUE_NAME);
-      if (vasqueNode) {
-        // Mémoriser l'échelle initiale AVANT l'extraction
-        vasqueInitScale = vasqueNode.scale.clone();
-        // Reparenter directement sous raw (en préservant le transform monde)
-        raw.attach(vasqueNode);
-      }
+      // 4. Identifier les 3 blocs
+      node1 = raw.getObjectByName('Group1');  // vasque (centre)
+      node2 = raw.getObjectByName('Group2');  // panneau gauche
+      node3 = raw.getObjectByName('Mesh3');   // panneau droit
 
-      // 5. Afficher et lancer les sliders
+      // 5. Stocker les paramètres initiaux pour le scaling 3 parties
+      //    Après attach, chaque nœud a scale = Model.scale (5.579) et position.x = 0
+      //    car Model n'avait pas de translation.
+      //    Le bord gauche de la vasque en espace raw local = node1.scale.x * 0.25
+      //    Le bord droit  de la vasque en espace raw local = node1.scale.x * 0.75
+      sx0 = node2 ? node2.scale.x : 1;
+      vL  = node1 ? node1.scale.x * g2mx : 0;   // bord gauche vasque (= bord droit de node2 initial)
+      vR  = node1 ? node1.scale.x * m3mn : 0;   // bord droit  vasque (= bord gauche de node3 initial)
+
+      // 6. Prêt
       document.getElementById('loader').classList.add('hidden');
       document.getElementById('dims').style.display = '';
       update();
     },
-
     function onProgress(xhr) {
       if (xhr.lengthComputable) {
         var el = document.getElementById('pct');
         if (el) el.textContent = Math.round(xhr.loaded / xhr.total * 100) + '%';
       }
     },
-
     function onError(err) {
       console.error('GLB error:', err);
-      document.querySelector('.loader-label').textContent = 'Erreur de chargement';
+      document.querySelector('.loader-lbl').textContent = 'Erreur de chargement';
     }
   );
 }
 
-// ── Mise à jour des sliders ──────────────────────────────────────────────────
 function update() {
   var l = +document.getElementById('sL').value;
-  var p = +document.getElementById('sP').value;
 
-  // Affichage
   document.getElementById('vL').textContent = l;
-  document.getElementById('vP').textContent = p;
   setFill('fL', l, L_MIN, L_MAX);
-  setFill('fP', p, P_MIN, P_MAX);
-  document.getElementById('dimsTxt').textContent = l + ' cm × ' + p + ' cm';
+  document.getElementById('dimsTxt').textContent = l + ' cm';
 
-  if (!meubleGroup) return;
+  if (!node2 || !node3) return;
 
-  // Ratios par rapport aux valeurs par défaut
-  var rL = l / L_DEF;   // ratio longueur
-  var rP = p / P_DEF;   // ratio profondeur
+  var r = l / L_DEF;  // ratio longueur
 
-  // Le meuble (Group2 + Mesh3) scale librement
-  meubleGroup.scale.set(rL, 1, rP);
+  // ── Panneau gauche (node2 = Group2) ────────────────────────────────────────
+  // S'étire vers la gauche. Son bord DROIT reste toujours collé au bord gauche
+  // de la vasque (vL). Formule : position.x = vL - scale.x * g2mx
+  node2.scale.x    = sx0 * r;
+  node2.position.x = vL - node2.scale.x * g2mx;
 
-  // La vasque (Group1) est enfant direct de raw (pas de meubleGroup) donc
-  // elle ne reçoit pas le scale du meubleGroup → taille toujours fixe ✓
-  // Sa position est déjà centrée (X ≈ 0) et ne change pas.
+  // ── Panneau droit (node3 = Mesh3) ──────────────────────────────────────────
+  // S'étire vers la droite. Son bord GAUCHE reste toujours collé au bord droit
+  // de la vasque (vR). Formule : position.x = vR - scale.x * m3mn
+  node3.scale.x    = sx0 * r;
+  node3.position.x = vR - node3.scale.x * m3mn;
+
+  // node1 (vasque) : jamais modifié → taille et position inchangées ✓
 }
 
 function setFill(id, val, min, max) {
@@ -371,14 +333,11 @@ function setFill(id, val, min, max) {
 
 function reset() {
   document.getElementById('sL').value = L_DEF;
-  document.getElementById('sP').value = P_DEF;
   update();
 }
 
-// ── Démarrage ────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
   setFill('fL', L_DEF, L_MIN, L_MAX);
-  setFill('fP', P_DEF, P_MIN, P_MAX);
   initScene();
 });
 </script>
