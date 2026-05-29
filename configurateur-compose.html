@@ -4,263 +4,217 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="robots" content="noindex, nofollow"/>
-  <title>Configurateur Vasque Composée — Kobo Design</title>
+  <title>Configurateur Vasque Mathilde — Kobo Design</title>
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900&display=swap" rel="stylesheet"/>
-
   <style>
-    :root {
-      --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A;
-      --white:#FFFFFF; --font:'Poppins',sans-serif;
-      --ease:cubic-bezier(0.16,1,0.3,1);
-    }
+    :root{ --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A; --white:#fff; --font:'Poppins',sans-serif }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:var(--font);background:var(--bg);color:var(--dark);min-height:100vh}
 
-    /* HEADER */
     header{height:64px;display:flex;align-items:center;justify-content:space-between;
-      padding:0 clamp(20px,5vw,72px);background:var(--bg);
-      border-bottom:1px solid rgba(26,26,26,.08)}
-    .logo img{height:32px;width:auto;display:block}
+      padding:0 clamp(20px,5vw,72px);border-bottom:1px solid rgba(26,26,26,.08)}
+    .logo img{height:32px}
     .badge{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
-      color:var(--accent);background:rgba(205,62,0,.08);
-      border:1px solid rgba(205,62,0,.2);border-radius:100px;padding:6px 14px}
+      color:var(--accent);background:rgba(205,62,0,.08);border:1px solid rgba(205,62,0,.2);
+      border-radius:100px;padding:6px 14px}
 
-    /* PAGE */
     .page{max-width:1280px;margin:0 auto;padding:clamp(32px,5vw,64px) clamp(20px,5vw,72px)}
-    .page__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;
+    .eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;
       color:var(--accent);margin-bottom:12px}
-    .page__title{font-size:clamp(32px,5vw,60px);font-weight:900;letter-spacing:-.04em;
-      line-height:1;margin-bottom:10px}
-    .page__title em{font-style:italic;font-weight:300;color:rgba(26,26,26,.25)}
-    .page__sub{font-size:14px;font-weight:300;color:rgba(26,26,26,.5);margin-bottom:40px}
+    h1{font-size:clamp(32px,5vw,60px);font-weight:900;letter-spacing:-.04em;line-height:1;margin-bottom:8px}
+    h1 em{font-style:italic;font-weight:300;color:rgba(26,26,26,.25)}
+    .sub{font-size:14px;font-weight:300;color:rgba(26,26,26,.5);margin-bottom:40px}
 
-    /* GRID */
-    .config-wrap{display:grid;grid-template-columns:1fr 340px;gap:32px;align-items:start}
-    @media(max-width:900px){.config-wrap{grid-template-columns:1fr}}
+    .layout{display:grid;grid-template-columns:1fr 320px;gap:32px;align-items:start}
+    @media(max-width:860px){.layout{grid-template-columns:1fr}}
 
-    /* VIEWER */
-    .viewer-wrap{position:relative;border-radius:16px;overflow:hidden;
-      background:#FAF7F2;border:1px solid rgba(26,26,26,.1);
-      aspect-ratio:4/3;box-shadow:0 8px 48px rgba(26,26,26,.1)}
-    #composedCanvas{width:100%;height:100%;display:block;cursor:grab}
-    #composedCanvas:active{cursor:grabbing}
+    /* Viewer */
+    .viewer{position:relative;border-radius:16px;overflow:hidden;background:#FAF7F2;
+      border:1px solid rgba(26,26,26,.1);aspect-ratio:4/3;
+      box-shadow:0 8px 48px rgba(26,26,26,.1)}
+    canvas{width:100%;height:100%;display:block;cursor:grab}
+    canvas:active{cursor:grabbing}
 
-    .viewer-loader{position:absolute;inset:0;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;background:#FAF7F2;z-index:10;
-      transition:opacity .5s}
-    .viewer-loader.hidden{opacity:0;pointer-events:none}
-    .spinner{width:40px;height:40px;border:3px solid rgba(205,62,0,.15);
+    .loader{position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;background:#FAF7F2;
+      z-index:10;transition:opacity .5s}
+    .loader.hidden{opacity:0;pointer-events:none}
+    .spin{width:40px;height:40px;border:3px solid rgba(205,62,0,.15);
       border-top-color:var(--accent);border-radius:50%;
       animation:spin .7s linear infinite;margin-bottom:16px}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .loader-txt{font-size:11px;font-weight:600;letter-spacing:.15em;
+    .loader-label{font-size:11px;font-weight:600;letter-spacing:.15em;
       text-transform:uppercase;color:rgba(26,26,26,.4)}
-    .loader-progress{font-size:10px;color:var(--accent);margin-top:6px;font-weight:700}
+    .loader-pct{font-size:10px;color:var(--accent);margin-top:6px;font-weight:700}
 
-    .viewer-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+    .hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
       font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
       color:rgba(26,26,26,.35);background:rgba(255,250,240,.85);
       padding:6px 14px;border-radius:100px;pointer-events:none;white-space:nowrap}
 
-    .dims-badge{position:absolute;top:16px;left:16px;font-size:11px;font-weight:600;
-      color:var(--dark);background:rgba(255,250,240,.9);
-      border:1px solid rgba(26,26,26,.1);border-radius:8px;
-      padding:8px 14px;line-height:1.8;pointer-events:none}
-    .dims-badge__label{font-size:9px;font-weight:700;letter-spacing:.18em;
-      text-transform:uppercase;color:var(--accent);display:block;margin-bottom:2px}
+    .dims{position:absolute;top:16px;left:16px;font-size:11px;font-weight:600;
+      background:rgba(255,250,240,.92);border:1px solid rgba(26,26,26,.1);
+      border-radius:8px;padding:8px 14px;pointer-events:none;line-height:1.9}
+    .dims-lbl{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--accent);display:block}
 
-    /* PANEL */
-    .ctrl-panel{display:flex;flex-direction:column;gap:20px}
-
-    .ctrl-card{background:var(--white);border:1px solid rgba(26,26,26,.09);
+    /* Panel */
+    .panel{display:flex;flex-direction:column;gap:20px}
+    .card{background:var(--white);border:1px solid rgba(26,26,26,.09);
       border-radius:12px;padding:22px}
-    .ctrl-card__label{font-size:10px;font-weight:700;letter-spacing:.22em;
-      text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:18px;
-      display:flex;align-items:center;gap:8px}
-    .ctrl-card__label-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:#1A1A1A}
+    .card-title{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+      color:rgba(26,26,26,.4);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+    .dot{width:7px;height:7px;border-radius:50%;background:#1A1A1A;flex-shrink:0}
 
-    /* Slider */
-    .slider-group{margin-bottom:18px}
-    .slider-group:last-child{margin-bottom:0}
-    .slider-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
-    .slider-name{font-size:13px;font-weight:600;color:var(--dark)}
-    .slider-val{font-size:22px;font-weight:900;color:var(--accent);letter-spacing:-.03em;line-height:1}
-    .slider-unit{font-size:10px;font-weight:600;color:rgba(26,26,26,.35);margin-left:2px}
-
-    .track-wrap{position:relative;margin-bottom:5px}
-    .track-fill{position:absolute;top:50%;left:0;height:4px;border-radius:2px 0 0 2px;
-      background:var(--accent);transform:translateY(-50%);pointer-events:none;
-      transition:width .05s}
-    input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;
-      border-radius:2px;background:rgba(26,26,26,.1);outline:none;cursor:pointer;
-      position:relative}
+    .sl-group{margin-bottom:18px}
+    .sl-group:last-child{margin-bottom:0}
+    .sl-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+    .sl-name{font-size:13px;font-weight:600}
+    .sl-val{font-size:22px;font-weight:900;color:var(--accent);letter-spacing:-.03em;line-height:1}
+    .sl-unit{font-size:10px;font-weight:600;color:rgba(26,26,26,.35);margin-left:2px}
+    .track{position:relative;margin-bottom:5px}
+    .fill{position:absolute;top:50%;left:0;height:4px;border-radius:2px 0 0 2px;
+      background:var(--accent);transform:translateY(-50%);pointer-events:none}
+    input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;
+      background:rgba(26,26,26,.1);outline:none;cursor:pointer}
     input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
       border-radius:50%;background:var(--accent);box-shadow:0 2px 8px rgba(205,62,0,.35);
-      cursor:pointer;transition:transform .15s,box-shadow .15s}
-    input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2);
-      box-shadow:0 4px 16px rgba(205,62,0,.45)}
+      cursor:pointer;transition:transform .15s}
+    input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
     input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;
       background:var(--accent);border:none;cursor:pointer}
-    .slider-limits{display:flex;justify-content:space-between;font-size:9px;
-      font-weight:600;letter-spacing:.1em;color:rgba(26,26,26,.28);text-transform:uppercase}
-
+    .sl-limits{display:flex;justify-content:space-between;font-size:9px;font-weight:600;
+      letter-spacing:.1em;color:rgba(26,26,26,.28);text-transform:uppercase}
     .divider{height:1px;background:rgba(26,26,26,.07);margin:14px 0}
 
-    /* Boutons */
     .btn{width:100%;font-family:var(--font);font-size:10px;font-weight:700;
-      letter-spacing:.18em;text-transform:uppercase;border-radius:8px;
-      padding:13px;cursor:pointer;display:flex;align-items:center;
-      justify-content:center;gap:8px;transition:.2s}
-    .btn-outline{background:none;color:rgba(26,26,26,.5);
-      border:1.5px solid rgba(26,26,26,.12)}
-    .btn-outline:hover{border-color:var(--accent);color:var(--accent);
-      background:rgba(205,62,0,.03)}
-    .btn-solid{background:var(--accent);color:var(--white);border:none}
-    .btn-solid:hover{background:#a83200;transform:translateY(-2px)}
-    .btn + .btn{margin-top:10px}
+      letter-spacing:.18em;text-transform:uppercase;border-radius:8px;padding:13px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
+    .btn+.btn{margin-top:10px}
+    .btn-out{background:none;color:rgba(26,26,26,.5);border:1.5px solid rgba(26,26,26,.12)}
+    .btn-out:hover{border-color:var(--accent);color:var(--accent)}
+    .btn-fill{background:var(--accent);color:#fff;border:none}
+    .btn-fill:hover{background:#a83200;transform:translateY(-2px)}
 
-    /* Info */
-    .info-card{background:rgba(205,62,0,.05);border:1px solid rgba(205,62,0,.15);
+    .info{background:rgba(205,62,0,.05);border:1px solid rgba(205,62,0,.15);
       border-radius:10px;padding:16px 18px}
-    .info-card__title{font-size:10px;font-weight:700;letter-spacing:.18em;
-      text-transform:uppercase;color:var(--accent);margin-bottom:8px}
-    .info-card__text{font-size:12px;font-weight:300;line-height:1.7;
-      color:rgba(26,26,26,.6)}
+    .info-title{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--accent);margin-bottom:8px}
+    .info-text{font-size:12px;font-weight:300;line-height:1.7;color:rgba(26,26,26,.6)}
   </style>
 </head>
 <body>
 
 <header>
-  <a href="gamme.html" class="logo">
-    <img src="img/logo-kobo.png" alt="Kōbō Design"/>
-  </a>
-  <div class="badge">Aperçu interne</div>
+  <a href="gamme.html" class="logo"><img src="img/logo-kobo.png" alt="Kōbō Design"/></a>
+  <span class="badge">Aperçu interne</span>
 </header>
 
 <div class="page">
-  <p class="page__eyebrow">Salle de bain · Sur-mesure</p>
-  <h1 class="page__title">Vasque <em>Mathilde</em></h1>
-  <p class="page__sub">Ajustez les dimensions du meuble. La vasque reste à taille fixe.</p>
+  <p class="eyebrow">Salle de bain · Sur-mesure</p>
+  <h1>Vasque <em>Mathilde</em></h1>
+  <p class="sub">Ajustez les dimensions du meuble. La vasque reste à taille fixe.</p>
 
-  <div class="config-wrap">
+  <div class="layout">
 
-    <!-- VIEWER 3D -->
-    <div class="viewer-wrap">
-      <canvas id="composedCanvas"></canvas>
+    <div class="viewer">
+      <canvas id="c"></canvas>
 
-      <div class="viewer-loader" id="viewerLoader">
-        <div class="spinner"></div>
-        <p class="loader-txt">Chargement…</p>
-        <p class="loader-progress" id="loaderPct"></p>
+      <div class="loader" id="loader">
+        <div class="spin"></div>
+        <p class="loader-label">Chargement…</p>
+        <p class="loader-pct" id="pct"></p>
       </div>
 
-      <div class="dims-badge" id="dimsBadge" style="display:none">
-        <span class="dims-badge__label">Ensemble</span>
-        <span id="dimsTxt">L — cm · p — cm</span>
+      <div class="dims" id="dims" style="display:none">
+        <span class="dims-lbl">Meuble</span>
+        <span id="dimsTxt">— cm × — cm</span>
       </div>
 
-      <div class="viewer-hint">Cliquer-glisser pour pivoter</div>
+      <p class="hint">Cliquer-glisser pour pivoter</p>
     </div>
 
-    <!-- CONTRÔLES -->
-    <div class="ctrl-panel">
+    <div class="panel">
 
-      <!-- Dimensions -->
-      <div class="ctrl-card">
-        <div class="ctrl-card__label">
-          <span class="ctrl-card__label-dot"></span>
-          Meuble &amp; plan de travail
-        </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Meuble</div>
 
-        <div class="slider-group">
-          <div class="slider-row">
-            <span class="slider-name">↔ Longueur</span>
-            <span><span class="slider-val" id="valML">120</span><span class="slider-unit">cm</span></span>
+        <div class="sl-group">
+          <div class="sl-row">
+            <span class="sl-name">↔ Longueur</span>
+            <span><span class="sl-val" id="vL">120</span><span class="sl-unit">cm</span></span>
           </div>
-          <div class="track-wrap">
-            <div class="track-fill" id="fillML"></div>
-            <input type="range" id="slML" min="80" max="240" step="1" value="120" oninput="onSlider()"/>
+          <div class="track">
+            <div class="fill" id="fL"></div>
+            <input type="range" id="sL" min="60" max="200" step="1" value="120" oninput="update()"/>
           </div>
-          <div class="slider-limits"><span>80 cm</span><span>240 cm</span></div>
+          <div class="sl-limits"><span>60 cm</span><span>200 cm</span></div>
         </div>
 
         <div class="divider"></div>
 
-        <div class="slider-group" style="margin-top:14px">
-          <div class="slider-row">
-            <span class="slider-name">↕ Profondeur</span>
-            <span><span class="slider-val" id="valMP">50</span><span class="slider-unit">cm</span></span>
+        <div class="sl-group" style="margin-top:14px">
+          <div class="sl-row">
+            <span class="sl-name">↕ Profondeur</span>
+            <span><span class="sl-val" id="vP">50</span><span class="sl-unit">cm</span></span>
           </div>
-          <div class="track-wrap">
-            <div class="track-fill" id="fillMP"></div>
-            <input type="range" id="slMP" min="35" max="75" step="1" value="50" oninput="onSlider()"/>
+          <div class="track">
+            <div class="fill" id="fP"></div>
+            <input type="range" id="sP" min="35" max="75" step="1" value="50" oninput="update()"/>
           </div>
-          <div class="slider-limits"><span>35 cm</span><span>75 cm</span></div>
+          <div class="sl-limits"><span>35 cm</span><span>75 cm</span></div>
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="ctrl-card">
-        <button class="btn btn-outline" onclick="resetAll()">
+      <div class="card">
+        <button class="btn btn-out" onclick="reset()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           Réinitialiser
         </button>
-        <button class="btn btn-solid" onclick="window.location.href='contact.html'">
+        <button class="btn btn-fill" onclick="location.href='contact.html'">
           Demander un devis
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
       </div>
 
-      <div class="info-card">
-        <div class="info-card__title">Fabrication sur-mesure</div>
-        <p class="info-card__text">
-          Les dimensions sont ajustables dans notre atelier à Bordeaux.
-          Ce configurateur donne un aperçu visuel — les cotes finales sont validées avec vous lors du devis.
-        </p>
+      <div class="info">
+        <div class="info-title">Fabrication sur-mesure</div>
+        <p class="info-text">Dimensions ajustables dans notre atelier à Bordeaux. Cet aperçu est indicatif — les cotes finales sont validées avec vous lors du devis.</p>
       </div>
 
     </div>
   </div>
 </div>
 
-<!-- ── THREE.JS (même version que le reste du site) ── -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-
 <script>
-// ─────────────────────────────────────────────────────────
-//  CONSTANTES
-// ─────────────────────────────────────────────────────────
-var GLB = 'models/sdb/vasquemathilde.glb';
-var ML_DEF = 120, ML_MIN = 60, ML_MAX = 200;  // longueur
-var MP_DEF = 50,  MP_MIN = 35, MP_MAX = 75;   // profondeur
+// ── Constantes ──────────────────────────────────────────────────────────────
+var GLB    = 'models/sdb/vasquemathilde.glb';
+var L_DEF  = 120, L_MIN = 60,  L_MAX = 200;   // longueur meuble (cm)
+var P_DEF  = 50,  P_MIN = 35,  P_MAX = 75;    // profondeur meuble (cm)
 
-// Structure du GLB vasquemathilde :
-//   Model (racine) → Group1 (vasque, centre) + Group2 (panneau gauche) + Mesh3 (panneau droit)
-// Group1 reçoit une compensation d'échelle inverse → taille fixe, position suit le meuble.
-var FIXED_NAMES = ['Group1'];
+// Nœud de la vasque dans le GLB (taille fixe, position suit le meuble)
+var VASQUE_NAME = 'Group1';
 
-// ─────────────────────────────────────────────────────────
-//  THREE.JS
-// ─────────────────────────────────────────────────────────
-var canvas  = document.getElementById('composedCanvas');
-var wrapper = canvas.parentElement;
+// ── État Three.js ────────────────────────────────────────────────────────────
+var canvas   = document.getElementById('c');
+var wrapper  = canvas.parentElement;
+var scene, camera, renderer, rootModel;
 
-var scene, camera, renderer;
-var rootModel     = null;
-var ensembleGroup = null;  // tout le modèle → scale avec les sliders
-var fixedNodes    = [];    // vasques + robinets : suivent en position, taille compensée
-var baseScale = 1;
+// Groupes
+var meubleGroup = null;   // Group2 + Mesh3 → scalent avec les sliders
+var vasqueNode  = null;   // Group1 → taille fixe, position suit le meuble
+var vasqueInitScale = null; // échelle initiale de la vasque (après attach)
 
-var isDragging = false, prevX = 0, prevY = 0;
-var rotX = 0.08, rotY = 0.35;
+// Rotation 3D (drag)
+var rotX = 0.15, rotY = 0.4;
+var dragging = false, prevX = 0, prevY = 0;
 
-// ─────────────────────────────────────────────────────────
-//  INIT SCÈNE
-// ─────────────────────────────────────────────────────────
+// ── Initialisation scène ─────────────────────────────────────────────────────
 function initScene() {
   var W = wrapper.clientWidth  || 800;
   var H = wrapper.clientHeight || 600;
@@ -268,176 +222,163 @@ function initScene() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xFAF7F2);
 
-  camera = new THREE.PerspectiveCamera(40, W / H, 0.01, 200);
-  camera.position.set(0, 0.3, 4.5);
+  camera = new THREE.PerspectiveCamera(38, W / H, 0.01, 100);
+  camera.position.set(0, 0.4, 4.5);
 
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(W, H);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 0.95;
   try { renderer.outputColorSpace = THREE.SRGBColorSpace; }
   catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  // Lumières
+  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
   var key = new THREE.DirectionalLight(0xffffff, 0.9);
-  key.position.set(4, 6, 4); scene.add(key);
+  key.position.set(3, 6, 4); scene.add(key);
   var fill = new THREE.DirectionalLight(0xfffde8, 0.35);
   fill.position.set(-4, 2, -3); scene.add(fill);
-  var back = new THREE.DirectionalLight(0xffffff, 0.18);
-  back.position.set(0, -3, -4); scene.add(back);
+  var back = new THREE.DirectionalLight(0xffffff, 0.15);
+  back.position.set(0, -2, -5); scene.add(back);
 
-  canvas.addEventListener('mousedown', function(e) {
-    isDragging = true; prevX = e.clientX; prevY = e.clientY;
-  });
-  window.addEventListener('mouseup', function() { isDragging = false; });
-  window.addEventListener('mousemove', function(e) {
-    if (!isDragging || !rootModel) return;
-    rotY += (e.clientX - prevX) * 0.008;
-    rotX = Math.max(-0.45, Math.min(0.45, rotX + (e.clientY - prevY) * 0.004));
+  // Drag souris
+  canvas.addEventListener('mousedown',  function(e){ dragging=true; prevX=e.clientX; prevY=e.clientY; });
+  window.addEventListener('mouseup',    function(){ dragging=false; });
+  window.addEventListener('mousemove',  function(e){
+    if (!dragging || !rootModel) return;
+    rotY += (e.clientX - prevX) * 0.007;
+    rotX  = Math.max(-0.4, Math.min(0.4, rotX + (e.clientY - prevY) * 0.004));
     rootModel.rotation.set(rotX, rotY, 0);
     prevX = e.clientX; prevY = e.clientY;
   });
 
-  canvas.addEventListener('touchstart', function(e) {
-    isDragging = true; prevX = e.touches[0].clientX;
-  }, { passive: true });
-  canvas.addEventListener('touchend', function() { isDragging = false; });
-  canvas.addEventListener('touchmove', function(e) {
-    if (!isDragging || !rootModel) return;
-    rotY += (e.touches[0].clientX - prevX) * 0.008;
+  // Drag tactile
+  canvas.addEventListener('touchstart', function(e){ dragging=true; prevX=e.touches[0].clientX; }, {passive:true});
+  canvas.addEventListener('touchend',   function(){ dragging=false; });
+  canvas.addEventListener('touchmove',  function(e){
+    if (!dragging || !rootModel) return;
+    rotY += (e.touches[0].clientX - prevX) * 0.007;
     rootModel.rotation.y = rotY;
     prevX = e.touches[0].clientX;
-  }, { passive: true });
+  }, {passive:true});
 
-  window.addEventListener('resize', function() {
-    var W2 = wrapper.clientWidth, H2 = wrapper.clientHeight;
-    camera.aspect = W2 / H2;
+  // Resize
+  window.addEventListener('resize', function(){
+    var w = wrapper.clientWidth, h = wrapper.clientHeight;
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(W2, H2);
+    renderer.setSize(w, h);
   });
 
-  (function loop() {
-    requestAnimationFrame(loop);
-    renderer.render(scene, camera);
-  })();
+  // Boucle de rendu
+  (function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); })();
 
   loadModel();
 }
 
-// ─────────────────────────────────────────────────────────
-//  CHARGEMENT GLB
-// ─────────────────────────────────────────────────────────
+// ── Chargement du GLB ────────────────────────────────────────────────────────
 function loadModel() {
-  var loader = new THREE.GLTFLoader();
-  loader.load(
+  new THREE.GLTFLoader().load(
     GLB,
+
     function onLoad(gltf) {
-      var raw = gltf.scene;
+      var raw = gltf.scene;   // nœud racine de la scène glTF
 
-      // Normaliser la taille et centrer
-      var box    = new THREE.Box3().setFromObject(raw);
-      var center = box.getCenter(new THREE.Vector3());
-      var size   = box.getSize(new THREE.Vector3());
-      var normScale = 2.4 / Math.max(size.x, size.y, size.z, 0.001);
+      // 1. Normaliser : centrer + cadrer dans une boîte de taille 2.4
+      var box  = new THREE.Box3().setFromObject(raw);
+      var size = box.getSize(new THREE.Vector3());
+      var ctr  = box.getCenter(new THREE.Vector3());
+      var norm = 2.4 / Math.max(size.x, size.y, size.z, 0.001);
+      raw.scale.setScalar(norm);
+      raw.position.set(-ctr.x * norm, -ctr.y * norm, -ctr.z * norm);
+      // NB : pas de rotation sur raw — la rotation de vue est portée par rootModel
 
-      raw.position.set(-center.x * normScale, -center.y * normScale, -center.z * normScale);
-      raw.scale.setScalar(normScale);
-      raw.rotation.set(rotX, rotY, 0);
-
+      // 2. rootModel = pivot de rotation 3D (drag)
       rootModel = new THREE.Group();
+      rootModel.rotation.set(rotX, rotY, 0);
       scene.add(rootModel);
       rootModel.add(raw);
 
-      // Tout le modèle → ensembleGroup (meuble + plan de travail + vasques + robinets)
-      ensembleGroup = new THREE.Group();
-      raw.add(ensembleGroup);
+      // 3. Créer meubleGroup (parts scalables) et y déplacer tous les enfants du GLB
+      meubleGroup = new THREE.Group();
+      raw.add(meubleGroup);
 
-      var modelRoot = raw.children[0] || raw;
-      Array.from(modelRoot.children).forEach(function(child) {
-        ensembleGroup.attach(child);
+      var modelNode = raw.children[0]; // nœud "Model" dans le GLB
+      // Copier la liste avant de modifier l'arbre
+      Array.from(modelNode.children).forEach(function(child) {
+        meubleGroup.attach(child);
       });
 
-      // Mémoriser les nœuds à taille fixe (vasques + robinets).
-      // Ils restent dans ensembleGroup → leur POSITION suit le plan de travail
-      // quand il s'étire. On leur applique une compensation d'échelle inverse
-      // en onSlider pour qu'ils ne changent PAS de taille.
-      fixedNodes = [];
-      FIXED_NAMES.forEach(function(name) {
-        var obj = raw.getObjectByName(name);
-        if (obj) fixedNodes.push(obj);
-      });
+      // 4. Extraire la vasque (Group1) hors de meubleGroup → elle ne sera pas scalée
+      vasqueNode = raw.getObjectByName(VASQUE_NAME);
+      if (vasqueNode) {
+        // Mémoriser l'échelle initiale AVANT l'extraction
+        vasqueInitScale = vasqueNode.scale.clone();
+        // Reparenter directement sous raw (en préservant le transform monde)
+        raw.attach(vasqueNode);
+      }
 
-      baseScale = 1;
-
-      document.getElementById('viewerLoader').classList.add('hidden');
-      document.getElementById('dimsBadge').style.display = '';
-
-      onSlider();
+      // 5. Afficher et lancer les sliders
+      document.getElementById('loader').classList.add('hidden');
+      document.getElementById('dims').style.display = '';
+      update();
     },
+
     function onProgress(xhr) {
       if (xhr.lengthComputable) {
-        var pct = Math.round((xhr.loaded / xhr.total) * 100);
-        var el = document.getElementById('loaderPct');
-        if (el) el.textContent = pct + '%';
+        var el = document.getElementById('pct');
+        if (el) el.textContent = Math.round(xhr.loaded / xhr.total * 100) + '%';
       }
     },
+
     function onError(err) {
-      console.error('[GLB] Erreur:', err);
-      var el = document.querySelector('.loader-txt');
-      if (el) el.textContent = 'Erreur de chargement.';
+      console.error('GLB error:', err);
+      document.querySelector('.loader-label').textContent = 'Erreur de chargement';
     }
   );
 }
 
-// ─────────────────────────────────────────────────────────
-//  SLIDERS
-// ─────────────────────────────────────────────────────────
-function onSlider() {
-  var ml = parseInt(document.getElementById('slML').value, 10);
-  var mp = parseInt(document.getElementById('slMP').value, 10);
+// ── Mise à jour des sliders ──────────────────────────────────────────────────
+function update() {
+  var l = +document.getElementById('sL').value;
+  var p = +document.getElementById('sP').value;
 
-  document.getElementById('valML').textContent = ml;
-  document.getElementById('valMP').textContent = mp;
+  // Affichage
+  document.getElementById('vL').textContent = l;
+  document.getElementById('vP').textContent = p;
+  setFill('fL', l, L_MIN, L_MAX);
+  setFill('fP', p, P_MIN, P_MAX);
+  document.getElementById('dimsTxt').textContent = l + ' cm × ' + p + ' cm';
 
-  setFill('fillML', ml, ML_MIN, ML_MAX);
-  setFill('fillMP', mp, MP_MIN, MP_MAX);
+  if (!meubleGroup) return;
 
-  if (!ensembleGroup) return;
+  // Ratios par rapport aux valeurs par défaut
+  var rL = l / L_DEF;   // ratio longueur
+  var rP = p / P_DEF;   // ratio profondeur
 
-  var scaleX = baseScale * (ml / ML_DEF);
-  var scaleZ = baseScale * (mp / MP_DEF);
+  // Le meuble (Group2 + Mesh3) scale librement
+  meubleGroup.scale.set(rL, 1, rP);
 
-  // Tout le modèle s'étire (meuble + plan de travail + vasques en position)
-  ensembleGroup.scale.set(scaleX, baseScale, scaleZ);
-
-  // Compensation inverse sur vasques + robinets :
-  // leur position suit le plan de travail, mais leur taille reste identique.
-  fixedNodes.forEach(function(node) {
-    node.scale.set(1 / scaleX, 1, 1 / scaleZ);
-  });
-
-  document.getElementById('dimsTxt').textContent =
-    'L ' + ml + ' cm · p ' + mp + ' cm';
+  // La vasque (Group1) est enfant direct de raw (pas de meubleGroup) donc
+  // elle ne reçoit pas le scale du meubleGroup → taille toujours fixe ✓
+  // Sa position est déjà centrée (X ≈ 0) et ne change pas.
 }
 
 function setFill(id, val, min, max) {
-  var pct = ((val - min) / (max - min)) * 100;
-  document.getElementById(id).style.width = pct + '%';
+  document.getElementById(id).style.width = ((val - min) / (max - min) * 100) + '%';
 }
 
-function resetAll() {
-  document.getElementById('slML').value = ML_DEF;
-  document.getElementById('slMP').value = MP_DEF;
-  onSlider();
+function reset() {
+  document.getElementById('sL').value = L_DEF;
+  document.getElementById('sP').value = P_DEF;
+  update();
 }
 
-// ─────────────────────────────────────────────────────────
-//  START
-// ─────────────────────────────────────────────────────────
+// ── Démarrage ────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
-  setFill('fillML', ML_DEF, ML_MIN, ML_MAX);
-  setFill('fillMP', MP_DEF, MP_MIN, MP_MAX);
+  setFill('fL', L_DEF, L_MIN, L_MAX);
+  setFill('fP', P_DEF, P_MIN, P_MAX);
   initScene();
 });
 </script>
