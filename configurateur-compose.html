@@ -90,6 +90,17 @@
     .btn-fill{background:var(--accent);color:#fff;border:none}
     .btn-fill:hover{background:#a83200;transform:translateY(-2px)}
 
+    /* Sélecteur de texture */
+    .tex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .tex-btn{border:2px solid transparent;border-radius:10px;overflow:hidden;
+      cursor:pointer;padding:0;background:none;transition:border-color .2s,transform .15s;
+      aspect-ratio:1}
+    .tex-btn img{width:100%;height:100%;display:block;object-fit:cover;border-radius:8px}
+    .tex-btn:hover{transform:scale(1.04)}
+    .tex-btn.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(205,62,0,.18)}
+    .tex-name{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+      color:rgba(26,26,26,.4);text-align:center;margin-top:5px}
+
     .info{background:rgba(205,62,0,.05);border:1px solid rgba(205,62,0,.15);border-radius:10px;padding:16px 18px}
     .info-title{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
     .info-text{font-size:12px;font-weight:300;line-height:1.7;color:rgba(26,26,26,.6)}
@@ -140,6 +151,31 @@
         </div>
       </div>
 
+      <!-- Sélecteur de texture vasque -->
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--accent)"></span>Matière vasque</div>
+        <div class="tex-grid">
+          <div>
+            <button class="tex-btn active" id="tex-0" onclick="setTexture(0)" title="Noir">
+              <img src="img/texture-noir.png" alt="Noir"/>
+            </button>
+            <p class="tex-name">Noir</p>
+          </div>
+          <div>
+            <button class="tex-btn" id="tex-1" onclick="setTexture(1)" title="Blanc Gris">
+              <img src="img/texture-blanc-gris.png" alt="Blanc Gris"/>
+            </button>
+            <p class="tex-name">Blanc Gris</p>
+          </div>
+          <div>
+            <button class="tex-btn" id="tex-2" onclick="setTexture(2)" title="Multicolore">
+              <img src="img/texture-blanc-multicouleurs.png" alt="Multicolore"/>
+            </button>
+            <p class="tex-name">Multicolore</p>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <button class="btn btn-out" onclick="reset()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -165,6 +201,15 @@
 // ─── Constantes ──────────────────────────────────────────────────────────────
 var GLB   = 'models/sdb/vasquemathilde.glb';
 var L_DEF = 120, L_MIN = 60, L_MAX = 240;
+
+// Textures disponibles pour la vasque
+var TEXTURES = [
+  { id: 'tex-0', src: 'img/texture-noir.png'              },
+  { id: 'tex-1', src: 'img/texture-blanc-gris.png'        },
+  { id: 'tex-2', src: 'img/texture-blanc-multicouleurs.png'}
+];
+var textures      = [];   // THREE.Texture chargées
+var activeTexIdx  = 0;    // index de la texture active
 
 // ─── Nœuds GLB ───────────────────────────────────────────────────────────────
 // Structure du fichier (extraite via analyse) :
@@ -283,7 +328,19 @@ function loadModel() {
       vL  = node1 ? node1.scale.x * g2mx : 0;   // bord gauche vasque (= bord droit de node2 initial)
       vR  = node1 ? node1.scale.x * m3mn : 0;   // bord droit  vasque (= bord gauche de node3 initial)
 
-      // 6. Prêt
+      // 6. Pré-charger les textures et appliquer la première
+      var loader2 = new THREE.TextureLoader();
+      TEXTURES.forEach(function(t, i) {
+        loader2.load(t.src, function(tex) {
+          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+          tex.repeat.set(3, 3);  // répétition pour couvrir la vasque
+          tex.encoding = THREE.sRGBEncoding;
+          textures[i] = tex;
+          if (i === activeTexIdx) applyTexture(tex);
+        });
+      });
+
+      // 7. Prêt
       document.getElementById('loader').classList.add('hidden');
       document.getElementById('dims').style.display = '';
       update();
@@ -325,6 +382,30 @@ function update() {
   node3.position.x = vR - node3.scale.x * m3mn;
 
   // node1 (vasque) : jamais modifié → taille et position inchangées ✓
+}
+
+// ─── Texture vasque ──────────────────────────────────────────────────────────
+function applyTexture(tex) {
+  if (!node1) return;
+  node1.traverse(function(obj) {
+    if (!obj.isMesh) return;
+    var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(function(mat) {
+      mat.map = tex;
+      mat.needsUpdate = true;
+    });
+  });
+}
+
+function setTexture(idx) {
+  activeTexIdx = idx;
+  // Mettre à jour le bouton actif
+  TEXTURES.forEach(function(t, i) {
+    var btn = document.getElementById(t.id);
+    if (btn) btn.classList.toggle('active', i === idx);
+  });
+  // Appliquer si la texture est déjà chargée
+  if (textures[idx]) applyTexture(textures[idx]);
 }
 
 function setFill(id, val, min, max) {
