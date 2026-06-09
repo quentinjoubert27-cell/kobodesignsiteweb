@@ -72,6 +72,7 @@
     .nav__drop:hover .nav__drop-menu{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
     .nav__drop-item{display:block;padding:11px 22px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark);transition:color .18s,background .18s}
     .nav__drop-item:hover{color:var(--accent);background:rgba(205,62,0,.04)}
+    .nav__drop-menu::before{content:'';position:absolute;top:-16px;left:0;right:0;height:16px}
     .nav__link.active{color:var(--accent)}
     .nav__link.active::after{width:100%}
     .nav__cta{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:11px 22px;border-radius:4px;transition:background .22s,transform .18s}
