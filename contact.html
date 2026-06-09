@@ -89,17 +89,28 @@
     .nav__link{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dark);position:relative;padding-bottom:2px}
     .nav__link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .28s var(--ease)}
     .nav__link:hover::after{width:100%}
-    .nav__drop{position:relative;display:flex;align-items:center}
-    .nav__drop-btn{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dark);background:none;border:none;cursor:pointer;font-family:var(--font);position:relative;padding-bottom:2px}
-    .nav__drop-btn::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .28s var(--ease)}
-    .nav__drop:hover .nav__drop-btn::after{width:100%}
-    .nav__drop-btn svg{transition:transform .22s var(--ease)}
-    .nav__drop:hover .nav__drop-btn svg{transform:rotate(180deg)}
-    .nav__drop-menu{position:absolute;top:calc(100% + 16px);left:50%;transform:translateX(-50%) translateY(-6px);background:var(--bg);border:1px solid rgba(26,26,26,.09);border-radius:8px;padding:6px 0;box-shadow:0 8px 32px rgba(26,26,26,.12);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s var(--ease);white-space:nowrap;min-width:270px;z-index:200}
-    .nav__drop:hover .nav__drop-menu{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
-    .nav__drop-item{display:block;padding:11px 22px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark);transition:color .18s,background .18s}
-    .nav__drop-item:hover{color:var(--accent);background:rgba(205,62,0,.04)}
-    .nav__drop-menu::before{content:'';position:absolute;top:-16px;left:0;right:0;height:16px}
+    .nav__presta-btn{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dark);background:none;border:none;cursor:pointer;font-family:var(--font);position:relative;padding-bottom:2px;display:flex;align-items:center;gap:5px}
+    .nav__presta-btn::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .28s var(--ease)}
+    .nav__presta-btn:hover::after{width:100%}
+    .orient-overlay{position:fixed;inset:0;z-index:800;background:rgba(26,26,26,.55);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:clamp(20px,4vw,48px);opacity:0;pointer-events:none;transition:opacity .32s var(--ease)}
+    .orient-overlay.open{opacity:1;pointer-events:all}
+    .orient-modal{background:var(--bg);border-radius:16px;padding:clamp(32px,5vw,56px);max-width:860px;width:100%;position:relative;transform:translateY(20px) scale(.97);transition:transform .36s var(--ease);box-shadow:0 24px 80px rgba(26,26,26,.18)}
+    .orient-overlay.open .orient-modal{transform:translateY(0) scale(1)}
+    .orient-close{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:50%;background:none;border:1.5px solid rgba(26,26,26,.15);cursor:pointer;color:rgba(26,26,26,.4);display:flex;align-items:center;justify-content:center;transition:border-color .18s,color .18s}
+    .orient-close:hover{border-color:var(--dark);color:var(--dark)}
+    .orient-eyebrow{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+    .orient-title{font-size:clamp(22px,3.5vw,34px);font-weight:800;line-height:1.2;color:var(--dark);margin-bottom:36px}
+    .orient-title em{font-style:italic;font-weight:300}
+    .orient-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .orient-card{display:flex;flex-direction:column;border:1.5px solid rgba(26,26,26,.1);border-radius:12px;padding:28px 28px 24px;cursor:pointer;transition:border-color .22s,transform .22s,box-shadow .22s;text-decoration:none;color:inherit}
+    .orient-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 40px rgba(205,62,0,.10)}
+    .orient-card__icon{width:48px;height:48px;border-radius:10px;background:rgba(205,62,0,.07);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+    .orient-card__icon svg{width:22px;height:22px}
+    .orient-card h3{font-size:16px;font-weight:700;line-height:1.3;color:var(--dark);margin-bottom:10px}
+    .orient-card p{font-size:13px;font-weight:300;line-height:1.7;color:rgba(26,26,26,.55);flex:1;margin-bottom:22px}
+    .orient-card__cta{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+    .orient-card:hover .orient-card__cta{text-decoration:underline}
+    @media(max-width:580px){.orient-cards{grid-template-columns:1fr}}
     .nav__link.active{color:var(--accent)}
     .nav__link.active::after{width:100%}
     .nav__cta{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:11px 22px;border-radius:4px;transition:background .22s,transform .18s}
@@ -375,7 +386,37 @@
 </div>
 
 <!-- MENU MOBILE -->
-<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
+
+  <!-- ── Modale d'orientation Prestations ── -->
+  <div class="orient-overlay" id="orientOverlay" onclick="handleOrientClick(event)">
+    <div class="orient-modal" id="orientModal">
+      <button class="orient-close" onclick="closeOrient()" aria-label="Fermer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <p class="orient-eyebrow">Nos Prestations</p>
+      <h2 class="orient-title">Vous avez un projet<br><em>en tête ?</em></h2>
+      <div class="orient-cards">
+        <a href="mobilier.html" class="orient-card">
+          <div class="orient-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h3>J'ai une idée<br>ou un dessin</h3>
+          <p>Vous savez ce que vous voulez — même vaguement. On conçoit, on usine sur-mesure et on vous livre le kit prêt à assembler.</p>
+          <span class="orient-card__cta">Mobilier sur mesure prêt à monter →</span>
+        </a>
+        <a href="gamme.html" class="orient-card">
+          <div class="orient-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </div>
+          <h3>Je cherche<br>l'inspiration</h3>
+          <p>Pas encore d'idée précise ? Parcourez notre gamme de meubles déjà pensés, à personnaliser et à vous approprier.</p>
+          <span class="orient-card__cta">Découvrir notre gamme →</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
 <nav class="mobile-nav" id="mobileNav">
   <div class="mobile-nav__inner">
     <a href="index.html" onclick="toggleMenu()">Accueil</a>
@@ -396,13 +437,7 @@
   </a>
   <nav class="nav">
     <a href="index.html" class="nav__link">Accueil</a>
-    <div class="nav__drop">
-      <button class="nav__drop-btn">Prestations <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <div class="nav__drop-menu">
-        <a href="mobilier.html" class="nav__drop-item">Mobilier sur mesure prêt à monter</a>
-        <a href="gamme.html" class="nav__drop-item">Notre gamme de mobilier à s'approprier</a>
-      </div>
-    </div>
+<button class="nav__presta-btn" onclick="openOrient()">Prestations <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <a href="projets.html" class="nav__link">Projets</a>
     <a href="#" class="nav__link active">Contact</a>
     <a href="#formulaire" class="nav__cta">Devis &#x2192;</a>
@@ -687,7 +722,22 @@
   }
 
   /* Menu mobile */
-  function toggleMenu(){
+  
+    /* ── Modale Prestations ── */
+    function openOrient() {
+      document.getElementById('orientOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeOrient() {
+      document.getElementById('orientOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    function handleOrientClick(e) {
+      if (e.target === document.getElementById('orientOverlay')) closeOrient();
+    }
+    document.addEventListener('keydown', function(e) { if(e.key==='Escape') closeOrient(); });
+
+    function toggleMenu(){
     const nav=document.getElementById('mobileNav');
     const overlay=document.getElementById('mobileNavOverlay');
     const burger=document.getElementById('burger');
