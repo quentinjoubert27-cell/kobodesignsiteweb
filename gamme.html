@@ -1105,6 +1105,16 @@
     .sdb-vasque-mat.active{border-color:var(--accent);border-width:2.5px}
     .sdb-vasque-mat::after{content:attr(data-name);position:absolute;bottom:3px;left:3px;right:3px;font-size:8px;font-weight:700;letter-spacing:.08em;color:var(--dark);background:rgba(255,250,240,.88);padding:2px 5px;border-radius:3px;text-align:center;line-height:1.1;text-transform:capitalize}
 
+    /* ── SLIDER DIMENSIONS VASQUE ── */
+    .sdb-dim-slider{padding:4px 0}
+    .sdb-dim-slider__labels{display:flex;justify-content:space-between;font-size:9px;font-weight:600;letter-spacing:.1em;color:rgba(26,26,26,.4);margin-bottom:8px}
+    .sdb-dim-input{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;background:linear-gradient(to right,var(--accent) 0%,var(--accent) var(--pct,33%),rgba(26,26,26,.12) var(--pct,33%),rgba(26,26,26,.12) 100%);outline:none;cursor:pointer;display:block}
+    .sdb-dim-input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(205,62,0,.35);transition:transform .15s}
+    .sdb-dim-input::-webkit-slider-thumb:hover{transform:scale(1.15)}
+    .sdb-dim-input::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--accent);cursor:pointer;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(205,62,0,.35)}
+    .sdb-dim-hint{font-size:9px;color:rgba(26,26,26,.4);margin-top:10px;line-height:1.45;font-style:italic}
+    .sdb-dim-badge{display:inline-block;background:rgba(205,62,0,.09);color:var(--accent);font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:4px}
+
     /* NAV bas (Suivant / Précédent) */
     .sdb-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sdb-nav__back{padding:13px 18px;border:1.5px solid rgba(26,26,26,.15);background:var(--white);border-radius:7px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dark);cursor:pointer;transition:border-color .2s,color .2s;flex:0 0 auto}
@@ -2262,6 +2272,25 @@
             <div class="sdb-vasque-mats" id="sdbVasqueMats"></div>
           </div>
 
+          <!-- DIMENSIONS -->
+          <div class="sdb-sect">
+            <div class="sdb-sect__head">
+              <span class="sdb-sect__lbl">✦ Largeur du plan de travail</span>
+              <span class="sdb-sect__val"><span id="vasqueDimLabel">120</span><span class="sdb-dim-badge">cm</span></span>
+            </div>
+            <div class="sdb-dim-slider">
+              <div class="sdb-dim-slider__labels">
+                <span>80 cm</span>
+                <span>140 cm</span>
+                <span>200 cm</span>
+              </div>
+              <input type="range" class="sdb-dim-input" id="vasqueWidthSlider"
+                     min="80" max="200" step="5" value="120"
+                     oninput="onVasqueWidthChange(this.value)">
+              <p class="sdb-dim-hint">Le bac reste intact — seul le plan s'étend de chaque côté.</p>
+            </div>
+          </div>
+
         </div>
 
         <!-- ÉTAPE 2 : configuration meuble + bois -->
@@ -2319,6 +2348,7 @@
             <div class="sdb-recap">
               <div class="sdb-recap__row"><span class="sdb-recap__lbl">Vasque</span><span class="sdb-recap__val" id="sdbRecapVasque">—</span></div>
               <div class="sdb-recap__row"><span class="sdb-recap__lbl">Matière vasque</span><span class="sdb-recap__val" id="sdbRecapVasqueMat">—</span></div>
+              <div class="sdb-recap__row"><span class="sdb-recap__lbl">Largeur plan</span><span class="sdb-recap__val" id="sdbRecapWidth">120 cm</span></div>
               <div class="sdb-recap__row"><span class="sdb-recap__lbl">Meuble</span><span class="sdb-recap__val" id="sdbRecapMeuble">—</span></div>
               <div class="sdb-recap__row"><span class="sdb-recap__lbl">Configuration</span><span class="sdb-recap__val" id="sdbRecapConfig">—</span></div>
               <div class="sdb-recap__row"><span class="sdb-recap__lbl">Bois</span><span class="sdb-recap__val" id="sdbRecapBois">—</span></div>
@@ -2454,6 +2484,7 @@
       vc: 1,              // 1 ou 2 vasques
       lc: 1,              // 1 ou 2 lavabos
       bois: 'chene',
+      vasqueWidth: 120,   // cm (largeur plan de travail)
     };
 
     /* ─────── THREE.JS ─────── */
@@ -2463,6 +2494,89 @@
     var autoRotate = false, lastInteraction = 0;
     var textureCache = {};
     var pendingLoadId = 0;  // pour invalider les chargements obsolètes
+
+    /* ─────── PLAN DE TRAVAIL — DIMENSIONS ─────── */
+    // Les nœuds enfants directs du "Model" root qui ne contiennent pas
+    // l'assemblage vasque+robinet sont les extensions du plan de travail.
+    var planGroups = [];
+
+    // Noms de nœuds propres à l'assemblage vasque/robinet (à exclure)
+    var VASQUE_ASSEMBLY_NAMES = [
+      'Robinet', 'Col_de_cygne', 'Glas_28', 'Tige_de',
+      'simplicity', 'marie', 'reflexion', 'elegance', 'evita',
+    ];
+
+    function findPlanGroups(model) {
+      planGroups = [];
+      // Localiser le nœud racine "Model"
+      var modelNode = null;
+      model.traverse(function(obj) { if(obj.name === 'Model') modelNode = obj; });
+      if(!modelNode){ console.log('[DIM] nœud Model introuvable'); return; }
+
+      modelNode.children.forEach(function(child) {
+        var isAssembly = false;
+        child.traverse(function(obj) {
+          if(isAssembly) return;
+          var n = obj.name || '';
+          for(var i = 0; i < VASQUE_ASSEMBLY_NAMES.length; i++){
+            if(n.indexOf(VASQUE_ASSEMBLY_NAMES[i]) >= 0){ isAssembly = true; break; }
+          }
+        });
+        if(!isAssembly){
+          // Calculer la boîte englobante originale dans l'espace du modèle
+          var bb = new THREE.Box3().setFromObject(child);
+          var cx = (bb.min.x + bb.max.x) / 2;
+          var extentX = bb.max.x - bb.min.x;
+          // Stocker les données d'origine
+          child.userData.planOrigPos   = child.position.clone();
+          child.userData.planOrigScaleX= child.scale.x;
+          child.userData.planCenterX   = cx;
+          child.userData.planExtentX   = extentX;
+          planGroups.push(child);
+          console.log('[DIM] plan group:', child.name, 'cx:', cx.toFixed(3), 'ext:', extentX.toFixed(3));
+        }
+      });
+      console.log('[DIM]', planGroups.length, 'groupe(s) plan de travail');
+    }
+
+    function applyVasqueDimensions() {
+      if(!currentModel || planGroups.length === 0) return;
+      var DEFAULT_WIDTH = 120;
+      var factor = state.vasqueWidth / DEFAULT_WIDTH;
+
+      planGroups.forEach(function(g) {
+        var origPos    = g.userData.planOrigPos;
+        var origScaleX = g.userData.planOrigScaleX || 1;
+        var cx         = g.userData.planCenterX || 0;
+        var extentX    = g.userData.planExtentX || 1;
+        var dir        = cx >= 0 ? 1 : -1;
+
+        // Scale du groupe en X
+        g.scale.x = origScaleX * factor;
+
+        // Décalage en X pour que le bord intérieur reste en place
+        // Le centre se déplace de : dir × extentX × (factor-1) / 2
+        var shift = dir * extentX * (factor - 1) * 0.5;
+        g.position.x = origPos.x + shift;
+      });
+
+      // Màj label
+      var lbl = document.getElementById('vasqueDimLabel');
+      if(lbl) lbl.textContent = state.vasqueWidth;
+
+      // Màj dégradé du slider
+      var slider = document.getElementById('vasqueWidthSlider');
+      if(slider){
+        var pct = ((state.vasqueWidth - 80) / (200 - 80) * 100).toFixed(1);
+        slider.style.setProperty('--pct', pct + '%');
+      }
+    }
+
+    function onVasqueWidthChange(val) {
+      state.vasqueWidth = parseInt(val, 10);
+      applyVasqueDimensions();
+    }
+    window.onVasqueWidthChange = onVasqueWidthChange;
 
     // ─── IDENTIFICATION DES MATÉRIAUX ─────────────────────────
     // Analyse réelle des GLB (confirmée par les retours utilisateur sur le rendu) :
@@ -2636,6 +2750,12 @@
 
         // Tagger les meshes (principal vs robinet) et fixer le robinet en chrome
         tagMeshes(currentModel);
+
+        // Identifier les groupes du plan de travail (étape 1 = vasque seule)
+        if(state.step === 1){
+          findPlanGroups(currentModel);
+          applyVasqueDimensions();
+        }
 
         // Appliquer la matière courante (vasque ou bois selon l'étape)
         applyMaterials();
@@ -3081,6 +3201,7 @@
           gamme: 'salle-de-bain',
           vasque: 'Vasque ' + state.vasque,
           matiere_vasque: (findVasqueMat(state.vasqueFam, state.vasqueMatId) || {}).label || '',
+          largeur_plan: state.vasqueWidth + ' cm',
           meuble: 'Meuble ' + state.vasque + ' · ' + getMeubleName(),
           config: state.vc + ' vasque(s) · ' + state.lc + ' étagère(s)',
           bois: BOIS[state.bois].label
@@ -3093,6 +3214,7 @@
       var vMat = findVasqueMat(state.vasqueFam, state.vasqueMatId);
       document.getElementById('sdbRecapVasque').textContent = 'Vasque ' + state.vasque;
       document.getElementById('sdbRecapVasqueMat').textContent = vMat ? vMat.label : '—';
+      document.getElementById('sdbRecapWidth').textContent = state.vasqueWidth + ' cm';
       document.getElementById('sdbRecapMeuble').textContent = 'Meuble ' + state.vasque + ' · ' + getMeubleName();
       document.getElementById('sdbRecapConfig').textContent = state.vc + ' vasque(s) · ' + state.lc + ' étagère(s)';
       document.getElementById('sdbRecapBois').textContent = BOIS[state.bois].label;
