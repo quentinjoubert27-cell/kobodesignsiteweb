@@ -2541,12 +2541,18 @@
           child.userData.planOrigPos    = child.position.clone();
           child.userData.planOrigScaleX = child.scale.x;
           child.userData.planCenterX    = cx;
-          child.userData.planExtentX    = extentX;
-          // Bords intérieurs (world space) pour la correction post-scaling
-          child.userData.planOrigMinX   = bb.min.x;  // bord intérieur du panneau droit
-          child.userData.planOrigMaxX   = bb.max.x;  // bord intérieur du panneau gauche
+
+          // Bord INTÉRIEUR en local space du currentModel (stable même après rotation)
+          // Panneau droit (cx>0) : bord intérieur = minX ; gauche : maxX
+          var innerEdge_world = (cx > 0) ? bb.min.x : bb.max.x;
+          var ieVec = new THREE.Vector3(innerEdge_world, 0, 0);
+          currentModel.worldToLocal(ieVec);
+          child.userData.planInnerEdge_local = ieVec.x;
+
           planGroups.push(child);
-          console.log('[DIM] plan group ✓:', child.name, 'cx:', cx.toFixed(3), 'ext:', extentX.toFixed(3));
+          console.log('[DIM] plan group ✓:', child.name,
+            'cx:', cx.toFixed(3),
+            'innerEdge_local:', ieVec.x.toFixed(3));
         } else {
           console.log('[DIM] skip (centré):', child.name, 'cx:', cx.toFixed(3));
         }
@@ -2558,36 +2564,21 @@
       if(!currentModel || planGroups.length === 0) return;
       var DEFAULT_WIDTH = 120;
       var factor = state.vasqueWidth / DEFAULT_WIDTH;
-      // Scale uniforme du modèle parent (pour convertir world ↔ local du parent)
-      var parentScaleX = currentModel.scale.x || 1;
 
       planGroups.forEach(function(g) {
-        var origPos    = g.userData.planOrigPos;
-        var origScaleX = g.userData.planOrigScaleX || 1;
-        var cx         = g.userData.planCenterX || 0;
-        var origMinX   = g.userData.planOrigMinX || 0;  // bord world au chargement
-        var origMaxX   = g.userData.planOrigMaxX || 0;
+        var origPos        = g.userData.planOrigPos;
+        var origScaleX     = g.userData.planOrigScaleX || 1;
+        var innerEdge_local = g.userData.planInnerEdge_local || 0;
 
-        // 1. Reset position, applique le nouveau scale
-        g.position.x = origPos.x;
-        g.scale.x    = origScaleX * factor;
+        // Scale du panneau en X (autour de son origine locale)
+        g.scale.x = origScaleX * factor;
 
-        // 2. Mettre à jour les matrices pour lire le vrai bounding box
-        g.updateMatrixWorld(true);
-        var newBB = new THREE.Box3().setFromObject(g);
-
-        // 3. Calcul de la dérive du bord INTÉRIEUR en world space
-        //    Panneau droit (cx > 0) : bord intérieur = minX → doit rester à origMinX
-        //    Panneau gauche (cx < 0) : bord intérieur = maxX → doit rester à origMaxX
-        var drift_world;
-        if(cx > 0){
-          drift_world = newBB.min.x - origMinX;   // > 0 si dérive vers la droite
-        } else {
-          drift_world = newBB.max.x - origMaxX;   // < 0 si dérive vers la gauche
-        }
-
-        // 4. Correction en espace local du parent (diviser par parentScaleX)
-        g.position.x = origPos.x - drift_world / parentScaleX;
+        // Correction de position pour que le bord intérieur reste fixe.
+        // Formule analytique en local space du parent (currentModel) :
+        //   innerEdge_local_new = g.position.x + factor * (innerEdge_local - origPos.x)
+        //   On veut innerEdge_local_new = innerEdge_local
+        //   → g.position.x = origPos.x + (innerEdge_local - origPos.x) * (1 - factor)
+        g.position.x = origPos.x + (innerEdge_local - origPos.x) * (1 - factor);
       });
 
       // Màj label
