@@ -203,7 +203,7 @@
     /* ── Section orientation landing ─────────────────────────────── */
     .orient-section {
       background: var(--bg);
-      padding: clamp(72px,10vw,120px) clamp(24px,7vw,100px) 0;
+      padding: clamp(72px,10vw,120px) clamp(24px,7vw,100px) clamp(72px,10vw,120px);
     }
     .orient-section__header {
       max-width: 1120px; margin: 0 auto clamp(48px,6vw,72px);
@@ -228,8 +228,8 @@
     .orient-panels {
       display: grid; grid-template-columns: 1fr 1fr;
       max-width: 1120px; margin: 0 auto;
-      border-radius: 20px 20px 0 0; overflow: hidden;
-      border: 1.5px solid rgba(26,26,26,.1); border-bottom: none;
+      border-radius: 20px; overflow: hidden;
+      border: 1.5px solid rgba(26,26,26,.1);
     }
 
     .orient-panel {
@@ -318,7 +318,7 @@
     .orient-panel:hover .orient-panel__cta { transform: translateX(4px); }
 
     @media (max-width: 720px) {
-      .orient-panels { grid-template-columns: 1fr; border-radius: 16px 16px 0 0; }
+      .orient-panels { grid-template-columns: 1fr; border-radius: 16px; }
       .orient-panel--dark { border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
       .orient-panel { min-height: 360px; }
       .orient-section__hint { display: none; }
@@ -669,6 +669,7 @@
     /* Split 2 colonnes */
     .expertises__split { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0; margin-bottom: clamp(48px,7vw,80px); align-items: start; }
     .expertises__divider { background: rgba(26,26,26,.08); align-self: stretch; }
+    .expertises__full { max-width: 680px; padding: 0; }
     .expertises__col { padding: 0 clamp(28px,4vw,60px); }
     .expertises__col:first-child { padding-left: 0; }
     .expertises__col:last-child { padding-right: 0; }
@@ -1189,29 +1190,6 @@
     </a>
   </section>
 
-  <!-- BANDE RÉASSURANCE -->
-  <div class="reassurance-band">
-    <div class="reassurance-item">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <span>Devis gratuit · Sans engagement</span>
-    </div>
-    <div class="reassurance-sep"></div>
-    <div class="reassurance-item">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#CD3E00" stroke-width="1.6"/><path d="M12 6v6l4 2" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <span>Réponse sous 24h</span>
-    </div>
-    <div class="reassurance-sep"></div>
-    <div class="reassurance-item">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-      <span>Prix ferme · Aucune surprise</span>
-    </div>
-    <div class="reassurance-sep"></div>
-    <div class="reassurance-item">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#CD3E00" stroke-width="1.6"/></svg>
-      <span>+50 projets à Bordeaux</span>
-    </div>
-  </div>
-
   <section class="expertises" id="expertise" aria-label="Nos expertises">
 
     <!-- En-tête -->
@@ -1220,11 +1198,7 @@
       <h2 class="expertises__title">Que faisons-nous<br><em>exactement ?</em></h2>
     </div>
 
-    <!-- Grille principale : PAM + Archi côte à côte -->
-    <div class="expertises__split">
-
-      <!-- Colonne gauche : Mobilier PAM — cœur de métier -->
-      <div class="expertises__col expertises__col--main reveal">
+    <div class="expertises__full reveal">
         <div class="expertises__col-header">
           <span class="expertises__pill expertises__pill--main">Cœur de métier</span>
           <h3 class="expertises__col-title">Mobilier Sur-Mesure<br>Prêt-à-Monter</h3>
@@ -1338,6 +1312,30 @@
     <div class="reveal reveal-delay-2"><p class="stat__number">100%</p><p class="stat__label">Clients satisfaits</p></div>
     <div class="reveal reveal-delay-3"><p class="stat__number">3</p><p class="stat__label">Prix de design</p></div>
   </section>
+
+  <!-- BANDE RÉASSURANCE -->
+  <div class="reassurance-band">
+    <div class="reassurance-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Devis gratuit · Sans engagement</span>
+    </div>
+    <div class="reassurance-sep"></div>
+    <div class="reassurance-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#CD3E00" stroke-width="1.6"/><path d="M12 6v6l4 2" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Réponse sous 24h</span>
+    </div>
+    <div class="reassurance-sep"></div>
+    <div class="reassurance-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Prix ferme · Aucune surprise</span>
+    </div>
+    <div class="reassurance-sep"></div>
+    <div class="reassurance-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#CD3E00" stroke-width="1.6"/></svg>
+      <span>+50 projets à Bordeaux</span>
+    </div>
+  </div>
+
 
   <section class="contact" id="contact" aria-label="Nous contacter">
 
