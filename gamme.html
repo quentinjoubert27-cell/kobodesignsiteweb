@@ -2513,7 +2513,14 @@
       model.traverse(function(obj) { if(obj.name === 'Model') modelNode = obj; });
       if(!modelNode){ console.log('[DIM] nœud Model introuvable'); return; }
 
+      // Boîte du modèle entier (centré en 0,0,0 après le fit)
+      // Seuil : un groupe est "côté" si son centre X est > 10% de la demi-largeur totale
+      var totalBB = new THREE.Box3().setFromObject(model);
+      var totalHalfW = (totalBB.max.x - totalBB.min.x) * 0.10;
+      console.log('[DIM] totalHalfW seuil:', totalHalfW.toFixed(3));
+
       modelNode.children.forEach(function(child) {
+        // Exclure les groupes "assembly vasque+robinet"
         var isAssembly = false;
         child.traverse(function(obj) {
           if(isAssembly) return;
@@ -2522,21 +2529,26 @@
             if(n.indexOf(VASQUE_ASSEMBLY_NAMES[i]) >= 0){ isAssembly = true; break; }
           }
         });
-        if(!isAssembly){
-          // Calculer la boîte englobante originale dans l'espace du modèle
-          var bb = new THREE.Box3().setFromObject(child);
-          var cx = (bb.min.x + bb.max.x) / 2;
-          var extentX = bb.max.x - bb.min.x;
-          // Stocker les données d'origine
-          child.userData.planOrigPos   = child.position.clone();
-          child.userData.planOrigScaleX= child.scale.x;
-          child.userData.planCenterX   = cx;
-          child.userData.planExtentX   = extentX;
+        if(isAssembly) return;
+
+        // Boîte du groupe en world space (tient compte du scale du modèle parent)
+        var bb = new THREE.Box3().setFromObject(child);
+        var cx = (bb.min.x + bb.max.x) / 2;
+        var extentX = bb.max.x - bb.min.x;
+
+        // Seulement les groupes clairement décalés en X = panneaux latéraux
+        if(Math.abs(cx) > totalHalfW){
+          child.userData.planOrigPos    = child.position.clone();
+          child.userData.planOrigScaleX = child.scale.x;
+          child.userData.planCenterX    = cx;
+          child.userData.planExtentX    = extentX;
           planGroups.push(child);
-          console.log('[DIM] plan group:', child.name, 'cx:', cx.toFixed(3), 'ext:', extentX.toFixed(3));
+          console.log('[DIM] plan group ✓:', child.name, 'cx:', cx.toFixed(3), 'ext:', extentX.toFixed(3));
+        } else {
+          console.log('[DIM] skip (centré):', child.name, 'cx:', cx.toFixed(3));
         }
       });
-      console.log('[DIM]', planGroups.length, 'groupe(s) plan de travail');
+      console.log('[DIM]', planGroups.length, 'panneau(x) latéral/latéraux trouvé(s)');
     }
 
     function applyVasqueDimensions() {
@@ -2777,15 +2789,13 @@
 
     // ─── TAGGING DES MESHES AU CHARGEMENT ─────────────────────
     // 3 tags possibles dans child.userData.kobok :
-    //   - 'vasque'  : la grande mesh Mati_re10 (plateau céramique)
-    //   - 'robinet' : les petites meshes Mati_re10 (bec + poignées)
-    //   - 'meuble'  : la mesh utilisant Capture_..._09_59_44 (caisson du meuble)
-    // Tout le reste : pas tagué → jamais touché par le code.
-    function tagMeshes(model){
-      // Étape 1 : collecter les meshes par matériau d'intérêt
-      var matiRe10Meshes = [];
-      var meubleMeshes = [];
+    //   - 'vasque'  : toute mesh Mati_re10 hors hiérarchie robinet (bol + plan de travail)
+    //   - 'robinet' : mesh Mati_re10 descendante d'un nœud faucet (Col_de_cygne, Robinet, Tige…)
+    //   - 'meuble'  : mesh utilisant Capture_..._09_59_44 (caisson du meuble)
+    // Noms parents = robinet (si l'un d'eux apparaît dans la chaîne d'ancêtres → robinet)
+    var FAUCET_ANCESTOR_NAMES = ['Robinet', 'Col_de_cygne', 'Tige_de', 'T_te_de', 'robinet_mural'];
 
+    function tagMeshes(model){
       model.traverse(function(child){
         if(!child.isMesh || !child.material) return;
         var mats = Array.isArray(child.material) ? child.material : [child.material];
@@ -2794,28 +2804,24 @@
           if(!m) continue;
           var baseName = (m.name || '').replace(/\.\d+$/, '');
           if(baseName === MAT_VASQUE){
-            if(!child.geometry.boundingBox) child.geometry.computeBoundingBox();
-            var bb = child.geometry.boundingBox;
-            var sizeX = bb ? Math.abs(bb.max.x - bb.min.x) : 0;
-            matiRe10Meshes.push({ mesh: child, sizeX: sizeX });
+            // Remonter la hiérarchie pour détecter si c'est un robinet
+            var isFaucet = false;
+            var p = child.parent;
+            while(p){
+              var pn = p.name || '';
+              for(var k=0; k<FAUCET_ANCESTOR_NAMES.length; k++){
+                if(pn.indexOf(FAUCET_ANCESTOR_NAMES[k]) >= 0){ isFaucet = true; break; }
+              }
+              if(isFaucet) break;
+              p = p.parent;
+            }
+            child.userData.kobok = isFaucet ? 'robinet' : 'vasque';
             break;
           } else if(baseName === MAT_MEUBLE){
-            meubleMeshes.push({ mesh: child });
+            child.userData.kobok = 'meuble';
             break;
           }
         }
-      });
-
-      // Étape 2 : tagger
-      var maxSize = 0;
-      matiRe10Meshes.forEach(function(item){
-        if(item.sizeX > maxSize) maxSize = item.sizeX;
-      });
-      matiRe10Meshes.forEach(function(item){
-        item.mesh.userData.kobok = (item.sizeX >= maxSize * 0.8) ? 'vasque' : 'robinet';
-      });
-      meubleMeshes.forEach(function(item){
-        item.mesh.userData.kobok = 'meuble';
       });
 
       // Cloner les matériaux pour ne pas que les modifs sur un mesh affectent les autres
