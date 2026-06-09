@@ -200,6 +200,23 @@
       .orient-cards { grid-template-columns: 1fr; }
     }
 
+    /* ── Section orientation landing ─────────────────────────────── */
+    .orient-section {
+      padding: clamp(64px,9vw,112px) clamp(24px,7vw,100px);
+      background: var(--bg);
+    }
+    .orient-section__inner { max-width: 920px; margin: 0 auto; }
+    .orient-section__header { margin-bottom: 40px; }
+    .orient-section__eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: .22em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+    }
+    .orient-section__title {
+      font-size: clamp(26px,4vw,40px); font-weight: 800; line-height: 1.18;
+      color: var(--dark);
+    }
+    .orient-section__title em { font-style: italic; font-weight: 300; }
+
     .nav__cta {
       font-size: 11px; font-weight: 700; letter-spacing: .14em;
       text-transform: uppercase; color: var(--white);
@@ -970,6 +987,36 @@
       <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure Prêt-à-Monter</span><span class="marquee-sep"></span></div>
     </div>
   </div>
+
+  <!-- ================================================================
+       ORIENTATION — Quel est votre projet ?
+  ================================================================ -->
+  <section class="orient-section" aria-label="Choisissez votre prestation">
+    <div class="orient-section__inner">
+      <div class="orient-section__header reveal">
+        <p class="orient-section__eyebrow">Nos Prestations</p>
+        <h2 class="orient-section__title">Vous avez un projet<br><em>en tête ?</em></h2>
+      </div>
+      <div class="orient-cards reveal reveal-delay-1">
+        <a href="mobilier.html" class="orient-card">
+          <div class="orient-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h3>J'ai une idée<br>ou un dessin</h3>
+          <p>Vous savez ce que vous voulez — même vaguement. On conçoit, on usine sur-mesure et on vous livre le kit prêt à assembler.</p>
+          <span class="orient-card__cta">Mobilier sur mesure prêt à monter →</span>
+        </a>
+        <a href="gamme.html" class="orient-card">
+          <div class="orient-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </div>
+          <h3>Je cherche<br>l'inspiration</h3>
+          <p>Pas encore d'idée précise ? Parcourez notre gamme de meubles déjà pensés, à personnaliser et à vous approprier.</p>
+          <span class="orient-card__cta">Découvrir notre gamme →</span>
+        </a>
+      </div>
+    </div>
+  </section>
 
   <!-- ================================================================
        GAMME DE MOBILIER
