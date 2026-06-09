@@ -89,6 +89,16 @@
     .nav__link{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dark);position:relative;padding-bottom:2px}
     .nav__link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .28s var(--ease)}
     .nav__link:hover::after{width:100%}
+    .nav__drop{position:relative;display:flex;align-items:center}
+    .nav__drop-btn{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dark);background:none;border:none;cursor:pointer;font-family:var(--font);position:relative;padding-bottom:2px}
+    .nav__drop-btn::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent);transition:width .28s var(--ease)}
+    .nav__drop:hover .nav__drop-btn::after{width:100%}
+    .nav__drop-btn svg{transition:transform .22s var(--ease)}
+    .nav__drop:hover .nav__drop-btn svg{transform:rotate(180deg)}
+    .nav__drop-menu{position:absolute;top:calc(100% + 16px);left:50%;transform:translateX(-50%) translateY(-6px);background:var(--bg);border:1px solid rgba(26,26,26,.09);border-radius:8px;padding:6px 0;box-shadow:0 8px 32px rgba(26,26,26,.12);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s var(--ease);white-space:nowrap;min-width:270px;z-index:200}
+    .nav__drop:hover .nav__drop-menu{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
+    .nav__drop-item{display:block;padding:11px 22px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark);transition:color .18s,background .18s}
+    .nav__drop-item:hover{color:var(--accent);background:rgba(205,62,0,.04)}
     .nav__link.active{color:var(--accent)}
     .nav__link.active::after{width:100%}
     .nav__cta{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:11px 22px;border-radius:4px;transition:background .22s,transform .18s}
@@ -368,8 +378,9 @@
 <nav class="mobile-nav" id="mobileNav">
   <div class="mobile-nav__inner">
     <a href="index.html" onclick="toggleMenu()">Accueil</a>
+    <a href="mobilier.html" onclick="toggleMenu()">Mobilier sur mesure</a>
+    <a href="gamme.html" onclick="toggleMenu()">Notre gamme</a>
     <a href="projets.html" onclick="toggleMenu()">Projets</a>
-    <a href="gamme.html" onclick="toggleMenu()">Gamme</a>
     <a href="#" onclick="toggleMenu()">Contact</a>
   </div>
   <div class="mobile-nav__cta-wrap">
@@ -384,8 +395,14 @@
   </a>
   <nav class="nav">
     <a href="index.html" class="nav__link">Accueil</a>
+    <div class="nav__drop">
+      <button class="nav__drop-btn">Prestations <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="nav__drop-menu">
+        <a href="mobilier.html" class="nav__drop-item">Mobilier sur mesure prêt à monter</a>
+        <a href="gamme.html" class="nav__drop-item">Notre gamme de mobilier à s'approprier</a>
+      </div>
+    </div>
     <a href="projets.html" class="nav__link">Projets</a>
-    <a href="gamme.html" class="nav__link">Gamme</a>
     <a href="#" class="nav__link active">Contact</a>
     <a href="#formulaire" class="nav__cta">Devis &#x2192;</a>
     <button class="nav__login" onclick="openLogin()" aria-label="Espace client">
@@ -615,7 +632,7 @@
     <div class="footer__top">
       <div class="footer__brand">
         <img src="img/logo-koboblanc.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
-        <p>Studio de mobilier sur-mesure et d'architecture d'intérieur, basé à Bordeaux depuis 2018.</p>
+        <p>Studio de mobilier sur-mesure prêt-à-monter, basé à Bordeaux depuis 2018.</p>
       </div>
       <div class="footer__col">
         <h4>Pages</h4>
@@ -624,7 +641,7 @@
           <li><a href="projets.html">Nos projets</a></li>
           <li><a href="gamme.html">Notre gamme</a></li>
           <li><a href="mobilier.html">Mobilier sur-mesure</a></li>
-          <li><a href="architecture.html">Architecture d'intérieur</a></li>
+          <li><a href="gamme.html">Notre gamme de mobilier</a></li>
         </ul>
       </div>
       <div class="footer__col">

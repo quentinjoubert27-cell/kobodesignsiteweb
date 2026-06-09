@@ -6,26 +6,26 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="shortcut icon" href="favicon.png"/>
 
-  <title>Kobo Design Bordeaux — Mobilier Sur-Mesure & Architecture d'Intérieur</title>
-  <meta name="description" content="Studio de mobilier sur-mesure prêt-à-monter et d'architecture d'intérieur à Bordeaux. Kobo Design conçoit, fabrique et livre votre mobilier unique. Devis gratuit sous 24h."/>
-  <meta name="keywords" content="mobilier sur-mesure Bordeaux, architecture intérieur Bordeaux, meuble sur-mesure Bordeaux, studio design Bordeaux, agencement intérieur Bordeaux, kobo design"/>
+  <title>Kobo Design Bordeaux — Mobilier Sur-Mesure Prêt-à-Monter</title>
+  <meta name="description" content="Studio de mobilier sur-mesure prêt-à-monter à Bordeaux. Kobo Design conçoit, fabrique et livre votre mobilier unique. Devis gratuit sous 24h."/>
+  <meta name="keywords" content="mobilier sur-mesure Bordeaux, meuble sur-mesure Bordeaux, studio design Bordeaux, kobo design"/>
   <link rel="canonical" href="https://www.kobo-design.fr/"/>
-  <meta name="keywords" content="mobilier sur-mesure Bordeaux, meuble sur-mesure Bordeaux, architecte intérieur Bordeaux, architecture intérieur Bordeaux, studio design Bordeaux, bibliothèque sur-mesure Bordeaux, dressing sur-mesure Bordeaux"/>
+  <meta name="keywords" content="mobilier sur-mesure Bordeaux, meuble sur-mesure Bordeaux, studio design Bordeaux, bibliothèque sur-mesure Bordeaux, dressing sur-mesure Bordeaux"/>
   <meta name="robots" content="index, follow"/>
 
   <!-- Open Graph -->
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://www.kobo-design.fr/"/>
-  <meta property="og:title" content="Kobo Design — Mobilier Sur-Mesure & Architecture d'Intérieur à Bordeaux"/>
-  <meta property="og:description" content="Studio bordelais en mobilier sur-mesure prêt-à-monter et architecture d'intérieur. Chaque pièce dessinée pour vous, fabriquée par des artisans sélectionnés."/>
+  <meta property="og:title" content="Kobo Design — Mobilier Sur-Mesure Prêt-à-Monter à Bordeaux"/>
+  <meta property="og:description" content="Studio bordelais en mobilier sur-mesure prêt-à-monter. Chaque pièce dessinée pour vous, fabriquée par des artisans sélectionnés."/>
   <meta property="og:image" content="https://www.kobo-design.fr/img/hero.jpeg"/>
   <meta property="og:locale" content="fr_FR"/>
   <meta property="og:site_name" content="Kobo Design"/>
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="Kobo Design — Mobilier Sur-Mesure & Architecture d'Intérieur à Bordeaux"/>
-  <meta name="twitter:description" content="Studio bordelais en mobilier sur-mesure prêt-à-monter et architecture d'intérieur. Chaque pièce dessinée pour vous, fabriquée par des artisans sélectionnés."/>
+  <meta name="twitter:title" content="Kobo Design — Mobilier Sur-Mesure Prêt-à-Monter à Bordeaux"/>
+  <meta name="twitter:description" content="Studio bordelais en mobilier sur-mesure prêt-à-monter. Chaque pièce dessinée pour vous, fabriquée par des artisans sélectionnés."/>
   <meta name="twitter:image" content="https://www.kobo-design.fr/img/hero.jpeg"/>
 
   <!-- Schema.org -->
@@ -34,7 +34,7 @@
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "Kobo Design",
-  "description": "Studio de mobilier sur-mesure et d'architecture d'intérieur à Bordeaux.",
+  "description": "Studio de mobilier sur-mesure prêt-à-monter à Bordeaux.",
   "url": "https://www.kobo-design.fr",
   "telephone": "+33642899858",
   "address": {
@@ -111,6 +111,45 @@
       transition: width .28s var(--ease);
     }
     .nav__link:hover::after { width: 100%; }
+
+    /* ── Dropdown Prestations ─────────────────────────────────────── */
+    .nav__drop { position: relative; display: flex; align-items: center; }
+    .nav__drop-btn {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--dark);
+      background: none; border: none; cursor: pointer;
+      font-family: var(--font); position: relative; padding-bottom: 2px;
+    }
+    .nav__drop-btn::after {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 0; height: 1.5px; background: var(--accent);
+      transition: width .28s var(--ease);
+    }
+    .nav__drop:hover .nav__drop-btn::after { width: 100%; }
+    .nav__drop-btn svg { transition: transform .22s var(--ease); }
+    .nav__drop:hover .nav__drop-btn svg { transform: rotate(180deg); }
+    .nav__drop-menu {
+      position: absolute; top: calc(100% + 16px); left: 50%;
+      transform: translateX(-50%) translateY(-6px);
+      background: var(--bg); border: 1px solid rgba(26,26,26,.09);
+      border-radius: 8px; padding: 6px 0;
+      box-shadow: 0 8px 32px rgba(26,26,26,.12);
+      opacity: 0; pointer-events: none;
+      transition: opacity .22s, transform .22s var(--ease);
+      white-space: nowrap; min-width: 270px; z-index: 200;
+    }
+    .nav__drop:hover .nav__drop-menu {
+      opacity: 1; pointer-events: all;
+      transform: translateX(-50%) translateY(0);
+    }
+    .nav__drop-item {
+      display: block; padding: 11px 22px;
+      font-size: 10px; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--dark);
+      transition: color .18s, background .18s;
+    }
+    .nav__drop-item:hover { color: var(--accent); background: rgba(205,62,0,.04); }
 
     .nav__cta {
       font-size: 11px; font-weight: 700; letter-spacing: .14em;
@@ -786,7 +825,8 @@
   <nav class="mobile-nav" id="mobileNav" aria-label="Navigation mobile">
     <div class="mobile-nav__inner">
       <a href="#" onclick="toggleMenu()">Accueil</a>
-      <a href="gamme.html" onclick="toggleMenu()">Gamme</a>
+      <a href="mobilier.html" onclick="toggleMenu()">Mobilier sur mesure</a>
+      <a href="gamme.html" onclick="toggleMenu()">Notre gamme</a>
       <a href="projets.html" onclick="toggleMenu()">Projets</a>
       <a href="contact.html" onclick="toggleMenu()">Contact</a>
     </div>
@@ -804,9 +844,14 @@
     </a>
     <nav class="nav">
       <a href="#" class="nav__link">Accueil</a>
+      <div class="nav__drop">
+        <button class="nav__drop-btn">Prestations <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav__drop-menu">
+          <a href="mobilier.html" class="nav__drop-item">Mobilier sur mesure prêt à monter</a>
+          <a href="gamme.html" class="nav__drop-item">Notre gamme de mobilier à s'approprier</a>
+        </div>
+      </div>
       <a href="projets.html" class="nav__link">Projets</a>
-      <a href="gamme.html" class="nav__link">Gamme</a>
-      <a href="architecture.html" class="nav__link">Architecture</a>
       <a href="contact.html" class="nav__link">Contact</a>
       <a href="contact.html" class="nav__cta">Devis →</a>
       <!-- Pill "Mon espace" : discret, positionné en dernier à droite -->
@@ -847,10 +892,10 @@
   ================================================================ -->
   <div class="marquee-wrap" aria-hidden="true">
     <div class="marquee-track">
-      <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure et Architecture d'Intérieur</span><span class="marquee-sep"></span></div>
-      <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure et Architecture d'Intérieur</span><span class="marquee-sep"></span></div>
-      <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure et Architecture d'Intérieur</span><span class="marquee-sep"></span></div>
-      <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure et Architecture d'Intérieur</span><span class="marquee-sep"></span></div>
+      <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure Prêt-à-Monter</span><span class="marquee-sep"></span></div>
+      <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure Prêt-à-Monter</span><span class="marquee-sep"></span></div>
+      <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure Prêt-à-Monter</span><span class="marquee-sep"></span></div>
+      <div class="marquee-item"><span class="marquee-text">Mobilier Sur-Mesure Prêt-à-Monter</span><span class="marquee-sep"></span></div>
     </div>
   </div>
 
@@ -934,50 +979,6 @@
         </a>
       </div>
 
-      <!-- Séparateur vertical -->
-      <div class="expertises__divider" aria-hidden="true"></div>
-
-      <!-- Colonne droite : Architecture d'intérieur — service indépendant -->
-      <div class="expertises__col expertises__col--secondary reveal reveal-delay-1">
-        <div class="expertises__col-header">
-          <span class="expertises__pill expertises__pill--secondary">Service indépendant</span>
-          <h3 class="expertises__col-title">Architecture<br>d'Intérieur</h3>
-          <p class="expertises__col-intro">Vous voulez repenser un espace complet — pas juste un meuble. Nos architectes d'intérieur prennent votre projet en main de A à Z.</p>
-        </div>
-        <div class="expertises__archi-items">
-          <div class="expertises__archi-item">
-            <div class="expertises__archi-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </div>
-            <div>
-              <p class="expertises__archi-title">Analyse de votre espace</p>
-              <p class="expertises__archi-desc">Volumes, flux de circulation, besoins de rangement — on lit votre espace avant de proposer quoi que ce soit.</p>
-            </div>
-          </div>
-          <div class="expertises__archi-item">
-            <div class="expertises__archi-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#CD3E00" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </div>
-            <div>
-              <p class="expertises__archi-title">Plans 3D &amp; ambiances</p>
-              <p class="expertises__archi-desc">Modélisation de votre futur espace, choix des matériaux, palette de couleurs, mobilier intégré.</p>
-            </div>
-          </div>
-          <div class="expertises__archi-item">
-            <div class="expertises__archi-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </div>
-            <div>
-              <p class="expertises__archi-title">Suivi de chantier complet</p>
-              <p class="expertises__archi-desc">Coordination des artisans, contrôle qualité, réception. Un seul interlocuteur de la conception à la clé en main.</p>
-            </div>
-          </div>
-        </div>
-        <a href="architecture.html" class="expertises__col-cta expertises__col-cta--secondary">
-          Tout savoir sur l'architecture
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-      </div>
 
     </div>
 
@@ -1098,9 +1099,9 @@
     </div>
     <div class="projects__grid" role="list">
       <article class="proj-item reveal" role="listitem" tabindex="0"><div class="proj-item__bg"></div><div class="proj-item__overlay"><div class="proj-item__info"><p class="proj-item__cat">Mobilier Sur-Mesure</p><h3 class="proj-item__name">Chambre d'Amis</h3></div></div></article>
-      <article class="proj-item reveal reveal-delay-1" role="listitem" tabindex="0"><div class="proj-item__bg"></div><div class="proj-item__overlay"><div class="proj-item__info"><p class="proj-item__cat">Architecture d'Intérieur</p><h3 class="proj-item__name">Bibliotheque salon</h3></div></div></article>
+      <article class="proj-item reveal reveal-delay-1" role="listitem" tabindex="0"><div class="proj-item__bg"></div><div class="proj-item__overlay"><div class="proj-item__info"><p class="proj-item__cat">Mobilier Sur-Mesure</p><h3 class="proj-item__name">Bibliotheque salon</h3></div></div></article>
       <article class="proj-item reveal reveal-delay-2" role="listitem" tabindex="0"><div class="proj-item__bg"></div><div class="proj-item__overlay"><div class="proj-item__info"><p class="proj-item__cat">Mobilier Sur-Mesure</p><h3 class="proj-item__name">Cuisine sur-Mesure</h3></div></div></article>
-      <article class="proj-item reveal reveal-delay-3" role="listitem" tabindex="0"><div class="proj-item__bg"></div><div class="proj-item__overlay"><div class="proj-item__info"><p class="proj-item__cat">Architecture d'Intérieur</p><h3 class="proj-item__name">Rangement dressing</h3></div></div></article>
+      <article class="proj-item reveal reveal-delay-3" role="listitem" tabindex="0"><div class="proj-item__bg"></div><div class="proj-item__overlay"><div class="proj-item__info"><p class="proj-item__cat">Mobilier Sur-Mesure</p><h3 class="proj-item__name">Rangement dressing</h3></div></div></article>
     </div>
   </section>
 
@@ -1171,7 +1172,7 @@
     <div class="footer__top">
       <div class="footer__brand">
         <img src="img/logo-koboblanc.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
-        <p>Studio de mobilier sur-mesure et d'architecture d'intérieur, basé à Bordeaux depuis 2018.</p>
+        <p>Studio de mobilier sur-mesure prêt-à-monter, basé à Bordeaux depuis 2018.</p>
       </div>
       <div class="footer__col">
         <h4>Pages</h4>
@@ -1179,8 +1180,8 @@
           <li><a href="index.html">Accueil</a></li>
           <li><a href="projets.html">Nos projets</a></li>
           <li><a href="gamme.html">Notre gamme</a></li>
-          <li><a href="mobilier.html">Mobilier sur-mesure</a></li>
-          <li><a href="architecture.html">Architecture d'intérieur</a></li>
+          <li><a href="mobilier.html">Mobilier sur mesure prêt à monter</a></li>
+          <li><a href="gamme.html">Notre gamme de mobilier</a></li>
         </ul>
       </div>
       <div class="footer__col">
