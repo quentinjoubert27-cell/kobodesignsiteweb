@@ -8,6 +8,21 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Endpoint de diagnostic (GET)
+  if (req.method === 'GET') {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const { error } = await supabase.from('configs_biblio').select('id').limit(1);
+    return res.status(200).json({
+      supabase_url: process.env.SUPABASE_URL ? 'OK' : 'MANQUANT',
+      supabase_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MANQUANT',
+      resend_key: process.env.RESEND_API_KEY ? 'OK' : 'MANQUANT',
+      contact_email: process.env.CONTACT_EMAIL ? 'OK' : 'MANQUANT',
+      table_configs_biblio: error ? ('ERREUR: ' + error.message) : 'OK',
+    });
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
@@ -127,6 +142,10 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     console.error('biblio-config error:', err);
-    return res.status(500).json({ error: 'Erreur serveur. Réessayez dans un instant.' });
+    // En dev/debug : renvoyer le message réel pour faciliter le diagnostic
+    const isDev = process.env.VERCEL_ENV !== 'production';
+    return res.status(500).json({
+      error: isDev ? (err.message || String(err)) : 'Erreur serveur. Réessayez dans un instant.'
+    });
   }
 };
