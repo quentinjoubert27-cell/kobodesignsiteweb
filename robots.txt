@@ -4,6 +4,8 @@ Allow: /
 Disallow: /admin.html
 Disallow: /espace-client.html
 Disallow: /configurateur-biblio-test.html
+Disallow: /mes-configs.html
+Disallow: /mes-configs
 Disallow: /configurateur-compose.html
 Disallow: /mentions-legales.html
 Disallow: /politique-confidentialite.html
