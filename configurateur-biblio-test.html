@@ -209,7 +209,36 @@
       border:none; border-radius:10px; cursor:pointer; transition:background .2s;
     }
     .cta-btn:hover{ background:#2d2d2d }
+    .cta-btn:disabled{ opacity:.5; cursor:not-allowed }
     .cta-note{ font-size:10px; color:rgba(26,26,26,.38); text-align:center; line-height:1.5 }
+
+    /* Formulaire envoi config */
+    .cfg-field{
+      width:100%; padding:10px 12px; font-family:var(--font); font-size:12px;
+      border:1.5px solid rgba(26,26,26,.15); border-radius:8px; background:#fff;
+      color:var(--dark); outline:none; transition:border-color .2s; box-sizing:border-box;
+    }
+    .cfg-field:focus{ border-color:var(--accent) }
+    .cfg-field::placeholder{ color:rgba(26,26,26,.35) }
+    textarea.cfg-field{ resize:vertical; min-height:68px; line-height:1.5 }
+    .cfg-field-row{ display:flex; flex-direction:column; gap:8px }
+    .cfg-summary{
+      background:rgba(26,26,26,.04); border-radius:8px; padding:10px 14px;
+      font-size:10px; font-weight:600; color:rgba(26,26,26,.5);
+      letter-spacing:.04em; line-height:1.6; text-align:center;
+    }
+    .cfg-summary strong{ color:var(--dark) }
+    .cfg-ok{
+      background:rgba(205,62,0,.08); border:1px solid rgba(205,62,0,.2);
+      border-radius:10px; padding:16px; text-align:center;
+      font-size:12px; font-weight:600; color:var(--accent); line-height:1.6;
+    }
+    .cfg-ok .cfg-ok-icon{ font-size:22px; display:block; margin-bottom:6px }
+    .cfg-err{
+      background:rgba(220,0,0,.07); border:1px solid rgba(220,0,0,.2);
+      border-radius:8px; padding:10px 14px;
+      font-size:11px; color:#c00; text-align:center;
+    }
   </style>
 </head>
 <body>
@@ -314,8 +343,35 @@
 
       <div class="divider"></div>
 
-      <a href="contact.html" class="cta-btn" id="ctaBtn">Demander un devis →</a>
-      <p class="cta-note">Gratuit · Sans engagement · Réponse sous 24 h</p>
+      <!-- ── Envoi configuration ──────────────────── -->
+      <div class="ctrl-sect">
+        <p class="sect-lbl">✦ Envoyer ma configuration</p>
+
+        <!-- Formulaire (état initial) -->
+        <div id="cfgFormWrap">
+          <div class="cfg-field-row" style="margin-bottom:8px">
+            <input  type="text"  id="cfgPrenom"  class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
+            <input  type="email" id="cfgEmail"   class="cfg-field" placeholder="Votre email *"  maxlength="200" autocomplete="email"/>
+            <textarea             id="cfgMessage" class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
+          </div>
+          <!-- Récap config -->
+          <div class="cfg-summary" id="cfgSummary" style="margin-bottom:12px">—</div>
+          <!-- Anti-bot -->
+          <input type="text" id="cfgBot" style="display:none" tabindex="-1" autocomplete="off"/>
+          <!-- Erreur -->
+          <div class="cfg-err" id="cfgErr" style="display:none;margin-bottom:10px"></div>
+          <!-- Submit -->
+          <button class="cta-btn" id="cfgSubmitBtn" onclick="submitConfig()">Envoyer ma bibliothèque →</button>
+          <p class="cta-note" style="margin-top:8px">Gratuit · Sans engagement · Réponse sous 24 h</p>
+        </div>
+
+        <!-- État succès -->
+        <div class="cfg-ok" id="cfgSuccess" style="display:none">
+          <span class="cfg-ok-icon">✓</span>
+          Configuration reçue !<br>
+          <span style="font-weight:400;color:rgba(26,26,26,.5)">On revient vers vous dans les 24 h.</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1194,11 +1250,74 @@ function updateCTA(){
   var tr=elements.filter(function(e){return e.type==='traverse';}).length;
   var se=elements.filter(function(e){return e.type==='separator';}).length;
   var do_=elements.filter(function(e){return e.type==='door';}).length;
-  var p=new URLSearchParams({gamme:'bibliothèque',largeur:state.W+' cm',hauteur:state.H+' cm',
-    profondeur:state.D+' cm',etageres:sh,traverses:tr,intercalaires:se,portes:do_,essence:def.label});
-  var btn=document.getElementById('ctaBtn');
-  if(btn)btn.href='contact.html?'+p.toString();
+
+  // Récap config dans le formulaire
+  var sumEl=document.getElementById('cfgSummary');
+  if(sumEl){
+    var parts=['<strong>'+state.W+'×'+state.H+'×'+state.D+' cm</strong>','<strong>'+def.label+'</strong>'];
+    if(sh) parts.push(sh+' étagère'+(sh>1?'s':''));
+    if(tr) parts.push(tr+' traverse'+(tr>1?'s':''));
+    if(se) parts.push(se+' intercalaire'+(se>1?'s':''));
+    if(do_) parts.push(do_+' porte'+(do_>1?'s':''));
+    sumEl.innerHTML=parts.join(' · ');
+  }
 }
+
+async function submitConfig(){
+  var prenom  = (document.getElementById('cfgPrenom').value||'').trim();
+  var email   = (document.getElementById('cfgEmail').value||'').trim();
+  var message = (document.getElementById('cfgMessage').value||'').trim();
+  var bot     = document.getElementById('cfgBot').value;
+  var errEl   = document.getElementById('cfgErr');
+  var btn     = document.getElementById('cfgSubmitBtn');
+
+  // Validation basique
+  errEl.style.display='none';
+  if(!prenom||!email){
+    errEl.textContent='Prénom et email obligatoires.';
+    errEl.style.display='block';
+    return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    errEl.textContent='Email invalide.';
+    errEl.style.display='block';
+    return;
+  }
+
+  btn.disabled=true; btn.textContent='Envoi en cours…';
+
+  var def=MATS.find(function(m){return m.id===state.matId;})||MATS[0];
+
+  try {
+    var resp=await fetch('/api/biblio-config',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        prenom: prenom,
+        email:  email,
+        message:message,
+        botcheck: bot,
+        config:{
+          W:state.W, H:state.H, D:state.D,
+          matLabel:def.label,
+          elements:elements
+        }
+      })
+    });
+    var data=await resp.json();
+    if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
+
+    // Succès
+    document.getElementById('cfgFormWrap').style.display='none';
+    document.getElementById('cfgSuccess').style.display='block';
+
+  } catch(err){
+    btn.disabled=false; btn.textContent='Envoyer ma bibliothèque →';
+    errEl.textContent=err.message||'Erreur réseau. Réessayez.';
+    errEl.style.display='block';
+  }
+}
+window.submitConfig=submitConfig;
 
 // ═══════════════════════════════════════════════════
 //  PORTES — animation & toggle
