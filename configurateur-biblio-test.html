@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <title>Configurateur Bibliothèque — Kobo Design</title>
+  <link rel="icon" type="image/png" href="img/logo-kobo.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;0,900&display=swap" rel="stylesheet"/>
+  <style>
+    :root{ --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A; --font:'Poppins',sans-serif }
+    *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0 }
+    body{ font-family:var(--font); background:var(--bg); color:var(--dark); min-height:100vh }
+
+    header{
+      height:64px; display:flex; align-items:center; justify-content:space-between;
+      padding:0 clamp(20px,5vw,72px); border-bottom:1px solid rgba(26,26,26,.08);
+      background:rgba(255,250,240,.96); backdrop-filter:blur(8px); position:sticky; top:0; z-index:10;
+    }
+    .logo img{ height:30px }
+    .header-badge{
+      font-size:9px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+      color:var(--accent); background:rgba(205,62,0,.08);
+      border:1px solid rgba(205,62,0,.2); border-radius:100px; padding:6px 14px;
+    }
+
+    .page{ max-width:1300px; margin:0 auto; padding:40px clamp(20px,5vw,72px) 80px }
+    .eyebrow{ font-size:9px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); margin-bottom:8px }
+    h1{ font-size:clamp(28px,3.8vw,52px); font-weight:900; letter-spacing:-.03em; margin-bottom:6px; line-height:1.05 }
+    h1 em{ font-style:italic; font-weight:300; color:rgba(26,26,26,.28) }
+    .sub{ font-size:12px; color:rgba(26,26,26,.45); margin-bottom:36px }
+    .test-banner{
+      margin-bottom:24px; background:rgba(205,62,0,.07);
+      border:1px solid rgba(205,62,0,.18); border-radius:10px;
+      padding:10px 16px; font-size:11px; color:rgba(26,26,26,.6);
+    }
+    .test-banner strong{ color:var(--accent) }
+
+    .layout{ display:grid; grid-template-columns:1fr 340px; gap:24px; align-items:start }
+    @media(max-width:900px){ .layout{ grid-template-columns:1fr } }
+
+    /* ── Viewer ──────────────────────────────────────── */
+    .viewer-wrap{
+      position:relative; border-radius:18px; overflow:hidden;
+      background:linear-gradient(145deg,#F2EAD8,#F8F3E9);
+      border:1px solid rgba(26,26,26,.09); aspect-ratio:4/3;
+    }
+    canvas{ width:100%!important; height:100%!important; display:block }
+    .viewer-wrap.mode-edit   canvas{ cursor:crosshair }
+    .viewer-wrap.mode-rotate canvas{ cursor:grab }
+    .viewer-wrap.mode-rotate canvas:active{ cursor:grabbing }
+
+    /* Hint rotation */
+    .viewer-hint{
+      position:absolute; top:14px; left:50%; transform:translateX(-50%);
+      font-size:9px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+      color:rgba(26,26,26,.38); background:rgba(255,250,240,.8);
+      padding:5px 14px; border-radius:100px; pointer-events:none; white-space:nowrap; transition:opacity .25s;
+    }
+    .mode-edit .viewer-hint{ opacity:0 }
+
+    /* Barre d'édition */
+    .edit-bar{
+      position:absolute; top:14px; left:50%; transform:translateX(-50%);
+      display:flex; align-items:center; gap:8px;
+      background:rgba(26,26,26,.82); backdrop-filter:blur(6px);
+      border-radius:100px; padding:5px 8px 5px 14px;
+      opacity:0; pointer-events:none; transition:opacity .2s; white-space:nowrap;
+    }
+    .mode-edit .edit-bar{ opacity:1; pointer-events:auto }
+    .edit-bar-label{ font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.55) }
+    .type-btns{ display:flex; border-radius:100px; overflow:hidden; background:rgba(255,255,255,.1) }
+    .type-btn{
+      padding:5px 11px; font-family:var(--font); font-size:10px; font-weight:700;
+      letter-spacing:.08em; text-transform:uppercase;
+      color:rgba(255,255,255,.5); background:none; border:none; cursor:pointer;
+      border-radius:100px; transition:background .15s,color .15s; white-space:nowrap;
+    }
+    .type-btn.active{ background:var(--accent); color:#fff }
+    .edit-sep{ width:1px; height:16px; background:rgba(255,255,255,.2) }
+    .edit-close{
+      width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.12);
+      border:none; cursor:pointer; color:rgba(255,255,255,.7); font-size:14px;
+      display:flex; align-items:center; justify-content:center; transition:background .15s;
+    }
+    .edit-close:hover{ background:rgba(255,255,255,.25) }
+
+    /* Hint action */
+    .action-hint{
+      position:absolute; bottom:48px; left:50%; transform:translateX(-50%);
+      font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(26,26,26,.5); background:rgba(255,250,240,.85);
+      padding:5px 14px; border-radius:100px; pointer-events:none;
+      white-space:nowrap; opacity:0; transition:opacity .2s;
+    }
+    .mode-edit .action-hint{ opacity:1 }
+
+    /* Badge vide */
+    .empty-hint{
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      text-align:center; pointer-events:none; transition:opacity .3s;
+    }
+    .empty-hint .eh-icon{ font-size:36px; margin-bottom:10px; opacity:.25 }
+    .empty-hint .eh-txt{
+      font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+      color:rgba(26,26,26,.3); line-height:1.7;
+    }
+
+    /* Coords live */
+    .pos-hint{
+      position:absolute; bottom:48px; right:14px;
+      font-size:9px; font-weight:700; letter-spacing:.08em; font-family:monospace;
+      color:rgba(26,26,26,.55); background:rgba(255,250,240,.88);
+      padding:4px 10px; border-radius:100px; pointer-events:none;
+      white-space:nowrap; opacity:0; transition:opacity .15s;
+    }
+    .mode-edit .pos-hint.visible{ opacity:1 }
+
+    /* Badge dimensions */
+    .dims-badge{
+      position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+      font-size:10px; font-weight:700; letter-spacing:.1em;
+      color:var(--dark); background:rgba(255,250,240,.92);
+      padding:6px 18px; border-radius:100px; white-space:nowrap;
+      border:1px solid rgba(26,26,26,.1);
+    }
+
+    /* ── Contrôles ──────────────────────────────────── */
+    .ctrl-panel{
+      background:#fff; border-radius:18px; border:1px solid rgba(26,26,26,.09);
+      padding:28px 24px; display:flex; flex-direction:column; gap:24px;
+    }
+    .sect-lbl{ font-size:9px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:rgba(26,26,26,.4); margin-bottom:14px }
+
+    /* Sliders */
+    .srow{ margin-bottom:14px }
+    .srow:last-child{ margin-bottom:0 }
+    .srow-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px }
+    .srow-name{ font-size:12px; font-weight:600 }
+    .srow-val{ font-size:12px; font-weight:700; color:var(--accent) }
+    input[type=range]{
+      -webkit-appearance:none; appearance:none; width:100%; height:3px; border-radius:2px;
+      background:linear-gradient(to right,var(--accent) 0%,var(--accent) var(--pct,0%),rgba(26,26,26,.13) var(--pct,0%),rgba(26,26,26,.13) 100%);
+      outline:none; cursor:pointer; display:block;
+    }
+    input[type=range]::-webkit-slider-thumb{
+      -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+      background:var(--accent); border:2.5px solid #fff;
+      box-shadow:0 1px 6px rgba(205,62,0,.3); cursor:pointer; transition:transform .12s;
+    }
+    input[type=range]:active::-webkit-slider-thumb{ transform:scale(1.2) }
+    .range-ends{ display:flex; justify-content:space-between; font-size:9px; color:rgba(26,26,26,.3); font-weight:500; margin-top:4px }
+
+    .edit-btn{
+      width:100%; padding:12px; font-family:var(--font); font-size:10px; font-weight:700;
+      letter-spacing:.18em; text-transform:uppercase;
+      border:2px solid var(--accent); border-radius:10px; cursor:pointer;
+      transition:background .2s,color .2s; background:transparent; color:var(--accent);
+    }
+    .edit-btn:hover, .edit-btn.active{ background:var(--accent); color:#fff }
+    .reset-btn{
+      width:100%; padding:10px; font-family:var(--font); font-size:9px; font-weight:700;
+      letter-spacing:.16em; text-transform:uppercase;
+      border:1.5px solid rgba(26,26,26,.15); border-radius:8px; cursor:pointer;
+      background:none; color:rgba(26,26,26,.45); transition:border-color .2s,color .2s;
+    }
+    .reset-btn:hover{ border-color:var(--accent); color:var(--accent) }
+
+    .elem-count{ font-size:11px; color:rgba(26,26,26,.45); text-align:center; min-height:18px }
+    .elem-count strong{ color:var(--dark); font-weight:700 }
+
+    /* Légende types */
+    .legend{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:-8px }
+    .legend-item{ display:flex; align-items:center; gap:5px; font-size:9px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:rgba(26,26,26,.4) }
+    .legend-dot{ width:10px; height:10px; border-radius:2px; flex-shrink:0 }
+    .legend-dot.shelf{ background:rgba(26,26,26,.25) }
+    .legend-dot.traverse{ background:rgba(26,26,26,.15); height:4px; border-radius:1px }
+    .legend-dot.separator{ background:rgba(26,26,26,.25); width:4px; height:14px; border-radius:1px }
+    .legend-dot.door{ background:rgba(26,26,26,.22); width:9px; height:14px; border-radius:1px; border-right:2px solid rgba(26,26,26,.35) }
+
+    .toggle-doors-btn{
+      width:100%; padding:11px; font-family:var(--font); font-size:10px; font-weight:700;
+      letter-spacing:.14em; text-transform:uppercase;
+      border:1.5px solid rgba(26,26,26,.18); border-radius:8px; cursor:pointer;
+      background:none; color:rgba(26,26,26,.55); transition:border-color .2s,color .2s,background .2s;
+      display:none;
+    }
+    .toggle-doors-btn:hover{ border-color:var(--accent); color:var(--accent) }
+    .toggle-doors-btn.open{ background:var(--accent); color:#fff; border-color:var(--accent) }
+
+    /* Grille matières */
+    .mat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px }
+    .mat-btn{
+      aspect-ratio:1; border-radius:9px; border:2px solid transparent;
+      overflow:hidden; cursor:pointer; background:none; padding:0;
+      position:relative; transition:border-color .2s,transform .15s;
+    }
+    .mat-btn:hover{ transform:scale(1.06) }
+    .mat-btn.active{ border-color:var(--accent) }
+    .mat-btn img,.mat-swatch{ width:100%; height:100%; object-fit:cover; border-radius:7px; display:block }
+    .mat-lbl{ position:absolute; bottom:0; left:0; right:0; font-size:7px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; text-align:center; background:rgba(255,250,240,.88); color:var(--dark); padding:2px 3px }
+
+    .divider{ height:1px; background:rgba(26,26,26,.07); margin:0 -24px }
+    .cta-btn{
+      display:block; width:100%; padding:14px; font-family:var(--font);
+      font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+      text-align:center; text-decoration:none; background:var(--dark); color:#fff;
+      border:none; border-radius:10px; cursor:pointer; transition:background .2s;
+    }
+    .cta-btn:hover{ background:#2d2d2d }
+    .cta-note{ font-size:10px; color:rgba(26,26,26,.38); text-align:center; line-height:1.5 }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo"><img src="img/logo-kobo.png" alt="Kobo Design"/></a>
+  <span class="header-badge">Test · Bibliothèque PAM</span>
+</header>
+
+<div class="page">
+  <p class="eyebrow">Configurateur</p>
+  <h1>Bibliothèque<br><em>sur-mesure.</em></h1>
+  <p class="sub">Aperçu 3D indicatif — les cotes finales sont confirmées lors du devis.</p>
+  <div class="test-banner">
+    <strong>Version test</strong> — géométrie 100% procédurale. En mode édition : cliquez à l'intérieur pour placer étagères, traverses ou intercalaires. Cliquez sur un élément pour le supprimer.
+  </div>
+
+  <div class="layout">
+
+    <!-- VIEWER -->
+    <div class="viewer-wrap mode-rotate" id="viewerWrap">
+      <canvas id="c"></canvas>
+
+      <!-- Indice vide -->
+      <div class="empty-hint" id="emptyHint">
+        <div class="eh-icon">□</div>
+        <div class="eh-txt">Structure vide<br>Cliquez « Éditer » pour ajouter des étagères</div>
+      </div>
+
+      <!-- Hint rotation -->
+      <div class="viewer-hint">⟳ Glissez pour tourner</div>
+
+      <!-- Barre édition -->
+      <div class="edit-bar">
+        <span class="edit-bar-label">Ajouter</span>
+        <div class="type-btns">
+          <button class="type-btn active" id="typeShelf"     onclick="setType('shelf')">━ Étagère</button>
+          <button class="type-btn"        id="typeTraverse"  onclick="setType('traverse')">═ Traverse</button>
+          <button class="type-btn"        id="typeSeparator" onclick="setType('separator')">┃ Intercalaire</button>
+          <button class="type-btn"        id="typeDoor"      onclick="setType('door')">🚪 Porte</button>
+        </div>
+        <div class="edit-sep"></div>
+        <button class="edit-close" onclick="setEditMode(false)" title="Quitter l'édition">✕</button>
+      </div>
+
+      <!-- Hint action -->
+      <div class="action-hint" id="actionHint">Clic = poser · Clic sur élément = supprimer</div>
+      <!-- Coordonnées live en mode édition -->
+      <div class="pos-hint" id="posHint"></div>
+
+      <!-- Dimensions -->
+      <div class="dims-badge" id="dimsBadge">120 × 200 × 35 cm</div>
+    </div>
+
+    <!-- CONTRÔLES -->
+    <div class="ctrl-panel">
+
+      <div class="ctrl-sect">
+        <p class="sect-lbl">✦ Dimensions</p>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-name">Largeur</span><span class="srow-val"><span id="vW">120</span> cm</span></div>
+          <input type="range" id="sW" min="60" max="300" step="5" value="120" oninput="onSlider()"/>
+          <div class="range-ends"><span>60 cm</span><span>300 cm</span></div>
+        </div>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-name">Hauteur</span><span class="srow-val"><span id="vH">200</span> cm</span></div>
+          <input type="range" id="sH" min="80" max="260" step="5" value="200" oninput="onSlider()"/>
+          <div class="range-ends"><span>80 cm</span><span>260 cm</span></div>
+        </div>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-name">Profondeur</span><span class="srow-val"><span id="vD">35</span> cm</span></div>
+          <input type="range" id="sD" min="25" max="60" step="5" value="35" oninput="onSlider()"/>
+          <div class="range-ends"><span>25 cm</span><span>60 cm</span></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="ctrl-sect">
+        <p class="sect-lbl">✦ Aménagement intérieur</p>
+        <p class="elem-count" id="elemCount">Structure vide</p>
+        <div class="legend" id="legend" style="display:none">
+          <span class="legend-item"><span class="legend-dot shelf"></span>Étagère</span>
+          <span class="legend-item"><span class="legend-dot traverse"></span>Traverse</span>
+          <span class="legend-item"><span class="legend-dot separator"></span>Intercalaire</span>
+          <span class="legend-item"><span class="legend-dot door"></span>Porte</span>
+        </div>
+        <div style="height:12px"></div>
+        <button class="edit-btn" id="editBtn" onclick="toggleEdit()">✏ Éditer les positions</button>
+        <div style="height:8px"></div>
+        <button class="reset-btn" onclick="resetElements()">↺ Vider l'aménagement</button>
+        <div style="height:8px"></div>
+        <button class="toggle-doors-btn" id="toggleDoorsBtn" onclick="toggleAllDoors()">🚪 Ouvrir toutes les portes</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="ctrl-sect">
+        <p class="sect-lbl">✦ Essence / finition</p>
+        <div class="mat-grid" id="matGrid"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <a href="contact.html" class="cta-btn" id="ctaBtn">Demander un devis →</a>
+      <p class="cta-note">Gratuit · Sans engagement · Réponse sous 24 h</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════
+//  DONNÉES MATÉRIAUX
+// ═══════════════════════════════════════════════════
+var MATS = [
+  {id:'chene',        label:'Chêne',       src:'img/BOISCHENE.jpg'},
+  {id:'noyer',        label:'Noyer',       src:'img/NOYER.jpg'},
+  {id:'chene_fonce',  label:'Chêne F.',    src:'img/CHENEFONCE.jpg'},
+  {id:'sapelli',      label:'Sapelli',     src:'img/SAPELLI.jpg'},
+  {id:'vert_sauge',   label:'Vert Sauge',  src:'img/VERTSAUGE.jpg'},
+  {id:'brun_rose',    label:'Brun Rosé',   src:'img/BRUNROSE.jpg'},
+  {id:'gris_ardoise', label:'Gris Ardoise',src:'img/GRISARDOISE.jpg'},
+  {id:'blanc',        label:'Blanc',       src:null, color:'#F0EDEA'},
+];
+
+// ═══════════════════════════════════════════════════
+//  ÉTAT
+// ═══════════════════════════════════════════════════
+var state = {W:120, H:200, D:35, matId:'chene'};
+
+/*  Chaque élément :
+    - {type:'shelf',     y_cm: Number}   étagère horizontale
+    - {type:'traverse',  y_cm: Number}   traverse en façade
+    - {type:'separator', x_cm: Number, y_cm: Number}  intercalaire vertical
+      x_cm : position depuis le mur gauche intérieur
+      y_cm : position de clic (sert à identifier le compartiment) */
+var elements    = [];
+var currentType = 'shelf';
+var editMode    = false;
+
+// Dimensions en mètres — mises à jour à chaque rebuild
+var W_m, H_m, D_m, iW_m, iH_m, normScale;
+
+// ═══════════════════════════════════════════════════
+//  CONSTANTES
+// ═══════════════════════════════════════════════════
+var T            = 0.018;  // épaisseur panneau 18 mm
+var BT           = 0.008;  // fond 8 mm
+var TR_DEPTH     = 0.05;   // profondeur traverse 5 cm
+var SNAP_CM      = 1;      // grille de snap 1 cm
+var MIN_GAP_H    = 6;      // espacement min vertical entre éléments (cm)
+var MIN_GAP_V    = 6;      // espacement min horizontal entre intercalaires (cm)
+
+// ═══════════════════════════════════════════════════
+//  THREE.JS
+// ═══════════════════════════════════════════════════
+var canvas  = document.getElementById('c');
+var wrapper = document.getElementById('viewerWrap');
+
+var scene, camera, renderer;
+var rootGroup  = null;
+var caseGroup  = null;
+var elemsGroup = null;
+var ghostMesh   = null;
+var hitPlane    = null;
+var elemMeshes  = [];   // pivot/mesh par élément (ordre = elements[])
+var doorLeaves  = [];   // feuilles de porte pour raycast
+
+var rotX = 0.18, rotY = 0.5, drag = false, lastX = 0, lastY = 0;
+var savedRotX = 0.18, savedRotY = 0.5; // sauvegarde pour restauration après édition
+var raycaster = new THREE.Raycaster();
+var mouseVec  = new THREE.Vector2();
+var texCache  = {};
+var baseMat   = null;
+
+// ── Init scène ───────────────────────────────────
+function initScene() {
+  var vw = wrapper.clientWidth  || 800;
+  var vh = wrapper.clientHeight || 600;
+
+  scene  = new THREE.Scene();
+  scene.background = new THREE.Color(0xF2EAD8);
+  camera = new THREE.PerspectiveCamera(36, vw/vh, 0.01, 200);
+  camera.position.set(0, 0, 5);
+
+  renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(vw, vh);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.88;
+  try{renderer.outputColorSpace=THREE.SRGBColorSpace;}catch(e){try{renderer.outputEncoding=THREE.sRGBEncoding;}catch(e2){}}
+
+  scene.add(new THREE.AmbientLight(0xfff8ef, 0.70));
+  var key = new THREE.DirectionalLight(0xffffff, 0.90);
+  key.position.set(5,10,7); key.castShadow=true;
+  key.shadow.mapSize.set(1024,1024);
+  key.shadow.camera.left=key.shadow.camera.bottom=-6;
+  key.shadow.camera.right=key.shadow.camera.top=6;
+  key.shadow.bias=-0.001;
+  scene.add(key);
+  var fill=new THREE.DirectionalLight(0xffe8d0,0.40); fill.position.set(-6,4,-3); scene.add(fill);
+  var rim=new THREE.DirectionalLight(0xffffff,0.15);  rim.position.set(0,-4,-8); scene.add(rim);
+
+  var sp = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.ShadowMaterial({opacity:0.10}));
+  sp.rotation.x=-Math.PI/2; sp.position.y=-1.3; sp.receiveShadow=true; scene.add(sp);
+
+  rootGroup = new THREE.Group();
+  rootGroup.rotation.set(rotX, rotY, 0);
+  scene.add(rootGroup);
+
+  canvas.addEventListener('mousedown', onMouseDown);
+  window.addEventListener('mouseup',   onMouseUp);
+  window.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('click',     onCanvasClick);
+  canvas.addEventListener('touchstart', onTouchStart, {passive:true});
+  canvas.addEventListener('touchend',   onTouchEnd);
+  canvas.addEventListener('touchmove',  onTouchMove, {passive:true});
+  window.addEventListener('resize', function(){
+    var w=wrapper.clientWidth, h=wrapper.clientHeight;
+    camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+  });
+  (function loop(){requestAnimationFrame(loop); animateDoors(); renderer.render(scene,camera);})();
+}
+
+// ── Événements ──────────────────────────────────
+function onMouseDown(e){ if(!editMode){drag=true; lastX=e.clientX; lastY=e.clientY;} }
+function onMouseUp()   { drag=false; }
+function onMouseMove(e){
+  if(editMode){ updateGhost(e); }
+  else if(!drag&&doorLeaves.length){
+    var ndc=getNDC(e); mouseVec.set(ndc.x,ndc.y);
+    raycaster.setFromCamera(mouseVec,camera);
+    canvas.style.cursor=raycaster.intersectObjects(doorLeaves,false).length?'pointer':'';
+  }
+  if(drag&&rootGroup){
+    rotY+=(e.clientX-lastX)*0.007;
+    rotX=Math.max(-0.6,Math.min(0.6,rotX+(e.clientY-lastY)*0.004));
+    rootGroup.rotation.set(rotX,rotY,0);
+    lastX=e.clientX; lastY=e.clientY;
+  }
+}
+function onCanvasClick(e){
+  if(editMode){ placeOrRemove(e); return; }
+  // Mode visualisation : clic sur porte = ouvrir/fermer
+  if(!doorLeaves.length)return;
+  var ndc=getNDC(e); mouseVec.set(ndc.x,ndc.y);
+  raycaster.setFromCamera(mouseVec,camera);
+  var hits=raycaster.intersectObjects(doorLeaves,false);
+  if(!hits.length)return;
+  var eidx=hits[0].object.userData.elementIndex;
+  if(eidx!==undefined&&elements[eidx]&&elements[eidx].type==='door'){
+    elements[eidx].open=!elements[eidx].open;
+    updateToggleDoorsBtn();
+  }
+}
+function onTouchStart(e){ if(!editMode){drag=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;} }
+function onTouchEnd(){ drag=false; }
+function onTouchMove(e){
+  if(editMode) return;
+  if(!drag) return;
+  rotY+=(e.touches[0].clientX-lastX)*0.007;
+  rotX=Math.max(-0.6,Math.min(0.6,rotX+(e.touches[0].clientY-lastY)*0.004));
+  rootGroup.rotation.set(rotX,rotY,0);
+  lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
+}
+
+// ═══════════════════════════════════════════════════
+//  TEXTURE / MATÉRIAU
+// ═══════════════════════════════════════════════════
+function loadMat(id, cb){
+  var def=MATS.find(function(m){return m.id===id;});
+  if(!def){if(cb)cb();return;}
+  if(!def.src){
+    baseMat=new THREE.MeshStandardMaterial({color:new THREE.Color(def.color||'#D4A96A'),roughness:.70,metalness:0});
+    if(cb)cb(); return;
+  }
+  if(texCache[id]){
+    baseMat=new THREE.MeshStandardMaterial({map:texCache[id],roughness:.65,metalness:0});
+    if(cb)cb(); return;
+  }
+  new THREE.TextureLoader().load(def.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    texCache[id]=tex;
+    baseMat=new THREE.MeshStandardMaterial({map:tex,roughness:.65,metalness:0});
+    if(cb)cb();
+  });
+}
+
+function panelMat(rW,rH){
+  if(baseMat&&baseMat.map){
+    var tex=baseMat.map.clone(); tex.needsUpdate=true;
+    tex.repeat.set(Math.max(rW,0.01)/0.40, Math.max(rH,0.01)/0.40);
+    return new THREE.MeshStandardMaterial({map:tex,roughness:.65,metalness:0});
+  }
+  return baseMat?baseMat.clone():new THREE.MeshStandardMaterial({color:0xD4A96A,roughness:.68});
+}
+
+function addPanel(group,w,h,d,x,y,z,rW,rH){
+  var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), panelMat(rW||w,rH||h));
+  mesh.position.set(x,y,z); mesh.castShadow=true; mesh.receiveShadow=true;
+  group.add(mesh);
+}
+
+// ═══════════════════════════════════════════════════
+//  GEOMETRY HELPERS
+// ═══════════════════════════════════════════════════
+
+// Y local (caseGroup, mètres) depuis cm sol intérieur
+function ycmToLocal(y_cm){
+  return y_cm/100 - H_m/2 + T;
+}
+
+// Trouve le compartiment vertical contenant y_cm_hit.
+// x_cm (optionnel) : si fourni, ignore les étagères partielles qui ne couvrent pas ce X
+// → une étagère de baie ne divise que sa propre colonne, pas toute la largeur
+function getCompartment(y_cm_hit, x_cm){
+  var maxX=Math.round(iW_m*100);
+  var surfaces=[0];
+  elements.forEach(function(el){
+    if(el.type==='shelf'||el.type==='traverse'){
+      if(x_cm!==undefined){
+        var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
+        var xr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
+        if(x_cm<=xl||x_cm>=xr)return; // cette étagère ne couvre pas le X demandé
+      }
+      surfaces.push(el.y_cm);
+    }
+  });
+  surfaces.push(state.H);
+  surfaces.sort(function(a,b){return a-b;});
+  var floor=0, ceil=state.H;
+  for(var i=0;i<surfaces.length-1;i++){
+    if(y_cm_hit>=surfaces[i]&&y_cm_hit<surfaces[i+1]){floor=surfaces[i];ceil=surfaces[i+1];break;}
+  }
+  return {floor_y_cm:floor, ceil_y_cm:ceil};
+}
+
+// Détecte la baie horizontale (entre murs/séparateurs) à la position x_cm_hit
+// dans le compartiment contenant y_cm_hit
+function getBay(y_cm_hit, x_cm_hit){
+  var comp=getCompartment(y_cm_hit, x_cm_hit); // x-aware : compartiment correct pour cette colonne
+  // Séparateurs appartenant à ce compartiment (eux aussi x-aware)
+  var seps=[];
+  elements.forEach(function(el){
+    if(el.type==='separator'){
+      var ec=getCompartment(el.y_cm, el.x_cm);
+      // Un séparateur divise ce compartiment si son étendue physique le chevauche
+      // (chevauchement : ec.floor < comp.ceil ET ec.ceil > comp.floor)
+      // Cas important : étagère partielle → le séparateur peut avoir un compartiment
+      // plus grand que comp, mais s'étend quand même à travers lui
+      if(ec.floor_y_cm < comp.ceil_y_cm && ec.ceil_y_cm > comp.floor_y_cm)
+        seps.push(el.x_cm);
+    }
+  });
+  seps.sort(function(a,b){return a-b;});
+  var maxX=Math.round(iW_m*100);
+  var bounds=[0].concat(seps).concat([maxX]);
+  var left=0, right=maxX;
+  for(var i=0;i<bounds.length-1;i++){
+    if(x_cm_hit>=bounds[i]&&x_cm_hit<=bounds[i+1]){left=bounds[i];right=bounds[i+1];break;}
+  }
+  return {floor_y_cm:comp.floor_y_cm, ceil_y_cm:comp.ceil_y_cm, x_left_cm:left, x_right_cm:right};
+}
+
+// Calcule le centre Y et la hauteur locale d'un intercalaire dans un compartiment donné
+function compToLocalYH(floor_y_cm, ceil_y_cm){
+  var floor_top = (floor_y_cm===0) ? -H_m/2+T : ycmToLocal(floor_y_cm)+T/2;
+  var ceil_bot  = (ceil_y_cm===state.H) ? H_m/2-T : ycmToLocal(ceil_y_cm)-T/2;
+  return {centerY:(floor_top+ceil_bot)/2, height:ceil_bot-floor_top};
+}
+
+// ═══════════════════════════════════════════════════
+//  RECONSTRUCTION STRUCTURE
+// ═══════════════════════════════════════════════════
+function rebuild(){
+  if(caseGroup){
+    caseGroup.traverse(function(o){
+      if(o.geometry)o.geometry.dispose();
+      if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){m.dispose();});
+    });
+    rootGroup.remove(caseGroup);
+  }
+  ghostMesh=null; hitPlane=null;
+
+  W_m=state.W/100; H_m=state.H/100; D_m=state.D/100;
+  iW_m=W_m-2*T; iH_m=H_m-2*T;
+
+  caseGroup  = new THREE.Group();
+  elemsGroup = new THREE.Group();
+
+  // Structure (5 panneaux)
+  addPanel(caseGroup, T,   H_m, D_m, -W_m/2+T/2, 0, 0,   D_m, H_m);  // gauche
+  addPanel(caseGroup, T,   H_m, D_m,  W_m/2-T/2, 0, 0,   D_m, H_m);  // droite
+  addPanel(caseGroup, iW_m, T,  D_m,  0,  H_m/2-T/2, 0,  iW_m, D_m); // dessus
+  addPanel(caseGroup, iW_m, T,  D_m,  0, -H_m/2+T/2, 0,  iW_m, D_m); // dessous
+  addPanel(caseGroup, iW_m, iH_m, BT, 0, 0, -D_m/2+BT/2, iW_m, iH_m); // fond
+
+  // Normalisation sur la structure seule (avant d'ajouter hitPlane)
+  caseGroup.updateMatrixWorld(true);
+  var bbox=new THREE.Box3().setFromObject(caseGroup);
+  var bsize=bbox.getSize(new THREE.Vector3());
+  var bctr =bbox.getCenter(new THREE.Vector3());
+  var maxDim=Math.max(bsize.x,bsize.y,bsize.z,0.001);
+  normScale=2.0/maxDim;
+  caseGroup.scale.setScalar(normScale);
+  caseGroup.position.set(-bctr.x*normScale,-bctr.y*normScale,-bctr.z*normScale);
+
+  // hitPlane + elemsGroup APRÈS normalisation
+  hitPlane=new THREE.Mesh(
+    new THREE.PlaneGeometry(50,50),
+    new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide})
+  );
+  // Plan sur la face avant de la bibliothèque (juste derrière l'ouverture)
+  // → élimine la parallaxe quand le meuble est tourné
+  hitPlane.position.z=D_m/2-T-0.001;
+  hitPlane.userData.isHitPlane=true;
+  caseGroup.add(hitPlane);
+  caseGroup.add(elemsGroup);
+  rootGroup.add(caseGroup);
+
+  rebuildElements();
+  updateUI();
+}
+
+// ═══════════════════════════════════════════════════
+//  ÉLÉMENTS (étagères, traverses, intercalaires)
+// ═══════════════════════════════════════════════════
+function rebuildElements(){
+  while(elemsGroup.children.length){
+    var c=elemsGroup.children[0];
+    c.traverse(function(o){
+      if(o.geometry)o.geometry.dispose();
+      if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){m.dispose();});
+    });
+    elemsGroup.remove(c);
+  }
+  elemMeshes=[]; doorLeaves=[];
+  elements.forEach(function(el,idx){
+    var mesh=makeElemMesh(el,false);
+    if(!mesh)return;
+    mesh.userData.elementIndex=idx;
+    mesh.userData.elementType=el.type;
+    elemMeshes.push(mesh);
+    elemsGroup.add(mesh);
+    if(el.type==='door'){
+      mesh.traverse(function(c){
+        if(c!==mesh){
+          c.userData.elementIndex=idx;
+          c.userData.elementType='door';
+          // Exclure les poignées du raycasting
+          if(c.isMesh&&c.geometry&&!c.userData.isHandle)doorLeaves.push(c);
+        }
+      });
+    }
+  });
+  updateEmptyHint();
+  updateToggleDoorsBtn();
+}
+
+function makeElemMesh(el, isGhost){
+  var mat;
+  if(isGhost){
+    mat=new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:0.40,depthWrite:false});
+  } else {
+    mat=panelMat(
+      el.type==='separator' ? D_m : iW_m,
+      el.type==='separator' ? (iH_m/3) : D_m
+    );
+  }
+  var mesh;
+
+  if(el.type==='shelf'){
+    var maxX=Math.round(iW_m*100);
+    var sxl=el.x_left_cm!==undefined?el.x_left_cm:0;
+    var sxr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
+    var sW=(sxr-sxl)/100;
+    var sCx=sxl/100-iW_m/2+sW/2;
+    if(!isGhost)mat=panelMat(sW,D_m-BT);
+    mesh=new THREE.Mesh(new THREE.BoxGeometry(sW,T,D_m-BT),mat);
+    mesh.position.set(sCx, ycmToLocal(el.y_cm), BT/2);
+
+  } else if(el.type==='traverse'){
+    var maxX=Math.round(iW_m*100);
+    var txl=el.x_left_cm!==undefined?el.x_left_cm:0;
+    var txr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
+    var tW=(txr-txl)/100;
+    var tCx=txl/100-iW_m/2+tW/2;
+    if(!isGhost)mat=panelMat(tW,TR_DEPTH);
+    mesh=new THREE.Mesh(new THREE.BoxGeometry(tW,T*1.2,TR_DEPTH),mat);
+    mesh.position.set(tCx, ycmToLocal(el.y_cm), D_m/2-TR_DEPTH/2);
+
+  } else if(el.type==='separator'){
+    var comp=getCompartment(el.y_cm, el.x_cm); // x-aware
+    var span=compToLocalYH(comp.floor_y_cm, comp.ceil_y_cm);
+    if(span.height<0.01) return null;
+    var sepH = isGhost ? span.height : span.height; // même hauteur
+    var geo=new THREE.BoxGeometry(T*(isGhost?2.5:1), sepH, D_m-BT-0.02);
+    mesh=new THREE.Mesh(geo,mat);
+    var x=el.x_cm/100-iW_m/2;
+    mesh.position.set(x, span.centerY, BT/2+0.01);
+  }
+
+  if(el.type==='door'){
+    var span2=compToLocalYH(el.floor_y_cm, el.ceil_y_cm);
+    if(span2.height<0.02)return null;
+    // Compatibilité : ancienne porte sans baie → pleine largeur
+    var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
+    var xr=el.x_right_cm!==undefined?el.x_right_cm:Math.round(iW_m*100);
+    var bayW_m=(xr-xl)/100;
+    var dW=bayW_m-0.003, dH=span2.height-0.004, dD=T;
+    // Charnière : porte la plus proche du mur gauche → pivot à gauche ; sinon → pivot à droite
+    var bayCtrCm=(xl+xr)/2;
+    var hingeLeft=(bayCtrCm<=(iW_m*100/2));
+    var pivot=new THREE.Group();
+    pivot.position.set(
+      hingeLeft ? xl/100-iW_m/2 : xr/100-iW_m/2,
+      span2.centerY, D_m/2-T/2
+    );
+    var openAngle=hingeLeft?-Math.PI*0.5:Math.PI*0.5;
+    pivot.rotation.y=isGhost?0:(el.open?openAngle:0);
+    var dMat=isGhost
+      ?new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:.38,depthWrite:false})
+      :panelMat(dH,dW);
+    var doorMesh=new THREE.Mesh(new THREE.BoxGeometry(dW,dH,dD),dMat);
+    // Offset : si pivot à gauche, porte s'étend à droite (+dW/2) ; sinon à gauche (-dW/2)
+    doorMesh.position.set(hingeLeft?dW/2:-dW/2, 0, 0);
+    if(!isGhost){
+      doorMesh.castShadow=true; doorMesh.receiveShadow=true;
+      // Poignée du côté intérieur (bord non-charnière)
+      var hMat=new THREE.MeshStandardMaterial({color:0xD4B483,roughness:.45,metalness:.20});
+      var hMesh=new THREE.Mesh(new THREE.BoxGeometry(0.011,0.07,0.014),hMat);
+      hMesh.position.set(hingeLeft?dW-0.040:-(dW-0.040), 0, dD/2+0.008);
+      hMesh.userData.isHandle=true;
+      doorMesh.add(hMesh);
+    }
+    pivot.add(doorMesh);
+    return pivot;
+  }
+
+  if(!isGhost){mesh.castShadow=true; mesh.receiveShadow=true;}
+  return mesh;
+}
+
+// ═══════════════════════════════════════════════════
+//  RAYCASTING
+// ═══════════════════════════════════════════════════
+function getNDC(e){
+  var rect=canvas.getBoundingClientRect();
+  return {x:((e.clientX-rect.left)/rect.width)*2-1, y:-((e.clientY-rect.top)/rect.height)*2+1};
+}
+
+// Retourne les coordonnées locales (mètres, espace caseGroup pré-normalisation) ou null
+function getLocalHit(e){
+  if(!hitPlane||!caseGroup)return null;
+  var ndc=getNDC(e);
+  mouseVec.set(ndc.x,ndc.y);
+  raycaster.setFromCamera(mouseVec,camera);
+  var hits=raycaster.intersectObject(hitPlane,false);
+  if(!hits.length)return null;
+  var pt=hits[0].point.clone();
+  caseGroup.worldToLocal(pt);
+  return {x:pt.x/normScale, y:pt.y/normScale};  // en mètres
+}
+
+// Convertit coordonnées locales mètres → cm positionnement
+function localToYcm(localY){
+  return (localY+H_m/2-T)*100;
+}
+function localToXcm(localX){
+  return (localX+iW_m/2)*100;
+}
+
+// Snap à la grille
+function snapCm(val){ return Math.round(val/SNAP_CM)*SNAP_CM; }
+
+// Raycast principal — retourne les infos de placement ou null
+function castRay(e){
+  if(!hitPlane||!caseGroup)return null;
+  var ndc=getNDC(e);
+  mouseVec.set(ndc.x,ndc.y);
+  raycaster.setFromCamera(mouseVec,camera);
+
+  // 1. Tester les éléments existants (pour suppression)
+  if(elemMeshes.length){
+    var hits=raycaster.intersectObjects(elemMeshes,true); // true → descend dans les pivots de portes
+    if(hits.length){
+      var h=hits[0];
+      var pt=h.point.clone(); caseGroup.worldToLocal(pt);
+      var localX=pt.x/normScale, localY=pt.y/normScale;
+      var eidx=h.object.userData.elementIndex;
+      if(eidx===undefined&&h.object.parent)eidx=h.object.parent.userData.elementIndex;
+      return {
+        overElement:true, elemIdx:eidx, hitObject:h.object,
+        x_cm:snapCm(Math.max(SNAP_CM,Math.min(iW_m*100-SNAP_CM,localToXcm(localX)))),
+        y_cm:snapCm(Math.max(SNAP_CM,Math.min(state.H-Math.ceil(T*100)-SNAP_CM,localToYcm(localY)))),
+      };
+    }
+  }
+
+  // 2. Tester le plan de frappe
+  var hits2=raycaster.intersectObject(hitPlane,false);
+  if(!hits2.length)return null;
+  var pt2=hits2[0].point.clone(); caseGroup.worldToLocal(pt2);
+  var lx=pt2.x/normScale, ly=pt2.y/normScale;
+
+  // Hors interior → ignorer
+  if(Math.abs(lx)>iW_m/2+0.02)return null;
+  if(ly<-H_m/2+T+0.02||ly>H_m/2-T-0.02)return null;
+
+  var y_cm=snapCm(Math.max(SNAP_CM,Math.min(state.H-Math.ceil(T*100)-SNAP_CM,localToYcm(ly))));
+  var x_cm=snapCm(Math.max(SNAP_CM,Math.min(Math.round(iW_m*100)-SNAP_CM,localToXcm(lx))));
+
+  return {overElement:false, elemIdx:-1, y_cm:y_cm, x_cm:x_cm};
+}
+
+// ── Ghost preview ─────────────────────────────────
+var _ghostType=''; var _ghostCompKey='';
+
+function clearGhost(){
+  if(ghostMesh){
+    if(ghostMesh.geometry)ghostMesh.geometry.dispose();
+    if(ghostMesh.material)ghostMesh.material.dispose();
+    caseGroup.remove(ghostMesh);
+    ghostMesh=null;
+  }
+  _ghostType=''; _ghostCompKey='';
+}
+
+function resetEmissive(){
+  elemMeshes.forEach(function(m){
+    m.traverse(function(c){if(c.material&&c.material.emissive)c.material.emissive.setHex(0);});
+  });
+}
+
+function updatePosHint(hit){
+  var ph=document.getElementById('posHint');
+  if(!ph)return;
+  if(!hit||hit.overElement){ph.classList.remove('visible');return;}
+  var txt='';
+  if(currentType==='shelf'||currentType==='traverse'){
+    var b=getBay(hit.y_cm,hit.x_cm);
+    var fullW=Math.round(iW_m*100);
+    txt=(b.x_left_cm===0&&b.x_right_cm===fullW)?'H = '+hit.y_cm+' cm':'H = '+hit.y_cm+' cm  ['+b.x_left_cm+'→'+b.x_right_cm+' cm]';
+  }
+  else if(currentType==='separator') txt='X = '+hit.x_cm+' cm · H = '+hit.y_cm+' cm';
+  else if(currentType==='door'){
+    var bay=getBay(hit.y_cm,hit.x_cm);
+    txt='Baie '+bay.x_left_cm+'→'+bay.x_right_cm+' cm';
+  }
+  ph.textContent=txt;
+  ph.classList.add('visible');
+}
+
+function updateGhost(e){
+  var hit=castRay(e);
+  resetEmissive();
+  updatePosHint(hit);
+
+  if(!hit){
+    if(ghostMesh)ghostMesh.visible=false;
+    return;
+  }
+
+  if(hit.overElement){
+    // Mettre en évidence l'élément à supprimer
+    if(hit.hitObject&&hit.hitObject.material&&hit.hitObject.material.emissive)
+      hit.hitObject.material.emissive.setHex(0x550000);
+    if(ghostMesh)ghostMesh.visible=false;
+    canvas.style.cursor='pointer';
+    return;
+  }
+
+  canvas.style.cursor='crosshair';
+
+  if(currentType==='door'){
+    updateGhostDoor(hit);
+  } else if(currentType==='separator'){
+    updateGhostSeparator(hit);
+  } else {
+    updateGhostHorizontal(hit);
+  }
+}
+
+function updateGhostHorizontal(hit){
+  var bay=getBay(hit.y_cm, hit.x_cm);
+  var bayW=(bay.x_right_cm-bay.x_left_cm)/100;
+  var bayCx=bay.x_left_cm/100-iW_m/2+bayW/2;
+  var bayKey=currentType+'_'+bay.x_left_cm+'_'+bay.x_right_cm;
+
+  if(!ghostMesh||_ghostType!==bayKey){
+    clearGhost();
+    var mat=new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:.40,depthWrite:false});
+    var geo;
+    if(currentType==='shelf'){
+      geo=new THREE.BoxGeometry(bayW,T*1.5,D_m-BT);
+      ghostMesh=new THREE.Mesh(geo,mat);
+      ghostMesh.position.z=BT/2;
+    } else {
+      geo=new THREE.BoxGeometry(bayW,T*1.8,TR_DEPTH);
+      ghostMesh=new THREE.Mesh(geo,mat);
+      ghostMesh.position.z=D_m/2-TR_DEPTH/2;
+    }
+    _ghostType=bayKey;
+    ghostMesh.renderOrder=1;
+    caseGroup.add(ghostMesh);
+  }
+
+  ghostMesh.position.x=bayCx;
+  ghostMesh.position.y=ycmToLocal(hit.y_cm);
+
+  // Conflit : étagère/traverse qui chevauche la même baie et est trop proche en Y
+  var maxX=Math.round(iW_m*100);
+  var tooClose=elements.some(function(el){
+    if(el.type!=='shelf'&&el.type!=='traverse')return false;
+    if(Math.abs(el.y_cm-hit.y_cm)>=MIN_GAP_H)return false;
+    var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
+    var xr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
+    return xl<bay.x_right_cm&&xr>bay.x_left_cm; // chevauchement horizontal
+  });
+  ghostMesh.material.color.setHex(tooClose?0xFF2200:0xCD3E00);
+  ghostMesh.material.opacity=tooClose?.25:.40;
+  ghostMesh.visible=true;
+}
+
+function updateGhostSeparator(hit){
+  var comp=getCompartment(hit.y_cm, hit.x_cm); // x-aware
+  var span=compToLocalYH(comp.floor_y_cm, comp.ceil_y_cm);
+  if(span.height<0.01){if(ghostMesh)ghostMesh.visible=false; return;}
+
+  var compKey=comp.floor_y_cm+'_'+comp.ceil_y_cm;
+
+  // Recréer si compartiment changé ou type changé
+  if(!ghostMesh||_ghostType!=='separator'||_ghostCompKey!==compKey){
+    clearGhost();
+    var mat=new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:.40,depthWrite:false});
+    var geo=new THREE.BoxGeometry(T*2.5, span.height, D_m-BT-0.02);
+    ghostMesh=new THREE.Mesh(geo,mat);
+    ghostMesh.position.z=BT/2+0.01;
+    ghostMesh.position.y=span.centerY;
+    ghostMesh.renderOrder=1;
+    caseGroup.add(ghostMesh);
+    _ghostType='separator'; _ghostCompKey=compKey;
+  }
+
+  // Mise à jour X
+  ghostMesh.position.x=hit.x_cm/100-iW_m/2;
+  ghostMesh.position.y=span.centerY; // recalcul si compartiment inchangé mais dimensions modifiées
+
+  var tooClose=elements.some(function(el){
+    if(el.type!=='separator')return false;
+    var ec=getCompartment(el.y_cm, el.x_cm);
+    return ec.floor_y_cm<comp.ceil_y_cm&&ec.ceil_y_cm>comp.floor_y_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+  });
+  ghostMesh.material.color.setHex(tooClose?0xFF2200:0xCD3E00);
+  ghostMesh.material.opacity=tooClose?.25:.40;
+  ghostMesh.visible=true;
+}
+
+function updateGhostDoor(hit){
+  var bay=getBay(hit.y_cm, hit.x_cm);
+  var span=compToLocalYH(bay.floor_y_cm, bay.ceil_y_cm);
+  if(span.height<0.02){if(ghostMesh)ghostMesh.visible=false; return;}
+  var bayW_m=(bay.x_right_cm-bay.x_left_cm)/100;
+  var compKey=bay.floor_y_cm+'_'+bay.ceil_y_cm+'_'+bay.x_left_cm+'_'+bay.x_right_cm;
+
+  if(!ghostMesh||_ghostType!=='door'||_ghostCompKey!==compKey){
+    clearGhost();
+    var dW=bayW_m-0.003, dH=span.height-0.004;
+    var mat=new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:.36,depthWrite:false});
+    ghostMesh=new THREE.Mesh(new THREE.BoxGeometry(dW,dH,T*1.5),mat);
+    var bayCtrX=bay.x_left_cm/100-iW_m/2+bayW_m/2;
+    ghostMesh.position.set(bayCtrX, span.centerY, D_m/2-T/2);
+    ghostMesh.renderOrder=1;
+    caseGroup.add(ghostMesh);
+    _ghostType='door'; _ghostCompKey=compKey;
+  }
+  // Rouge si porte déjà présente dans cette baie
+  var exists=elements.some(function(el){
+    return el.type==='door'&&el.floor_y_cm===bay.floor_y_cm&&el.ceil_y_cm===bay.ceil_y_cm
+      &&el.x_left_cm===bay.x_left_cm&&el.x_right_cm===bay.x_right_cm;
+  });
+  ghostMesh.material.color.setHex(exists?0xFF2200:0xCD3E00);
+  ghostMesh.material.opacity=exists?.18:.36;
+  ghostMesh.visible=true;
+}
+
+// ── Placer ou supprimer ──────────────────────────
+function placeOrRemove(e){
+  var hit=castRay(e);
+  if(!hit)return;
+
+  if(hit.overElement&&hit.elemIdx>=0){
+    // Supprimer
+    elements.splice(hit.elemIdx,1);
+    clearGhost();
+    rebuildElements();
+    updateElemCount();
+    updateCTA();
+    return;
+  }
+
+  if(currentType==='shelf'||currentType==='traverse'){
+    var bay2=getBay(hit.y_cm, hit.x_cm);
+    var maxX2=Math.round(iW_m*100);
+    var tooClose=elements.some(function(el){
+      if(el.type!=='shelf'&&el.type!=='traverse')return false;
+      if(Math.abs(el.y_cm-hit.y_cm)>=MIN_GAP_H)return false;
+      var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var xr=el.x_right_cm!==undefined?el.x_right_cm:maxX2;
+      return xl<bay2.x_right_cm&&xr>bay2.x_left_cm;
+    });
+    if(tooClose)return;
+    elements.push({type:currentType, y_cm:hit.y_cm,
+      x_left_cm:bay2.x_left_cm, x_right_cm:bay2.x_right_cm});
+    elements.sort(function(a,b){
+      if(a.type==='separator'&&b.type!=='separator')return 1;
+      if(b.type==='separator'&&a.type!=='separator')return-1;
+      return(a.y_cm||0)-(b.y_cm||0);
+    });
+
+  } else if(currentType==='door'){
+    var bay=getBay(hit.y_cm, hit.x_cm);
+    var alreadyDoor=elements.some(function(el){
+      return el.type==='door'&&el.floor_y_cm===bay.floor_y_cm&&el.ceil_y_cm===bay.ceil_y_cm
+        &&el.x_left_cm===bay.x_left_cm&&el.x_right_cm===bay.x_right_cm;
+    });
+    if(alreadyDoor)return;
+    elements.push({type:'door', floor_y_cm:bay.floor_y_cm, ceil_y_cm:bay.ceil_y_cm,
+      x_left_cm:bay.x_left_cm, x_right_cm:bay.x_right_cm, open:false});
+
+  } else { // separator
+    var comp=getCompartment(hit.y_cm, hit.x_cm);
+    var tooClose2=elements.some(function(el){
+      if(el.type!=='separator')return false;
+      var ec=getCompartment(el.y_cm, el.x_cm);
+      return ec.floor_y_cm<comp.ceil_y_cm&&ec.ceil_y_cm>comp.floor_y_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+    });
+    if(tooClose2)return;
+    elements.push({type:'separator', x_cm:hit.x_cm, y_cm:hit.y_cm});
+  }
+
+  rebuildElements();
+  updateElemCount();
+  updateCTA();
+}
+
+// ═══════════════════════════════════════════════════
+//  MODE ÉDITION
+// ═══════════════════════════════════════════════════
+function setEditMode(on){
+  editMode=on;
+  wrapper.className='viewer-wrap '+(on?'mode-edit':'mode-rotate');
+  document.getElementById('editBtn').classList.toggle('active',on);
+  if(on){
+    // Sauvegarder la rotation et passer en vue frontale pour un placement précis
+    savedRotX=rotX; savedRotY=rotY;
+    animateTo(0.08, 0, 350);
+  } else {
+    clearGhost();
+    canvas.style.cursor='';
+    resetEmissive();
+    var ph=document.getElementById('posHint');
+    if(ph)ph.classList.remove('visible');
+    // Restaurer la rotation d'avant l'édition
+    animateTo(savedRotX, savedRotY, 350);
+  }
+}
+
+// Anime rootGroup vers une rotation cible en ms
+function animateTo(tx, ty, ms){
+  if(!rootGroup)return;
+  var startX=rotX, startY=rotY, t0=performance.now();
+  (function step(now){
+    var p=Math.min((now-t0)/ms,1);
+    var e=1-Math.pow(1-p,3); // ease-out cubic
+    rotX=startX+(tx-startX)*e;
+    rotY=startY+(ty-startY)*e;
+    rootGroup.rotation.set(rotX,rotY,0);
+    if(p<1)requestAnimationFrame(step);
+  })(performance.now());
+}
+window.setEditMode=setEditMode;
+function toggleEdit(){setEditMode(!editMode);}
+window.toggleEdit=toggleEdit;
+
+function setType(t){
+  currentType=t;
+  var map={shelf:'typeShelf',traverse:'typeTraverse',separator:'typeSeparator',door:'typeDoor'};
+  ['shelf','traverse','separator','door'].forEach(function(id){
+    var el=document.getElementById(map[id]);
+    if(el)el.classList.toggle('active',id===t);
+  });
+  clearGhost();
+}
+window.setType=setType;
+
+function resetElements(){
+  elements=[];
+  clearGhost();
+  rebuildElements();
+  updateElemCount();
+  updateCTA();
+  updateToggleDoorsBtn();
+}
+window.resetElements=resetElements;
+
+// ═══════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════
+function updateSliderGrad(el){
+  el.style.setProperty('--pct',((el.value-el.min)/(el.max-el.min)*100).toFixed(1)+'%');
+}
+
+function onSlider(){
+  var sW=document.getElementById('sW'),sH=document.getElementById('sH'),sD=document.getElementById('sD');
+  state.W=+sW.value; state.H=+sH.value; state.D=+sD.value;
+  document.getElementById('vW').textContent=state.W;
+  document.getElementById('vH').textContent=state.H;
+  document.getElementById('vD').textContent=state.D;
+  updateSliderGrad(sW); updateSliderGrad(sH); updateSliderGrad(sD);
+  // Purger les éléments hors-limites
+  var newMaxX=Math.round((state.W/100-2*T)*100);
+  elements=elements.filter(function(el){
+    if(el.type==='separator') return el.x_cm>0&&el.x_cm<state.W-Math.ceil(T*100);
+    if(el.type==='door'){
+      // Garder la porte si sa baie reste dans les nouvelles dimensions
+      return (el.x_left_cm||0)<newMaxX&&(el.x_right_cm||newMaxX)>0
+        &&el.floor_y_cm<state.H&&el.ceil_y_cm>0;
+    }
+    if(el.type==='shelf'||el.type==='traverse'){
+      var ok=el.y_cm>0&&el.y_cm<state.H-Math.ceil(T*100);
+      if(ok&&el.x_right_cm!==undefined) ok=el.x_left_cm<newMaxX&&el.x_right_cm<=newMaxX;
+      return ok;
+    }
+    return el.y_cm>0&&el.y_cm<state.H-Math.ceil(T*100);
+  });
+  rebuild();
+}
+window.onSlider=onSlider;
+
+function setMat(id){
+  state.matId=id;
+  document.querySelectorAll('.mat-btn').forEach(function(b){b.classList.toggle('active',b.dataset.id===id);});
+  loadMat(id,rebuild);
+}
+window.setMat=setMat;
+
+function updateEmptyHint(){
+  var hint=document.getElementById('emptyHint');
+  if(hint) hint.style.opacity = elements.length===0?'1':'0';
+}
+
+function updateElemCount(){
+  var sh=elements.filter(function(e){return e.type==='shelf';}).length;
+  var tr=elements.filter(function(e){return e.type==='traverse';}).length;
+  var se=elements.filter(function(e){return e.type==='separator';}).length;
+  var do_=elements.filter(function(e){return e.type==='door';}).length;
+  var parts=[];
+  if(sh) parts.push('<strong>'+sh+'</strong> étagère'+(sh>1?'s':''));
+  if(tr) parts.push('<strong>'+tr+'</strong> traverse'+(tr>1?'s':''));
+  if(se) parts.push('<strong>'+se+'</strong> intercalaire'+(se>1?'s':''));
+  if(do_) parts.push('<strong>'+do_+'</strong> porte'+(do_>1?'s':''));
+  document.getElementById('elemCount').innerHTML=parts.length?parts.join(' · '):'Structure vide';
+  var leg=document.getElementById('legend');
+  if(leg) leg.style.display=elements.length?'flex':'none';
+  updateToggleDoorsBtn();
+}
+
+function updateUI(){
+  document.getElementById('dimsBadge').textContent=state.W+' × '+state.H+' × '+state.D+' cm';
+  updateElemCount();
+  updateCTA();
+}
+
+function updateCTA(){
+  var def=MATS.find(function(m){return m.id===state.matId;})||MATS[0];
+  var sh=elements.filter(function(e){return e.type==='shelf';}).length;
+  var tr=elements.filter(function(e){return e.type==='traverse';}).length;
+  var se=elements.filter(function(e){return e.type==='separator';}).length;
+  var do_=elements.filter(function(e){return e.type==='door';}).length;
+  var p=new URLSearchParams({gamme:'bibliothèque',largeur:state.W+' cm',hauteur:state.H+' cm',
+    profondeur:state.D+' cm',etageres:sh,traverses:tr,intercalaires:se,portes:do_,essence:def.label});
+  var btn=document.getElementById('ctaBtn');
+  if(btn)btn.href='contact.html?'+p.toString();
+}
+
+// ═══════════════════════════════════════════════════
+//  PORTES — animation & toggle
+// ═══════════════════════════════════════════════════
+function animateDoors(){
+  elemMeshes.forEach(function(pivot){
+    var idx=pivot.userData.elementIndex;
+    if(idx===undefined)return;
+    var el=elements[idx];
+    if(!el||el.type!=='door')return;
+    var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
+    var xr=el.x_right_cm!==undefined?el.x_right_cm:Math.round(iW_m*100);
+    var hingeLeft=((xl+xr)/2<=(iW_m*100/2));
+    var openAngle=hingeLeft?-Math.PI*0.5:Math.PI*0.5;
+    var target=el.open?openAngle:0;
+    pivot.rotation.y+=(target-pivot.rotation.y)*0.12;
+  });
+}
+window.animateDoors=animateDoors;
+
+function toggleAllDoors(){
+  var anyOpen=elements.some(function(el){return el.type==='door'&&el.open;});
+  elements.forEach(function(el){if(el.type==='door')el.open=!anyOpen;});
+  updateToggleDoorsBtn();
+}
+window.toggleAllDoors=toggleAllDoors;
+
+function updateToggleDoorsBtn(){
+  var btn=document.getElementById('toggleDoorsBtn');
+  if(!btn)return;
+  var hasDoors=elements.some(function(el){return el.type==='door';});
+  btn.style.display=hasDoors?'block':'none';
+  var anyOpen=elements.some(function(el){return el.type==='door'&&el.open;});
+  btn.textContent=anyOpen?'🚪 Fermer toutes les portes':'🚪 Ouvrir toutes les portes';
+  btn.classList.toggle('open',anyOpen);
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT UI
+// ═══════════════════════════════════════════════════
+(function buildUI(){
+  var grid=document.getElementById('matGrid');
+  MATS.forEach(function(def){
+    var b=document.createElement('button');
+    b.className='mat-btn'+(def.id===state.matId?' active':'');
+    b.dataset.id=def.id; b.title=def.label;
+    b.innerHTML=def.src
+      ?'<img src="'+def.src+'" alt="'+def.label+'"/><span class="mat-lbl">'+def.label+'</span>'
+      :'<div class="mat-swatch" style="background:'+def.color+'"></div><span class="mat-lbl">'+def.label+'</span>';
+    b.addEventListener('click',function(){setMat(def.id);});
+    grid.appendChild(b);
+  });
+  ['sW','sH','sD'].forEach(function(id){updateSliderGrad(document.getElementById(id));});
+})();
+
+// ═══════════════════════════════════════════════════
+//  DÉMARRAGE — structure vide
+// ═══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',function(){
+  initScene();
+  loadMat(state.matId,function(){
+    W_m=state.W/100; H_m=state.H/100; D_m=state.D/100;
+    iW_m=W_m-2*T; iH_m=H_m-2*T;
+    // Démarrage vide — pas d'étagères par défaut
+    rebuild();
+  });
+});
+</script>
+</body>
+</html>
