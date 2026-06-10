@@ -2495,97 +2495,124 @@
     var textureCache = {};
     var pendingLoadId = 0;  // pour invalider les chargements obsolètes
 
-    /* ─────── PLAN DE TRAVAIL — DIMENSIONS ─────── */
-    // Les nœuds enfants directs du "Model" root qui ne contiennent pas
-    // l'assemblage vasque+robinet sont les extensions du plan de travail.
-    var planGroups = [];
+    /* ═══════════════════════════════════════════════════════════════
+       PLAN DE TRAVAIL — système identique à configurateur-compose.html
+       ───────────────────────────────────────────────────────────────
+       Variables (en espace local du nœud "Model" racine du GLB) :
+         pdtLeft / pdtRight  → nœuds panneaux gauche / droit
+         pdtSx0              → scale.x initial des panneaux
+         pdtVL               → bord droit du panneau gauche  (= bord gauche de la vasque)
+         pdtVR               → bord gauche du panneau droit  (= bord droit de la vasque)
+         pdtG2mx             → inner edge X du panneau gauche dans son propre local space
+         pdtM3mn             → inner edge X du panneau droit  dans son propre local space
+       Formules (identiques Mathilde) :
+         pdtLeft.scale.x     = pdtSx0 * r
+         pdtLeft.position.x  = pdtVL - pdtLeft.scale.x  * pdtG2mx
+         pdtRight.scale.x    = pdtSx0 * r
+         pdtRight.position.x = pdtVR - pdtRight.scale.x * pdtM3mn
+    ═══════════════════════════════════════════════════════════════ */
+    var pdtLeft  = null, pdtRight = null;
+    var pdtSx0   = 1;
+    var pdtVL    = 0, pdtVR   = 0;
+    var pdtG2mx  = 0, pdtM3mn = 0;
 
-    // Noms de nœuds propres à l'assemblage vasque/robinet (à exclure)
-    var VASQUE_ASSEMBLY_NAMES = [
+    var PDT_ASSEMBLY_NAMES = [
       'Robinet', 'Col_de_cygne', 'Glas_28', 'Tige_de',
       'simplicity', 'marie', 'reflexion', 'elegance', 'evita',
     ];
 
-    function findPlanGroups(model) {
-      planGroups = [];
-      // Localiser le nœud racine "Model"
+    // Calcule la bounding box d'un nœud dans son PROPRE espace local
+    // (compose les matrices locales des enfants jusqu'au nœud)
+    function getBBoxLocal(node) {
+      var bb = new THREE.Box3();
+      node.traverse(function(child) {
+        if(!child.isMesh || !child.geometry) return;
+        if(!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+        var geoBB = child.geometry.boundingBox.clone();
+        // Remonter de child jusqu'à node en composant les matrices locales
+        var m = new THREE.Matrix4().identity();
+        var cur = child;
+        while(cur !== node) {
+          cur.updateMatrix();
+          m.premultiply(cur.matrix);
+          cur = cur.parent;
+          if(!cur) break;
+        }
+        geoBB.applyMatrix4(m);
+        bb.union(geoBB);
+      });
+      return bb;
+    }
+
+    function setupPlanDeTravail(model) {
+      pdtLeft = pdtRight = null;
+
+      // Trouver le nœud racine "Model" du GLB
       var modelNode = null;
       model.traverse(function(obj) { if(obj.name === 'Model') modelNode = obj; });
-      if(!modelNode){ console.log('[DIM] nœud Model introuvable'); return; }
+      if(!modelNode){ console.log('[PDT] nœud Model introuvable'); return; }
 
-      // Boîte du modèle entier (centré en 0,0,0 après le fit)
-      // Seuil : un groupe est "côté" si son centre X est > 10% de la demi-largeur totale
-      var totalBB = new THREE.Box3().setFromObject(model);
-      var totalHalfW = (totalBB.max.x - totalBB.min.x) * 0.10;
-      console.log('[DIM] totalHalfW seuil:', totalHalfW.toFixed(3));
-
-      modelNode.children.forEach(function(child) {
-        // Exclure les groupes "assembly vasque+robinet"
+      // Séparer assembly vasque (jamais touché) et panneaux (s'étirent)
+      var panels = [];
+      Array.from(modelNode.children).forEach(function(child) {
         var isAssembly = false;
         child.traverse(function(obj) {
           if(isAssembly) return;
           var n = obj.name || '';
-          for(var i = 0; i < VASQUE_ASSEMBLY_NAMES.length; i++){
-            if(n.indexOf(VASQUE_ASSEMBLY_NAMES[i]) >= 0){ isAssembly = true; break; }
+          for(var i = 0; i < PDT_ASSEMBLY_NAMES.length; i++){
+            if(n.indexOf(PDT_ASSEMBLY_NAMES[i]) >= 0){ isAssembly = true; break; }
           }
         });
-        if(isAssembly) return;
-
-        // Boîte du groupe en world space (tient compte du scale du modèle parent)
-        var bb = new THREE.Box3().setFromObject(child);
-        var cx = (bb.min.x + bb.max.x) / 2;
-        var extentX = bb.max.x - bb.min.x;
-
-        // Seulement les groupes clairement décalés en X = panneaux latéraux
-        if(Math.abs(cx) > totalHalfW){
-          child.userData.planOrigPos    = child.position.clone();
-          child.userData.planOrigScaleX = child.scale.x;
-          child.userData.planCenterX    = cx;
-
-          // Bord INTÉRIEUR en local space du currentModel (stable même après rotation)
-          // Panneau droit (cx>0) : bord intérieur = minX ; gauche : maxX
-          var innerEdge_world = (cx > 0) ? bb.min.x : bb.max.x;
-          var ieVec = new THREE.Vector3(innerEdge_world, 0, 0);
-          currentModel.worldToLocal(ieVec);
-          child.userData.planInnerEdge_local = ieVec.x;
-
-          planGroups.push(child);
-          console.log('[DIM] plan group ✓:', child.name,
-            'cx:', cx.toFixed(3),
-            'innerEdge_local:', ieVec.x.toFixed(3));
-        } else {
-          console.log('[DIM] skip (centré):', child.name, 'cx:', cx.toFixed(3));
-        }
+        if(!isAssembly) panels.push(child);
       });
-      console.log('[DIM]', planGroups.length, 'panneau(x) latéral/latéraux trouvé(s)');
+
+      if(panels.length < 2){
+        console.log('[PDT] pas assez de panneaux (' + panels.length + ')'); return;
+      }
+
+      // Trier par centre X croissant → panels[0] = gauche, panels[last] = droit
+      panels.sort(function(a, b){
+        var cxA = (new THREE.Box3().setFromObject(a).min.x + new THREE.Box3().setFromObject(a).max.x) / 2;
+        var cxB = (new THREE.Box3().setFromObject(b).min.x + new THREE.Box3().setFromObject(b).max.x) / 2;
+        return cxA - cxB;
+      });
+      pdtLeft  = panels[0];
+      pdtRight = panels[panels.length - 1];
+
+      // Scale initial (même pour les deux — ils héritent tous de Model)
+      pdtSx0 = pdtLeft.scale.x;
+
+      // Inner edge de chaque panneau dans son propre espace local
+      var bbL = getBBoxLocal(pdtLeft);
+      var bbR = getBBoxLocal(pdtRight);
+      pdtG2mx = bbL.max.x;   // bord droit (intérieur) du panneau gauche
+      pdtM3mn = bbR.min.x;   // bord gauche (intérieur) du panneau droit
+
+      // Bords de la vasque en espace parent (= espace local de modelNode)
+      // = inner edge du panneau à sa position et scale d'origine
+      pdtVL = pdtLeft.position.x  + pdtLeft.scale.x  * pdtG2mx;
+      pdtVR = pdtRight.position.x + pdtRight.scale.x * pdtM3mn;
+
+      console.log('[PDT] OK | sx0', pdtSx0.toFixed(4),
+        '| vL', pdtVL.toFixed(4), 'vR', pdtVR.toFixed(4),
+        '| g2mx', pdtG2mx.toFixed(4), 'm3mn', pdtM3mn.toFixed(4));
     }
 
     function applyVasqueDimensions() {
-      if(!currentModel || planGroups.length === 0) return;
-      var DEFAULT_WIDTH = 120;
-      var factor = state.vasqueWidth / DEFAULT_WIDTH;
+      if(!pdtLeft || !pdtRight) return;
+      var r = state.vasqueWidth / 120;  // ratio par rapport à la largeur de référence
 
-      planGroups.forEach(function(g) {
-        var origPos        = g.userData.planOrigPos;
-        var origScaleX     = g.userData.planOrigScaleX || 1;
-        var innerEdge_local = g.userData.planInnerEdge_local || 0;
+      // Panneau gauche : bord droit reste ancré à pdtVL
+      pdtLeft.scale.x    = pdtSx0 * r;
+      pdtLeft.position.x = pdtVL - pdtLeft.scale.x * pdtG2mx;
 
-        // Scale du panneau en X (autour de son origine locale)
-        g.scale.x = origScaleX * factor;
+      // Panneau droit : bord gauche reste ancré à pdtVR
+      pdtRight.scale.x    = pdtSx0 * r;
+      pdtRight.position.x = pdtVR - pdtRight.scale.x * pdtM3mn;
 
-        // Correction de position pour que le bord intérieur reste fixe.
-        // Formule analytique en local space du parent (currentModel) :
-        //   innerEdge_local_new = g.position.x + factor * (innerEdge_local - origPos.x)
-        //   On veut innerEdge_local_new = innerEdge_local
-        //   → g.position.x = origPos.x + (innerEdge_local - origPos.x) * (1 - factor)
-        g.position.x = origPos.x + (innerEdge_local - origPos.x) * (1 - factor);
-      });
-
-      // Màj label
+      // Màj UI
       var lbl = document.getElementById('vasqueDimLabel');
       if(lbl) lbl.textContent = state.vasqueWidth;
-
-      // Màj dégradé du slider
       var slider = document.getElementById('vasqueWidthSlider');
       if(slider){
         var pct = ((state.vasqueWidth - 80) / (200 - 80) * 100).toFixed(1);
@@ -2772,9 +2799,9 @@
         // Tagger les meshes (principal vs robinet) et fixer le robinet en chrome
         tagMeshes(currentModel);
 
-        // Identifier les groupes du plan de travail (étape 1 = vasque seule)
+        // Initialiser le système plan de travail (étape 1 = vasque seule)
         if(state.step === 1){
-          findPlanGroups(currentModel);
+          setupPlanDeTravail(currentModel);
           applyVasqueDimensions();
         }
 
