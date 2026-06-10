@@ -56,10 +56,16 @@ module.exports = async function handler(req, res) {
     const matLabel   = (cfg.matLabel   || '').toString().slice(0, 80);
     const elements   = Array.isArray(cfg.elements) ? cfg.elements : [];
 
+    const matId  = (cfg.matId || 'chene').toString().slice(0, 40);
+
     const nb_etageres     = elements.filter(e => e.type === 'shelf').length;
     const nb_traverses    = elements.filter(e => e.type === 'traverse').length;
     const nb_intercalaires= elements.filter(e => e.type === 'separator').length;
     const nb_portes       = elements.filter(e => e.type === 'door').length;
+
+    // Lien de visualisation directe (base64 de la config)
+    const configB64 = Buffer.from(JSON.stringify({ W, H, D, matId, elements })).toString('base64');
+    const vizUrl = `https://www.kobo-design.fr/configurateur-biblio-test?c=${configB64}`;
 
     // ── Supabase ─────────────────────────────────────
     const { error: dbError } = await supabase
@@ -111,6 +117,11 @@ module.exports = async function handler(req, res) {
         <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
           <p style="color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">Kobo Design · Configurateur</p>
           <h1 style="color:#FFFAF0;font-size:22px;margin:0">Nouvelle bibliothèque configurée</h1>
+        </div>
+        <div style="background:#CD3E00;padding:16px 32px;text-align:center;">
+          <a href="${vizUrl}" style="display:inline-block;background:#fff;color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;padding:10px 28px;border-radius:100px;text-decoration:none;">
+            ▶ Visualiser en 3D
+          </a>
         </div>
         <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">

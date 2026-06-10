@@ -1299,7 +1299,7 @@ async function submitConfig(){
         botcheck: bot,
         config:{
           W:state.W, H:state.H, D:state.D,
-          matLabel:def.label,
+          matId:def.id, matLabel:def.label,
           elements:elements
         }
       })
@@ -1378,12 +1378,48 @@ function updateToggleDoorsBtn(){
 // ═══════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',function(){
   initScene();
-  loadMat(state.matId,function(){
-    W_m=state.W/100; H_m=state.H/100; D_m=state.D/100;
-    iW_m=W_m-2*T; iH_m=H_m-2*T;
-    // Démarrage vide — pas d'étagères par défaut
-    rebuild();
-  });
+
+  // Charger une config depuis ?c= (base64 JSON)
+  var urlCfg=null;
+  try{
+    var param=new URLSearchParams(location.search).get('c');
+    if(param) urlCfg=JSON.parse(decodeURIComponent(escape(atob(param))));
+  }catch(e){ console.warn('Param ?c= invalide'); }
+
+  if(urlCfg){
+    // Appliquer les dimensions
+    state.W=urlCfg.W||state.W; state.H=urlCfg.H||state.H; state.D=urlCfg.D||state.D;
+    var sW=document.getElementById('sW'), sH=document.getElementById('sH'), sD=document.getElementById('sD');
+    sW.value=state.W; sH.value=state.H; sD.value=state.D;
+    document.getElementById('vW').textContent=state.W;
+    document.getElementById('vH').textContent=state.H;
+    document.getElementById('vD').textContent=state.D;
+    updateSliderGrad(sW); updateSliderGrad(sH); updateSliderGrad(sD);
+    // Appliquer le matériau
+    var matId=urlCfg.matId||'chene';
+    state.matId=matId;
+    document.querySelectorAll('.mat-btn').forEach(function(b){b.classList.toggle('active',b.dataset.id===matId);});
+    // Charger texture + reconstruire avec les éléments
+    loadMat(matId,function(){
+      W_m=state.W/100; H_m=state.H/100; D_m=state.D/100;
+      iW_m=W_m-2*T; iH_m=H_m-2*T;
+      elements=Array.isArray(urlCfg.elements)?urlCfg.elements:[];
+      rebuild();
+      updateUI();
+      // Petit badge pour signaler que c'est une config chargée
+      var badge=document.createElement('div');
+      badge.style.cssText='position:fixed;bottom:16px;right:16px;background:#1A1A1A;color:#fff;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:100px;z-index:100;opacity:.85';
+      badge.textContent='Config client chargée';
+      document.body.appendChild(badge);
+      setTimeout(function(){badge.style.transition='opacity .5s';badge.style.opacity='0';setTimeout(function(){badge.remove();},600);},3000);
+    });
+  } else {
+    loadMat(state.matId,function(){
+      W_m=state.W/100; H_m=state.H/100; D_m=state.D/100;
+      iW_m=W_m-2*T; iH_m=H_m-2*T;
+      rebuild();
+    });
+  }
 });
 </script>
 </body>
