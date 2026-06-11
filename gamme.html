@@ -2692,14 +2692,69 @@
     // Largeur de référence selon le nombre de vasques
     function refLargeur(){ return state.vc === 2 ? 140 : 80; }
 
-    // X-scale le modèle meuble selon vasqueWidth (plan de travail = meuble)
+    /* ─────── SÉPARATION VASQUE / MEUBLE ─────────────────────────────
+       Principe : scale le modèle entier en X (meuble s'étire),
+       puis contre-scale les nœuds "vasque" pour annuler l'étirement.
+       Maths :
+         world.scale.x (vasque) = model.scale.x × node.scale.x
+                                = (bs×r) × (origSx/r) = bs×origSx  ✓
+         world.pos.x   (vasque) = model.scale.x × node.pos.x
+                                = (bs×r) × (origPx/r) = bs×origPx  ✓
+    ─────────────────────────────────────────────────────────────── */
+
+    var vasqueTopNodes = [];  // nœuds de premier niveau : vasque/robinet (ne bougent pas en X)
+    var meubleTopNodes = [];  // nœuds de premier niveau : meuble/caisson (s'étirent)
+
+    function classifyTopNodes(model){
+      vasqueTopNodes = [];
+      meubleTopNodes = [];
+
+      // Trouver le nœud racine 'Model' (convention Blender GLB export)
+      var modelNode = null;
+      model.traverse(function(obj){ if(obj.name === 'Model') modelNode = obj; });
+      if(!modelNode) modelNode = model; // fallback : scène elle-même
+
+      Array.from(modelNode.children).forEach(function(child){
+        // Stocker transforms originaux AVANT tout resize
+        child.userData._origScaleX = child.scale.x;
+        child.userData._origPosX   = child.position.x;
+
+        var hasVasque = false, hasMeuble = false;
+        child.traverse(function(n){
+          if(n.userData.kobok === 'vasque' || n.userData.kobok === 'robinet') hasVasque = true;
+          if(n.userData.kobok === 'meuble') hasMeuble = true;
+        });
+
+        // Priorité vasque : si le nœud contient une vasque, il ne doit PAS s'étirer
+        if(hasVasque) vasqueTopNodes.push(child);
+        else           meubleTopNodes.push(child);
+
+        console.log('[Classify]', child.name || '(sans nom)',
+          '→', hasVasque ? 'vasque' : hasMeuble ? 'meuble' : 'autre');
+      });
+
+      console.log('[Classify] vasque:', vasqueTopNodes.length,
+        '| meuble:', meubleTopNodes.length);
+    }
+
+    // X-scale le modèle complet, puis rétablit l'échelle X des nœuds vasque
     function applyDimensionsStep2(){
       if(!currentModel || !state._meubleBaseScale || !state._meubleCenter) return;
-      var r = state.vasqueWidth / refLargeur();
+      var r  = state.vasqueWidth / refLargeur();
       var bs = state._meubleBaseScale;
       var cx = state._meubleCenter.x;
+
+      // Scale global en X (étire le meuble + décors)
       currentModel.scale.set(bs * r, bs, bs);
       currentModel.position.x = -cx * bs * r;
+
+      // Contre-corriger les nœuds vasque pour annuler l'étirement X
+      vasqueTopNodes.forEach(function(node){
+        var sx = node.userData._origScaleX !== undefined ? node.userData._origScaleX : 1;
+        var px = node.userData._origPosX   !== undefined ? node.userData._origPosX   : 0;
+        node.scale.x    = sx / r;
+        node.position.x = px / r;
+      });
     }
 
     // ─── IDENTIFICATION DES MATÉRIAUX ─────────────────────────
@@ -2879,14 +2934,17 @@
         // Tagger les meshes (principal vs robinet) et fixer le robinet en chrome
         tagMeshes(currentModel);
 
+        // Classifier les nœuds de premier niveau en vasque vs meuble
+        // (doit être fait APRÈS tagMeshes et AVANT applyDimensionsStep2)
+        classifyTopNodes(currentModel);
+
         // Étape 1 : système pdtLeft/pdtRight (extension des panneaux du plan de travail)
         if(state.step === 1){
           setupPlanDeTravail(currentModel);
           applyVasqueDimensions();
         }
 
-        // Étape 2 : X-scale le modèle complet selon la largeur courante
-        // (meuble + plan de travail ont la même largeur → un seul scale X)
+        // Étape 2 : X-scale le meuble selon la largeur courante, vasque non étirée
         if(state.step === 2){
           applyDimensionsStep2();
         }
