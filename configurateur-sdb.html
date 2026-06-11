@@ -433,6 +433,11 @@ function loadGLB(path){
 
 function getMeubleGlb(){
   var f = state.meubleFamily, vc = state.vc, v = state.meubleVariant;
+  // meuble1 : pas de préfixe dans les noms de fichiers (1v_1l.glb)
+  // meuble2-7 : préfixe famille (2_1v_1l.glb, etc.)
+  if(f === 1){
+    return 'models/sdb/meuble1/'+vc+'v_'+v+'l.glb';
+  }
   return 'models/sdb/meuble'+f+'/'+f+'_'+vc+'v_'+v+'l.glb';
 }
 function getVasqueGlb(){
@@ -456,47 +461,57 @@ function loadScene(){
     loadGLB(getMeubleGlb()).catch(function(e){ console.warn('[SDB] Meuble GLB non trouvé:', getMeubleGlb(), e); return null; }),
     loadGLB(getVasqueGlb()).catch(function(e){ console.warn('[SDB] Vasque GLB non trouvé:', getVasqueGlb(), e); return null; })
   ]).then(function(results){
-    if(myLoad !== _pendingLoad) return;
+    if(myLoad !== _pendingLoad){ if(loading) loading.classList.add('hidden'); return; }
 
-    var mGLB = results[0];
-    var vGLB = results[1];
+    try{
+      var mGLB = results[0];
+      var vGLB = results[1];
 
-    var combined = new THREE.Group();
+      var combined = new THREE.Group();
 
-    if(mGLB && mGLB.scene){
-      currentMeubleModel = mGLB.scene;
-      tagMeshesMeuble(currentMeubleModel);
-      combined.add(currentMeubleModel);
+      if(mGLB && mGLB.scene){
+        currentMeubleModel = mGLB.scene;
+        tagMeshesMeuble(currentMeubleModel);
+        combined.add(currentMeubleModel);
+      }
+
+      if(vGLB && vGLB.scene){
+        currentVasqueModel = vGLB.scene;
+        tagMeshesVasque(currentVasqueModel);
+        combined.add(currentVasqueModel);
+      }
+
+      rootGroup.add(combined);
+      combined.updateMatrixWorld(true);
+
+      var bbox  = new THREE.Box3().setFromObject(combined);
+      if(!bbox.isEmpty()){
+        var bsize = bbox.getSize(new THREE.Vector3());
+        var bctr  = bbox.getCenter(new THREE.Vector3());
+        var maxDim = Math.max(bsize.x, bsize.y, bsize.z, 0.001);
+        var scale  = 2.0 / maxDim;
+
+        combined.scale.setScalar(scale);
+        combined.position.set(-bctr.x*scale, -bctr.y*scale, -bctr.z*scale);
+
+        state._baseScale = scale;
+        state._center    = { x:bctr.x, y:bctr.y, z:bctr.z };
+
+        classifyTopNodes(combined);
+        applyAllMaterials();
+        applyDimensions();
+        updateDimsBadge();
+        updateCfgSummary();
+      } else {
+        console.warn('[SDB] Bounding box vide — les deux GLBs ont peut-être échoué.');
+      }
+    } catch(err){
+      console.error('[SDB] Erreur lors du chargement de la scène:', err);
     }
 
-    if(vGLB && vGLB.scene){
-      currentVasqueModel = vGLB.scene;
-      tagMeshesVasque(currentVasqueModel);
-      combined.add(currentVasqueModel);
-    }
-
-    rootGroup.add(combined);
-    combined.updateMatrixWorld(true);
-
-    // Normaliser sur la combinaison des deux modèles
-    var bbox  = new THREE.Box3().setFromObject(combined);
-    var bsize = bbox.getSize(new THREE.Vector3());
-    var bctr  = bbox.getCenter(new THREE.Vector3());
-    var maxDim = Math.max(bsize.x, bsize.y, bsize.z, 0.001);
-    var scale  = 2.0 / maxDim;
-
-    combined.scale.setScalar(scale);
-    combined.position.set(-bctr.x*scale, -bctr.y*scale, -bctr.z*scale);
-
-    state._baseScale = scale;
-    state._center    = { x:bctr.x, y:bctr.y, z:bctr.z };
-
-    classifyTopNodes(combined);
-    applyAllMaterials();
-    applyDimensions();
-    updateDimsBadge();
-    updateCfgSummary();
-
+    if(loading) loading.classList.add('hidden');
+  }).catch(function(err){
+    console.error('[SDB] Erreur inattendue:', err);
     if(loading) loading.classList.add('hidden');
   });
 }
