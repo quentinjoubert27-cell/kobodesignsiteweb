@@ -206,27 +206,10 @@
     <!-- CONTRÔLES -->
     <div class="ctrl-panel">
 
-      <!-- Vasque -->
+      <!-- Modèle (meuble + vasque intégré) -->
       <div class="ctrl-sect">
-        <p class="sect-lbl">✦ Vasque</p>
-        <div class="item-grid" id="vasqueGrid"></div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Finition vasque -->
-      <div class="ctrl-sect">
-        <p class="sect-lbl">✦ Finition vasque</p>
-        <div class="vmat-grid" id="vmatGrid"></div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Meuble -->
-      <div class="ctrl-sect">
-        <p class="sect-lbl">✦ Meuble</p>
-        <p class="sub-lbl">Famille</p>
-        <div class="item-grid" id="meubleGrid"></div>
+        <p class="sect-lbl">✦ Modèle</p>
+        <div class="item-grid" id="modeleGrid"></div>
         <p class="sub-lbl" style="margin-top:14px">Nombre de vasques</p>
         <div class="toggle-row" id="vcToggle">
           <button class="toggle-btn active" data-vc="1" onclick="sdbSetVC(1)">1 Vasque</button>
@@ -237,6 +220,14 @@
           <button class="toggle-btn active" data-v="1" onclick="sdbSetVariant(1)">Variante A</button>
           <button class="toggle-btn"        data-v="2" onclick="sdbSetVariant(2)">Variante B</button>
         </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Finition vasque -->
+      <div class="ctrl-sect">
+        <p class="sect-lbl">✦ Finition vasque</p>
+        <div class="vmat-grid" id="vmatGrid"></div>
       </div>
 
       <div class="divider"></div>
@@ -294,7 +285,6 @@
 // ═══════════════════════════════════════════════════
 //  DONNÉES
 // ═══════════════════════════════════════════════════
-var VASQUES_DEF = [1,2,3,4,5,6,7].map(function(n){ return { num:n, label:'Vasque '+n }; });
 var MEUBLES_DEF = [1,2,3,4,5,6,7].map(function(n){ return { family:n, label:'Meuble '+n }; });
 
 var BOIS_DEF = [
@@ -326,8 +316,7 @@ var CHROME = { r:.72, g:.70, b:.65, roughness:.22, metalness:.9 };
 //  STATE
 // ═══════════════════════════════════════════════════
 var state = {
-  vasqueNum:     1,
-  meubleFamily:  1,
+  meubleFamily:  1,   // 1-7 : détermine le modèle complet (forme vasque + caisson)
   vc:            1,   // 1 or 2 vasques
   meubleVariant: 1,   // 1 or 2
   vasqueMatId:   'blanc',
@@ -345,7 +334,6 @@ var wrapper = document.getElementById('viewerWrap');
 var scene, camera, renderer;
 var rootGroup = null;
 var currentMeubleModel = null;
-var currentVasqueModel = null;
 var texCache = {};
 var rotX = 0.18, rotY = 0.5;
 var drag = false, lastX = 0, lastY = 0;
@@ -432,15 +420,9 @@ function loadGLB(path){
 
 function getMeubleGlb(){
   var f = state.meubleFamily, vc = state.vc, v = state.meubleVariant;
-  // meuble1 : pas de préfixe dans les noms de fichiers (1v_1l.glb)
-  // meuble2-7 : préfixe famille (2_1v_1l.glb, etc.)
-  if(f === 1){
-    return 'models/sdb/meuble1/'+vc+'v_'+v+'l.glb';
-  }
+  // meuble1 : pas de préfixe (1v_1l.glb) — meuble2-7 : préfixe famille (2_1v_1l.glb)
+  if(f === 1) return 'models/sdb/meuble1/'+vc+'v_'+v+'l.glb';
   return 'models/sdb/meuble'+f+'/'+f+'_'+vc+'v_'+v+'l.glb';
-}
-function getVasqueGlb(){
-  return 'models/sdb/vasque/vasque'+state.vasqueNum+'.glb';
 }
 
 function loadScene(){
@@ -451,69 +433,52 @@ function loadScene(){
   // Nettoyer la scène
   while(rootGroup.children.length){ rootGroup.remove(rootGroup.children[0]); }
   currentMeubleModel = null;
-  currentVasqueModel = null;
   vasqueTopNodes = [];
   meubleTopNodes = [];
 
   var myLoad = ++_pendingLoad;
 
-  Promise.all([
-    loadGLB(getMeubleGlb()).catch(function(e){ console.warn('[SDB] Meuble GLB non trouvé:', getMeubleGlb(), e); return null; }),
-    loadGLB(getVasqueGlb()).catch(function(e){ console.warn('[SDB] Vasque GLB non trouvé:', getVasqueGlb(), e); return null; })
-  ]).then(function(results){
-    if(myLoad !== _pendingLoad){ if(loading) loading.classList.add('hidden'); return; }
+  // On charge uniquement le GLB meuble (qui contient la vasque intégrée)
+  loadGLB(getMeubleGlb())
+    .catch(function(e){ console.warn('[SDB] GLB non trouvé:', getMeubleGlb(), e); return null; })
+    .then(function(gltf){
+      if(myLoad !== _pendingLoad){ if(loading) loading.classList.add('hidden'); return; }
+      try{
+        if(!gltf || !gltf.scene){ console.warn('[SDB] Scène GLB vide'); if(loading) loading.classList.add('hidden'); return; }
 
-    try{
-      var mGLB = results[0];
-      var vGLB = results[1];
-
-      var combined = new THREE.Group();
-
-      if(mGLB && mGLB.scene){
-        currentMeubleModel = mGLB.scene;
+        currentMeubleModel = gltf.scene;
         tagMeshesMeuble(currentMeubleModel);
+
+        var combined = new THREE.Group();
         combined.add(currentMeubleModel);
+        rootGroup.add(combined);
+        combined.updateMatrixWorld(true);
+
+        var bbox = new THREE.Box3().setFromObject(combined);
+        if(!bbox.isEmpty()){
+          var bsize = bbox.getSize(new THREE.Vector3());
+          var bctr  = bbox.getCenter(new THREE.Vector3());
+          var maxDim = Math.max(bsize.x, bsize.y, bsize.z, 0.001);
+          var scale  = 2.0 / maxDim;
+          combined.scale.setScalar(scale);
+          combined.position.set(-bctr.x*scale, -bctr.y*scale, -bctr.z*scale);
+          state._baseScale = scale;
+          state._center    = { x:bctr.x, y:bctr.y, z:bctr.z };
+          classifyTopNodes(combined);
+          applyAllMaterials();
+          applyDimensions();
+          updateDimsBadge();
+          updateCfgSummary();
+        }
+      } catch(err){
+        console.error('[SDB] Erreur chargement scène:', err);
       }
-
-      if(vGLB && vGLB.scene){
-        currentVasqueModel = vGLB.scene;
-        tagMeshesVasque(currentVasqueModel);
-        combined.add(currentVasqueModel);
-      }
-
-      rootGroup.add(combined);
-      combined.updateMatrixWorld(true);
-
-      var bbox  = new THREE.Box3().setFromObject(combined);
-      if(!bbox.isEmpty()){
-        var bsize = bbox.getSize(new THREE.Vector3());
-        var bctr  = bbox.getCenter(new THREE.Vector3());
-        var maxDim = Math.max(bsize.x, bsize.y, bsize.z, 0.001);
-        var scale  = 2.0 / maxDim;
-
-        combined.scale.setScalar(scale);
-        combined.position.set(-bctr.x*scale, -bctr.y*scale, -bctr.z*scale);
-
-        state._baseScale = scale;
-        state._center    = { x:bctr.x, y:bctr.y, z:bctr.z };
-
-        classifyTopNodes(combined);
-        applyAllMaterials();
-        applyDimensions();
-        updateDimsBadge();
-        updateCfgSummary();
-      } else {
-        console.warn('[SDB] Bounding box vide — les deux GLBs ont peut-être échoué.');
-      }
-    } catch(err){
-      console.error('[SDB] Erreur lors du chargement de la scène:', err);
-    }
-
-    if(loading) loading.classList.add('hidden');
-  }).catch(function(err){
-    console.error('[SDB] Erreur inattendue:', err);
-    if(loading) loading.classList.add('hidden');
-  });
+      if(loading) loading.classList.add('hidden');
+    })
+    .catch(function(err){
+      console.error('[SDB] Erreur inattendue:', err);
+      if(loading) loading.classList.add('hidden');
+    });
 }
 
 // ═══════════════════════════════════════════════════
@@ -531,7 +496,11 @@ function isFaucetNode(child){
   return false;
 }
 
-// Tagger le meuble GLB : vasque intégrée → masquée, reste → 'meuble'
+// Tagger le GLB meuble+vasque :
+//   MAT_VASQUE → 'vasque' (visible, recevra la finition vasque)
+//   MAT_VASQUE sur ancêtre robinet → 'robinet' (chrome)
+//   MAT_MEUBLE → 'meuble' (recevra l'essence bois)
+//   Fallback  → 'meuble'
 function tagMeshesMeuble(model){
   model.traverse(function(child){
     if(!child.isMesh||!child.material) return;
@@ -540,8 +509,7 @@ function tagMeshesMeuble(model){
       var m=mats[i]; if(!m) continue;
       var bn=(m.name||'').replace(/\.\d+$/,'');
       if(bn===MAT_VASQUE){
-        child.userData.kobok='vasque_embedded';
-        child.visible=false; // masquer — on affiche la vasque standalone
+        child.userData.kobok = isFaucetNode(child) ? 'robinet' : 'vasque';
         break;
       } else if(bn===MAT_MEUBLE){
         child.userData.kobok='meuble';
@@ -549,7 +517,7 @@ function tagMeshesMeuble(model){
       }
     }
   });
-  // Fallback : si aucun mesh 'meuble' détecté → tout ce qui reste non-taguё = meuble
+  // Fallback : aucun 'meuble' trouvé → tout ce qui est non-taguё = meuble
   var hasM=false;
   model.traverse(function(c){ if(c.userData.kobok==='meuble') hasM=true; });
   if(!hasM){
@@ -558,28 +526,18 @@ function tagMeshesMeuble(model){
       child.userData.kobok='meuble';
     });
   }
-  // Cloner les matériaux des meshes visibles
+  // Cloner tous les matériaux pour éviter les effets de bord
   model.traverse(function(child){
-    if(child.userData.kobok!=='meuble') return;
+    if(!child.userData.kobok) return;
     cloneMats(child);
   });
-}
-
-// Tagger la vasque standalone : tout → 'vasque', robinets → 'robinet' + chrome
-function tagMeshesVasque(model){
-  model.traverse(function(child){
-    if(!child.isMesh||!child.material) return;
-    child.userData.kobok = isFaucetNode(child) ? 'robinet' : 'vasque';
-    cloneMats(child);
-  });
-  // Appliquer chrome aux robinets
+  // Chrome sur les robinets
   model.traverse(function(child){
     if(child.userData.kobok!=='robinet') return;
     var mats=Array.isArray(child.material)?child.material:[child.material];
     mats.forEach(function(m){
       if(!m) return;
-      m.map=null;
-      m.color.setRGB(CHROME.r,CHROME.g,CHROME.b);
+      m.map=null; m.color.setRGB(CHROME.r,CHROME.g,CHROME.b);
       if('roughness' in m) m.roughness=CHROME.roughness;
       if('metalness' in m) m.metalness=CHROME.metalness;
       m.needsUpdate=true;
@@ -606,13 +564,13 @@ function applyAllMaterials(){
 }
 
 function applyVasqueMat(){
-  if(!currentVasqueModel) return;
+  if(!currentMeubleModel) return;
   var def=VMAT_DEF.find(function(d){ return d.id===state.vasqueMatId; });
   if(!def) return;
   if(def.texture){
-    loadTex(def.texture, function(tex){ setTexOnModel(currentVasqueModel,'vasque',tex); });
+    loadTex(def.texture, function(tex){ if(currentMeubleModel) setTexOnModel(currentMeubleModel,'vasque',tex); });
   } else if(def.color){
-    setColorOnModel(currentVasqueModel,'vasque',def.color);
+    setColorOnModel(currentMeubleModel,'vasque',def.color);
   }
 }
 
@@ -621,10 +579,9 @@ function applyBois(){
   var def=BOIS_DEF.find(function(d){ return d.id===state.boisId; });
   if(!def) return;
   if(def.src){
-    loadTex(def.src, function(tex){ setTexOnModel(currentMeubleModel,'meuble',tex); });
+    loadTex(def.src, function(tex){ if(currentMeubleModel) setTexOnModel(currentMeubleModel,'meuble',tex); });
   } else if(def.hexColor){
-    var c=hexToRGB(def.hexColor);
-    setColorOnModel(currentMeubleModel,'meuble',c);
+    setColorOnModel(currentMeubleModel,'meuble',hexToRGB(def.hexColor));
   }
 }
 
@@ -715,7 +672,6 @@ function classifyTopNodes(combined){
     });
   }
 
-  if(currentVasqueModel) processGroup(currentVasqueModel, true);
   if(currentMeubleModel) processGroup(currentMeubleModel, false);
 }
 
@@ -742,17 +698,10 @@ function applyDimensions(){
 // ═══════════════════════════════════════════════════
 //  HANDLERS UI
 // ═══════════════════════════════════════════════════
-function sdbSetVasque(num){
-  state.vasqueNum=num;
-  document.querySelectorAll('#vasqueGrid .item-card').forEach(function(b){
-    b.classList.toggle('active',+b.dataset.num===num);
-  });
-  loadScene();
-}
-
-function sdbSetMeubleFamily(f){
+// Le sélecteur "Modèle" choisit la famille de meuble (qui détermine aussi la forme de vasque)
+function sdbSetModele(f){
   state.meubleFamily=f;
-  document.querySelectorAll('#meubleGrid .item-card').forEach(function(b){
+  document.querySelectorAll('#modeleGrid .item-card').forEach(function(b){
     b.classList.toggle('active',+b.dataset.family===f);
   });
   loadScene();
@@ -767,6 +716,7 @@ function sdbSetVC(vc){
   adaptLargeurSlider();
   loadScene();
 }
+window.sdbSetModele=sdbSetModele;
 window.sdbSetVC=sdbSetVC;
 
 function sdbSetVariant(v){
@@ -831,10 +781,8 @@ function updateCfgSummary(){
   var el=document.getElementById('cfgSummary');
   if(!el) return;
   el.innerHTML=
-    'Vasque <strong>'+state.vasqueNum+'</strong> · '+v.label+' · '+
-    'Meuble <strong>'+state.meubleFamily+'</strong> · '+state.vc+'V'+
-    ' var.'+state.meubleVariant+' · '+
-    b.label+' · <strong>'+state.largeur+' cm</strong>';
+    'Modèle <strong>'+state.meubleFamily+'</strong> · '+state.vc+'V var.'+state.meubleVariant+' · '+
+    'Vasque : '+v.label+' · Meuble : '+b.label+' · <strong>'+state.largeur+' cm</strong>';
 }
 
 // ═══════════════════════════════════════════════════
@@ -857,7 +805,7 @@ async function submitConfig(){
     var resp=await fetch('/api/biblio-config',{
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ prenom,email,message,botcheck:bot,
-        config:{ type:'sdb', vasqueNum:state.vasqueNum, vasqueMat:vDef.label,
+        config:{ type:'sdb', modele:state.meubleFamily, vasqueMat:vDef.label,
           meubleFamily:state.meubleFamily, vc:state.vc, meubleVariant:state.meubleVariant,
           essence:bDef.label, largeur:state.largeur }})
     });
@@ -877,20 +825,18 @@ window.submitConfig=submitConfig;
 //  CONSTRUCTION UI
 // ═══════════════════════════════════════════════════
 (function buildUI(){
-  // SVG vasque (bol vue de face)
-  var svgV='<svg viewBox="0 0 40 30" fill="none"><path d="M6 8 Q20 22 34 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="8" x2="38" y2="8" stroke="currentColor" stroke-width="1.2"/><rect x="2" y="18" width="36" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/></svg>';
-  // SVG meuble (cabinet)
-  var svgM='<svg viewBox="0 0 40 28" fill="none"><rect x="2" y="2" width="36" height="24" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="20" y1="2" x2="20" y2="26" stroke="currentColor" stroke-width="1"/><circle cx="17" cy="14" r="1.5" fill="currentColor"/><circle cx="23" cy="14" r="1.5" fill="currentColor"/></svg>';
+  // SVG meuble+vasque (icône combinée)
+  var svgMod='<svg viewBox="0 0 40 32" fill="none"><path d="M8 10 Q20 20 32 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4" y1="10" x2="36" y2="10" stroke="currentColor" stroke-width="1"/><rect x="4" y="18" width="32" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><line x1="20" y1="18" x2="20" y2="30" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/></svg>';
 
-  // Vasques
-  var vg=document.getElementById('vasqueGrid');
-  VASQUES_DEF.forEach(function(d){
+  // Modèles (meuble + vasque intégré)
+  var mg2=document.getElementById('modeleGrid');
+  MEUBLES_DEF.forEach(function(d){
     var btn=document.createElement('button');
-    btn.className='item-card'+(d.num===state.vasqueNum?' active':'');
-    btn.dataset.num=d.num;
-    btn.innerHTML=svgV+'<span>'+d.label+'</span>';
-    btn.addEventListener('click',function(){ sdbSetVasque(d.num); });
-    vg.appendChild(btn);
+    btn.className='item-card'+(d.family===state.meubleFamily?' active':'');
+    btn.dataset.family=d.family;
+    btn.innerHTML=svgMod+'<span>Modèle '+d.family+'</span>';
+    btn.addEventListener('click',function(){ sdbSetModele(d.family); });
+    mg2.appendChild(btn);
   });
 
   // Finition vasque
@@ -905,16 +851,6 @@ window.submitConfig=submitConfig;
     vmg.appendChild(btn);
   });
 
-  // Meubles
-  var mg=document.getElementById('meubleGrid');
-  MEUBLES_DEF.forEach(function(d){
-    var btn=document.createElement('button');
-    btn.className='item-card'+(d.family===state.meubleFamily?' active':'');
-    btn.dataset.family=d.family;
-    btn.innerHTML=svgM+'<span>'+d.label+'</span>';
-    btn.addEventListener('click',function(){ sdbSetMeubleFamily(d.family); });
-    mg.appendChild(btn);
-  });
 
   // Bois
   var bg=document.getElementById('matGrid');
