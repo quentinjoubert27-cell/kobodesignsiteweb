@@ -2308,12 +2308,23 @@
                   <button class="sdb-toggle__btn" data-vc="2" onclick="sdbSetVC(2)">2 vasques</button>
                 </div>
               </div>
-              <div class="sdb-toggle">
+              <!-- Étagères : vasques 2-7 uniquement -->
+              <div class="sdb-toggle" id="sdbEtageresToggle" style="display:none">
                 <span class="sdb-sect__lbl" style="font-size:8px">Étagères</span>
                 <div class="sdb-toggle__buttons">
                   <button class="sdb-toggle__btn active" data-lc="1" onclick="sdbSetLC(1)">1 étagère</button>
                   <button class="sdb-toggle__btn" data-lc="2" onclick="sdbSetLC(2)">2 étagères</button>
                 </div>
+              </div>
+            </div>
+            <!-- Aménagement : vasque 1 uniquement -->
+            <div id="sdbAmenagementToggle" style="margin-top:12px">
+              <span class="sdb-sect__lbl" style="font-size:8px;display:block;margin-bottom:8px">Aménagement</span>
+              <div class="sdb-toggle__buttons" style="flex-wrap:wrap;gap:6px">
+                <button class="sdb-toggle__btn active" data-am="1TIROIR" onclick="sdbSetAmenagement('1TIROIR')">1 Tiroir</button>
+                <button class="sdb-toggle__btn" data-am="2TIROIRS" onclick="sdbSetAmenagement('2TIROIRS')">2 Tiroirs</button>
+                <button class="sdb-toggle__btn" data-am="1NICHE-1TIROIR" onclick="sdbSetAmenagement('1NICHE-1TIROIR')">1 Niche + 1 Tiroir</button>
+                <button class="sdb-toggle__btn" data-am="2NICHES-2TIROIRS" onclick="sdbSetAmenagement('2NICHES-2TIROIRS')">2 Niches + 2 Tiroirs</button>
               </div>
             </div>
           </div>
@@ -2461,15 +2472,28 @@
       ],
     };
 
-    // Note : on n'a plus de "Design A/B/C/D" — on génère le nom dynamiquement à partir de la config
+    // Libellé de configuration pour le récap
     function getMeubleName(){
+      if(state.vasque === 1){
+        var amLabels = {
+          '1TIROIR': '1 tiroir',
+          '2TIROIRS': '2 tiroirs',
+          '1NICHE-1TIROIR': '1 niche + 1 tiroir',
+          '2NICHES-2TIROIRS': '2 niches + 2 tiroirs'
+        };
+        return state.vc + ' vasque' + (state.vc > 1 ? 's' : '') + ' · ' + (amLabels[state.amenagement] || state.amenagement);
+      }
       return state.vc + ' vasque' + (state.vc > 1 ? 's' : '') + ' · ' + state.lc + ' étagère' + (state.lc > 1 ? 's' : '');
     }
 
-    // Construit le chemin GLB d'un meuble selon vasque (1-7), variante (1-4) et toggles vc/lc
-    // Meuble 1 a un schéma sans le préfixe "1_", les autres ont "N_"
+    // Construit le chemin GLB d'un meuble selon vasque (1-7), variante et toggles vc/lc
+    // Vasque 1 utilise les nouveaux GLB dans models/sdb/vasque1/
+    // Les autres vasques utilisent models/sdb/meuble{N}/ avec {N_}{vc}v_{lc}l.glb
     function getMeubleGlb(vasqueNum, vc, lc){
-      var prefix = vasqueNum === 1 ? '' : (vasqueNum + '_');
+      if(vasqueNum === 1){
+        return 'models/sdb/vasque1/V1-' + vc + '-' + state.amenagement + '.glb';
+      }
+      var prefix = vasqueNum + '_';
       var fname = prefix + vc + 'v_' + lc + 'l.glb';
       return 'models/sdb/meuble' + vasqueNum + '/' + fname;
     }
@@ -2482,7 +2506,8 @@
       vasqueMatId: 'blanc',
       meubleVariant: 1,   // unused now, kept for backward compat
       vc: 1,              // 1 ou 2 vasques
-      lc: 1,              // 1 ou 2 lavabos
+      lc: 1,              // 1 ou 2 lavabos (vasques 2-7)
+      amenagement: '1TIROIR', // vasque 1 uniquement : 1TIROIR | 2TIROIRS | 1NICHE-1TIROIR | 2NICHES-2TIROIRS
       bois: 'chene',
       vasqueWidth: 120,   // cm (largeur plan de travail)
     };
@@ -3126,6 +3151,8 @@
         el.classList.toggle('active', parseInt(el.dataset.v) === n);
       });
       document.getElementById('sdbVasqueLabel').textContent = 'Vasque ' + n;
+      // Mettre à jour le panneau de config meuble (aménagement vs étagères)
+      updateMeublePanel();
       // On recharge le modèle vasque seul (étape 1)
       loadModel('models/sdb/vasque/vasque' + n + '.glb');
     }
@@ -3148,9 +3175,25 @@
     }
     window.sdbSetLC = sdbSetLC;
 
+    function sdbSetAmenagement(a){
+      state.amenagement = a;
+      document.querySelectorAll('.sdb-toggle__btn[data-am]').forEach(function(b){
+        b.classList.toggle('active', b.dataset.am === a);
+      });
+      loadCurrentMeuble();
+    }
+    window.sdbSetAmenagement = sdbSetAmenagement;
+
+    // Affiche/masque le bon sélecteur d'aménagement selon la vasque sélectionnée
+    function updateMeublePanel(){
+      var isV1 = state.vasque === 1;
+      var etEl = document.getElementById('sdbEtageresToggle');
+      var amEl = document.getElementById('sdbAmenagementToggle');
+      if(etEl) etEl.style.display = isV1 ? 'none' : '';
+      if(amEl) amEl.style.display = isV1 ? '' : 'none';
+    }
+
     function loadCurrentMeuble(){
-      // Variant 1 = première combinaison (1v_1l), variant 2 = 1v_2l etc.
-      // Mais on a aussi les toggles. On charge le fichier qui correspond aux toggles vc/lc.
       var path = getMeubleGlb(state.vasque, state.vc, state.lc);
       loadModel(path);
     }
@@ -3231,6 +3274,7 @@
       if(n === 1){
         loadModel('models/sdb/vasque/vasque' + state.vasque + '.glb');
       } else if(n === 2){
+        updateMeublePanel();
         loadCurrentMeuble();
       } else if(n === 3){
         // Le modèle meuble reste, on met à jour le récap et les sélecteurs
