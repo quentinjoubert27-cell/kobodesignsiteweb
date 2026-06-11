@@ -378,7 +378,6 @@ function initScene(){
   key.shadow.camera.right = key.shadow.camera.top = 6;
   key.shadow.bias = -0.001;
   scene.add(key);
-  scene.add(Object.assign(new THREE.DirectionalLight(0xffe8d0,.40), {position: new THREE.Vector3(-6,4,-3)}));
   var fill = new THREE.DirectionalLight(0xffe8d0,.40); fill.position.set(-6,4,-3); scene.add(fill);
   var rim  = new THREE.DirectionalLight(0xffffff,.15); rim.position.set(0,-4,-8);  scene.add(rim);
 
@@ -445,6 +444,7 @@ function getVasqueGlb(){
 }
 
 function loadScene(){
+  if(!rootGroup){ console.warn('[SDB] initScene pas encore prêt'); return; }
   var loading = document.getElementById('loadingOverlay');
   if(loading) loading.classList.remove('hidden');
 
