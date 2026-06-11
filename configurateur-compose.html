@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="robots" content="noindex, nofollow"/>
-  <title>Configurateur Vasque Mathilde — Kobo Design</title>
+  <title>Configurateur Vasque — Kobo Design</title>
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -31,6 +31,7 @@
     .layout{display:grid;grid-template-columns:1fr 320px;gap:32px;align-items:start}
     @media(max-width:860px){.layout{grid-template-columns:1fr}}
 
+    /* ── Viewer ─────────────────────────────────────────── */
     .viewer{position:relative;border-radius:16px;overflow:hidden;background:#FAF7F2;
       border:1px solid rgba(26,26,26,.1);aspect-ratio:4/3;box-shadow:0 8px 48px rgba(26,26,26,.1)}
     canvas{width:100%;height:100%;display:block;cursor:grab}
@@ -43,43 +44,41 @@
       border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:16px}
     @keyframes spin{to{transform:rotate(360deg)}}
     .loader-lbl{font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(26,26,26,.4)}
-    .loader-pct{font-size:10px;color:var(--accent);margin-top:6px;font-weight:700}
-
     .hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:10px;
       font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.35);
       background:rgba(255,250,240,.85);padding:6px 14px;border-radius:100px;
       pointer-events:none;white-space:nowrap}
 
-    .dims{position:absolute;top:16px;left:16px;font-size:11px;font-weight:600;
-      background:rgba(255,250,240,.92);border:1px solid rgba(26,26,26,.1);
-      border-radius:8px;padding:8px 14px;pointer-events:none}
-    .dims-lbl{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--accent);display:block;margin-bottom:2px}
-
+    /* ── Panel ──────────────────────────────────────────── */
     .panel{display:flex;flex-direction:column;gap:20px}
     .card{background:var(--white);border:1px solid rgba(26,26,26,.09);border-radius:12px;padding:22px}
     .card-title{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
-      color:rgba(26,26,26,.4);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+      color:rgba(26,26,26,.4);margin-bottom:16px;display:flex;align-items:center;gap:8px}
     .dot{width:7px;height:7px;border-radius:50%;background:#1A1A1A;flex-shrink:0}
 
-    .sl-group{margin-bottom:18px}
-    .sl-group:last-child{margin-bottom:0}
-    .sl-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
-    .sl-name{font-size:13px;font-weight:600}
-    .sl-val{font-size:22px;font-weight:900;color:var(--accent);letter-spacing:-.03em;line-height:1}
-    .sl-unit{font-size:10px;font-weight:600;color:rgba(26,26,26,.35);margin-left:2px}
-    .track{position:relative;margin-bottom:5px}
-    .fill{position:absolute;top:50%;left:0;height:4px;border-radius:2px 0 0 2px;
-      background:var(--accent);transform:translateY(-50%);pointer-events:none}
-    input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;
-      background:rgba(26,26,26,.1);outline:none;cursor:pointer}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
-      border-radius:50%;background:var(--accent);box-shadow:0 2px 8px rgba(205,62,0,.35);cursor:pointer;transition:transform .15s}
-    input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
-    input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);border:none;cursor:pointer}
-    .sl-limits{display:flex;justify-content:space-between;font-size:9px;font-weight:600;
-      letter-spacing:.1em;color:rgba(26,26,26,.28);text-transform:uppercase}
-    .divider{height:1px;background:rgba(26,26,26,.07);margin:14px 0}
+    /* Sélecteurs à boutons */
+    .sel-group{margin-bottom:16px}
+    .sel-group:last-child{margin-bottom:0}
+    .sel-lbl{font-size:11px;font-weight:600;color:rgba(26,26,26,.5);margin-bottom:8px}
+    .sel-btns{display:flex;gap:6px;flex-wrap:wrap}
+    .sel-btn{flex:1;min-width:0;padding:9px 8px;font-family:var(--font);font-size:10px;font-weight:700;
+      letter-spacing:.08em;text-transform:uppercase;text-align:center;
+      border:1.5px solid rgba(26,26,26,.14);border-radius:8px;
+      background:none;color:rgba(26,26,26,.5);cursor:pointer;
+      transition:border-color .15s,color .15s,background .15s;white-space:nowrap}
+    .sel-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .sel-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .sel-btn-icon{display:block;font-size:16px;margin-bottom:4px}
+
+    /* Sélecteur texture */
+    .tex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .tex-btn{border:2px solid transparent;border-radius:10px;overflow:hidden;
+      cursor:pointer;padding:0;background:none;transition:border-color .2s,transform .15s;aspect-ratio:1}
+    .tex-btn img{width:100%;height:100%;display:block;object-fit:cover;border-radius:8px}
+    .tex-btn:hover{transform:scale(1.04)}
+    .tex-btn.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(205,62,0,.18)}
+    .tex-name{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+      color:rgba(26,26,26,.4);text-align:center;margin-top:5px}
 
     .btn{width:100%;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:.18em;
       text-transform:uppercase;border-radius:8px;padding:13px;cursor:pointer;
@@ -89,17 +88,6 @@
     .btn-out:hover{border-color:var(--accent);color:var(--accent)}
     .btn-fill{background:var(--accent);color:#fff;border:none}
     .btn-fill:hover{background:#a83200;transform:translateY(-2px)}
-
-    /* Sélecteur de texture */
-    .tex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .tex-btn{border:2px solid transparent;border-radius:10px;overflow:hidden;
-      cursor:pointer;padding:0;background:none;transition:border-color .2s,transform .15s;
-      aspect-ratio:1}
-    .tex-btn img{width:100%;height:100%;display:block;object-fit:cover;border-radius:8px}
-    .tex-btn:hover{transform:scale(1.04)}
-    .tex-btn.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(205,62,0,.18)}
-    .tex-name{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-      color:rgba(26,26,26,.4);text-align:center;margin-top:5px}
 
     .info{background:rgba(205,62,0,.05);border:1px solid rgba(205,62,0,.15);border-radius:10px;padding:16px 18px}
     .info-title{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
@@ -115,8 +103,8 @@
 
 <div class="page">
   <p class="eyebrow">Salle de bain · Sur-mesure</p>
-  <h1>Vasque <em>Mathilde</em></h1>
-  <p class="sub">Ajustez la longueur du meuble. La vasque reste toujours à taille fixe.</p>
+  <h1>Vasque <em>1</em></h1>
+  <p class="sub">Choisissez la configuration du meuble sous vasque.</p>
 
   <div class="layout">
 
@@ -124,34 +112,49 @@
       <canvas id="c"></canvas>
       <div class="loader" id="loader">
         <div class="spin"></div>
-        <p class="loader-lbl">Chargement…</p>
-        <p class="loader-pct" id="pct"></p>
-      </div>
-      <div class="dims" id="dims" style="display:none">
-        <span class="dims-lbl">Longueur meuble</span>
-        <span id="dimsTxt">— cm</span>
+        <p class="loader-lbl" id="loaderLbl">Chargement…</p>
       </div>
       <p class="hint">Cliquer-glisser pour pivoter</p>
     </div>
 
     <div class="panel">
+
+      <!-- Nombre de vasques -->
       <div class="card">
         <div class="card-title"><span class="dot"></span>Meuble</div>
 
-        <div class="sl-group">
-          <div class="sl-row">
-            <span class="sl-name">↔ Longueur</span>
-            <span><span class="sl-val" id="vL">120</span><span class="sl-unit">cm</span></span>
+        <div class="sel-group">
+          <p class="sel-lbl">Nombre de vasques</p>
+          <div class="sel-btns">
+            <button class="sel-btn active" id="nb-1" onclick="setNbVasques(1)">
+              <span class="sel-btn-icon">◻</span>Simple
+            </button>
+            <button class="sel-btn" id="nb-2" onclick="setNbVasques(2)">
+              <span class="sel-btn-icon">◻◻</span>Double
+            </button>
           </div>
-          <div class="track">
-            <div class="fill" id="fL"></div>
-            <input type="range" id="sL" min="60" max="240" step="1" value="120" oninput="update()"/>
+        </div>
+
+        <div class="sel-group">
+          <p class="sel-lbl">Aménagement</p>
+          <div class="sel-btns" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <button class="sel-btn active" id="am-1TIROIR"         onclick="setAmenagement('1TIROIR')">
+              <span class="sel-btn-icon">▭</span>1 Tiroir
+            </button>
+            <button class="sel-btn" id="am-2TIROIRS"               onclick="setAmenagement('2TIROIRS')">
+              <span class="sel-btn-icon">▭▭</span>2 Tiroirs
+            </button>
+            <button class="sel-btn" id="am-1NICHE-1TIROIR"         onclick="setAmenagement('1NICHE-1TIROIR')">
+              <span class="sel-btn-icon">□▭</span>1 Niche + 1 Tiroir
+            </button>
+            <button class="sel-btn" id="am-2NICHES-2TIROIRS"       onclick="setAmenagement('2NICHES-2TIROIRS')">
+              <span class="sel-btn-icon">□□</span>2 Niches + 2 Tiroirs
+            </button>
           </div>
-          <div class="sl-limits"><span>60 cm</span><span>240 cm</span></div>
         </div>
       </div>
 
-      <!-- Sélecteur de texture vasque -->
+      <!-- Texture -->
       <div class="card">
         <div class="card-title"><span class="dot" style="background:var(--accent)"></span>Matière vasque</div>
         <div class="tex-grid">
@@ -177,10 +180,6 @@
       </div>
 
       <div class="card">
-        <button class="btn btn-out" onclick="reset()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          Réinitialiser
-        </button>
         <button class="btn btn-fill" onclick="location.href='contact.html'">
           Demander un devis
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -198,53 +197,56 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-// ─── Constantes ──────────────────────────────────────────────────────────────
-var GLB   = 'models/sdb/vasquemathilde.glb';
-var L_DEF = 120, L_MIN = 60, L_MAX = 240;
+// ─── Catalogue des modèles ────────────────────────────────────────────────────
+// Vasque 1 : 2 variantes × 4 aménagements = 8 GLB
+var CATALOGUE = {
+  'V1': {
+    label: 'Vasque 1',
+    variants: {
+      '1': { label: 'Simple vasque' },
+      '2': { label: 'Double vasque' }
+    },
+    amenagements: [
+      { id: '1TIROIR',        label: '1 Tiroir' },
+      { id: '2TIROIRS',       label: '2 Tiroirs' },
+      { id: '1NICHE-1TIROIR', label: '1 Niche + 1 Tiroir' },
+      { id: '2NICHES-2TIROIRS', label: '2 Niches + 2 Tiroirs' }
+    ],
+    glbPath: function(variant, amenagement) {
+      return 'models/sdb/vasque1/V1-' + variant + '-' + amenagement + '.glb';
+    }
+  }
+};
 
-// Textures disponibles pour la vasque
+// ─── État ─────────────────────────────────────────────────────────────────────
+var vasque       = 'V1';
+var nbVasques    = 1;      // 1 = simple, 2 = double
+var amenagement  = '1TIROIR';
+var activeTexIdx = 0;
+
+// ─── Textures ─────────────────────────────────────────────────────────────────
 var TEXTURES = [
-  { id: 'tex-0', src: 'img/texture-noir.png'              },
-  { id: 'tex-1', src: 'img/texture-blanc-gris.png'        },
-  { id: 'tex-2', src: 'img/texture-blanc-multicouleurs.png'}
+  { id: 'tex-0', src: 'img/texture-noir.png' },
+  { id: 'tex-1', src: 'img/texture-blanc-gris.png' },
+  { id: 'tex-2', src: 'img/texture-blanc-multicouleurs.png' }
 ];
-var textures      = [];   // THREE.Texture chargées
-var activeTexIdx  = 0;    // index de la texture active
+var loadedTextures = {};   // cache : src → THREE.Texture
 
-// ─── Nœuds GLB ───────────────────────────────────────────────────────────────
-// Structure du fichier (extraite via analyse) :
-//   Model (racine) → Group1 (vasque centre) + Group2 (panneau gauche) + Mesh3 (panneau droit)
-// Les 3 blocs occupent X : [0–0.25], [0.25–0.75], [0.75–1] en espace Model local
-// → le bloc central (vasque) ne change JAMAIS de taille
-// → les blocs latéraux s'étirent vers l'extérieur, bord intérieur toujours collé à la vasque
-var node1 = null;   // Group1 = vasque (jamais modifié)
-var node2 = null;   // Group2 = panneau gauche
-var node3 = null;   // Mesh3  = panneau droit
-
-// Valeurs initiales stockées au chargement
-var sx0  = 0;        // scale.x initial des panneaux (= scale de "Model" dans le GLB)
-var vL   = 0;        // bord gauche de la vasque en espace raw local
-var vR   = 0;        // bord droit  de la vasque en espace raw local
-var g2mx = 0.25;     // géometrie max X de Group2 dans son espace local (depuis JSON du GLB)
-var m3mn = 0.75;     // géometrie min X de Mesh3  dans son espace local (depuis JSON du GLB)
-
-// ─── Three.js ────────────────────────────────────────────────────────────────
-var canvas  = document.getElementById('c');
-var wrapper = canvas.parentElement;
-var scene, camera, renderer, rootModel;
+// ─── Three.js ─────────────────────────────────────────────────────────────────
+var canvas   = document.getElementById('c');
+var wrapper  = canvas.parentElement;
+var scene, camera, renderer;
+var rootModel = null;
 var rotX = 0.15, rotY = 0.4;
 var drag = false, px = 0, py = 0;
+var currentLoad = 0; // numéro de chargement pour ignorer les anciens callbacks
 
 function initScene() {
-  var W = wrapper.clientWidth || 800;
-  var H = wrapper.clientHeight || 600;
-
-  scene = new THREE.Scene();
+  var W = wrapper.clientWidth || 800, H = wrapper.clientHeight || 600;
+  scene    = new THREE.Scene();
   scene.background = new THREE.Color(0xFAF7F2);
-
-  camera = new THREE.PerspectiveCamera(38, W / H, 0.01, 100);
-  camera.position.set(0, 0.3, 4.5);
-
+  camera   = new THREE.PerspectiveCamera(38, W / H, 0.01, 100);
+  camera.position.set(0, 0.2, 4.5);
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(W, H);
@@ -254,173 +256,133 @@ function initScene() {
   catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-  var key = new THREE.DirectionalLight(0xffffff, 0.9);
-  key.position.set(3, 6, 4); scene.add(key);
-  var fill = new THREE.DirectionalLight(0xfffde8, 0.35);
-  fill.position.set(-4, 2, -3); scene.add(fill);
-  var back = new THREE.DirectionalLight(0xffffff, 0.15);
-  back.position.set(0, -2, -5); scene.add(back);
+  var key = new THREE.DirectionalLight(0xffffff, 0.90); key.position.set(3,6,4); scene.add(key);
+  var fill = new THREE.DirectionalLight(0xfffde8, 0.35); fill.position.set(-4,2,-3); scene.add(fill);
+  var back = new THREE.DirectionalLight(0xffffff, 0.15); back.position.set(0,-2,-5); scene.add(back);
 
   canvas.addEventListener('mousedown',  function(e){ drag=true; px=e.clientX; py=e.clientY; });
   window.addEventListener('mouseup',    function(){ drag=false; });
   window.addEventListener('mousemove',  function(e){
-    if (!drag || !rootModel) return;
-    rotY += (e.clientX - px) * 0.007;
-    rotX  = Math.max(-0.4, Math.min(0.4, rotX + (e.clientY - py) * 0.004));
-    rootModel.rotation.set(rotX, rotY, 0);
-    px = e.clientX; py = e.clientY;
+    if(!drag||!rootModel)return;
+    rotY+=(e.clientX-px)*0.007;
+    rotX=Math.max(-0.4,Math.min(0.4,rotX+(e.clientY-py)*0.004));
+    rootModel.rotation.set(rotX,rotY,0);
+    px=e.clientX; py=e.clientY;
   });
-  canvas.addEventListener('touchstart', function(e){ drag=true; px=e.touches[0].clientX; }, {passive:true});
+  canvas.addEventListener('touchstart', function(e){ drag=true; px=e.touches[0].clientX; },{passive:true});
   canvas.addEventListener('touchend',   function(){ drag=false; });
   canvas.addEventListener('touchmove',  function(e){
-    if (!drag || !rootModel) return;
-    rotY += (e.touches[0].clientX - px) * 0.007;
-    rootModel.rotation.y = rotY;
-    px = e.touches[0].clientX;
-  }, {passive:true});
-
+    if(!drag||!rootModel)return;
+    rotY+=(e.touches[0].clientX-px)*0.007;
+    rootModel.rotation.y=rotY; px=e.touches[0].clientX;
+  },{passive:true});
   window.addEventListener('resize', function(){
-    var w = wrapper.clientWidth, h = wrapper.clientHeight;
-    camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+    var w=wrapper.clientWidth, h=wrapper.clientHeight;
+    camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
   });
-
-  (function loop(){ requestAnimationFrame(loop); renderer.render(scene, camera); })();
-  loadModel();
+  (function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
+  loadCurrentModel();
 }
 
-function loadModel() {
-  new THREE.GLTFLoader().load(GLB,
-    function onLoad(gltf) {
-      var raw = gltf.scene;
+// ─── Chargement GLB ───────────────────────────────────────────────────────────
+function loadCurrentModel() {
+  var cat  = CATALOGUE[vasque];
+  var path = cat.glbPath(String(nbVasques), amenagement);
+  var myLoad = ++currentLoad;
 
-      // 1. Normaliser raw (centre + cadrage, sans rotation — la rotation est sur rootModel)
+  // Afficher loader
+  var loaderEl = document.getElementById('loader');
+  loaderEl.classList.remove('hidden');
+  document.getElementById('loaderLbl').textContent = 'Chargement…';
+
+  new THREE.GLTFLoader().load(
+    path,
+    function onLoad(gltf) {
+      if(myLoad !== currentLoad) return; // chargement annulé
+
+      // Supprimer l'ancien modèle
+      if(rootModel) { scene.remove(rootModel); rootModel = null; }
+
+      var raw  = gltf.scene;
       var box  = new THREE.Box3().setFromObject(raw);
       var size = box.getSize(new THREE.Vector3());
       var ctr  = box.getCenter(new THREE.Vector3());
       var norm = 2.4 / Math.max(size.x, size.y, size.z, 0.001);
       raw.scale.setScalar(norm);
-      raw.position.set(-ctr.x * norm, -ctr.y * norm, -ctr.z * norm);
+      raw.position.set(-ctr.x*norm, -ctr.y*norm, -ctr.z*norm);
 
-      // 2. rootModel = pivot de rotation 3D
       rootModel = new THREE.Group();
       rootModel.rotation.set(rotX, rotY, 0);
-      scene.add(rootModel);
       rootModel.add(raw);
+      scene.add(rootModel);
 
-      // 3. Récupérer le nœud racine du GLB ("Model") et rattacher ses enfants à raw
-      //    directement (raw.attach préserve le transform monde de chaque enfant)
-      var modelNode = raw.children[0];
-      Array.from(modelNode.children).forEach(function(child) {
-        raw.attach(child);
-      });
+      // Appliquer la texture active si déjà chargée
+      applyCurrentTexture();
 
-      // 4. Identifier les 3 blocs
-      node1 = raw.getObjectByName('Group1');  // vasque (centre)
-      node2 = raw.getObjectByName('Group2');  // panneau gauche
-      node3 = raw.getObjectByName('Mesh3');   // panneau droit
-
-      // 5. Stocker les paramètres initiaux pour le scaling 3 parties
-      //    Après attach, chaque nœud a scale = Model.scale (5.579) et position.x = 0
-      //    car Model n'avait pas de translation.
-      //    Le bord gauche de la vasque en espace raw local = node1.scale.x * 0.25
-      //    Le bord droit  de la vasque en espace raw local = node1.scale.x * 0.75
-      sx0 = node2 ? node2.scale.x : 1;
-      vL  = node1 ? node1.scale.x * g2mx : 0;   // bord gauche vasque (= bord droit de node2 initial)
-      vR  = node1 ? node1.scale.x * m3mn : 0;   // bord droit  vasque (= bord gauche de node3 initial)
-
-      // 6. Pré-charger les textures et appliquer la première
-      var loader2 = new THREE.TextureLoader();
-      TEXTURES.forEach(function(t, i) {
-        loader2.load(t.src, function(tex) {
-          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-          tex.repeat.set(3, 3);  // répétition pour couvrir la vasque
-          tex.encoding = THREE.sRGBEncoding;
-          textures[i] = tex;
-          if (i === activeTexIdx) applyTexture(tex);
-        });
-      });
-
-      // 7. Prêt
-      document.getElementById('loader').classList.add('hidden');
-      document.getElementById('dims').style.display = '';
-      update();
+      loaderEl.classList.add('hidden');
     },
-    function onProgress(xhr) {
-      if (xhr.lengthComputable) {
-        var el = document.getElementById('pct');
-        if (el) el.textContent = Math.round(xhr.loaded / xhr.total * 100) + '%';
-      }
-    },
+    null,
     function onError(err) {
-      console.error('GLB error:', err);
-      document.querySelector('.loader-lbl').textContent = 'Erreur de chargement';
+      if(myLoad !== currentLoad) return;
+      console.error('GLB error:', path, err);
+      document.getElementById('loaderLbl').textContent = 'Erreur de chargement';
     }
   );
 }
 
-function update() {
-  var l = +document.getElementById('sL').value;
-
-  document.getElementById('vL').textContent = l;
-  setFill('fL', l, L_MIN, L_MAX);
-  document.getElementById('dimsTxt').textContent = l + ' cm';
-
-  if (!node2 || !node3) return;
-
-  var r = l / L_DEF;  // ratio longueur
-
-  // ── Panneau gauche (node2 = Group2) ────────────────────────────────────────
-  // S'étire vers la gauche. Son bord DROIT reste toujours collé au bord gauche
-  // de la vasque (vL). Formule : position.x = vL - scale.x * g2mx
-  node2.scale.x    = sx0 * r;
-  node2.position.x = vL - node2.scale.x * g2mx;
-
-  // ── Panneau droit (node3 = Mesh3) ──────────────────────────────────────────
-  // S'étire vers la droite. Son bord GAUCHE reste toujours collé au bord droit
-  // de la vasque (vR). Formule : position.x = vR - scale.x * m3mn
-  node3.scale.x    = sx0 * r;
-  node3.position.x = vR - node3.scale.x * m3mn;
-
-  // node1 (vasque) : jamais modifié → taille et position inchangées ✓
+// ─── Sélecteurs ───────────────────────────────────────────────────────────────
+function setNbVasques(n) {
+  nbVasques = n;
+  document.getElementById('nb-1').classList.toggle('active', n===1);
+  document.getElementById('nb-2').classList.toggle('active', n===2);
+  loadCurrentModel();
 }
 
-// ─── Texture vasque ──────────────────────────────────────────────────────────
-function applyTexture(tex) {
-  if (!node1) return;
-  node1.traverse(function(obj) {
-    if (!obj.isMesh) return;
-    var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-    mats.forEach(function(mat) {
-      mat.map = tex;
-      mat.needsUpdate = true;
+function setAmenagement(id) {
+  amenagement = id;
+  ['1TIROIR','2TIROIRS','1NICHE-1TIROIR','2NICHES-2TIROIRS'].forEach(function(a){
+    var el = document.getElementById('am-'+a);
+    if(el) el.classList.toggle('active', a===id);
+  });
+  loadCurrentModel();
+}
+
+// ─── Texture ──────────────────────────────────────────────────────────────────
+function applyCurrentTexture() {
+  var src = TEXTURES[activeTexIdx].src;
+  if(loadedTextures[src]) {
+    applyTexToScene(loadedTextures[src]);
+  } else {
+    new THREE.TextureLoader().load(src, function(tex) {
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(3,3);
+      try { tex.colorSpace = THREE.SRGBColorSpace; } catch(e) { tex.encoding = THREE.sRGBEncoding; }
+      loadedTextures[src] = tex;
+      applyTexToScene(tex);
     });
+  }
+}
+
+function applyTexToScene(tex) {
+  if(!rootModel) return;
+  rootModel.traverse(function(obj) {
+    if(!obj.isMesh) return;
+    var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(function(mat) { mat.map = tex; mat.needsUpdate = true; });
   });
 }
 
 function setTexture(idx) {
   activeTexIdx = idx;
-  // Mettre à jour le bouton actif
-  TEXTURES.forEach(function(t, i) {
+  TEXTURES.forEach(function(t,i){
     var btn = document.getElementById(t.id);
-    if (btn) btn.classList.toggle('active', i === idx);
+    if(btn) btn.classList.toggle('active', i===idx);
   });
-  // Appliquer si la texture est déjà chargée
-  if (textures[idx]) applyTexture(textures[idx]);
+  applyCurrentTexture();
 }
 
-function setFill(id, val, min, max) {
-  document.getElementById(id).style.width = ((val - min) / (max - min) * 100) + '%';
-}
-
-function reset() {
-  document.getElementById('sL').value = L_DEF;
-  update();
-}
-
-window.addEventListener('DOMContentLoaded', function() {
-  setFill('fL', L_DEF, L_MIN, L_MAX);
-  initScene();
-});
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() { initScene(); });
 </script>
 </body>
 </html>
