@@ -1084,6 +1084,11 @@
     .sdb-toggle__btn{flex:1;padding:11px 8px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.06em;color:rgba(26,26,26,.55);background:none;border:none;cursor:pointer;transition:background .2s,color .2s}
     .sdb-toggle__btn:hover:not(.active){color:var(--dark);background:rgba(26,26,26,.04)}
     .sdb-toggle__btn.active{background:var(--accent);color:var(--white)}
+    /* Grille 2×2 aménagement (vasque 1) — boutons individuels, pas de overflow:hidden */
+    .sdb-am-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .sdb-am-btn{padding:11px 8px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.06em;color:rgba(26,26,26,.55);background:var(--white);border:1.5px solid rgba(26,26,26,.12);border-radius:8px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+    .sdb-am-btn:hover:not(.active){color:var(--dark);background:rgba(26,26,26,.04)}
+    .sdb-am-btn.active{background:var(--accent);color:var(--white);border-color:var(--accent)}
 
     /* MATIÈRES (textures) — bois meuble */
     .sdb-mats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -2320,11 +2325,11 @@
             <!-- Aménagement : vasque 1 uniquement -->
             <div id="sdbAmenagementToggle" style="margin-top:12px">
               <span class="sdb-sect__lbl" style="font-size:8px;display:block;margin-bottom:8px">Aménagement</span>
-              <div class="sdb-toggle__buttons" style="flex-wrap:wrap;gap:6px">
-                <button class="sdb-toggle__btn active" data-am="1TIROIR" onclick="sdbSetAmenagement('1TIROIR')">1 Tiroir</button>
-                <button class="sdb-toggle__btn" data-am="2TIROIRS" onclick="sdbSetAmenagement('2TIROIRS')">2 Tiroirs</button>
-                <button class="sdb-toggle__btn" data-am="1NICHE-1TIROIR" onclick="sdbSetAmenagement('1NICHE-1TIROIR')">1 Niche + 1 Tiroir</button>
-                <button class="sdb-toggle__btn" data-am="2NICHES-2TIROIRS" onclick="sdbSetAmenagement('2NICHES-2TIROIRS')">2 Niches + 2 Tiroirs</button>
+              <div class="sdb-am-grid">
+                <button class="sdb-am-btn active" data-am="1TIROIR" onclick="sdbSetAmenagement('1TIROIR')">1 Tiroir</button>
+                <button class="sdb-am-btn" data-am="2TIROIRS" onclick="sdbSetAmenagement('2TIROIRS')">2 Tiroirs</button>
+                <button class="sdb-am-btn" data-am="1NICHE-1TIROIR" onclick="sdbSetAmenagement('1NICHE-1TIROIR')">1 Niche + 1 Tiroir</button>
+                <button class="sdb-am-btn" data-am="2NICHES-2TIROIRS" onclick="sdbSetAmenagement('2NICHES-2TIROIRS')">2 Niches + 2 Tiroirs</button>
               </div>
             </div>
           </div>
@@ -2885,16 +2890,27 @@
         }
       });
 
+      // Fallback pour les nouveaux GLBs (V1, etc.) dont les noms de matériaux ne correspondent
+      // pas à MAT_MEUBLE. Si aucun mesh n'a été taguée 'meuble', on tagge tous les meshes
+      // non-taguées comme 'meuble' pour que la texture bois puisse s'y appliquer.
+      var meubleCount = 0;
+      model.traverse(function(c){ if(c.userData.kobok === 'meuble') meubleCount++; });
+      if(meubleCount === 0){
+        model.traverse(function(child){
+          if(!child.isMesh || !child.material || child.userData.kobok) return;
+          child.userData.kobok = 'meuble';
+        });
+      }
+
       // Cloner les matériaux pour ne pas que les modifs sur un mesh affectent les autres
       // (Three.js partage souvent les références matériau entre meshes ayant le même mat).
+      // On clone TOUS les matériaux des meshes taguées (pas seulement MAT_VASQUE/MAT_MEUBLE).
       model.traverse(function(child){
         if(!child.userData.kobok) return;
         var mats = Array.isArray(child.material) ? child.material : [child.material];
         for(var i=0; i<mats.length; i++){
           var m = mats[i];
           if(!m) continue;
-          var bn = (m.name || '').replace(/\.\d+$/, '');
-          if(bn !== MAT_VASQUE && bn !== MAT_MEUBLE) continue;
           var cloned = m.clone();
           cloned.needsUpdate = true;
           if(Array.isArray(child.material)) child.material[i] = cloned;
@@ -2980,11 +2996,20 @@
       currentModel.traverse(function(child){
         if(child.userData.kobok !== tag) return;
         var mats = Array.isArray(child.material) ? child.material : [child.material];
+        // Vérifier si ce mesh possède le matériau attendu.
+        // Si oui → filtre strict (comportement original).
+        // Si non → appliquer à tous les matériaux du mesh (nouveaux GLBs V1).
+        var hasExpectedMat = false;
+        if(matName){
+          for(var j=0; j<mats.length; j++){
+            if(mats[j] && (mats[j].name||'').replace(/\.\d+$/,'') === matName){ hasExpectedMat=true; break; }
+          }
+        }
         for(var i=0; i<mats.length; i++){
           var m = mats[i];
           if(!m) continue;
           var bn = (m.name || '').replace(/\.\d+$/, '');
-          if(matName && bn !== matName) continue;
+          if(matName && hasExpectedMat && bn !== matName) continue;
           // Cloner la texture pour ajuster repeat selon UV de cette mesh
           var newTex = tex.clone();
           newTex.needsUpdate = true;
@@ -3043,11 +3068,17 @@
       currentModel.traverse(function(child){
         if(child.userData.kobok !== tag) return;
         var mats = Array.isArray(child.material) ? child.material : [child.material];
+        var hasExpectedMat = false;
+        if(matName){
+          for(var j=0; j<mats.length; j++){
+            if(mats[j] && (mats[j].name||'').replace(/\.\d+$/,'') === matName){ hasExpectedMat=true; break; }
+          }
+        }
         for(var i=0; i<mats.length; i++){
           var m = mats[i];
           if(!m) continue;
           var bn = (m.name || '').replace(/\.\d+$/, '');
-          if(matName && bn !== matName) continue;
+          if(matName && hasExpectedMat && bn !== matName) continue;
           m.map = null;
           m.color.setRGB(color.r, color.g, color.b);
           if('roughness' in m) m.roughness = 0.4;
@@ -3177,7 +3208,7 @@
 
     function sdbSetAmenagement(a){
       state.amenagement = a;
-      document.querySelectorAll('.sdb-toggle__btn[data-am]').forEach(function(b){
+      document.querySelectorAll('.sdb-am-btn[data-am]').forEach(function(b){
         b.classList.toggle('active', b.dataset.am === a);
       });
       loadCurrentMeuble();
