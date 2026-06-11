@@ -2334,33 +2334,20 @@
             </div>
           </div>
 
-          <!-- Largeur du meuble -->
+          <!-- Largeur (meuble = plan de travail, même dimension) -->
           <div class="sdb-sect">
             <div class="sdb-sect__head">
-              <span class="sdb-sect__lbl">✦ Largeur du meuble</span>
-              <span class="sdb-sect__val"><span id="meubleLargeurLabel">80</span><span class="sdb-dim-badge">cm</span></span>
+              <span class="sdb-sect__lbl">✦ Largeur</span>
+              <span class="sdb-sect__val"><span id="vasqueDimLabel2">80</span><span class="sdb-dim-badge">cm</span></span>
             </div>
             <div class="sdb-dim-slider">
-              <div class="sdb-dim-slider__labels"><span>50 cm</span><span>115 cm</span><span>180 cm</span></div>
-              <input type="range" class="sdb-dim-input" id="meubleLargeurSlider"
-                     min="50" max="180" step="5" value="80"
-                     oninput="onMeubleLargeurChange(this.value)">
-              <p class="sdb-dim-hint">La largeur du caisson en bois sous la vasque.</p>
-            </div>
-          </div>
-
-          <!-- Largeur du plan de travail (synced avec étape 1) -->
-          <div class="sdb-sect">
-            <div class="sdb-sect__head">
-              <span class="sdb-sect__lbl">✦ Largeur du plan de travail</span>
-              <span class="sdb-sect__val"><span id="vasqueDimLabel2">120</span><span class="sdb-dim-badge">cm</span></span>
-            </div>
-            <div class="sdb-dim-slider">
-              <div class="sdb-dim-slider__labels"><span>80 cm</span><span>140 cm</span><span>200 cm</span></div>
+              <div class="sdb-dim-slider__labels" id="largeurSliderLabels">
+                <span>60 cm</span><span>120 cm</span><span>180 cm</span>
+              </div>
               <input type="range" class="sdb-dim-input" id="vasqueWidthSlider2"
-                     min="80" max="200" step="5" value="120"
+                     min="60" max="180" step="5" value="80"
                      oninput="onVasqueWidthChange(this.value)">
-              <p class="sdb-dim-hint">Le plan de travail s'étend de chaque côté de la vasque.</p>
+              <p class="sdb-dim-hint">Largeur du meuble et du plan de travail — la même dimension.</p>
             </div>
           </div>
 
@@ -2544,9 +2531,8 @@
       lc: 1,              // 1 ou 2 lavabos (vasques 2-7)
       amenagement: '1TIROIR', // vasque 1 uniquement : 1TIROIR | 2TIROIRS | 1NICHE-1TIROIR | 2NICHES-2TIROIRS
       bois: 'chene',
-      vasqueWidth: 120,   // cm (largeur plan de travail)
-      meubleWidth: 80,    // cm (largeur du meuble cabinet)
-      // Refs internes — stockées lors du chargement du modèle
+      vasqueWidth: 80,    // cm (largeur totale : meuble = plan de travail)
+      // Refs internes — stockées lors du chargement du modèle (étape 2)
       _meubleBaseScale: 0,
       _meubleCenter: null,
     };
@@ -2674,56 +2660,47 @@
       pdtRight.scale.x    = pdtSx0 * r;
       pdtRight.position.x = pdtVR - pdtRight.scale.x * pdtM3mn;
 
-      // Màj UI — synchronise les deux sliders (étape 1 et étape 2)
+      // Màj UI (label étape 1 seulement — syncLargeurUI fait le reste)
       var pct = ((state.vasqueWidth - 80) / (200 - 80) * 100).toFixed(1);
-      ['vasqueDimLabel','vasqueDimLabel2'].forEach(function(id){
-        var el = document.getElementById(id); if(el) el.textContent = state.vasqueWidth;
-      });
-      ['vasqueWidthSlider','vasqueWidthSlider2'].forEach(function(id){
-        var el = document.getElementById(id);
-        if(!el) return;
-        el.style.setProperty('--pct', pct + '%');
-        el.value = state.vasqueWidth;
-      });
+      var lbl = document.getElementById('vasqueDimLabel');
+      if(lbl) lbl.textContent = state.vasqueWidth;
+      var slider = document.getElementById('vasqueWidthSlider');
+      if(slider){ slider.style.setProperty('--pct', pct + '%'); }
     }
 
     function onVasqueWidthChange(val) {
       state.vasqueWidth = parseInt(val, 10);
-      applyVasqueDimensions();
+      if(state.step === 1) applyVasqueDimensions();
+      if(state.step === 2) applyDimensionsStep2();
+      syncLargeurUI();
     }
     window.onVasqueWidthChange = onVasqueWidthChange;
 
-    /* ─────── LARGEUR DU MEUBLE ─────── */
-    // Slider de largeur du meuble (étape 2) : scale l'axe X du modèle
-    // Référence = largeur par défaut selon vc (80 cm simple, 140 cm double)
-    function defaultMeubleWidth(){ return state.vc === 2 ? 140 : 80; }
+    // Synchronise les labels et sliders largeur (étapes 1 et 2)
+    function syncLargeurUI(){
+      var v = state.vasqueWidth;
+      var pct1 = ((v - 80) / (200 - 80) * 100).toFixed(1);
+      var pct2 = ((v - 60) / (180 - 60) * 100).toFixed(1);
+      var e;
+      e = document.getElementById('vasqueDimLabel');  if(e) e.textContent = v;
+      e = document.getElementById('vasqueDimLabel2'); if(e) e.textContent = v;
+      e = document.getElementById('vasqueWidthSlider');  if(e){ e.value = v; e.style.setProperty('--pct', pct1+'%'); }
+      e = document.getElementById('vasqueWidthSlider2'); if(e){ e.value = v; e.style.setProperty('--pct', pct2+'%'); }
+    }
 
-    function applyMeubleDimensions(){
+    /* ─────── DIMENSIONS ÉTAPE 2 ─────── */
+    // Largeur de référence selon le nombre de vasques
+    function refLargeur(){ return state.vc === 2 ? 140 : 80; }
+
+    // X-scale le modèle meuble selon vasqueWidth (plan de travail = meuble)
+    function applyDimensionsStep2(){
       if(!currentModel || !state._meubleBaseScale || !state._meubleCenter) return;
-      var refW = defaultMeubleWidth();
-      var r = state.meubleWidth / refW;
+      var r = state.vasqueWidth / refLargeur();
       var bs = state._meubleBaseScale;
       var cx = state._meubleCenter.x;
       currentModel.scale.set(bs * r, bs, bs);
       currentModel.position.x = -cx * bs * r;
-      // Sync UI step 2
-      var lbl = document.getElementById('meubleLargeurLabel');
-      if(lbl) lbl.textContent = state.meubleWidth;
-      var slider = document.getElementById('meubleLargeurSlider');
-      if(slider){
-        var pct = ((state.meubleWidth - 50) / (180 - 50) * 100).toFixed(1);
-        slider.style.setProperty('--pct', pct + '%');
-        slider.value = state.meubleWidth;
-      }
     }
-
-    function onMeubleLargeurChange(val){
-      state.meubleWidth = parseInt(val, 10);
-      applyMeubleDimensions();
-      // Recalculer pdtLeft/pdtRight si disponible (le plan peut aussi bouger)
-      applyVasqueDimensions();
-    }
-    window.onMeubleLargeurChange = onMeubleLargeurChange;
 
     // ─── IDENTIFICATION DES MATÉRIAUX ─────────────────────────
     // Analyse réelle des GLB (confirmée par les retours utilisateur sur le rendu) :
@@ -2902,16 +2879,16 @@
         // Tagger les meshes (principal vs robinet) et fixer le robinet en chrome
         tagMeshes(currentModel);
 
-        // Initialiser le système plan de travail
-        // Étapes 1 et 2 : le système pdtLeft/pdtRight gère l'extension du plan de travail
-        if(state.step === 1 || state.step === 2){
+        // Étape 1 : système pdtLeft/pdtRight (extension des panneaux du plan de travail)
+        if(state.step === 1){
           setupPlanDeTravail(currentModel);
           applyVasqueDimensions();
         }
 
-        // Étape 2 : appliquer aussi la largeur du meuble
+        // Étape 2 : X-scale le modèle complet selon la largeur courante
+        // (meuble + plan de travail ont la même largeur → un seul scale X)
         if(state.step === 2){
-          applyMeubleDimensions();
+          applyDimensionsStep2();
         }
 
         // Appliquer la matière courante (vasque ou bois selon l'étape)
@@ -3269,11 +3246,29 @@
 
     function sdbSetVC(v){
       state.vc = v;
-      state.meubleWidth = v === 2 ? 140 : 80; // reset à la largeur par défaut
+      // Reset la largeur au défaut pour ce nombre de vasques
+      state.vasqueWidth = v === 2 ? 140 : 80;
+      // Adapter le slider étape 2 (range et labels selon vc)
+      adaptLargeurSlider();
       document.querySelectorAll('.sdb-toggle__btn[data-vc]').forEach(function(b){
         b.classList.toggle('active', parseInt(b.dataset.vc) === v);
       });
       loadCurrentMeuble();
+    }
+
+    // Adapte le range du slider étape 2 et ses labels selon vc
+    function adaptLargeurSlider(){
+      var s2 = document.getElementById('vasqueWidthSlider2');
+      var lbWrap = document.getElementById('largeurSliderLabels');
+      if(!s2) return;
+      if(state.vc === 2){
+        s2.min = '100'; s2.max = '220'; s2.step = '5';
+        if(lbWrap) lbWrap.innerHTML = '<span>100 cm</span><span>160 cm</span><span>220 cm</span>';
+      } else {
+        s2.min = '60'; s2.max = '180'; s2.step = '5';
+        if(lbWrap) lbWrap.innerHTML = '<span>60 cm</span><span>120 cm</span><span>180 cm</span>';
+      }
+      syncLargeurUI();
     }
     window.sdbSetVC = sdbSetVC;
 
@@ -3386,10 +3381,7 @@
         loadModel('models/sdb/vasque/vasque' + state.vasque + '.glb');
       } else if(n === 2){
         updateMeublePanel();
-        // Sync les sliders de dimensions au state courant
-        var ml = document.getElementById('meubleLargeurLabel'); if(ml) ml.textContent = state.meubleWidth;
-        var ms = document.getElementById('meubleLargeurSlider');
-        if(ms){ ms.value = state.meubleWidth; var mp = ((state.meubleWidth-50)/(180-50)*100).toFixed(1); ms.style.setProperty('--pct', mp+'%'); }
+        adaptLargeurSlider(); // adapter range + sync UI
         loadCurrentMeuble();
       } else if(n === 3){
         // Le modèle meuble reste, on met à jour le récap et les sélecteurs
@@ -3402,8 +3394,7 @@
           gamme: 'salle-de-bain',
           vasque: 'Vasque ' + state.vasque,
           matiere_vasque: (findVasqueMat(state.vasqueFam, state.vasqueMatId) || {}).label || '',
-          largeur_meuble: state.meubleWidth + ' cm',
-          largeur_plan: state.vasqueWidth + ' cm',
+          largeur: state.vasqueWidth + ' cm',
           meuble: 'Meuble ' + state.vasque + ' · ' + getMeubleName(),
           bois: BOIS[state.bois].label
         });
@@ -3415,7 +3406,7 @@
       var vMat = findVasqueMat(state.vasqueFam, state.vasqueMatId);
       document.getElementById('sdbRecapVasque').textContent = 'Vasque ' + state.vasque;
       document.getElementById('sdbRecapVasqueMat').textContent = vMat ? vMat.label : '—';
-      document.getElementById('sdbRecapWidth').textContent = 'Meuble ' + state.meubleWidth + ' cm · Plan ' + state.vasqueWidth + ' cm';
+      document.getElementById('sdbRecapWidth').textContent = state.vasqueWidth + ' cm (meuble + plan de travail)';
       document.getElementById('sdbRecapMeuble').textContent = 'Meuble ' + state.vasque + ' · ' + getMeubleName();
       document.getElementById('sdbRecapConfig').textContent = state.vc + ' vasque(s)';
       document.getElementById('sdbRecapBois').textContent = BOIS[state.bois].label;
