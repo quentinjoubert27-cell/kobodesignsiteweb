@@ -694,22 +694,40 @@ function storeResizeData(model){
   // seuil pour qualifier un mesh de "pleine-largeur" (5% de tolérance de chaque côté)
   var thr=W0*0.05;
 
-  // Bornes X de l'ensemble des meshes vasque → zone fixe du 5-part
-  var vxmin=Infinity, vxmax=-Infinity;
+  // ── Regroupement des vasques individuelles (clustering par proximité) ──
+  var vGroups=[];
   model.traverse(function(child){
     if(!child.isMesh||child.userData.kobok!=='vasque') return;
     child.geometry.computeBoundingBox();
     var bb=child.geometry.boundingBox;
-    if(bb.min.x<vxmin) vxmin=bb.min.x;
-    if(bb.max.x>vxmax) vxmax=bb.max.x;
+    var cx=(bb.min.x+bb.max.x)/2;
+    var found=false;
+    for(var g=0;g<vGroups.length;g++){
+      if(Math.abs(cx-vGroups[g].cx)<W0*0.25){
+        vGroups[g].xmin=Math.min(vGroups[g].xmin,bb.min.x);
+        vGroups[g].xmax=Math.max(vGroups[g].xmax,bb.max.x);
+        vGroups[g].cx=(vGroups[g].xmin+vGroups[g].xmax)/2;
+        found=true; break;
+      }
+    }
+    if(!found) vGroups.push({xmin:bb.min.x,xmax:bb.max.x,cx:cx});
   });
-  // Marge pour inclure les vertices du trou dans le plan de travail
+  vGroups.sort(function(a,b){ return a.xmin-b.xmin; });
+  // Marge autour de chaque groupe pour capturer les vertices du trou PDT
   var margin=W0*0.015;
-  var hasVasque=isFinite(vxmin);
-  if(hasVasque){ vxmin-=margin; vxmax+=margin; }
+  vGroups.forEach(function(g){ g.xmin-=margin; g.xmax+=margin; });
+
+  // Si les vasques couvrent >50% de la zone utile → mode 3-part simple
+  // (meuble 2v : vasques trop larges pour être figées sans distordre le reste)
+  var usableW=Math.max(W0-2*cap, 0.001);
+  var vasqueCoverage=vGroups.reduce(function(s,g){ return s+(g.xmax-g.xmin); },0);
+  var simple3Part=(vasqueCoverage/usableW)>0.50;
 
   model.userData._resizeBounds={xmin:xmin, xmax:xmax, W0:W0, cap:cap,
-                                 vxmin:vxmin, vxmax:vxmax, hasVasque:hasVasque};
+                                 vGroups:vGroups, simple3Part:simple3Part};
+
+  // Seuil largeur significative : meshes 'meuble' couvrant >30% du total
+  var sigW=W0*0.30;
 
   model.traverse(function(child){
     if(!child.isMesh||!child.geometry) return;
@@ -718,11 +736,16 @@ function storeResizeData(model){
     if(!posAttr) return;
     child.geometry.computeBoundingBox();
     var bb=child.geometry.boundingBox;
+    var meshW=bb.max.x-bb.min.x;
     var isFullWidth=(bb.min.x<xmin+thr && bb.max.x>xmax-thr);
-    if(isFullWidth){
+    // Mode simple3Part : tout mesh structurel large est redimensionné, y compris les vasques
+    var isWideStructural=simple3Part&&(child.userData.kobok==='meuble'||child.userData.kobok==='vasque')&&meshW>sigW;
+
+    if(isFullWidth||isWideStructural){
       child.userData._isResizeMesh=true;
       child.userData._origPositions=new Float32Array(posAttr.array);
-    } else if(child.userData.kobok==='vasque'||child.userData.kobok==='robinet'){
+    } else if(!simple3Part&&(child.userData.kobok==='vasque'||child.userData.kobok==='robinet')){
+      // Mode 5-part : vasques en translation rigide
       child.userData._isVasqueMesh=true;
       child.userData._origPositions=new Float32Array(posAttr.array);
       child.userData._origCenterX=(bb.min.x+bb.max.x)/2;
@@ -748,30 +771,46 @@ function applyVertexResize(model, r){
   var midSpan    =rightEdge-leftEdge;
   var newMidSpan =newRight-newLeft;
 
-  // Fonction 5-part pour un X quelconque :
-  //   cap gauche | overhang gauche | ZONE VASQUE FIXE | overhang droit | cap droit
-  //   La zone vasque ne bouge pas → trou du PDT = même taille que la vasque
+  // Fonction de transformation X :
+  //   Mode simple3Part (2v) : 3-part classique cap|milieu|cap
+  //   Mode 5-part    (1v) : cap|overhangG|VASQUE FIXE|overhangD|cap
   function tx(ox){
-    // Cap gauche : glisse vers la gauche
+    // Caps toujours identiques
     if(ox<=leftEdge) return ox-dW/2;
-    // Cap droit : glisse vers la droite
     if(ox>=rightEdge) return ox+dW/2;
 
-    if(p.hasVasque){
-      var vxmn=p.vxmin, vxmx=p.vxmax;
-      // Zone vasque : fixe
-      if(ox>=vxmn && ox<=vxmx) return ox;
-      // Overhang gauche (entre cap gauche et bord gauche vasque)
-      if(ox<vxmn){
-        var t=(ox-leftEdge)/(vxmn-leftEdge);
-        return (leftEdge-dW/2)+t*(vxmn-(leftEdge-dW/2));
-      }
-      // Overhang droit (entre bord droit vasque et cap droit)
-      var t=(ox-vxmx)/(rightEdge-vxmx);
-      return vxmx+t*((rightEdge+dW/2)-vxmx);
+    if(p.simple3Part){
+      // 3-part simple : tout le milieu s'étire uniformément
+      return newLeft+(ox-leftEdge)/midSpan*newMidSpan;
     }
 
-    // Pas de vasque connue : 3-part classique
+    // 5-part : zones vasques figées, overhangs s'étendent
+    var groups=p.vGroups;
+    if(groups&&groups.length){
+      // Zone vasque fixe ?
+      for(var k=0;k<groups.length;k++){
+        if(ox>=groups[k].xmin&&ox<=groups[k].xmax) return ox;
+      }
+      // Overhang gauche (avant le premier groupe)
+      if(ox<groups[0].xmin){
+        var zW=groups[0].xmin-leftEdge;
+        if(zW<=0) return ox-dW/2; // pas d'espace → se comporte comme cap
+        var t=(ox-leftEdge)/zW;
+        return (leftEdge-dW/2)+t*(groups[0].xmin-(leftEdge-dW/2));
+      }
+      // Overhang droit (après le dernier groupe)
+      var last=groups[groups.length-1];
+      if(ox>last.xmax){
+        var zW2=rightEdge-last.xmax;
+        if(zW2<=0) return ox+dW/2;
+        var t2=(ox-last.xmax)/zW2;
+        return last.xmax+t2*((rightEdge+dW/2)-last.xmax);
+      }
+      // Zone intermédiaire entre groupes : fixe
+      return ox;
+    }
+
+    // Fallback 3-part
     return newLeft+(ox-leftEdge)/midSpan*newMidSpan;
   }
 
