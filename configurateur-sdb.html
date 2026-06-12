@@ -758,7 +758,10 @@ function storeResizeData(model){
     console.log('[SDB] Pas de mesh pleine-largeur mais détection 3-panneaux échouée → fallback vertex');
   }
 
-  // ── Mode vertex : regroupement vasques + robinets (zone solidaire fixe) ──
+  // ── Mode vertex : regroupement robinets + vasques PETITES (zone solidaire fixe) ──
+  // On exclut les meshes vasque pleine-largeur (plan de travail) : ils sont résizés via vertex
+  // mais ne définissent pas la zone centrale fixe. Seuls les robinets et les cuvettes petites
+  // (< 50% de W0) définissent où se situe le centre immobile.
   var vGroups=[];
   model.traverse(function(child){
     if(!child.isMesh) return;
@@ -766,6 +769,9 @@ function storeResizeData(model){
     if(k!=='vasque'&&k!=='robinet') return;
     child.geometry.computeBoundingBox();
     var bb=child.geometry.boundingBox;
+    var meshW=bb.max.x-bb.min.x;
+    // Exclure les meshes pleine-largeur (PDT/vasque intégré) : trop large pour définir le centre
+    if(meshW>W0*0.50) return;
     var cx=(bb.min.x+bb.max.x)/2;
     var found=false;
     for(var g=0;g<vGroups.length;g++){
@@ -779,7 +785,7 @@ function storeResizeData(model){
     if(!found) vGroups.push({xmin:bb.min.x,xmax:bb.max.x,cx:cx});
   });
   vGroups.sort(function(a,b){ return a.xmin-b.xmin; });
-  // Marge autour de chaque groupe : assure que les vertices du bord du trou PDT sont inclus
+  // Marge : capture les vertices du bord du trou PDT autour de chaque vasque/robinet
   var margin=W0*0.05;
   vGroups.forEach(function(g){ g.xmin-=margin; g.xmax+=margin; });
 
