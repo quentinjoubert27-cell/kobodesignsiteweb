@@ -706,8 +706,12 @@ function storeResizeData(model){
     var isFullWidth=(bb.min.x<xmin+thr && bb.max.x>xmax-thr);
     if(isFullWidth){
       child.userData._isResizeMesh=true;
-      // Copie des positions originales (Float32Array)
       child.userData._origPositions=new Float32Array(posAttr.array);
+    } else if(child.userData.kobok==='vasque'||child.userData.kobok==='robinet'){
+      // Vasque/robinet : translation rigide — forme intacte, position suit le 3-part
+      child.userData._isVasqueMesh=true;
+      child.userData._origPositions=new Float32Array(posAttr.array);
+      child.userData._origCenterX=(bb.min.x+bb.max.x)/2;
     }
   });
 }
@@ -715,42 +719,48 @@ function storeResizeData(model){
 // Applique le 3-part scaling en X à toutes les pièces pleine-largeur.
 // Panneaux latéraux : translation pure (pas de déformation).
 // Milieu (dos, fond, plateau) : interpolation linéaire entre les nouvelles bornes.
-// Vasque, robinets, poignées : non touchés.
+// Vasque / robinets : translation rigide — le centre suit le même calcul 3-part,
+//                     la forme n'est pas déformée.
 function applyVertexResize(model, r){
   var p=model.userData._resizeBounds;
   if(!p) return;
   var xmin=p.xmin, xmax=p.xmax, W0=p.W0, cap=p.cap;
-  var W1=W0*r;           // nouvelle largeur locale
-  var dW=W1-W0;          // delta (positif = plus large)
+  var W1=W0*r;
+  var dW=W1-W0;
   var leftEdge =xmin+cap;
   var rightEdge=xmax-cap;
-  var newLeft  =xmin-dW/2+cap;   // nouvelle borne gauche du milieu
-  var newRight =xmax+dW/2-cap;   // nouvelle borne droite du milieu
-  var midSpan  =rightEdge-leftEdge;
-  var newMidSpan=newRight-newLeft;
+  var newLeft  =xmin-dW/2+cap;
+  var newRight =xmax+dW/2-cap;
+  var midSpan    =rightEdge-leftEdge;
+  var newMidSpan =newRight-newLeft;
+
+  // Fonction 3-part pour un X quelconque
+  function tx(ox){
+    if(ox<=leftEdge) return ox-dW/2;
+    if(ox>=rightEdge) return ox+dW/2;
+    return newLeft+(ox-leftEdge)/midSpan*newMidSpan;
+  }
 
   model.traverse(function(child){
-    if(!child.isMesh||!child.userData._isResizeMesh) return;
+    if(!child.isMesh) return;
     var orig=child.userData._origPositions;
+    if(!orig) return;
     var arr=child.geometry.attributes.position.array;
-    for(var i=0;i<arr.length;i+=3){
-      var ox=orig[i];
-      var nx;
-      if(ox<=leftEdge){
-        // Panneau gauche : glisse vers la gauche
-        nx=ox-dW/2;
-      } else if(ox>=rightEdge){
-        // Panneau droit : glisse vers la droite
-        nx=ox+dW/2;
-      } else {
-        // Milieu : interpolation linéaire entre les nouvelles bornes
-        var t=(ox-leftEdge)/midSpan;
-        nx=newLeft+t*newMidSpan;
-      }
-      arr[i]=nx;
+
+    if(child.userData._isResizeMesh){
+      // Pièces pleine-largeur : chaque vertex transformé individuellement
+      for(var i=0;i<arr.length;i+=3) arr[i]=tx(orig[i]);
+    } else if(child.userData._isVasqueMesh){
+      // Vasque / robinets : translation rigide — on déplace le centre, pas les vertices un par un
+      var origCx=child.userData._origCenterX;
+      var newCx =tx(origCx);
+      var delta =newCx-origCx;
+      for(var j=0;j<arr.length;j+=3) arr[j]=orig[j]+delta;
+    } else {
+      return;
     }
     child.geometry.attributes.position.needsUpdate=true;
-    child.geometry.boundingBox=null; // invalider bbox cachée
+    child.geometry.boundingBox=null;
   });
 }
 
