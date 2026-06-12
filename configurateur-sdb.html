@@ -337,7 +337,6 @@ var currentMeubleModel = null;
 var texCache = {};
 var rotX = 0.18, rotY = 0.5;
 var drag = false, lastX = 0, lastY = 0;
-var vasqueTopNodes = [], meubleTopNodes = [];
 
 function initScene(){
   var vw = wrapper.clientWidth || 800;
@@ -433,8 +432,6 @@ function loadScene(){
   // Nettoyer la scène
   while(rootGroup.children.length){ rootGroup.remove(rootGroup.children[0]); }
   currentMeubleModel = null;
-  vasqueTopNodes = [];
-  meubleTopNodes = [];
 
   var myLoad = ++_pendingLoad;
 
@@ -464,7 +461,6 @@ function loadScene(){
           combined.position.set(-bctr.x*scale, -bctr.y*scale, -bctr.z*scale);
           state._baseScale = scale;
           state._center    = { x:bctr.x, y:bctr.y, z:bctr.z };
-          classifyTopNodes(combined);
           applyAllMaterials();
           applyDimensions();
           updateDimsBadge();
@@ -530,6 +526,11 @@ function tagMeshesMeuble(model){
   model.traverse(function(child){
     if(!child.userData.kobok) return;
     cloneMats(child);
+  });
+  // Stocker le scale X original de chaque mesh → sert à contre-corriger la vasque sans bloquer le PDT
+  model.traverse(function(child){
+    if(!child.isMesh) return;
+    child.userData._origMeshScaleX = child.scale.x;
   });
   // Chrome sur les robinets
   model.traverse(function(child){
@@ -649,50 +650,35 @@ function setColorOnModel(model,tag,color){
 }
 
 // ═══════════════════════════════════════════════════
-//  DIMENSIONS — séparation vasque / meuble
+//  DIMENSIONS
 // ═══════════════════════════════════════════════════
-function classifyTopNodes(combined){
-  vasqueTopNodes=[];
-  meubleTopNodes=[];
-
-  function processGroup(group, defaultIsVasque){
-    var root=null;
-    group.traverse(function(o){ if(o.name==='Model') root=o; });
-    if(!root) root=group;
-    Array.from(root.children).forEach(function(child){
-      child.userData._origScaleX=child.scale.x;
-      child.userData._origPosX=child.position.x;
-      var hasV=false, hasM=false;
-      child.traverse(function(n){
-        if(n.userData.kobok==='vasque'||n.userData.kobok==='robinet') hasV=true;
-        if(n.userData.kobok==='meuble') hasM=true;
-      });
-      if(defaultIsVasque||hasV) vasqueTopNodes.push(child);
-      else meubleTopNodes.push(child);
-    });
-  }
-
-  if(currentMeubleModel) processGroup(currentMeubleModel, false);
-}
-
+// Largeur de référence du GLB (au chargement, r=1)
 function refLargeur(){ return state.vc===2 ? 140 : 80; }
 
 function applyDimensions(){
   if(!state._baseScale||!state._center) return;
   var combined=rootGroup.children[0];
   if(!combined) return;
-  var r=state.largeur/refLargeur();
-  var bs=state._baseScale;
-  var c=state._center;
+  var r  = state.largeur / refLargeur();
+  var bs = state._baseScale;
+  var c  = state._center;
+
+  // ① Scale tout le modèle en X — plan de travail ET meuble s'étendent
+  //    L'expansion est symétrique : combined.position.x compense le décalage du centre
   combined.scale.set(bs*r, bs, bs);
   combined.position.set(-c.x*bs*r, -c.y*bs, -c.z*bs);
-  // Contre-corriger les nœuds vasque pour éviter la distorsion
-  vasqueTopNodes.forEach(function(node){
-    var sx=node.userData._origScaleX!==undefined?node.userData._origScaleX:1;
-    var px=node.userData._origPosX!==undefined?node.userData._origPosX:0;
-    node.scale.x=sx/r;
-    node.position.x=px/r;
-  });
+
+  // ② Contre-corriger UNIQUEMENT les meshes vasque (niveau mesh, pas niveau nœud)
+  //    → le bol garde sa forme sans bloquer l'extension du plan de travail
+  //    Maths : worldScale.x(mesh) = combined.scale.x * parents * mesh.scale.x
+  //            Pour rester constant : mesh.scale.x = origMeshScaleX / r
+  if(currentMeubleModel){
+    currentMeubleModel.traverse(function(child){
+      if(!child.isMesh || child.userData.kobok !== 'vasque') return;
+      var origSx = child.userData._origMeshScaleX !== undefined ? child.userData._origMeshScaleX : 1;
+      child.scale.x = origSx / r;
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════
