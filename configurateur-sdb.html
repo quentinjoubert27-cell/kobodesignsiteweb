@@ -694,10 +694,12 @@ function storeResizeData(model){
   // seuil pour qualifier un mesh de "pleine-largeur" (5% de tolérance de chaque côté)
   var thr=W0*0.05;
 
-  // ── Regroupement des vasques individuelles (clustering par proximité) ──
+  // ── Regroupement : vasques + robinets ensemble (zone solidaire) ──
   var vGroups=[];
   model.traverse(function(child){
-    if(!child.isMesh||child.userData.kobok!=='vasque') return;
+    if(!child.isMesh) return;
+    var k=child.userData.kobok;
+    if(k!=='vasque'&&k!=='robinet') return;
     child.geometry.computeBoundingBox();
     var bb=child.geometry.boundingBox;
     var cx=(bb.min.x+bb.max.x)/2;
@@ -713,8 +715,8 @@ function storeResizeData(model){
     if(!found) vGroups.push({xmin:bb.min.x,xmax:bb.max.x,cx:cx});
   });
   vGroups.sort(function(a,b){ return a.xmin-b.xmin; });
-  // Marge autour de chaque groupe pour capturer les vertices du trou PDT
-  var margin=W0*0.015;
+  // Marge autour de chaque groupe : capture le trou PDT + espace autour du robinet
+  var margin=W0*0.03;
   vGroups.forEach(function(g){ g.xmin-=margin; g.xmax+=margin; });
 
   // Si les vasques couvrent >50% de la zone utile → mode 3-part simple
