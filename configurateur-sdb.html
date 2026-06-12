@@ -670,15 +670,58 @@ function setColorOnModel(model,tag,color){
 }
 
 // ═══════════════════════════════════════════════════
-//  DIMENSIONS — 3-part vertex scaling
+//  DIMENSIONS — resize 3-part (vertex ou translation)
 // ═══════════════════════════════════════════════════
 // Largeur de référence du GLB (au chargement, r=1)
 function refLargeur(){ return state.vc===2 ? 140 : 80; }
 
+// ── Détection modèle pré-splitté (3 panneaux séparés : gauche | centre fixe | droit) ──
+// Quand aucun mesh ne couvre toute la largeur, le GLB est déjà découpé en 3 pièces.
+// Dans ce cas on fait une translation pure des panneaux L/R, sans toucher aux vertices.
+// Référence : v1.glb — Mesh3=gauche X[0..25%], Mesh2=centre fixe X[25..75%], Mesh1=droit X[75..100%]
+function detectPreSplitNodes(model, xmin, xmax, W0, thr){
+  // Descendre dans la hiérarchie jusqu'à trouver un nœud avec plusieurs enfants contenant des meshes
+  var rootNode=model;
+  for(var safety=0; safety<10; safety++){
+    if(rootNode.children.length!==1) break;
+    rootNode=rootNode.children[0];
+  }
+
+  var leftNode=null, rightNode=null;
+  rootNode.children.forEach(function(child){
+    var cxmin=Infinity, cxmax=-Infinity;
+    child.traverse(function(c){
+      if(!c.isMesh||!c.geometry) return;
+      c.geometry.computeBoundingBox();
+      var bb=c.geometry.boundingBox;
+      if(bb.min.x<cxmin) cxmin=bb.min.x;
+      if(bb.max.x>cxmax) cxmax=bb.max.x;
+    });
+    if(!isFinite(cxmin)) return;
+    var cxCenter=(cxmin+cxmax)/2;
+    var cxW=cxmax-cxmin;
+    // Panneau GAUCHE : commence au bord gauche, ne couvre pas plus de 45% de la largeur totale
+    if(cxmin<=xmin+thr && cxCenter<xmin+W0*0.5 && cxW<W0*0.45){
+      leftNode=child;
+      child.userData._isPreSplitLeft=true;
+      child.userData._origPositionX=child.position.x;
+    }
+    // Panneau DROIT : termine au bord droit, ne couvre pas plus de 45% de la largeur totale
+    if(cxmax>=xmax-thr && cxCenter>xmin+W0*0.5 && cxW<W0*0.45){
+      rightNode=child;
+      child.userData._isPreSplitRight=true;
+      child.userData._origPositionX=child.position.x;
+    }
+  });
+  return (leftNode!==null && rightNode!==null);
+}
+
 // Appelé après tagMeshesMeuble, AVANT la normalisation du combined group.
-// Identifie les meshes pleine-largeur et stocke leurs positions originales.
+// Identifie la stratégie de resize (pré-splitté ou vertex) et stocke les données nécessaires.
 function storeResizeData(model){
-  // Calcul des bornes X du modèle entier en local space
+  model.updateMatrixWorld(true);
+
+  // Bornes X globales du modèle en local space (espace géométrie)
   var xmin=Infinity, xmax=-Infinity;
   model.traverse(function(child){
     if(!child.isMesh||!child.geometry) return;
@@ -689,12 +732,33 @@ function storeResizeData(model){
   });
   if(!isFinite(xmin)) return;
   var W0=xmax-xmin;
-  // cap = épaisseur des panneaux latéraux (~2.5% de la largeur totale ≈ 2cm sur 80cm)
-  var cap=W0*0.030;
-  // seuil pour qualifier un mesh de "pleine-largeur" (5% de tolérance de chaque côté)
-  var thr=W0*0.05;
+  var cap=W0*0.030;   // épaisseur panneaux latéraux (~2% de 80cm = 1.6cm)
+  var thr=W0*0.05;    // tolérance pour "pleine-largeur"
 
-  // ── Regroupement : vasques + robinets ensemble (zone solidaire) ──
+  // Initialiser les bornes communes
+  model.userData._resizeBounds={xmin:xmin, xmax:xmax, W0:W0, cap:cap, isPreSplit:false};
+
+  // ── Détection modèle pré-splitté : aucun mesh ne couvre la pleine largeur ──
+  var hasFullWidth=false;
+  model.traverse(function(child){
+    if(!child.isMesh||!child.geometry) return;
+    child.geometry.computeBoundingBox();
+    var bb=child.geometry.boundingBox;
+    if(bb.min.x<xmin+thr && bb.max.x>xmax-thr) hasFullWidth=true;
+  });
+
+  if(!hasFullWidth){
+    // Tentative de détection 3-panneaux → translation pure sans manipulation de vertices
+    var ok=detectPreSplitNodes(model, xmin, xmax, W0, thr);
+    if(ok){
+      model.userData._resizeBounds.isPreSplit=true;
+      console.log('[SDB] Modèle pré-splitté détecté → translation pure L/R');
+      return; // pas de manipulation de vertices
+    }
+    console.log('[SDB] Pas de mesh pleine-largeur mais détection 3-panneaux échouée → fallback vertex');
+  }
+
+  // ── Mode vertex : regroupement vasques + robinets (zone solidaire fixe) ──
   var vGroups=[];
   model.traverse(function(child){
     if(!child.isMesh) return;
@@ -715,20 +779,18 @@ function storeResizeData(model){
     if(!found) vGroups.push({xmin:bb.min.x,xmax:bb.max.x,cx:cx});
   });
   vGroups.sort(function(a,b){ return a.xmin-b.xmin; });
-  // Marge autour de chaque groupe : capture le trou PDT + espace autour du robinet
-  var margin=W0*0.03;
+  // Marge autour de chaque groupe : assure que les vertices du bord du trou PDT sont inclus
+  var margin=W0*0.05;
   vGroups.forEach(function(g){ g.xmin-=margin; g.xmax+=margin; });
 
-  // Si les vasques couvrent >50% de la zone utile → mode 3-part simple
-  // (meuble 2v : vasques trop larges pour être figées sans distordre le reste)
+  // Si les vasques couvrent >50% de la zone utile → mode 3-part simple (cas 2v)
   var usableW=Math.max(W0-2*cap, 0.001);
   var vasqueCoverage=vGroups.reduce(function(s,g){ return s+(g.xmax-g.xmin); },0);
   var simple3Part=(vasqueCoverage/usableW)>0.50;
 
-  model.userData._resizeBounds={xmin:xmin, xmax:xmax, W0:W0, cap:cap,
-                                 vGroups:vGroups, simple3Part:simple3Part};
+  model.userData._resizeBounds.vGroups=vGroups;
+  model.userData._resizeBounds.simple3Part=simple3Part;
 
-  // Seuil largeur significative : meshes 'meuble' couvrant >30% du total
   var sigW=W0*0.30;
 
   model.traverse(function(child){
@@ -747,7 +809,7 @@ function storeResizeData(model){
       child.userData._isResizeMesh=true;
       child.userData._origPositions=new Float32Array(posAttr.array);
     } else if(!simple3Part&&(child.userData.kobok==='vasque'||child.userData.kobok==='robinet')){
-      // Mode 5-part : vasques en translation rigide
+      // Mode 5-part : vasques et robinets en translation rigide (centre fixe)
       child.userData._isVasqueMesh=true;
       child.userData._origPositions=new Float32Array(posAttr.array);
       child.userData._origCenterX=(bb.min.x+bb.max.x)/2;
@@ -853,14 +915,30 @@ function applyDimensions(){
   var bs=state._baseScale;
   var c =state._center;
 
-  // Normalisation uniforme : pas de scaling X sur le groupe (géré au niveau vertex)
   combined.scale.set(bs, bs, bs);
   combined.position.set(-c.x*bs, -c.y*bs, -c.z*bs);
 
-  // 3-part vertex resize : panneaux latéraux glissent, milieu s'étend proprement
   if(currentMeubleModel){
+    var p=currentMeubleModel.userData._resizeBounds;
     var r=state.largeur/refLargeur();
-    applyVertexResize(currentMeubleModel, r);
+
+    if(p && p.isPreSplit){
+      // ── Mode pré-splitté : translation pure des panneaux gauche et droit ──
+      // Le panneau central (avec la vasque) reste IMMOBILE.
+      // Les panneaux L et R glissent de ±dW/2 dans l'espace local du modèle.
+      var dW_local=p.W0*(r-1);
+      currentMeubleModel.traverse(function(child){
+        if(child.userData._isPreSplitLeft){
+          child.position.x=(child.userData._origPositionX||0)-dW_local/2;
+        }
+        if(child.userData._isPreSplitRight){
+          child.position.x=(child.userData._origPositionX||0)+dW_local/2;
+        }
+      });
+    } else {
+      // ── Mode vertex : 5-part (1v) ou 3-part (2v) ──
+      applyVertexResize(currentMeubleModel, r);
+    }
   }
 }
 
