@@ -216,8 +216,10 @@
         </div>
         <p class="sub-lbl" style="margin-top:12px">Variante</p>
         <div class="toggle-row" id="variantToggle">
-          <button class="toggle-btn active" data-v="1" onclick="sdbSetVariant(1)">Variante A</button>
-          <button class="toggle-btn"        data-v="2" onclick="sdbSetVariant(2)">Variante B</button>
+          <button class="toggle-btn active" data-v="1" onclick="sdbSetVariant(1)">1 Tiroir</button>
+          <button class="toggle-btn"        data-v="2" onclick="sdbSetVariant(2)">2 Tiroirs</button>
+          <button class="toggle-btn"        data-v="3" onclick="sdbSetVariant(3)">1 Niche 1 Tiroir</button>
+          <button class="toggle-btn"        data-v="4" onclick="sdbSetVariant(4)">2 Niches 2 Tiroirs</button>
         </div>
       </div>
 
@@ -436,12 +438,17 @@ function loadGLB(path){
   });
 }
 
+// Noms des variantes pour famille 1 (nouveaux GLBs pré-splittés)
+var MEUBLE1_VARIANTS = ['1TIROIR','2TIROIRS','1NICHE-1TIROIR','2NICHES-2TIROIRS'];
+
 function getMeubleGlb(){
   var f = state.meubleFamily, vc = state.vc, v = state.meubleVariant;
-  // TEST v1.glb (modèle pré-splitté 3 panneaux) pour famille 1 / 1v
-  if(f === 1 && vc === 1) return 'models/sdb/v1.glb';
-  // meuble1 : pas de préfixe (1v_1l.glb) — meuble2-7 : préfixe famille (2_1v_1l.glb)
-  if(f === 1) return 'models/sdb/meuble1/'+vc+'v_'+v+'l.glb';
+  // Famille 1 : nouveaux GLBs V1-{vc}-{variant}.glb (pré-splittés, centre vasque immobile)
+  if(f === 1){
+    var varName = MEUBLE1_VARIANTS[(v-1) % MEUBLE1_VARIANTS.length];
+    return 'models/sdb/meuble1/V1-'+vc+'-'+varName+'.glb';
+  }
+  // meuble2-7 : ancienne convention
   return 'models/sdb/meuble'+f+'/'+f+'_'+vc+'v_'+v+'l.glb';
 }
 
@@ -677,19 +684,24 @@ function setColorOnModel(model,tag,color){
 // Largeur de référence du GLB (au chargement, r=1)
 function refLargeur(){ return state.vc===2 ? 140 : 80; }
 
-// ── Détection modèle pré-splitté (3 panneaux séparés : gauche | centre fixe | droit) ──
-// Quand aucun mesh ne couvre toute la largeur, le GLB est déjà découpé en 3 pièces.
-// Dans ce cas on fait une translation pure des panneaux L/R, sans toucher aux vertices.
-// Référence : v1.glb — Mesh3=gauche X[0..25%], Mesh2=centre fixe X[25..75%], Mesh1=droit X[75..100%]
-function detectPreSplitNodes(model, xmin, xmax, W0, thr){
-  // Descendre dans la hiérarchie jusqu'à trouver un nœud avec plusieurs enfants contenant des meshes
+// ── Classification hybride des nœuds (nouvelle architecture) ──
+// Chaque nœud top-level reçoit un rôle :
+//   LEFT   : centre < 30% de W0, largeur < 45% → translation -dW/2
+//   RIGHT  : centre > 70% de W0, largeur < 45% → translation +dW/2
+//   CENTER : entre 30% et 70%, aucune pleine-largeur → IMMOBILE (vasque, robinets, fixings)
+//   FULL   : largeur > 85% de W0 → vertex stretch 3-part uniforme (dos, fond, plafond)
+// Cette classification gère à la fois les GLBs purs (v1.glb) et les hybrides (V1-x-*.glb).
+function classifyHybridNodes(model, xmin, xmax, W0){
+  // Descendre dans la hiérarchie jusqu'au nœud structural (plusieurs enfants)
   var rootNode=model;
   for(var safety=0; safety<10; safety++){
     if(rootNode.children.length!==1) break;
     rootNode=rootNode.children[0];
   }
 
-  var leftNode=null, rightNode=null;
+  var hasLR=false; // a-t-on trouvé au moins un nœud LEFT et un RIGHT ?
+  var foundLeft=false, foundRight=false;
+
   rootNode.children.forEach(function(child){
     var cxmin=Infinity, cxmax=-Infinity;
     child.traverse(function(c){
@@ -700,30 +712,46 @@ function detectPreSplitNodes(model, xmin, xmax, W0, thr){
       if(bb.max.x>cxmax) cxmax=bb.max.x;
     });
     if(!isFinite(cxmin)) return;
-    var cxCenter=(cxmin+cxmax)/2;
-    var cxW=cxmax-cxmin;
-    // Panneau GAUCHE : commence au bord gauche, ne couvre pas plus de 45% de la largeur totale
-    if(cxmin<=xmin+thr && cxCenter<xmin+W0*0.5 && cxW<W0*0.45){
-      leftNode=child;
+
+    var cW=cxmax-cxmin;
+    var cCenterRatio=((cxmin+cxmax)/2-xmin)/W0;
+
+    if(cW>W0*0.85){
+      // FULL_WIDTH : structure/fond/plafond → vertex stretch uniforme
+      child.userData._nodeType='full';
+      child.traverse(function(c){
+        if(!c.isMesh||!c.geometry||!c.geometry.attributes.position) return;
+        c.userData._isResizeMesh=true;
+        c.userData._origPositions=new Float32Array(c.geometry.attributes.position.array);
+      });
+    } else if(cCenterRatio<0.30 && cW<W0*0.45){
+      // LEFT : panneau / tiroir / hardware gauche
+      child.userData._nodeType='left';
       child.userData._isPreSplitLeft=true;
       child.userData._origPositionX=child.position.x;
-    }
-    // Panneau DROIT : termine au bord droit, ne couvre pas plus de 45% de la largeur totale
-    if(cxmax>=xmax-thr && cxCenter>xmin+W0*0.5 && cxW<W0*0.45){
-      rightNode=child;
+      foundLeft=true;
+    } else if(cCenterRatio>0.70 && cW<W0*0.45){
+      // RIGHT : panneau / tiroir / hardware droit
+      child.userData._nodeType='right';
       child.userData._isPreSplitRight=true;
       child.userData._origPositionX=child.position.x;
+      foundRight=true;
+    } else {
+      // CENTER : vasque, robinets, savon, éléments centraux → IMMOBILE
+      child.userData._nodeType='center';
     }
   });
-  return (leftNode!==null && rightNode!==null);
+
+  hasLR=foundLeft&&foundRight;
+  return hasLR;
 }
 
 // Appelé après tagMeshesMeuble, AVANT la normalisation du combined group.
-// Identifie la stratégie de resize (pré-splitté ou vertex) et stocke les données nécessaires.
+// Identifie la stratégie de resize et stocke les données nécessaires.
 function storeResizeData(model){
   model.updateMatrixWorld(true);
 
-  // Bornes X globales du modèle en local space (espace géométrie)
+  // Bornes X globales du modèle en local space
   var xmin=Infinity, xmax=-Infinity;
   model.traverse(function(child){
     if(!child.isMesh||!child.geometry) return;
@@ -734,36 +762,24 @@ function storeResizeData(model){
   });
   if(!isFinite(xmin)) return;
   var W0=xmax-xmin;
-  var cap=W0*0.030;   // épaisseur panneaux latéraux (~2% de 80cm = 1.6cm)
-  var thr=W0*0.05;    // tolérance pour "pleine-largeur"
+  var cap=W0*0.030;
+  var thr=W0*0.05;
 
-  // Initialiser les bornes communes
-  model.userData._resizeBounds={xmin:xmin, xmax:xmax, W0:W0, cap:cap, isPreSplit:false};
+  model.userData._resizeBounds={xmin:xmin, xmax:xmax, W0:W0, cap:cap, isPreSplit:false,
+                                 vGroups:[], simple3Part:true};
 
-  // ── Détection modèle pré-splitté : aucun mesh ne couvre la pleine largeur ──
-  var hasFullWidth=false;
-  model.traverse(function(child){
-    if(!child.isMesh||!child.geometry) return;
-    child.geometry.computeBoundingBox();
-    var bb=child.geometry.boundingBox;
-    if(bb.min.x<xmin+thr && bb.max.x>xmax-thr) hasFullWidth=true;
-  });
-
-  if(!hasFullWidth){
-    // Tentative de détection 3-panneaux → translation pure sans manipulation de vertices
-    var ok=detectPreSplitNodes(model, xmin, xmax, W0, thr);
-    if(ok){
-      model.userData._resizeBounds.isPreSplit=true;
-      console.log('[SDB] Modèle pré-splitté détecté → translation pure L/R');
-      return; // pas de manipulation de vertices
-    }
-    console.log('[SDB] Pas de mesh pleine-largeur mais détection 3-panneaux échouée → fallback vertex');
+  // ── Essayer la classification hybride en premier ──
+  // Fonctionne pour v1.glb (pur 3-panneaux) et les nouveaux V1-x-*.glb (hybride)
+  var ok=classifyHybridNodes(model, xmin, xmax, W0);
+  if(ok){
+    model.userData._resizeBounds.isPreSplit=true;
+    // vGroups vide + simple3Part=true : les FULL_WIDTH s'étirent uniformément (cap|stretch|cap)
+    console.log('[SDB] Mode hybride : translation L/R + vertex stretch FULL_WIDTH');
+    return;
   }
 
-  // ── Mode vertex : regroupement robinets + vasques PETITES (zone solidaire fixe) ──
-  // On exclut les meshes vasque pleine-largeur (plan de travail) : ils sont résizés via vertex
-  // mais ne définissent pas la zone centrale fixe. Seuls les robinets et les cuvettes petites
-  // (< 50% de W0) définissent où se situe le centre immobile.
+  // ── Fallback : mode vertex pur (anciens GLBs meuble2-7) ──
+  console.log('[SDB] Mode vertex pur (fallback)');
   var vGroups=[];
   model.traverse(function(child){
     if(!child.isMesh) return;
@@ -772,8 +788,7 @@ function storeResizeData(model){
     child.geometry.computeBoundingBox();
     var bb=child.geometry.boundingBox;
     var meshW=bb.max.x-bb.min.x;
-    // Exclure les meshes pleine-largeur (PDT/vasque intégré) : trop large pour définir le centre
-    if(meshW>W0*0.50) return;
+    if(meshW>W0*0.50) return; // exclure meshes pleine-largeur
     var cx=(bb.min.x+bb.max.x)/2;
     var found=false;
     for(var g=0;g<vGroups.length;g++){
@@ -787,11 +802,9 @@ function storeResizeData(model){
     if(!found) vGroups.push({xmin:bb.min.x,xmax:bb.max.x,cx:cx});
   });
   vGroups.sort(function(a,b){ return a.xmin-b.xmin; });
-  // Marge : capture les vertices du bord du trou PDT autour de chaque vasque/robinet
   var margin=W0*0.05;
   vGroups.forEach(function(g){ g.xmin-=margin; g.xmax+=margin; });
 
-  // Si les vasques couvrent >50% de la zone utile → mode 3-part simple (cas 2v)
   var usableW=Math.max(W0-2*cap, 0.001);
   var vasqueCoverage=vGroups.reduce(function(s,g){ return s+(g.xmax-g.xmin); },0);
   var simple3Part=(vasqueCoverage/usableW)>0.50;
@@ -800,7 +813,6 @@ function storeResizeData(model){
   model.userData._resizeBounds.simple3Part=simple3Part;
 
   var sigW=W0*0.30;
-
   model.traverse(function(child){
     if(!child.isMesh||!child.geometry) return;
     var geom=child.geometry;
@@ -810,14 +822,11 @@ function storeResizeData(model){
     var bb=child.geometry.boundingBox;
     var meshW=bb.max.x-bb.min.x;
     var isFullWidth=(bb.min.x<xmin+thr && bb.max.x>xmax-thr);
-    // Mode simple3Part : tout mesh structurel large est redimensionné, y compris les vasques
     var isWideStructural=simple3Part&&(child.userData.kobok==='meuble'||child.userData.kobok==='vasque')&&meshW>sigW;
-
     if(isFullWidth||isWideStructural){
       child.userData._isResizeMesh=true;
       child.userData._origPositions=new Float32Array(posAttr.array);
     } else if(!simple3Part&&(child.userData.kobok==='vasque'||child.userData.kobok==='robinet')){
-      // Mode 5-part : vasques et robinets en translation rigide (centre fixe)
       child.userData._isVasqueMesh=true;
       child.userData._origPositions=new Float32Array(posAttr.array);
       child.userData._origCenterX=(bb.min.x+bb.max.x)/2;
