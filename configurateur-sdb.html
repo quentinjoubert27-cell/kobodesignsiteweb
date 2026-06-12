@@ -438,6 +438,8 @@ function loadGLB(path){
 
 function getMeubleGlb(){
   var f = state.meubleFamily, vc = state.vc, v = state.meubleVariant;
+  // TEST v1.glb (modèle pré-splitté 3 panneaux) pour famille 1 / 1v
+  if(f === 1 && vc === 1) return 'models/sdb/v1.glb';
   // meuble1 : pas de préfixe (1v_1l.glb) — meuble2-7 : préfixe famille (2_1v_1l.glb)
   if(f === 1) return 'models/sdb/meuble1/'+vc+'v_'+v+'l.glb';
   return 'models/sdb/meuble'+f+'/'+f+'_'+vc+'v_'+v+'l.glb';
