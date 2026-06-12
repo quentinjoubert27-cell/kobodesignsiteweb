@@ -694,7 +694,22 @@ function storeResizeData(model){
   // seuil pour qualifier un mesh de "pleine-largeur" (5% de tolérance de chaque côté)
   var thr=W0*0.05;
 
-  model.userData._resizeBounds={xmin:xmin, xmax:xmax, W0:W0, cap:cap};
+  // Bornes X de l'ensemble des meshes vasque → zone fixe du 5-part
+  var vxmin=Infinity, vxmax=-Infinity;
+  model.traverse(function(child){
+    if(!child.isMesh||child.userData.kobok!=='vasque') return;
+    child.geometry.computeBoundingBox();
+    var bb=child.geometry.boundingBox;
+    if(bb.min.x<vxmin) vxmin=bb.min.x;
+    if(bb.max.x>vxmax) vxmax=bb.max.x;
+  });
+  // Marge pour inclure les vertices du trou dans le plan de travail
+  var margin=W0*0.015;
+  var hasVasque=isFinite(vxmin);
+  if(hasVasque){ vxmin-=margin; vxmax+=margin; }
+
+  model.userData._resizeBounds={xmin:xmin, xmax:xmax, W0:W0, cap:cap,
+                                 vxmin:vxmin, vxmax:vxmax, hasVasque:hasVasque};
 
   model.traverse(function(child){
     if(!child.isMesh||!child.geometry) return;
@@ -708,7 +723,6 @@ function storeResizeData(model){
       child.userData._isResizeMesh=true;
       child.userData._origPositions=new Float32Array(posAttr.array);
     } else if(child.userData.kobok==='vasque'||child.userData.kobok==='robinet'){
-      // Vasque/robinet : translation rigide — forme intacte, position suit le 3-part
       child.userData._isVasqueMesh=true;
       child.userData._origPositions=new Float32Array(posAttr.array);
       child.userData._origCenterX=(bb.min.x+bb.max.x)/2;
@@ -734,10 +748,30 @@ function applyVertexResize(model, r){
   var midSpan    =rightEdge-leftEdge;
   var newMidSpan =newRight-newLeft;
 
-  // Fonction 3-part pour un X quelconque
+  // Fonction 5-part pour un X quelconque :
+  //   cap gauche | overhang gauche | ZONE VASQUE FIXE | overhang droit | cap droit
+  //   La zone vasque ne bouge pas → trou du PDT = même taille que la vasque
   function tx(ox){
+    // Cap gauche : glisse vers la gauche
     if(ox<=leftEdge) return ox-dW/2;
+    // Cap droit : glisse vers la droite
     if(ox>=rightEdge) return ox+dW/2;
+
+    if(p.hasVasque){
+      var vxmn=p.vxmin, vxmx=p.vxmax;
+      // Zone vasque : fixe
+      if(ox>=vxmn && ox<=vxmx) return ox;
+      // Overhang gauche (entre cap gauche et bord gauche vasque)
+      if(ox<vxmn){
+        var t=(ox-leftEdge)/(vxmn-leftEdge);
+        return (leftEdge-dW/2)+t*(vxmn-(leftEdge-dW/2));
+      }
+      // Overhang droit (entre bord droit vasque et cap droit)
+      var t=(ox-vxmx)/(rightEdge-vxmx);
+      return vxmx+t*((rightEdge+dW/2)-vxmx);
+    }
+
+    // Pas de vasque connue : 3-part classique
     return newLeft+(ox-leftEdge)/midSpan*newMidSpan;
   }
 
