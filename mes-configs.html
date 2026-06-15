@@ -76,6 +76,44 @@
       border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;
       margin-bottom:12px}
     @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Fiche technique accordéon */
+    .fiche-btn{
+      display:inline-flex;align-items:center;gap:5px;padding:7px 12px;
+      font-family:var(--font);font-size:9px;font-weight:700;letter-spacing:.1em;
+      text-transform:uppercase;border:1.5px solid rgba(26,26,26,.18);
+      border-radius:100px;background:none;color:rgba(26,26,26,.5);cursor:pointer;
+      transition:border-color .2s,color .2s,background .2s;white-space:nowrap;
+    }
+    .fiche-btn:hover,.fiche-btn.open{border-color:var(--accent);color:var(--accent)}
+    .fiche-btn.open{background:rgba(205,62,0,.06)}
+    .fiche-row td{padding:0 !important;border-bottom:1px solid rgba(26,26,26,.07)!important}
+    .fiche-inner{
+      padding:20px 24px;background:rgba(255,250,240,.5);
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;
+    }
+    .fiche-sect{}
+    .fiche-sect-title{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+      color:rgba(26,26,26,.38);margin-bottom:8px}
+    .fiche-block{background:#fff;border-radius:8px;border:1px solid rgba(26,26,26,.07);
+      padding:8px 12px}
+    .fiche-drow{display:flex;justify-content:space-between;align-items:baseline;
+      font-size:11px;padding:2px 0;gap:8px}
+    .fiche-drow span{color:rgba(26,26,26,.5);flex:1}
+    .fiche-drow strong{color:var(--dark);font-weight:700;white-space:nowrap;font-size:11.5px}
+    .fiche-empty{font-size:11px;color:rgba(26,26,26,.3);font-style:italic}
+    .fiche-actions{display:flex;gap:8px;align-items:center;margin-top:12px;grid-column:1/-1}
+    .fiche-copy-btn{
+      padding:8px 16px;font-family:var(--font);font-size:9px;font-weight:700;
+      letter-spacing:.14em;text-transform:uppercase;border:1.5px solid rgba(26,26,26,.18);
+      border-radius:8px;cursor:pointer;background:#fff;color:rgba(26,26,26,.5);
+      transition:border-color .2s,color .2s;
+    }
+    .fiche-copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .fiche-copy-btn.ok{border-color:#22a35a;color:#22a35a}
+    .fiche-surface{font-size:11px;color:rgba(26,26,26,.45);padding:8px 12px;
+      background:rgba(26,26,26,.03);border-radius:8px;line-height:1.7}
+    .fiche-surface strong{color:var(--dark)}
   </style>
 </head>
 <body>
@@ -190,22 +228,30 @@ function render(configs, token){
     return;
   }
 
-  var rows = configs.map(function(c){
+  var rows = configs.map(function(c, idx){
     var viz = makeVizUrl(c);
-    return '<tr>'
+    return '<tr id="cfg-row-'+idx+'">'
       + '<td><div class="cfg-date">'+fmtDate(c.created_at)+'</div></td>'
       + '<td><div class="cfg-name">'+esc(c.prenom)+'</div><div class="cfg-email">'+esc(c.email)+'</div></td>'
       + '<td><div class="cfg-dims">'+c.largeur+'×'+c.hauteur+'×'+c.profondeur+' cm</div><div class="cfg-mat">'+esc(c.essence||'')+'</div></td>'
       + '<td><div class="cfg-elems">'+elemsSummary(c)+'</div></td>'
       + '<td>'+(c.message?'<div class="cfg-msg" title="'+esc(c.message)+'">'+esc(c.message)+'</div>':'<span style="color:rgba(26,26,26,.25)">—</span>')+'</td>'
-      + '<td><a href="'+viz+'" class="viz-btn" target="_blank">▶ Voir en 3D</a></td>'
-      + '</tr>';
+      + '<td style="white-space:nowrap">'
+        + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+        + '<a href="'+viz+'" class="viz-btn" target="_blank">▶ 3D</a>'
+        + '<button class="fiche-btn" onclick="generatePDF('+idx+')">📄 PDF</button>'
+        + '</div>'
+      + '</td>'
+      + '</tr>'
+      ;
   }).join('');
 
   wrap.innerHTML = '<table>'
     + '<thead><tr><th>Date</th><th>Contact</th><th>Dimensions</th><th>Aménagement</th><th>Message</th><th></th></tr></thead>'
     + '<tbody>'+rows+'</tbody>'
     + '</table>';
+  // Stocker configs globalement pour accès dans toggleFiche
+  window._configs = configs;
 }
 
 function stat(val, lbl){
@@ -213,6 +259,446 @@ function stat(val, lbl){
 }
 function esc(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════
+//  FICHE TECHNIQUE
+// ═══════════════════════════════════════════════
+var T_m  = 0.018; // épaisseur panneau 18mm
+var BT_m = 0.008; // fond 8mm
+var T_cm = Math.round(T_m * 100 * 10) / 10; // 1.8 cm
+
+function toggleFiche(idx){
+  var row  = document.getElementById('fiche-row-'+idx);
+  var btn  = document.getElementById('fiche-btn-'+idx);
+  var isOpen = row.style.display !== 'none';
+  if(isOpen){
+    row.style.display = 'none';
+    btn.classList.remove('open');
+  } else {
+    var cfg = window._configs[idx];
+    document.getElementById('fiche-inner-'+idx).innerHTML = buildFicheHTML(cfg);
+    row.style.display = '';
+    btn.classList.add('open');
+  }
+}
+window.toggleFiche = toggleFiche;
+
+function buildFicheHTML(cfg){
+  var W = cfg.largeur, H = cfg.hauteur, D = cfg.profondeur;
+  var iW = Math.round((W - 2*T_cm)*10)/10;
+  var iH = Math.round((H - 2*T_cm)*10)/10;
+  var iD = Math.round((D - BT_m*100)*10)/10;
+  var maxX = iW;
+  var elems = Array.isArray(cfg.elements) ? cfg.elements : [];
+
+  var shelves = elems.filter(function(e){return e.type==='shelf'||e.type==='traverse';});
+  shelves.sort(function(a,b){return a.y_cm-b.y_cm;});
+  var seps = elems.filter(function(e){return e.type==='separator';});
+  seps.sort(function(a,b){return a.x_cm-b.x_cm;});
+  var doors = elems.filter(function(e){return e.type==='door';});
+
+  var html = '';
+
+  // ── Dimensions intérieures ────────────────────
+  html += '<div class="fiche-sect">';
+  html += '<div class="fiche-sect-title">Dimensions intérieures</div>';
+  html += '<div class="fiche-block">';
+  html += drow('Largeur int.', iW+' cm');
+  html += drow('Hauteur int.', iH+' cm');
+  html += drow('Profondeur utile', iD+' cm');
+  html += drow('Épaisseur panneau', T_cm+' mm');
+  html += drow('Fond', Math.round(BT_m*100*10)/10+' mm');
+  html += '</div></div>';
+
+  // ── Colonnes ──────────────────────────────────
+  if(seps.length){
+    html += '<div class="fiche-sect">';
+    html += '<div class="fiche-sect-title">Colonnes ('+seps.length+' intercalaire'+(seps.length>1?'s':'')+')</div>';
+    html += '<div class="fiche-block">';
+    var xBounds = [0].concat(seps.map(function(s){return s.x_cm;})).concat([maxX]);
+    xBounds.sort(function(a,b){return a-b;});
+    for(var i=0;i<xBounds.length-1;i++){
+      var colW = Math.round((xBounds[i+1]-xBounds[i])*10)/10;
+      html += drow('Col. '+(i+1)+' ('+xBounds[i]+'→'+xBounds[i+1]+' cm)', colW+' cm');
+    }
+    html += '</div></div>';
+  }
+
+  // ── Étagères & traverses ──────────────────────
+  if(shelves.length){
+    html += '<div class="fiche-sect">';
+    html += '<div class="fiche-sect-title">Étagères / traverses ('+shelves.length+')</div>';
+    html += '<div class="fiche-block">';
+    shelves.forEach(function(s){
+      var xl = s.x_left_cm  !== undefined ? s.x_left_cm  : 0;
+      var xr = s.x_right_cm !== undefined ? s.x_right_cm : maxX;
+      var sw = Math.round((xr-xl)*10)/10;
+      var partial = (xl!==0 || Math.abs(xr-maxX)>0.5);
+      var lbl = (s.type==='traverse'?'Traverse':'Étagère')+' H='+s.y_cm+' cm';
+      var val = sw+' cm'+(partial?' ('+xl+'→'+xr+')':'');
+      html += drow(lbl, val);
+    });
+    html += '</div></div>';
+  }
+
+  // ── Cases (hauteurs libres) ───────────────────
+  var fullShelves = shelves.filter(function(s){
+    var xl = s.x_left_cm !== undefined ? s.x_left_cm : 0;
+    var xr = s.x_right_cm !== undefined ? s.x_right_cm : maxX;
+    return xl===0 && Math.abs(xr-maxX)<0.5;
+  });
+  html += '<div class="fiche-sect">';
+  html += '<div class="fiche-sect-title">Cases (hauteurs libres)</div>';
+  html += '<div class="fiche-block">';
+  var yBounds = [0].concat(fullShelves.map(function(s){return s.y_cm;})).concat([H]);
+  yBounds.sort(function(a,b){return a-b;});
+  for(var j=0;j<yBounds.length-1;j++){
+    var caseH = Math.round((yBounds[j+1]-yBounds[j]-T_cm)*10)/10;
+    html += drow('Case '+(j+1)+' ('+yBounds[j]+'→'+yBounds[j+1]+' cm)', caseH+' cm');
+  }
+  if(shelves.length>0 && fullShelves.length===0){
+    html += '<div class="fiche-empty">Étagères partielles — cases variables par colonne</div>';
+  }
+  html += '</div></div>';
+
+  // ── Portes ────────────────────────────────────
+  if(doors.length){
+    html += '<div class="fiche-sect">';
+    html += '<div class="fiche-sect-title">Portes ('+doors.length+')</div>';
+    html += '<div class="fiche-block">';
+    doors.forEach(function(d,i){
+      var dW = Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
+      var dH = Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
+      html += drow('Porte '+(i+1), dW+' × '+dH+' cm');
+    });
+    html += '</div></div>';
+  }
+
+  // ── Surface bois (estimation) ─────────────────
+  var surf = calcSurface(cfg, shelves, doors, iW, iH, iD, W, H, D);
+  html += '<div class="fiche-actions">';
+  html += '<div class="fiche-surface">'+surf+'</div>';
+  html += '<button class="fiche-copy-btn" onclick="copyFiche(this,'+JSON.stringify(cfg).replace(/</g,'\\u003c')+')">⎘ Copier</button>';
+  html += '</div>';
+
+  return html;
+}
+
+function drow(lbl, val){
+  return '<div class="fiche-drow"><span>'+esc(lbl)+'</span><strong>'+esc(val)+'</strong></div>';
+}
+
+function calcSurface(cfg, shelves, doors, iW, iH, iD, W, H, D){
+  var T_cm_l = T_cm;
+  // Panneaux de structure
+  var s_cotes  = 2 * (H/100 * D/100);            // 2 côtés
+  var s_ht     = 2 * (iW/100 * D/100);            // dessus + dessous
+  var s_fond   = (iW/100) * (iH/100);             // fond
+  var s_struct = s_cotes + s_ht + s_fond;
+
+  // Étagères
+  var s_etag = 0;
+  shelves.forEach(function(s){
+    var xl = s.x_left_cm  !== undefined ? s.x_left_cm  : 0;
+    var xr = s.x_right_cm !== undefined ? s.x_right_cm : iW;
+    s_etag += ((xr-xl)/100) * (iD/100);
+  });
+
+  // Portes (plein panneau)
+  var s_portes = 0;
+  doors.forEach(function(d){
+    var dW = Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
+    var dH = Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
+    s_portes += (dW/100)*(dH/100);
+  });
+
+  var total = s_struct + s_etag + s_portes;
+
+  return '<strong>Surface bois estimée :</strong> '
+    + r2(s_struct)+' m² structure · '
+    + (shelves.length?r2(s_etag)+' m² étagères · ':'')
+    + (doors.length?r2(s_portes)+' m² portes · ':'')
+    + '<strong>→ Total '+r2(total)+' m²</strong>';
+}
+
+function r2(v){ return Math.round(v*100)/100; }
+
+function copyFiche(btn, cfg){
+  var W = cfg.largeur, H = cfg.hauteur, D = cfg.profondeur;
+  var iW = Math.round((W-2*T_cm)*10)/10;
+  var iH = Math.round((H-2*T_cm)*10)/10;
+  var iD = Math.round((D-BT_m*100)*10)/10;
+  var maxX = iW;
+  var elems = Array.isArray(cfg.elements)?cfg.elements:[];
+  var shelves = elems.filter(function(e){return e.type==='shelf'||e.type==='traverse';});
+  shelves.sort(function(a,b){return a.y_cm-b.y_cm;});
+  var seps = elems.filter(function(e){return e.type==='separator';});
+  seps.sort(function(a,b){return a.x_cm-b.x_cm;});
+  var doors = elems.filter(function(e){return e.type==='door';});
+
+  var lines = [
+    'BIBLIOTHÈQUE '+W+'×'+H+'×'+D+' cm — '+esc(cfg.essence||''),
+    'Client : '+esc(cfg.prenom)+' <'+esc(cfg.email)+'>',
+    '',
+    'INTÉRIEUR',
+    '  Largeur int.    '+iW+' cm',
+    '  Hauteur int.    '+iH+' cm',
+    '  Profondeur      '+iD+' cm',
+  ];
+  if(seps.length){
+    lines.push('');
+    lines.push('COLONNES ('+seps.length+' intercalaire'+(seps.length>1?'s':'')+')');
+    var xBounds = [0].concat(seps.map(function(s){return s.x_cm;})).concat([maxX]);
+    xBounds.sort(function(a,b){return a-b;});
+    for(var i=0;i<xBounds.length-1;i++)
+      lines.push('  Col.'+(i+1)+' → '+(Math.round((xBounds[i+1]-xBounds[i])*10)/10)+' cm');
+  }
+  if(shelves.length){
+    lines.push('');
+    lines.push('ÉTAGÈRES / TRAVERSES');
+    shelves.forEach(function(s){
+      var xl=s.x_left_cm||0, xr=s.x_right_cm||maxX;
+      lines.push('  '+(s.type==='traverse'?'Traverse':'Étagère')+' H='+s.y_cm+' cm → L='+(xr-xl)+' cm');
+    });
+  }
+  var fullShelves = shelves.filter(function(s){
+    return (s.x_left_cm||0)===0 && Math.abs((s.x_right_cm||maxX)-maxX)<0.5;
+  });
+  lines.push('');
+  lines.push('CASES (hauteurs libres)');
+  var yBounds=[0].concat(fullShelves.map(function(s){return s.y_cm;})).concat([H]);
+  yBounds.sort(function(a,b){return a-b;});
+  for(var j=0;j<yBounds.length-1;j++)
+    lines.push('  Case '+(j+1)+' → '+(Math.round((yBounds[j+1]-yBounds[j]-T_cm)*10)/10)+' cm haut.');
+  if(doors.length){
+    lines.push('');
+    lines.push('PORTES ('+doors.length+')');
+    doors.forEach(function(d,i){
+      var dW=Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
+      var dH=Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
+      lines.push('  Porte '+(i+1)+' → '+dW+' × '+dH+' cm');
+    });
+  }
+
+  navigator.clipboard.writeText(lines.join('\n')).then(function(){
+    btn.textContent='✓ Copié !';
+    btn.classList.add('ok');
+    setTimeout(function(){btn.textContent='⎘ Copier';btn.classList.remove('ok');},2000);
+  }).catch(function(){ window.prompt('Copier :', lines.join('\n')); });
+}
+window.copyFiche = copyFiche;
+
+// ═══════════════════════════════════════════════
+//  GÉNÉRATION PDF (print-to-PDF via nouvelle fenêtre)
+// ═══════════════════════════════════════════════
+function generatePDF(idx){
+  var cfg = window._configs[idx];
+  if(!cfg) return;
+  var html = buildPDFHtml(cfg);
+  var win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+  win.onload = function(){ win.focus(); win.print(); };
+}
+window.generatePDF = generatePDF;
+
+function buildPDFHtml(cfg){
+  var W=cfg.largeur, H=cfg.hauteur, D=cfg.profondeur;
+  var iW=Math.round((W-2*T_cm)*10)/10;
+  var iH=Math.round((H-2*T_cm)*10)/10;
+  var iD=Math.round((D-BT_m*100)*10)/10;
+  var maxX=iW;
+  var elems=Array.isArray(cfg.elements)?cfg.elements:[];
+  var shelves=elems.filter(function(e){return e.type==='shelf'||e.type==='traverse';});
+  shelves.sort(function(a,b){return a.y_cm-b.y_cm;});
+  var seps=elems.filter(function(e){return e.type==='separator';});
+  seps.sort(function(a,b){return a.x_cm-b.x_cm;});
+  var doors=elems.filter(function(e){return e.type==='door';});
+  var fullShelves=shelves.filter(function(s){
+    return (s.x_left_cm||0)===0&&Math.abs((s.x_right_cm||maxX)-maxX)<0.5;
+  });
+
+  // Surface bois
+  var s_cotes=2*(H/100*D/100);
+  var s_ht=2*(iW/100*D/100);
+  var s_fond=(iW/100)*(iH/100);
+  var s_struct=s_cotes+s_ht+s_fond;
+  var s_etag=0;
+  shelves.forEach(function(s){
+    var xl=s.x_left_cm||0, xr=s.x_right_cm||maxX;
+    s_etag+=((xr-xl)/100)*(iD/100);
+  });
+  var s_portes=0;
+  doors.forEach(function(d){
+    var dW=Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
+    var dH=Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
+    s_portes+=(dW/100)*(dH/100);
+  });
+  var s_total=s_struct+s_etag+s_portes;
+
+  var dateStr=fmtDate(cfg.created_at);
+  var ref='BIB-'+String(cfg.id||'').padStart(4,'0');
+
+  // Dessin SVG simplifié de la bibliothèque (vue de face)
+  var svgW=200, svgH=Math.round(svgW*(H/W));
+  var pxPerCm=svgW/W;
+  var svgElems='';
+  // Structure
+  var t=Math.round(T_cm*pxPerCm*10)/10;
+  svgElems+='<rect x="0" y="0" width="'+svgW+'" height="'+svgH+'" fill="#F0EDEA" stroke="#ccc" stroke-width="1"/>';
+  // fond
+  svgElems+='<rect x="'+t+'" y="'+t+'" width="'+(svgW-2*t)+'" height="'+(svgH-2*t)+'" fill="none" stroke="#999" stroke-width="0.5"/>';
+  // étagères
+  shelves.forEach(function(s){
+    var xl=(s.x_left_cm||0)*pxPerCm+t;
+    var xr=(s.x_right_cm||maxX)*pxPerCm+t;
+    var yy=svgH-(s.y_cm*pxPerCm)-t;
+    svgElems+='<line x1="'+xl+'" y1="'+yy+'" x2="'+xr+'" y2="'+yy+'" stroke="#888" stroke-width="'+(t*0.9)+'" stroke-linecap="round"/>';
+  });
+  // intercalaires
+  seps.forEach(function(s){
+    var xx=s.x_cm*pxPerCm+t;
+    svgElems+='<line x1="'+xx+'" y1="'+t+'" x2="'+xx+'" y2="'+(svgH-t)+'" stroke="#888" stroke-width="'+(t*0.9)+'" stroke-linecap="round"/>';
+  });
+  // portes
+  doors.forEach(function(d){
+    var xl_=(d.x_left_cm||0)*pxPerCm+t;
+    var xr_=(d.x_right_cm||maxX)*pxPerCm+t;
+    var yb_=svgH-(d.floor_y_cm||0)*pxPerCm-t;
+    var yt_=svgH-(d.ceil_y_cm)*pxPerCm-t;
+    svgElems+='<rect x="'+xl_+'" y="'+yt_+'" width="'+(xr_-xl_)+'" height="'+(yb_-yt_)+'" fill="rgba(205,62,0,.12)" stroke="rgba(205,62,0,.5)" stroke-width="0.8" rx="1"/>';
+  });
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgW+' '+svgH+'" width="'+svgW+'" height="'+svgH+'">'+svgElems+'</svg>';
+
+  // Tables HTML pour chaque section
+  function tbl(rows){
+    return '<table><tbody>'+rows.map(function(r){
+      return '<tr><td class="lbl">'+r[0]+'</td><td class="val">'+r[1]+'</td></tr>';
+    }).join('')+'</tbody></table>';
+  }
+
+  var colRows=[];
+  if(seps.length){
+    var xBounds=[0].concat(seps.map(function(s){return s.x_cm;})).concat([maxX]);
+    xBounds.sort(function(a,b){return a-b;});
+    for(var i=0;i<xBounds.length-1;i++){
+      var colW=Math.round((xBounds[i+1]-xBounds[i])*10)/10;
+      colRows.push(['Colonne '+(i+1)+' ('+xBounds[i]+' → '+xBounds[i+1]+' cm)', '<strong>'+colW+' cm</strong>']);
+    }
+  }
+
+  var shelfRows=shelves.map(function(s,i){
+    var xl=s.x_left_cm||0, xr=s.x_right_cm||maxX;
+    var sw=Math.round((xr-xl)*10)/10;
+    var partial=(xl!==0||Math.abs(xr-maxX)>0.5);
+    return [(s.type==='traverse'?'Traverse':'Étagère')+' n°'+(i+1)+' — H = '+s.y_cm+' cm',
+      '<strong>Larg. '+sw+' cm</strong>'+(partial?' <span class="note">partielle ('+xl+' → '+xr+' cm)</span>':'')];
+  });
+
+  var yBounds=[0].concat(fullShelves.map(function(s){return s.y_cm;})).concat([H]);
+  yBounds.sort(function(a,b){return a-b;});
+  var caseRows=yBounds.slice(0,-1).map(function(y,i){
+    var cH=Math.round((yBounds[i+1]-y-T_cm)*10)/10;
+    return ['Case '+(i+1)+' (de '+y+' cm à '+yBounds[i+1]+' cm)', '<strong>'+cH+' cm</strong> haut. libre'];
+  });
+
+  var doorRows=doors.map(function(d,i){
+    var dW=Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
+    var dH=Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
+    return ['Porte n°'+(i+1)+' — baie '+d.x_left_cm+' → '+d.x_right_cm+' cm', '<strong>'+dW+' × '+dH+' cm</strong>'];
+  });
+
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>'
+    +'<title>Fiche '+ref+' — '+esc(cfg.prenom)+'</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Poppins,sans-serif;color:#1A1A1A;background:#fff;padding:32px 40px;font-size:12px}'
+    +'@page{size:A4;margin:16mm 14mm}'
+    +'@media print{body{padding:0}}'
+    +'.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #CD3E00;padding-bottom:16px;margin-bottom:24px}'
+    +'.brand{font-size:22px;font-weight:900;letter-spacing:-.03em;color:#1A1A1A}'
+    +'.brand em{font-style:italic;font-weight:300;color:rgba(26,26,26,.3)}'
+    +'.ref-block{text-align:right}'
+    +'.ref{font-size:18px;font-weight:700;color:#CD3E00}'
+    +'.ref-date{font-size:10px;color:rgba(26,26,26,.4);margin-top:2px}'
+    +'.meta{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;margin-bottom:24px;align-items:start}'
+    +'.meta-block{background:#F8F5F0;border-radius:8px;padding:12px 16px}'
+    +'.meta-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:8px}'
+    +'.meta-val{font-size:14px;font-weight:700}'
+    +'.meta-sub{font-size:11px;color:rgba(26,26,26,.5)}'
+    +'.dims-big{display:flex;gap:8px;align-items:baseline}'
+    +'.dims-big span{font-size:22px;font-weight:900;color:#CD3E00}'
+    +'.dims-big small{font-size:11px;color:rgba(26,26,26,.4)}'
+    +'.body-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}'
+    +'.sect{margin-bottom:16px}'
+    +'.sect-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#CD3E00;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(205,62,0,.2)}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'tr:nth-child(even) td{background:#FAFAF8}'
+    +'td{padding:5px 8px;font-size:11px;vertical-align:top}'
+    +'td.lbl{color:rgba(26,26,26,.55);width:60%}'
+    +'td.val{font-weight:600;text-align:right}'
+    +'.note{font-size:9px;font-weight:400;color:rgba(26,26,26,.45)}'
+    +'.surface-box{background:#F8F5F0;border-radius:8px;padding:14px 16px;margin-bottom:16px}'
+    +'.surface-box .s-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:10px}'
+    +'.surface-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'
+    +'.sval{font-size:14px;font-weight:900;color:#CD3E00}'
+    +'.slbl{font-size:9px;color:rgba(26,26,26,.45);margin-top:1px}'
+    +'.footer{border-top:1px solid rgba(26,26,26,.1);padding-top:12px;display:flex;justify-content:space-between;font-size:9px;color:rgba(26,26,26,.35)}'
+    +'.print-btn{position:fixed;bottom:24px;right:24px;padding:12px 24px;background:#CD3E00;color:#fff;border:none;border-radius:100px;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(205,62,0,.3)}'
+    +'@media print{.print-btn{display:none}}'
+    +'</style></head><body>'
+    // Header
+    +'<div class="header">'
+      +'<div class="brand">Kobo <em>Design</em></div>'
+      +'<div class="ref-block"><div class="ref">'+ref+'</div><div class="ref-date">'+dateStr+'</div></div>'
+    +'</div>'
+    // Meta
+    +'<div class="meta">'
+      +'<div class="meta-block"><div class="meta-title">Client</div><div class="meta-val">'+esc(cfg.prenom)+'</div><div class="meta-sub">'+esc(cfg.email)+'</div></div>'
+      +'<div class="meta-block"><div class="meta-title">Bibliothèque</div>'
+        +'<div class="dims-big"><span>'+W+'×'+H+'×'+D+'</span><small>cm</small></div>'
+        +'<div class="meta-sub" style="margin-top:4px">'+esc(cfg.essence||'—')+'</div>'
+      +'</div>'
+      +'<div>'+svg+'</div>'
+    +'</div>'
+    // Grille principale
+    +'<div class="body-grid">'
+    // Col gauche
+    +'<div>'
+    +'<div class="sect"><div class="sect-title">Dimensions intérieures</div>'
+    +tbl([
+      ['Largeur intérieure','<strong>'+iW+' cm</strong>'],
+      ['Hauteur intérieure','<strong>'+iH+' cm</strong>'],
+      ['Profondeur utile','<strong>'+iD+' cm</strong>'],
+      ['Épaisseur panneau','<strong>'+T_cm+' mm</strong>'],
+      ['Fond','<strong>'+Math.round(BT_m*100*10)/10+' mm</strong>'],
+    ])+'</div>'
+    +(seps.length?'<div class="sect"><div class="sect-title">Colonnes ('+seps.length+' intercalaire'+(seps.length>1?'s':'')+')</div>'+tbl(colRows)+'</div>':'')
+    +'</div>'
+    // Col droite
+    +'<div>'
+    +(shelves.length?'<div class="sect"><div class="sect-title">Étagères / Traverses ('+shelves.length+')</div>'+tbl(shelfRows)+'</div>':'')
+    +'<div class="sect"><div class="sect-title">Cases (hauteurs libres)</div>'+tbl(caseRows)+'</div>'
+    +(doors.length?'<div class="sect"><div class="sect-title">Portes ('+doors.length+')</div>'+tbl(doorRows)+'</div>':'')
+    +'</div>'
+    +'</div>'
+    // Surface bois
+    +'<div class="surface-box"><div class="s-title">Surface bois estimée</div>'
+    +'<div class="surface-grid">'
+    +'<div><div class="sval">'+r2(s_struct)+'</div><div class="slbl">m² structure</div></div>'
+    +(shelves.length?'<div><div class="sval">'+r2(s_etag)+'</div><div class="slbl">m² étagères</div></div>':'')
+    +(doors.length?'<div><div class="sval">'+r2(s_portes)+'</div><div class="slbl">m² portes</div></div>':'')
+    +'<div><div class="sval" style="color:#1A1A1A">'+r2(s_total)+'</div><div class="slbl">m² total</div></div>'
+    +'</div></div>'
+    // Message client
+    +(cfg.message?'<div class="sect"><div class="sect-title">Message client</div><div style="background:#F8F5F0;border-radius:8px;padding:10px 14px;font-size:11px;font-style:italic;color:rgba(26,26,26,.6)">'+esc(cfg.message)+'</div></div>':'')
+    // Footer
+    +'<div class="footer"><span>Kobo Design — document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
+    // Bouton impression
+    +'<button class="print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>'
+    +'</body></html>';
 }
 
 // Auto-login si token dans l'URL

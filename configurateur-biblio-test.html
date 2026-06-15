@@ -201,6 +201,23 @@
     .mat-btn img,.mat-swatch{ width:100%; height:100%; object-fit:cover; border-radius:7px; display:block }
     .mat-lbl{ position:absolute; bottom:0; left:0; right:0; font-size:7px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; text-align:center; background:rgba(255,250,240,.88); color:var(--dark); padding:2px 3px }
 
+    /* ── Fiche technique ──────────────────────────── */
+    .dt-label{ font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:rgba(26,26,26,.38); margin:12px 0 5px }
+    .dt-label:first-child{ margin-top:0 }
+    .dt-block{ background:rgba(26,26,26,.03); border-radius:8px; padding:8px 10px; margin-bottom:6px }
+    .dt-row{ display:flex; justify-content:space-between; align-items:baseline; font-size:11px; padding:2.5px 0; gap:8px }
+    .dt-row span{ color:rgba(26,26,26,.5); flex:1; min-width:0 }
+    .dt-row strong{ color:var(--dark); font-weight:700; white-space:nowrap; font-size:11px }
+    .dt-empty{ font-size:11px; color:rgba(26,26,26,.35); font-style:italic; text-align:center; padding:4px 0 }
+    .dt-copy-btn{
+      width:100%; margin-top:10px; padding:9px; font-family:var(--font); font-size:9px; font-weight:700;
+      letter-spacing:.14em; text-transform:uppercase; border:1.5px solid rgba(26,26,26,.15);
+      border-radius:8px; cursor:pointer; background:none; color:rgba(26,26,26,.45);
+      transition:border-color .2s,color .2s;
+    }
+    .dt-copy-btn:hover{ border-color:var(--accent); color:var(--accent) }
+    .dt-copy-btn.copied{ border-color:#22a35a; color:#22a35a }
+
     .divider{ height:1px; background:rgba(26,26,26,.07); margin:0 -24px }
     .cta-btn{
       display:block; width:100%; padding:14px; font-family:var(--font);
@@ -339,6 +356,15 @@
       <div class="ctrl-sect">
         <p class="sect-lbl">✦ Essence / finition</p>
         <div class="mat-grid" id="matGrid"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- ── Fiche technique ────────────────────────── -->
+      <div class="ctrl-sect">
+        <p class="sect-lbl">✦ Fiche technique</p>
+        <div id="dimsTechContent"></div>
+        <button class="dt-copy-btn" id="dtCopyBtn" onclick="copyDimsTech()">⎘ Copier les dimensions</button>
       </div>
 
       <div class="divider"></div>
@@ -1241,8 +1267,178 @@ function updateElemCount(){
 function updateUI(){
   document.getElementById('dimsBadge').textContent=state.W+' × '+state.H+' × '+state.D+' cm';
   updateElemCount();
+  buildDimsPanel();
   updateCTA();
 }
+
+// ═══════════════════════════════════════════════════
+//  FICHE TECHNIQUE — dimensions pour calcul de prix
+// ═══════════════════════════════════════════════════
+function buildDimsPanel(){
+  var el=document.getElementById('dimsTechContent');
+  if(!el||!iW_m)return;
+
+  var T_cm=Math.round(T*100*10)/10;
+  var iW=Math.round(iW_m*100*10)/10;
+  var iH=Math.round(iH_m*100*10)/10;
+  var iD=Math.round((state.D-BT*100)*10)/10;
+
+  var html='';
+
+  // ── Intérieur ────────────────────────────────────
+  html+='<p class="dt-label">Dimensions intérieures</p>';
+  html+='<div class="dt-block">';
+  html+='<div class="dt-row"><span>Largeur int.</span><strong>'+iW+' cm</strong></div>';
+  html+='<div class="dt-row"><span>Hauteur int.</span><strong>'+iH+' cm</strong></div>';
+  html+='<div class="dt-row"><span>Profondeur utile</span><strong>'+iD+' cm</strong></div>';
+  html+='<div class="dt-row"><span>Épaisseur panneau</span><strong>'+T_cm+' mm</strong></div>';
+  html+='</div>';
+
+  var maxX_cm=Math.round(iW_m*100);
+
+  // ── Intercalaires & colonnes ──────────────────────
+  var seps=elements.filter(function(e){return e.type==='separator';});
+  seps.sort(function(a,b){return a.x_cm-b.x_cm;});
+  if(seps.length){
+    html+='<p class="dt-label">Intercalaires ('+seps.length+')</p>';
+    html+='<div class="dt-block">';
+    var xBounds=[0].concat(seps.map(function(s){return s.x_cm;})).concat([maxX_cm]);
+    xBounds.sort(function(a,b){return a-b;});
+    for(var i=0;i<xBounds.length-1;i++){
+      var colW=Math.round((xBounds[i+1]-xBounds[i])*10)/10;
+      html+='<div class="dt-row"><span>Col. '+(i+1)+' (x='+xBounds[i]+'→'+xBounds[i+1]+' cm)</span><strong>'+colW+' cm larg.</strong></div>';
+    }
+    html+='</div>';
+  }
+
+  // ── Étagères & traverses ─────────────────────────
+  var shelves=elements.filter(function(e){return e.type==='shelf'||e.type==='traverse';});
+  shelves.sort(function(a,b){return a.y_cm-b.y_cm;});
+  if(shelves.length){
+    html+='<p class="dt-label">Étagères / traverses ('+shelves.length+')</p>';
+    html+='<div class="dt-block">';
+    shelves.forEach(function(s,i){
+      var xl=s.x_left_cm!==undefined?s.x_left_cm:0;
+      var xr=s.x_right_cm!==undefined?s.x_right_cm:maxX_cm;
+      var sw=Math.round((xr-xl)*10)/10;
+      var isPartial=(xl!==0||xr!==maxX_cm);
+      var label=(s.type==='traverse'?'Traverse':'Étagère')+' H='+s.y_cm+' cm';
+      var detail=isPartial?sw+' cm ('+xl+'→'+xr+')':sw+' cm';
+      html+='<div class="dt-row"><span>'+label+'</span><strong>'+detail+'</strong></div>';
+    });
+    html+='</div>';
+  }
+
+  // ── Cases (hauteurs libres) ───────────────────────
+  var fullShelves=shelves.filter(function(s){
+    return (s.x_left_cm===undefined||s.x_left_cm===0)&&(s.x_right_cm===undefined||s.x_right_cm===maxX_cm);
+  });
+  html+='<p class="dt-label">Cases (hauteurs libres)</p>';
+  html+='<div class="dt-block">';
+  var yBounds=[0].concat(fullShelves.map(function(s){return s.y_cm;})).concat([state.H]);
+  yBounds.sort(function(a,b){return a-b;});
+  for(var j=0;j<yBounds.length-1;j++){
+    var caseH=Math.round((yBounds[j+1]-yBounds[j]-T_cm)*10)/10;
+    var label2='Case '+(j+1)+' ('+yBounds[j]+'→'+yBounds[j+1]+' cm)';
+    html+='<div class="dt-row"><span>'+label2+'</span><strong>'+caseH+' cm</strong></div>';
+  }
+  if(yBounds.length<=2&&fullShelves.length===0&&shelves.length>0){
+    html+='<div class="dt-empty">Étagères partielles — cases variables</div>';
+  }
+  html+='</div>';
+
+  // ── Portes ───────────────────────────────────────
+  var doors=elements.filter(function(e){return e.type==='door';});
+  if(doors.length){
+    html+='<p class="dt-label">Portes ('+doors.length+')</p>';
+    html+='<div class="dt-block">';
+    doors.forEach(function(d,i){
+      var dW=Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
+      var dH=Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
+      html+='<div class="dt-row"><span>Porte '+(i+1)+'</span><strong>'+dW+' × '+dH+' cm</strong></div>';
+    });
+    html+='</div>';
+  }
+
+  el.innerHTML=html;
+}
+
+function copyDimsTech(){
+  var lines=[];
+  lines.push('BIBLIOTHÈQUE '+state.W+' × '+state.H+' × '+state.D+' cm');
+  lines.push('');
+
+  var T_cm=Math.round(T*100*10)/10;
+  var iW=Math.round(iW_m*100*10)/10;
+  var iH=Math.round(iH_m*100*10)/10;
+  var iD=Math.round((state.D-BT*100)*10)/10;
+  var maxX_cm=Math.round(iW_m*100);
+
+  lines.push('INTÉRIEUR');
+  lines.push('  Largeur int.    '+iW+' cm');
+  lines.push('  Hauteur int.    '+iH+' cm');
+  lines.push('  Profondeur      '+iD+' cm');
+  lines.push('  Épaisseur pann. '+T_cm+' mm');
+
+  var seps=elements.filter(function(e){return e.type==='separator';});
+  if(seps.length){
+    seps.sort(function(a,b){return a.x_cm-b.x_cm;});
+    var xBounds=[0].concat(seps.map(function(s){return s.x_cm;})).concat([maxX_cm]);
+    xBounds.sort(function(a,b){return a-b;});
+    lines.push('');
+    lines.push('COLONNES ('+seps.length+' intercalaire'+(seps.length>1?'s':'')+')');
+    for(var i=0;i<xBounds.length-1;i++){
+      lines.push('  Col.'+(i+1)+' → '+(xBounds[i+1]-xBounds[i])+' cm');
+    }
+  }
+
+  var shelves=elements.filter(function(e){return e.type==='shelf'||e.type==='traverse';});
+  shelves.sort(function(a,b){return a.y_cm-b.y_cm;});
+  if(shelves.length){
+    lines.push('');
+    lines.push('ÉTAGÈRES / TRAVERSES ('+shelves.length+')');
+    shelves.forEach(function(s){
+      var xl=s.x_left_cm||0;
+      var xr=s.x_right_cm||maxX_cm;
+      var sw=xr-xl;
+      lines.push('  '+(s.type==='traverse'?'Traverse':'Étagère')+' H='+s.y_cm+' cm → L='+sw+' cm'+(xl!==0||xr!==maxX_cm?' (partielle x='+xl+'→'+xr+')':''));
+    });
+  }
+
+  var fullShelves=shelves.filter(function(s){
+    return (s.x_left_cm===undefined||s.x_left_cm===0)&&(s.x_right_cm===undefined||s.x_right_cm===maxX_cm);
+  });
+  lines.push('');
+  lines.push('CASES (hauteurs libres)');
+  var yBounds=[0].concat(fullShelves.map(function(s){return s.y_cm;})).concat([state.H]);
+  yBounds.sort(function(a,b){return a-b;});
+  for(var j=0;j<yBounds.length-1;j++){
+    var caseH=Math.round((yBounds[j+1]-yBounds[j]-T_cm)*10)/10;
+    lines.push('  Case '+(j+1)+' → '+caseH+' cm haut.');
+  }
+
+  var doors=elements.filter(function(e){return e.type==='door';});
+  if(doors.length){
+    lines.push('');
+    lines.push('PORTES ('+doors.length+')');
+    doors.forEach(function(d,i){
+      var dW=Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
+      var dH=Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
+      lines.push('  Porte '+(i+1)+' → '+dW+' × '+dH+' cm');
+    });
+  }
+
+  var txt=lines.join('\n');
+  navigator.clipboard.writeText(txt).then(function(){
+    var btn=document.getElementById('dtCopyBtn');
+    btn.textContent='✓ Copié !';
+    btn.classList.add('copied');
+    setTimeout(function(){btn.textContent='⎘ Copier les dimensions';btn.classList.remove('copied');},2000);
+  }).catch(function(){
+    window.prompt('Copiez ces dimensions :', txt);
+  });
+}
+window.copyDimsTech=copyDimsTech;
 
 function updateCTA(){
   var def=MATS.find(function(m){return m.id===state.matId;})||MATS[0];
