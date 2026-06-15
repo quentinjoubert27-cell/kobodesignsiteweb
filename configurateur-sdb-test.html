@@ -223,6 +223,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════
 // ÉTAT
@@ -477,30 +478,51 @@ function buildPlan(){
 // ═══════════════════════════════════════════════════════
 // BUILD VASQUE
 // ═══════════════════════════════════════════════════════
+var _vasqueGltfCache=null;
+var _vasqueLoading=false;
+
 function buildVasque(){
+  if(_vasqueLoading) return;
+  if(_vasqueGltfCache){ _applyVasqueGltf(_vasqueGltfCache); return; }
+  _vasqueLoading=true;
+  var loader=new THREE.GLTFLoader();
+  loader.load('models/vasque-v1.glb',function(gltf){
+    _vasqueLoading=false; _vasqueGltfCache=gltf; _applyVasqueGltf(gltf);
+  },undefined,function(err){
+    _vasqueLoading=false; console.error('GLB vasque error',err);
+  });
+}
+
+function _applyVasqueGltf(gltf){
   disposeGroup(vasqueGrp);
-  var VW=S.vasqueW,VD=S.vasqueD,VH=0.12,th=0.008;
-  var matCeram=new THREE.MeshStandardMaterial({color:0xF4F1ED,roughness:0.08,metalness:0.0});
-  var matLaito=new THREE.MeshStandardMaterial({color:0xC8A050,roughness:0.18,metalness:0.90});
-  var matBonde=new THREE.MeshStandardMaterial({color:0xA09060,roughness:0.35,metalness:0.70});
   var grp=new THREE.Group();
-  function addBox(w,h,d,mat,x,y,z){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;grp.add(m);}
-  addBox(VW,th,VD,matCeram,0,th/2,0);
-  addBox(VW,VH,th,matCeram,0,VH/2,VD/2-th/2);
-  addBox(VW,VH,th,matCeram,0,VH/2,-VD/2+th/2);
-  addBox(th,VH,VD-2*th,matCeram,-VW/2+th/2,VH/2,0);
-  addBox(th,VH,VD-2*th,matCeram,VW/2-th/2,VH/2,0);
-  var rC=new THREE.Mesh(new THREE.CylinderGeometry(0.009,0.009,0.09,12),matLaito);
-  rC.position.set(0,VH+0.045,-VD/2+0.014); grp.add(rC);
-  var rB=new THREE.Mesh(new THREE.CylinderGeometry(0.005,0.008,0.06,8),matLaito);
-  rB.rotation.x=-Math.PI/2.6; rB.position.set(0,VH+0.068,-VD/2+0.033); grp.add(rB);
-  var bn=new THREE.Mesh(new THREE.CylinderGeometry(0.013,0.013,0.004,16),matBonde);
-  bn.position.set(0,th+0.001,0); grp.add(bn);
-  var ba=new THREE.Mesh(new THREE.TorusGeometry(0.013,0.002,6,20),matBonde);
-  ba.rotation.x=Math.PI/2; ba.position.set(0,th+0.003,0); grp.add(ba);
-  vasqueRimOffset=VH;
-  S.vasqueRx=VW/2+0.006; S.vasqueRz=VD/2+0.006;
+  var model=gltf.scene.clone(true);
+
+  // Bounding box native (avant scale)
+  var box0=new THREE.Box3().setFromObject(model);
+  var sz0=new THREE.Vector3(); box0.getSize(sz0);
+
+  // Scale pour correspondre à vasqueW × vasqueD
+  var sx=S.vasqueW/sz0.x, sz=S.vasqueD/sz0.z;
+  var sy=Math.min(sx,sz); // proportionnel en hauteur
+  model.scale.set(sx,sy,sz);
+
+  // Bounding box après scale
+  var box1=new THREE.Box3().setFromObject(model);
+  var sz1=new THREE.Vector3(); box1.getSize(sz1);
+  var ctr=new THREE.Vector3(); box1.getCenter(ctr);
+
+  // Centrer + aligner le bas sur Y=0
+  model.position.set(-ctr.x, -box1.min.y, -ctr.z);
+
+  model.traverse(function(o){ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} });
+  grp.add(model);
+
+  vasqueRimOffset=sz1.y;
+  S.vasqueRx=sz1.x/2+0.006; S.vasqueRz=sz1.z/2+0.006;
+
   scene.add(grp); vasqueGrp=grp;
+  vasqueGrp.visible=(S.step===3);
   S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
   positionVasque(); buildPlan(); updatePosInfo();
 }
