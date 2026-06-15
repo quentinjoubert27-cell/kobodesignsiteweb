@@ -155,27 +155,21 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 
       <!-- STEP 2 -->
       <div class="panel" id="p2">
-        <div class="tip"><span class="tip-icon">✥</span>Choisissez un modèle de vasque puis glissez-le sur le plan.</div>
-        <div class="sec">Modèle de vasque</div>
-        <div class="mat-grid" id="mg-vasque">
-          <button class="mat-btn on" id="vbtn-v1" onclick="selectVasque('models/sdb/v1.glb','v1')">
-            <div class="mat-sw" style="background:var(--panel);border:1.5px solid var(--accent)"></div>
-            <span class="mat-lbl">Vasque ronde<br><span style="font-size:10px;opacity:.6">1 robinet</span></span>
-          </button>
-          <button class="mat-btn" id="vbtn-v2" onclick="selectVasque('models/sdb/v2.glb','v2')">
-            <div class="mat-sw" style="background:var(--panel);border:1.5px solid var(--border)"></div>
-            <span class="mat-lbl">Vasque murale<br><span style="font-size:10px;opacity:.6">2 robinets</span></span>
-          </button>
+        <div class="tip"><span class="tip-icon">✥</span>Dimensionnez la vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="sec">Dimensions de la vasque</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-VW">50 cm</span></div>
+          <input type="range" min="30" max="70" step="1" value="50" oninput="setVasqueW(+this.value)">
         </div>
-        <div id="load-overlay-inline" style="display:none;font-size:11px;color:var(--text2);margin:6px 0 10px;padding:8px 10px;background:rgba(200,150,90,.08);border-radius:6px;border-left:2px solid var(--accent)">
-          ⟳ Chargement…
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-VD">35 cm</span></div>
+          <input type="range" min="25" max="45" step="1" value="35" oninput="setVasqueD(+this.value)">
         </div>
         <div class="sec">Position</div>
         <div class="pos-info">
           Distance bord gauche : <strong id="pos-x">—</strong><br>
           Distance mur : <strong id="pos-z">—</strong>
         </div>
-        <div id="load-status" style="font-size:11px;color:var(--text2);margin-top:8px"></div>
       </div>
 
       <!-- STEP 3 -->
@@ -191,6 +185,15 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
         </div>
         <div class="sec">Finition bois</div>
         <div class="mat-grid" id="mg-cais"></div>
+        <div class="sec">Aménagement intérieur</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Tablettes</span><span class="sl-val" id="v-TBL">1</span></div>
+          <input type="range" min="0" max="3" step="1" value="1" oninput="setTablettes(+this.value)">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Type de façade</span></div>
+          <div class="mat-grid" id="mg-facade" style="margin-top:4px"></div>
+        </div>
         <div class="sec">Récapitulatif</div>
         <div class="recap-box" id="recap"></div>
       </div>
@@ -205,16 +208,10 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
   <div id="cv-wrap">
     <canvas id="c"></canvas>
     <div id="hint">☛ Glissez la vasque pour la repositionner</div>
-    <div id="load-overlay">
-      <div class="load-spin"></div>
-      <div class="load-pct" id="load-pct">0%</div>
-      <div class="load-txt">Chargement du modèle…</div>
-    </div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
@@ -226,14 +223,14 @@ var S = {
   // Plan
   L: 1.40, P: 0.55, Ep: 0.04,
   matPlan: 0,
-  // Vasque (position normalisée, center sur le plan)
-  vx: 0, vz: 0,   // position monde relative au plan (sera initialisée au centre)
-  vasqueLoaded: false,
-  vasqueModel: 'v1',              // modèle actif
-  vasqueRx: 0.15, vasqueRz: 0.10,  // demi-dim emprise XZ du GLB
+  // Vasque
+  vx: 0, vz: 0,
+  vasqueW: 0.50, vasqueD: 0.35,    // dimensions vasque (m)
+  vasqueRx: 0.256, vasqueRz: 0.181, // calculé depuis vasqueW/D
   // Caisson
   CL: 1.20, CH: 0.45,
   matCais: 0,
+  nbTablettes: 1,  // tablettes à l'intérieur du meuble
 };
 
 var MATS_PLAN = [
@@ -482,12 +479,84 @@ function buildCaisson() {
   var p1 = new THREE.Mesh(pGeo, matLaiton); p1.rotation.z = Math.PI/2; p1.position.set(-fw/2-jeu/2, CH/2, fz+0.021); p1.castShadow=true; caissonGrp.add(p1);
   var p2 = new THREE.Mesh(pGeo.clone(), matLaiton); p2.rotation.z = Math.PI/2; p2.position.set( fw/2+jeu/2, CH/2, fz+0.021); p2.castShadow=true; caissonGrp.add(p2);
 
+  // ── Tablettes intérieures ────────────────────────────
+  var nbT = S.nbTablettes;
+  if (nbT > 0) {
+    var matTab = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(mDef.hex).multiplyScalar(0.88),
+      roughness: mDef.r * 0.95, metalness: 0.01,
+    });
+    var step_h = iH / (nbT + 1);
+    for (var ti = 1; ti <= nbT; ti++) {
+      var ty = ep + step_h * ti;
+      var tab = box(iW, ep, CP - ep, matTab);
+      tab.position.set(0, ty, -ep/2);
+      caissonGrp.add(tab);
+    }
+  }
+
   // Le caisson est centré en X, aligné avec le plan en Z (avant), posé sur le sol
   caissonGrp.position.set(0, 0, -(0.025/2));
   scene.add(caissonGrp);
 }
 
-// ─── VASQUE (GLB) ──────────────────────────────────────
+// ─── VASQUE PROCÉDURALE ────────────────────────────────
+function buildVasque() {
+  disposeGroup(vasqueGrp);
+
+  var VW = S.vasqueW, VD = S.vasqueD;
+  var VH  = 0.12;   // profondeur cuvette (m)
+  var th  = 0.008;  // épaisseur paroi céramique
+
+  var matCeram = new THREE.MeshStandardMaterial({ color: 0xF4F1ED, roughness: 0.08, metalness: 0.0 });
+  var matLaito = new THREE.MeshStandardMaterial({ color: 0xC8A050, roughness: 0.18, metalness: 0.90 });
+  var matBonde = new THREE.MeshStandardMaterial({ color: 0xA09060, roughness: 0.35, metalness: 0.70 });
+
+  var grp = new THREE.Group();
+
+  function addBox(w,h,d,mat,x,y,z){
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+    m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; grp.add(m);
+  }
+
+  // Cuvette (5 panneaux céramique)
+  addBox(VW,    th,       VD,        matCeram,  0,       th/2,          0);           // fond
+  addBox(VW,    VH,       th,        matCeram,  0,       VH/2,          VD/2-th/2);   // paroi avant
+  addBox(VW,    VH,       th,        matCeram,  0,       VH/2,         -VD/2+th/2);   // paroi arrière
+  addBox(th,    VH,       VD-2*th,   matCeram, -VW/2+th/2, VH/2,        0);           // paroi gauche
+  addBox(th,    VH,       VD-2*th,   matCeram,  VW/2-th/2, VH/2,        0);           // paroi droite
+
+  // Robinet col-de-cygne (laiton)
+  var rCorps = new THREE.Mesh(new THREE.CylinderGeometry(0.009,0.009,0.09,12), matLaito);
+  rCorps.position.set(0, VH+0.045, -VD/2+0.014); rCorps.castShadow=true; grp.add(rCorps);
+  var rBec = new THREE.Mesh(new THREE.CylinderGeometry(0.005,0.008,0.06,8), matLaito);
+  rBec.rotation.x = -Math.PI/2.6; rBec.position.set(0, VH+0.068, -VD/2+0.033); rBec.castShadow=true; grp.add(rBec);
+  var rBout = new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.006,10), matLaito);
+  rBout.rotation.x = Math.PI/2; rBout.position.set(0, VH+0.046, -VD/2+0.053); grp.add(rBout);
+
+  // Bonde
+  var bonde = new THREE.Mesh(new THREE.CylinderGeometry(0.013,0.013,0.004,16), matBonde);
+  bonde.position.set(0, th+0.001, 0); grp.add(bonde);
+  var bondeAnn = new THREE.Mesh(new THREE.TorusGeometry(0.013, 0.002, 6, 20), matBonde);
+  bondeAnn.rotation.x = Math.PI/2; bondeAnn.position.set(0, th+0.003, 0); grp.add(bondeAnn);
+
+  // Rim offset : le rim est en haut des parois (Y=VH)
+  vasqueRimOffset = VH;
+
+  // Demi-dimensions pour le trou dans le plan (+ 6mm de jeu)
+  S.vasqueRx = VW/2 + 0.006;
+  S.vasqueRz = VD/2 + 0.006;
+
+  scene.add(grp);
+  vasqueGrp = grp;
+
+  S.vx = clampVasque(S.vx, 'x');
+  S.vz = clampVasque(S.vz, 'z');
+  positionVasque();
+  buildPlan();
+  updatePosInfo();
+}
+
 function clampVasque(val, axis) {
   var marge = 0.04;
   var halfPlan = axis === 'x' ? S.L/2 : S.P/2;
@@ -509,144 +578,6 @@ function positionVasque() {
   S.vx = vx; S.vz = vz;
 }
 
-var loader = new THREE.GLTFLoader();
-var glbLoaded = false;
-
-function selectVasque(path, key) {
-  if (S.vasqueModel === key && glbLoaded) return;
-  S.vasqueModel = key;
-  // Mettre à jour les boutons
-  ['v1','v2'].forEach(function(k) {
-    var btn = document.getElementById('vbtn-' + k);
-    if (btn) btn.classList.toggle('on', k === key);
-  });
-  glbLoaded = false;
-  loadGLB(path);
-}
-
-function loadGLB(path) {
-  path = path || 'models/sdb/v1.glb';
-  var inlineLoader = document.getElementById('load-overlay-inline');
-  if (inlineLoader) { inlineLoader.style.display = 'block'; inlineLoader.textContent = '⟳ Chargement…'; }
-  document.getElementById('load-overlay').classList.remove('hidden');
-  document.getElementById('load-pct').textContent = '0%';
-
-  loader.load(
-    path,
-    function(gltf) {
-      if (vasqueGrp) { disposeGroup(vasqueGrp); }
-
-      var inner = gltf.scene;
-
-      // Correction scale : le GLB exporté a scale=0.01 mais les coords sont en mm
-      // → on force 0.001 (mm→m) en divisant par 10
-      inner.scale.multiplyScalar(0.1);
-      inner.updateMatrixWorld(true);
-
-      // 1. Calculer la bounding box (setFromObject force updateMatrixWorld)
-      var box3 = new THREE.Box3().setFromObject(inner);
-      var center = new THREE.Vector3();
-      var size   = new THREE.Vector3();
-      box3.getCenter(center);
-      box3.getSize(size);
-      console.log('GLB size (m):', size.x.toFixed(3), size.y.toFixed(3), size.z.toFixed(3));
-
-      // 2. centGroup : base du modèle à Y=0, centré en XZ
-      var centGroup = new THREE.Group();
-      centGroup.position.set(-center.x, -box3.min.y, -center.z);
-      centGroup.add(inner);
-
-      // 3. posGroup : c'est lui que positionVasque() déplace (position de drag)
-      var posGroup = new THREE.Group();
-      posGroup.add(centGroup);
-      scene.add(posGroup);
-      vasqueGrp = posGroup;
-
-      // 4. Ombres
-      inner.traverse(function(o) {
-        if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
-      });
-
-      // 5. Rayons du trou + rim offset pour l'encastrement
-      S.vasqueRx = size.x / 2 + 0.015;
-      S.vasqueRz = size.z / 2 + 0.015;
-
-      // Trouver le rim de la vasque (bowl) en excluant la robinetterie
-      // Heuristique : les robinets atteignent le sommet global du modèle
-      // → exclure tout mesh dont le max.y est à moins de 5cm du max global
-      var rimThreshold = box3.max.y - 0.05;
-      var box3Bowl = new THREE.Box3();
-      inner.traverse(function(o) {
-        if (o.isMesh) {
-          var mb = new THREE.Box3().setFromObject(o);
-          if (mb.max.y < rimThreshold) box3Bowl.union(mb);
-        }
-      });
-      // Hauteur du rim depuis la base du centGroup (centGroup.y = -box3.min.y)
-      vasqueRimOffset = box3Bowl.max.y - box3.min.y;
-      console.log('vasque OK — rimOff:', vasqueRimOffset.toFixed(3), 'posY:', (planTopY()-vasqueRimOffset).toFixed(3));
-
-      S.vx = 0; S.vz = 0;
-      positionVasque();
-
-      glbLoaded = true;
-      S.vasqueLoaded = true;
-
-      document.getElementById('load-overlay').classList.add('hidden');
-      document.getElementById('load-status').textContent = '';
-      var inlineLoader2 = document.getElementById('load-overlay-inline');
-      if (inlineLoader2) inlineLoader2.style.display = 'none';
-
-      buildPlan();
-      updatePosInfo();
-    },
-    function(xhr) {
-      if (xhr.total > 0) {
-        var pct = Math.round(xhr.loaded / xhr.total * 100);
-        document.getElementById('load-pct').textContent = pct + '%';
-      }
-    },
-    function(err) {
-      console.warn('GLB non trouvé ou erreur:', err);
-      document.getElementById('load-overlay').classList.add('hidden');
-      var inlineLoader3 = document.getElementById('load-overlay-inline');
-      if (inlineLoader3) inlineLoader3.style.display = 'none';
-      document.getElementById('load-status').textContent = '⚠ Modèle introuvable — vasque placeholder';
-      buildFallbackVasque();
-      glbLoaded = true;
-      S.vasqueLoaded = true;
-      buildPlan();
-    }
-  );
-}
-
-function buildFallbackVasque() {
-  if (vasqueGrp) { disposeGroup(vasqueGrp); }
-  vasqueGrp = new THREE.Group();
-
-  // Cuvette
-  var geo = new THREE.SphereGeometry(0.17, 32, 16, 0, Math.PI*2, 0, Math.PI*0.6);
-  geo.rotateX(Math.PI);
-  var mat = new THREE.MeshStandardMaterial({ color: 0xf2ede8, roughness: 0.06, metalness: 0.0, side: THREE.DoubleSide });
-  var m = new THREE.Mesh(geo, mat);
-  m.castShadow = true; m.receiveShadow = true;
-  vasqueGrp.add(m);
-
-  // Robinetterie placeholder
-  var robMat = new THREE.MeshStandardMaterial({ color: 0xc8b890, roughness: 0.15, metalness: 0.9 });
-  var corps = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.10, 8), robMat);
-  corps.position.set(0, 0.05, -0.12); corps.castShadow = true;
-  vasqueGrp.add(corps);
-  var bec = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.009, 0.06, 8), robMat);
-  bec.rotation.x = -Math.PI/3; bec.position.set(0, 0.09, -0.10); bec.castShadow = true;
-  vasqueGrp.add(bec);
-
-  S.vasqueRx = 0.18; S.vasqueRz = 0.18;
-  S.vx = 0; S.vz = 0;
-  scene.add(vasqueGrp);
-  positionVasque();
-  updatePosInfo();
-}
 
 // ═══════════════════════════════════════════════════════
 // DRAG & DROP VASQUE
@@ -757,6 +688,9 @@ function setPro(v){ S.P=v/100; document.getElementById('v-P').textContent=v+' cm
 function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; clampAndRebuild(); }
 function setCL(v){ S.CL=Math.min(v/100,S.L); document.getElementById('v-CL').textContent=Math.round(S.CL*100)+' cm'; buildCaisson(); }
 function setCH(v){ S.CH=v/100; document.getElementById('v-CH').textContent=v+' cm'; clampAndRebuild(); }
+function setVasqueW(v){ S.vasqueW=v/100; document.getElementById('v-VW').textContent=v+' cm'; buildVasque(); }
+function setVasqueD(v){ S.vasqueD=v/100; document.getElementById('v-VD').textContent=v+' cm'; buildVasque(); }
+function setTablettes(v){ S.nbTablettes=v; document.getElementById('v-TBL').textContent=v; buildCaisson(); }
 
 function clampAndRebuild(){
   S.vx = clampVasque(S.vx,'x');
@@ -820,8 +754,7 @@ function goStep(n){
   controls.enabled = true;
 
   if (n === 2) {
-    if (!glbLoaded) loadGLB();
-    else { if (vasqueGrp) vasqueGrp.visible = true; }
+    if (vasqueGrp) vasqueGrp.visible = true;
     updatePosInfo();
   } else {
     if (vasqueGrp) vasqueGrp.visible = (n !== 1); // cachée à l'étape 1 pour ne pas perturber
@@ -872,14 +805,16 @@ function nextStep(){
 
 function buildRecapStr() {
   return '• Plan : ' + Math.round(S.L*100) + '×' + Math.round(S.P*100) + ' cm, ' + MATS_PLAN[S.matPlan].n + '\n'
-       + '• Vasque : ' + MATS_PLAN[S.matPlan].n + '\n'
-       + '• Meuble : ' + Math.round(S.CL*100) + 'L × ' + Math.round(S.CH*100) + 'H cm, ' + MATS_CAIS[S.matCais].n;
+       + '• Vasque : ' + Math.round(S.vasqueW*100) + '×' + Math.round(S.vasqueD*100) + ' cm\n'
+       + '• Meuble : ' + Math.round(S.CL*100) + 'L × ' + Math.round(S.CH*100) + 'H cm, ' + MATS_CAIS[S.matCais].n
+       + (S.nbTablettes > 0 ? ', ' + S.nbTablettes + ' tablette'+(S.nbTablettes>1?'s':'') : '');
 }
 function buildRecap(){
   var html = [
     ['Plan',   Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n],
-    ['Vasque', 'Centrée (drag étape 2)'],
+    ['Vasque', Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
     ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+' cm — '+MATS_CAIS[S.matCais].n],
+    ['Tablettes', S.nbTablettes > 0 ? S.nbTablettes+' tablette'+(S.nbTablettes>1?'s':'') : 'aucune'],
   ];
   document.getElementById('recap').innerHTML = html.map(function(r){
     return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
@@ -931,9 +866,9 @@ loop();
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
-// Init position vasque au centre
+// Init
 S.vx = 0; S.vz = 0;
-buildPlan();
+buildVasque();   // construit vasque procédurale + plan avec trou
 buildCaisson();
 goStep(1);
 setTimeout(function(){ document.getElementById('hint').classList.remove('show'); }, 6000);
