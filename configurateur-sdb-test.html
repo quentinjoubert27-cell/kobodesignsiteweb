@@ -115,19 +115,44 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
     </div>
     <div id="stepper">
       <div class="step-dot active" id="sd1" onclick="goStep(1)"><span class="sn">1</span></div>
-      <span class="step-lbl">Plan</span>
+      <span class="step-lbl">Meuble</span>
       <div class="step-line" id="sl1"></div>
       <div class="step-dot" id="sd2" onclick="goStep(2)"><span class="sn">2</span></div>
-      <span class="step-lbl">Vasque</span>
+      <span class="step-lbl">Plan</span>
       <div class="step-line" id="sl2"></div>
       <div class="step-dot" id="sd3" onclick="goStep(3)"><span class="sn">3</span></div>
-      <span class="step-lbl">Meuble</span>
+      <span class="step-lbl">Vasque</span>
     </div>
 
     <div id="sb-body">
 
-      <!-- STEP 1 — Plan de travail -->
+      <!-- STEP 1 — Meuble -->
       <div class="panel on" id="p1">
+        <div class="sec">Dimensions du meuble</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
+          <input type="range" id="sl-cL" min="40" max="220" step="1" value="120" oninput="setCL(+this.value)">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
+          <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">30 cm</span></div>
+          <input type="range" min="20" max="60" step="1" value="30" oninput="setCP(+this.value)">
+        </div>
+        <div class="sec">Finition bois</div>
+        <div class="mat-grid" id="mg-cais"></div>
+        <div class="sec">Aménagement intérieur</div>
+        <div class="amgt-row">
+          <span class="amgt-count" id="amgt-count">Structure vide</span>
+          <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
+        </div>
+        <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
+      </div>
+
+      <!-- STEP 2 — Plan de travail -->
+      <div class="panel" id="p2">
         <div class="sec">Dimensions du plan</div>
         <div class="sl-row">
           <div class="sl-top"><span class="sl-lbl">Longueur totale</span><span class="sl-val" id="v-L">140 cm</span></div>
@@ -150,8 +175,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
         <div class="mat-grid" id="mg-plan"></div>
       </div>
 
-      <!-- STEP 2 — Vasque -->
-      <div class="panel" id="p2">
+      <!-- STEP 3 — Vasque -->
+      <div class="panel" id="p3">
         <div class="tip"><span class="tip-icon">✥</span>Dimensionnez la vasque puis glissez-la sur le plan pour la repositionner.</div>
         <div class="sec">Dimensions de la vasque</div>
         <div class="sl-row">
@@ -172,31 +197,6 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
           Distance bord gauche : <strong id="pos-x">—</strong><br>
           Distance mur : <strong id="pos-z">—</strong>
         </div>
-      </div>
-
-      <!-- STEP 3 — Meuble -->
-      <div class="panel" id="p3">
-        <div class="sec">Dimensions du meuble</div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
-          <input type="range" id="sl-cL" min="40" max="220" step="1" value="120" oninput="setCL(+this.value)">
-        </div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
-          <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
-        </div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">30 cm</span></div>
-          <input type="range" min="20" max="60" step="1" value="30" oninput="setCP(+this.value)">
-        </div>
-        <div class="sec">Finition bois</div>
-        <div class="mat-grid" id="mg-cais"></div>
-        <div class="sec">Aménagement intérieur</div>
-        <div class="amgt-row">
-          <span class="amgt-count" id="amgt-count">Structure vide</span>
-          <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
-        </div>
-        <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
         <div class="sec">Récapitulatif</div>
         <div class="recap-box" id="recap"></div>
       </div>
@@ -720,7 +720,7 @@ function toNDC(e){
 
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
-  if(S.step===3&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
+  if(S.step===1&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
   if(S.step!==3||!vasqueGrp) return;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(raycaster.intersectObject(vasqueGrp,true).length>0){
@@ -731,7 +731,7 @@ cvs.addEventListener('pointerdown',function(e){
   }
 });
 cvs.addEventListener('pointermove',function(e){
-  if(S.step===3&&caissonEditMode){ updateCaissonGhost(e); return; }
+  if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
   if(!vasqueGrp) return;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
@@ -827,22 +827,22 @@ function goStep(n){
   ['sl1','sl2'].forEach(function(id,i){document.getElementById(id).classList.toggle('done',i+1<n);});
   document.getElementById('btn-back').disabled=(n===1);
   document.getElementById('btn-next').textContent=n<3?'Suivant →':'Terminer ✓';
-  document.getElementById('hint').classList.toggle('show',n===2);
+  document.getElementById('hint').classList.toggle('show',n===3);
   if(caissonEditMode) toggleCaissonEdit();
   controls.enabled=true;
 
-  if(planMesh)  planMesh.visible=true;
-  if(vasqueGrp) vasqueGrp.visible=(n>=2);
-  if(n===1){ buildPlan(); }
-  if(n===2){ positionVasque(); updatePosInfo(); }
-  if(n===3){ buildCaisson(); buildRecap(); }
+  if(planMesh)  planMesh.visible=(n>=2);
+  if(vasqueGrp) vasqueGrp.visible=(n===3);
+  if(n===1) buildCaisson();
+  if(n===2) buildPlan();
+  if(n===3){ buildRecap(); updatePosInfo(); positionVasque(); }
   animCamera(n);
 }
 
 var camTargets=[
-  {pos:[-0.6,1.55,1.65],tgt:[0,0.55,0]},  // step 1 — plan vue dessus
-  {pos:[0,1.30,1.50],   tgt:[0,0.80,0]},  // step 2 — vasque
-  {pos:[-0.4,0.9,1.6],  tgt:[0,0.22,0]},  // step 3 — meuble face
+  {pos:[-0.4,0.9,1.6], tgt:[0,0.22,0]},
+  {pos:[-0.6,1.55,1.65],tgt:[0,0.55,0]},
+  {pos:[0,1.30,1.50],  tgt:[0,0.80,0]},
 ];
 var camAnim=null;
 function animCamera(n){
@@ -913,8 +913,8 @@ loop();
 // DÉMARRAGE
 // ═══════════════════════════════════════════════════════
 S.vx=0; S.vz=0;
-buildCaisson();
 buildVasque();
+buildCaisson();
 goStep(1);
 </script>
 </body>
