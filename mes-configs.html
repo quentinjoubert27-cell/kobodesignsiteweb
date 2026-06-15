@@ -540,36 +540,119 @@ function buildPDFHtml(cfg){
   var dateStr=fmtDate(cfg.created_at);
   var ref='BIB-'+String(cfg.id||'').padStart(4,'0');
 
-  // Dessin SVG simplifié de la bibliothèque (vue de face)
-  var svgW=200, svgH=Math.round(svgW*(H/W));
-  var pxPerCm=svgW/W;
-  var svgElems='';
-  // Structure
-  var t=Math.round(T_cm*pxPerCm*10)/10;
-  svgElems+='<rect x="0" y="0" width="'+svgW+'" height="'+svgH+'" fill="#F0EDEA" stroke="#ccc" stroke-width="1"/>';
-  // fond
-  svgElems+='<rect x="'+t+'" y="'+t+'" width="'+(svgW-2*t)+'" height="'+(svgH-2*t)+'" fill="none" stroke="#999" stroke-width="0.5"/>';
-  // étagères
-  shelves.forEach(function(s){
-    var xl=(s.x_left_cm||0)*pxPerCm+t;
-    var xr=(s.x_right_cm||maxX)*pxPerCm+t;
-    var yy=svgH-(s.y_cm*pxPerCm)-t;
-    svgElems+='<line x1="'+xl+'" y1="'+yy+'" x2="'+xr+'" y2="'+yy+'" stroke="#888" stroke-width="'+(t*0.9)+'" stroke-linecap="round"/>';
+  // ── SVG coté (dessin technique avec légendes) ──
+  var drawW=190, drawH=Math.round(drawW*(H/W));
+  if(drawH<50)drawH=50; if(drawH>340)drawH=340;
+  var mL=52, mR=52, mT=30, mB=30; // marges pour cotations
+  var svgTW=mL+drawW+mR, svgTH=mT+drawH+mB;
+  var px=drawW/W; // px par cm
+  var t=T_cm*px;  // épaisseur panneau en px
+
+  // Helpers cotation
+  function hDim(x1,x2,y,lbl){
+    var cx=(x1+x2)/2, hw=Math.max(String(lbl).length*4,8);
+    return '<line x1="'+x1+'" y1="'+y+'" x2="'+(cx-hw-1)+'" y2="'+y+'" stroke="#CD3E00" stroke-width="0.7"/>'
+      +'<line x1="'+(cx+hw+1)+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="#CD3E00" stroke-width="0.7"/>'
+      +'<line x1="'+x1+'" y1="'+(y-3.5)+'" x2="'+x1+'" y2="'+(y+3.5)+'" stroke="#CD3E00" stroke-width="0.8"/>'
+      +'<line x1="'+x2+'" y1="'+(y-3.5)+'" x2="'+x2+'" y2="'+(y+3.5)+'" stroke="#CD3E00" stroke-width="0.8"/>'
+      +'<rect x="'+(cx-hw-1)+'" y="'+(y-5)+'" width="'+(hw*2+2)+'" height="10" fill="#fff"/>'
+      +'<text x="'+cx+'" y="'+(y+0.5)+'" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#CD3E00" font-family="Poppins,sans-serif" font-weight="700">'+lbl+'</text>';
+  }
+  function vDim(y1,y2,x,lbl){
+    var cy=(y1+y2)/2, hw=Math.max(String(lbl).length*4,8);
+    return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+(cy-hw-1)+'" stroke="#CD3E00" stroke-width="0.7"/>'
+      +'<line x1="'+x+'" y1="'+(cy+hw+1)+'" x2="'+x+'" y2="'+y2+'" stroke="#CD3E00" stroke-width="0.7"/>'
+      +'<line x1="'+(x-3.5)+'" y1="'+y1+'" x2="'+(x+3.5)+'" y2="'+y1+'" stroke="#CD3E00" stroke-width="0.8"/>'
+      +'<line x1="'+(x-3.5)+'" y1="'+y2+'" x2="'+(x+3.5)+'" y2="'+y2+'" stroke="#CD3E00" stroke-width="0.8"/>'
+      +'<rect x="'+(x-hw-1)+'" y="'+(cy-hw-1)+'" width="'+(hw*2+2)+'" height="'+(hw*2+2)+'" fill="#fff"/>'
+      +'<text x="'+x+'" y="'+cy+'" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#CD3E00" font-family="Poppins,sans-serif" font-weight="700" transform="rotate(-90,'+x+','+cy+')">'+lbl+'</text>';
+  }
+
+  var s='';
+  // ── Fond de la bibliothèque ──
+  s+='<rect x="'+mL+'" y="'+mT+'" width="'+drawW+'" height="'+drawH+'" fill="#F0EDEA" stroke="#AAA" stroke-width="1.2"/>';
+  s+='<rect x="'+(mL+t)+'" y="'+(mT+t)+'" width="'+(drawW-2*t)+'" height="'+(drawH-2*t)+'" fill="#FAF8F4" stroke="#CCC" stroke-width="0.5" stroke-dasharray="2,2"/>';
+
+  // ── Étagères / traverses ──
+  shelves.forEach(function(sh){
+    var xl=mL+t+(sh.x_left_cm||0)*px;
+    var xr=mL+t+(sh.x_right_cm||maxX)*px;
+    var yy=mT+drawH-t-sh.y_cm*px;
+    s+='<rect x="'+xl+'" y="'+(yy-t)+'" width="'+(xr-xl)+'" height="'+t+'" fill="#B0956E" rx="0.5"/>';
   });
-  // intercalaires
-  seps.forEach(function(s){
-    var xx=s.x_cm*pxPerCm+t;
-    svgElems+='<line x1="'+xx+'" y1="'+t+'" x2="'+xx+'" y2="'+(svgH-t)+'" stroke="#888" stroke-width="'+(t*0.9)+'" stroke-linecap="round"/>';
+
+  // ── Intercalaires ──
+  seps.forEach(function(sp){
+    var xx=mL+t+sp.x_cm*px;
+    s+='<rect x="'+(xx-t/2)+'" y="'+(mT+t)+'" width="'+t+'" height="'+(drawH-2*t)+'" fill="#B0956E" rx="0.5"/>';
   });
-  // portes
-  doors.forEach(function(d){
-    var xl_=(d.x_left_cm||0)*pxPerCm+t;
-    var xr_=(d.x_right_cm||maxX)*pxPerCm+t;
-    var yb_=svgH-(d.floor_y_cm||0)*pxPerCm-t;
-    var yt_=svgH-(d.ceil_y_cm)*pxPerCm-t;
-    svgElems+='<rect x="'+xl_+'" y="'+yt_+'" width="'+(xr_-xl_)+'" height="'+(yb_-yt_)+'" fill="rgba(205,62,0,.12)" stroke="rgba(205,62,0,.5)" stroke-width="0.8" rx="1"/>';
+
+  // ── Portes ──
+  doors.forEach(function(d,di){
+    var xl_=mL+t+(d.x_left_cm||0)*px;
+    var xr_=mL+t+(d.x_right_cm||maxX)*px;
+    var yt_=mT+drawH-t-d.ceil_y_cm*px;
+    var yb_=mT+drawH-t-(d.floor_y_cm||0)*px;
+    var dw_=xr_-xl_, dh_=yb_-yt_;
+    s+='<rect x="'+xl_+'" y="'+yt_+'" width="'+dw_+'" height="'+dh_+'" fill="rgba(205,62,0,.09)" stroke="#CD3E00" stroke-width="1" rx="1.5"/>';
+    // Poignée
+    var isL=((d.x_left_cm||0)+(d.x_right_cm||maxX))/2<=maxX/2;
+    s+='<circle cx="'+(isL?xr_-4:xl_+4)+'" cy="'+((yt_+yb_)/2)+'" r="2" fill="#CD3E00" opacity=".6"/>';
+    // Label dimensions porte
+    var dWcm=Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
+    var dHcm=Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
+    if(dw_>22&&dh_>14){
+      s+='<rect x="'+(xl_+dw_/2-14)+'" y="'+(yt_+dh_/2-5)+'" width="28" height="10" fill="rgba(255,255,255,.9)" rx="2"/>';
+      s+='<text x="'+(xl_+dw_/2)+'" y="'+(yt_+dh_/2+0.5)+'" text-anchor="middle" dominant-baseline="middle" font-size="6.5" fill="#CD3E00" font-family="Poppins,sans-serif" font-weight="700">'+dWcm+'×'+dHcm+'</text>';
+    }
   });
-  var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgW+' '+svgH+'" width="'+svgW+'" height="'+svgH+'">'+svgElems+'</svg>';
+
+  // ── Cotation largeur totale (bas) ──
+  s+=hDim(mL, mL+drawW, mT+drawH+18, W+' cm');
+  // Ligne d'attache
+  s+='<line x1="'+mL+'" y1="'+(mT+drawH)+'" x2="'+mL+'" y2="'+(mT+drawH+22)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+  s+='<line x1="'+(mL+drawW)+'" y1="'+(mT+drawH)+'" x2="'+(mL+drawW)+'" y2="'+(mT+drawH+22)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+
+  // ── Cotation hauteur totale (droite) ──
+  s+=vDim(mT, mT+drawH, mL+drawW+20, H+' cm');
+  s+='<line x1="'+(mL+drawW)+'" y1="'+mT+'" x2="'+(mL+drawW+24)+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+  s+='<line x1="'+(mL+drawW)+'" y1="'+(mT+drawH)+'" x2="'+(mL+drawW+24)+'" y2="'+(mT+drawH)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+
+  // ── Cotations largeurs colonnes (haut) ──
+  var xBoundsS=[0].concat(seps.map(function(sp){return sp.x_cm;})).concat([maxX]);
+  xBoundsS.sort(function(a,b){return a-b;});
+  if(seps.length>0){
+    for(var ci=0;ci<xBoundsS.length-1;ci++){
+      var cxl=mL+t+xBoundsS[ci]*px;
+      var cxr=mL+t+xBoundsS[ci+1]*px;
+      if(cxr-cxl>16){
+        var cW=Math.round((xBoundsS[ci+1]-xBoundsS[ci])*10)/10;
+        s+=hDim(cxl,cxr,mT-16,cW+' cm');
+        s+='<line x1="'+cxl+'" y1="'+(mT-12)+'" x2="'+cxl+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+        s+='<line x1="'+cxr+'" y1="'+(mT-12)+'" x2="'+cxr+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+      }
+    }
+  } else {
+    // Largeur intérieure
+    s+=hDim(mL+t,mL+drawW-t,mT-16,iW+' cm int.');
+  }
+
+  // ── Cotations hauteurs cases (gauche) ──
+  var yBoundsS=[0].concat(fullShelves.map(function(sh){return sh.y_cm;})).concat([H]);
+  yBoundsS.sort(function(a,b){return a-b;});
+  for(var ki=0;ki<yBoundsS.length-1;ki++){
+    var cy1=mT+drawH-t-yBoundsS[ki+1]*px;
+    var cy2=mT+drawH-t-yBoundsS[ki]*px;
+    if(ki>0)cy1+=t; // dessous de l'étagère
+    var cH=Math.round((yBoundsS[ki+1]-yBoundsS[ki]-T_cm)*10)/10;
+    if(cy2-cy1>12){
+      s+=vDim(cy1,cy2,mL-18,cH+' cm');
+      s+='<line x1="'+(mL-14)+'" y1="'+cy1+'" x2="'+mL+'" y2="'+cy1+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+      s+='<line x1="'+(mL-14)+'" y1="'+cy2+'" x2="'+mL+'" y2="'+cy2+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    }
+  }
+
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgTW+' '+svgTH+'" width="'+svgTW+'" height="'+svgTH+'">'+s+'</svg>';
 
   // Tables HTML pour chaque section
   function tbl(rows){
