@@ -9,34 +9,24 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#1a1816;
-  --panel:#222019;
-  --panel2:#2a2723;
-  --border:#38342f;
-  --accent:#c8965a;
-  --accent2:#b07d3e;
-  --text:#ece7df;
-  --text2:#8a847a;
-  --w:320px;
+  --bg:#1a1816;--panel:#222019;--panel2:#2a2723;--border:#38342f;
+  --accent:#c8965a;--accent2:#b07d3e;--text:#ece7df;--text2:#8a847a;--w:320px;
 }
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(--text)}
 #app{display:flex;width:100%;height:100%}
 
 /* SIDEBAR */
 #sidebar{width:var(--w);min-width:var(--w);background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-
-/* HEADER */
 #sb-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
 .logo-txt{font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
 .logo-sub{font-size:10px;color:var(--text2);letter-spacing:.06em;margin-top:2px}
 
 /* STEPPER */
-#stepper{display:flex;align-items:center;gap:0;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0}
-.step-dot{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);flex-shrink:0;transition:all .25s;cursor:pointer;position:relative}
+#stepper{display:flex;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0}
+.step-dot{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);flex-shrink:0;transition:all .25s;cursor:pointer}
 .step-dot.active{border-color:var(--accent);background:rgba(200,150,90,.15);color:var(--accent)}
 .step-dot.done{border-color:#4a6b4a;background:rgba(74,107,74,.15);color:#6aab6a}
-.step-dot.done::after{content:'✓';font-size:11px}
-.step-dot.done .sn{display:none}
+.step-dot.done::after{content:'✓';font-size:11px}.step-dot.done .sn{display:none}
 .sn{font-size:10px}
 .step-lbl{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text2);margin:0 8px;flex-shrink:0}
 .step-dot.active + .step-lbl{color:var(--accent)}
@@ -47,7 +37,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 #sb-body{flex:1;overflow-y:auto;padding:20px 22px}
 #sb-body::-webkit-scrollbar{width:3px}
 #sb-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
 .panel{display:none}.panel.on{display:block}
 .sec{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:20px 0 10px}
 .sec:first-child{margin-top:0}
@@ -55,22 +44,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 /* SLIDERS */
 .sl-row{margin-bottom:16px}
 .sl-top{display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px}
-.sl-lbl{color:var(--text2)}
-.sl-val{font-weight:700;color:var(--text);font-size:13px}
+.sl-lbl{color:var(--text2)}.sl-val{font-weight:700;color:var(--text);font-size:13px}
 input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(200,150,90,.2);cursor:pointer;transition:transform .15s}
 input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 
-/* MATIÈRE GRID */
+/* MAT GRID */
 .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
 .mat-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--panel2);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
-.mat-btn:hover{border-color:var(--text2)}
-.mat-btn.on{border-color:var(--accent);background:rgba(200,150,90,.1)}
+.mat-btn:hover{border-color:var(--text2)}.mat-btn.on{border-color:var(--accent);background:rgba(200,150,90,.1)}
 .mat-sw{width:22px;height:22px;border-radius:5px;flex-shrink:0;border:1px solid rgba(255,255,255,.1)}
-.mat-lbl{font-size:11px;font-weight:500;color:var(--text2)}
-.mat-btn.on .mat-lbl{color:var(--accent)}
+.mat-lbl{font-size:11px;font-weight:500;color:var(--text2)}.mat-btn.on .mat-lbl{color:var(--accent)}
 
-/* INFOS VASQUE */
+/* VASQUE POSITION */
 .pos-info{background:rgba(200,150,90,.08);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:14px}
 .pos-info strong{color:var(--text)}
 
@@ -84,31 +70,24 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .recap-row:last-child{border-bottom:none}
 .recap-k{color:var(--text2)}.recap-v{color:var(--text);font-weight:600}
 
-/* LOADER overlay */
-#load-overlay{position:absolute;inset:0;background:rgba(26,24,22,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:14px;pointer-events:none;transition:opacity .4s}
-#load-overlay.hidden{opacity:0;pointer-events:none}
+/* AMÉNAGEMENT */
+.amgt-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.amgt-count{font-size:11px;color:var(--text2)}
+.amgt-count strong{color:var(--text)}
+.edit-mode-btn{padding:8px 14px;border-radius:7px;border:1.5px solid var(--border);background:var(--panel2);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.04em}
+.edit-mode-btn:hover{border-color:var(--text2)}.edit-mode-btn.active{border-color:var(--accent);background:rgba(200,150,90,.15);color:var(--accent)}
+.reset-btn{width:100%;padding:9px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:.08em;transition:all .18s;margin-bottom:6px}
+.reset-btn:hover{border-color:var(--text2);color:var(--text)}
 
-/* AMÉNAGEMENT CAISSON */
-.edit-btn{padding:8px 14px;border-radius:7px;border:1.5px solid var(--border);background:var(--panel2);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.04em}
-.edit-btn:hover{border-color:var(--text2)}
-.edit-btn.active{border-color:var(--accent);background:rgba(200,150,90,.15);color:var(--accent)}
-.shelf-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.shelf-count{font-size:12px;color:var(--text2)}
-.shelf-count strong{color:var(--text)}
+/* FACADE BTNS */
 .facade-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
 .facade-btn{flex:1;min-width:0;padding:8px 6px;border-radius:7px;border:1.5px solid var(--border);background:var(--panel2);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:all .18s;text-align:center;white-space:nowrap}
-.facade-btn:hover{border-color:var(--text2)}
-.facade-btn.on{border-color:var(--accent);background:rgba(200,150,90,.12);color:var(--accent)}
-.load-spin{width:36px;height:36px;border:2px solid rgba(200,150,90,.18);border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text2)}
-.load-pct{font-size:20px;font-weight:700;color:var(--accent);font-family:'Archivo',sans-serif}
+.facade-btn:hover{border-color:var(--text2)}.facade-btn.on{border-color:var(--accent);background:rgba(200,150,90,.12);color:var(--accent)}
 
-/* FOOTER NAV */
+/* NAV */
 #sb-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
 .btn-back{flex:0 0 auto;padding:11px 14px;border-radius:7px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
-.btn-back:hover{border-color:var(--text2);color:var(--text)}
-.btn-back:disabled{opacity:.3;cursor:not-allowed}
+.btn-back:hover{border-color:var(--text2);color:var(--text)}.btn-back:disabled{opacity:.3;cursor:not-allowed}
 .btn-next{flex:1;padding:12px;border-radius:7px;background:var(--accent);border:none;color:#16140f;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .2s;font-family:'DM Sans',sans-serif}
 .btn-next:hover{background:var(--accent2)}
 
@@ -117,6 +96,26 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 #c{width:100%!important;height:100%!important;display:block}
 #hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(26,24,22,.8);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:10px;color:var(--text2);pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px);transition:opacity .4s;opacity:0;letter-spacing:.06em}
 #hint.show{opacity:1}
+
+/* BARRE D'ÉDITION CAISSON (flottante dans le viewer) */
+#c-edit-bar{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;
+  background:rgba(20,18,14,.88);backdrop-filter:blur(8px);
+  border-radius:100px;padding:5px 8px 5px 14px;
+  opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;
+  border:1px solid rgba(200,150,90,.2);
+}
+#cv-wrap.mode-edit #c-edit-bar{opacity:1;pointer-events:auto}
+.c-edit-lbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(236,231,223,.45)}
+.c-type-btns{display:flex;border-radius:100px;overflow:hidden;background:rgba(255,255,255,.07)}
+.c-type-btn{padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(236,231,223,.45);background:none;border:none;cursor:pointer;border-radius:100px;transition:background .15s,color .15s;white-space:nowrap}
+.c-type-btn.active{background:var(--accent);color:#16140f}
+.c-edit-sep{width:1px;height:16px;background:rgba(200,150,90,.2)}
+.c-edit-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);border:none;cursor:pointer;color:rgba(236,231,223,.6);font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.c-edit-close:hover{background:rgba(255,255,255,.2)}
+#c-action-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);background:rgba(20,18,14,.8);padding:6px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .2s;border:1px solid var(--border)}
+#cv-wrap.mode-edit #c-action-hint{opacity:1}
 
 /* RESPONSIVE */
 @media(max-width:760px){
@@ -139,14 +138,15 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
       <span class="step-lbl">Plan</span>
       <div class="step-line" id="sl1"></div>
       <div class="step-dot" id="sd2" onclick="goStep(2)"><span class="sn">2</span></div>
-      <span class="step-lbl" id="slbl2" style="color:var(--text2)">Vasque</span>
+      <span class="step-lbl">Vasque</span>
       <div class="step-line" id="sl2"></div>
       <div class="step-dot" id="sd3" onclick="goStep(3)"><span class="sn">3</span></div>
-      <span class="step-lbl" id="slbl3" style="color:var(--text2)">Meuble</span>
+      <span class="step-lbl">Meuble</span>
     </div>
 
     <div id="sb-body">
-      <!-- STEP 1 -->
+
+      <!-- STEP 1 — Plan de travail -->
       <div class="panel on" id="p1">
         <div class="sec">Dimensions du plan</div>
         <div class="sl-row">
@@ -165,7 +165,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
         <div class="mat-grid" id="mg-plan"></div>
       </div>
 
-      <!-- STEP 2 -->
+      <!-- STEP 2 — Vasque -->
       <div class="panel" id="p2">
         <div class="tip"><span class="tip-icon">✥</span>Dimensionnez la vasque puis glissez-la sur le plan pour la repositionner.</div>
         <div class="sec">Dimensions de la vasque</div>
@@ -184,31 +184,34 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
         </div>
       </div>
 
-      <!-- STEP 3 -->
+      <!-- STEP 3 — Meuble -->
       <div class="panel" id="p3">
         <div class="sec">Dimensions du meuble</div>
         <div class="sl-row">
           <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
-          <input type="range" id="sl-cL" min="60" max="200" step="1" value="120" oninput="setCL(+this.value)">
+          <input type="range" id="sl-cL" min="40" max="200" step="1" value="120" oninput="setCL(+this.value)">
         </div>
         <div class="sl-row">
           <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
-          <input type="range" min="30" max="60" step="1" value="45" oninput="setCH(+this.value)">
+          <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
         </div>
         <div class="sec">Finition bois</div>
         <div class="mat-grid" id="mg-cais"></div>
+
         <div class="sec">Aménagement intérieur</div>
-        <div class="shelf-row">
-          <span class="shelf-count"><strong id="shelf-count-val">0</strong> tablette</span>
-          <button class="edit-btn" id="btn-edit-caisson" onclick="setCaissonEditMode(!caissonEditMode)">✏ Éditer</button>
+        <div class="amgt-row">
+          <span class="amgt-count" id="amgt-count">Structure vide</span>
+          <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
         </div>
-        <div class="tip" id="tip-edit-caisson" style="display:none"><span class="tip-icon">☛</span>Cliquez dans le meuble pour ajouter une tablette. Cliquez sur une tablette existante pour la supprimer.</div>
+        <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
+
         <div class="sec">Type de façade</div>
         <div class="facade-row">
-          <button class="facade-btn on" id="fb-portes2" onclick="setFacadeStyle('portes2')">2 Portes</button>
-          <button class="facade-btn" id="fb-tiroirs3" onclick="setFacadeStyle('tiroirs3')">3 Tiroirs</button>
-          <button class="facade-btn" id="fb-mixte" onclick="setFacadeStyle('mixte')">Porte + Tiroir</button>
+          <button class="facade-btn on" id="fb-portes2"  onclick="setFacadeStyle('portes2')">2 Portes</button>
+          <button class="facade-btn"    id="fb-tiroirs3" onclick="setFacadeStyle('tiroirs3')">3 Tiroirs</button>
+          <button class="facade-btn"    id="fb-mixte"    onclick="setFacadeStyle('mixte')">Porte + Tiroir</button>
         </div>
+
         <div class="sec">Récapitulatif</div>
         <div class="recap-box" id="recap"></div>
       </div>
@@ -223,57 +226,69 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
   <div id="cv-wrap">
     <canvas id="c"></canvas>
     <div id="hint">☛ Glissez la vasque pour la repositionner</div>
+
+    <!-- Barre d'édition caisson (visible uniquement en mode édition step 3) -->
+    <div id="c-edit-bar">
+      <span class="c-edit-lbl">Ajouter</span>
+      <div class="c-type-btns">
+        <button class="c-type-btn active" id="ct-shelf" onclick="setCaissonType('shelf')">━ Tablette</button>
+        <button class="c-type-btn" id="ct-sep"   onclick="setCaissonType('separator')">┃ Séparateur</button>
+      </div>
+      <div class="c-edit-sep"></div>
+      <button class="c-edit-close" onclick="toggleCaissonEdit()" title="Quitter">✕</button>
+    </div>
+    <div id="c-action-hint">Clic = poser · Clic sur élément = supprimer</div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
 <script>
 // ═══════════════════════════════════════════════════════
-// ÉTAT
+// ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════════
 var S = {
-  step: 1,
-  L: 1.40, P: 0.55, Ep: 0.04, matPlan: 0,
-  vx: 0, vz: 0,
-  vasqueW: 0.50, vasqueD: 0.35,
-  vasqueRx: 0.256, vasqueRz: 0.181,
-  CL: 1.20, CH: 0.45, matCais: 0,
-  facadeStyle: 'portes2',  // 'portes2' | 'tiroirs3' | 'porte1tiroir1'
+  step:1,
+  L:1.40, P:0.55, Ep:0.04, matPlan:0,
+  vx:0, vz:0,
+  vasqueW:0.50, vasqueD:0.35, vasqueRx:0.256, vasqueRz:0.181,
+  CL:1.20, CH:0.45, matCais:0,
+  facadeStyle:'portes2',
 };
 
-// Aménagement intérieur du caisson
-var caissonShelves  = [];    // [{y_cm}] — positions tablettes depuis fond intérieur
-var caissonEditMode = false;
-var caissonHitPlane = null;
-var caissonGhostMesh= null;
-var caissonShelfMeshes = []; // pour le raycast suppression
-
 var MATS_PLAN = [
-  { n:'Pierre claire',  hex:0xC2AB8E, r:.42 },
-  { n:'Marbre gris',    hex:0x8A8A8A, r:.22 },
-  { n:'Bois clair',     hex:0xD4C4A8, r:.55 },
-  { n:'Noir mat',       hex:0x2A2A2A, r:.82 },
+  {n:'Pierre claire', hex:0xC2AB8E, r:.42},
+  {n:'Marbre gris',   hex:0x8A8A8A, r:.22},
+  {n:'Bois clair',    hex:0xD4C4A8, r:.55},
+  {n:'Noir mat',      hex:0x2A2A2A, r:.82},
 ];
 var MATS_CAIS = [
-  { n:'Chêne naturel',  hex:0x8B6F47, r:.58 },
-  { n:'Fumé',           hex:0x5A4128, r:.55 },
-  { n:'Noyer',          hex:0x4A3520, r:.52 },
-  { n:'Noir',           hex:0x1E1E1E, r:.65 },
+  {n:'Chêne naturel', hex:0x8B6F47, r:.58},
+  {n:'Fumé',          hex:0x5A4128, r:.55},
+  {n:'Noyer',         hex:0x4A3520, r:.52},
+  {n:'Noir',          hex:0x1E1E1E, r:.65},
 ];
 
-// Plan top Y (surface supérieure du plan — fixe, indépendante de l'épaisseur)
-// L'épaisseur croît vers le bas depuis cette surface fixe
-function planTopY() { return S.CH + 0.04; }
+// ── Aménagement intérieur caisson ──────────────────────
+// Chaque élement :
+//   {type:'shelf',     y_cm: Number}   tablette horizontale
+//   {type:'separator', x_cm: Number, y_cm: Number}  intercalaire vertical
+//   x_cm/y_cm : depuis bord intérieur bas-gauche (0,0)
+var caissonElements = [];
+var caissonType     = 'shelf';
+var caissonEditMode = false;
+var caissonGhost    = null;
+var caissonHitPlane = null;
+var caissonElemMeshes = [];   // pour raycast suppression
+var EP = 0.019;  // épaisseur panneau (constante)
 
 // ═══════════════════════════════════════════════════════
-// SCENE THREE.JS
+// THREE.JS — SCENE
 // ═══════════════════════════════════════════════════════
 var wrap = document.getElementById('cv-wrap');
 var cvs  = document.getElementById('c');
-var renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+var renderer = new THREE.WebGLRenderer({canvas:cvs, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
@@ -284,738 +299,612 @@ var scene = new THREE.Scene();
 scene.background = new THREE.Color(0x141210);
 scene.fog = new THREE.FogExp2(0x141210, 0.045);
 
-var camera = new THREE.PerspectiveCamera(42, 1, 0.01, 30);
-camera.position.set(-0.6, 1.55, 1.65);
-camera.lookAt(0, 0.55, 0);
+var camera = new THREE.PerspectiveCamera(42,1,0.01,30);
+camera.position.set(-0.6,1.55,1.65);
+camera.lookAt(0,0.55,0);
 
-// LUMIÈRES
-var hemi = new THREE.HemisphereLight(0xffe8d0, 0x3a2a18, 0.5);
-scene.add(hemi);
+scene.add(new THREE.HemisphereLight(0xffe8d0,0x3a2a18,0.5));
+var sun = new THREE.DirectionalLight(0xfff5e8,0.95);
+sun.position.set(3,6,3); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-2; sun.shadow.camera.right=2;
+sun.shadow.camera.top=2;  sun.shadow.camera.bottom=-2;
+sun.shadow.camera.far=20; sun.shadow.bias=-0.0003;
+scene.add(sun);
+var fill = new THREE.DirectionalLight(0xb0c8e0,0.3);
+fill.position.set(-4,2,-3); scene.add(fill);
 
-var sunLight = new THREE.DirectionalLight(0xfff5e8, 0.95);
-sunLight.position.set(3, 6, 3);
-sunLight.castShadow = true;
-sunLight.shadow.mapSize.set(2048, 2048);
-sunLight.shadow.camera.left   = -2; sunLight.shadow.camera.right  = 2;
-sunLight.shadow.camera.top    =  2; sunLight.shadow.camera.bottom = -2;
-sunLight.shadow.camera.far    = 20;
-sunLight.shadow.bias = -0.0003;
-scene.add(sunLight);
+var solMesh = new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x242018,roughness:0.92,metalness:0.05}));
+solMesh.rotation.x=-Math.PI/2; solMesh.receiveShadow=true; scene.add(solMesh);
+var solSh = new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.ShadowMaterial({opacity:0.22}));
+solSh.rotation.x=-Math.PI/2; solSh.position.y=0.001; solSh.receiveShadow=true; scene.add(solSh);
 
-var fillLight = new THREE.DirectionalLight(0xb0c8e0, 0.3);
-fillLight.position.set(-4, 2, -3);
-scene.add(fillLight);
+var murMesh = new THREE.Mesh(new THREE.PlaneGeometry(20,5),new THREE.MeshStandardMaterial({color:0x302a22,roughness:0.94}));
+murMesh.position.set(0,2.5,-0.75); murMesh.receiveShadow=true; scene.add(murMesh);
 
-// SOL
-var solMesh = new THREE.Mesh(
-  new THREE.PlaneGeometry(20, 20),
-  new THREE.MeshStandardMaterial({ color: 0x242018, roughness: 0.92, metalness: 0.05 })
-);
-solMesh.rotation.x = -Math.PI / 2;
-solMesh.receiveShadow = true;
-scene.add(solMesh);
+var mirGrp = new THREE.Group();
+mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.76,0.96,0.012),new THREE.MeshStandardMaterial({color:0xb09060,roughness:0.2,metalness:0.7})));
+mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.70,0.90,0.008),new THREE.MeshPhysicalMaterial({color:0xd8d0c8,metalness:0.92,roughness:0.06,clearcoat:1.0})));
+mirGrp.position.set(0,1.65,-0.73); scene.add(mirGrp);
 
-// SOL SHADOW
-var solSh = new THREE.Mesh(
-  new THREE.PlaneGeometry(20, 20),
-  new THREE.ShadowMaterial({ opacity: 0.22 })
-);
-solSh.rotation.x = -Math.PI / 2;
-solSh.position.y = 0.001;
-solSh.receiveShadow = true;
-scene.add(solSh);
-
-// MUR
-var murMesh = new THREE.Mesh(
-  new THREE.PlaneGeometry(20, 5),
-  new THREE.MeshStandardMaterial({ color: 0x302a22, roughness: 0.94 })
-);
-murMesh.position.set(0, 2.5, -0.75);
-murMesh.receiveShadow = true;
-scene.add(murMesh);
-
-// MIROIR
-var mirGroup = new THREE.Group();
-var mirMesh = new THREE.Mesh(
-  new THREE.BoxGeometry(0.70, 0.90, 0.008),
-  new THREE.MeshPhysicalMaterial({ color: 0xd8d0c8, metalness: 0.92, roughness: 0.06, clearcoat: 1.0 })
-);
-var mirFrame = new THREE.Mesh(
-  new THREE.BoxGeometry(0.76, 0.96, 0.012),
-  new THREE.MeshStandardMaterial({ color: 0xb09060, roughness: 0.2, metalness: 0.7 })
-);
-mirGroup.add(mirFrame);
-mirGroup.add(mirMesh);
-mirGroup.position.set(0, 1.65, -0.73);
-scene.add(mirGroup);
-
-// ═══════════════════════════════════════════════════════
 // ORBIT CONTROLS
-// ═══════════════════════════════════════════════════════
-var controls = new THREE.OrbitControls(camera, cvs);
-controls.enableDamping = true;
-controls.dampingFactor = 0.1;
-controls.target.set(0, 0.5, 0);
-controls.minPolarAngle = Math.PI * 0.15;
-controls.maxPolarAngle = Math.PI * 0.52;
-controls.minDistance   = 0.8;
-controls.maxDistance   = 4.0;
-controls.update();
+var controls = new THREE.OrbitControls(camera,cvs);
+controls.enableDamping=true; controls.dampingFactor=0.1;
+controls.target.set(0,0.5,0);
+controls.minPolarAngle=Math.PI*0.15; controls.maxPolarAngle=Math.PI*0.52;
+controls.minDistance=0.8; controls.maxDistance=4.0; controls.update();
 
 // ═══════════════════════════════════════════════════════
 // MESHES
 // ═══════════════════════════════════════════════════════
-var planMesh    = null;
-var caissonGrp  = null;
-var vasqueGrp   = null;
-var vasqueRimOffset = 0; // hauteur du rim de la vasque dans centGroup (pour encastrement)
+var planMesh   = null;
+var caissonGrp = null;
+var vasqueGrp  = null;
+var vasqueRimOffset = 0;
 
-function disposeMesh(m) {
-  if (!m) return;
-  if (m.geometry) m.geometry.dispose();
-  if (m.material) {
-    if (Array.isArray(m.material)) m.material.forEach(function(x){x.dispose();});
-    else m.material.dispose();
-  }
+function disposeMesh(m){
+  if(!m) return;
+  if(m.geometry) m.geometry.dispose();
+  if(m.material){ if(Array.isArray(m.material)) m.material.forEach(function(x){x.dispose();}); else m.material.dispose(); }
 }
-function disposeGroup(g) {
-  if (!g) return;
-  g.traverse(function(o){ if (o.isMesh) disposeMesh(o); });
+function disposeGroup(g){
+  if(!g) return;
+  g.traverse(function(o){if(o.isMesh) disposeMesh(o);});
   scene.remove(g);
 }
 
-// ─── PLAN DE TRAVAIL ───────────────────────────────────
-function buildPlan() {
-  if (planMesh) { disposeMesh(planMesh); scene.remove(planMesh); planMesh = null; }
+// ─── PLAN DE TRAVAIL ──────────────────────────────────
+// La surface haute du plan est FIXE à S.CH + 0.04
+// L'épaisseur grandit vers le bas
+function planTopY(){ return S.CH + 0.04; }
 
-  var L = S.L, P = S.P, Ep = S.Ep;
-  var topY = planTopY();
+function buildPlan(){
+  if(planMesh){disposeMesh(planMesh);scene.remove(planMesh);planMesh=null;}
+  var L=S.L, P=S.P, Ep=S.Ep, topY=planTopY();
+  var marge=0.04;
+  var vx=clampVasque(S.vx,'x'), vz=clampVasque(S.vz,'z');
 
-  // Marge de la vasque par rapport aux bords du plan
-  var marge = 0.04;
-  var vx = clampVasque(S.vx, 'x');
-  var vz = clampVasque(S.vz, 'z');
+  var shape=new THREE.Shape();
+  shape.moveTo(-L/2,-P/2); shape.lineTo(L/2,-P/2); shape.lineTo(L/2,P/2); shape.lineTo(-L/2,P/2); shape.closePath();
 
-  var shape = new THREE.Shape();
-  shape.moveTo(-L/2, -P/2);
-  shape.lineTo( L/2, -P/2);
-  shape.lineTo( L/2,  P/2);
-  shape.lineTo(-L/2,  P/2);
-  shape.closePath();
-
-  // Trou vasque (rectangle arrondi pour couvrir les coins du modèle)
-  var hole = new THREE.Path();
-  var rx = S.vasqueRx, rz = S.vasqueRz;
-  var cr = Math.min(rx, rz) * 0.12; // rayon de coin = 12% du plus petit rayon
-  hole.moveTo(vx - rx + cr, vz - rz);
-  hole.lineTo(vx + rx - cr, vz - rz);
-  hole.quadraticCurveTo(vx + rx, vz - rz, vx + rx, vz - rz + cr);
-  hole.lineTo(vx + rx, vz + rz - cr);
-  hole.quadraticCurveTo(vx + rx, vz + rz, vx + rx - cr, vz + rz);
-  hole.lineTo(vx - rx + cr, vz + rz);
-  hole.quadraticCurveTo(vx - rx, vz + rz, vx - rx, vz + rz - cr);
-  hole.lineTo(vx - rx, vz - rz + cr);
-  hole.quadraticCurveTo(vx - rx, vz - rz, vx - rx + cr, vz - rz);
-  hole.closePath();
+  var rx=S.vasqueRx, rz=S.vasqueRz, cr=Math.min(rx,rz)*0.12;
+  var hole=new THREE.Path();
+  hole.moveTo(vx-rx+cr,vz-rz); hole.lineTo(vx+rx-cr,vz-rz); hole.quadraticCurveTo(vx+rx,vz-rz,vx+rx,vz-rz+cr);
+  hole.lineTo(vx+rx,vz+rz-cr); hole.quadraticCurveTo(vx+rx,vz+rz,vx+rx-cr,vz+rz);
+  hole.lineTo(vx-rx+cr,vz+rz); hole.quadraticCurveTo(vx-rx,vz+rz,vx-rx,vz+rz-cr);
+  hole.lineTo(vx-rx,vz-rz+cr); hole.quadraticCurveTo(vx-rx,vz-rz,vx-rx+cr,vz-rz); hole.closePath();
   shape.holes.push(hole);
 
-  var geo = new THREE.ExtrudeGeometry(shape, {
-    depth: Ep,
-    bevelEnabled: false,
-    curveSegments: 48,
-  });
-  // Shape XY → monde XZ (Y vers le haut), et translation verticale
-  geo.rotateX(Math.PI / 2);
-  geo.translate(0, topY - Ep, 0);
-
-  var mDef = MATS_PLAN[S.matPlan];
-  var mat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(mDef.hex),
-    roughness: mDef.r,
-    metalness: 0.04,
-  });
-  planMesh = new THREE.Mesh(geo, mat);
-  planMesh.castShadow = true;
-  planMesh.receiveShadow = true;
-  scene.add(planMesh);
+  var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
+  geo.rotateX(Math.PI/2); geo.translate(0,topY-Ep,0);
+  var md=MATS_PLAN[S.matPlan];
+  planMesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex),roughness:md.r,metalness:0.04}));
+  planMesh.castShadow=true; planMesh.receiveShadow=true; scene.add(planMesh);
 }
 
-// ─── CAISSON ───────────────────────────────────────────
-function buildCaisson() {
+// ─── CAISSON ──────────────────────────────────────────
+
+// Conversion coordonnées locales du caissonGrp ↔ intérieur (cm, origine bas-gauche)
+function localToYcm(y_loc){ return (y_loc - EP) * 100; }
+function ycmToLocal(y_cm) { return EP + y_cm / 100; }
+function localToXcm(x_loc){ return (x_loc + S.CL/2 - EP) * 100; }
+function xcmToLocal(x_cm) { return -S.CL/2 + EP + x_cm / 100; }
+
+// Compartiment vertical : espace entre les deux tablettes encadrant y_cm
+function getCompartment(y_cm){
+  var iH_cm=(S.CH-2*EP)*100;
+  var shelves=caissonElements.filter(function(e){return e.type==='shelf';}).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
+  var bot=0, top=iH_cm;
+  shelves.forEach(function(s){ if(s<y_cm&&s>bot) bot=s; if(s>y_cm&&s<top) top=s; });
+  return {bottom_cm:bot, top_cm:top, height_cm:top-bot, centerY:ycmToLocal((top+bot)/2)};
+}
+
+// Baie horizontale : espace entre les deux séparateurs encadrant x_cm dans ce compartiment
+function getBay(x_cm, y_cm){
+  var iW_cm=(S.CL-2*EP)*100;
+  var comp=getCompartment(y_cm);
+  var seps=caissonElements.filter(function(e){
+    return e.type==='separator' && e.y_cm>=comp.bottom_cm && e.y_cm<=comp.top_cm;
+  }).map(function(e){return e.x_cm;}).sort(function(a,b){return a-b;});
+  var left=0, right=iW_cm;
+  seps.forEach(function(s){ if(s<x_cm&&s>left) left=s; if(s>x_cm&&s<right) right=s; });
+  return {left_cm:left, right_cm:right, width_cm:right-left, centerX:xcmToLocal((right+left)/2)};
+}
+
+function buildCaisson(){
   disposeGroup(caissonGrp);
-  caissonGrp  = new THREE.Group();
-  caissonHitPlane  = null;
-  caissonShelfMeshes = [];
+  caissonGrp=new THREE.Group();
+  caissonHitPlane=null;
+  caissonElemMeshes=[];
+  if(caissonGhost){caissonGhost=null;} // sera recréé
 
-  var CL = S.CL, CH = S.CH;
-  var CP = S.P - 0.025;
-  var ep = 0.019;
-  var iW = CL - 2 * ep;
-  var iH = CH - 2 * ep;
+  var CL=S.CL, CH=S.CH, CP=S.P-0.025;
+  var ep=EP;
+  var iW=CL-2*ep, iH=CH-2*ep;
 
-  var mDef = MATS_CAIS[S.matCais];
-  var matCais    = new THREE.MeshStandardMaterial({ color: new THREE.Color(mDef.hex), roughness: mDef.r, metalness: 0.02 });
-  var matFacade  = new THREE.MeshStandardMaterial({ color: new THREE.Color(mDef.hex).multiplyScalar(0.82), roughness: mDef.r * 0.9, metalness: 0.02 });
-  var matFond    = new THREE.MeshStandardMaterial({ color: new THREE.Color(mDef.hex).multiplyScalar(0.7), roughness: mDef.r, metalness: 0.01 });
-  var matTab     = new THREE.MeshStandardMaterial({ color: new THREE.Color(mDef.hex).multiplyScalar(0.88), roughness: mDef.r * 0.95, metalness: 0.01 });
-  var matLaiton  = new THREE.MeshStandardMaterial({ color: 0xc9a45a, roughness: 0.28, metalness: 0.88 });
+  var md=MATS_CAIS[S.matCais];
+  var matCais   =new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex),roughness:md.r,metalness:0.02});
+  var matFacade =new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex).multiplyScalar(0.82),roughness:md.r*0.9,metalness:0.02});
+  var matFond   =new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex).multiplyScalar(0.70),roughness:md.r,metalness:0.01});
+  var matElem   =new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex).multiplyScalar(0.88),roughness:md.r*0.95,metalness:0.01});
+  var matLaiton =new THREE.MeshStandardMaterial({color:0xc9a45a,roughness:0.28,metalness:0.88});
 
-  function box(w,h,d,mat){ var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.castShadow=true; m.receiveShadow=true; return m; }
+  function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
 
-  // Structure caisson
-  var cg = box(ep, CH, CP, matCais); cg.position.set(-CL/2+ep/2, CH/2, 0); caissonGrp.add(cg);
-  var cd = box(ep, CH, CP, matCais); cd.position.set( CL/2-ep/2, CH/2, 0); caissonGrp.add(cd);
-  var dt = box(iW, ep, CP, matCais); dt.position.set(0, CH-ep/2, 0); caissonGrp.add(dt);
-  var db = box(iW, ep, CP, matCais); db.position.set(0, ep/2, 0); caissonGrp.add(db);
-  var fd = box(CL, CH, 0.008, matFond); fd.position.set(0, CH/2, -CP/2+0.004); caissonGrp.add(fd);
+  // Structure
+  var cg=box(ep,CH,CP,matCais); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
+  var cd=box(ep,CH,CP,matCais); cd.position.set( CL/2-ep/2,CH/2,0); caissonGrp.add(cd);
+  var dt=box(iW,ep,CP,matCais); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
+  var db=box(iW,ep,CP,matCais); db.position.set(0,ep/2,0); caissonGrp.add(db);
+  var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
 
-  // ── Tablettes depuis caissonShelves[] ──
-  for (var si = 0; si < caissonShelves.length; si++) {
-    var sy = ep + caissonShelves[si] / 100; // y depuis fond intérieur (m)
-    if (sy < ep + 0.005 || sy > CH - ep - ep - 0.005) continue; // hors limites
-    var tab = box(iW, ep, CP - ep, matTab);
-    tab.position.set(0, sy, -ep/2);
-    tab.userData.isShelf = true;
-    tab.userData.shelfIdx = si;
-    caissonGrp.add(tab);
-    caissonShelfMeshes.push(tab);
-  }
+  // ── Éléments intérieurs ──
+  caissonElements.forEach(function(el,idx){
+    var m;
+    if(el.type==='shelf'){
+      // Tablette = pleine largeur de la baie à ce niveau
+      var bay=getBay(0,el.y_cm); // x=0 → baie la plus centrale (ou la seule)
+      // En fait une tablette est toujours pleine largeur (span total)
+      m=box(iW,ep,CP-ep,matElem);
+      m.position.set(0,ycmToLocal(el.y_cm),-ep/2);
+    } else if(el.type==='separator'){
+      var comp=getCompartment(el.y_cm);
+      var h=comp.height_cm/100;
+      if(h<0.01) return;
+      m=box(ep,h,CP-ep,matElem);
+      m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
+    }
+    if(!m) return;
+    m.userData.elemIdx=idx;
+    m.userData.elemType=el.type;
+    caissonElemMeshes.push(m);
+    caissonGrp.add(m);
+  });
 
   // ── Façades ──
-  var jeu = 0.003;
-  var fh  = iH - 0.004;
-  var fz  = CP/2 + 0.020;
-  var hdl = 0.006; // rayon poignée
-
-  if (S.facadeStyle === 'portes2') {
-    var fw = (iW - jeu) / 2;
-    var f1 = box(fw, fh, 0.020, matFacade); f1.position.set(-fw/2-jeu/2, CH/2, fz); caissonGrp.add(f1);
-    var f2 = box(fw, fh, 0.020, matFacade); f2.position.set( fw/2+jeu/2, CH/2, fz); caissonGrp.add(f2);
-    var pGeo = new THREE.CylinderGeometry(hdl, hdl, fw * 0.35, 12);
-    var p1 = new THREE.Mesh(pGeo, matLaiton); p1.rotation.z=Math.PI/2; p1.position.set(-fw/2-jeu/2, CH/2, fz+0.021); caissonGrp.add(p1);
-    var p2 = new THREE.Mesh(pGeo.clone(), matLaiton); p2.rotation.z=Math.PI/2; p2.position.set( fw/2+jeu/2, CH/2, fz+0.021); caissonGrp.add(p2);
-
-  } else if (S.facadeStyle === 'tiroirs3') {
-    var th3 = (fh - 2*jeu) / 3;
-    var pGeoH = new THREE.CylinderGeometry(hdl, hdl, iW * 0.3, 12);
-    for (var ti=0; ti<3; ti++) {
-      var ty3 = ep + jeu/2 + (0.5 + ti) * (fh + 2*jeu) / 3;
-      var tir = box(iW - 2*jeu, th3, 0.020, matFacade); tir.position.set(0, ty3, fz); caissonGrp.add(tir);
-      var ph = new THREE.Mesh(pGeoH.clone(), matLaiton); ph.rotation.z=Math.PI/2; ph.position.set(0, ty3, fz+0.021); caissonGrp.add(ph);
+  var jeu=0.003, fh=iH-0.004, fz=CP/2+0.020, hdl=0.006;
+  if(S.facadeStyle==='portes2'){
+    var fw=(iW-jeu)/2;
+    var f1=box(fw,fh,0.020,matFacade); f1.position.set(-fw/2-jeu/2,CH/2,fz); caissonGrp.add(f1);
+    var f2=box(fw,fh,0.020,matFacade); f2.position.set( fw/2+jeu/2,CH/2,fz); caissonGrp.add(f2);
+    var pg=new THREE.CylinderGeometry(hdl,hdl,fw*0.35,12);
+    var p1=new THREE.Mesh(pg,matLaiton); p1.rotation.z=Math.PI/2; p1.position.set(-fw/2-jeu/2,CH/2,fz+0.021); caissonGrp.add(p1);
+    var p2=new THREE.Mesh(pg.clone(),matLaiton); p2.rotation.z=Math.PI/2; p2.position.set(fw/2+jeu/2,CH/2,fz+0.021); caissonGrp.add(p2);
+  } else if(S.facadeStyle==='tiroirs3'){
+    var th3=(fh-2*jeu)/3;
+    var pgH=new THREE.CylinderGeometry(hdl,hdl,iW*0.3,12);
+    for(var ti=0;ti<3;ti++){
+      var ty3=ep+jeu/2+(0.5+ti)*(fh+2*jeu)/3;
+      var tr=box(iW-2*jeu,th3,0.020,matFacade); tr.position.set(0,ty3,fz); caissonGrp.add(tr);
+      var ph=new THREE.Mesh(pgH.clone(),matLaiton); ph.rotation.z=Math.PI/2; ph.position.set(0,ty3,fz+0.021); caissonGrp.add(ph);
     }
-
-  } else { // mixte : porte haute + tiroir bas (1/3 bas)
-    var tirH  = (fh - jeu) * 0.33;
-    var porH  = fh - tirH - jeu;
-    var yTir  = ep + jeu/2 + tirH/2;
-    var yPor  = ep + tirH + jeu + porH/2;
-    var tir2  = box(iW - 2*jeu, tirH, 0.020, matFacade); tir2.position.set(0, yTir, fz); caissonGrp.add(tir2);
-    var por2  = box(iW - 2*jeu, porH, 0.020, matFacade); por2.position.set(0, yPor, fz); caissonGrp.add(por2);
-    var pGeoH2 = new THREE.CylinderGeometry(hdl, hdl, iW * 0.3, 12);
-    var ph2 = new THREE.Mesh(pGeoH2, matLaiton); ph2.rotation.z=Math.PI/2; ph2.position.set(0, yTir, fz+0.021); caissonGrp.add(ph2);
-    var pGeoV2 = new THREE.CylinderGeometry(hdl, hdl, porH * 0.35, 12);
-    var pv2 = new THREE.Mesh(pGeoV2, matLaiton); pv2.position.set(iW/4, yPor, fz+0.021); caissonGrp.add(pv2);
+  } else { // mixte
+    var tirH=(fh-jeu)*0.33, porH=fh-tirH-jeu;
+    var yTir=ep+jeu/2+tirH/2, yPor=ep+tirH+jeu+porH/2;
+    var t2=box(iW-2*jeu,tirH,0.020,matFacade); t2.position.set(0,yTir,fz); caissonGrp.add(t2);
+    var p3e=box(iW-2*jeu,porH,0.020,matFacade); p3e.position.set(0,yPor,fz); caissonGrp.add(p3e);
+    var pgH2=new THREE.CylinderGeometry(hdl,hdl,iW*0.3,12);
+    var ph2=new THREE.Mesh(pgH2,matLaiton); ph2.rotation.z=Math.PI/2; ph2.position.set(0,yTir,fz+0.021); caissonGrp.add(ph2);
+    var pgV2=new THREE.CylinderGeometry(hdl,hdl,porH*0.35,12);
+    var pv2=new THREE.Mesh(pgV2,matLaiton); pv2.position.set(iW/4,yPor,fz+0.021); caissonGrp.add(pv2);
   }
 
-  // ── Plan de frappe (invisible) — face avant intérieure ──
-  var hpGeo = new THREE.PlaneGeometry(iW, iH);
-  var hpMat = new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide });
-  caissonHitPlane = new THREE.Mesh(hpGeo, hpMat);
-  caissonHitPlane.position.set(0, ep + iH/2, CP/2 - 0.002);
-  caissonHitPlane.userData.isHitPlane = true;
+  // ── Plan de frappe invisible (face avant intérieure) ──
+  var hpGeo=new THREE.PlaneGeometry(iW,iH);
+  var hpMat=new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide});
+  caissonHitPlane=new THREE.Mesh(hpGeo,hpMat);
+  caissonHitPlane.position.set(0,EP+iH/2,CP/2-0.002);
   caissonGrp.add(caissonHitPlane);
 
-  caissonGrp.position.set(0, 0, -(0.025/2));
+  caissonGrp.position.set(0,0,-(0.025/2));
   scene.add(caissonGrp);
-
-  // Met à jour le compteur UI
-  var el = document.getElementById('shelf-count-val');
-  if (el) el.textContent = caissonShelves.length;
+  updateAmgtCount();
 }
 
-// ─── VASQUE PROCÉDURALE ────────────────────────────────
-function buildVasque() {
+// ─── VASQUE PROCÉDURALE ───────────────────────────────
+function buildVasque(){
   disposeGroup(vasqueGrp);
-
-  var VW = S.vasqueW, VD = S.vasqueD;
-  var VH  = 0.12;   // profondeur cuvette (m)
-  var th  = 0.008;  // épaisseur paroi céramique
-
-  var matCeram = new THREE.MeshStandardMaterial({ color: 0xF4F1ED, roughness: 0.08, metalness: 0.0 });
-  var matLaito = new THREE.MeshStandardMaterial({ color: 0xC8A050, roughness: 0.18, metalness: 0.90 });
-  var matBonde = new THREE.MeshStandardMaterial({ color: 0xA09060, roughness: 0.35, metalness: 0.70 });
-
-  var grp = new THREE.Group();
-
-  function addBox(w,h,d,mat,x,y,z){
-    var m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
-    m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; grp.add(m);
-  }
-
-  // Cuvette (5 panneaux céramique)
-  addBox(VW,    th,       VD,        matCeram,  0,       th/2,          0);           // fond
-  addBox(VW,    VH,       th,        matCeram,  0,       VH/2,          VD/2-th/2);   // paroi avant
-  addBox(VW,    VH,       th,        matCeram,  0,       VH/2,         -VD/2+th/2);   // paroi arrière
-  addBox(th,    VH,       VD-2*th,   matCeram, -VW/2+th/2, VH/2,        0);           // paroi gauche
-  addBox(th,    VH,       VD-2*th,   matCeram,  VW/2-th/2, VH/2,        0);           // paroi droite
-
-  // Robinet col-de-cygne (laiton)
-  var rCorps = new THREE.Mesh(new THREE.CylinderGeometry(0.009,0.009,0.09,12), matLaito);
-  rCorps.position.set(0, VH+0.045, -VD/2+0.014); rCorps.castShadow=true; grp.add(rCorps);
-  var rBec = new THREE.Mesh(new THREE.CylinderGeometry(0.005,0.008,0.06,8), matLaito);
-  rBec.rotation.x = -Math.PI/2.6; rBec.position.set(0, VH+0.068, -VD/2+0.033); rBec.castShadow=true; grp.add(rBec);
-  var rBout = new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.006,10), matLaito);
-  rBout.rotation.x = Math.PI/2; rBout.position.set(0, VH+0.046, -VD/2+0.053); grp.add(rBout);
-
-  // Bonde
-  var bonde = new THREE.Mesh(new THREE.CylinderGeometry(0.013,0.013,0.004,16), matBonde);
-  bonde.position.set(0, th+0.001, 0); grp.add(bonde);
-  var bondeAnn = new THREE.Mesh(new THREE.TorusGeometry(0.013, 0.002, 6, 20), matBonde);
-  bondeAnn.rotation.x = Math.PI/2; bondeAnn.position.set(0, th+0.003, 0); grp.add(bondeAnn);
-
-  // Rim offset : le rim est en haut des parois (Y=VH)
-  vasqueRimOffset = VH;
-
-  // Demi-dimensions pour le trou dans le plan (+ 6mm de jeu)
-  S.vasqueRx = VW/2 + 0.006;
-  S.vasqueRz = VD/2 + 0.006;
-
-  scene.add(grp);
-  vasqueGrp = grp;
-
-  S.vx = clampVasque(S.vx, 'x');
-  S.vz = clampVasque(S.vz, 'z');
-  positionVasque();
-  buildPlan();
-  updatePosInfo();
+  var VW=S.vasqueW, VD=S.vasqueD, VH=0.12, th=0.008;
+  var matCeram=new THREE.MeshStandardMaterial({color:0xF4F1ED,roughness:0.08,metalness:0.0});
+  var matLaito=new THREE.MeshStandardMaterial({color:0xC8A050,roughness:0.18,metalness:0.90});
+  var matBonde=new THREE.MeshStandardMaterial({color:0xA09060,roughness:0.35,metalness:0.70});
+  var grp=new THREE.Group();
+  function addBox(w,h,d,mat,x,y,z){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;grp.add(m);}
+  addBox(VW,th,VD,matCeram,0,th/2,0);
+  addBox(VW,VH,th,matCeram,0,VH/2,VD/2-th/2);
+  addBox(VW,VH,th,matCeram,0,VH/2,-VD/2+th/2);
+  addBox(th,VH,VD-2*th,matCeram,-VW/2+th/2,VH/2,0);
+  addBox(th,VH,VD-2*th,matCeram,VW/2-th/2,VH/2,0);
+  var rCorps=new THREE.Mesh(new THREE.CylinderGeometry(0.009,0.009,0.09,12),matLaito);
+  rCorps.position.set(0,VH+0.045,-VD/2+0.014); rCorps.castShadow=true; grp.add(rCorps);
+  var rBec=new THREE.Mesh(new THREE.CylinderGeometry(0.005,0.008,0.06,8),matLaito);
+  rBec.rotation.x=-Math.PI/2.6; rBec.position.set(0,VH+0.068,-VD/2+0.033); grp.add(rBec);
+  var bonde=new THREE.Mesh(new THREE.CylinderGeometry(0.013,0.013,0.004,16),matBonde);
+  bonde.position.set(0,th+0.001,0); grp.add(bonde);
+  var bondeAnn=new THREE.Mesh(new THREE.TorusGeometry(0.013,0.002,6,20),matBonde);
+  bondeAnn.rotation.x=Math.PI/2; bondeAnn.position.set(0,th+0.003,0); grp.add(bondeAnn);
+  vasqueRimOffset=VH;
+  S.vasqueRx=VW/2+0.006; S.vasqueRz=VD/2+0.006;
+  scene.add(grp); vasqueGrp=grp;
+  S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
+  positionVasque(); buildPlan(); updatePosInfo();
 }
 
-function clampVasque(val, axis) {
-  var marge = 0.04;
-  var halfPlan = axis === 'x' ? S.L/2 : S.P/2;
-  var halfV    = axis === 'x' ? S.vasqueRx : S.vasqueRz;
-  var min = -halfPlan + halfV + marge;
-  var max =  halfPlan - halfV - marge;
-  if (min > max) return 0;
-  return Math.max(min, Math.min(max, val));
+function clampVasque(val,axis){
+  var halfPlan=axis==='x'?S.L/2:S.P/2;
+  var halfV   =axis==='x'?S.vasqueRx:S.vasqueRz;
+  var min=-halfPlan+halfV+0.04, max=halfPlan-halfV-0.04;
+  if(min>max) return 0;
+  return Math.max(min,Math.min(max,val));
 }
-
-function positionVasque() {
-  if (!vasqueGrp) return;
-  var topY = planTopY();
-  var vx = clampVasque(S.vx, 'x');
-  var vz = clampVasque(S.vz, 'z');
-  // vasqueRimOffset = distance du rim de la vasque depuis la base du centGroup
-  // → posGroup.y tel que rim soit exactement à planTopY()
-  vasqueGrp.position.set(vx, topY - vasqueRimOffset, vz);
-  S.vx = vx; S.vz = vz;
+function positionVasque(){
+  if(!vasqueGrp) return;
+  var vx=clampVasque(S.vx,'x'), vz=clampVasque(S.vz,'z');
+  vasqueGrp.position.set(vx,planTopY()-vasqueRimOffset,vz);
+  S.vx=vx; S.vz=vz;
 }
-
 
 // ═══════════════════════════════════════════════════════
-// DRAG & DROP VASQUE
+// DRAG VASQUE (step 2)
 // ═══════════════════════════════════════════════════════
-var isDragging = false;
-var dragOffset = new THREE.Vector3();
-var raycaster  = new THREE.Raycaster();
-var mouse      = new THREE.Vector2();
-var dragPlane  = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-var dragPt     = new THREE.Vector3();
+var isDragging=false, dragOffset=new THREE.Vector3();
+var raycaster=new THREE.Raycaster(), mouse=new THREE.Vector2();
+var dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0), dragPt=new THREE.Vector3();
 
-function toNDC(e) {
-  var r = cvs.getBoundingClientRect();
-  mouse.x = ((e.clientX - r.left) / r.width)  * 2 - 1;
-  mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+function toNDC(e){
+  var r=cvs.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1;
+  mouse.y=-((e.clientY-r.top)/r.height)*2+1;
 }
 
-cvs.addEventListener('pointerdown', function(e) {
-  if (e.button !== 0) return;
+// ═══════════════════════════════════════════════════════
+// INTERACTIVITÉ CAISSON (step 3)
+// ═══════════════════════════════════════════════════════
+var SNAP_CAI=1; // snap 1 cm
+var MIN_GAP_H=3, MIN_GAP_V=3; // gap min entre éléments (cm)
 
-  // ── Step 3 : placement tablette ──
-  if (S.step === 3 && caissonEditMode && caissonHitPlane) {
-    toNDC(e);
-    raycaster.setFromCamera(mouse, camera);
-    // Priorité aux tablettes existantes (suppression)
-    var shelfHits = raycaster.intersectObjects(caissonShelfMeshes);
-    if (shelfHits.length) {
-      var idx = shelfHits[0].object.userData.shelfIdx;
-      if (idx !== undefined) { caissonShelves.splice(idx, 1); clearCaissonGhost(); buildCaisson(); e.stopPropagation(); return; }
-    }
-    var planeHits = raycaster.intersectObject(caissonHitPlane);
-    if (planeHits.length) {
-      var ptGrp = caissonGrp.worldToLocal(planeHits[0].point.clone());
-      var yCm = snapShelf(ptGrp.y);
-      placeCaissonShelf(yCm);
-      e.stopPropagation();
-    }
-    return;
+function setCaissonType(t){
+  caissonType=t;
+  document.getElementById('ct-shelf').classList.toggle('active',t==='shelf');
+  document.getElementById('ct-sep').classList.toggle('active',t==='separator');
+  clearCaissonGhost();
+}
+
+function toggleCaissonEdit(){
+  caissonEditMode=!caissonEditMode;
+  var btn=document.getElementById('btn-edit-cais');
+  if(btn) btn.classList.toggle('active',caissonEditMode);
+  wrap.classList.toggle('mode-edit',caissonEditMode);
+  controls.enabled=!caissonEditMode;
+  cvs.style.cursor=caissonEditMode?'crosshair':'';
+  if(!caissonEditMode) clearCaissonGhost();
+}
+
+function clearCaissonGhost(){
+  if(caissonGhost){
+    if(caissonGhost.parent) caissonGhost.parent.remove(caissonGhost);
+    if(caissonGhost.geometry) caissonGhost.geometry.dispose();
+    if(caissonGhost.material) caissonGhost.material.dispose();
+    caissonGhost=null;
   }
+}
 
-  // ── Step 2 : drag vasque ──
-  if (S.step !== 2 || !vasqueGrp) return;
+function getCaissonHit(e){
+  if(!caissonHitPlane||!caissonGrp) return null;
   toNDC(e);
-  raycaster.setFromCamera(mouse, camera);
-  var hits = raycaster.intersectObject(vasqueGrp, true);
-  if (hits.length > 0) {
-    isDragging = true;
-    controls.enabled = false;
-    cvs.style.cursor = 'grabbing';
-    dragPlane.constant = -planTopY();
-    raycaster.ray.intersectPlane(dragPlane, dragPt);
-    dragOffset.set(dragPt.x - S.vx, 0, dragPt.z - S.vz);
+  raycaster.setFromCamera(mouse,camera);
+  var hits=raycaster.intersectObject(caissonHitPlane,false);
+  if(!hits.length) return null;
+  var ptGrp=caissonGrp.worldToLocal(hits[0].point.clone());
+  var CL=S.CL, CH=S.CH, ep=EP;
+  var iW_cm=(CL-2*ep)*100, iH_cm=(CH-2*ep)*100;
+  var x_cm=Math.round(localToXcm(ptGrp.x)/SNAP_CAI)*SNAP_CAI;
+  var y_cm=Math.round(localToYcm(ptGrp.y)/SNAP_CAI)*SNAP_CAI;
+  x_cm=Math.min(Math.max(x_cm,0),iW_cm);
+  y_cm=Math.min(Math.max(y_cm,0),iH_cm);
+  return {x_cm:x_cm, y_cm:y_cm};
+}
+
+function updateCaissonGhost(e){
+  if(!caissonEditMode||S.step!==3) return;
+  var hit=getCaissonHit(e);
+  if(!hit){clearCaissonGhost();return;}
+  var CL=S.CL, CH=S.CH, CP=S.P-0.025, ep=EP;
+  var iW=(CL-2*ep), iH=(CH-2*ep);
+  var occupied,gW,gH,gX,gY;
+
+  if(caissonType==='shelf'){
+    var y_cm=hit.y_cm;
+    occupied=caissonElements.some(function(el){return el.type==='shelf'&&Math.abs(el.y_cm-y_cm)<MIN_GAP_H;});
+    gW=iW; gH=ep;
+    gX=0; gY=ycmToLocal(y_cm);
+  } else {
+    var comp=getCompartment(hit.y_cm);
+    var bay=getBay(hit.x_cm,hit.y_cm);
+    if(comp.height_cm<0.01){clearCaissonGhost();return;}
+    occupied=caissonElements.some(function(el){
+      if(el.type!=='separator') return false;
+      var ec=getCompartment(el.y_cm);
+      return ec.bottom_cm===comp.bottom_cm && ec.top_cm===comp.top_cm && Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+    });
+    gW=ep; gH=comp.height_cm/100;
+    gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
+  }
+
+  // Réutilise ou crée le ghost
+  if(!caissonGhost){
+    var gMat=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
+    caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat);
+    caissonGhost.renderOrder=1;
+    caissonGrp.add(caissonGhost);
+  }
+  caissonGhost.scale.set(gW,gH,CP-ep);
+  caissonGhost.position.set(gX,gY,-ep/2);
+  caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
+  caissonGhost.material.opacity=occupied?0.25:0.45;
+  caissonGhost.visible=true;
+}
+
+function placeOrRemoveCaisson(e){
+  if(!caissonEditMode||S.step!==3) return false;
+  toNDC(e);
+  raycaster.setFromCamera(mouse,camera);
+
+  // 1. Clic sur un élément existant → le supprimer
+  var ehits=raycaster.intersectObjects(caissonElemMeshes,false);
+  if(ehits.length){
+    var idx=ehits[0].object.userData.elemIdx;
+    if(idx!==undefined){ caissonElements.splice(idx,1); clearCaissonGhost(); buildCaisson(); return true; }
+  }
+
+  // 2. Clic sur le plan de frappe → placer
+  var hit=getCaissonHit(e);
+  if(!hit) return false;
+
+  if(caissonType==='shelf'){
+    var y_cm=hit.y_cm;
+    if(caissonElements.some(function(el){return el.type==='shelf'&&Math.abs(el.y_cm-y_cm)<MIN_GAP_H;})) return true;
+    caissonElements.push({type:'shelf',y_cm:y_cm});
+    caissonElements.sort(function(a,b){
+      if(a.type!==b.type) return a.type==='shelf'?-1:1;
+      return (a.y_cm||0)-(b.y_cm||0);
+    });
+  } else {
+    var comp=getCompartment(hit.y_cm);
+    if(comp.height_cm<0.01) return true;
+    var x_cm=hit.x_cm;
+    var dup=caissonElements.some(function(el){
+      if(el.type!=='separator') return false;
+      var ec=getCompartment(el.y_cm);
+      return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-x_cm)<MIN_GAP_V;
+    });
+    if(dup) return true;
+    caissonElements.push({type:'separator',x_cm:x_cm,y_cm:(comp.bottom_cm+comp.top_cm)/2});
+  }
+  clearCaissonGhost();
+  buildCaisson();
+  return true;
+}
+
+function resetCaissonElements(){
+  caissonElements=[];
+  clearCaissonGhost();
+  buildCaisson();
+}
+
+function updateAmgtCount(){
+  var el=document.getElementById('amgt-count');
+  if(!el) return;
+  var nb=caissonElements.length;
+  if(!nb){ el.textContent='Structure vide'; return; }
+  var sh=caissonElements.filter(function(e){return e.type==='shelf';}).length;
+  var sp=caissonElements.filter(function(e){return e.type==='separator';}).length;
+  var parts=[];
+  if(sh) parts.push(sh+' tablette'+(sh>1?'s':''));
+  if(sp) parts.push(sp+' séparateur'+(sp>1?'s':''));
+  el.innerHTML='<strong>'+nb+'</strong> élément'+(nb>1?'s':'')+' — '+parts.join(', ');
+}
+
+// ═══════════════════════════════════════════════════════
+// EVENTS SOURIS / TOUCH
+// ═══════════════════════════════════════════════════════
+cvs.addEventListener('pointerdown',function(e){
+  if(e.button!==0) return;
+  if(S.step===3&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
+  if(S.step!==2||!vasqueGrp) return;
+  toNDC(e);
+  raycaster.setFromCamera(mouse,camera);
+  if(raycaster.intersectObject(vasqueGrp,true).length>0){
+    isDragging=true; controls.enabled=false; cvs.style.cursor='grabbing';
+    dragPlane.constant=-planTopY();
+    raycaster.ray.intersectPlane(dragPlane,dragPt);
+    dragOffset.set(dragPt.x-S.vx,0,dragPt.z-S.vz);
     e.stopPropagation();
   }
 });
 
-cvs.addEventListener('pointermove', function(e) {
-  // Step 3 ghost preview
-  if (S.step === 3 && caissonEditMode) {
-    updateCaissonGhost(e);
+cvs.addEventListener('pointermove',function(e){
+  if(S.step===3&&caissonEditMode){ updateCaissonGhost(e); return; }
+  if(!vasqueGrp) return;
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  if(!isDragging){
+    if(S.step===2){ var h=raycaster.intersectObject(vasqueGrp,true); cvs.style.cursor=h.length?'grab':''; }
     return;
   }
-
-  if (!vasqueGrp) return;
-  toNDC(e);
-  raycaster.setFromCamera(mouse, camera);
-
-  if (!isDragging) {
-    if (S.step === 2) {
-      var hits = raycaster.intersectObject(vasqueGrp, true);
-      cvs.style.cursor = hits.length > 0 ? 'grab' : 'crosshair';
-    }
-    return;
-  }
-  dragPlane.constant = -planTopY();
-  if (!raycaster.ray.intersectPlane(dragPlane, dragPt)) return;
-
-  S.vx = dragPt.x - dragOffset.x;
-  S.vz = dragPt.z - dragOffset.z;
-  S.vx = clampVasque(S.vx, 'x');
-  S.vz = clampVasque(S.vz, 'z');
-
-  positionVasque();
-  buildPlan();  // trou suit la vasque
-  updatePosInfo();
+  dragPlane.constant=-planTopY();
+  if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
+  S.vx=clampVasque(dragPt.x-dragOffset.x,'x');
+  S.vz=clampVasque(dragPt.z-dragOffset.z,'z');
+  positionVasque(); buildPlan(); updatePosInfo();
 });
 
-window.addEventListener('pointerup', function() {
-  if (isDragging) {
-    isDragging = false;
-    controls.enabled = (S.step !== 2) || true; // toujours réactiver
-    cvs.style.cursor = '';
-  }
+window.addEventListener('pointerup',function(){
+  if(isDragging){ isDragging=false; controls.enabled=true; cvs.style.cursor=''; }
 });
 
-cvs.addEventListener('touchstart', function(e) {
-  if (S.step !== 2 || !vasqueGrp) return;
-  var t = e.touches[0];
-  toNDC({ clientX: t.clientX, clientY: t.clientY });
-  raycaster.setFromCamera(mouse, camera);
-  if (raycaster.intersectObject(vasqueGrp, true).length > 0) {
-    isDragging = true;
-    controls.enabled = false;
-    dragPlane.constant = -planTopY();
-    raycaster.ray.intersectPlane(dragPlane, dragPt);
-    dragOffset.set(dragPt.x - S.vx, 0, dragPt.z - S.vz);
-    e.preventDefault();
+cvs.addEventListener('touchstart',function(e){
+  if(S.step!==2||!vasqueGrp) return;
+  var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
+  raycaster.setFromCamera(mouse,camera);
+  if(raycaster.intersectObject(vasqueGrp,true).length>0){
+    isDragging=true; controls.enabled=false;
+    dragPlane.constant=-planTopY();
+    raycaster.ray.intersectPlane(dragPlane,dragPt);
+    dragOffset.set(dragPt.x-S.vx,0,dragPt.z-S.vz); e.preventDefault();
   }
-}, { passive: false });
+},{passive:false});
 
-cvs.addEventListener('touchmove', function(e) {
-  if (!isDragging) return;
-  e.preventDefault();
-  var t = e.touches[0];
-  toNDC({ clientX: t.clientX, clientY: t.clientY });
-  raycaster.setFromCamera(mouse, camera);
-  dragPlane.constant = -planTopY();
-  if (!raycaster.ray.intersectPlane(dragPlane, dragPt)) return;
-  S.vx = clampVasque(dragPt.x - dragOffset.x, 'x');
-  S.vz = clampVasque(dragPt.z - dragOffset.z, 'z');
-  positionVasque();
-  buildPlan();
-  updatePosInfo();
-}, { passive: false });
+cvs.addEventListener('touchmove',function(e){
+  if(!isDragging) return; e.preventDefault();
+  var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
+  raycaster.setFromCamera(mouse,camera);
+  dragPlane.constant=-planTopY();
+  if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
+  S.vx=clampVasque(dragPt.x-dragOffset.x,'x');
+  S.vz=clampVasque(dragPt.z-dragOffset.z,'z');
+  positionVasque(); buildPlan(); updatePosInfo();
+},{passive:false});
 
-cvs.addEventListener('touchend', function() {
-  isDragging = false;
-  controls.enabled = true;
-});
+cvs.addEventListener('touchend',function(){isDragging=false;controls.enabled=true;});
 
 // ═══════════════════════════════════════════════════════
-// UI CALLBACKS
+// UI CALLBACKS SLIDERS / MATIÈRES
 // ═══════════════════════════════════════════════════════
-function setL(v){ S.L=v/100; document.getElementById('v-L').textContent=v+' cm'; var slCL=document.getElementById('sl-cL'); slCL.max=v; if(S.CL>S.L){S.CL=S.L;slCL.value=v;document.getElementById('v-CL').textContent=v+' cm';} clampAndRebuild(); }
+function setL(v){ S.L=v/100; document.getElementById('v-L').textContent=v+' cm'; var s=document.getElementById('sl-cL'); s.max=v; if(S.CL>S.L){S.CL=S.L;s.value=v;document.getElementById('v-CL').textContent=v+' cm';} clampAndRebuild(); }
 function setPro(v){ S.P=v/100; document.getElementById('v-P').textContent=v+' cm'; clampAndRebuild(); }
 function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; clampAndRebuild(); }
 function setCL(v){ S.CL=Math.min(v/100,S.L); document.getElementById('v-CL').textContent=Math.round(S.CL*100)+' cm'; buildCaisson(); }
 function setCH(v){ S.CH=v/100; document.getElementById('v-CH').textContent=v+' cm'; clampAndRebuild(); }
 function setVasqueW(v){ S.vasqueW=v/100; document.getElementById('v-VW').textContent=v+' cm'; buildVasque(); }
 function setVasqueD(v){ S.vasqueD=v/100; document.getElementById('v-VD').textContent=v+' cm'; buildVasque(); }
-function setFacadeStyle(style) {
-  S.facadeStyle = style;
-  ['portes2','tiroirs3','mixte'].forEach(function(id) {
-    var btn = document.getElementById('fb-'+id);
-    if (btn) btn.classList.toggle('on', id === style);
+
+function setFacadeStyle(style){
+  S.facadeStyle=style;
+  ['portes2','tiroirs3','mixte'].forEach(function(id){
+    var b=document.getElementById('fb-'+id); if(b) b.classList.toggle('on',id===style);
   });
   buildCaisson();
 }
 
-function setCaissonEditMode(active) {
-  caissonEditMode = active;
-  var btn = document.getElementById('btn-edit-caisson');
-  var tip = document.getElementById('tip-edit-caisson');
-  if (btn) btn.classList.toggle('active', active);
-  if (tip) tip.style.display = active ? '' : 'none';
-  controls.enabled = !active;
-  cvs.style.cursor = active ? 'crosshair' : '';
-  if (!active) clearCaissonGhost();
-}
-
-function clearCaissonGhost() {
-  if (caissonGhostMesh) {
-    if (caissonGhostMesh.parent) caissonGhostMesh.parent.remove(caissonGhostMesh);
-    caissonGhostMesh.geometry.dispose();
-    caissonGhostMesh = null;
-  }
-}
-
-function snapShelf(yInGrp) {
-  // yInGrp = y en coordonnées du caissonGrp (0 = bas du caisson)
-  // Retourne la hauteur en cm depuis le fond intérieur (ep)
-  var ep = 0.019, CH = S.CH;
-  var fromBottom = yInGrp - ep; // distance depuis fond intérieur (m)
-  var yCm = Math.round(fromBottom * 100);
-  var minCm = 3, maxCm = Math.floor((CH - 2*ep) * 100) - 3;
-  return Math.min(Math.max(yCm, minCm), maxCm);
-}
-
-function updateCaissonGhost(e) {
-  if (!caissonEditMode || S.step !== 3 || !caissonHitPlane || !caissonGrp) return;
-  toNDC(e);
-  raycaster.setFromCamera(mouse, camera);
-  var hits = raycaster.intersectObject(caissonHitPlane);
-  if (!hits.length) { clearCaissonGhost(); return; }
-
-  var ep = 0.019, CL = S.CL, CP = S.P - 0.025;
-  var ptGrp = caissonGrp.worldToLocal(hits[0].point.clone());
-  var yCm = snapShelf(ptGrp.y);
-  var occupied = caissonShelves.some(function(s){ return Math.abs(s - yCm) < 2; });
-
-  clearCaissonGhost();
-  var iW = CL - 2*ep;
-  var gGeo = new THREE.BoxGeometry(iW, ep, CP - ep);
-  var gMat = new THREE.MeshStandardMaterial({
-    color: occupied ? 0xff4444 : 0xc8a050,
-    transparent: true, opacity: 0.5, roughness: 0.4
-  });
-  caissonGhostMesh = new THREE.Mesh(gGeo, gMat);
-  caissonGhostMesh.position.set(0, ep + yCm/100, -ep/2);
-  caissonGhostMesh.userData.ghostYcm = yCm;
-  caissonGhostMesh.userData.occupied = occupied;
-  caissonGrp.add(caissonGhostMesh);
-}
-
-function placeCaissonShelf(yCm) {
-  // Si tablette déjà présente, la supprimer; sinon ajouter
-  var idx = -1;
-  for (var i=0; i<caissonShelves.length; i++) {
-    if (Math.abs(caissonShelves[i] - yCm) < 2) { idx = i; break; }
-  }
-  if (idx >= 0) {
-    caissonShelves.splice(idx, 1);
-  } else {
-    caissonShelves.push(yCm);
-    caissonShelves.sort(function(a,b){return a-b;});
-  }
-  clearCaissonGhost();
-  buildCaisson();
-}
+function setMatPlan(i){ S.matPlan=i; document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildPlan(); }
+function setMatCais(i){ S.matCais=i; document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildCaisson(); }
 
 function clampAndRebuild(){
-  S.vx = clampVasque(S.vx,'x');
-  S.vz = clampVasque(S.vz,'z');
-  positionVasque();
-  buildPlan();
-  buildCaisson();
-  updatePosInfo();
-}
-
-function setMatPlan(i){
-  S.matPlan=i;
-  document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
-  buildPlan();
-}
-function setMatCais(i){
-  S.matCais=i;
-  document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
-  buildCaisson();
+  S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
+  positionVasque(); buildPlan(); buildCaisson(); updatePosInfo();
 }
 
 function updatePosInfo(){
-  var vx = clampVasque(S.vx,'x');
-  var vz = clampVasque(S.vz,'z');
-  var distLeft = Math.round((vx + S.L/2) * 100);
-  var distMur  = Math.round((S.P/2 - vz) * 100);
-  document.getElementById('pos-x').textContent = distLeft + ' cm';
-  document.getElementById('pos-z').textContent = distMur  + ' cm';
+  var vx=clampVasque(S.vx,'x'), vz=clampVasque(S.vz,'z');
+  document.getElementById('pos-x').textContent=Math.round((vx+S.L/2)*100)+' cm';
+  document.getElementById('pos-z').textContent=Math.round((S.P/2-vz)*100)+' cm';
 }
 
 // ═══════════════════════════════════════════════════════
-// WIZARD
+// WIZARD STEPS
 // ═══════════════════════════════════════════════════════
-var step = 1;
-
+var step=1;
 function goStep(n){
-  if (n < 1 || n > 3) return;
-  step = n; S.step = n;
-
-  ['p1','p2','p3'].forEach(function(id,i){
-    document.getElementById(id).classList.toggle('on', i+1 === n);
-  });
+  if(n<1||n>3) return;
+  step=n; S.step=n;
+  ['p1','p2','p3'].forEach(function(id,i){document.getElementById(id).classList.toggle('on',i+1===n);});
   ['sd1','sd2','sd3'].forEach(function(id,i){
-    var el = document.getElementById(id);
-    el.classList.remove('active','done');
-    if (i+1 === n) el.classList.add('active');
-    else if (i+1 < n) el.classList.add('done');
+    var el=document.getElementById(id); el.classList.remove('active','done');
+    if(i+1===n) el.classList.add('active'); else if(i+1<n) el.classList.add('done');
   });
-  ['sl1','sl2'].forEach(function(id,i){
-    document.getElementById(id).classList.toggle('done', i+1 < n);
-  });
+  ['sl1','sl2'].forEach(function(id,i){document.getElementById(id).classList.toggle('done',i+1<n);});
+  document.getElementById('btn-back').disabled=(n===1);
+  document.getElementById('btn-next').textContent=n<3?'Suivant →':'Terminer ✓';
+  document.getElementById('hint').classList.toggle('show',n===2);
 
-  document.getElementById('btn-back').disabled = (n === 1);
-  var btnNext = document.getElementById('btn-next');
-  btnNext.textContent = n < 3 ? 'Suivant →' : 'Terminer ✓';
+  // Quitter edit mode si on change de step
+  if(caissonEditMode) toggleCaissonEdit();
+  controls.enabled=true;
 
-  // Hint drag
-  document.getElementById('hint').classList.toggle('show', n === 2);
-
-  // Quitter le mode édition si on change d'étape
-  if (caissonEditMode) setCaissonEditMode(false);
-  controls.enabled = true;
-
-  if (n === 2) {
-    if (vasqueGrp) vasqueGrp.visible = true;
-    updatePosInfo();
-  } else {
-    if (vasqueGrp) vasqueGrp.visible = (n !== 1); // cachée à l'étape 1 pour ne pas perturber
-  }
-
-  if (n === 3) {
-    buildRecap();
-    // S'assurer que le caisson est à jour
-    var slCL = document.getElementById('sl-cL');
-    slCL.max = Math.round(S.L * 100);
-    buildCaisson();
-  }
-
+  if(n===2){ if(vasqueGrp) vasqueGrp.visible=true; updatePosInfo(); }
+  else { if(vasqueGrp) vasqueGrp.visible=(n!==1); }
+  if(n===3){ buildRecap(); document.getElementById('sl-cL').max=Math.round(S.L*100); buildCaisson(); }
   animCamera(n);
 }
 
-var camTargets = [
-  { pos: [-0.6, 1.55, 1.65], tgt: [0, 0.55, 0] },  // étape 1 — vue plan
-  { pos: [0,    1.30, 1.50], tgt: [0, 0.80, 0] },  // étape 2 — vue vasque
-  { pos: [-0.5, 1.20, 1.80], tgt: [0, 0.40, 0] },  // étape 3 — vue meuble
+var camTargets=[
+  {pos:[-0.6,1.55,1.65],tgt:[0,0.55,0]},
+  {pos:[0,1.30,1.50],   tgt:[0,0.80,0]},
+  {pos:[-0.5,1.20,1.80],tgt:[0,0.40,0]},
 ];
-var camAnim = null;
-function animCamera(n) {
-  var tgt = camTargets[n-1];
-  var p0 = camera.position.clone(), t0 = controls.target.clone();
-  var p1 = new THREE.Vector3().fromArray(tgt.pos);
-  var t1 = new THREE.Vector3().fromArray(tgt.tgt);
-  var f = 0, N = 50;
-  if (camAnim) clearInterval(camAnim);
-  camAnim = setInterval(function(){
-    f++; var a = f/N; a = a<.5?2*a*a:-1+(4-2*a)*a;
-    camera.position.lerpVectors(p0, p1, a);
-    controls.target.lerpVectors(t0, t1, a);
-    controls.update();
-    if (f >= N) { clearInterval(camAnim); camAnim = null; }
-  }, 16);
+var camAnim=null;
+function animCamera(n){
+  var tgt=camTargets[n-1];
+  var p0=camera.position.clone(), t0=controls.target.clone();
+  var p1=new THREE.Vector3().fromArray(tgt.pos), t1=new THREE.Vector3().fromArray(tgt.tgt);
+  var f=0,N=50; if(camAnim) clearInterval(camAnim);
+  camAnim=setInterval(function(){
+    f++; var a=f/N; a=a<.5?2*a*a:-1+(4-2*a)*a;
+    camera.position.lerpVectors(p0,p1,a); controls.target.lerpVectors(t0,t1,a); controls.update();
+    if(f>=N){clearInterval(camAnim);camAnim=null;}
+  },16);
 }
+function prevStep(){goStep(step-1);}
+function nextStep(){if(step<3) goStep(step+1); else alert('Votre configuration :\n\n'+buildRecapStr());}
 
-function prevStep(){ goStep(step - 1); }
-function nextStep(){
-  if (step < 3) goStep(step + 1);
-  else {
-    // Terminer
-    var r = buildRecapStr();
-    alert('Votre configuration :\n\n' + r);
-  }
-}
-
-var FACADE_LABELS = { portes2: '2 portes', tiroirs3: '3 tiroirs', mixte: 'Porte + Tiroir' };
-function buildRecapStr() {
-  var nb = caissonShelves.length;
-  return '• Plan : ' + Math.round(S.L*100) + '×' + Math.round(S.P*100) + ' cm, ' + MATS_PLAN[S.matPlan].n + '\n'
-       + '• Vasque : ' + Math.round(S.vasqueW*100) + '×' + Math.round(S.vasqueD*100) + ' cm\n'
-       + '• Meuble : ' + Math.round(S.CL*100) + 'L × ' + Math.round(S.CH*100) + 'H cm, ' + MATS_CAIS[S.matCais].n
-       + (nb > 0 ? ', ' + nb + ' tablette'+(nb>1?'s':'') : '');
+var FACADE_LABELS={portes2:'2 portes',tiroirs3:'3 tiroirs',mixte:'Porte + Tiroir'};
+function buildRecapStr(){
+  var sh=caissonElements.filter(function(e){return e.type==='shelf';}).length;
+  var sp=caissonElements.filter(function(e){return e.type==='separator';}).length;
+  return '• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n'
+       + '• Vasque : '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n'
+       + '• Meuble : '+Math.round(S.CL*100)+'L × '+Math.round(S.CH*100)+'H cm, '+MATS_CAIS[S.matCais].n+'\n'
+       + '• Façade : '+FACADE_LABELS[S.facadeStyle]+'\n'
+       + '• Intérieur : '+sh+' tablette'+(sh!==1?'s':'')+', '+sp+' séparateur'+(sp!==1?'s':'');
 }
 function buildRecap(){
-  var nb = caissonShelves.length;
-  var html = [
+  var sh=caissonElements.filter(function(e){return e.type==='shelf';}).length;
+  var sp=caissonElements.filter(function(e){return e.type==='separator';}).length;
+  var rows=[
     ['Plan',    Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n],
     ['Vasque',  Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
     ['Meuble',  Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+' cm — '+MATS_CAIS[S.matCais].n],
     ['Façade',  FACADE_LABELS[S.facadeStyle]||S.facadeStyle],
-    ['Tablettes', nb > 0 ? nb+' tablette'+(nb>1?'s':'') : 'aucune'],
+    ['Tablettes',sh+' tablette'+(sh!==1?'s':'')],
+    ['Séparateurs',sp+' séparateur'+(sp!==1?'s':'')],
   ];
-  document.getElementById('recap').innerHTML = html.map(function(r){
+  document.getElementById('recap').innerHTML=rows.map(function(r){
     return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
   }).join('');
 }
 
 // ═══════════════════════════════════════════════════════
-// UI INIT — grilles matières
+// INIT GRILLES MATIÈRES
 // ═══════════════════════════════════════════════════════
-function buildMatGrid(id, arr, fn) {
-  var el = document.getElementById(id);
-  arr.forEach(function(m, i) {
-    var btn = document.createElement('button');
-    btn.className = 'mat-btn' + (i===0?' on':'');
-    btn.onclick = function(){ fn(i); };
-    var sw = document.createElement('span');
-    sw.className = 'mat-sw';
-    sw.style.background = '#' + ('000000' + m.hex.toString(16)).slice(-6);
-    var lbl = document.createElement('span');
-    lbl.className = 'mat-lbl';
-    lbl.textContent = m.n;
-    btn.appendChild(sw);
-    btn.appendChild(lbl);
-    el.appendChild(btn);
+function buildMatGrid(id,arr,fn){
+  var el=document.getElementById(id);
+  arr.forEach(function(m,i){
+    var btn=document.createElement('button'); btn.className='mat-btn'+(i===0?' on':'');
+    btn.onclick=function(){fn(i);};
+    var sw=document.createElement('span'); sw.className='mat-sw';
+    sw.style.background='#'+('000000'+m.hex.toString(16)).slice(-6);
+    var lbl=document.createElement('span'); lbl.className='mat-lbl'; lbl.textContent=m.n;
+    btn.appendChild(sw); btn.appendChild(lbl); el.appendChild(btn);
   });
 }
-buildMatGrid('mg-plan', MATS_PLAN, setMatPlan);
-buildMatGrid('mg-cais', MATS_CAIS, setMatCais);
+buildMatGrid('mg-plan',MATS_PLAN,setMatPlan);
+buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
 
 // ═══════════════════════════════════════════════════════
-// RESIZE & LOOP
+// RESIZE & RENDER LOOP
 // ═══════════════════════════════════════════════════════
-function onResize(){
-  var w = wrap.clientWidth, h = wrap.clientHeight;
-  renderer.setSize(w, h);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-}
-window.addEventListener('resize', onResize);
-onResize();
-
-function loop(){
-  requestAnimationFrame(loop);
-  controls.update();
-  renderer.render(scene, camera);
-}
+function onResize(){ var w=wrap.clientWidth,h=wrap.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+window.addEventListener('resize',onResize); onResize();
+function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); }
 loop();
 
 // ═══════════════════════════════════════════════════════
-// INIT
+// DÉMARRAGE
 // ═══════════════════════════════════════════════════════
-// Init
-S.vx = 0; S.vz = 0;
-buildVasque();   // construit vasque procédurale + plan avec trou
+S.vx=0; S.vz=0;
+buildVasque();
 buildCaisson();
 goStep(1);
-setTimeout(function(){ document.getElementById('hint').classList.remove('show'); }, 6000);
 </script>
 </body>
 </html>
