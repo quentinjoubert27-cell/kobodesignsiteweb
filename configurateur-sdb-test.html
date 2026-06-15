@@ -187,6 +187,11 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
           <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-VD">35 cm</span></div>
           <input type="range" min="25" max="45" step="1" value="35" oninput="setVasqueD(+this.value)">
         </div>
+        <div class="sec">🔧 Calage hauteur (temp)</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Offset Y vasque</span><span class="sl-val" id="v-VY">32 cm</span></div>
+          <input type="range" min="-50" max="80" step="1" value="32" oninput="setVasqueYOffset(+this.value)">
+        </div>
         <div class="sec">Position</div>
         <div class="pos-info">
           Distance bord gauche : <strong id="pos-x">—</strong><br>
@@ -478,6 +483,7 @@ function buildPlan(){
 // ═══════════════════════════════════════════════════════
 // BUILD VASQUE
 // ═══════════════════════════════════════════════════════
+var _vasqueYOffset=0.32;
 var _vasqueGltfCache=null;
 var _vasqueLoading=false;
 
@@ -518,7 +524,7 @@ function _applyVasqueGltf(gltf){
   model.traverse(function(o){ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} });
   grp.add(model);
 
-  vasqueRimOffset=sz1.y-0.32;
+  vasqueRimOffset=sz1.y-_vasqueYOffset;
   S.vasqueRx=sz1.x/2+0.006; S.vasqueRz=sz1.z/2+0.006;
 
   scene.add(grp); vasqueGrp=grp;
@@ -792,6 +798,11 @@ function setCaissonOffset(v){
 }
 function setVasqueW(v){ S.vasqueW=v/100; document.getElementById('v-VW').textContent=v+' cm'; buildVasque(); }
 function setVasqueD(v){ S.vasqueD=v/100; document.getElementById('v-VD').textContent=v+' cm'; buildVasque(); }
+function setVasqueYOffset(v){
+  document.getElementById('v-VY').textContent=v+' cm';
+  _vasqueYOffset=v/100;
+  if(_vasqueGltfCache) _applyVasqueGltf(_vasqueGltfCache);
+}
 function setMatPlan(i){ S.matPlan=i; document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildPlan(); }
 function setMatCais(i){ S.matCais=i; document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildCaisson(); }
 
