@@ -449,7 +449,7 @@ function buildCaisson(){
 // ═══════════════════════════════════════════════════════
 // BUILD PLAN DE TRAVAIL
 // ═══════════════════════════════════════════════════════
-function planTopY(){ return S.CH+0.04; }
+function planTopY(){ return S.CH+0.04+S.Ep; }
 
 function buildPlan(){
   if(planMesh){disposeMesh(planMesh);scene.remove(planMesh);planMesh=null;}
@@ -468,7 +468,7 @@ function buildPlan(){
   shape.holes.push(hole);
 
   var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
-  geo.rotateX(Math.PI/2); geo.translate(0,topY-Ep,0);
+  geo.rotateX(Math.PI/2); geo.translate(0,S.CH+0.04,0);
   var md=MATS_PLAN[S.matPlan];
   planMesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex),roughness:md.r,metalness:0.04}));
   planMesh.castShadow=true; planMesh.receiveShadow=true; scene.add(planMesh);
