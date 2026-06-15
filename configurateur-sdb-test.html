@@ -291,7 +291,7 @@ sun.shadow.camera.left=-2; sun.shadow.camera.right=2;
 sun.shadow.camera.top=2;  sun.shadow.camera.bottom=-2;
 sun.shadow.camera.far=20; sun.shadow.bias=-0.0003;
 scene.add(sun);
-scene.add(Object.assign(new THREE.DirectionalLight(0xb0c8e0,0.3),{position:new THREE.Vector3(-4,2,-3)}));
+var dl2=new THREE.DirectionalLight(0xb0c8e0,0.3); dl2.position.set(-4,2,-3); scene.add(dl2);
 
 var solMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x242018,roughness:0.92,metalness:0.05}));
 solMesh.rotation.x=-Math.PI/2; solMesh.receiveShadow=true; scene.add(solMesh);
