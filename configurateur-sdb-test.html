@@ -518,7 +518,7 @@ function _applyVasqueGltf(gltf){
   model.traverse(function(o){ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} });
   grp.add(model);
 
-  vasqueRimOffset=sz1.y;
+  vasqueRimOffset=sz1.y-0.32;
   S.vasqueRx=sz1.x/2+0.006; S.vasqueRz=sz1.z/2+0.006;
 
   scene.add(grp); vasqueGrp=grp;
