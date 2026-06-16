@@ -474,15 +474,10 @@ function buildCaisson(){
       var pgV=new THREE.CylinderGeometry(0.006,0.006,h*0.35,12);
       var pv=new THREE.Mesh(pgV,matLaiton);
       pv.position.set(cx+(w/2-0.028),cy,fz+0.021); caissonGrp.add(pv);
-    } else { // tiroir — occupe le bas du compartiment, h max 14cm
-      var tirH=Math.min(h*0.55,0.14);
-      var cy2=ycmToLocal(bot)+tirH/2;
-      var tm=box(w-jeu,tirH-jeu,0.020,matFacade); tm.position.set(cx,cy2,fz);
+    } else { // tiroir — pleine hauteur du compartiment, sans poignée
+      var cy2=ycmToLocal((bot+top)/2);
+      var tm=box(w-jeu,h-jeu,0.020,matFacade); tm.position.set(cx,cy2,fz);
       tm.userData.elemIdx=idx; caissonElemMeshes.push(tm); caissonGrp.add(tm);
-      // Poignée horizontale
-      var pgH=new THREE.CylinderGeometry(0.006,0.006,(w-jeu)*0.45,12);
-      var ph=new THREE.Mesh(pgH,matLaiton); ph.rotation.z=Math.PI/2;
-      ph.position.set(cx,cy2,fz+0.021); caissonGrp.add(ph);
     }
   });
 
