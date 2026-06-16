@@ -254,11 +254,16 @@ var MATS_PLAN = [
   {n:'Noir mat',        hex:0x2A2A2A, r:.82},
 ];
 var MATS_CAIS = [
-  {n:'Chêne naturel', hex:0x8B6F47, r:.58},
-  {n:'Fumé',          hex:0x5A4128, r:.55},
-  {n:'Noyer',         hex:0x4A3520, r:.52},
-  {n:'Noir',          hex:0x1E1E1E, r:.65},
+  {n:'Chêne',        src:'img/BOISCHENE.jpg',   r:.65},
+  {n:'Noyer',        src:'img/NOYER.jpg',        r:.62},
+  {n:'Chêne Foncé',  src:'img/CHENEFONCE.jpg',  r:.62},
+  {n:'Sapelli',      src:'img/SAPELLI.jpg',      r:.60},
+  {n:'Vert Sauge',   src:'img/VERTSAUGE.jpg',   r:.65},
+  {n:'Brun Rosé',    src:'img/BRUNROSE.jpg',     r:.65},
+  {n:'Gris Ardoise', src:'img/GRISARDOISE.jpg', r:.65},
+  {n:'Blanc',        src:null, color:'#F0EDEA',  r:.70},
 ];
+var _caisTexCache={};
 
 var EP = 0.019;  // épaisseur panneau
 
@@ -385,11 +390,21 @@ function buildCaisson(){
   var ep=EP, iW=CL-2*ep, iH=CH-2*ep;
 
   var md=MATS_CAIS[S.matCais];
-  var matCais  =new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex),roughness:md.r,metalness:0.02});
-  var matFacade=new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex).multiplyScalar(0.80),roughness:md.r*.9,metalness:0.02});
-  var matFond  =new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex).multiplyScalar(0.68),roughness:md.r,metalness:0.01});
-  var matElem  =new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex).multiplyScalar(0.88),roughness:md.r*.95,metalness:0.01});
   var matLaiton=new THREE.MeshStandardMaterial({color:0xc9a45a,roughness:0.28,metalness:0.88});
+  function makePanelMat(darken,w,h){
+    var tex=_caisTexCache[S.matCais];
+    if(tex){
+      var t=tex.clone(); t.needsUpdate=true;
+      t.repeat.set(Math.max(w,0.01)/0.40, Math.max(h,0.01)/0.40);
+      return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});
+    }
+    var base=new THREE.Color(md.color||'#D4A96A');
+    return new THREE.MeshStandardMaterial({color:base.multiplyScalar(darken),roughness:md.r,metalness:0.02});
+  }
+  var matCais  =makePanelMat(1.00, EP, 0.5);
+  var matFacade=makePanelMat(0.80, 0.3, 0.4);
+  var matFond  =makePanelMat(0.68, 0.5, 0.4);
+  var matElem  =makePanelMat(0.88, 0.3, 0.3);
 
   function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
 
@@ -862,7 +877,18 @@ function setVasqueYOffset(v){
   if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
 }
 function setMatPlan(i){ S.matPlan=i; document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildPlan(); }
-function setMatCais(i){ S.matCais=i; document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildCaisson(); }
+function setMatCais(i){
+  S.matCais=i;
+  document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_CAIS[i];
+  if(!md.src){ buildCaisson(); return; }
+  if(_caisTexCache[i]){ buildCaisson(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _caisTexCache[i]=tex; buildCaisson();
+  });
+}
 
 function updatePosInfo(){
   var vx=clampVasque(S.vx,'x'),vz=clampVasque(S.vz,'z');
@@ -950,14 +976,31 @@ function buildMatGrid(id,arr,fn){
   arr.forEach(function(m,i){
     var btn=document.createElement('button'); btn.className='mat-btn'+(i===0?' on':'');
     btn.onclick=function(){fn(i);};
-    var sw=document.createElement('span'); sw.className='mat-sw';
-    sw.style.background='#'+('000000'+m.hex.toString(16)).slice(-6);
+    if(m.src){
+      var img=document.createElement('img');
+      img.src=m.src; img.style.cssText='width:22px;height:22px;border-radius:5px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.1)';
+      btn.appendChild(img);
+    } else {
+      var sw=document.createElement('span'); sw.className='mat-sw';
+      sw.style.background=m.color||('#'+('000000'+(m.hex||0).toString(16)).slice(-6));
+      btn.appendChild(sw);
+    }
     var lbl=document.createElement('span'); lbl.className='mat-lbl'; lbl.textContent=m.n;
-    btn.appendChild(sw); btn.appendChild(lbl); el.appendChild(btn);
+    btn.appendChild(lbl); el.appendChild(btn);
   });
 }
 buildMatGrid('mg-plan',MATS_PLAN,setMatPlan);
 buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
+// Précharge la première texture bois
+(function(){
+  var md=MATS_CAIS[0];
+  if(!md.src) return;
+  new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _caisTexCache[0]=tex; buildCaisson();
+  });
+})();
 
 // Grille sélecteur vasques
 (function(){
