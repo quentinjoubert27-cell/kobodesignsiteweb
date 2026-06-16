@@ -879,7 +879,7 @@ function parseKeyS(key){
 
 function buildPDFHtmlSdb(cfg){
   var W=cfg.meuble_l||0, H=cfg.meuble_h||0, P=cfg.meuble_p||0;
-  var ep=1.9;
+  var ep=1.8;
   var elems=Array.isArray(cfg.elements)?cfg.elements:[];
   var shelves=elems.filter(function(e){return e.type==='shelf';}).sort(function(a,b){return a.y_cm-b.y_cm;});
   var seps=elems.filter(function(e){return e.type==='separator';}).sort(function(a,b){return a.x_cm-b.x_cm;});
