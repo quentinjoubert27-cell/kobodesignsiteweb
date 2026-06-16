@@ -317,8 +317,8 @@ scene.fog=new THREE.FogExp2(0x141210,0.045);
 var camera=new THREE.PerspectiveCamera(42,1,0.01,30);
 camera.position.set(-0.4,0.9,1.6); camera.lookAt(0,0.25,0);
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x707070,0.28));
-var sun=new THREE.DirectionalLight(0xffffff,0.52);
+scene.add(new THREE.HemisphereLight(0xffffff,0x707070,0.32));
+var sun=new THREE.DirectionalLight(0xffffff,0.60);
 sun.position.set(3,6,3); sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-2; sun.shadow.camera.right=2;
