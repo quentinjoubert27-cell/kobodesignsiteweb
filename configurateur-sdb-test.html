@@ -317,16 +317,16 @@ scene.fog=new THREE.FogExp2(0x141210,0.045);
 var camera=new THREE.PerspectiveCamera(42,1,0.01,30);
 camera.position.set(-0.4,0.9,1.6); camera.lookAt(0,0.25,0);
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x707070,0.35));
-var sun=new THREE.DirectionalLight(0xffffff,0.65);
+scene.add(new THREE.HemisphereLight(0xffffff,0x707070,0.18));
+var sun=new THREE.DirectionalLight(0xffffff,0.35);
 sun.position.set(3,6,3); sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-2; sun.shadow.camera.right=2;
 sun.shadow.camera.top=2;  sun.shadow.camera.bottom=-2;
 sun.shadow.camera.far=20; sun.shadow.bias=-0.0003;
 scene.add(sun);
-var dl2=new THREE.DirectionalLight(0xffffff,0.2); dl2.position.set(-3,3,4); scene.add(dl2);
-var dl3=new THREE.DirectionalLight(0xffffff,0.15); dl3.position.set(3,2,4); scene.add(dl3);
+var dl2=new THREE.DirectionalLight(0xffffff,0.10); dl2.position.set(-3,3,4); scene.add(dl2);
+var dl3=new THREE.DirectionalLight(0xffffff,0.08); dl3.position.set(3,2,4); scene.add(dl3);
 
 var solMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x242018,roughness:0.92,metalness:0.05}));
 solMesh.rotation.x=-Math.PI/2; solMesh.receiveShadow=true; scene.add(solMesh);
