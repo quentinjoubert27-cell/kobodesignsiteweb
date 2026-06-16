@@ -545,7 +545,7 @@ function clampVasque(val,axis){
     return Math.max(mn,Math.min(mx,val));
   } else {
     var halfV=S.vasqueRz, pz=planCZ();
-    var mn=pz-S.P/2+halfV+0.04, mx=pz+S.P/2-halfV-0.04;
+    var mn=pz-S.P/2+halfV, mx=pz+S.P/2-halfV-0.04;
     if(mn>mx) return pz;
     return Math.max(mn,Math.min(mx,val));
   }
