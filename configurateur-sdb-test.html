@@ -1256,6 +1256,8 @@ async function submitConfig(){
           plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10,
                  matLabel:MATS_PLAN[S.matPlan].n, matId:S.matPlan },
           vasques:{ nb:S.nbVasques, W:Math.round(S.vasqueW*100), D:Math.round(S.vasqueD*100),
+                    id:_vasqueSelected,
+                    label:(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label,
                     vx:Math.round(S.vx*100)/100, vz:Math.round(S.vz*100)/100,
                     vx2:Math.round(S.vx2*100)/100, vz2:Math.round(S.vz2*100)/100 },
           elements:caissonElements,

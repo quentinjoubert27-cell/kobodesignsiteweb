@@ -850,7 +850,7 @@ function renderSDB(configs){
         +'<div class="cfg-name">'+esc(c.prenom)+' <span class="cfg-email">'+esc(c.email)+'</span></div>'
         +'<div class="cfg-mat">'+ref+' · Meuble '+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm · '+esc(c.meuble_mat)
         +' &nbsp;|&nbsp; Plan '+c.plan_l+'×'+c.plan_p+' cm · '+esc(c.plan_mat)
-        +' &nbsp;|&nbsp; '+c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':'')
+        +' &nbsp;|&nbsp; '+c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':'')+(c.vasque_label?' '+esc(c.vasque_label):'')
         +(c.nb_tiroirs?' · '+c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''):'')
         +(c.nb_portes?' · '+c.nb_portes+' porte'+(c.nb_portes>1?'s':''):'')+'</div>'
       +'</div>'
@@ -1017,7 +1017,7 @@ function buildPDFHtmlSdb(cfg){
     +'<div class="body-grid"><div>'
       +'<div class="sect"><div class="sect-title">Dimensions intérieures</div>'+tbl([['Largeur int.',Math.round(iW)+' cm'],['Hauteur int.',Math.round(iH)+' cm'],['Profondeur',P+' cm'],['Épaisseur panneau',ep+' mm']])+'</div>'
       +(seps.length?'<div class="sect"><div class="sect-title">Séparateurs</div>'+tbl(seps.map(function(s,i){return ['Séparateur n°'+(i+1),'X = '+s.x_cm+' cm'];}))+'</div>':'')
-      +'<div class="sect"><div class="sect-title">Vasque'+(cfg.nb_vasques>1?'s':'')+'</div>'+tbl([['Nombre',cfg.nb_vasques],['Dimensions',cfg.vasque_w+'×'+cfg.vasque_d+' cm']])+'</div>'
+      +'<div class="sect"><div class="sect-title">Vasque'+(cfg.nb_vasques>1?'s':'')+'</div>'+tbl([['Modèle',(cfg.vasque_label||'—')],['Nombre',cfg.nb_vasques],['Dimensions',cfg.vasque_w+'×'+cfg.vasque_d+' cm']])+'</div>'
     +'</div><div>'
       +(shelves.length?'<div class="sect"><div class="sect-title">Tablettes ('+shelves.length+')</div>'+tbl(shelves.map(function(s,i){var xl=s.x_left_cm||0,xr=s.x_right_cm||iW,partial=xl>1||(xr<iW-1);return ['Tablette n°'+(i+1)+' H='+s.y_cm+' cm','<strong>'+(xr-xl)+' cm</strong>'+(partial?' (partielle)':'')];}))+'</div>':'')
       +(portes.length?'<div class="sect"><div class="sect-title">Portes ('+portes.length+')</div>'+tbl(portes.map(function(p,i){var k=parseKeyS(p.key);if(!k)return['Porte n°'+(i+1),'—'];return['Porte n°'+(i+1),'<strong>'+Math.round(k.xright-k.xleft)+'×'+Math.round(k.top-k.bot)+' cm</strong>'];}))+'</div>':'')
