@@ -193,8 +193,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
           <button class="facade-btn on" id="vt-poser" onclick="setVasqueType('poser')">À poser</button>
           <button class="facade-btn" id="vt-encastree" onclick="setVasqueType('encastree')">Encastrée</button>
         </div>
-
-
+        <div class="sec">Finition vasque</div>
+        <div class="mat-grid" id="mg-vasque"></div>
         <div class="sec">Position</div>
         <div class="pos-info">
           Distance bord gauche : <strong id="pos-x">—</strong><br>
@@ -248,11 +248,16 @@ var S = {
 };
 
 var MATS_PLAN = [
-  {n:'Céramique blanc', hex:0xF4F1ED, r:.08},
-  {n:'Marbre gris',     hex:0x8A8A8A, r:.22},
-  {n:'Pierre claire',   hex:0xC2AB8E, r:.42},
-  {n:'Noir mat',        hex:0x2A2A2A, r:.82},
+  {n:'Chêne',        src:'img/BOISCHENE.jpg',   r:.65},
+  {n:'Noyer',        src:'img/NOYER.jpg',        r:.62},
+  {n:'Chêne Foncé',  src:'img/CHENEFONCE.jpg',  r:.62},
+  {n:'Sapelli',      src:'img/SAPELLI.jpg',      r:.60},
+  {n:'Vert Sauge',   src:'img/VERTSAUGE.jpg',   r:.65},
+  {n:'Brun Rosé',    src:'img/BRUNROSE.jpg',     r:.65},
+  {n:'Gris Ardoise', src:'img/GRISARDOISE.jpg', r:.65},
+  {n:'Blanc',        src:null, color:'#F4F1ED',  r:.08},
 ];
+var _planTexCache={};
 var MATS_CAIS = [
   {n:'Chêne',        src:'img/BOISCHENE.jpg',   r:.65},
   {n:'Noyer',        src:'img/NOYER.jpg',        r:.62},
@@ -501,7 +506,15 @@ function buildPlan(){
   var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
   geo.rotateX(Math.PI/2); geo.translate(0,S.CH+0.04,0);
   var md=MATS_PLAN[S.matPlan];
-  planMesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(md.hex),roughness:md.r,metalness:0.04}));
+  var planMat;
+  if(_planTexCache[S.matPlan]){
+    var t=_planTexCache[S.matPlan].clone(); t.needsUpdate=true;
+    t.repeat.set(Math.max(S.L,0.01)/0.40, Math.max(S.P,0.01)/0.40);
+    planMat=new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.04});
+  } else {
+    planMat=new THREE.MeshStandardMaterial({color:new THREE.Color(md.color||'#C2AB8E'),roughness:md.r,metalness:0.04});
+  }
+  planMesh=new THREE.Mesh(geo,planMat);
   planMesh.castShadow=true; planMesh.receiveShadow=true;
   planMesh.position.z=planCZ(); scene.add(planMesh);
 }
@@ -511,6 +524,18 @@ function buildPlan(){
 // ═══════════════════════════════════════════════════════
 var _vasqueYOffset=0.10; // à poser=0.10, encastrée=0.06
 var vasqueEncastree=false;
+var MATS_VASQUE=[
+  {n:'Chêne',        src:'img/BOISCHENE.jpg',   r:.65},
+  {n:'Noyer',        src:'img/NOYER.jpg',        r:.62},
+  {n:'Chêne Foncé',  src:'img/CHENEFONCE.jpg',  r:.62},
+  {n:'Sapelli',      src:'img/SAPELLI.jpg',      r:.60},
+  {n:'Vert Sauge',   src:'img/VERTSAUGE.jpg',   r:.65},
+  {n:'Brun Rosé',    src:'img/BRUNROSE.jpg',     r:.65},
+  {n:'Gris Ardoise', src:'img/GRISARDOISE.jpg', r:.65},
+  {n:'Blanc',        src:null, color:'#F4F1ED',  r:.08},
+];
+var S_matVasque=7; // blanc par défaut
+var _vasqueTexCache={};
 var _vasqueModels=[
   {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.05},
   {id:'v2',label:'V2',file:'models/vasque-v2.glb', oPoser:0.09, oEncastree:0.0475},
@@ -580,6 +605,7 @@ function _applyVasqueGltf(gltf){
   S.vx=clampVasque(S.vx,'x');
   S.vz=clampVasque(WALL_Z+S.vasqueRz,'z'); // coller au mur par défaut
   positionVasque(); buildPlan(); updatePosInfo();
+  applyVasqueMat();
 }
 
 function clampVasque(val,axis){
@@ -876,7 +902,45 @@ function setVasqueYOffset(v){
   _vasqueYOffset=v/100;
   if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
 }
-function setMatPlan(i){ S.matPlan=i; document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildPlan(); }
+function applyVasqueMat(){
+  if(!vasqueGrp) return;
+  var md=MATS_VASQUE[S_matVasque];
+  var tex=_vasqueTexCache[S_matVasque];
+  vasqueGrp.traverse(function(o){
+    if(!o.isMesh) return;
+    if(tex){
+      var t=tex.clone(); t.needsUpdate=true;
+      t.repeat.set(1,1);
+      o.material=new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});
+    } else {
+      o.material=new THREE.MeshStandardMaterial({color:new THREE.Color(md.color||'#F4F1ED'),roughness:md.r,metalness:0.02});
+    }
+  });
+}
+function setMatVasque(i){
+  S_matVasque=i;
+  document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_VASQUE[i];
+  if(!md.src){ applyVasqueMat(); return; }
+  if(_vasqueTexCache[i]){ applyVasqueMat(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _vasqueTexCache[i]=tex; applyVasqueMat();
+  });
+}
+function setMatPlan(i){
+  S.matPlan=i;
+  document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_PLAN[i];
+  if(!md.src){ buildPlan(); return; }
+  if(_planTexCache[i]){ buildPlan(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _planTexCache[i]=tex; buildPlan();
+  });
+}
 function setMatCais(i){
   S.matCais=i;
   document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
@@ -991,6 +1055,9 @@ function buildMatGrid(id,arr,fn){
 }
 buildMatGrid('mg-plan',MATS_PLAN,setMatPlan);
 buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
+buildMatGrid('mg-vasque',MATS_VASQUE,setMatVasque);
+// Sélectionne "Blanc" par défaut pour la vasque
+document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===7);});
 // Précharge la première texture bois
 (function(){
   var md=MATS_CAIS[0];
