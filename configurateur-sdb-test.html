@@ -502,13 +502,13 @@ function buildPlan(){
 var _vasqueYOffset=0.10; // à poser=0.10, encastrée=0.06
 var vasqueEncastree=false;
 var _vasqueModels=[
-  {id:'v1',label:'V1',file:'models/vasque-v1.glb'},
-  {id:'v2',label:'V2',file:'models/vasque-v2.glb'},
-  {id:'v3',label:'V3',file:'models/vasque-v3.glb'},
-  {id:'v4',label:'V4',file:'models/vasque-v4.glb'},
-  {id:'v5',label:'V5',file:'models/vasque-v5.glb'},
-  {id:'v6',label:'V6',file:'models/vasque-v6.glb'},
-  {id:'v7',label:'V7',file:'models/vasque-v7.glb'},
+  {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.06},
+  {id:'v2',label:'V2',file:'models/vasque-v2.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v3',label:'V3',file:'models/vasque-v3.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v4',label:'V4',file:'models/vasque-v4.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v5',label:'V5',file:'models/vasque-v5.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v6',label:'V6',file:'models/vasque-v6.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v7',label:'V7',file:'models/vasque-v7.glb', oPoser:0.09, oEncastree:0.05},
 ];
 var _vasqueSelected='v1';
 var _vasqueCache={};  // {id: gltf}
@@ -533,6 +533,7 @@ function selectVasque(id){
   document.querySelectorAll('.vasque-btn').forEach(function(b){
     b.classList.toggle('on', b.dataset.id===id);
   });
+  _applyOffsetForCurrent();
   buildVasque();
 }
 
@@ -842,11 +843,21 @@ function setCaissonOffset(v){
 }
 function setVasqueW(v){ S.vasqueW=v/100; document.getElementById('v-VW').textContent=v+' cm'; buildVasque(); }
 function setVasqueD(v){ S.vasqueD=v/100; document.getElementById('v-VD').textContent=v+' cm'; buildVasque(); }
+function _applyOffsetForCurrent(){
+  var m=_vasqueModels.find(function(x){return x.id===_vasqueSelected;});
+  if(!m) return;
+  var offset=vasqueEncastree?m.oEncastree:m.oPoser;
+  _vasqueYOffset=offset;
+  var sl=document.getElementById('v-VY');
+  if(sl) sl.textContent=Math.round(offset*1000)/10+' cm';
+  var inp=document.querySelector('#p3 input[type=range][oninput*=VasqueYOffset]');
+  if(inp) inp.value=Math.round(offset*1000)/10;
+}
 function setVasqueType(t){
   vasqueEncastree=(t==='encastree');
-  _vasqueYOffset=vasqueEncastree?0.06:0.10;
   document.getElementById('vt-poser').classList.toggle('on',!vasqueEncastree);
   document.getElementById('vt-encastree').classList.toggle('on',vasqueEncastree);
+  _applyOffsetForCurrent();
   if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
   buildPlan();
 }
