@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="robots" content="noindex,nofollow"/>
-  <title>Configs bibliothèque — Kobo Design</title>
+  <title>Configs — Kobo Design</title>
   <link rel="icon" type="image/png" href="img/logo-kobo.png"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
   <style>
@@ -114,18 +114,33 @@
     .fiche-surface{font-size:11px;color:rgba(26,26,26,.45);padding:8px 12px;
       background:rgba(26,26,26,.03);border-radius:8px;line-height:1.7}
     .fiche-surface strong{color:var(--dark)}
+
+    /* Tabs */
+    .tabs{display:flex;gap:4px;margin-bottom:28px;background:#fff;border-radius:12px;
+      padding:5px;border:1px solid rgba(26,26,26,.08);width:fit-content}
+    .tab-btn{padding:9px 20px;border-radius:8px;border:none;background:none;font-family:var(--font);
+      font-size:11px;font-weight:700;letter-spacing:.06em;color:rgba(26,26,26,.45);cursor:pointer;transition:all .18s}
+    .tab-btn.active{background:var(--accent);color:#fff}
+    .tab-pane{display:none}.tab-pane.active{display:block}
+
+    /* SDB table */
+    .cfg-row-sdb{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;
+      gap:16px;padding:14px 20px;border-bottom:1px solid rgba(26,26,26,.06);transition:background .15s}
+    .cfg-row-sdb:hover{background:#FAFAF8}
+    .cfg-row-sdb:last-child{border-bottom:none}
+    .cfg-num{font-size:11px;font-weight:700;color:rgba(26,26,26,.25);min-width:28px}
   </style>
 </head>
 <body>
 
 <header>
   <a href="index.html" class="logo"><img src="img/logo-kobo.png" alt="Kobo Design"/></a>
-  <span class="badge">Admin · Configs biblio</span>
+  <span class="badge">Admin · Configs</span>
 </header>
 
 <div class="page">
   <p class="eyebrow">Kobo Design</p>
-  <h1>Bibliothèques <em>configurées.</em></h1>
+  <h1>Configurations <em>reçues.</em></h1>
   <p class="sub">Toutes les configurations soumises par les visiteurs.</p>
 
   <!-- Auth -->
@@ -138,9 +153,25 @@
 
   <!-- Contenu (caché jusqu'à auth) -->
   <div id="content" style="display:none">
-    <div class="stats" id="stats"></div>
-    <div class="configs-wrap" id="configsWrap">
-      <div class="loading"><div class="spinner"></div><br>Chargement…</div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('biblio')">📚 Bibliothèques</button>
+      <button class="tab-btn" onclick="switchTab('sdb')">🚿 Salles de bain</button>
+    </div>
+
+    <!-- Tab Biblio -->
+    <div class="tab-pane active" id="tab-biblio">
+      <div class="stats" id="stats"></div>
+      <div class="configs-wrap" id="configsWrap">
+        <div class="loading"><div class="spinner"></div><br>Chargement…</div>
+      </div>
+    </div>
+
+    <!-- Tab SDB -->
+    <div class="tab-pane" id="tab-sdb">
+      <div class="stats" id="stats-sdb"></div>
+      <div class="configs-wrap" id="configsWrap-sdb">
+        <div class="loading"><div class="spinner"></div><br>Chargement…</div>
+      </div>
     </div>
   </div>
 </div>
@@ -162,23 +193,34 @@ function loadConfigs(token){
   document.getElementById('authWrap').style.display='none';
   document.getElementById('content').style.display='block';
 
-  fetch('/api/list-configs?token=' + encodeURIComponent(token))
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data.error){
-        document.getElementById('authWrap').style.display='block';
-        document.getElementById('content').style.display='none';
-        document.getElementById('tokenInput').value='';
-        document.getElementById('authErr').textContent='Token invalide.';
-        return;
-      }
-      render(data.configs || [], token);
-    })
-    .catch(function(){
+  var t = encodeURIComponent(token);
+  Promise.all([
+    fetch('/api/list-configs?token='+t).then(function(r){return r.json();}),
+    fetch('/api/list-configs-sdb?token='+t).then(function(r){return r.json();})
+  ]).then(function(results){
+    var biblio = results[0], sdb = results[1];
+    if(biblio.error){
       document.getElementById('authWrap').style.display='block';
       document.getElementById('content').style.display='none';
-      document.getElementById('authErr').textContent='Erreur réseau.';
-    });
+      document.getElementById('tokenInput').value='';
+      document.getElementById('authErr').textContent='Token invalide.';
+      return;
+    }
+    render(biblio.configs || [], token);
+    renderSDB(sdb.configs || []);
+  }).catch(function(){
+    document.getElementById('authWrap').style.display='block';
+    document.getElementById('content').style.display='none';
+    document.getElementById('authErr').textContent='Erreur réseau.';
+  });
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){
+    b.classList.toggle('active', (i===0&&tab==='biblio')||(i===1&&tab==='sdb'));
+  });
+  document.getElementById('tab-biblio').classList.toggle('active', tab==='biblio');
+  document.getElementById('tab-sdb').classList.toggle('active', tab==='sdb');
 }
 
 function makeVizUrl(cfg){
@@ -780,6 +822,215 @@ function buildPDFHtml(cfg){
     // Footer
     +'<div class="footer"><span>Kobo Design — document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
     // Bouton impression
+    +'<button class="print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>'
+    +'</body></html>';
+}
+
+// ═══════════════════════════════════════════════
+//  SALLE DE BAIN
+// ═══════════════════════════════════════════════
+function renderSDB(configs){
+  var statsEl = document.getElementById('stats-sdb');
+  statsEl.innerHTML =
+    stat(configs.length, 'Configurations') +
+    stat(configs.filter(function(c){return c.nb_tiroirs>0;}).length, 'Avec tiroirs') +
+    stat(configs.filter(function(c){return c.nb_vasques>1;}).length, 'Double vasque');
+
+  window._configsSDB = configs;
+  var wrap = document.getElementById('configsWrap-sdb');
+  if(!configs.length){
+    wrap.innerHTML='<div class="empty">Aucune configuration reçue pour l\'instant.</div>';
+    return;
+  }
+  var rows = configs.map(function(c,idx){
+    var ref='SDB-'+String(c.id||'').padStart(4,'0');
+    return '<div class="cfg-row-sdb">'
+      +'<div class="cfg-num">'+(idx+1)+'</div>'
+      +'<div>'
+        +'<div class="cfg-name">'+esc(c.prenom)+' <span class="cfg-email">'+esc(c.email)+'</span></div>'
+        +'<div class="cfg-mat">'+ref+' · Meuble '+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm · '+esc(c.meuble_mat)
+        +' &nbsp;|&nbsp; Plan '+c.plan_l+'×'+c.plan_p+' cm · '+esc(c.plan_mat)
+        +' &nbsp;|&nbsp; '+c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':'')
+        +(c.nb_tiroirs?' · '+c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''):'')
+        +(c.nb_portes?' · '+c.nb_portes+' porte'+(c.nb_portes>1?'s':''):'')+'</div>'
+      +'</div>'
+      +'<div class="cfg-date">'+fmtDate(c.created_at)+'</div>'
+      +'<button class="fiche-btn" onclick="generatePDFSdb('+idx+')">📄 PDF</button>'
+      +'</div>';
+  }).join('');
+  wrap.innerHTML = rows;
+}
+
+function generatePDFSdb(idx){
+  var cfg = window._configsSDB[idx];
+  if(!cfg) return;
+  var html = buildPDFHtmlSdb(cfg);
+  var win = window.open('', '_blank', 'width=1000,height=800');
+  win.document.write(html);
+  win.document.close();
+  win.onload = function(){ win.focus(); win.print(); };
+}
+
+function parseKeyS(key){
+  var p=String(key||'').split('_');
+  if(p.length<4) return null;
+  return {bot:parseFloat(p[0]),xleft:parseFloat(p[1]),top:parseFloat(p[2]),xright:parseFloat(p[3])};
+}
+
+function buildPDFHtmlSdb(cfg){
+  var W=cfg.meuble_l||0, H=cfg.meuble_h||0, P=cfg.meuble_p||0;
+  var ep=1.9;
+  var elems=Array.isArray(cfg.elements)?cfg.elements:[];
+  var shelves=elems.filter(function(e){return e.type==='shelf';}).sort(function(a,b){return a.y_cm-b.y_cm;});
+  var seps=elems.filter(function(e){return e.type==='separator';}).sort(function(a,b){return a.x_cm-b.x_cm;});
+  var portes=elems.filter(function(e){return e.type==='porte';});
+  var tiroirs=elems.filter(function(e){return e.type==='tiroir';});
+  var iW=W-2*ep, iH=H-2*ep;
+  var ref='SDB-'+String(cfg.id||'').padStart(4,'0');
+  var dateStr=fmtDate(cfg.created_at);
+
+  function buildSVG(withTiroirs){
+    var drawW=200, drawH=Math.round(drawW*(H/W));
+    if(drawH<60)drawH=60; if(drawH>320)drawH=320;
+    var mL=52,mR=50,mT=30,mB=28;
+    var svgTW=mL+drawW+mR, svgTH=mT+drawH+mB;
+    var px=drawW/W, t=ep*px;
+    function hDim(x1,x2,y,lbl){
+      var cx=(x1+x2)/2,hw=Math.max(String(lbl).length*4,8);
+      return '<line x1="'+x1+'" y1="'+y+'" x2="'+(cx-hw-1)+'" y2="'+y+'" stroke="#CD3E00" stroke-width="0.7"/>'
+        +'<line x1="'+(cx+hw+1)+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="#CD3E00" stroke-width="0.7"/>'
+        +'<line x1="'+x1+'" y1="'+(y-3.5)+'" x2="'+x1+'" y2="'+(y+3.5)+'" stroke="#CD3E00" stroke-width="0.8"/>'
+        +'<line x1="'+x2+'" y1="'+(y-3.5)+'" x2="'+x2+'" y2="'+(y+3.5)+'" stroke="#CD3E00" stroke-width="0.8"/>'
+        +'<rect x="'+(cx-hw-1)+'" y="'+(y-5)+'" width="'+(hw*2+2)+'" height="10" fill="#fff"/>'
+        +'<text x="'+cx+'" y="'+(y+0.5)+'" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#CD3E00" font-family="Poppins,sans-serif" font-weight="700">'+lbl+'</text>';
+    }
+    function vDim(y1,y2,x,lbl){
+      var cy=(y1+y2)/2,hw=Math.max(String(lbl).length*4,8);
+      return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+(cy-hw-1)+'" stroke="#CD3E00" stroke-width="0.7"/>'
+        +'<line x1="'+x+'" y1="'+(cy+hw+1)+'" x2="'+x+'" y2="'+y2+'" stroke="#CD3E00" stroke-width="0.7"/>'
+        +'<line x1="'+(x-3.5)+'" y1="'+y1+'" x2="'+(x+3.5)+'" y2="'+y1+'" stroke="#CD3E00" stroke-width="0.8"/>'
+        +'<line x1="'+(x-3.5)+'" y1="'+y2+'" x2="'+(x+3.5)+'" y2="'+y2+'" stroke="#CD3E00" stroke-width="0.8"/>'
+        +'<rect x="'+(x-hw-1)+'" y="'+(cy-hw-1)+'" width="'+(hw*2+2)+'" height="'+(hw*2+2)+'" fill="#fff"/>'
+        +'<text x="'+x+'" y="'+cy+'" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#CD3E00" font-family="Poppins,sans-serif" font-weight="700" transform="rotate(-90,'+x+','+cy+')">'+lbl+'</text>';
+    }
+    function yPx(y_cm){return mT+drawH-t-y_cm*px;}
+    function xPx(x_cm){return mL+t+x_cm*px;}
+    var s='';
+    s+='<rect x="'+mL+'" y="'+mT+'" width="'+drawW+'" height="'+drawH+'" fill="#E8E2D8" stroke="#999" stroke-width="1.2"/>';
+    s+='<rect x="'+(mL+t)+'" y="'+(mT+t)+'" width="'+(drawW-2*t)+'" height="'+(drawH-2*t)+'" fill="#FAF8F4" stroke="#CCC" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    shelves.forEach(function(sh){
+      var xl=xPx(sh.x_left_cm||0),xr=xPx(sh.x_right_cm||iW),yy=yPx(sh.y_cm);
+      s+='<rect x="'+xl+'" y="'+(yy-t)+'" width="'+(xr-xl)+'" height="'+t+'" fill="#B0956E" rx="0.5"/>';
+    });
+    seps.forEach(function(sp){
+      var xx=xPx(sp.x_cm);
+      s+='<rect x="'+(xx-t/2)+'" y="'+(mT+t)+'" width="'+t+'" height="'+(drawH-2*t)+'" fill="#B0956E" rx="0.5"/>';
+    });
+    portes.forEach(function(p){
+      var k=parseKeyS(p.key); if(!k) return;
+      var xl=xPx(k.xleft),xr=xPx(k.xright),yt=yPx(k.top),yb=yPx(k.bot),dw=xr-xl,dh=yb-yt;
+      s+='<rect x="'+xl+'" y="'+yt+'" width="'+dw+'" height="'+dh+'" fill="rgba(205,62,0,.1)" stroke="#CD3E00" stroke-width="1" rx="1.5"/>';
+      var isL=(k.xleft+k.xright)/2<=iW/2;
+      s+='<circle cx="'+(isL?xr-4:xl+4)+'" cy="'+((yt+yb)/2)+'" r="2" fill="#CD3E00" opacity=".6"/>';
+    });
+    tiroirs.forEach(function(p){
+      var k=parseKeyS(p.key); if(!k) return;
+      var xl=xPx(k.xleft),xr=xPx(k.xright),yt=yPx(k.top),yb=yPx(k.bot),dw=xr-xl,dh=yb-yt;
+      if(withTiroirs){
+        s+='<rect x="'+xl+'" y="'+yt+'" width="'+dw+'" height="'+dh+'" fill="#C8B89A" stroke="#8B7355" stroke-width="1" rx="1"/>';
+        s+='<line x1="'+(xl+4)+'" y1="'+((yt+yb)/2)+'" x2="'+(xr-4)+'" y2="'+((yt+yb)/2)+'" stroke="#8B7355" stroke-width="0.5" opacity=".5"/>';
+      } else {
+        s+='<rect x="'+xl+'" y="'+yt+'" width="'+dw+'" height="'+dh+'" fill="rgba(26,26,26,.03)" stroke="rgba(26,26,26,.2)" stroke-width="0.8" stroke-dasharray="3,2" rx="1"/>';
+      }
+      if(dw>20&&dh>12){
+        var wlbl=Math.round(k.xright-k.xleft)+' cm';
+        s+='<rect x="'+(xl+dw/2-10)+'" y="'+(yt+dh/2-5)+'" width="20" height="10" fill="rgba(255,255,255,.85)" rx="2"/>';
+        s+='<text x="'+(xl+dw/2)+'" y="'+(yt+dh/2+0.5)+'" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="'+(withTiroirs?'#6B5535':'rgba(26,26,26,.4)')+'" font-family="Poppins,sans-serif" font-weight="700">'+wlbl+'</text>';
+      }
+    });
+    s+=hDim(mL,mL+drawW,mT+drawH+18,W+' cm');
+    s+='<line x1="'+mL+'" y1="'+(mT+drawH)+'" x2="'+mL+'" y2="'+(mT+drawH+22)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    s+='<line x1="'+(mL+drawW)+'" y1="'+(mT+drawH)+'" x2="'+(mL+drawW)+'" y2="'+(mT+drawH+22)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    s+=vDim(mT,mT+drawH,mL+drawW+18,H+' cm');
+    s+='<line x1="'+(mL+drawW)+'" y1="'+mT+'" x2="'+(mL+drawW+22)+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    s+='<line x1="'+(mL+drawW)+'" y1="'+(mT+drawH)+'" x2="'+(mL+drawW+22)+'" y2="'+(mT+drawH)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    var xB=[0].concat(seps.map(function(sp){return sp.x_cm;})).concat([iW]).sort(function(a,b){return a-b;});
+    if(seps.length){
+      for(var ci=0;ci<xB.length-1;ci++){
+        var cxl=xPx(xB[ci]),cxr=xPx(xB[ci+1]);
+        if(cxr-cxl>16){s+=hDim(cxl,cxr,mT-16,Math.round(xB[ci+1]-xB[ci])+' cm');s+='<line x1="'+cxl+'" y1="'+(mT-12)+'" x2="'+cxl+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/><line x1="'+cxr+'" y1="'+(mT-12)+'" x2="'+cxr+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';}
+      }
+    } else { s+=hDim(mL+t,mL+drawW-t,mT-16,Math.round(iW)+' cm int.'); }
+    var fsh=shelves.filter(function(sh){return (sh.x_left_cm||0)<1&&(sh.x_right_cm||iW)>iW-1;});
+    var yB=[0].concat(fsh.map(function(sh){return sh.y_cm;})).concat([iH]).sort(function(a,b){return a-b;});
+    for(var ki=0;ki<yB.length-1;ki++){
+      var cy1=yPx(yB[ki+1]),cy2=yPx(yB[ki]);
+      if(ki>0)cy1+=t;
+      var cH=Math.round((yB[ki+1]-yB[ki]-ep)*10)/10;
+      if(cy2-cy1>12){s+=vDim(cy1,cy2,mL-18,cH+' cm');s+='<line x1="'+(mL-14)+'" y1="'+cy1+'" x2="'+mL+'" y2="'+cy1+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/><line x1="'+(mL-14)+'" y1="'+cy2+'" x2="'+mL+'" y2="'+cy2+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';}
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgTW+' '+svgTH+'" width="100%" style="max-width:'+(svgTW*1.4)+'px">'+s+'</svg>';
+  }
+
+  var svgAvec=buildSVG(true), svgSans=buildSVG(false);
+  function tbl(rows){return '<table><tbody>'+rows.map(function(r){return '<tr><td class="lbl">'+r[0]+'</td><td class="val">'+r[1]+'</td></tr>';}).join('')+'</tbody></table>';}
+  var r2=function(n){return Math.round(n*100)/100;};
+  var s_struct=2*(H/100*P/100)+2*(iW/100*P/100)+(iW/100)*(iH/100);
+  var s_etag=0; shelves.forEach(function(sh){var xl=sh.x_left_cm||0,xr=sh.x_right_cm||iW;s_etag+=((xr-xl)/100)*(P/100*0.9);});
+  var s_fac=0; portes.concat(tiroirs).forEach(function(p){var k=parseKeyS(p.key);if(k)s_fac+=((k.xright-k.xleft)/100)*((k.top-k.bot)/100);});
+
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Fiche '+ref+' — '+esc(cfg.prenom)+'</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Poppins,sans-serif;color:#1A1A1A;background:#fff;padding:32px 40px;font-size:12px}'
+    +'@page{size:A4;margin:14mm 12mm}@media print{body{padding:0}.print-btn{display:none!important}}'
+    +'.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #CD3E00;padding-bottom:14px;margin-bottom:20px}'
+    +'.brand{font-size:20px;font-weight:900;letter-spacing:-.03em}.brand em{font-style:italic;font-weight:300;color:rgba(26,26,26,.3)}'
+    +'.ref{font-size:16px;font-weight:700;color:#CD3E00}.ref-date{font-size:10px;color:rgba(26,26,26,.4);margin-top:2px;text-align:right}'
+    +'.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}'
+    +'.meta-block{background:#F8F5F0;border-radius:8px;padding:10px 14px}'
+    +'.meta-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:6px}'
+    +'.meta-val{font-size:13px;font-weight:700}.meta-sub{font-size:10px;color:rgba(26,26,26,.5);margin-top:2px}'
+    +'.schemas{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px}'
+    +'.schema-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(205,62,0,.2)}'
+    +'.schema-avec{color:#6B5535}.schema-sans{color:rgba(26,26,26,.4)}'
+    +'.body-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}'
+    +'.sect{margin-bottom:14px}.sect-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#CD3E00;margin-bottom:6px;padding-bottom:3px;border-bottom:1px solid rgba(205,62,0,.2)}'
+    +'table{width:100%;border-collapse:collapse}tr:nth-child(even) td{background:#FAFAF8}'
+    +'td{padding:4px 8px;font-size:10px;vertical-align:top}td.lbl{color:rgba(26,26,26,.55);width:55%}td.val{font-weight:600;text-align:right}'
+    +'.surface-box{background:#F8F5F0;border-radius:8px;padding:12px 16px;margin-bottom:14px}'
+    +'.s-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:8px}'
+    +'.surface-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'
+    +'.sval{font-size:13px;font-weight:900;color:#CD3E00}.slbl{font-size:9px;color:rgba(26,26,26,.45);margin-top:1px}'
+    +'.footer{border-top:1px solid rgba(26,26,26,.1);padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:rgba(26,26,26,.35)}'
+    +'.print-btn{position:fixed;bottom:24px;right:24px;padding:12px 24px;background:#CD3E00;color:#fff;border:none;border-radius:100px;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(205,62,0,.3)}'
+    +'</style></head><body>'
+    +'<div class="header"><div class="brand">Kobo <em>Design</em> — Salle de Bain</div><div><div class="ref">'+ref+'</div><div class="ref-date">'+dateStr+'</div></div></div>'
+    +'<div class="meta">'
+      +'<div class="meta-block"><div class="meta-title">Client</div><div class="meta-val">'+esc(cfg.prenom)+'</div><div class="meta-sub">'+esc(cfg.email)+'</div></div>'
+      +'<div class="meta-block"><div class="meta-title">Meuble</div><div class="meta-val">'+W+'×'+H+'×'+P+' cm</div><div class="meta-sub">'+esc(cfg.meuble_mat)+'</div></div>'
+      +'<div class="meta-block"><div class="meta-title">Plan de travail</div><div class="meta-val">'+cfg.plan_l+'×'+cfg.plan_p+' cm</div><div class="meta-sub">'+esc(cfg.plan_mat)+'</div></div>'
+    +'</div>'
+    +'<div class="schemas">'
+      +'<div><div class="schema-title schema-avec">Vue de face — avec tiroirs</div>'+svgAvec+'</div>'
+      +'<div><div class="schema-title schema-sans">Vue de face — sans tiroirs</div>'+svgSans+'</div>'
+    +'</div>'
+    +'<div class="body-grid"><div>'
+      +'<div class="sect"><div class="sect-title">Dimensions intérieures</div>'+tbl([['Largeur int.',Math.round(iW)+' cm'],['Hauteur int.',Math.round(iH)+' cm'],['Profondeur',P+' cm'],['Épaisseur panneau',ep+' mm']])+'</div>'
+      +(seps.length?'<div class="sect"><div class="sect-title">Séparateurs</div>'+tbl(seps.map(function(s,i){return ['Séparateur n°'+(i+1),'X = '+s.x_cm+' cm'];}))+'</div>':'')
+      +'<div class="sect"><div class="sect-title">Vasque'+(cfg.nb_vasques>1?'s':'')+'</div>'+tbl([['Nombre',cfg.nb_vasques],['Dimensions',cfg.vasque_w+'×'+cfg.vasque_d+' cm']])+'</div>'
+    +'</div><div>'
+      +(shelves.length?'<div class="sect"><div class="sect-title">Tablettes ('+shelves.length+')</div>'+tbl(shelves.map(function(s,i){var xl=s.x_left_cm||0,xr=s.x_right_cm||iW,partial=xl>1||(xr<iW-1);return ['Tablette n°'+(i+1)+' H='+s.y_cm+' cm','<strong>'+(xr-xl)+' cm</strong>'+(partial?' (partielle)':'')];}))+'</div>':'')
+      +(portes.length?'<div class="sect"><div class="sect-title">Portes ('+portes.length+')</div>'+tbl(portes.map(function(p,i){var k=parseKeyS(p.key);if(!k)return['Porte n°'+(i+1),'—'];return['Porte n°'+(i+1),'<strong>'+Math.round(k.xright-k.xleft)+'×'+Math.round(k.top-k.bot)+' cm</strong>'];}))+'</div>':'')
+      +(tiroirs.length?'<div class="sect"><div class="sect-title">Tiroirs ('+tiroirs.length+')</div>'+tbl(tiroirs.map(function(p,i){var k=parseKeyS(p.key);if(!k)return['Tiroir n°'+(i+1),'—'];return['Tiroir n°'+(i+1),'<strong>'+Math.round(k.xright-k.xleft)+'×'+Math.round(k.top-k.bot)+' cm</strong>'];}))+'</div>':'')
+    +'</div></div>'
+    +'<div class="surface-box"><div class="s-title">Surface bois estimée</div><div class="surface-grid">'
+      +'<div><div class="sval">'+r2(s_struct)+'</div><div class="slbl">m² structure</div></div>'
+      +(shelves.length?'<div><div class="sval">'+r2(s_etag)+'</div><div class="slbl">m² tablettes</div></div>':'')
+      +(s_fac>0?'<div><div class="sval">'+r2(s_fac)+'</div><div class="slbl">m² façades</div></div>':'')
+      +'<div><div class="sval" style="color:#1A1A1A">'+r2(s_struct+s_etag+s_fac)+'</div><div class="slbl">m² total</div></div>'
+    +'</div></div>'
+    +(cfg.message?'<div class="sect"><div class="sect-title">Message client</div><div style="background:#F8F5F0;border-radius:8px;padding:8px 12px;font-size:11px;font-style:italic;color:rgba(26,26,26,.6)">'+esc(cfg.message)+'</div></div>':'')
+    +'<div class="footer"><span>Kobo Design — document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
     +'<button class="print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>'
     +'</body></html>';
 }
