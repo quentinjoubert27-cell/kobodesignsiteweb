@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <title>Configs SDB — Kobo Design</title>
+  <link rel="icon" type="image/png" href="img/logo-kobo.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--accent:#CD3E00;--bg:#FFFAF0;--dark:#1A1A1A;--font:'Poppins',sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font);background:var(--bg);color:var(--dark);min-height:100vh}
+    header{height:64px;display:flex;align-items:center;justify-content:space-between;
+      padding:0 clamp(20px,5vw,72px);border-bottom:1px solid rgba(26,26,26,.08);
+      background:rgba(255,250,240,.96);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
+    .logo img{height:30px}
+    .badge{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+      color:var(--accent);background:rgba(205,62,0,.08);border:1px solid rgba(205,62,0,.2);
+      border-radius:100px;padding:6px 14px}
+    .page{max-width:1100px;margin:0 auto;padding:40px clamp(20px,5vw,72px) 80px}
+    .eyebrow{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+    h1{font-size:clamp(24px,3vw,40px);font-weight:900;letter-spacing:-.03em;margin-bottom:6px}
+    h1 em{font-style:italic;font-weight:300;color:rgba(26,26,26,.28)}
+    .sub{font-size:12px;color:rgba(26,26,26,.45);margin-bottom:36px}
+
+    #authWrap{max-width:380px;margin:60px auto 0;background:#fff;border-radius:18px;
+      border:1px solid rgba(26,26,26,.09);padding:40px;text-align:center}
+    #authWrap h2{font-size:18px;font-weight:700;margin-bottom:20px}
+    .field{width:100%;padding:11px 14px;font-family:var(--font);font-size:13px;
+      border:1.5px solid rgba(26,26,26,.15);border-radius:8px;outline:none;
+      transition:border-color .2s;margin-bottom:12px}
+    .field:focus{border-color:var(--accent)}
+    .btn{width:100%;padding:13px;font-family:var(--font);font-size:10px;font-weight:700;
+      letter-spacing:.18em;text-transform:uppercase;background:var(--dark);color:#fff;
+      border:none;border-radius:10px;cursor:pointer;transition:background .2s}
+    .btn:hover{background:#2d2d2d}
+    .auth-err{font-size:11px;color:#c00;margin-top:8px}
+
+    .stats{display:flex;gap:16px;margin-bottom:32px;flex-wrap:wrap}
+    .stat{background:#fff;border-radius:12px;border:1px solid rgba(26,26,26,.08);
+      padding:16px 24px;flex:1;min-width:130px}
+    .stat-val{font-size:28px;font-weight:900;color:var(--accent)}
+    .stat-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+      color:rgba(26,26,26,.4);margin-top:2px}
+
+    .configs-wrap{background:#fff;border-radius:18px;border:1px solid rgba(26,26,26,.09);overflow:hidden}
+    .cfg-row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;
+      gap:16px;padding:16px 24px;border-bottom:1px solid rgba(26,26,26,.06);cursor:pointer;
+      transition:background .15s}
+    .cfg-row:hover{background:#FAFAF8}
+    .cfg-row:last-child{border-bottom:none}
+    .cfg-num{font-size:11px;font-weight:700;color:rgba(26,26,26,.25);min-width:32px}
+    .cfg-main{}
+    .cfg-name{font-size:14px;font-weight:700}
+    .cfg-dims{font-size:11px;color:rgba(26,26,26,.45);margin-top:2px}
+    .cfg-date{font-size:10px;color:rgba(26,26,26,.35);white-space:nowrap}
+    .fiche-btn{padding:7px 14px;border-radius:7px;border:1px solid rgba(26,26,26,.12);
+      background:transparent;font-family:var(--font);font-size:10px;font-weight:700;
+      letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:rgba(26,26,26,.5);
+      transition:all .15s;white-space:nowrap}
+    .fiche-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+    .cfg-detail{display:none;padding:0 24px 20px;border-bottom:1px solid rgba(26,26,26,.06);
+      background:#FAFAF8;font-size:12px}
+    .cfg-detail.open{display:block}
+    .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;margin-top:16px}
+    .detail-block{background:#fff;border-radius:8px;padding:12px 16px;border:1px solid rgba(26,26,26,.06)}
+    .detail-block-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+    .detail-block-val{font-size:13px;font-weight:700}
+    .detail-block-sub{font-size:11px;color:rgba(26,26,26,.45);margin-top:2px}
+
+    #mainWrap{display:none}
+  </style>
+</head>
+<body>
+<header>
+  <a class="logo" href="/"><img src="img/logo-kobo.png" alt="Kobo Design"/></a>
+  <span class="badge">Admin · Configs SDB</span>
+</header>
+
+<div class="page">
+  <div id="authWrap">
+    <h2>Accès admin</h2>
+    <input class="field" type="password" id="tokenInput" placeholder="Token admin" onkeydown="if(event.key==='Enter')auth()"/>
+    <button class="btn" onclick="auth()">Accéder →</button>
+    <div class="auth-err" id="authErr" style="display:none"></div>
+  </div>
+
+  <div id="mainWrap">
+    <div class="eyebrow">Kobo Design</div>
+    <h1>Configs <em>Salle de Bain</em></h1>
+    <p class="sub" id="subLine">Chargement…</p>
+
+    <div class="stats" id="statsWrap"></div>
+    <div class="configs-wrap" id="configsWrap"><p style="padding:40px;text-align:center;color:rgba(26,26,26,.35)">Chargement…</p></div>
+  </div>
+</div>
+
+<script>
+var _token = '';
+
+function auth(){
+  var t = document.getElementById('tokenInput').value.trim();
+  if(!t){ showAuthErr('Token requis.'); return; }
+  _token = t;
+  fetch('/api/list-configs-sdb?token=' + encodeURIComponent(t))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.error){ showAuthErr(d.error); return; }
+      document.getElementById('authWrap').style.display='none';
+      document.getElementById('mainWrap').style.display='block';
+      render(d.configs || [], t);
+    })
+    .catch(function(){ showAuthErr('Erreur réseau.'); });
+}
+function showAuthErr(msg){ var e=document.getElementById('authErr'); e.textContent=msg; e.style.display='block'; }
+
+function fmtDate(s){
+  if(!s) return '—';
+  var d=new Date(s);
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})
+    +' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function r2(n){ return Math.round(n*100)/100; }
+
+function render(configs, token){
+  document.getElementById('subLine').textContent = configs.length + ' configuration' + (configs.length>1?'s':'') + ' reçue' + (configs.length>1?'s':'');
+
+  // Stats
+  var avecTiroirs = configs.filter(function(c){return c.nb_tiroirs>0;}).length;
+  var avecPortes  = configs.filter(function(c){return c.nb_portes>0;}).length;
+  var stats = [
+    {v: configs.length, l: 'Configs totales'},
+    {v: avecTiroirs,    l: 'Avec tiroirs'},
+    {v: avecPortes,     l: 'Avec portes'},
+    {v: configs.filter(function(c){return c.nb_vasques>1;}).length, l: 'Double vasque'},
+  ];
+  document.getElementById('statsWrap').innerHTML = stats.map(function(s){
+    return '<div class="stat"><div class="stat-val">'+s.v+'</div><div class="stat-lbl">'+s.l+'</div></div>';
+  }).join('');
+
+  var wrap = document.getElementById('configsWrap');
+  if(!configs.length){ wrap.innerHTML='<p style="padding:40px;text-align:center;color:rgba(26,26,26,.35)">Aucune configuration.</p>'; return; }
+
+  window._configs = configs;
+
+  var rows = configs.map(function(c, idx){
+    var ref = 'SDB-' + String(c.id||'').padStart(4,'0');
+    return '<div class="cfg-row" onclick="toggleFiche('+idx+')">'
+      + '<div class="cfg-num">'+(idx+1)+'</div>'
+      + '<div class="cfg-main"><div class="cfg-name">'+esc(c.prenom)+' <span style="font-weight:400;color:rgba(26,26,26,.4)">'+esc(c.email)+'</span></div>'
+      + '<div class="cfg-dims">'+ref+' · Meuble '+c.meuble_L+'×'+c.meuble_H+'×'+c.meuble_P+' cm · '+esc(c.meuble_mat)+'</div></div>'
+      + '<div class="cfg-date">'+fmtDate(c.created_at)+'</div>'
+      + '<button class="fiche-btn" onclick="event.stopPropagation();generatePDF('+idx+')">📄 PDF</button>'
+      + '</div>'
+      + '<div class="cfg-detail" id="detail-'+idx+'"></div>';
+  }).join('');
+
+  wrap.innerHTML = rows;
+}
+
+function toggleFiche(idx){
+  var el = document.getElementById('detail-'+idx);
+  if(el.classList.contains('open')){ el.classList.remove('open'); el.innerHTML=''; return; }
+  var c = window._configs[idx];
+  var elems = Array.isArray(c.elements) ? c.elements : [];
+  var counts = {shelf:0,separator:0,porte:0,tiroir:0};
+  elems.forEach(function(e){ if(counts[e.type]!==undefined) counts[e.type]++; });
+
+  el.innerHTML = '<div class="detail-grid">'
+    + '<div class="detail-block"><div class="detail-block-title">Meuble</div><div class="detail-block-val">'+c.meuble_L+'×'+c.meuble_H+'×'+c.meuble_P+' cm</div><div class="detail-block-sub">'+esc(c.meuble_mat)+'</div></div>'
+    + '<div class="detail-block"><div class="detail-block-title">Plan de travail</div><div class="detail-block-val">'+c.plan_L+'×'+c.plan_P+'×'+c.plan_Ep+' cm</div><div class="detail-block-sub">'+esc(c.plan_mat)+'</div></div>'
+    + '<div class="detail-block"><div class="detail-block-title">Vasque'+(c.nb_vasques>1?'s':'')+'</div><div class="detail-block-val">'+c.nb_vasques+'× '+c.vasque_W+'×'+c.vasque_D+' cm</div></div>'
+    + '<div class="detail-block"><div class="detail-block-title">Tablettes</div><div class="detail-block-val">'+counts.shelf+'</div></div>'
+    + '<div class="detail-block"><div class="detail-block-title">Séparateurs</div><div class="detail-block-val">'+counts.separator+'</div></div>'
+    + '<div class="detail-block"><div class="detail-block-title">Tiroirs / Portes</div><div class="detail-block-val">'+counts.tiroir+' tiroir'+(counts.tiroir>1?'s':'')+' · '+counts.porte+' porte'+(counts.porte>1?'s':'')+'</div></div>'
+    + '</div>'
+    + (c.message?'<p style="font-size:11px;font-style:italic;color:rgba(26,26,26,.5);margin-top:4px">« '+esc(c.message)+' »</p>':'');
+  el.classList.add('open');
+}
+
+// ═══════════════════════════════════════════════════
+//  PDF
+// ═══════════════════════════════════════════════════
+function generatePDF(idx){
+  var cfg = window._configs[idx];
+  if(!cfg) return;
+  var html = buildPDFHtml(cfg);
+  var win = window.open('', '_blank', 'width=1000,height=800');
+  win.document.write(html);
+  win.document.close();
+  win.onload = function(){ win.focus(); win.print(); };
+}
+window.generatePDF = generatePDF;
+
+function parseKey(key){
+  // format: "bot_xleft_top_xright" (cm values)
+  var p = String(key||'').split('_');
+  if(p.length < 4) return null;
+  return { bot: parseFloat(p[0]), xleft: parseFloat(p[1]), top: parseFloat(p[2]), xright: parseFloat(p[3]) };
+}
+
+function buildPDFHtml(cfg){
+  var W  = cfg.meuble_L || 0;
+  var H  = cfg.meuble_H || 0;
+  var P  = cfg.meuble_P || 0;
+  var ep = 1.9; // épaisseur panneau en cm
+
+  var elems = Array.isArray(cfg.elements) ? cfg.elements : [];
+  var shelves   = elems.filter(function(e){ return e.type==='shelf'; });
+  var seps      = elems.filter(function(e){ return e.type==='separator'; });
+  var portes    = elems.filter(function(e){ return e.type==='porte'; });
+  var tiroirs   = elems.filter(function(e){ return e.type==='tiroir'; });
+
+  shelves.sort(function(a,b){ return a.y_cm-b.y_cm; });
+  seps.sort(function(a,b){ return a.x_cm-b.x_cm; });
+
+  var iW = W - 2*ep;
+  var iH = H - 2*ep;
+
+  var ref = 'SDB-' + String(cfg.id||'').padStart(4,'0');
+  var dateStr = fmtDate(cfg.created_at);
+
+  // ── SVG helpers ────────────────────────────────────
+  function buildSVG(withTiroirs){
+    var drawW = 200, drawH = Math.round(drawW*(H/W));
+    if(drawH<60) drawH=60; if(drawH>320) drawH=320;
+    var mL=52, mR=50, mT=30, mB=28;
+    var svgTW=mL+drawW+mR, svgTH=mT+drawH+mB;
+    var px = drawW/W;
+    var t  = ep*px;
+
+    function hDim(x1,x2,y,lbl){
+      var cx=(x1+x2)/2, hw=Math.max(String(lbl).length*4,8);
+      return '<line x1="'+x1+'" y1="'+y+'" x2="'+(cx-hw-1)+'" y2="'+y+'" stroke="#CD3E00" stroke-width="0.7"/>'
+        +'<line x1="'+(cx+hw+1)+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="#CD3E00" stroke-width="0.7"/>'
+        +'<line x1="'+x1+'" y1="'+(y-3.5)+'" x2="'+x1+'" y2="'+(y+3.5)+'" stroke="#CD3E00" stroke-width="0.8"/>'
+        +'<line x1="'+x2+'" y1="'+(y-3.5)+'" x2="'+x2+'" y2="'+(y+3.5)+'" stroke="#CD3E00" stroke-width="0.8"/>'
+        +'<rect x="'+(cx-hw-1)+'" y="'+(y-5)+'" width="'+(hw*2+2)+'" height="10" fill="#fff"/>'
+        +'<text x="'+cx+'" y="'+(y+0.5)+'" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#CD3E00" font-family="Poppins,sans-serif" font-weight="700">'+lbl+'</text>';
+    }
+    function vDim(y1,y2,x,lbl){
+      var cy=(y1+y2)/2, hw=Math.max(String(lbl).length*4,8);
+      return '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+(cy-hw-1)+'" stroke="#CD3E00" stroke-width="0.7"/>'
+        +'<line x1="'+x+'" y1="'+(cy+hw+1)+'" x2="'+x+'" y2="'+y2+'" stroke="#CD3E00" stroke-width="0.7"/>'
+        +'<line x1="'+(x-3.5)+'" y1="'+y1+'" x2="'+(x+3.5)+'" y2="'+y1+'" stroke="#CD3E00" stroke-width="0.8"/>'
+        +'<line x1="'+(x-3.5)+'" y1="'+y2+'" x2="'+(x+3.5)+'" y2="'+y2+'" stroke="#CD3E00" stroke-width="0.8"/>'
+        +'<rect x="'+(x-hw-1)+'" y="'+(cy-hw-1)+'" width="'+(hw*2+2)+'" height="'+(hw*2+2)+'" fill="#fff"/>'
+        +'<text x="'+x+'" y="'+cy+'" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#CD3E00" font-family="Poppins,sans-serif" font-weight="700" transform="rotate(-90,'+x+','+cy+')">'+lbl+'</text>';
+    }
+
+    // y pixel from bottom of interior (0 = floor of caisson)
+    function yPx(y_cm){ return mT+drawH-t-y_cm*px; }
+    function xPx(x_cm){ return mL+t+x_cm*px; }
+
+    var s='';
+    // Caisson exterior
+    s+='<rect x="'+mL+'" y="'+mT+'" width="'+drawW+'" height="'+drawH+'" fill="#E8E2D8" stroke="#999" stroke-width="1.2"/>';
+    // Interior
+    s+='<rect x="'+(mL+t)+'" y="'+(mT+t)+'" width="'+(drawW-2*t)+'" height="'+(drawH-2*t)+'" fill="#FAF8F4" stroke="#CCC" stroke-width="0.5" stroke-dasharray="2,2"/>';
+
+    // Tablettes
+    shelves.forEach(function(sh){
+      var xl = xPx(sh.x_left_cm||0);
+      var xr = xPx(sh.x_right_cm||iW);
+      var yy = yPx(sh.y_cm);
+      s+='<rect x="'+xl+'" y="'+(yy-t)+'" width="'+(xr-xl)+'" height="'+t+'" fill="#B0956E" rx="0.5"/>';
+    });
+
+    // Séparateurs
+    seps.forEach(function(sp){
+      var xx = xPx(sp.x_cm);
+      s+='<rect x="'+(xx-t/2)+'" y="'+(mT+t)+'" width="'+t+'" height="'+(drawH-2*t)+'" fill="#B0956E" rx="0.5"/>';
+    });
+
+    // Portes
+    portes.forEach(function(p){
+      var k = parseKey(p.key); if(!k) return;
+      var xl = xPx(k.xleft), xr = xPx(k.xright);
+      var yt = yPx(k.top),   yb = yPx(k.bot);
+      var dw = xr-xl, dh = yb-yt;
+      s+='<rect x="'+xl+'" y="'+yt+'" width="'+dw+'" height="'+dh+'" fill="rgba(205,62,0,.1)" stroke="#CD3E00" stroke-width="1" rx="1.5"/>';
+      var isL = (k.xleft+k.xright)/2 <= iW/2;
+      s+='<circle cx="'+(isL?xr-4:xl+4)+'" cy="'+((yt+yb)/2)+'" r="2" fill="#CD3E00" opacity=".6"/>';
+      if(dw>20&&dh>12){
+        var wlbl = Math.round(k.xright-k.xleft)+' cm';
+        s+='<rect x="'+(xl+dw/2-10)+'" y="'+(yt+dh/2-5)+'" width="20" height="10" fill="rgba(255,255,255,.9)" rx="2"/>';
+        s+='<text x="'+(xl+dw/2)+'" y="'+(yt+dh/2+0.5)+'" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#CD3E00" font-family="Poppins,sans-serif" font-weight="700">'+wlbl+'</text>';
+      }
+    });
+
+    // Tiroirs
+    tiroirs.forEach(function(p){
+      var k = parseKey(p.key); if(!k) return;
+      var xl = xPx(k.xleft), xr = xPx(k.xright);
+      var yt = yPx(k.top),   yb = yPx(k.bot);
+      var dw = xr-xl, dh = yb-yt;
+      if(withTiroirs){
+        // Tiroir fermé = panneau plein avec ligne de joint
+        s+='<rect x="'+xl+'" y="'+yt+'" width="'+dw+'" height="'+dh+'" fill="#C8B89A" stroke="#8B7355" stroke-width="1" rx="1"/>';
+        // Ligne de joint horizontale au milieu (effet tiroir)
+        var midY = (yt+yb)/2;
+        s+='<line x1="'+(xl+4)+'" y1="'+midY+'" x2="'+(xr-4)+'" y2="'+midY+'" stroke="#8B7355" stroke-width="0.5" opacity=".5"/>';
+      } else {
+        // Sans tiroir = compartiment vide (juste contour pointillé)
+        s+='<rect x="'+xl+'" y="'+yt+'" width="'+dw+'" height="'+dh+'" fill="rgba(26,26,26,.03)" stroke="rgba(26,26,26,.2)" stroke-width="0.8" stroke-dasharray="3,2" rx="1"/>';
+      }
+      if(dw>20&&dh>12){
+        var wlbl = Math.round(k.xright-k.xleft)+' cm';
+        s+='<rect x="'+(xl+dw/2-10)+'" y="'+(yt+dh/2-5)+'" width="20" height="10" fill="rgba(255,255,255,.85)" rx="2"/>';
+        s+='<text x="'+(xl+dw/2)+'" y="'+(yt+dh/2+0.5)+'" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="'+(withTiroirs?'#6B5535':'rgba(26,26,26,.4)')+'" font-family="Poppins,sans-serif" font-weight="700">'+wlbl+'</text>';
+      }
+    });
+
+    // Cotations
+    // Largeur totale (bas)
+    s+=hDim(mL, mL+drawW, mT+drawH+18, W+' cm');
+    s+='<line x1="'+mL+'" y1="'+(mT+drawH)+'" x2="'+mL+'" y2="'+(mT+drawH+22)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    s+='<line x1="'+(mL+drawW)+'" y1="'+(mT+drawH)+'" x2="'+(mL+drawW)+'" y2="'+(mT+drawH+22)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    // Hauteur totale (droite)
+    s+=vDim(mT, mT+drawH, mL+drawW+18, H+' cm');
+    s+='<line x1="'+(mL+drawW)+'" y1="'+mT+'" x2="'+(mL+drawW+22)+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    s+='<line x1="'+(mL+drawW)+'" y1="'+(mT+drawH)+'" x2="'+(mL+drawW+22)+'" y2="'+(mT+drawH)+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+
+    // Colonnes (haut)
+    var xBounds = [0].concat(seps.map(function(sp){return sp.x_cm;})).concat([iW]);
+    xBounds.sort(function(a,b){return a-b;});
+    if(seps.length){
+      for(var ci=0;ci<xBounds.length-1;ci++){
+        var cxl=xPx(xBounds[ci]), cxr=xPx(xBounds[ci+1]);
+        if(cxr-cxl>16){
+          var cW=Math.round((xBounds[ci+1]-xBounds[ci])*10)/10;
+          s+=hDim(cxl,cxr,mT-16,cW+' cm');
+          s+='<line x1="'+cxl+'" y1="'+(mT-12)+'" x2="'+cxl+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+          s+='<line x1="'+cxr+'" y1="'+(mT-12)+'" x2="'+cxr+'" y2="'+mT+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+        }
+      }
+    } else {
+      s+=hDim(mL+t,mL+drawW-t,mT-16,iW+' cm int.');
+    }
+
+    // Hauteurs cases (gauche) — basé sur tablettes pleine largeur
+    var fullShelves = shelves.filter(function(sh){
+      return (sh.x_left_cm||0)<1 && (sh.x_right_cm||iW)>iW-1;
+    });
+    var yBounds = [0].concat(fullShelves.map(function(sh){return sh.y_cm;})).concat([iH]);
+    yBounds.sort(function(a,b){return a-b;});
+    for(var ki=0;ki<yBounds.length-1;ki++){
+      var cy1=yPx(yBounds[ki+1]), cy2=yPx(yBounds[ki]);
+      if(ki>0) cy1+=t;
+      var cH=Math.round((yBounds[ki+1]-yBounds[ki]-ep)*10)/10;
+      if(cy2-cy1>12){
+        s+=vDim(cy1,cy2,mL-18,cH+' cm');
+        s+='<line x1="'+(mL-14)+'" y1="'+cy1+'" x2="'+mL+'" y2="'+cy1+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+        s+='<line x1="'+(mL-14)+'" y1="'+cy2+'" x2="'+mL+'" y2="'+cy2+'" stroke="#CD3E00" stroke-width="0.5" stroke-dasharray="2,2"/>';
+      }
+    }
+
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgTW+' '+svgTH+'" width="100%" style="max-width:'+(svgTW*1.4)+'px">'+s+'</svg>';
+  }
+
+  var svgAvec  = buildSVG(true);
+  var svgSans  = buildSVG(false);
+
+  // ── Tables données ─────────────────────────────────
+  function tbl(rows){
+    return '<table><tbody>'+rows.map(function(r){
+      return '<tr><td class="lbl">'+r[0]+'</td><td class="val">'+r[1]+'</td></tr>';
+    }).join('')+'</tbody></table>';
+  }
+
+  var elShelves = shelves.map(function(s,i){
+    var xl=s.x_left_cm||0, xr=s.x_right_cm||iW;
+    var partial=(xl>1||(xr<iW-1));
+    return ['Tablette n°'+(i+1)+' — H='+s.y_cm+' cm',
+      '<strong>'+(xr-xl)+' cm</strong>'+(partial?' <span class="note">partielle ('+xl+'→'+xr+' cm)</span>':'')];
+  });
+
+  var elSeps = seps.map(function(s,i){
+    return ['Séparateur n°'+(i+1), '<strong>X = '+s.x_cm+' cm</strong>'];
+  });
+
+  var elPortes = portes.map(function(p,i){
+    var k=parseKey(p.key); if(!k) return ['Porte n°'+(i+1),'—'];
+    var dW=Math.round(k.xright-k.xleft); var dH=Math.round(k.top-k.bot);
+    return ['Porte n°'+(i+1)+' ['+k.xleft+'→'+k.xright+' cm]', '<strong>'+dW+' × '+dH+' cm</strong>'];
+  });
+
+  var elTiroirs = tiroirs.map(function(p,i){
+    var k=parseKey(p.key); if(!k) return ['Tiroir n°'+(i+1),'—'];
+    var dW=Math.round(k.xright-k.xleft); var dH=Math.round(k.top-k.bot);
+    return ['Tiroir n°'+(i+1)+' ['+k.xleft+'→'+k.xright+' cm]', '<strong>'+dW+' × '+dH+' cm</strong>'];
+  });
+
+  // Surface bois estimée
+  var s_cotes = 2*(H/100*P/100);
+  var s_ht    = 2*(iW/100*P/100);
+  var s_fond  = (iW/100)*(iH/100);
+  var s_struct= s_cotes+s_ht+s_fond;
+  var s_etag  = 0; shelves.forEach(function(s){ var xl=s.x_left_cm||0,xr=s.x_right_cm||iW; s_etag+=((xr-xl)/100)*(P/100*0.9); });
+  var s_fac   = 0;
+  portes.concat(tiroirs).forEach(function(p){
+    var k=parseKey(p.key); if(!k) return;
+    s_fac+=((k.xright-k.xleft)/100)*((k.top-k.bot)/100);
+  });
+  var s_total = s_struct+s_etag+s_fac;
+
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>'
+    +'<title>Fiche '+ref+' — '+esc(cfg.prenom)+'</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Poppins,sans-serif;color:#1A1A1A;background:#fff;padding:32px 40px;font-size:12px}'
+    +'@page{size:A4;margin:14mm 12mm}'
+    +'@media print{body{padding:0}.print-btn{display:none!important}}'
+    +'.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #CD3E00;padding-bottom:14px;margin-bottom:20px}'
+    +'.brand{font-size:20px;font-weight:900;letter-spacing:-.03em}'
+    +'.brand em{font-style:italic;font-weight:300;color:rgba(26,26,26,.3)}'
+    +'.ref{font-size:16px;font-weight:700;color:#CD3E00}'
+    +'.ref-date{font-size:10px;color:rgba(26,26,26,.4);margin-top:2px;text-align:right}'
+    +'.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}'
+    +'.meta-block{background:#F8F5F0;border-radius:8px;padding:10px 14px}'
+    +'.meta-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:6px}'
+    +'.meta-val{font-size:13px;font-weight:700}'
+    +'.meta-sub{font-size:10px;color:rgba(26,26,26,.5);margin-top:2px}'
+    +'.schemas{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px}'
+    +'.schema-block{}'
+    +'.schema-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(205,62,0,.2)}'
+    +'.schema-avec{color:#6B5535}'
+    +'.schema-sans{color:rgba(26,26,26,.4)}'
+    +'.body-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}'
+    +'.sect{margin-bottom:14px}'
+    +'.sect-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#CD3E00;margin-bottom:6px;padding-bottom:3px;border-bottom:1px solid rgba(205,62,0,.2)}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'tr:nth-child(even) td{background:#FAFAF8}'
+    +'td{padding:4px 8px;font-size:10px;vertical-align:top}'
+    +'td.lbl{color:rgba(26,26,26,.55);width:55%}'
+    +'td.val{font-weight:600;text-align:right}'
+    +'.note{font-size:8px;font-weight:400;color:rgba(26,26,26,.4)}'
+    +'.surface-box{background:#F8F5F0;border-radius:8px;padding:12px 16px;margin-bottom:14px}'
+    +'.s-title{font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:8px}'
+    +'.surface-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'
+    +'.sval{font-size:13px;font-weight:900;color:#CD3E00}'
+    +'.slbl{font-size:9px;color:rgba(26,26,26,.45);margin-top:1px}'
+    +'.footer{border-top:1px solid rgba(26,26,26,.1);padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:rgba(26,26,26,.35)}'
+    +'.print-btn{position:fixed;bottom:24px;right:24px;padding:12px 24px;background:#CD3E00;color:#fff;border:none;border-radius:100px;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(205,62,0,.3)}'
+    +'</style></head><body>'
+    // Header
+    +'<div class="header">'
+      +'<div class="brand">Kobo <em>Design</em> — Salle de Bain</div>'
+      +'<div><div class="ref">'+ref+'</div><div class="ref-date">'+dateStr+'</div></div>'
+    +'</div>'
+    // Meta client + dimensions
+    +'<div class="meta">'
+      +'<div class="meta-block"><div class="meta-title">Client</div><div class="meta-val">'+esc(cfg.prenom)+'</div><div class="meta-sub">'+esc(cfg.email)+'</div></div>'
+      +'<div class="meta-block"><div class="meta-title">Meuble</div><div class="meta-val">'+W+'×'+H+'×'+P+' cm</div><div class="meta-sub">'+esc(cfg.meuble_mat)+'</div></div>'
+      +'<div class="meta-block"><div class="meta-title">Plan de travail</div><div class="meta-val">'+cfg.plan_L+'×'+cfg.plan_P+'×'+cfg.plan_Ep+' cm</div><div class="meta-sub">'+esc(cfg.plan_mat)+'</div></div>'
+    +'</div>'
+    // 2 schémas SVG côte à côte
+    +'<div class="schemas">'
+      +'<div class="schema-block"><div class="schema-title schema-avec">Vue de face — avec tiroirs</div>'+svgAvec+'</div>'
+      +'<div class="schema-block"><div class="schema-title schema-sans">Vue de face — sans tiroirs</div>'+svgSans+'</div>'
+    +'</div>'
+    // Grille données
+    +'<div class="body-grid">'
+    +'<div>'
+      +'<div class="sect"><div class="sect-title">Dimensions intérieures meuble</div>'
+      +tbl([
+        ['Largeur intérieure','<strong>'+Math.round(iW*10)/10+' cm</strong>'],
+        ['Hauteur intérieure','<strong>'+Math.round(iH*10)/10+' cm</strong>'],
+        ['Profondeur','<strong>'+P+' cm</strong>'],
+        ['Épaisseur panneau','<strong>'+ep+' mm</strong>'],
+      ])+'</div>'
+      +(elSeps.length?'<div class="sect"><div class="sect-title">Séparateurs ('+elSeps.length+')</div>'+tbl(elSeps)+'</div>':'')
+      +'<div class="sect"><div class="sect-title">Vasque'+(cfg.nb_vasques>1?'s ('+cfg.nb_vasques+')':'')+'</div>'
+      +tbl([
+        ['Nombre',cfg.nb_vasques],
+        ['Dimensions',cfg.vasque_W+'×'+cfg.vasque_D+' cm'],
+      ])+'</div>'
+    +'</div>'
+    +'<div>'
+      +(elShelves.length?'<div class="sect"><div class="sect-title">Tablettes ('+elShelves.length+')</div>'+tbl(elShelves)+'</div>':'')
+      +(elPortes.length?'<div class="sect"><div class="sect-title">Portes ('+elPortes.length+')</div>'+tbl(elPortes)+'</div>':'')
+      +(elTiroirs.length?'<div class="sect"><div class="sect-title">Tiroirs ('+elTiroirs.length+')</div>'+tbl(elTiroirs)+'</div>':'')
+    +'</div>'
+    +'</div>'
+    // Surface bois
+    +'<div class="surface-box"><div class="s-title">Surface bois estimée</div>'
+    +'<div class="surface-grid">'
+    +'<div><div class="sval">'+r2(s_struct)+'</div><div class="slbl">m² structure</div></div>'
+    +(elShelves.length?'<div><div class="sval">'+r2(s_etag)+'</div><div class="slbl">m² tablettes</div></div>':'')
+    +(s_fac>0?'<div><div class="sval">'+r2(s_fac)+'</div><div class="slbl">m² façades</div></div>':'')
+    +'<div><div class="sval" style="color:#1A1A1A">'+r2(s_total)+'</div><div class="slbl">m² total</div></div>'
+    +'</div></div>'
+    // Message
+    +(cfg.message?'<div class="sect"><div class="sect-title">Message client</div><div style="background:#F8F5F0;border-radius:8px;padding:8px 12px;font-size:11px;font-style:italic;color:rgba(26,26,26,.6)">'+esc(cfg.message)+'</div></div>':'')
+    // Footer
+    +'<div class="footer"><span>Kobo Design — document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
+    +'<button class="print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>'
+    +'</body></html>';
+}
+
+var urlToken = new URLSearchParams(location.search).get('t');
+if(urlToken){ document.getElementById('tokenInput').value=urlToken; auth(); }
+</script>
+</body>
+</html>

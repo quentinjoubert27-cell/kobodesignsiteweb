@@ -87,6 +87,17 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 #hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(255,250,240,.92);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:10px;color:var(--text2);pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px);transition:opacity .4s;opacity:0;letter-spacing:.06em}
 #hint.show{opacity:1}
 
+/* FORMULAIRE ENVOI */
+.cfg-field{width:100%;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;transition:border-color .18s;margin-bottom:10px}
+.cfg-field:focus{border-color:var(--accent)}
+textarea.cfg-field{resize:vertical;min-height:72px}
+.cfg-err{font-size:11px;color:#c00;background:rgba(192,0,0,.06);border-radius:7px;padding:8px 12px}
+.cfg-ok{text-align:center;padding:24px 16px;font-size:14px;font-weight:700;color:var(--text)}
+.cfg-ok-icon{display:block;font-size:36px;margin-bottom:12px;color:var(--accent)}
+.cta-btn{width:100%;padding:13px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.cta-btn:hover{background:var(--accent2)}.cta-btn:disabled{opacity:.5;cursor:not-allowed}
+.cta-note{font-size:10px;color:var(--text2);text-align:center;margin-top:8px}
+
 /* BARRE ÉDITION CAISSON */
 #c-edit-bar{
   position:absolute;top:14px;left:50%;transform:translateX(-50%);
@@ -130,6 +141,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
       <div class="step-line" id="sl2"></div>
       <div class="step-dot" id="sd3" onclick="goStep(3)"><span class="sn">3</span></div>
       <span class="step-lbl">Vasque</span>
+      <div class="step-line" id="sl3"></div>
+      <div class="step-dot" id="sd4" onclick="goStep(4)"><span class="sn">4</span></div>
+      <span class="step-lbl">Envoyer</span>
     </div>
 
     <div id="sb-body">
@@ -207,6 +221,27 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
         </div>
         <div class="sec">Récapitulatif</div>
         <div class="recap-box" id="recap"></div>
+      </div>
+
+      <!-- STEP 4 — Envoyer -->
+      <div class="panel" id="p4">
+        <div class="sec">Votre configuration</div>
+        <div class="recap-box" id="recap4"></div>
+        <div class="sec">Vos coordonnées</div>
+        <div id="cfgFormWrap">
+          <input type="text"  id="cfgPrenom"  class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
+          <input type="email" id="cfgEmail"   class="cfg-field" placeholder="Votre email *"  maxlength="200" autocomplete="email"/>
+          <textarea           id="cfgMessage" class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
+          <input type="text" id="cfgBot" style="display:none" tabindex="-1" autocomplete="off"/>
+          <div class="cfg-err" id="cfgErr" style="display:none;margin-bottom:10px"></div>
+          <button class="cta-btn" id="cfgSubmitBtn" onclick="submitConfig()">Envoyer ma configuration →</button>
+          <p class="cta-note">Gratuit · Sans engagement · Réponse sous 24 h</p>
+        </div>
+        <div class="cfg-ok" id="cfgSuccess" style="display:none">
+          <span class="cfg-ok-icon">✓</span>
+          Configuration reçue !<br>
+          <span style="font-weight:400;color:var(--text2)">On revient vers vous dans les 24 h.</span>
+        </div>
       </div>
     </div>
 
@@ -1099,26 +1134,26 @@ function updatePosInfo(){
 // ═══════════════════════════════════════════════════════
 var step=1;
 function goStep(n){
-  if(n<1||n>3) return;
-  step=n; S.step=n;
-  ['p1','p2','p3'].forEach(function(id,i){document.getElementById(id).classList.toggle('on',i+1===n);});
-  ['sd1','sd2','sd3'].forEach(function(id,i){
+  if(n<1||n>4) return;
+  step=n; S.step=Math.min(n,3);
+  ['p1','p2','p3','p4'].forEach(function(id,i){document.getElementById(id).classList.toggle('on',i+1===n);});
+  ['sd1','sd2','sd3','sd4'].forEach(function(id,i){
     var el=document.getElementById(id); el.classList.remove('active','done');
     if(i+1===n) el.classList.add('active'); else if(i+1<n) el.classList.add('done');
   });
-  ['sl1','sl2'].forEach(function(id,i){document.getElementById(id).classList.toggle('done',i+1<n);});
+  ['sl1','sl2','sl3'].forEach(function(id,i){document.getElementById(id).classList.toggle('done',i+1<n);});
   document.getElementById('btn-back').disabled=(n===1);
-  document.getElementById('btn-next').textContent=n<3?'Suivant →':'Terminer ✓';
+  document.getElementById('btn-next').textContent=n<3?'Suivant →':(n===3?'Envoyer →':'');
+  document.getElementById('btn-next').style.display=(n===4?'none':'');
   document.getElementById('hint').classList.toggle('show',n===3);
   if(caissonEditMode) toggleCaissonEdit();
   controls.enabled=true;
 
   if(planMesh)   planMesh.visible=(n>=2);
-  if(vasqueGrp)  vasqueGrp.visible=(n===3);
-  if(vasqueGrp2) vasqueGrp2.visible=(n===3);
+  if(vasqueGrp)  vasqueGrp.visible=(n===3||n===4);
+  if(vasqueGrp2) vasqueGrp2.visible=(n===3||n===4);
   if(n===1) buildCaisson();
   if(n===2){
-    // Synchro largeur plan = largeur meuble
     S.L=S.CL;
     var slL=document.getElementById('sl-L')||document.querySelector('#p2 input[oninput*="setL"]');
     if(slL){ slL.value=Math.round(S.L*100); }
@@ -1126,7 +1161,8 @@ function goStep(n){
     buildPlan();
   }
   if(n===3){ buildRecap(); updatePosInfo(); positionVasque(); }
-  animCamera(n);
+  if(n===4){ buildRecap4(); }
+  if(n<=3) animCamera(n);
 }
 
 var camTargets=[
@@ -1147,7 +1183,7 @@ function animCamera(n){
   },16);
 }
 function prevStep(){goStep(step-1);}
-function nextStep(){if(step<3) goStep(step+1); else alert('Configuration :\n\n'+buildRecapStr());}
+function nextStep(){goStep(step+1);}
 
 function buildRecapStr(){
   var counts={shelf:0,separator:0,porte:0,tiroir:0};
@@ -1173,6 +1209,71 @@ function buildRecap(){
     return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
   }).join('');
 }
+
+function buildRecap4(){
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var rows=[
+    ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm — '+MATS_CAIS[S.matCais].n],
+    ['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+'×'+Math.round(S.Ep*10)/10+' cm — '+MATS_PLAN[S.matPlan].n],
+    ['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
+    ['Tablettes', counts.shelf],
+    ['Séparateurs', counts.separator],
+    ['Portes', counts.porte],
+    ['Tiroirs', counts.tiroir],
+  ];
+  document.getElementById('recap4').innerHTML=rows.map(function(r){
+    return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
+  }).join('');
+}
+
+async function submitConfig(){
+  var prenom  = (document.getElementById('cfgPrenom').value||'').trim();
+  var email   = (document.getElementById('cfgEmail').value||'').trim();
+  var message = (document.getElementById('cfgMessage').value||'').trim();
+  var bot     = document.getElementById('cfgBot').value;
+  var errEl   = document.getElementById('cfgErr');
+  var btn     = document.getElementById('cfgSubmitBtn');
+
+  errEl.style.display='none';
+  if(!prenom||!email){ errEl.textContent='Prénom et email obligatoires.'; errEl.style.display='block'; return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
+
+  btn.disabled=true; btn.textContent='Envoi en cours…';
+
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+
+  try {
+    var resp=await fetch('/api/sdb-config',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        prenom:prenom, email:email, message:message, botcheck:bot,
+        config:{
+          meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
+                   matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },
+          plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10,
+                 matLabel:MATS_PLAN[S.matPlan].n, matId:S.matPlan },
+          vasques:{ nb:S.nbVasques, W:Math.round(S.vasqueW*100), D:Math.round(S.vasqueD*100),
+                    vx:Math.round(S.vx*100)/100, vz:Math.round(S.vz*100)/100,
+                    vx2:Math.round(S.vx2*100)/100, vz2:Math.round(S.vz2*100)/100 },
+          elements:caissonElements,
+          counts:counts
+        }
+      })
+    });
+    var data=await resp.json();
+    if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
+    document.getElementById('cfgFormWrap').style.display='none';
+    document.getElementById('cfgSuccess').style.display='block';
+  } catch(err){
+    btn.disabled=false; btn.textContent='Envoyer ma configuration →';
+    errEl.textContent=err.message||'Erreur réseau. Réessayez.';
+    errEl.style.display='block';
+  }
+}
+window.submitConfig=submitConfig;
 
 // ═══════════════════════════════════════════════════════
 // INIT GRILLES MATIÈRES
