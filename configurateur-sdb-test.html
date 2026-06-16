@@ -538,30 +538,21 @@ function buildCaisson(){
       var pgV=new THREE.CylinderGeometry(0.006,0.006,h*0.35,12);
       var pv=new THREE.Mesh(pgV,matLaiton);
       pv.position.set(cx+(w/2-0.028),cy,fz+0.021); caissonGrp.add(pv);
-    } else { // tiroir
+    } else { // tiroir — couvre toutes les faces blanches de sa zone
       var isOpen=!!caissonOpenState[el.key];
       var tirZ=isOpen ? fz+CP*0.55 : fz;
-      // Baie pleine largeur : left=0, right=iW_cm ET aucun séparateur dans ce compartiment
-      var iW_cm=iW*100;
-      var hasSep=caissonElements.some(function(s){
-        return s.type==='separator'&&s.x_cm>left+0.5&&s.x_cm<right-0.5&&s.y_cm>=bot-0.5&&s.y_cm<=top+0.5;
-      });
-      var isFullW=(!hasSep && left<0.5 && right>iW_cm-0.5);
-      console.log('[tiroir] key='+el.key+' left='+left+' right='+right+' iW_cm='+iW_cm.toFixed(2)+' hasSep='+hasSep+' isFullW='+isFullW);
-      var tirW=isFullW ? CL : w-jeu;
-      var tirCx=isFullW ? 0 : cx;
-      // Compartiment jusqu'en haut → couvre aussi la face de la tablette haute
-      var iH_cm=iH*100;
-      var isTopComp=(Math.abs(top-iH_cm)<0.5);
-      var tirH, tirCy;
-      if(isFullW && isTopComp){
-        var tirBotY=ycmToLocal(bot);
-        tirH=CH-tirBotY-jeu/2;
-        tirCy=tirBotY+tirH/2;
-      } else {
-        tirH=h-jeu;
-        tirCy=ycmToLocal((bot+top)/2);
-      }
+      var iW_cm=iW*100, iH_cm=iH*100;
+      var jeu=0.003;
+      // Limites X : joue si bord du caisson, sinon face ext du séparateur
+      var tirXleft  = (left<0.5)       ? -CL/2 : xcmToLocal(left)  - EP/2;
+      var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+      // Limites Y : panneau struct si bord du caisson, sinon face ext de la tablette
+      var tirYbot = (bot<0.5)          ?  0  : ycmToLocal(bot) - EP/2;
+      var tirYtop = (top>iH_cm-0.5)    ?  CH : ycmToLocal(top) + EP/2;
+      var tirW = tirXright - tirXleft - jeu;
+      var tirH = tirYtop - tirYbot - jeu;
+      var tirCx = (tirXleft + tirXright) / 2;
+      var tirCy = (tirYbot  + tirYtop)  / 2;
       var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
       tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
       caissonElemMeshes.push(tm); caissonGrp.add(tm);
