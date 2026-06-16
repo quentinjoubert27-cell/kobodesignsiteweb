@@ -931,19 +931,38 @@ function applyVasqueMat(){
   vasqueGrp.traverse(function(o){
     if(!o.isMesh) return;
     var orig=_vasqueOrigMats[o.uuid];
-    if(orig){
-      o.material=orig.clone();
-    } else {
-      o.material=new THREE.MeshStandardMaterial({roughness:md.r,metalness:0.02});
-    }
+    if(orig) o.material=orig.clone();
     if(tex){
-      o.material.map=tex;
+      var newTex=tex.clone();
+      newTex.needsUpdate=true;
+      newTex.wrapS=THREE.RepeatWrapping;
+      newTex.wrapT=THREE.RepeatWrapping;
+      try{newTex.colorSpace=THREE.SRGBColorSpace;}catch(e){newTex.encoding=THREE.sRGBEncoding;}
+      newTex.minFilter=THREE.LinearMipmapLinearFilter;
+      newTex.magFilter=THREE.LinearFilter;
+      newTex.anisotropy=renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():16;
+      newTex.generateMipmaps=true;
+      var uvAttr=o.geometry.attributes.uv;
+      if(uvAttr){
+        var arr=uvAttr.array;
+        var uMin=Infinity,uMax=-Infinity,vMin=Infinity,vMax=-Infinity;
+        for(var k=0;k<arr.length;k+=2){
+          if(arr[k]<uMin)uMin=arr[k]; if(arr[k]>uMax)uMax=arr[k];
+          if(arr[k+1]<vMin)vMin=arr[k+1]; if(arr[k+1]>vMax)vMax=arr[k+1];
+        }
+        var uR=uMax-uMin||1, vR=vMax-vMin||1;
+        var eu=Math.max(uR,0.5), ev=Math.max(vR,0.5);
+        newTex.repeat.set(2/eu,2/ev);
+        newTex.offset.set(-uMin*(2/eu),-vMin*(2/ev));
+      }
+      o.material.map=newTex;
       o.material.color.setRGB(1,1,1);
     } else {
       o.material.map=null;
-      var c=new THREE.Color(md.color||'#F4F1ED');
-      o.material.color.copy(c);
+      o.material.color.copy(new THREE.Color(md.color||'#F4F1ED'));
     }
+    if('roughness' in o.material) o.material.roughness=md.r||0.4;
+    if('metalness' in o.material) o.material.metalness=0.05;
     o.material.needsUpdate=true;
   });
 }
