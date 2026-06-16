@@ -146,8 +146,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
           <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
         </div>
         <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">30 cm</span></div>
-          <input type="range" min="20" max="60" step="1" value="30" oninput="setCP(+this.value)">
+          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">36 cm</span></div>
+          <input type="range" min="36" max="60" step="1" value="36" oninput="setCP(+this.value)">
         </div>
         <div class="sec">Finition bois</div>
         <div class="mat-grid" id="mg-cais"></div>
@@ -168,7 +168,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
         </div>
         <div class="sl-row">
           <div class="sl-top"><span class="sl-lbl">Profondeur totale</span><span class="sl-val" id="v-P">55 cm</span></div>
-          <input type="range" min="20" max="80" step="1" value="55" oninput="setPro(+this.value)">
+          <input type="range" min="36" max="80" step="1" value="55" oninput="setPro(+this.value)">
         </div>
         <div class="sl-row">
           <div class="sl-top"><span class="sl-lbl">Épaisseur</span><span class="sl-val" id="v-E">4.0 cm</span></div>
@@ -244,7 +244,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 var S = {
   step:1,
   // Meuble
-  CL:1.20, CH:0.45, CairsonP:0.30, matCais:0,
+  CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
   caissonOffset:0,  // décalage X du caisson sous le plan (m)
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
