@@ -57,19 +57,19 @@ module.exports = async function handler(req, res) {
         email,
         message: message || null,
         // meuble
-        meuble_L: meuble.L || 0,
-        meuble_H: meuble.H || 0,
-        meuble_P: meuble.P || 0,
+        meuble_l: meuble.L || 0,
+        meuble_h: meuble.H || 0,
+        meuble_p: meuble.P || 0,
         meuble_mat: meuble.matLabel || '',
         // plan
-        plan_L: plan.L || 0,
-        plan_P: plan.P || 0,
+        plan_l: plan.L || 0,
+        plan_p: plan.P || 0,
         plan_ep: plan.Ep || 0,
         plan_mat: plan.matLabel || '',
         // vasques
         nb_vasques: vasques.nb || 1,
-        vasque_W: vasques.W || 0,
-        vasque_D: vasques.D || 0,
+        vasque_w: vasques.W || 0,
+        vasque_d: vasques.D || 0,
         // intérieur
         nb_tablettes: counts.shelf || 0,
         nb_separateurs: counts.separator || 0,
