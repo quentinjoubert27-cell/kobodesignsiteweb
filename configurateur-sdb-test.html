@@ -1069,18 +1069,10 @@ function buildMatGrid(id,arr,fn){
 buildMatGrid('mg-plan',MATS_PLAN,setMatPlan);
 buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
 buildMatGrid('mg-vasque',MATS_VASQUE,setMatVasque);
-// Sélectionne "Blanc Elysée" par défaut pour la vasque
-document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===S_matVasque);});
-// Précharge la première texture bois
-(function(){
-  var md=MATS_CAIS[0];
-  if(!md.src) return;
-  new THREE.TextureLoader().load(md.src,function(tex){
-    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
-    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
-    _caisTexCache[0]=tex; buildCaisson();
-  });
-})();
+// Charge les textures par défaut au démarrage
+setMatPlan(0);     // Evok
+setMatCais(0);     // Chêne
+setMatVasque(S_matVasque); // Blanc Elysée
 
 // Grille sélecteur vasques
 (function(){
