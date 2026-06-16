@@ -56,6 +56,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .tip{background:rgba(205,62,0,.05);border:1px dashed rgba(205,62,0,.25);border-radius:8px;padding:11px 13px;font-size:11px;color:var(--text2);line-height:1.55;margin-bottom:16px}
 .tip-icon{font-size:14px;display:inline-block;margin-right:4px}
 .recap-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
+.warn-alert{display:none;background:rgba(205,62,0,.07);border:1.5px solid rgba(205,62,0,.35);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--accent);line-height:1.55;margin-bottom:14px}
+.warn-alert.show{display:block}
 .recap-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
 .recap-row:last-child{border-bottom:none}
 .recap-k{color:var(--text2)}.recap-v{color:var(--text);font-weight:600}
@@ -175,6 +177,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 
       <!-- STEP 2 — Plan de travail -->
       <div class="panel" id="p2">
+        <div class="warn-alert" id="warn-plan"></div>
         <div class="sec">Dimensions du plan</div>
         <div class="sl-row">
           <div class="sl-top"><span class="sl-lbl">Longueur totale</span><span class="sl-val" id="v-L">140 cm</span></div>
@@ -200,6 +203,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
       <!-- STEP 3 — Vasque -->
       <div class="panel" id="p3">
         <div class="tip"><span class="tip-icon">✥</span>Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="warn-alert" id="warn-vasque"></div>
         <div class="sec">Nombre de vasques</div>
         <div class="facade-row" style="margin-bottom:16px">
           <button class="facade-btn on" id="nv1" onclick="setNbVasques(1)">1 vasque</button>
@@ -469,18 +473,32 @@ function buildCaisson(){
     var base=new THREE.Color(md.color||'#D4A96A');
     return new THREE.MeshStandardMaterial({color:base.multiplyScalar(darken),roughness:md.r,metalness:0.02});
   }
+
+  // Essences bois → intérieur blanc, laques/peintures → tout de la même couleur
+  var isWood=(S.matCais<=3);
+  var matWhite=new THREE.MeshStandardMaterial({color:0xF2EDE8,roughness:0.90,metalness:0.0});
+
   var matCais  =makePanelMat(1.00, EP, 0.5);
   var matFacade=makePanelMat(0.80, 0.3, 0.4);
-  var matFond  =makePanelMat(0.68, 0.5, 0.4);
-  var matElem  =makePanelMat(0.88, 0.3, 0.3);
+  var matFond  =isWood ? matWhite : makePanelMat(0.68, 0.5, 0.4);
+  var matElem  =isWood ? matWhite : makePanelMat(0.88, 0.3, 0.3);
 
   function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
+  // Boîte avec matériaux différents par face pour l'effet bois/blanc
+  // BoxGeometry faces : [+x, -x, +y, -y, +z, -z]
+  function boxBimat(w,h,d,intFaceIdx){
+    var mats=[matCais,matCais,matCais,matCais,matCais,matCais];
+    if(isWood){ mats[intFaceIdx]=matWhite; mats[4]=matWhite; } // face int + face avant
+    var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats);
+    m.castShadow=true; m.receiveShadow=true; return m;
+  }
 
-  // Structure
-  var cg=box(ep,CH,CP,matCais); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
-  var cd=box(ep,CH,CP,matCais); cd.position.set( CL/2-ep/2,CH/2,0); caissonGrp.add(cd);
-  var dt=box(iW,ep,CP,matCais); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
-  var db=box(iW,ep,CP,matCais); db.position.set(0,ep/2,0); caissonGrp.add(db);
+  // Structure — joue gauche : face int = +x (idx 0), joue droite : face int = -x (idx 1)
+  // tablette haute : face int = -y (idx 3), tablette basse : face int = +y (idx 2)
+  var cg=boxBimat(ep,CH,CP,0); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
+  var cd=boxBimat(ep,CH,CP,1); cd.position.set( CL/2-ep/2,CH/2,0); caissonGrp.add(cd);
+  var dt=boxBimat(iW,ep,CP,3); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
+  var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db);
   var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
 
   // Tablettes et séparateurs
@@ -520,11 +538,11 @@ function buildCaisson(){
       var pgV=new THREE.CylinderGeometry(0.006,0.006,h*0.35,12);
       var pv=new THREE.Mesh(pgV,matLaiton);
       pv.position.set(cx+(w/2-0.028),cy,fz+0.021); caissonGrp.add(pv);
-    } else { // tiroir — pleine hauteur, cliquable pour ouvrir
+    } else { // tiroir — pleine largeur meuble, cache les côtés
       var cy2=ycmToLocal((bot+top)/2);
       var isOpen=!!caissonOpenState[el.key];
       var tirZ=isOpen ? fz+CP*0.55 : fz;
-      var tm=box(w-jeu,h-jeu,0.020,matFacade); tm.position.set(cx,cy2,tirZ);
+      var tm=box(CL,h-jeu,0.020,matFacade); tm.position.set(0,cy2,tirZ);
       tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
       caissonElemMeshes.push(tm); caissonGrp.add(tm);
     }
@@ -985,10 +1003,9 @@ cvs.addEventListener('touchend',function(){isDragging=false;activeVasqueDrag=-1;
 // ═══════════════════════════════════════════════════════
 function setCL(v){
   S.CL=v/100; document.getElementById('v-CL').textContent=v+' cm';
-  // Clamp offset slider range
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
   var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
-  buildCaisson();
+  buildCaisson(); checkAlerts();
 }
 function setCH(v){ S.CH=v/100; document.getElementById('v-CH').textContent=v+' cm'; buildCaisson(); if(planMesh) buildPlan(); }
 function setCP(v){ S.CairsonP=v/100; document.getElementById('v-CP').textContent=v+' cm'; buildCaisson(); }
@@ -998,7 +1015,7 @@ function setL(v){
   var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
   S.caissonOffset=Math.max(-(S.L/2-S.CL/2-0.01),Math.min(S.L/2-S.CL/2-0.01,S.caissonOffset));
   S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
-  positionVasque(); buildPlan(); buildCaisson(); updatePosInfo();
+  positionVasque(); buildPlan(); buildCaisson(); updatePosInfo(); checkAlerts();
 }
 function setPro(v){ S.P=v/100; document.getElementById('v-P').textContent=v+' cm'; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
 function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); }
@@ -1088,7 +1105,7 @@ function applyVasqueMat(){
   });
 }
 function setMatVasque(i){
-  S_matVasque=i;
+  S_matVasque=i; checkAlerts();
   document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
   var md=MATS_VASQUE[i];
   if(!md.src){ applyVasqueMat(); return; }
@@ -1102,12 +1119,12 @@ function setMatPlan(i){
   S.matPlan=i;
   document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
   var md=MATS_PLAN[i];
-  if(!md.src){ buildPlan(); return; }
-  if(_planTexCache[i]){ buildPlan(); return; }
+  if(!md.src){ buildPlan(); checkAlerts(); return; }
+  if(_planTexCache[i]){ buildPlan(); checkAlerts(); return; }
   new THREE.TextureLoader().load(md.src,function(tex){
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
     try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
-    _planTexCache[i]=tex; buildPlan();
+    _planTexCache[i]=tex; buildPlan(); checkAlerts();
   });
 }
 function setMatCais(i){
@@ -1182,6 +1199,35 @@ function animCamera(n){
     if(f>=N){clearInterval(camAnim);camAnim=null;}
   },16);
 }
+function checkAlerts(){
+  // Alerte plan vs meuble
+  var wPlan=document.getElementById('warn-plan');
+  if(wPlan){
+    var meubleL=Math.round(S.CL*100), planL=Math.round(S.L*100);
+    if(meubleL>planL){
+      wPlan.textContent='⚠ Le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
+      wPlan.classList.add('show');
+    } else if(planL>meubleL+1){
+      wPlan.textContent='ℹ Le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+( planL-meubleL)+' cm.';
+      wPlan.classList.add('show');
+    } else {
+      wPlan.classList.remove('show');
+    }
+  }
+  // Alerte plan ≠ vasque
+  var wVasque=document.getElementById('warn-vasque');
+  if(wVasque){
+    var pMat=MATS_PLAN[S.matPlan], vMat=MATS_VASQUE[S_matVasque];
+    var planName=pMat?pMat.n:'', vasqueName=vMat?vMat.n:'';
+    if(planName!==vasqueName){
+      wVasque.textContent='⚠ La vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
+      wVasque.classList.add('show');
+    } else {
+      wVasque.classList.remove('show');
+    }
+  }
+}
+
 function prevStep(){goStep(step-1);}
 function nextStep(){goStep(step+1);}
 
