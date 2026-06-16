@@ -431,8 +431,13 @@ function buildCaisson(){
   // Tablettes et séparateurs
   caissonElements.forEach(function(el,idx){
     if(el.type==='shelf'){
-      var m=box(iW,ep,CP-ep,matElem);
-      m.position.set(0,ycmToLocal(el.y_cm),-ep/2);
+      var iW_cm2=(S.CL-2*EP)*100;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
+      var sw=(sr-sl)/100;
+      var scx=xcmToLocal((sl+sr)/2);
+      var m=box(sw,ep,CP-ep,matElem);
+      m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
     } else if(el.type==='separator'){
       var comp=getCompartment(el.y_cm);
@@ -704,8 +709,16 @@ function updateCaissonGhost(e){
   var gW,gH,gX,gY,occupied=false;
 
   if(caissonType==='shelf'){
-    occupied=caissonElements.some(function(el){return el.type==='shelf'&&Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H;});
-    gW=iW; gH=ep; gX=0; gY=ycmToLocal(hit.y_cm);
+    var bay0=getBay(hit.x_cm,hit.y_cm);
+    var bW0=(bay0.right_cm-bay0.left_cm)/100;
+    var bCx0=xcmToLocal((bay0.left_cm+bay0.right_cm)/2);
+    occupied=caissonElements.some(function(el){
+      if(el.type!=='shelf') return false;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
+      return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay0.right_cm&&sr>bay0.left_cm;
+    });
+    gW=bW0; gH=ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
   } else if(caissonType==='separator'){
     var comp=getCompartment(hit.y_cm);
     if(comp.height_cm<1){clearCaissonGhost();return;}
@@ -767,8 +780,14 @@ function placeOrRemoveCaisson(e){
   if(!hit) return false;
 
   if(caissonType==='shelf'){
-    if(caissonElements.some(function(el){return el.type==='shelf'&&Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H;})) return true;
-    caissonElements.push({type:'shelf',y_cm:hit.y_cm});
+    var bay1=getBay(hit.x_cm,hit.y_cm);
+    if(caissonElements.some(function(el){
+      if(el.type!=='shelf') return false;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
+      return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay1.right_cm&&sr>bay1.left_cm;
+    })) return true;
+    caissonElements.push({type:'shelf',y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
   } else if(caissonType==='separator'){
     var comp=getCompartment(hit.y_cm);
     if(comp.height_cm<1) return true;
