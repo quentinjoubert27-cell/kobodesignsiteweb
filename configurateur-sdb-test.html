@@ -533,7 +533,8 @@ function _applyVasqueGltf(gltf){
 
   scene.add(grp); vasqueGrp=grp;
   vasqueGrp.visible=(S.step===3);
-  S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
+  S.vx=clampVasque(S.vx,'x');
+  S.vz=clampVasque(WALL_Z+S.vasqueRz,'z'); // coller au mur par défaut
   positionVasque(); buildPlan(); updatePosInfo();
 }
 
