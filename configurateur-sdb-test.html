@@ -70,6 +70,11 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .facade-row{display:flex;gap:8px;margin-bottom:4px}
 .facade-btn{flex:1;padding:9px 6px;border-radius:8px;border:1.5px solid var(--border);background:var(--panel2);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.04em}
 .facade-btn:hover{border-color:var(--text2)}.facade-btn.on{border-color:var(--accent);background:rgba(200,150,90,.1);color:var(--accent)}
+.vasque-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+.vasque-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--panel2);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.vasque-btn:hover{border-color:var(--text2)}.vasque-btn.on{border-color:var(--accent);background:rgba(200,150,90,.1)}
+.vasque-btn canvas{border-radius:5px;background:#2a2723}
+.vasque-lbl{font-size:10px;font-weight:600;color:var(--text2)}.vasque-btn.on .vasque-lbl{color:var(--accent)}
 
 #sb-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
 .btn-back{flex:0 0 auto;padding:11px 14px;border-radius:7px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
@@ -180,7 +185,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 
       <!-- STEP 3 — Vasque -->
       <div class="panel" id="p3">
-        <div class="tip"><span class="tip-icon">✥</span>Dimensionnez la vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="tip"><span class="tip-icon">✥</span>Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="sec">Modèle de vasque</div>
+        <div class="vasque-grid" id="vg"></div>
         <div class="sec">Type de pose</div>
         <div class="facade-row" style="margin-bottom:16px">
           <button class="facade-btn on" id="vt-poser" onclick="setVasqueType('poser')">À poser</button>
@@ -489,19 +496,39 @@ function buildPlan(){
 // ═══════════════════════════════════════════════════════
 var _vasqueYOffset=0.10; // à poser=0.10, encastrée=0.06
 var vasqueEncastree=false;
-var _vasqueGltfCache=null;
+var _vasqueModels=[
+  {id:'v1',label:'V1',file:'models/vasque-v1.glb'},
+  {id:'v2',label:'V2',file:'models/vasque-v2.glb'},
+  {id:'v3',label:'V3',file:'models/vasque-v3.glb'},
+  {id:'v4',label:'V4',file:'models/vasque-v4.glb'},
+  {id:'v5',label:'V5',file:'models/vasque-v5.glb'},
+  {id:'v6',label:'V6',file:'models/vasque-v6.glb'},
+  {id:'v7',label:'V7',file:'models/vasque-v7.glb'},
+];
+var _vasqueSelected='v1';
+var _vasqueCache={};  // {id: gltf}
 var _vasqueLoading=false;
 
 function buildVasque(){
   if(_vasqueLoading) return;
-  if(_vasqueGltfCache){ _applyVasqueGltf(_vasqueGltfCache); return; }
+  var id=_vasqueSelected;
+  if(_vasqueCache[id]){ _applyVasqueGltf(_vasqueCache[id]); return; }
   _vasqueLoading=true;
+  var model=_vasqueModels.find(function(m){return m.id===id;});
   var loader=new THREE.GLTFLoader();
-  loader.load('models/vasque-v1.glb',function(gltf){
-    _vasqueLoading=false; _vasqueGltfCache=gltf; _applyVasqueGltf(gltf);
+  loader.load(model.file,function(gltf){
+    _vasqueLoading=false; _vasqueCache[id]=gltf; _applyVasqueGltf(gltf);
   },undefined,function(err){
     _vasqueLoading=false; console.error('GLB vasque error',err);
   });
+}
+
+function selectVasque(id){
+  _vasqueSelected=id;
+  document.querySelectorAll('.vasque-btn').forEach(function(b){
+    b.classList.toggle('on', b.dataset.id===id);
+  });
+  buildVasque();
 }
 
 function _applyVasqueGltf(gltf){
@@ -815,13 +842,13 @@ function setVasqueType(t){
   _vasqueYOffset=vasqueEncastree?0.06:0.10;
   document.getElementById('vt-poser').classList.toggle('on',!vasqueEncastree);
   document.getElementById('vt-encastree').classList.toggle('on',vasqueEncastree);
-  if(_vasqueGltfCache) _applyVasqueGltf(_vasqueGltfCache);
+  if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
   buildPlan();
 }
 function setVasqueYOffset(v){
   document.getElementById('v-VY').textContent=v+' cm';
   _vasqueYOffset=v/100;
-  if(_vasqueGltfCache) _applyVasqueGltf(_vasqueGltfCache);
+  if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
 }
 function setMatPlan(i){ S.matPlan=i; document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildPlan(); }
 function setMatCais(i){ S.matCais=i; document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);}); buildCaisson(); }
@@ -920,6 +947,20 @@ function buildMatGrid(id,arr,fn){
 }
 buildMatGrid('mg-plan',MATS_PLAN,setMatPlan);
 buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
+
+// Grille sélecteur vasques
+(function(){
+  var grid=document.getElementById('vg');
+  _vasqueModels.forEach(function(m){
+    var btn=document.createElement('button');
+    btn.className='vasque-btn'+(m.id==='v1'?' on':'');
+    btn.dataset.id=m.id;
+    btn.onclick=function(){ selectVasque(m.id); };
+    var lbl=document.createElement('span');
+    lbl.className='vasque-lbl'; lbl.textContent=m.label;
+    btn.appendChild(lbl); grid.appendChild(btn);
+  });
+})();
 
 // ═══════════════════════════════════════════════════════
 // RESIZE & LOOP
