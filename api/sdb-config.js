@@ -64,7 +64,7 @@ module.exports = async function handler(req, res) {
         // plan
         plan_L: plan.L || 0,
         plan_P: plan.P || 0,
-        plan_Ep: plan.Ep || 0,
+        plan_ep: plan.Ep || 0,
         plan_mat: plan.matLabel || '',
         // vasques
         nb_vasques: vasques.nb || 1,
