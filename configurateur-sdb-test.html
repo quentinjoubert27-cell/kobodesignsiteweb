@@ -464,17 +464,21 @@ function buildPlan(){
   if(planMesh){disposeMesh(planMesh);scene.remove(planMesh);planMesh=null;}
   var L=S.L, P=S.P, Ep=S.Ep, topY=planTopY();
   var vx=clampVasque(S.vx,'x'), vz=clampVasque(S.vz,'z');
+  // vz est en world space ; la shape est en local (avant planMesh.position.z=planCZ())
+  var lz=vz-planCZ();
 
   var shape=new THREE.Shape();
   shape.moveTo(-L/2,-P/2); shape.lineTo(L/2,-P/2); shape.lineTo(L/2,P/2); shape.lineTo(-L/2,P/2); shape.closePath();
 
-  var rx=S.vasqueRx, rz=S.vasqueRz, cr=Math.min(rx,rz)*0.12;
-  var hole=new THREE.Path();
-  hole.moveTo(vx-rx+cr,vz-rz); hole.lineTo(vx+rx-cr,vz-rz); hole.quadraticCurveTo(vx+rx,vz-rz,vx+rx,vz-rz+cr);
-  hole.lineTo(vx+rx,vz+rz-cr); hole.quadraticCurveTo(vx+rx,vz+rz,vx+rx-cr,vz+rz);
-  hole.lineTo(vx-rx+cr,vz+rz); hole.quadraticCurveTo(vx-rx,vz+rz,vx-rx,vz+rz-cr);
-  hole.lineTo(vx-rx,vz-rz+cr); hole.quadraticCurveTo(vx-rx,vz-rz,vx-rx+cr,vz-rz); hole.closePath();
-  shape.holes.push(hole);
+  if(S.vasqueRx>0 && S.vasqueRz>0){
+    var rx=S.vasqueRx, rz=S.vasqueRz, cr=Math.min(rx,rz)*0.12;
+    var hole=new THREE.Path();
+    hole.moveTo(vx-rx+cr,lz-rz); hole.lineTo(vx+rx-cr,lz-rz); hole.quadraticCurveTo(vx+rx,lz-rz,vx+rx,lz-rz+cr);
+    hole.lineTo(vx+rx,lz+rz-cr); hole.quadraticCurveTo(vx+rx,lz+rz,vx+rx-cr,lz+rz);
+    hole.lineTo(vx-rx+cr,lz+rz); hole.quadraticCurveTo(vx-rx,lz+rz,vx-rx,lz+rz-cr);
+    hole.lineTo(vx-rx,lz-rz+cr); hole.quadraticCurveTo(vx-rx,lz-rz,vx-rx+cr,lz-rz); hole.closePath();
+    shape.holes.push(hole);
+  }
 
   var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
   geo.rotateX(Math.PI/2); geo.translate(0,S.CH+0.04,0);
