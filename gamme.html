@@ -550,16 +550,16 @@
 
     /* ── HERO GAMME ── */
     .gamme-hero {
-      min-height: 55vh;
+      min-height: 38vh;
       background: var(--dark);
       display: flex; align-items: flex-end;
-      padding: clamp(48px,8vw,100px) clamp(24px,7vw,100px);
+      padding: clamp(56px,9vw,120px) clamp(24px,7vw,100px) clamp(64px,10vw,130px);
       position: relative; overflow: hidden;
     }
     .gamme-hero::before {
       content: '';
       position: absolute; inset: 0;
-      background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(205,62,0,.15) 0%, transparent 70%);
+      background: radial-gradient(ellipse 90% 70% at 75% 60%, rgba(205,62,0,.22) 0%, transparent 65%);
     }
     .gamme-hero__inner { position: relative; z-index: 1; max-width: 700px; }
     .gamme-hero__label {
@@ -621,7 +621,7 @@
 
     /* ── SECTION CATÉGORIE ── */
     .gamme-cat {
-      padding: clamp(80px,10vw,120px) clamp(24px,7vw,100px);
+      padding: clamp(100px,12vw,160px) clamp(24px,7vw,100px);
     }
     .gamme-cat--dark { background: var(--dark); }
     .gamme-cat--light { background: var(--bg); }
@@ -816,10 +816,10 @@
       position: relative;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+      background: linear-gradient(135deg, #f0ebe0 0%, #e8e2d5 100%);
       border-radius: 16px;
       overflow: hidden;
-      border: 1px solid rgba(255, 250, 240, 0.06);
+      border: 1px solid rgba(26,26,26,.08);
     }
     .sdb-showcase__canvas {
       width: 100%;
@@ -834,7 +834,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+      background: linear-gradient(135deg, #f0ebe0 0%, #e8e2d5 100%);
       transition: opacity 0.3s;
       pointer-events: none;
     }
@@ -856,11 +856,11 @@
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--accent);
-      background: rgba(26, 26, 26, 0.7);
+      background: rgba(255,250,240,0.9);
       backdrop-filter: blur(6px);
       padding: 6px 12px;
       border-radius: 100px;
-      border: 1px solid rgba(205, 62, 0, 0.25);
+      border: 1px solid rgba(205,62,0,0.2);
       pointer-events: none;
     }
 
@@ -882,7 +882,7 @@
       font-weight: 900;
       letter-spacing: -0.045em;
       line-height: 0.95;
-      color: var(--bg);
+      color: var(--dark);
       margin-bottom: 24px;
     }
     .sdb-showcase__title em {
@@ -894,13 +894,13 @@
       font-size: 14px;
       font-weight: 300;
       line-height: 1.65;
-      color: rgba(255, 250, 240, 0.6);
+      color: rgba(26,26,26,0.6);
       margin-bottom: 28px;
       max-width: 460px;
     }
     .sdb-showcase__txt strong {
       font-weight: 600;
-      color: rgba(255, 250, 240, 0.85);
+      color: rgba(26,26,26,0.85);
     }
 
     .sdb-showcase__list {
@@ -916,7 +916,7 @@
       align-items: center;
       gap: 14px;
       padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255, 250, 240, 0.08);
+      border-bottom: 1px solid rgba(26,26,26,0.08);
     }
     .sdb-showcase__list li:last-child {
       border-bottom: 0;
@@ -944,13 +944,13 @@
     .sdb-showcase__list strong {
       font-size: 13px;
       font-weight: 600;
-      color: var(--bg);
+      color: var(--dark);
       letter-spacing: 0.01em;
     }
     .sdb-showcase__list span {
       font-size: 11px;
       font-weight: 400;
-      color: rgba(255, 250, 240, 0.45);
+      color: rgba(26,26,26,0.45);
       letter-spacing: 0.02em;
     }
 
@@ -1388,13 +1388,13 @@
     .produit-card__tag { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; background: rgba(205,62,0,.12); color: var(--accent); border: 1px solid rgba(205,62,0,.2); margin-top: 10px; }
 
     /* ── BIENTOT ── */
-    .bientot-section { padding: clamp(48px,6vw,80px) clamp(32px,7vw,100px); background: var(--dark); border-top: 1px solid rgba(255,250,240,.05); }
+    .bientot-section { padding: clamp(64px,8vw,100px) clamp(32px,7vw,100px); background: var(--mid); border-top: 1px solid rgba(26,26,26,.06); }
     .bientot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     @media(max-width:768px){.bientot-grid{grid-template-columns:1fr 1fr}}
-    .bientot-card { border: 1px solid rgba(255,250,240,.07); border-radius: 10px; padding: 24px 20px; display: flex; flex-direction: column; gap: 8px; opacity: .5; }
-    .bientot-card__label { font-size: 8px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,250,240,.3); }
-    .bientot-card__name { font-size: 16px; font-weight: 800; color: rgba(255,250,240,.6); letter-spacing: -.01em; }
-    .bientot-card__tag { display: inline-flex; font-size: 8px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; border: 1px solid rgba(255,250,240,.12); color: rgba(255,250,240,.25); width: fit-content; }
+    .bientot-card { border: 1px solid rgba(26,26,26,.09); border-radius: 10px; padding: 24px 20px; display: flex; flex-direction: column; gap: 8px; opacity: .6; }
+    .bientot-card__label { font-size: 8px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(26,26,26,.35); }
+    .bientot-card__name { font-size: 16px; font-weight: 800; color: rgba(26,26,26,.55); letter-spacing: -.01em; }
+    .bientot-card__tag { display: inline-flex; font-size: 8px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; border: 1px solid rgba(26,26,26,.14); color: rgba(26,26,26,.3); width: fit-content; }
 
     /* ── CTA FINAL ── */
     .g-cta-final { padding: clamp(80px,10vw,120px) clamp(32px,7vw,100px); background: var(--accent); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 40px; }
@@ -1671,7 +1671,7 @@
 </section>
 
 <!-- ── SALLES DE BAIN ── -->
-<section class="gamme-cat gamme-cat--dark" id="salles-de-bain">
+<section class="gamme-cat gamme-cat--light" id="salles-de-bain">
   <div class="gamme-cat__header">
     <div class="gamme-cat__num reveal">02</div>
     <div>
@@ -1714,8 +1714,8 @@
 
 <!-- ── BIENTÔT DISPONIBLES ── -->
 <div class="bientot-section">
-  <p style="font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,250,240,.25);margin-bottom:20px;display:flex;align-items:center;gap:10px;">
-    <span style="display:inline-block;width:28px;height:1px;background:rgba(255,250,240,.15)"></span>
+  <p style="font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+    <span style="display:inline-block;width:28px;height:1px;background:rgba(26,26,26,.18)"></span>
     Prochainement configurables
   </p>
   <div class="bientot-grid">
