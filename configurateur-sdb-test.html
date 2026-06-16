@@ -374,7 +374,14 @@ function xcmToLocal(x_cm) { return -S.CL/2+EP+x_cm/100; }
 
 function getCompartment(y_cm){
   var iH_cm=(S.CH-2*EP)*100;
-  var shelves=caissonElements.filter(function(e){return e.type==='shelf';}).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
+  var iW_cm=(S.CL-2*EP)*100;
+  // Seules les tablettes pleine largeur définissent les compartiments verticaux
+  var shelves=caissonElements.filter(function(e){
+    if(e.type!=='shelf') return false;
+    var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
+    var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
+    return sl<=1 && sr>=iW_cm-1;
+  }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
   var bot=0,top=iH_cm;
   shelves.forEach(function(s){ if(s<y_cm&&s>bot) bot=s; if(s>y_cm&&s<top) top=s; });
   return {bottom_cm:bot,top_cm:top,height_cm:top-bot,centerY:ycmToLocal((top+bot)/2)};
@@ -761,9 +768,8 @@ function updateCaissonGhost(e){
     if(comp2.height_cm<1||bay2.width_cm<1){clearCaissonGhost();return;}
     occupied=!!getFacadeFor(comp2,bay2);
     var w2=bay2.width_cm/100, h2=comp2.height_cm/100;
-    if(caissonType==='tiroir') h2=Math.min(h2*0.55,0.14);
     gW=w2-0.003; gH=h2-0.003;
-    gX=bay2.centerX; gY=caissonType==='tiroir'?ycmToLocal(comp2.bottom_cm)+h2/2:comp2.centerY;
+    gX=bay2.centerX; gY=comp2.centerY;
     // pour le ghost de façade on le place devant, pas dans le plan de frappe
     if(!caissonGhost){
       var gMat=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
@@ -772,7 +778,7 @@ function updateCaissonGhost(e){
       caissonGrp.add(caissonGhost);
     }
     caissonGhost.scale.set(gW,gH,0.020);
-    caissonGhost.position.set(gX,gY,CP/2+0.020);
+    caissonGhost.position.set(gX,gY,CP/2+0.001);
     caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
     caissonGhost.material.opacity=occupied?0.25:0.45;
     caissonGhost.visible=true;
