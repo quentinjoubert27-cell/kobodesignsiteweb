@@ -248,14 +248,22 @@ var S = {
 };
 
 var MATS_PLAN = [
-  {n:'Chêne',        src:'img/BOISCHENE.jpg',   r:.65},
-  {n:'Noyer',        src:'img/NOYER.jpg',        r:.62},
-  {n:'Chêne Foncé',  src:'img/CHENEFONCE.jpg',  r:.62},
-  {n:'Sapelli',      src:'img/SAPELLI.jpg',      r:.60},
-  {n:'Vert Sauge',   src:'img/VERTSAUGE.jpg',   r:.65},
-  {n:'Brun Rosé',    src:'img/BRUNROSE.jpg',     r:.65},
-  {n:'Gris Ardoise', src:'img/GRISARDOISE.jpg', r:.65},
-  {n:'Blanc',        src:null, color:'#F4F1ED',  r:.08},
+  // Dekton
+  {n:'Evok',          src:'textures/dekton/evok.png',       r:.18, brand:'Dekton'},
+  {n:'Kedar',         src:'textures/dekton/kedar.png',      r:.20, brand:'Dekton'},
+  {n:'Keena',         src:'textures/dekton/keena.png',      r:.15, brand:'Dekton'},
+  {n:'Thala',         src:'textures/dekton/thala.png',      r:.16, brand:'Dekton'},
+  {n:'Zira',          src:'textures/dekton/zira.png',       r:.18, brand:'Dekton'},
+  // Silestone
+  {n:'Arden Blue',    src:'textures/silestone/ardenblue.png',        r:.20, brand:'Silestone'},
+  {n:'Blanc Elysée',  src:'textures/silestone/blancelysee.png',      r:.14, brand:'Silestone'},
+  {n:'Calacatta Gold',src:'textures/silestone/calacattagold.png',    r:.16, brand:'Silestone'},
+  {n:'Chateau Brown', src:'textures/silestone/chateaubrown.png',     r:.22, brand:'Silestone'},
+  {n:'El Marquina',   src:'textures/silestone/elmarquina.png',       r:.18, brand:'Silestone'},
+  {n:'Jardin Emerald',src:'textures/silestone/jardinemerald.png',    r:.20, brand:'Silestone'},
+  {n:'Linen Cream',   src:'textures/silestone/linencream.png',       r:.18, brand:'Silestone'},
+  {n:'Miami White',   src:'textures/silestone/miamiwhite.png',       r:.12, brand:'Silestone'},
+  {n:'White Arabesque',src:'textures/silestone/whitearabesque.png',  r:.14, brand:'Silestone'},
 ];
 var _planTexCache={};
 var MATS_CAIS = [
@@ -525,16 +533,24 @@ function buildPlan(){
 var _vasqueYOffset=0.10; // à poser=0.10, encastrée=0.06
 var vasqueEncastree=false;
 var MATS_VASQUE=[
-  {n:'Chêne',        src:'img/BOISCHENE.jpg',   r:.65},
-  {n:'Noyer',        src:'img/NOYER.jpg',        r:.62},
-  {n:'Chêne Foncé',  src:'img/CHENEFONCE.jpg',  r:.62},
-  {n:'Sapelli',      src:'img/SAPELLI.jpg',      r:.60},
-  {n:'Vert Sauge',   src:'img/VERTSAUGE.jpg',   r:.65},
-  {n:'Brun Rosé',    src:'img/BRUNROSE.jpg',     r:.65},
-  {n:'Gris Ardoise', src:'img/GRISARDOISE.jpg', r:.65},
-  {n:'Blanc',        src:null, color:'#F4F1ED',  r:.08},
+  // Dekton
+  {n:'Evok',          src:'textures/dekton/evok.png',       r:.18, brand:'Dekton'},
+  {n:'Kedar',         src:'textures/dekton/kedar.png',      r:.20, brand:'Dekton'},
+  {n:'Keena',         src:'textures/dekton/keena.png',      r:.15, brand:'Dekton'},
+  {n:'Thala',         src:'textures/dekton/thala.png',      r:.16, brand:'Dekton'},
+  {n:'Zira',          src:'textures/dekton/zira.png',       r:.18, brand:'Dekton'},
+  // Silestone
+  {n:'Arden Blue',    src:'textures/silestone/ardenblue.png',        r:.20, brand:'Silestone'},
+  {n:'Blanc Elysée',  src:'textures/silestone/blancelysee.png',      r:.14, brand:'Silestone'},
+  {n:'Calacatta Gold',src:'textures/silestone/calacattagold.png',    r:.16, brand:'Silestone'},
+  {n:'Chateau Brown', src:'textures/silestone/chateaubrown.png',     r:.22, brand:'Silestone'},
+  {n:'El Marquina',   src:'textures/silestone/elmarquina.png',       r:.18, brand:'Silestone'},
+  {n:'Jardin Emerald',src:'textures/silestone/jardinemerald.png',    r:.20, brand:'Silestone'},
+  {n:'Linen Cream',   src:'textures/silestone/linencream.png',       r:.18, brand:'Silestone'},
+  {n:'Miami White',   src:'textures/silestone/miamiwhite.png',       r:.12, brand:'Silestone'},
+  {n:'White Arabesque',src:'textures/silestone/whitearabesque.png',  r:.14, brand:'Silestone'},
 ];
-var S_matVasque=7; // blanc par défaut
+var S_matVasque=6; // Blanc Elysée par défaut
 var _vasqueTexCache={};
 var _vasqueModels=[
   {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.05},
@@ -1056,8 +1072,8 @@ function buildMatGrid(id,arr,fn){
 buildMatGrid('mg-plan',MATS_PLAN,setMatPlan);
 buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
 buildMatGrid('mg-vasque',MATS_VASQUE,setMatVasque);
-// Sélectionne "Blanc" par défaut pour la vasque
-document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===7);});
+// Sélectionne "Blanc Elysée" par défaut pour la vasque
+document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===S_matVasque);});
 // Précharge la première texture bois
 (function(){
   var md=MATS_CAIS[0];
