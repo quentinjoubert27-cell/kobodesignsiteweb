@@ -151,7 +151,7 @@ function render(configs, token){
     return '<div class="cfg-row" onclick="toggleFiche('+idx+')">'
       + '<div class="cfg-num">'+(idx+1)+'</div>'
       + '<div class="cfg-main"><div class="cfg-name">'+esc(c.prenom)+' <span style="font-weight:400;color:rgba(26,26,26,.4)">'+esc(c.email)+'</span></div>'
-      + '<div class="cfg-dims">'+ref+' · Meuble '+c.meuble_L+'×'+c.meuble_H+'×'+c.meuble_P+' cm · '+esc(c.meuble_mat)+'</div></div>'
+      + '<div class="cfg-dims">'+ref+' · Meuble '+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm · '+esc(c.meuble_mat)+'</div></div>'
       + '<div class="cfg-date">'+fmtDate(c.created_at)+'</div>'
       + '<button class="fiche-btn" onclick="event.stopPropagation();generatePDF('+idx+')">📄 PDF</button>'
       + '</div>'
@@ -170,9 +170,9 @@ function toggleFiche(idx){
   elems.forEach(function(e){ if(counts[e.type]!==undefined) counts[e.type]++; });
 
   el.innerHTML = '<div class="detail-grid">'
-    + '<div class="detail-block"><div class="detail-block-title">Meuble</div><div class="detail-block-val">'+c.meuble_L+'×'+c.meuble_H+'×'+c.meuble_P+' cm</div><div class="detail-block-sub">'+esc(c.meuble_mat)+'</div></div>'
-    + '<div class="detail-block"><div class="detail-block-title">Plan de travail</div><div class="detail-block-val">'+c.plan_L+'×'+c.plan_P+'×'+c.plan_Ep+' cm</div><div class="detail-block-sub">'+esc(c.plan_mat)+'</div></div>'
-    + '<div class="detail-block"><div class="detail-block-title">Vasque'+(c.nb_vasques>1?'s':'')+'</div><div class="detail-block-val">'+c.nb_vasques+'× '+c.vasque_W+'×'+c.vasque_D+' cm</div></div>'
+    + '<div class="detail-block"><div class="detail-block-title">Meuble</div><div class="detail-block-val">'+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm</div><div class="detail-block-sub">'+esc(c.meuble_mat)+'</div></div>'
+    + '<div class="detail-block"><div class="detail-block-title">Plan de travail</div><div class="detail-block-val">'+c.plan_l+'×'+c.plan_p+'×'+c.plan_ep+' cm</div><div class="detail-block-sub">'+esc(c.plan_mat)+'</div></div>'
+    + '<div class="detail-block"><div class="detail-block-title">Vasque'+(c.nb_vasques>1?'s':'')+'</div><div class="detail-block-val">'+c.nb_vasques+'× '+c.vasque_w+'×'+c.vasque_d+' cm</div></div>'
     + '<div class="detail-block"><div class="detail-block-title">Tablettes</div><div class="detail-block-val">'+counts.shelf+'</div></div>'
     + '<div class="detail-block"><div class="detail-block-title">Séparateurs</div><div class="detail-block-val">'+counts.separator+'</div></div>'
     + '<div class="detail-block"><div class="detail-block-title">Tiroirs / Portes</div><div class="detail-block-val">'+counts.tiroir+' tiroir'+(counts.tiroir>1?'s':'')+' · '+counts.porte+' porte'+(counts.porte>1?'s':'')+'</div></div>'
@@ -203,9 +203,9 @@ function parseKey(key){
 }
 
 function buildPDFHtml(cfg){
-  var W  = cfg.meuble_L || 0;
-  var H  = cfg.meuble_H || 0;
-  var P  = cfg.meuble_P || 0;
+  var W  = cfg.meuble_l || 0;
+  var H  = cfg.meuble_h || 0;
+  var P  = cfg.meuble_p || 0;
   var ep = 1.9; // épaisseur panneau en cm
 
   var elems = Array.isArray(cfg.elements) ? cfg.elements : [];
@@ -456,7 +456,7 @@ function buildPDFHtml(cfg){
     +'<div class="meta">'
       +'<div class="meta-block"><div class="meta-title">Client</div><div class="meta-val">'+esc(cfg.prenom)+'</div><div class="meta-sub">'+esc(cfg.email)+'</div></div>'
       +'<div class="meta-block"><div class="meta-title">Meuble</div><div class="meta-val">'+W+'×'+H+'×'+P+' cm</div><div class="meta-sub">'+esc(cfg.meuble_mat)+'</div></div>'
-      +'<div class="meta-block"><div class="meta-title">Plan de travail</div><div class="meta-val">'+cfg.plan_L+'×'+cfg.plan_P+'×'+cfg.plan_Ep+' cm</div><div class="meta-sub">'+esc(cfg.plan_mat)+'</div></div>'
+      +'<div class="meta-block"><div class="meta-title">Plan de travail</div><div class="meta-val">'+cfg.plan_l+'×'+cfg.plan_p+'×'+cfg.plan_ep+' cm</div><div class="meta-sub">'+esc(cfg.plan_mat)+'</div></div>'
     +'</div>'
     // 2 schémas SVG côte à côte
     +'<div class="schemas">'
@@ -477,7 +477,7 @@ function buildPDFHtml(cfg){
       +'<div class="sect"><div class="sect-title">Vasque'+(cfg.nb_vasques>1?'s ('+cfg.nb_vasques+')':'')+'</div>'
       +tbl([
         ['Nombre',cfg.nb_vasques],
-        ['Dimensions',cfg.vasque_W+'×'+cfg.vasque_D+' cm'],
+        ['Dimensions',cfg.vasque_w+'×'+cfg.vasque_d+' cm'],
       ])+'</div>'
     +'</div>'
     +'<div>'

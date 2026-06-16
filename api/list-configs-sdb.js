@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
 
   const { data, error } = await supabase
     .from('configs_sdb')
-    .select('id, created_at, prenom, email, message, meuble_L, meuble_H, meuble_P, meuble_mat, plan_L, plan_P, plan_Ep, plan_mat, nb_vasques, vasque_W, vasque_D, nb_tablettes, nb_separateurs, nb_portes, nb_tiroirs, elements')
+    .select('id, created_at, prenom, email, message, meuble_l, meuble_h, meuble_p, meuble_mat, plan_l, plan_p, plan_ep, plan_mat, nb_vasques, vasque_w, vasque_d, nb_tablettes, nb_separateurs, nb_portes, nb_tiroirs, elements')
     .order('created_at', { ascending: false })
     .limit(200);
 
