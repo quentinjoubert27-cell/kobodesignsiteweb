@@ -186,6 +186,11 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
       <!-- STEP 3 — Vasque -->
       <div class="panel" id="p3">
         <div class="tip"><span class="tip-icon">✥</span>Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="sec">Nombre de vasques</div>
+        <div class="facade-row" style="margin-bottom:16px">
+          <button class="facade-btn on" id="nv1" onclick="setNbVasques(1)">1 vasque</button>
+          <button class="facade-btn" id="nv2" onclick="setNbVasques(2)">2 vasques</button>
+        </div>
         <div class="sec">Modèle de vasque</div>
         <div class="vasque-grid" id="vg"></div>
         <div class="sec">Type de pose</div>
@@ -244,7 +249,8 @@ var S = {
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
   // Vasque
-  vx:0, vz:0, vasqueW:0.50, vasqueD:0.35, vasqueRx:0.256, vasqueRz:0.181,
+  vx:0, vz:0, vx2:0, vz2:0, nbVasques:1,
+  vasqueW:0.50, vasqueD:0.35, vasqueRx:0.256, vasqueRz:0.181,
 };
 
 var MATS_PLAN = [
@@ -338,7 +344,10 @@ controls.target.set(0,0.25,0);
 controls.minPolarAngle=Math.PI*.10; controls.maxPolarAngle=Math.PI*.52;
 controls.minDistance=0.4; controls.maxDistance=4.0; controls.update();
 
-var planMesh=null, caissonGrp=null, vasqueGrp=null, vasqueRimOffset=0;
+var planMesh=null, caissonGrp=null;
+var vasqueGrp=null, vasqueGrp2=null;
+var vasqueRimOffset=0, vasqueRimOffset2=0;
+var activeVasqueDrag=-1; // 0=vasque1, 1=vasque2, -1=aucune
 
 function disposeMesh(m){
   if(!m) return;
@@ -506,14 +515,19 @@ function buildPlan(){
   var shape=new THREE.Shape();
   shape.moveTo(-L/2,-P/2); shape.lineTo(L/2,-P/2); shape.lineTo(L/2,P/2); shape.lineTo(-L/2,P/2); shape.closePath();
 
-  if(vasqueEncastree && S.vasqueRx>0 && S.vasqueRz>0){
+  function addVasqueHole(hx, hz){
     var rx=S.vasqueRx, rz=S.vasqueRz, cr=Math.min(rx,rz)*0.12;
+    var lhz=hz-planCZ();
     var hole=new THREE.Path();
-    hole.moveTo(vx-rx+cr,lz-rz); hole.lineTo(vx+rx-cr,lz-rz); hole.quadraticCurveTo(vx+rx,lz-rz,vx+rx,lz-rz+cr);
-    hole.lineTo(vx+rx,lz+rz-cr); hole.quadraticCurveTo(vx+rx,lz+rz,vx+rx-cr,lz+rz);
-    hole.lineTo(vx-rx+cr,lz+rz); hole.quadraticCurveTo(vx-rx,lz+rz,vx-rx,lz+rz-cr);
-    hole.lineTo(vx-rx,lz-rz+cr); hole.quadraticCurveTo(vx-rx,lz-rz,vx-rx+cr,lz-rz); hole.closePath();
+    hole.moveTo(hx-rx+cr,lhz-rz); hole.lineTo(hx+rx-cr,lhz-rz); hole.quadraticCurveTo(hx+rx,lhz-rz,hx+rx,lhz-rz+cr);
+    hole.lineTo(hx+rx,lhz+rz-cr); hole.quadraticCurveTo(hx+rx,lhz+rz,hx+rx-cr,lhz+rz);
+    hole.lineTo(hx-rx+cr,lhz+rz); hole.quadraticCurveTo(hx-rx,lhz+rz,hx-rx,lhz+rz-cr);
+    hole.lineTo(hx-rx,lhz-rz+cr); hole.quadraticCurveTo(hx-rx,lhz-rz,hx-rx+cr,lhz-rz); hole.closePath();
     shape.holes.push(hole);
+  }
+  if(vasqueEncastree && S.vasqueRx>0 && S.vasqueRz>0){
+    addVasqueHole(vx, clampVasque(S.vz,'z'));
+    if(S.nbVasques===2) addVasqueHole(clampVasque(S.vx2,'x'), clampVasque(S.vz2,'z'));
   }
 
   var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
@@ -557,7 +571,6 @@ var MATS_VASQUE=[
 ];
 var S_matVasque=6; // Blanc Elysée par défaut
 var _vasqueTexCache={};
-var _vasqueOrigMats={};  // {meshUuid: originalMaterial} pour la vasque courante
 var _vasqueModels=[
   {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.05},
   {id:'v2',label:'V2',file:'models/vasque-v2.glb', oPoser:0.09, oEncastree:0.0475},
@@ -594,43 +607,50 @@ function selectVasque(id){
   buildVasque();
 }
 
-function _applyVasqueGltf(gltf){
-  disposeGroup(vasqueGrp);
+function _buildOneVasqueGrp(gltf){
   var grp=new THREE.Group();
   var model=gltf.scene.clone(true);
-
-  // Bounding box native (avant scale)
   var box0=new THREE.Box3().setFromObject(model);
   var sz0=new THREE.Vector3(); box0.getSize(sz0);
-
-  // Scale pour correspondre à vasqueW × vasqueD
   var sx=S.vasqueW/sz0.x, sz=S.vasqueD/sz0.z;
-  var sy=Math.min(sx,sz); // proportionnel en hauteur
+  var sy=Math.min(sx,sz);
   model.scale.set(sx,sy,sz);
-
-  // Bounding box après scale
   var box1=new THREE.Box3().setFromObject(model);
   var sz1=new THREE.Vector3(); box1.getSize(sz1);
   var ctr=new THREE.Vector3(); box1.getCenter(ctr);
-
-  // Centrer + aligner le bas sur Y=0
-  model.position.set(-ctr.x, -box1.min.y, -ctr.z);
-
-  _vasqueOrigMats={};
+  model.position.set(-ctr.x,-box1.min.y,-ctr.z);
   model.traverse(function(o){
     if(!o.isMesh) return;
     o.castShadow=true; o.receiveShadow=true;
-    _vasqueOrigMats[o.uuid]=o.material.clone();
+    o.userData.origMat=o.material.clone();
   });
   grp.add(model);
+  return {grp:grp, rimOffset:sz1.y-_vasqueYOffset, rx:sz1.x/2, rz:sz1.z/2};
+}
 
-  vasqueRimOffset=sz1.y-_vasqueYOffset;
-  S.vasqueRx=sz1.x/2; S.vasqueRz=sz1.z/2;
+function _applyVasqueGltf(gltf){
+  disposeGroup(vasqueGrp); vasqueGrp=null;
+  disposeGroup(vasqueGrp2); vasqueGrp2=null;
 
-  scene.add(grp); vasqueGrp=grp;
+  var r1=_buildOneVasqueGrp(gltf);
+  vasqueGrp=r1.grp; vasqueRimOffset=r1.rimOffset;
+  S.vasqueRx=r1.rx; S.vasqueRz=r1.rz;
+  scene.add(vasqueGrp);
   vasqueGrp.visible=(S.step===3);
   S.vx=clampVasque(S.vx,'x');
-  S.vz=clampVasque(WALL_Z+S.vasqueRz,'z'); // coller au mur par défaut
+  S.vz=clampVasque(WALL_Z+S.vasqueRz,'z');
+
+  if(S.nbVasques===2){
+    var r2=_buildOneVasqueGrp(gltf);
+    vasqueGrp2=r2.grp; vasqueRimOffset2=r2.rimOffset;
+    scene.add(vasqueGrp2);
+    vasqueGrp2.visible=(S.step===3);
+    // Positionner à droite si vx1 est à gauche, sinon symétrique
+    S.vx2=clampVasque(S.L/4,'x');
+    S.vx=clampVasque(-S.L/4,'x');
+    S.vz2=S.vz;
+  }
+
   positionVasque(); buildPlan(); updatePosInfo();
   applyVasqueMat();
 }
@@ -649,10 +669,16 @@ function clampVasque(val,axis){
   }
 }
 function positionVasque(){
-  if(!vasqueGrp) return;
-  var vx=clampVasque(S.vx,'x'),vz=clampVasque(S.vz,'z');
-  vasqueGrp.position.set(vx,planTopY()-vasqueRimOffset,vz);
-  S.vx=vx; S.vz=vz;
+  if(vasqueGrp){
+    var vx=clampVasque(S.vx,'x'),vz=clampVasque(S.vz,'z');
+    vasqueGrp.position.set(vx,planTopY()-vasqueRimOffset,vz);
+    S.vx=vx; S.vz=vz;
+  }
+  if(vasqueGrp2){
+    var vx2=clampVasque(S.vx2,'x'),vz2=clampVasque(S.vz2,'z');
+    vasqueGrp2.position.set(vx2,planTopY()-vasqueRimOffset2,vz2);
+    S.vx2=vx2; S.vz2=vz2;
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -840,57 +866,67 @@ function toNDC(e){
   mouse.y=-((e.clientY-r.top)/r.height)*2+1;
 }
 
+function _startVasqueDrag(nx, nz){
+  dragPlane.constant=-planTopY();
+  raycaster.ray.intersectPlane(dragPlane,dragPt);
+  if(vasqueGrp && raycaster.intersectObject(vasqueGrp,true).length>0){
+    activeVasqueDrag=0; dragOffset.set(dragPt.x-S.vx,0,dragPt.z-S.vz); return true;
+  }
+  if(vasqueGrp2 && raycaster.intersectObject(vasqueGrp2,true).length>0){
+    activeVasqueDrag=1; dragOffset.set(dragPt.x-S.vx2,0,dragPt.z-S.vz2); return true;
+  }
+  return false;
+}
+function _moveDrag(){
+  dragPlane.constant=-planTopY();
+  if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
+  if(activeVasqueDrag===0){
+    S.vx=clampVasque(dragPt.x-dragOffset.x,'x');
+    S.vz=clampVasque(dragPt.z-dragOffset.z,'z');
+  } else {
+    S.vx2=clampVasque(dragPt.x-dragOffset.x,'x');
+    S.vz2=clampVasque(dragPt.z-dragOffset.z,'z');
+  }
+  positionVasque(); buildPlan(); updatePosInfo();
+}
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
-  if(S.step!==3||!vasqueGrp) return;
+  if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
-  if(raycaster.intersectObject(vasqueGrp,true).length>0){
-    isDragging=true; controls.enabled=false; cvs.style.cursor='grabbing';
-    dragPlane.constant=-planTopY();
-    raycaster.ray.intersectPlane(dragPlane,dragPt);
-    dragOffset.set(dragPt.x-S.vx,0,dragPt.z-S.vz); e.stopPropagation();
+  if(_startVasqueDrag()){
+    isDragging=true; controls.enabled=false; cvs.style.cursor='grabbing'; e.stopPropagation();
   }
 });
 cvs.addEventListener('pointermove',function(e){
   if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
-  if(!vasqueGrp) return;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
-    if(S.step===3){ cvs.style.cursor=raycaster.intersectObject(vasqueGrp,true).length?'grab':''; }
+    if(S.step===3){
+      var hit=(vasqueGrp&&raycaster.intersectObject(vasqueGrp,true).length)||
+              (vasqueGrp2&&raycaster.intersectObject(vasqueGrp2,true).length);
+      cvs.style.cursor=hit?'grab':'';
+    }
     return;
   }
-  dragPlane.constant=-planTopY();
-  if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
-  S.vx=clampVasque(dragPt.x-dragOffset.x,'x');
-  S.vz=clampVasque(dragPt.z-dragOffset.z,'z');
-  positionVasque(); buildPlan(); updatePosInfo();
+  _moveDrag();
 });
 window.addEventListener('pointerup',function(){
-  if(isDragging){isDragging=false;controls.enabled=true;cvs.style.cursor='';}
+  if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
 cvs.addEventListener('touchstart',function(e){
-  if(S.step!==3||!vasqueGrp) return;
+  if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
   var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
   raycaster.setFromCamera(mouse,camera);
-  if(raycaster.intersectObject(vasqueGrp,true).length>0){
-    isDragging=true; controls.enabled=false;
-    dragPlane.constant=-planTopY();
-    raycaster.ray.intersectPlane(dragPlane,dragPt);
-    dragOffset.set(dragPt.x-S.vx,0,dragPt.z-S.vz); e.preventDefault();
-  }
+  if(_startVasqueDrag()){ isDragging=true; controls.enabled=false; e.preventDefault(); }
 },{passive:false});
 cvs.addEventListener('touchmove',function(e){
   if(!isDragging) return; e.preventDefault();
   var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
   raycaster.setFromCamera(mouse,camera);
-  dragPlane.constant=-planTopY();
-  if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
-  S.vx=clampVasque(dragPt.x-dragOffset.x,'x');
-  S.vz=clampVasque(dragPt.z-dragOffset.z,'z');
-  positionVasque(); buildPlan(); updatePosInfo();
+  _moveDrag();
 },{passive:false});
-cvs.addEventListener('touchend',function(){isDragging=false;controls.enabled=true;});
+cvs.addEventListener('touchend',function(){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;});
 
 // ═══════════════════════════════════════════════════════
 // UI CALLBACKS
@@ -930,6 +966,18 @@ function _applyOffsetForCurrent(){
   var inp=document.querySelector('#p3 input[type=range][oninput*=VasqueYOffset]');
   if(inp) inp.value=Math.round(offset*1000)/10;
 }
+function setNbVasques(n){
+  S.nbVasques=n;
+  document.getElementById('nv1').classList.toggle('on',n===1);
+  document.getElementById('nv2').classList.toggle('on',n===2);
+  if(n===2 && !vasqueGrp2 && _vasqueCache[_vasqueSelected]){
+    _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
+  } else if(n===1 && vasqueGrp2){
+    scene.remove(vasqueGrp2); disposeGroup(vasqueGrp2); vasqueGrp2=null;
+    S.vx=clampVasque(0,'x');
+    positionVasque(); buildPlan();
+  }
+}
 function setVasqueType(t){
   vasqueEncastree=(t==='encastree');
   document.getElementById('vt-poser').classList.toggle('on',!vasqueEncastree);
@@ -944,12 +992,13 @@ function setVasqueYOffset(v){
   if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
 }
 function applyVasqueMat(){
-  if(!vasqueGrp) return;
   var md=MATS_VASQUE[S_matVasque];
   var tex=_vasqueTexCache[S_matVasque];
-  vasqueGrp.traverse(function(o){
+  [vasqueGrp,vasqueGrp2].forEach(function(grp){
+    if(!grp) return;
+    grp.traverse(function(o){
     if(!o.isMesh) return;
-    var orig=_vasqueOrigMats[o.uuid];
+    var orig=o.userData.origMat;
     if(orig) o.material=orig.clone();
     if(tex){
       var newTex=tex.clone();
@@ -983,6 +1032,7 @@ function applyVasqueMat(){
     if('roughness' in o.material) o.material.roughness=md.r||0.4;
     if('metalness' in o.material) o.material.metalness=0.05;
     o.material.needsUpdate=true;
+    });
   });
 }
 function setMatVasque(i){
@@ -1046,8 +1096,9 @@ function goStep(n){
   if(caissonEditMode) toggleCaissonEdit();
   controls.enabled=true;
 
-  if(planMesh)  planMesh.visible=(n>=2);
-  if(vasqueGrp) vasqueGrp.visible=(n===3);
+  if(planMesh)   planMesh.visible=(n>=2);
+  if(vasqueGrp)  vasqueGrp.visible=(n===3);
+  if(vasqueGrp2) vasqueGrp2.visible=(n===3);
   if(n===1) buildCaisson();
   if(n===2) buildPlan();
   if(n===3){ buildRecap(); updatePosInfo(); positionVasque(); }
