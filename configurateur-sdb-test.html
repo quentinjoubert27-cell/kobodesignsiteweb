@@ -925,9 +925,7 @@ function applyVasqueMat(){
   vasqueGrp.traverse(function(o){
     if(!o.isMesh) return;
     if(tex){
-      var t=tex.clone(); t.needsUpdate=true;
-      t.repeat.set(1,1);
-      o.material=new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});
+      o.material=new THREE.MeshStandardMaterial({map:tex,roughness:md.r,metalness:0.02});
     } else {
       o.material=new THREE.MeshStandardMaterial({color:new THREE.Color(md.color||'#F4F1ED'),roughness:md.r,metalness:0.02});
     }
@@ -940,7 +938,6 @@ function setMatVasque(i){
   if(!md.src){ applyVasqueMat(); return; }
   if(_vasqueTexCache[i]){ applyVasqueMat(); return; }
   new THREE.TextureLoader().load(md.src,function(tex){
-    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
     try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
     _vasqueTexCache[i]=tex; applyVasqueMat();
   });
