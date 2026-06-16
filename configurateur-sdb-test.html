@@ -1016,7 +1016,7 @@ function setCL(v){
   S.CL=v/100; document.getElementById('v-CL').textContent=v+' cm';
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
   var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
-  if(S.nbVasques===2 && (S.CL<1.20||S.L<1.20)) setNbVasques(1);
+  if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
   buildCaisson(); checkAlerts();
 }
 function setCH(v){ S.CH=v/100; document.getElementById('v-CH').textContent=v+' cm'; buildCaisson(); if(planMesh) buildPlan(); }
@@ -1027,7 +1027,7 @@ function setL(v){
   var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
   S.caissonOffset=Math.max(-(S.L/2-S.CL/2-0.01),Math.min(S.L/2-S.CL/2-0.01,S.caissonOffset));
   S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
-  if(S.nbVasques===2 && (S.CL<1.20||S.L<1.20)) setNbVasques(1);
+  if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
   positionVasque(); buildPlan(); buildCaisson(); updatePosInfo(); checkAlerts();
 }
 function setPro(v){ S.P=v/100; document.getElementById('v-P').textContent=v+' cm'; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
@@ -1050,9 +1050,8 @@ function _applyOffsetForCurrent(){
   if(inp) inp.value=Math.round(offset*1000)/10;
 }
 function setNbVasques(n){
-  if(n===2 && (S.CL<1.20 || S.L<1.20)){
-    var minL=Math.min(Math.round(S.CL*100),Math.round(S.L*100));
-    alert('Le meuble et le plan de travail doivent faire au moins 120 cm pour ajouter une 2ème vasque (actuellement '+minL+' cm).');
+  if(n===2 && S.CL<1.20 && S.L<1.20){
+    alert('Le meuble et le plan de travail doivent faire au moins 120 cm pour ajouter une 2ème vasque (meuble : '+Math.round(S.CL*100)+' cm, plan : '+Math.round(S.L*100)+' cm).');
     return;
   }
   S.nbVasques=n;
