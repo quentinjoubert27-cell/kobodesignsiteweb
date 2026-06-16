@@ -552,6 +552,7 @@ var MATS_VASQUE=[
 ];
 var S_matVasque=6; // Blanc Elysée par défaut
 var _vasqueTexCache={};
+var _vasqueOrigMats={};  // {meshUuid: originalMaterial} pour la vasque courante
 var _vasqueModels=[
   {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.05},
   {id:'v2',label:'V2',file:'models/vasque-v2.glb', oPoser:0.09, oEncastree:0.0475},
@@ -610,7 +611,12 @@ function _applyVasqueGltf(gltf){
   // Centrer + aligner le bas sur Y=0
   model.position.set(-ctr.x, -box1.min.y, -ctr.z);
 
-  model.traverse(function(o){ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} });
+  _vasqueOrigMats={};
+  model.traverse(function(o){
+    if(!o.isMesh) return;
+    o.castShadow=true; o.receiveShadow=true;
+    _vasqueOrigMats[o.uuid]=o.material.clone();
+  });
   grp.add(model);
 
   vasqueRimOffset=sz1.y-_vasqueYOffset;
@@ -924,11 +930,21 @@ function applyVasqueMat(){
   var tex=_vasqueTexCache[S_matVasque];
   vasqueGrp.traverse(function(o){
     if(!o.isMesh) return;
-    if(tex){
-      o.material=new THREE.MeshStandardMaterial({map:tex,roughness:md.r,metalness:0.02});
+    var orig=_vasqueOrigMats[o.uuid];
+    if(orig){
+      o.material=orig.clone();
     } else {
-      o.material=new THREE.MeshStandardMaterial({color:new THREE.Color(md.color||'#F4F1ED'),roughness:md.r,metalness:0.02});
+      o.material=new THREE.MeshStandardMaterial({roughness:md.r,metalness:0.02});
     }
+    if(tex){
+      o.material.map=tex;
+      o.material.color.setRGB(1,1,1);
+    } else {
+      o.material.map=null;
+      var c=new THREE.Color(md.color||'#F4F1ED');
+      o.material.color.copy(c);
+    }
+    o.material.needsUpdate=true;
   });
 }
 function setMatVasque(i){
@@ -938,6 +954,8 @@ function setMatVasque(i){
   if(!md.src){ applyVasqueMat(); return; }
   if(_vasqueTexCache[i]){ applyVasqueMat(); return; }
   new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    tex.repeat.set(2,2);
     try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
     _vasqueTexCache[i]=tex; applyVasqueMat();
   });
