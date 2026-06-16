@@ -954,8 +954,6 @@ function setMatVasque(i){
   if(!md.src){ applyVasqueMat(); return; }
   if(_vasqueTexCache[i]){ applyVasqueMat(); return; }
   new THREE.TextureLoader().load(md.src,function(tex){
-    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
-    tex.repeat.set(2,2);
     try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
     _vasqueTexCache[i]=tex; applyVasqueMat();
   });
