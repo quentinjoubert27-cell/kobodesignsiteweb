@@ -292,6 +292,7 @@ var EP = 0.019;  // épaisseur panneau
 // {type:'porte',     key}   clé = 'bot_left_top_right' en cm
 // {type:'tiroir',    key}
 var caissonElements  = [];
+var caissonOpenState = {};  // {key: bool} tiroirs ouverts
 var caissonType      = 'shelf';
 var caissonEditMode  = false;
 var caissonGhost     = null;
@@ -307,7 +308,7 @@ var renderer = new THREE.WebGLRenderer({canvas:cvs,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputEncoding=THREE.sRGBEncoding;
-renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.1;
+renderer.toneMapping=THREE.LinearToneMapping; renderer.toneMappingExposure=1.0;
 
 var scene=new THREE.Scene();
 scene.background=new THREE.Color(0x141210);
@@ -316,15 +317,16 @@ scene.fog=new THREE.FogExp2(0x141210,0.045);
 var camera=new THREE.PerspectiveCamera(42,1,0.01,30);
 camera.position.set(-0.4,0.9,1.6); camera.lookAt(0,0.25,0);
 
-scene.add(new THREE.HemisphereLight(0xffe8d0,0x3a2a18,0.5));
-var sun=new THREE.DirectionalLight(0xfff5e8,0.95);
+scene.add(new THREE.HemisphereLight(0xffffff,0x707070,0.6));
+var sun=new THREE.DirectionalLight(0xffffff,1.1);
 sun.position.set(3,6,3); sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-2; sun.shadow.camera.right=2;
 sun.shadow.camera.top=2;  sun.shadow.camera.bottom=-2;
 sun.shadow.camera.far=20; sun.shadow.bias=-0.0003;
 scene.add(sun);
-var dl2=new THREE.DirectionalLight(0xb0c8e0,0.3); dl2.position.set(-4,2,-3); scene.add(dl2);
+var dl2=new THREE.DirectionalLight(0xffffff,0.4); dl2.position.set(-3,3,4); scene.add(dl2);
+var dl3=new THREE.DirectionalLight(0xffffff,0.25); dl3.position.set(3,2,4); scene.add(dl3);
 
 var solMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x242018,roughness:0.92,metalness:0.05}));
 solMesh.rotation.x=-Math.PI/2; solMesh.receiveShadow=true; scene.add(solMesh);
@@ -458,7 +460,7 @@ function buildCaisson(){
   });
 
   // Façades par compartiment
-  var fz=CP/2+0.020;
+  var fz=CP/2+0.001; // collé au meuble (1mm)
   caissonElements.forEach(function(el,idx){
     if(el.type!=='porte'&&el.type!=='tiroir') return;
     var parts=el.key.split('_').map(Number);
@@ -474,10 +476,13 @@ function buildCaisson(){
       var pgV=new THREE.CylinderGeometry(0.006,0.006,h*0.35,12);
       var pv=new THREE.Mesh(pgV,matLaiton);
       pv.position.set(cx+(w/2-0.028),cy,fz+0.021); caissonGrp.add(pv);
-    } else { // tiroir — pleine hauteur du compartiment, sans poignée
+    } else { // tiroir — pleine hauteur, cliquable pour ouvrir
       var cy2=ycmToLocal((bot+top)/2);
-      var tm=box(w-jeu,h-jeu,0.020,matFacade); tm.position.set(cx,cy2,fz);
-      tm.userData.elemIdx=idx; caissonElemMeshes.push(tm); caissonGrp.add(tm);
+      var isOpen=!!caissonOpenState[el.key];
+      var tirZ=isOpen ? fz+CP*0.55 : fz;
+      var tm=box(w-jeu,h-jeu,0.020,matFacade); tm.position.set(cx,cy2,tirZ);
+      tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+      caissonElemMeshes.push(tm); caissonGrp.add(tm);
     }
   });
 
@@ -653,7 +658,7 @@ function _applyVasqueGltf(gltf){
 function clampVasque(val,axis){
   if(axis==='x'){
     var halfV=S.vasqueRx, h=S.L/2;
-    var mn=-h+halfV+0.04, mx=h-halfV-0.04;
+    var mn=-h+halfV+0.005, mx=h-halfV-0.005;
     if(mn>mx) return 0;
     return Math.max(mn,Math.min(mx,val));
   } else {
@@ -832,7 +837,7 @@ function placeOrRemoveCaisson(e){
 }
 
 function resetCaissonElements(){
-  caissonElements=[]; clearCaissonGhost(); buildCaisson();
+  caissonElements=[]; caissonOpenState={}; clearCaissonGhost(); buildCaisson();
 }
 function updateAmgtCount(){
   var el=document.getElementById('amgt-count'); if(!el) return;
@@ -887,6 +892,15 @@ function _moveDrag(){
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
+  if(S.step===1&&!caissonEditMode){
+    toNDC(e); raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
+    if(hits.length&&hits[0].object.userData.isTiroir){
+      var k=hits[0].object.userData.tirKey;
+      caissonOpenState[k]=!caissonOpenState[k];
+      buildCaisson(); return;
+    }
+  }
   if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(_startVasqueDrag()){
