@@ -67,6 +67,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .edit-mode-btn:hover{border-color:var(--text2)}.edit-mode-btn.active{border-color:var(--accent);background:rgba(200,150,90,.15);color:var(--accent)}
 .reset-btn{width:100%;padding:9px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:.08em;transition:all .18s;margin-bottom:6px}
 .reset-btn:hover{border-color:var(--text2);color:var(--text)}
+.facade-row{display:flex;gap:8px;margin-bottom:4px}
+.facade-btn{flex:1;padding:9px 6px;border-radius:8px;border:1.5px solid var(--border);background:var(--panel2);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.04em}
+.facade-btn:hover{border-color:var(--text2)}.facade-btn.on{border-color:var(--accent);background:rgba(200,150,90,.1);color:var(--accent)}
 
 #sb-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
 .btn-back{flex:0 0 auto;padding:11px 14px;border-radius:7px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
@@ -178,6 +181,11 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
       <!-- STEP 3 — Vasque -->
       <div class="panel" id="p3">
         <div class="tip"><span class="tip-icon">✥</span>Dimensionnez la vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="sec">Type de pose</div>
+        <div class="facade-row" style="margin-bottom:16px">
+          <button class="facade-btn on" id="vt-poser" onclick="setVasqueType('poser')">À poser</button>
+          <button class="facade-btn" id="vt-encastree" onclick="setVasqueType('encastree')">Encastrée</button>
+        </div>
         <div class="sec">Dimensions de la vasque</div>
         <div class="sl-row">
           <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-VW">50 cm</span></div>
@@ -470,7 +478,7 @@ function buildPlan(){
   var shape=new THREE.Shape();
   shape.moveTo(-L/2,-P/2); shape.lineTo(L/2,-P/2); shape.lineTo(L/2,P/2); shape.lineTo(-L/2,P/2); shape.closePath();
 
-  if(S.vasqueRx>0 && S.vasqueRz>0){
+  if(vasqueEncastree && S.vasqueRx>0 && S.vasqueRz>0){
     var rx=S.vasqueRx, rz=S.vasqueRz, cr=Math.min(rx,rz)*0.12;
     var hole=new THREE.Path();
     hole.moveTo(vx-rx+cr,lz-rz); hole.lineTo(vx+rx-cr,lz-rz); hole.quadraticCurveTo(vx+rx,lz-rz,vx+rx,lz-rz+cr);
@@ -492,6 +500,7 @@ function buildPlan(){
 // BUILD VASQUE
 // ═══════════════════════════════════════════════════════
 var _vasqueYOffset=0.32;
+var vasqueEncastree=false;
 var _vasqueGltfCache=null;
 var _vasqueLoading=false;
 
@@ -533,7 +542,7 @@ function _applyVasqueGltf(gltf){
   grp.add(model);
 
   vasqueRimOffset=sz1.y-_vasqueYOffset;
-  S.vasqueRx=sz1.x/2+0.006; S.vasqueRz=sz1.z/2+0.006;
+  S.vasqueRx=sz1.x/2; S.vasqueRz=sz1.z/2;
 
   scene.add(grp); vasqueGrp=grp;
   vasqueGrp.visible=(S.step===3);
@@ -813,6 +822,12 @@ function setCaissonOffset(v){
 }
 function setVasqueW(v){ S.vasqueW=v/100; document.getElementById('v-VW').textContent=v+' cm'; buildVasque(); }
 function setVasqueD(v){ S.vasqueD=v/100; document.getElementById('v-VD').textContent=v+' cm'; buildVasque(); }
+function setVasqueType(t){
+  vasqueEncastree=(t==='encastree');
+  document.getElementById('vt-poser').classList.toggle('on',!vasqueEncastree);
+  document.getElementById('vt-encastree').classList.toggle('on',vasqueEncastree);
+  buildPlan();
+}
 function setVasqueYOffset(v){
   document.getElementById('v-VY').textContent=v+' cm';
   _vasqueYOffset=v/100;
