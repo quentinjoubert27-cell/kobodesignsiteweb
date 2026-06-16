@@ -543,7 +543,7 @@ function buildPlan(){
   }
   planMesh=new THREE.Mesh(geo,planMat);
   planMesh.castShadow=true; planMesh.receiveShadow=true;
-  planMesh.position.z=planCZ(); scene.add(planMesh);
+  planMesh.position.z=planCZ(); planMesh.visible=(S.step>=2); scene.add(planMesh);
 }
 
 // ═══════════════════════════════════════════════════════
