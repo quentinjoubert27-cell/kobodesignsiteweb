@@ -195,6 +195,7 @@
     .legend-dot.shelf{ background:rgba(26,26,26,.25) }
     .legend-dot.traverse{ background:rgba(26,26,26,.15); height:4px; border-radius:1px }
     .legend-dot.separator{ background:rgba(26,26,26,.25); width:4px; height:14px; border-radius:1px }
+    .legend-dot.separator-simple{ background:rgba(26,26,26,.12); width:2px; height:14px; border-radius:1px; border:1px dashed rgba(26,26,26,.25); }
     .legend-dot.door{ background:rgba(26,26,26,.22); width:9px; height:14px; border-radius:1px; border-right:2px solid rgba(26,26,26,.35) }
 
     .toggle-doors-btn{
@@ -313,7 +314,8 @@
         <div class="type-btns">
           <button class="type-btn active" id="typeShelf"     onclick="setType('shelf')">━ Étagère</button>
           <button class="type-btn"        id="typeTraverse"  onclick="setType('traverse')">═ Traverse</button>
-          <button class="type-btn"        id="typeSeparator" onclick="setType('separator')">┃ Intercalaire</button>
+          <button class="type-btn"        id="typeSeparator" onclick="setType('separator')">┃ Intercalaire principal</button>
+          <button class="type-btn"        id="typeSepSimple" onclick="setType('separator_simple')">┊ Intercalaire simple</button>
           <button class="type-btn"        id="typeDoor"      onclick="setType('door')">🚪 Porte</button>
         </div>
         <div class="edit-sep"></div>
@@ -359,7 +361,8 @@
         <div class="legend" id="legend" style="display:none">
           <span class="legend-item"><span class="legend-dot shelf"></span>Étagère</span>
           <span class="legend-item"><span class="legend-dot traverse"></span>Traverse</span>
-          <span class="legend-item"><span class="legend-dot separator"></span>Intercalaire</span>
+          <span class="legend-item"><span class="legend-dot separator"></span>Intercalaire principal</span>
+          <span class="legend-item"><span class="legend-dot separator-simple"></span>Intercalaire simple</span>
           <span class="legend-item"><span class="legend-dot door"></span>Porte</span>
         </div>
         <div style="height:12px"></div>
@@ -877,12 +880,22 @@ function makeElemMesh(el, isGhost){
     mesh.position.set(tCx, ycmToLocal(el.y_cm), D_m/2-TR_DEPTH/2);
 
   } else if(el.type==='separator'){
-    var comp=getCompartment(el.y_cm, el.x_cm); // x-aware
+    var comp=getCompartment(el.y_cm, el.x_cm);
     var span=compToLocalYH(comp.floor_y_cm, comp.ceil_y_cm);
     if(span.height<0.01) return null;
-    var sepH = isGhost ? span.height : span.height; // même hauteur
-    var geo=new THREE.BoxGeometry(T*(isGhost?2.5:1), sepH, D_m-BT-0.02);
+    var geo=new THREE.BoxGeometry(T*(isGhost?2.5:1), span.height, D_m-BT-0.02);
     mesh=new THREE.Mesh(geo,mat);
+    var x=el.x_cm/100-iW_m/2;
+    mesh.position.set(x, span.centerY, BT/2+0.01);
+  } else if(el.type==='separator_simple'){
+    var comp=getCompartment(el.y_cm, el.x_cm);
+    var span=compToLocalYH(comp.floor_y_cm, comp.ceil_y_cm);
+    if(span.height<0.01) return null;
+    var sMat=isGhost
+      ? new THREE.MeshBasicMaterial({color:0x888888,transparent:true,opacity:.30,depthWrite:false})
+      : new THREE.MeshStandardMaterial({color:0xC8BEB0,roughness:.8,metalness:0,transparent:true,opacity:.7});
+    var geo=new THREE.BoxGeometry(T*(isGhost?1.5:0.5), span.height, D_m-BT-0.02);
+    mesh=new THREE.Mesh(geo,sMat);
     var x=el.x_cm/100-iW_m/2;
     mesh.position.set(x, span.centerY, BT/2+0.01);
   }
@@ -1063,6 +1076,8 @@ function updateGhost(e){
     updateGhostDoor(hit);
   } else if(currentType==='separator'){
     updateGhostSeparator(hit);
+  } else if(currentType==='separator_simple'){
+    updateGhostSeparatorSimple(hit);
   } else {
     updateGhostHorizontal(hit);
   }
@@ -1143,6 +1158,34 @@ function updateGhostSeparator(hit){
   ghostMesh.visible=true;
 }
 
+function updateGhostSeparatorSimple(hit){
+  var comp=getCompartment(hit.y_cm, hit.x_cm);
+  var span=compToLocalYH(comp.floor_y_cm, comp.ceil_y_cm);
+  if(span.height<0.01){if(ghostMesh)ghostMesh.visible=false; return;}
+  var compKey='ss_'+comp.floor_y_cm+'_'+comp.ceil_y_cm;
+  if(!ghostMesh||_ghostType!=='separator_simple'||_ghostCompKey!==compKey){
+    clearGhost();
+    var mat=new THREE.MeshBasicMaterial({color:0x888888,transparent:true,opacity:.35,depthWrite:false});
+    var geo=new THREE.BoxGeometry(T*1.5, span.height, D_m-BT-0.02);
+    ghostMesh=new THREE.Mesh(geo,mat);
+    ghostMesh.position.z=BT/2+0.01;
+    ghostMesh.position.y=span.centerY;
+    ghostMesh.renderOrder=1;
+    caseGroup.add(ghostMesh);
+    _ghostType='separator_simple'; _ghostCompKey=compKey;
+  }
+  ghostMesh.position.x=hit.x_cm/100-iW_m/2;
+  ghostMesh.position.y=span.centerY;
+  var tooClose=elements.some(function(el){
+    if(el.type!=='separator'&&el.type!=='separator_simple') return false;
+    var ec=getCompartment(el.y_cm, el.x_cm);
+    return ec.floor_y_cm<comp.ceil_y_cm&&ec.ceil_y_cm>comp.floor_y_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+  });
+  ghostMesh.material.color.setHex(tooClose?0xFF2200:0x888888);
+  ghostMesh.material.opacity=tooClose?.20:.35;
+  ghostMesh.visible=true;
+}
+
 function updateGhostDoor(hit){
   var bay=getBay(hit.y_cm, hit.x_cm);
   var span=compToLocalYH(bay.floor_y_cm, bay.ceil_y_cm);
@@ -1200,8 +1243,10 @@ function placeOrRemove(e){
     elements.push({type:currentType, y_cm:hit.y_cm,
       x_left_cm:bay2.x_left_cm, x_right_cm:bay2.x_right_cm});
     elements.sort(function(a,b){
-      if(a.type==='separator'&&b.type!=='separator')return 1;
-      if(b.type==='separator'&&a.type!=='separator')return-1;
+      var sepA=a.type==='separator'||a.type==='separator_simple';
+      var sepB=b.type==='separator'||b.type==='separator_simple';
+      if(sepA&&!sepB)return 1;
+      if(sepB&&!sepA)return-1;
       return(a.y_cm||0)-(b.y_cm||0);
     });
 
@@ -1215,10 +1260,19 @@ function placeOrRemove(e){
     elements.push({type:'door', floor_y_cm:bay.floor_y_cm, ceil_y_cm:bay.ceil_y_cm,
       x_left_cm:bay.x_left_cm, x_right_cm:bay.x_right_cm, open:false});
 
-  } else { // separator
+  } else if(currentType==='separator_simple'){
+    var comp=getCompartment(hit.y_cm, hit.x_cm);
+    var tooClose3=elements.some(function(el){
+      if(el.type!=='separator'&&el.type!=='separator_simple') return false;
+      var ec=getCompartment(el.y_cm, el.x_cm);
+      return ec.floor_y_cm<comp.ceil_y_cm&&ec.ceil_y_cm>comp.floor_y_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+    });
+    if(tooClose3) return;
+    elements.push({type:'separator_simple', x_cm:hit.x_cm, y_cm:hit.y_cm});
+  } else { // separator principal
     var comp=getCompartment(hit.y_cm, hit.x_cm);
     var tooClose2=elements.some(function(el){
-      if(el.type!=='separator')return false;
+      if(el.type!=='separator'&&el.type!=='separator_simple') return false;
       var ec=getCompartment(el.y_cm, el.x_cm);
       return ec.floor_y_cm<comp.ceil_y_cm&&ec.ceil_y_cm>comp.floor_y_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     });
@@ -1272,8 +1326,8 @@ window.toggleEdit=toggleEdit;
 
 function setType(t){
   currentType=t;
-  var map={shelf:'typeShelf',traverse:'typeTraverse',separator:'typeSeparator',door:'typeDoor'};
-  ['shelf','traverse','separator','door'].forEach(function(id){
+  var map={shelf:'typeShelf',traverse:'typeTraverse',separator:'typeSeparator',separator_simple:'typeSepSimple',door:'typeDoor'};
+  ['shelf','traverse','separator','separator_simple','door'].forEach(function(id){
     var el=document.getElementById(map[id]);
     if(el)el.classList.toggle('active',id===t);
   });
@@ -1308,7 +1362,7 @@ function onSlider(){
   // Purger les éléments hors-limites
   var newMaxX=Math.round((state.W/100-2*T)*100);
   elements=elements.filter(function(el){
-    if(el.type==='separator') return el.x_cm>0&&el.x_cm<state.W-Math.ceil(T*100);
+    if(el.type==='separator'||el.type==='separator_simple') return el.x_cm>0&&el.x_cm<state.W-Math.ceil(T*100);
     if(el.type==='door'){
       // Garder la porte si sa baie reste dans les nouvelles dimensions
       return (el.x_left_cm||0)<newMaxX&&(el.x_right_cm||newMaxX)>0
@@ -1341,11 +1395,13 @@ function updateElemCount(){
   var sh=elements.filter(function(e){return e.type==='shelf';}).length;
   var tr=elements.filter(function(e){return e.type==='traverse';}).length;
   var se=elements.filter(function(e){return e.type==='separator';}).length;
+  var ss=elements.filter(function(e){return e.type==='separator_simple';}).length;
   var do_=elements.filter(function(e){return e.type==='door';}).length;
   var parts=[];
   if(sh) parts.push('<strong>'+sh+'</strong> étagère'+(sh>1?'s':''));
   if(tr) parts.push('<strong>'+tr+'</strong> traverse'+(tr>1?'s':''));
-  if(se) parts.push('<strong>'+se+'</strong> intercalaire'+(se>1?'s':''));
+  if(se) parts.push('<strong>'+se+'</strong> intercalaire principal'+(se>1?'s':''));
+  if(ss) parts.push('<strong>'+ss+'</strong> intercalaire simple'+(ss>1?'s':''));
   if(do_) parts.push('<strong>'+do_+'</strong> porte'+(do_>1?'s':''));
   document.getElementById('elemCount').innerHTML=parts.length?parts.join(' · '):'Structure vide';
   var leg=document.getElementById('legend');
@@ -1534,6 +1590,7 @@ function updateCTA(){
   var sh=elements.filter(function(e){return e.type==='shelf';}).length;
   var tr=elements.filter(function(e){return e.type==='traverse';}).length;
   var se=elements.filter(function(e){return e.type==='separator';}).length;
+  var ss=elements.filter(function(e){return e.type==='separator_simple';}).length;
   var do_=elements.filter(function(e){return e.type==='door';}).length;
 
   // Récap config dans le formulaire
@@ -1542,7 +1599,8 @@ function updateCTA(){
     var parts=['<strong>'+state.W+'×'+state.H+'×'+state.D+' cm</strong>','<strong>'+def.label+'</strong>'];
     if(sh) parts.push(sh+' étagère'+(sh>1?'s':''));
     if(tr) parts.push(tr+' traverse'+(tr>1?'s':''));
-    if(se) parts.push(se+' intercalaire'+(se>1?'s':''));
+    if(se) parts.push(se+' intercalaire principal'+(se>1?'s':''));
+    if(ss) parts.push(ss+' intercalaire simple'+(ss>1?'s':''));
     if(do_) parts.push(do_+' porte'+(do_>1?'s':''));
     sumEl.innerHTML=parts.join(' · ');
   }
