@@ -371,6 +371,7 @@ var caissonType      = 'shelf';
 var caissonEditMode  = false;
 var caissonGhost     = null;
 var caissonHitPlane  = null;
+var caissonGuidesGrp = null;
 var caissonElemMeshes= [];
 
 // ═══════════════════════════════════════════════════════
@@ -600,6 +601,10 @@ function buildCaisson(){
   caissonHitPlane.position.set(0,EP+iH/2,CP/2-0.002);
   caissonGrp.add(caissonHitPlane);
 
+  caissonGuidesGrp = new THREE.Group();
+  caissonGuidesGrp.renderOrder = 4;
+  caissonGrp.add(caissonGuidesGrp);
+
   caissonGrp.position.set(S.caissonOffset,0,caissCZ());
   scene.add(caissonGrp);
   updateAmgtCount();
@@ -820,6 +825,77 @@ function clearCaissonGhost(){
     if(caissonGhost.material) caissonGhost.material.dispose();
     caissonGhost=null;
   }
+  clearCaissonGuides();
+}
+
+// ── Repères interactifs de case SDB (style Canva) ─────────────────────────
+var _SDB_GUIDE_SNAP=4; // cm
+
+function clearCaissonGuides(){
+  if(!caissonGuidesGrp)return;
+  caissonGuidesGrp.children.slice().forEach(function(c){
+    if(c.geometry)c.geometry.dispose();
+    if(c.material)c.material.dispose();
+    caissonGuidesGrp.remove(c);
+  });
+}
+
+function _sdbGuideLine(pts,color,dashed,opacity){
+  var geo=new THREE.BufferGeometry().setFromPoints(pts);
+  var mat=dashed
+    ? new THREE.LineDashedMaterial({color:color,dashSize:.010,gapSize:.007,transparent:true,opacity:opacity,depthWrite:false})
+    : new THREE.LineBasicMaterial({color:color,transparent:true,opacity:opacity,depthWrite:false});
+  var ln=new THREE.Line(geo,mat);
+  if(dashed)ln.computeLineDistances();
+  ln.renderOrder=5;
+  caissonGuidesGrp.add(ln);
+}
+
+function updateCaissonGuides(hit){
+  clearCaissonGuides();
+  if(!hit||!caissonEditMode||!caissonGuidesGrp)return;
+
+  var bay =getBay(hit.x_cm, hit.y_cm);
+  var comp=getCompartment(hit.y_cm, hit.x_cm);
+
+  var xL=xcmToLocal(bay.left_cm);
+  var xR=xcmToLocal(bay.right_cm);
+  var yBot=ycmToLocal(comp.bottom_cm);
+  var yTop=ycmToLocal(comp.top_cm);
+  var xMid=(xL+xR)/2;
+  var yMid=(yBot+yTop)/2;
+  var xMid_cm=(bay.left_cm+bay.right_cm)/2;
+  var yMid_cm=(comp.bottom_cm+comp.top_cm)/2;
+  var CP=caissonCP();
+  var z=CP/2+0.004;
+
+  var nearY=Math.abs(hit.y_cm-yMid_cm)<_SDB_GUIDE_SNAP;
+  var nearX=Math.abs(hit.x_cm-xMid_cm)<_SDB_GUIDE_SNAP;
+
+  // Bordures de la case (pointillés gris)
+  var bC=0x94A3B8,bO=0.20;
+  _sdbGuideLine([new THREE.Vector3(xL,yTop,z),new THREE.Vector3(xR,yTop,z)],bC,true,bO);
+  _sdbGuideLine([new THREE.Vector3(xL,yBot,z),new THREE.Vector3(xR,yBot,z)],bC,true,bO);
+  _sdbGuideLine([new THREE.Vector3(xL,yBot,z),new THREE.Vector3(xL,yTop,z)],bC,true,bO);
+  _sdbGuideLine([new THREE.Vector3(xR,yBot,z),new THREE.Vector3(xR,yTop,z)],bC,true,bO);
+
+  // Ligne de centre horizontale
+  var hC=nearY?0x2563EB:0x60A5FA, hO=nearY?0.90:0.48;
+  _sdbGuideLine([new THREE.Vector3(xL,yMid,z),new THREE.Vector3(xR,yMid,z)],hC,!nearY,hO);
+
+  // Ligne de centre verticale
+  var vC=nearX?0x2563EB:0x60A5FA, vO=nearX?0.90:0.48;
+  _sdbGuideLine([new THREE.Vector3(xMid,yBot,z),new THREE.Vector3(xMid,yTop,z)],vC,!nearX,vO);
+
+  // Losange au centre
+  var dC=(nearX||nearY)?0x2563EB:0x60A5FA, dO=(nearX||nearY)?0.95:0.55, s=0.007;
+  _sdbGuideLine([
+    new THREE.Vector3(xMid,yMid+s,z),
+    new THREE.Vector3(xMid+s,yMid,z),
+    new THREE.Vector3(xMid,yMid-s,z),
+    new THREE.Vector3(xMid-s,yMid,z),
+    new THREE.Vector3(xMid,yMid+s,z)
+  ],dC,false,dO);
 }
 
 function getCaissonHit(e){
@@ -883,6 +959,7 @@ function updateCaissonGhost(e){
     caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
     caissonGhost.material.opacity=occupied?0.25:0.45;
     caissonGhost.visible=true;
+    updateCaissonGuides(hit);
     return;
   }
 
@@ -896,6 +973,7 @@ function updateCaissonGhost(e){
   caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
   caissonGhost.material.opacity=occupied?0.25:0.45;
   caissonGhost.visible=true;
+  updateCaissonGuides(hit);
 }
 
 function placeOrRemoveCaisson(e){
