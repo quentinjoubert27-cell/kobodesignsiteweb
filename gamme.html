@@ -2314,35 +2314,20 @@
       });
     }
 
-    // Lance le showcase quand sa section devient visible (lazy)
-    function initShowcaseWhenVisible(){
-      var canvas = document.getElementById('sdb-showcase-canvas');
-      if(!canvas) return;
-      var started = false;
-      var io = new IntersectionObserver(function(entries){
-        entries.forEach(function(en){
-          if(en.isIntersecting && !started){
-            started = true;
-            io.disconnect();
-            if(window.THREE && window.THREE.GLTFLoader){
-              initShowcase();
-            } else {
-              loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js', function(){
-                loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js', function(){
-                  initShowcase();
-                });
-              });
-            }
-          }
-        });
-      }, { rootMargin: '200px' });
-      io.observe(canvas);
+    // Lance le showcase : attend que THREE soit dispo puis init
+    function waitForThreeAndInit(tries){
+      tries = tries || 0;
+      if(tries > 50) return; // abandon après 5s
+      if(window.THREE && window.THREE.GLTFLoader){
+        initShowcase();
+      } else {
+        setTimeout(function(){ waitForThreeAndInit(tries + 1); }, 100);
+      }
     }
-    // Lance après que le DOM est fini de charger
     if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', initShowcaseWhenVisible);
+      document.addEventListener('DOMContentLoaded', waitForThreeAndInit);
     } else {
-      initShowcaseWhenVisible();
+      waitForThreeAndInit();
     }
 
   })();
