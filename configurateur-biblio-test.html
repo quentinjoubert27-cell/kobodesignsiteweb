@@ -193,6 +193,7 @@
     .legend-item{ display:flex; align-items:center; gap:5px; font-size:9px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:rgba(26,26,26,.4) }
     .legend-dot{ width:10px; height:10px; border-radius:2px; flex-shrink:0 }
     .legend-dot.shelf{ background:rgba(26,26,26,.25) }
+    .legend-dot.shelf-simple{ background:rgba(26,26,26,.10); height:6px; border-radius:1px; border:1px dashed rgba(26,26,26,.25); }
     .legend-dot.traverse{ background:rgba(26,26,26,.15); height:4px; border-radius:1px }
     .legend-dot.separator{ background:rgba(26,26,26,.25); width:4px; height:14px; border-radius:1px }
     .legend-dot.separator-simple{ background:rgba(26,26,26,.12); width:2px; height:14px; border-radius:1px; border:1px dashed rgba(26,26,26,.25); }
@@ -312,7 +313,8 @@
       <div class="edit-bar">
         <span class="edit-bar-label">Ajouter</span>
         <div class="type-btns">
-          <button class="type-btn active" id="typeShelf"     onclick="setType('shelf')">━ Étagère</button>
+          <button class="type-btn active" id="typeShelf"      onclick="setType('shelf')">━ Étagère principale</button>
+          <button class="type-btn"        id="typeShelfSimple" onclick="setType('shelf_simple')">╌ Étagère simple</button>
           <button class="type-btn"        id="typeTraverse"  onclick="setType('traverse')">═ Traverse</button>
           <button class="type-btn"        id="typeSeparator" onclick="setType('separator')">┃ Intercalaire principal</button>
           <button class="type-btn"        id="typeSepSimple" onclick="setType('separator_simple')">┊ Intercalaire simple</button>
@@ -359,7 +361,8 @@
         <p class="sect-lbl">✦ Aménagement intérieur</p>
         <p class="elem-count" id="elemCount">Structure vide</p>
         <div class="legend" id="legend" style="display:none">
-          <span class="legend-item"><span class="legend-dot shelf"></span>Étagère</span>
+          <span class="legend-item"><span class="legend-dot shelf"></span>Étagère principale</span>
+          <span class="legend-item"><span class="legend-dot shelf-simple"></span>Étagère simple</span>
           <span class="legend-item"><span class="legend-dot traverse"></span>Traverse</span>
           <span class="legend-item"><span class="legend-dot separator"></span>Intercalaire principal</span>
           <span class="legend-item"><span class="legend-dot separator-simple"></span>Intercalaire simple</span>
@@ -869,6 +872,18 @@ function makeElemMesh(el, isGhost){
     mesh=new THREE.Mesh(new THREE.BoxGeometry(sW,T,D_m-BT),mat);
     mesh.position.set(sCx, ycmToLocal(el.y_cm), BT/2);
 
+  } else if(el.type==='shelf_simple'){
+    var maxX=Math.round(iW_m*100);
+    var sxl=el.x_left_cm!==undefined?el.x_left_cm:0;
+    var sxr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
+    var sW=(sxr-sxl)/100;
+    var sCx=sxl/100-iW_m/2+sW/2;
+    var ssMat=isGhost
+      ? new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:.30,depthWrite:false})
+      : new THREE.MeshStandardMaterial({color:0xC8BEB0,roughness:.8,metalness:0,transparent:true,opacity:.7});
+    mesh=new THREE.Mesh(new THREE.BoxGeometry(sW,T*0.5,D_m-BT),ssMat);
+    mesh.position.set(sCx, ycmToLocal(el.y_cm), BT/2);
+
   } else if(el.type==='traverse'){
     var maxX=Math.round(iW_m*100);
     var txl=el.x_left_cm!==undefined?el.x_left_cm:0;
@@ -1037,7 +1052,7 @@ function updatePosHint(hit){
   if(!ph)return;
   if(!hit||hit.overElement){ph.classList.remove('visible');return;}
   var txt='';
-  if(currentType==='shelf'||currentType==='traverse'){
+  if(currentType==='shelf'||currentType==='shelf_simple'||currentType==='traverse'){
     var b=getBay(hit.y_cm,hit.x_cm);
     var fullW=Math.round(iW_m*100);
     txt=(b.x_left_cm===0&&b.x_right_cm===fullW)?'H = '+hit.y_cm+' cm':'H = '+hit.y_cm+' cm  ['+b.x_left_cm+'→'+b.x_right_cm+' cm]';
@@ -1093,8 +1108,8 @@ function updateGhostHorizontal(hit){
     clearGhost();
     var mat=new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:.40,depthWrite:false});
     var geo;
-    if(currentType==='shelf'){
-      geo=new THREE.BoxGeometry(bayW,T*1.5,D_m-BT);
+    if(currentType==='shelf'||currentType==='shelf_simple'){
+      geo=new THREE.BoxGeometry(bayW,T*(currentType==='shelf_simple'?0.8:1.5),D_m-BT);
       ghostMesh=new THREE.Mesh(geo,mat);
       ghostMesh.position.z=BT/2;
     } else {
@@ -1113,7 +1128,7 @@ function updateGhostHorizontal(hit){
   // Conflit : étagère/traverse qui chevauche la même baie et est trop proche en Y
   var maxX=Math.round(iW_m*100);
   var tooClose=elements.some(function(el){
-    if(el.type!=='shelf'&&el.type!=='traverse')return false;
+    if(el.type!=='shelf'&&el.type!=='shelf_simple'&&el.type!=='traverse')return false;
     if(Math.abs(el.y_cm-hit.y_cm)>=MIN_GAP_H)return false;
     var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
     var xr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
@@ -1229,11 +1244,11 @@ function placeOrRemove(e){
     return;
   }
 
-  if(currentType==='shelf'||currentType==='traverse'){
+  if(currentType==='shelf'||currentType==='shelf_simple'||currentType==='traverse'){
     var bay2=getBay(hit.y_cm, hit.x_cm);
     var maxX2=Math.round(iW_m*100);
     var tooClose=elements.some(function(el){
-      if(el.type!=='shelf'&&el.type!=='traverse')return false;
+      if(el.type!=='shelf'&&el.type!=='shelf_simple'&&el.type!=='traverse')return false;
       if(Math.abs(el.y_cm-hit.y_cm)>=MIN_GAP_H)return false;
       var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
       var xr=el.x_right_cm!==undefined?el.x_right_cm:maxX2;
@@ -1326,8 +1341,8 @@ window.toggleEdit=toggleEdit;
 
 function setType(t){
   currentType=t;
-  var map={shelf:'typeShelf',traverse:'typeTraverse',separator:'typeSeparator',separator_simple:'typeSepSimple',door:'typeDoor'};
-  ['shelf','traverse','separator','separator_simple','door'].forEach(function(id){
+  var map={shelf:'typeShelf',shelf_simple:'typeShelfSimple',traverse:'typeTraverse',separator:'typeSeparator',separator_simple:'typeSepSimple',door:'typeDoor'};
+  ['shelf','shelf_simple','traverse','separator','separator_simple','door'].forEach(function(id){
     var el=document.getElementById(map[id]);
     if(el)el.classList.toggle('active',id===t);
   });
@@ -1368,7 +1383,7 @@ function onSlider(){
       return (el.x_left_cm||0)<newMaxX&&(el.x_right_cm||newMaxX)>0
         &&el.floor_y_cm<state.H&&el.ceil_y_cm>0;
     }
-    if(el.type==='shelf'||el.type==='traverse'){
+    if(el.type==='shelf'||el.type==='shelf_simple'||el.type==='traverse'){
       var ok=el.y_cm>0&&el.y_cm<state.H-Math.ceil(T*100);
       if(ok&&el.x_right_cm!==undefined) ok=el.x_left_cm<newMaxX&&el.x_right_cm<=newMaxX;
       return ok;
@@ -1393,12 +1408,14 @@ function updateEmptyHint(){
 
 function updateElemCount(){
   var sh=elements.filter(function(e){return e.type==='shelf';}).length;
+  var shs=elements.filter(function(e){return e.type==='shelf_simple';}).length;
   var tr=elements.filter(function(e){return e.type==='traverse';}).length;
   var se=elements.filter(function(e){return e.type==='separator';}).length;
   var ss=elements.filter(function(e){return e.type==='separator_simple';}).length;
   var do_=elements.filter(function(e){return e.type==='door';}).length;
   var parts=[];
-  if(sh) parts.push('<strong>'+sh+'</strong> étagère'+(sh>1?'s':''));
+  if(sh) parts.push('<strong>'+sh+'</strong> étagère principale'+(sh>1?'s':''));
+  if(shs) parts.push('<strong>'+shs+'</strong> étagère simple'+(shs>1?'s':''));
   if(tr) parts.push('<strong>'+tr+'</strong> traverse'+(tr>1?'s':''));
   if(se) parts.push('<strong>'+se+'</strong> intercalaire principal'+(se>1?'s':''));
   if(ss) parts.push('<strong>'+ss+'</strong> intercalaire simple'+(ss>1?'s':''));
@@ -1588,6 +1605,7 @@ window.copyDimsTech=copyDimsTech;
 function updateCTA(){
   var def=MATS.find(function(m){return m.id===state.matId;})||MATS[0];
   var sh=elements.filter(function(e){return e.type==='shelf';}).length;
+  var shs=elements.filter(function(e){return e.type==='shelf_simple';}).length;
   var tr=elements.filter(function(e){return e.type==='traverse';}).length;
   var se=elements.filter(function(e){return e.type==='separator';}).length;
   var ss=elements.filter(function(e){return e.type==='separator_simple';}).length;
@@ -1597,7 +1615,8 @@ function updateCTA(){
   var sumEl=document.getElementById('cfgSummary');
   if(sumEl){
     var parts=['<strong>'+state.W+'×'+state.H+'×'+state.D+' cm</strong>','<strong>'+def.label+'</strong>'];
-    if(sh) parts.push(sh+' étagère'+(sh>1?'s':''));
+    if(sh) parts.push(sh+' étagère principale'+(sh>1?'s':''));
+    if(shs) parts.push(shs+' étagère simple'+(shs>1?'s':''));
     if(tr) parts.push(tr+' traverse'+(tr>1?'s':''));
     if(se) parts.push(se+' intercalaire principal'+(se>1?'s':''));
     if(ss) parts.push(ss+' intercalaire simple'+(ss>1?'s':''));
