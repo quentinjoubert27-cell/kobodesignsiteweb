@@ -515,6 +515,7 @@ var caseGroup  = null;
 var elemsGroup = null;
 var ghostMesh   = null;
 var hitPlane    = null;
+var guidesGroup = null;
 var elemMeshes  = [];   // pivot/mesh par élément (ordre = elements[])
 var doorLeaves  = [];   // feuilles de porte pour raycast
 
@@ -832,6 +833,9 @@ function rebuild(){
   hitPlane.userData.isHitPlane=true;
   caseGroup.add(hitPlane);
   caseGroup.add(elemsGroup);
+  guidesGroup = new THREE.Group();
+  guidesGroup.renderOrder = 4;
+  caseGroup.add(guidesGroup);
   rootGroup.add(caseGroup);
 
   rebuildElements();
@@ -1048,6 +1052,86 @@ function clearGhost(){
     ghostMesh=null;
   }
   _ghostType=''; _ghostCompKey='';
+  clearGuides();
+}
+
+// ── Repères interactifs de case (style Canva) ──────────────────────────────
+var _GUIDE_SNAP=4; // cm — zone d'attraction vers le centre
+
+function clearGuides(){
+  if(!guidesGroup)return;
+  guidesGroup.children.slice().forEach(function(c){
+    if(c.geometry)c.geometry.dispose();
+    if(c.material)c.material.dispose();
+    guidesGroup.remove(c);
+  });
+}
+
+function _guideLine(pts,color,dashed,opacity){
+  var geo=new THREE.BufferGeometry().setFromPoints(pts);
+  var mat=dashed
+    ? new THREE.LineDashedMaterial({color:color,dashSize:.010,gapSize:.007,transparent:true,opacity:opacity,depthWrite:false})
+    : new THREE.LineBasicMaterial({color:color,transparent:true,opacity:opacity,depthWrite:false});
+  var ln=new THREE.Line(geo,mat);
+  if(dashed)ln.computeLineDistances();
+  ln.renderOrder=5;
+  guidesGroup.add(ln);
+}
+
+function updateGuides(hit){
+  clearGuides();
+  if(!hit||!editMode||!guidesGroup)return;
+
+  var inclSimple=(currentType==='separator_simple'||currentType==='shelf_simple');
+  var bay =getBay(hit.y_cm, hit.x_cm);
+  var comp=getCompartment(hit.y_cm, hit.x_cm, inclSimple);
+
+  var xL  =bay.x_left_cm/100  - iW_m/2;
+  var xR  =bay.x_right_cm/100 - iW_m/2;
+  var yBot=(comp.floor_y_cm===0)      ? -H_m/2+T : ycmToLocal(comp.floor_y_cm)+T/2;
+  var yTop=(comp.ceil_y_cm===state.H) ?  H_m/2-T : ycmToLocal(comp.ceil_y_cm)-T/2;
+
+  var xMid=(xL+xR)/2;
+  var yMid=(yBot+yTop)/2;
+  var xMid_cm=(bay.x_left_cm+bay.x_right_cm)/2;
+  var yMid_cm=(comp.floor_y_cm+comp.ceil_y_cm)/2;
+  var z=D_m/2+0.004;
+
+  var nearY=Math.abs(hit.y_cm - yMid_cm)<_GUIDE_SNAP;
+  var nearX=Math.abs(hit.x_cm - xMid_cm)<_GUIDE_SNAP;
+
+  // Bordures de la case (pointillés gris discrets)
+  var bC=0x94A3B8,bO=0.20;
+  _guideLine([new THREE.Vector3(xL,yTop,z),new THREE.Vector3(xR,yTop,z)],bC,true,bO);
+  _guideLine([new THREE.Vector3(xL,yBot,z),new THREE.Vector3(xR,yBot,z)],bC,true,bO);
+  _guideLine([new THREE.Vector3(xL,yBot,z),new THREE.Vector3(xL,yTop,z)],bC,true,bO);
+  _guideLine([new THREE.Vector3(xR,yBot,z),new THREE.Vector3(xR,yTop,z)],bC,true,bO);
+
+  // Ligne de centre horizontale (repère Y)
+  var hC=nearY?0x2563EB:0x60A5FA, hO=nearY?0.90:0.48;
+  _guideLine([new THREE.Vector3(xL,yMid,z),new THREE.Vector3(xR,yMid,z)],hC,!nearY,hO);
+
+  // Ligne de centre verticale (repère X)
+  var vC=nearX?0x2563EB:0x60A5FA, vO=nearX?0.90:0.48;
+  _guideLine([new THREE.Vector3(xMid,yBot,z),new THREE.Vector3(xMid,yTop,z)],vC,!nearX,vO);
+
+  // Losange au centre
+  var dC=(nearX||nearY)?0x2563EB:0x60A5FA, dO=(nearX||nearY)?0.95:0.55, s=0.007;
+  _guideLine([
+    new THREE.Vector3(xMid,yMid+s,z),
+    new THREE.Vector3(xMid+s,yMid,z),
+    new THREE.Vector3(xMid,yMid-s,z),
+    new THREE.Vector3(xMid-s,yMid,z),
+    new THREE.Vector3(xMid,yMid+s,z)
+  ],dC,false,dO);
+
+  // Indicateur "centre" dans le posHint
+  var ph=document.getElementById('posHint');
+  if(ph&&ph.classList.contains('visible')){
+    var base=ph.textContent.replace(/ [·⊕↔↕].*$/,'');
+    var tag=(nearX&&nearY)?' · ⊕ centre':nearY?' · ↕ centre H':nearX?' · ↔ centre V':'';
+    if(tag)ph.textContent=base+tag;
+  }
 }
 
 function resetEmissive(){
@@ -1105,6 +1189,7 @@ function updateGhost(e){
   } else {
     updateGhostHorizontal(hit);
   }
+  updateGuides(hit);
 }
 
 function updateGhostHorizontal(hit){
