@@ -698,15 +698,16 @@ function ycmToLocal(y_cm){
 // Trouve le compartiment vertical contenant y_cm_hit.
 // x_cm (optionnel) : si fourni, ignore les étagères partielles qui ne couvrent pas ce X
 // → une étagère de baie ne divise que sa propre colonne, pas toute la largeur
-function getCompartment(y_cm_hit, x_cm){
+function getCompartment(y_cm_hit, x_cm, includeSimple){
   var maxX=Math.round(iW_m*100);
   var surfaces=[0];
   elements.forEach(function(el){
-    if(el.type==='shelf'||el.type==='traverse'){
+    var isHoriz=(el.type==='shelf'||el.type==='traverse')||(includeSimple&&el.type==='shelf_simple');
+    if(isHoriz){
       if(x_cm!==undefined){
         var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
         var xr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
-        if(x_cm<=xl||x_cm>=xr)return; // cette étagère ne couvre pas le X demandé
+        if(x_cm<=xl||x_cm>=xr)return;
       }
       surfaces.push(el.y_cm);
     }
@@ -941,11 +942,10 @@ function makeElemMesh(el, isGhost){
     var x=el.x_cm/100-iW_m/2;
     mesh.position.set(x, span.centerY, BT/2+0.01);
   } else if(el.type==='separator_simple'){
-    var comp=getCompartment(el.y_cm, el.x_cm);
+    var comp=getCompartment(el.y_cm, el.x_cm, true);
     var span=compToLocalYH(comp.floor_y_cm, comp.ceil_y_cm);
     if(span.height<0.01) return null;
-    if(!isGhost)mat=new THREE.MeshStandardMaterial(Object.assign({},
-      {color:0xD4C5B0,roughness:.7,metalness:0}));
+    if(!isGhost)mat=panelMat(D_m-BT-0.02, span.height);
     var geo=new THREE.BoxGeometry(T*(isGhost?2.5:0.5), span.height, D_m-BT-0.02);
     mesh=new THREE.Mesh(geo,mat);
     var x=el.x_cm/100-iW_m/2;
@@ -1211,13 +1211,13 @@ function updateGhostSeparator(hit){
 }
 
 function updateGhostSeparatorSimple(hit){
-  var comp=getCompartment(hit.y_cm, hit.x_cm);
+  var comp=getCompartment(hit.y_cm, hit.x_cm, true);
   var span=compToLocalYH(comp.floor_y_cm, comp.ceil_y_cm);
   if(span.height<0.01){if(ghostMesh)ghostMesh.visible=false; return;}
   var compKey='ss_'+comp.floor_y_cm+'_'+comp.ceil_y_cm;
   if(!ghostMesh||_ghostType!=='separator_simple'||_ghostCompKey!==compKey){
     clearGhost();
-    var mat=new THREE.MeshBasicMaterial({color:0x888888,transparent:true,opacity:.35,depthWrite:false});
+    var mat=new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:.35,depthWrite:false});
     var geo=new THREE.BoxGeometry(T*1.5, span.height, D_m-BT-0.02);
     ghostMesh=new THREE.Mesh(geo,mat);
     ghostMesh.position.z=BT/2+0.01;
@@ -1230,10 +1230,10 @@ function updateGhostSeparatorSimple(hit){
   ghostMesh.position.y=span.centerY;
   var tooClose=elements.some(function(el){
     if(el.type!=='separator'&&el.type!=='separator_simple') return false;
-    var ec=getCompartment(el.y_cm, el.x_cm);
+    var ec=getCompartment(el.y_cm, el.x_cm, true);
     return ec.floor_y_cm<comp.ceil_y_cm&&ec.ceil_y_cm>comp.floor_y_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
   });
-  ghostMesh.material.color.setHex(tooClose?0xFF2200:0x888888);
+  ghostMesh.material.color.setHex(tooClose?0xFF2200:0xCD3E00);
   ghostMesh.material.opacity=tooClose?.20:.35;
   ghostMesh.visible=true;
 }
@@ -1313,10 +1313,10 @@ function placeOrRemove(e){
       x_left_cm:bay.x_left_cm, x_right_cm:bay.x_right_cm, open:false});
 
   } else if(currentType==='separator_simple'){
-    var comp=getCompartment(hit.y_cm, hit.x_cm);
+    var comp=getCompartment(hit.y_cm, hit.x_cm, true);
     var tooClose3=elements.some(function(el){
       if(el.type!=='separator'&&el.type!=='separator_simple') return false;
-      var ec=getCompartment(el.y_cm, el.x_cm);
+      var ec=getCompartment(el.y_cm, el.x_cm, true);
       return ec.floor_y_cm<comp.ceil_y_cm&&ec.ceil_y_cm>comp.floor_y_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     });
     if(tooClose3) return;
