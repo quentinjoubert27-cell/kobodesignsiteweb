@@ -1353,14 +1353,21 @@
     @media(max-width:768px){.g-manifeste{grid-template-columns:1fr}.g-manifeste__left{border-right:none;border-bottom:1px solid rgba(26,26,26,.07)}}
 
     /* ── INTRO EXEMPLES ── */
-    .g-examples-intro { padding: clamp(64px,8vw,100px) clamp(32px,7vw,100px) clamp(32px,4vw,48px); background: var(--dark); }
+    .g-examples-intro { padding: clamp(64px,8vw,100px) clamp(32px,7vw,100px) clamp(32px,4vw,48px); background: var(--bg); border-bottom: 1px solid rgba(26,26,26,.07); }
     .g-examples-intro__inner { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; }
     .g-examples-intro__label { font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
-    .g-examples-intro__title { font-size: clamp(32px,5vw,64px); font-weight: 900; letter-spacing: -.05em; line-height: .95; color: var(--bg); }
-    .g-examples-intro__title em { font-style: italic; font-weight: 300; color: rgba(255,250,240,.2); }
-    .g-examples-intro__note { max-width: 320px; font-size: 13px; font-weight: 300; color: rgba(255,250,240,.4); line-height: 1.7; text-align: right; }
-    .g-examples-intro__note strong { color: rgba(255,250,240,.7); font-weight: 600; }
+    .g-examples-intro__title { font-size: clamp(32px,5vw,64px); font-weight: 900; letter-spacing: -.05em; line-height: .95; color: var(--dark); }
+    .g-examples-intro__title em { font-style: italic; font-weight: 300; color: rgba(26,26,26,.18); }
+    .g-examples-intro__note { max-width: 320px; font-size: 13px; font-weight: 300; color: rgba(26,26,26,.4); line-height: 1.7; text-align: right; }
+    .g-examples-intro__note strong { color: rgba(26,26,26,.7); font-weight: 600; }
     @media(max-width:768px){.g-examples-intro__inner{flex-direction:column}.g-examples-intro__note{text-align:left}}
+
+    /* ── SDB FEATURE HEADER ── */
+    .sdb-feature__top { text-align: center; padding: clamp(72px,10vw,120px) 0 clamp(56px,7vw,80px); }
+    .sdb-feature__badge { display: inline-flex; align-items: center; gap: 8px; font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); background: rgba(205,62,0,.07); border: 1px solid rgba(205,62,0,.2); padding: 8px 18px; border-radius: 100px; margin-bottom: 28px; }
+    .sdb-feature__title { font-size: clamp(44px,7vw,88px); font-weight: 900; letter-spacing: -.05em; line-height: .92; margin-bottom: 20px; color: var(--dark); }
+    .sdb-feature__title em { font-style: italic; font-weight: 300; color: var(--accent); }
+    .sdb-feature__sub { font-size: 15px; font-weight: 300; color: rgba(26,26,26,.5); max-width: 480px; margin: 0 auto; line-height: 1.75; }
 
     /* ── GAMME CATEGORY ── */
     .gamme-cat { padding: 0 clamp(32px,7vw,100px) clamp(80px,10vw,120px); background: var(--dark); }
@@ -1672,13 +1679,10 @@
 
 <!-- ── SALLES DE BAIN ── -->
 <section class="gamme-cat gamme-cat--light" id="salles-de-bain">
-  <div class="gamme-cat__header">
-    <div class="gamme-cat__num reveal">02</div>
-    <div>
-      <p class="gamme-cat__eyebrow">Sanitaire · Vasques</p>
-      <h2 class="gamme-cat__title reveal">Salles de bain</h2>
-    </div>
-    <div class="gamme-cat__count reveal">7 vasques × 4 meubles · personnalisables</div>
+  <div class="sdb-feature__top reveal">
+    <div class="sdb-feature__badge">✦ Configurateur 3D · Exclusif Kōbō</div>
+    <h2 class="sdb-feature__title">Votre salle de bain,<br><em>sur-mesure en 3D.</em></h2>
+    <p class="sdb-feature__sub">Le seul configurateur qui vous permet de composer votre meuble vasque en temps réel — vasque, meuble, plan de travail, finitions — et de recevoir un devis ferme sous 24h.</p>
   </div>
 
   <div class="sdb-showcase">
