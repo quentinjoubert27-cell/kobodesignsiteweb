@@ -209,7 +209,6 @@
     .legend-dot{ width:10px; height:10px; border-radius:2px; flex-shrink:0 }
     .legend-dot.shelf{ background:rgba(26,26,26,.25) }
     .legend-dot.shelf-simple{ background:rgba(26,26,26,.10); height:6px; border-radius:1px; border:1px dashed rgba(26,26,26,.25); }
-    .legend-dot.traverse{ background:rgba(26,26,26,.15); height:4px; border-radius:1px }
     .legend-dot.separator{ background:rgba(26,26,26,.25); width:4px; height:14px; border-radius:1px }
     .legend-dot.separator-simple{ background:rgba(26,26,26,.12); width:2px; height:14px; border-radius:1px; border:1px dashed rgba(26,26,26,.25); }
     .legend-dot.door{ background:rgba(26,26,26,.22); width:9px; height:14px; border-radius:1px; border-right:2px solid rgba(26,26,26,.35) }
@@ -305,7 +304,7 @@
   <h1>Bibliothèque<br><em>sur-mesure.</em></h1>
   <p class="sub">Aperçu 3D indicatif — les cotes finales sont confirmées lors du devis.</p>
   <div class="test-banner">
-    <strong>Version test</strong> — géométrie 100% procédurale. En mode édition : cliquez à l'intérieur pour placer étagères, traverses ou intercalaires. Cliquez sur un élément pour le supprimer.
+    <strong>Version test</strong> — géométrie 100% procédurale. En mode édition : cliquez à l'intérieur pour placer étagères ou intercalaires. Cliquez sur un élément pour le supprimer.
   </div>
 
   <div class="layout">
@@ -327,11 +326,6 @@
           <button class="type-btn" id="typeShelfSimple" onclick="setType('shelf_simple')">
             <span class="tb-icon">╌</span>
             <span class="tb-body"><span class="tb-name">Étagère déco</span><span class="tb-desc">Cloisonnement visuel uniquement, sans impact sur les portes</span></span>
-          </button>
-          <div class="edit-group-sep"></div>
-          <button class="type-btn" id="typeTraverse" onclick="setType('traverse')">
-            <span class="tb-icon">═</span>
-            <span class="tb-body"><span class="tb-name">Traverse</span><span class="tb-desc">Renfort en façade, délimite aussi les cases</span></span>
           </button>
           <div class="edit-group-sep"></div>
           <button class="type-btn" id="typeSeparator" onclick="setType('separator')">
@@ -403,7 +397,6 @@
         <div class="legend" id="legend" style="display:none">
           <span class="legend-item"><span class="legend-dot shelf"></span>Étagère principale</span>
           <span class="legend-item"><span class="legend-dot shelf-simple"></span>Étagère simple</span>
-          <span class="legend-item"><span class="legend-dot traverse"></span>Traverse</span>
           <span class="legend-item"><span class="legend-dot separator"></span>Intercalaire principal</span>
           <span class="legend-item"><span class="legend-dot separator-simple"></span>Intercalaire simple</span>
           <span class="legend-item"><span class="legend-dot door"></span>Porte</span>
@@ -490,7 +483,6 @@ var state = {W:120, H:200, D:35, matId:'chene'};
 
 /*  Chaque élément :
     - {type:'shelf',     y_cm: Number}   étagère horizontale
-    - {type:'traverse',  y_cm: Number}   traverse en façade
     - {type:'separator', x_cm: Number, y_cm: Number}  intercalaire vertical
       x_cm : position depuis le mur gauche intérieur
       y_cm : position de clic (sert à identifier le compartiment) */
@@ -506,7 +498,6 @@ var W_m, H_m, D_m, iW_m, iH_m, normScale;
 // ═══════════════════════════════════════════════════
 var T            = 0.018;  // épaisseur panneau 18 mm
 var BT           = 0.008;  // fond 8 mm
-var TR_DEPTH     = 0.05;   // profondeur traverse 5 cm
 var SNAP_CM      = 1;      // grille de snap 1 cm
 var MIN_GAP_H    = 6;      // espacement min vertical entre éléments (cm)
 var MIN_GAP_V    = 6;      // espacement min horizontal entre intercalaires (cm)
@@ -702,7 +693,7 @@ function getCompartment(y_cm_hit, x_cm, includeSimple){
   var maxX=Math.round(iW_m*100);
   var surfaces=[0];
   elements.forEach(function(el){
-    var isHoriz=(el.type==='shelf'||el.type==='traverse')||(includeSimple&&el.type==='shelf_simple');
+    var isHoriz=(el.type==='shelf')||(includeSimple&&el.type==='shelf_simple');
     if(isHoriz){
       if(x_cm!==undefined){
         var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
@@ -857,7 +848,7 @@ function rebuild(){
 }
 
 // ═══════════════════════════════════════════════════
-//  ÉLÉMENTS (étagères, traverses, intercalaires)
+//  ÉLÉMENTS (étagères, intercalaires)
 // ═══════════════════════════════════════════════════
 function rebuildElements(){
   while(elemsGroup.children.length){
@@ -922,16 +913,6 @@ function makeElemMesh(el, isGhost){
     if(!isGhost)mat=panelMat(sW,D_m-BT);
     mesh=new THREE.Mesh(new THREE.BoxGeometry(sW,T*0.5,D_m-BT),mat);
     mesh.position.set(sCx, ycmToLocal(el.y_cm), BT/2);
-
-  } else if(el.type==='traverse'){
-    var maxX=Math.round(iW_m*100);
-    var txl=el.x_left_cm!==undefined?el.x_left_cm:0;
-    var txr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
-    var tW=(txr-txl)/100;
-    var tCx=txl/100-iW_m/2+tW/2;
-    if(!isGhost)mat=panelMat(tW,TR_DEPTH);
-    mesh=new THREE.Mesh(new THREE.BoxGeometry(tW,T*1.2,TR_DEPTH),mat);
-    mesh.position.set(tCx, ycmToLocal(el.y_cm), D_m/2-TR_DEPTH/2);
 
   } else if(el.type==='separator'){
     var comp=getCompartment(el.y_cm, el.x_cm);
@@ -1089,7 +1070,7 @@ function updatePosHint(hit){
   if(!ph)return;
   if(!hit||hit.overElement){ph.classList.remove('visible');return;}
   var txt='';
-  if(currentType==='shelf'||currentType==='shelf_simple'||currentType==='traverse'){
+  if(currentType==='shelf'||currentType==='shelf_simple'){
     var b=getBay(hit.y_cm,hit.x_cm);
     var fullW=Math.round(iW_m*100);
     txt=(b.x_left_cm===0&&b.x_right_cm===fullW)?'H = '+hit.y_cm+' cm':'H = '+hit.y_cm+' cm  ['+b.x_left_cm+'→'+b.x_right_cm+' cm]';
@@ -1162,10 +1143,10 @@ function updateGhostHorizontal(hit){
   ghostMesh.position.x=bayCx;
   ghostMesh.position.y=ycmToLocal(hit.y_cm);
 
-  // Conflit : étagère/traverse qui chevauche la même baie et est trop proche en Y
+  // Conflit : étagère qui chevauche la même baie et est trop proche en Y
   var maxX=Math.round(iW_m*100);
   var tooClose=elements.some(function(el){
-    if(el.type!=='shelf'&&el.type!=='shelf_simple'&&el.type!=='traverse')return false;
+    if(el.type!=='shelf'&&el.type!=='shelf_simple')return false;
     if(Math.abs(el.y_cm-hit.y_cm)>=MIN_GAP_H)return false;
     var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
     var xr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
@@ -1281,11 +1262,11 @@ function placeOrRemove(e){
     return;
   }
 
-  if(currentType==='shelf'||currentType==='shelf_simple'||currentType==='traverse'){
+  if(currentType==='shelf'||currentType==='shelf_simple'){
     var bay2=getBay(hit.y_cm, hit.x_cm);
     var maxX2=Math.round(iW_m*100);
     var tooClose=elements.some(function(el){
-      if(el.type!=='shelf'&&el.type!=='shelf_simple'&&el.type!=='traverse')return false;
+      if(el.type!=='shelf'&&el.type!=='shelf_simple')return false;
       if(Math.abs(el.y_cm-hit.y_cm)>=MIN_GAP_H)return false;
       var xl=el.x_left_cm!==undefined?el.x_left_cm:0;
       var xr=el.x_right_cm!==undefined?el.x_right_cm:maxX2;
@@ -1380,8 +1361,8 @@ window.toggleEdit=toggleEdit;
 
 function setType(t){
   currentType=t;
-  var map={shelf:'typeShelf',shelf_simple:'typeShelfSimple',traverse:'typeTraverse',separator:'typeSeparator',separator_simple:'typeSepSimple',door:'typeDoor'};
-  ['shelf','shelf_simple','traverse','separator','separator_simple','door'].forEach(function(id){
+  var map={shelf:'typeShelf',shelf_simple:'typeShelfSimple',separator:'typeSeparator',separator_simple:'typeSepSimple',door:'typeDoor'};
+  ['shelf','shelf_simple','separator','separator_simple','door'].forEach(function(id){
     var el=document.getElementById(map[id]);
     if(el)el.classList.toggle('active',id===t);
   });
@@ -1422,7 +1403,7 @@ function onSlider(){
       return (el.x_left_cm||0)<newMaxX&&(el.x_right_cm||newMaxX)>0
         &&el.floor_y_cm<state.H&&el.ceil_y_cm>0;
     }
-    if(el.type==='shelf'||el.type==='shelf_simple'||el.type==='traverse'){
+    if(el.type==='shelf'||el.type==='shelf_simple'){
       var ok=el.y_cm>0&&el.y_cm<state.H-Math.ceil(T*100);
       if(ok&&el.x_right_cm!==undefined) ok=el.x_left_cm<newMaxX&&el.x_right_cm<=newMaxX;
       return ok;
@@ -1448,14 +1429,12 @@ function updateEmptyHint(){
 function updateElemCount(){
   var sh=elements.filter(function(e){return e.type==='shelf';}).length;
   var shs=elements.filter(function(e){return e.type==='shelf_simple';}).length;
-  var tr=elements.filter(function(e){return e.type==='traverse';}).length;
   var se=elements.filter(function(e){return e.type==='separator';}).length;
   var ss=elements.filter(function(e){return e.type==='separator_simple';}).length;
   var do_=elements.filter(function(e){return e.type==='door';}).length;
   var parts=[];
   if(sh) parts.push('<strong>'+sh+'</strong> étagère principale'+(sh>1?'s':''));
   if(shs) parts.push('<strong>'+shs+'</strong> étagère simple'+(shs>1?'s':''));
-  if(tr) parts.push('<strong>'+tr+'</strong> traverse'+(tr>1?'s':''));
   if(se) parts.push('<strong>'+se+'</strong> intercalaire principal'+(se>1?'s':''));
   if(ss) parts.push('<strong>'+ss+'</strong> intercalaire simple'+(ss>1?'s':''));
   if(do_) parts.push('<strong>'+do_+'</strong> porte'+(do_>1?'s':''));
@@ -1512,18 +1491,18 @@ function buildDimsPanel(){
     html+='</div>';
   }
 
-  // ── Étagères & traverses ─────────────────────────
-  var shelves=elements.filter(function(e){return e.type==='shelf'||e.type==='traverse';});
+  // ── Étagères ─────────────────────────
+  var shelves=elements.filter(function(e){return e.type==='shelf';});
   shelves.sort(function(a,b){return a.y_cm-b.y_cm;});
   if(shelves.length){
-    html+='<p class="dt-label">Étagères / traverses ('+shelves.length+')</p>';
+    html+='<p class="dt-label">Étagères ('+shelves.length+')</p>';
     html+='<div class="dt-block">';
     shelves.forEach(function(s,i){
       var xl=s.x_left_cm!==undefined?s.x_left_cm:0;
       var xr=s.x_right_cm!==undefined?s.x_right_cm:maxX_cm;
       var sw=Math.round((xr-xl)*10)/10;
       var isPartial=(xl!==0||xr!==maxX_cm);
-      var label=(s.type==='traverse'?'Traverse':'Étagère')+' H='+s.y_cm+' cm';
+      var label='Étagère H='+s.y_cm+' cm';
       var detail=isPartial?sw+' cm ('+xl+'→'+xr+')':sw+' cm';
       html+='<div class="dt-row"><span>'+label+'</span><strong>'+detail+'</strong></div>';
     });
@@ -1593,7 +1572,7 @@ function copyDimsTech(){
     }
   }
 
-  var shelves=elements.filter(function(e){return e.type==='shelf'||e.type==='traverse';});
+  var shelves=elements.filter(function(e){return e.type==='shelf';});
   shelves.sort(function(a,b){return a.y_cm-b.y_cm;});
   if(shelves.length){
     lines.push('');
@@ -1602,7 +1581,7 @@ function copyDimsTech(){
       var xl=s.x_left_cm||0;
       var xr=s.x_right_cm||maxX_cm;
       var sw=xr-xl;
-      lines.push('  '+(s.type==='traverse'?'Traverse':'Étagère')+' H='+s.y_cm+' cm → L='+sw+' cm'+(xl!==0||xr!==maxX_cm?' (partielle x='+xl+'→'+xr+')':''));
+      lines.push('  Étagère H='+s.y_cm+' cm → L='+sw+' cm'+(xl!==0||xr!==maxX_cm?' (partielle x='+xl+'→'+xr+')':''));
     });
   }
 
@@ -1645,7 +1624,6 @@ function updateCTA(){
   var def=MATS.find(function(m){return m.id===state.matId;})||MATS[0];
   var sh=elements.filter(function(e){return e.type==='shelf';}).length;
   var shs=elements.filter(function(e){return e.type==='shelf_simple';}).length;
-  var tr=elements.filter(function(e){return e.type==='traverse';}).length;
   var se=elements.filter(function(e){return e.type==='separator';}).length;
   var ss=elements.filter(function(e){return e.type==='separator_simple';}).length;
   var do_=elements.filter(function(e){return e.type==='door';}).length;
@@ -1656,7 +1634,6 @@ function updateCTA(){
     var parts=['<strong>'+state.W+'×'+state.H+'×'+state.D+' cm</strong>','<strong>'+def.label+'</strong>'];
     if(sh) parts.push(sh+' étagère principale'+(sh>1?'s':''));
     if(shs) parts.push(shs+' étagère simple'+(shs>1?'s':''));
-    if(tr) parts.push(tr+' traverse'+(tr>1?'s':''));
     if(se) parts.push(se+' intercalaire principal'+(se>1?'s':''));
     if(ss) parts.push(ss+' intercalaire simple'+(ss>1?'s':''));
     if(do_) parts.push(do_+' porte'+(do_>1?'s':''));
