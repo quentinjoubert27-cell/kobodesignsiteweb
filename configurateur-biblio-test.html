@@ -53,8 +53,10 @@
       .edit-btn,.reset-btn,.toggle-doors-btn,.cta-btn{ min-height:44px; padding:12px }
       .cfg-field{ font-size:16px; padding:10px 10px }/* prevent iOS zoom */
       textarea.cfg-field{ min-height:60px }
-      .type-btn{ padding:6px 8px; font-size:9px }
-      .edit-bar{ gap:5px; padding:4px 6px 4px 10px }
+      .edit-bar{ min-width:170px; top:8px; left:8px }
+      .tb-desc{ display:none }
+      .type-btn{ padding:6px 8px }
+      .tb-name{ font-size:9px }
     }
 
     /* ── Viewer ──────────────────────────────────────── */
@@ -80,29 +82,39 @@
 
     /* Barre d'édition */
     .edit-bar{
-      position:absolute; top:14px; left:50%; transform:translateX(-50%);
-      display:flex; align-items:center; gap:8px;
-      background:rgba(26,26,26,.82); backdrop-filter:blur(6px);
-      border-radius:100px; padding:5px 8px 5px 14px;
-      opacity:0; pointer-events:none; transition:opacity .2s; white-space:nowrap;
+      position:absolute; top:12px; left:12px;
+      display:flex; flex-direction:column; gap:2px;
+      background:rgba(26,26,26,.88); backdrop-filter:blur(8px);
+      border-radius:14px; padding:10px 8px;
+      opacity:0; pointer-events:none; transition:opacity .2s; min-width:210px;
     }
     .mode-edit .edit-bar{ opacity:1; pointer-events:auto }
-    .edit-bar-label{ font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.55) }
-    .type-btns{ display:flex; border-radius:100px; overflow:hidden; background:rgba(255,255,255,.1) }
+    .edit-bar-header{ display:flex; align-items:center; justify-content:space-between; padding:0 6px 8px; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:4px }
+    .edit-bar-label{ font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.4) }
+    .edit-sep{ display:none }
+    .type-btns{ display:flex; flex-direction:column; gap:1px }
     .type-btn{
-      padding:5px 11px; font-family:var(--font); font-size:10px; font-weight:700;
-      letter-spacing:.08em; text-transform:uppercase;
-      color:rgba(255,255,255,.5); background:none; border:none; cursor:pointer;
-      border-radius:100px; transition:background .15s,color .15s; white-space:nowrap;
+      display:grid; grid-template-columns:24px 1fr; align-items:center; gap:0;
+      padding:7px 8px; font-family:var(--font);
+      color:rgba(255,255,255,.55); background:none; border:none; cursor:pointer;
+      border-radius:8px; transition:background .15s,color .15s; text-align:left;
     }
-    .type-btn.active{ background:var(--accent); color:#fff }
-    .edit-sep{ width:1px; height:16px; background:rgba(255,255,255,.2) }
+    .type-btn:hover{ background:rgba(255,255,255,.08); color:rgba(255,255,255,.85) }
+    .type-btn.active{ background:rgba(205,62,0,.25); color:#fff }
+    .type-btn.active .tb-icon{ color:var(--accent) }
+    .tb-icon{ font-size:13px; text-align:center; line-height:1; flex-shrink:0 }
+    .tb-body{ display:flex; flex-direction:column; gap:1px }
+    .tb-name{ font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; line-height:1 }
+    .tb-desc{ font-size:9px; font-weight:400; color:rgba(255,255,255,.35); line-height:1.3; margin-top:2px }
+    .type-btn.active .tb-desc{ color:rgba(255,255,255,.5) }
+    .type-btn:hover .tb-desc{ color:rgba(255,255,255,.45) }
+    .edit-group-sep{ height:1px; background:rgba(255,255,255,.08); margin:4px 6px }
     .edit-close{
-      width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.12);
-      border:none; cursor:pointer; color:rgba(255,255,255,.7); font-size:14px;
-      display:flex; align-items:center; justify-content:center; transition:background .15s;
+      width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.1);
+      border:none; cursor:pointer; color:rgba(255,255,255,.6); font-size:12px;
+      display:flex; align-items:center; justify-content:center; transition:background .15s; flex-shrink:0;
     }
-    .edit-close:hover{ background:rgba(255,255,255,.25) }
+    .edit-close:hover{ background:rgba(255,255,255,.22) }
 
     /* Hint action */
     .action-hint{
@@ -311,17 +323,39 @@
 
       <!-- Barre édition -->
       <div class="edit-bar">
-        <span class="edit-bar-label">Ajouter</span>
-        <div class="type-btns">
-          <button class="type-btn active" id="typeShelf"      onclick="setType('shelf')">━ Étagère principale</button>
-          <button class="type-btn"        id="typeShelfSimple" onclick="setType('shelf_simple')">╌ Étagère simple</button>
-          <button class="type-btn"        id="typeTraverse"  onclick="setType('traverse')">═ Traverse</button>
-          <button class="type-btn"        id="typeSeparator" onclick="setType('separator')">┃ Intercalaire principal</button>
-          <button class="type-btn"        id="typeSepSimple" onclick="setType('separator_simple')">┊ Intercalaire simple</button>
-          <button class="type-btn"        id="typeDoor"      onclick="setType('door')">🚪 Porte</button>
+        <div class="edit-bar-header">
+          <span class="edit-bar-label">Mode édition</span>
+          <button class="edit-close" onclick="setEditMode(false)" title="Quitter l'édition">✕</button>
         </div>
-        <div class="edit-sep"></div>
-        <button class="edit-close" onclick="setEditMode(false)" title="Quitter l'édition">✕</button>
+        <div class="type-btns">
+          <button class="type-btn active" id="typeShelf" onclick="setType('shelf')">
+            <span class="tb-icon">━</span>
+            <span class="tb-body"><span class="tb-name">Étagère</span><span class="tb-desc">Délimite une case — les portes s'y appuient</span></span>
+          </button>
+          <button class="type-btn" id="typeShelfSimple" onclick="setType('shelf_simple')">
+            <span class="tb-icon">╌</span>
+            <span class="tb-body"><span class="tb-name">Étagère déco</span><span class="tb-desc">Cloisonnement visuel uniquement, sans impact sur les portes</span></span>
+          </button>
+          <div class="edit-group-sep"></div>
+          <button class="type-btn" id="typeTraverse" onclick="setType('traverse')">
+            <span class="tb-icon">═</span>
+            <span class="tb-body"><span class="tb-name">Traverse</span><span class="tb-desc">Renfort en façade, délimite aussi les cases</span></span>
+          </button>
+          <div class="edit-group-sep"></div>
+          <button class="type-btn" id="typeSeparator" onclick="setType('separator')">
+            <span class="tb-icon">┃</span>
+            <span class="tb-body"><span class="tb-name">Intercalaire</span><span class="tb-desc">Séparation verticale — les portes s'y arrêtent</span></span>
+          </button>
+          <button class="type-btn" id="typeSepSimple" onclick="setType('separator_simple')">
+            <span class="tb-icon">┊</span>
+            <span class="tb-body"><span class="tb-name">Intercalaire déco</span><span class="tb-desc">Séparation visuelle uniquement, les portes l'ignorent</span></span>
+          </button>
+          <div class="edit-group-sep"></div>
+          <button class="type-btn" id="typeDoor" onclick="setType('door')">
+            <span class="tb-icon">▭</span>
+            <span class="tb-body"><span class="tb-name">Porte</span><span class="tb-desc">S'adapte à la baie — cliquer ou glisser pour sélectionner</span></span>
+          </button>
+        </div>
       </div>
 
       <!-- Hint action -->
@@ -878,10 +912,8 @@ function makeElemMesh(el, isGhost){
     var sxr=el.x_right_cm!==undefined?el.x_right_cm:maxX;
     var sW=(sxr-sxl)/100;
     var sCx=sxl/100-iW_m/2+sW/2;
-    var ssMat=isGhost
-      ? new THREE.MeshBasicMaterial({color:0xCD3E00,transparent:true,opacity:.30,depthWrite:false})
-      : new THREE.MeshStandardMaterial({color:0xC8BEB0,roughness:.8,metalness:0,transparent:true,opacity:.7});
-    mesh=new THREE.Mesh(new THREE.BoxGeometry(sW,T*0.5,D_m-BT),ssMat);
+    if(!isGhost)mat=panelMat(sW,D_m-BT);
+    mesh=new THREE.Mesh(new THREE.BoxGeometry(sW,T*0.5,D_m-BT),mat);
     mesh.position.set(sCx, ycmToLocal(el.y_cm), BT/2);
 
   } else if(el.type==='traverse'){
@@ -906,11 +938,10 @@ function makeElemMesh(el, isGhost){
     var comp=getCompartment(el.y_cm, el.x_cm);
     var span=compToLocalYH(comp.floor_y_cm, comp.ceil_y_cm);
     if(span.height<0.01) return null;
-    var sMat=isGhost
-      ? new THREE.MeshBasicMaterial({color:0x888888,transparent:true,opacity:.30,depthWrite:false})
-      : new THREE.MeshStandardMaterial({color:0xC8BEB0,roughness:.8,metalness:0,transparent:true,opacity:.7});
-    var geo=new THREE.BoxGeometry(T*(isGhost?1.5:0.5), span.height, D_m-BT-0.02);
-    mesh=new THREE.Mesh(geo,sMat);
+    if(!isGhost)mat=new THREE.MeshStandardMaterial(Object.assign({},
+      {color:0xD4C5B0,roughness:.7,metalness:0}));
+    var geo=new THREE.BoxGeometry(T*(isGhost?2.5:0.5), span.height, D_m-BT-0.02);
+    mesh=new THREE.Mesh(geo,mat);
     var x=el.x_cm/100-iW_m/2;
     mesh.position.set(x, span.centerY, BT/2+0.01);
   }
