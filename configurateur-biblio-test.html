@@ -67,6 +67,7 @@
     .viewer-wrap.mode-edit   canvas{ cursor:crosshair }
     .viewer-wrap.mode-rotate canvas{ cursor:grab }
     .viewer-wrap.mode-rotate canvas:active{ cursor:grabbing }
+    #selOverlay{ position:absolute; pointer-events:none; border:2px solid var(--accent); background:rgba(205,62,0,.08); border-radius:3px; display:none; }
 
     /* Hint rotation */
     .viewer-hint{
@@ -295,6 +296,7 @@
     <!-- VIEWER -->
     <div class="viewer-wrap mode-rotate" id="viewerWrap">
       <canvas id="c"></canvas>
+      <div id="selOverlay"></div>
 
       <!-- Indice vide -->
       <div class="empty-hint" id="emptyHint">
@@ -537,9 +539,31 @@ function initScene() {
 }
 
 // ── Événements ──────────────────────────────────
-function onMouseDown(e){ if(!editMode){drag=true; lastX=e.clientX; lastY=e.clientY;} }
-function onMouseUp()   { drag=false; }
+var selStart=null, selCurrent=null;
+var selEl=document.getElementById('selOverlay');
+
+function onMouseDown(e){
+  if(!editMode){ drag=true; lastX=e.clientX; lastY=e.clientY; return; }
+  if(currentType==='door'){ selStart={x:e.clientX,y:e.clientY}; selCurrent={x:e.clientX,y:e.clientY}; }
+}
+function onMouseUp(){
+  drag=false;
+  if(selStart&&selCurrent){
+    var dx=Math.abs(selCurrent.x-selStart.x), dy=Math.abs(selCurrent.y-selStart.y);
+    if(dx>8||dy>8) placeDoorInRect(selStart.x,selStart.y,selCurrent.x,selCurrent.y);
+    selStart=null; selCurrent=null;
+    if(selEl){ selEl.style.display='none'; }
+  }
+}
 function onMouseMove(e){
+  if(editMode&&selStart&&currentType==='door'){
+    selCurrent={x:e.clientX,y:e.clientY};
+    var wRect=wrapper.getBoundingClientRect();
+    var x1=Math.min(selStart.x,selCurrent.x)-wRect.left, y1=Math.min(selStart.y,selCurrent.y)-wRect.top;
+    var x2=Math.max(selStart.x,selCurrent.x)-wRect.left, y2=Math.max(selStart.y,selCurrent.y)-wRect.top;
+    if(selEl){ selEl.style.cssText='position:absolute;pointer-events:none;border:2px solid var(--accent);background:rgba(205,62,0,.08);border-radius:3px;display:block;left:'+x1+'px;top:'+y1+'px;width:'+(x2-x1)+'px;height:'+(y2-y1)+'px'; }
+    return;
+  }
   if(editMode){ updateGhost(e); }
   else if(!drag&&doorLeaves.length){
     var ndc=getNDC(e); mouseVec.set(ndc.x,ndc.y);
@@ -648,6 +672,54 @@ function getCompartment(y_cm_hit, x_cm){
     if(y_cm_hit>=surfaces[i]&&y_cm_hit<surfaces[i+1]){floor=surfaces[i];ceil=surfaces[i+1];break;}
   }
   return {floor_y_cm:floor, ceil_y_cm:ceil};
+}
+
+// Raycast depuis des coordonnées NDC (sans event souris)
+function getLocalHitFromNDC(ndcX, ndcY){
+  if(!hitPlane||!caseGroup) return null;
+  mouseVec.set(ndcX, ndcY);
+  raycaster.setFromCamera(mouseVec, camera);
+  var hits=raycaster.intersectObject(hitPlane, false);
+  if(!hits.length) return null;
+  var pt=hits[0].point.clone(); caseGroup.worldToLocal(pt);
+  var lx=pt.x/normScale, ly=pt.y/normScale;
+  if(Math.abs(lx)>iW_m/2+0.02) return null;
+  if(ly<-H_m/2+T+0.02||ly>H_m/2-T-0.02) return null;
+  return {
+    x_cm: snapCm(Math.max(SNAP_CM, Math.min(Math.round(iW_m*100)-SNAP_CM, localToXcm(lx)))),
+    y_cm: snapCm(Math.max(SNAP_CM, Math.min(state.H-Math.ceil(T*100)-SNAP_CM, localToYcm(ly))))
+  };
+}
+
+// Pose des portes dans toutes les baies couvertes par la sélection rectangulaire
+function placeDoorInRect(sx1, sy1, sx2, sy2){
+  var rect=canvas.getBoundingClientRect();
+  var seen={}, added=false;
+  var minX=Math.min(sx1,sx2), maxX=Math.max(sx1,sx2);
+  var minY=Math.min(sy1,sy2), maxY=Math.max(sy1,sy2);
+  var step=12;
+  for(var px=minX; px<=maxX+step; px+=step){
+    for(var py=minY; py<=maxY+step; py+=step){
+      var ndcX=((Math.min(px,maxX)-rect.left)/rect.width)*2-1;
+      var ndcY=-((Math.min(py,maxY)-rect.top)/rect.height)*2+1;
+      var hit=getLocalHitFromNDC(ndcX, ndcY);
+      if(!hit) continue;
+      var bay=getBay(hit.y_cm, hit.x_cm);
+      var key=bay.floor_y_cm+'_'+bay.ceil_y_cm+'_'+bay.x_left_cm+'_'+bay.x_right_cm;
+      if(seen[key]) continue;
+      seen[key]=true;
+      var already=elements.some(function(el){
+        return el.type==='door'&&el.floor_y_cm===bay.floor_y_cm&&el.ceil_y_cm===bay.ceil_y_cm
+          &&el.x_left_cm===bay.x_left_cm&&el.x_right_cm===bay.x_right_cm;
+      });
+      if(!already){
+        elements.push({type:'door',floor_y_cm:bay.floor_y_cm,ceil_y_cm:bay.ceil_y_cm,
+          x_left_cm:bay.x_left_cm,x_right_cm:bay.x_right_cm,open:false});
+        added=true;
+      }
+    }
+  }
+  if(added){ rebuildElements(); updateElemCount(); updateCTA(); }
 }
 
 // Détecte la baie horizontale (entre murs/séparateurs) à la position x_cm_hit
