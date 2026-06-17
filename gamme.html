@@ -1295,6 +1295,52 @@
       .sdb-steps-grid{grid-template-columns:1fr;gap:16px}
       .sdb-config__h{font-size:14px}
       .sdb-config__eyebrow{font-size:8px}
+      /* SDB showcase stack */
+      .sdb-showcase{grid-template-columns:1fr;gap:32px}
+      .sdb-showcase__visual{aspect-ratio:4/3;max-width:480px;margin:0 auto}
+    }
+
+    /* ── RESPONSIVE FIXES MOBILE ── */
+    /* iOS Safari anti-zoom : font-size 16px sur tous les inputs */
+    @media (max-width: 768px) {
+      input, textarea, select,
+      .form__input, .sdb-dim-input {
+        font-size: 16px !important;
+      }
+    }
+
+    /* Hero: réduire le padding excessif sur petits téléphones */
+    @media (max-width: 480px) {
+      .g-hero__top {
+        padding-top: clamp(96px,18vw,120px);
+        padding-bottom: clamp(32px,6vw,48px);
+      }
+      .g-hero__bottom {
+        gap: clamp(16px,4vw,32px);
+      }
+    }
+
+    /* Bientôt: 2 cols à 640px, 1 col à 480px */
+    @media (max-width: 640px) {
+      .bientot-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .bientot-grid { grid-template-columns: 1fr; }
+    }
+
+    /* SDB showcase stack dès 768px — double définition pour sûreté */
+    @media (max-width: 768px) {
+      .sdb-showcase { grid-template-columns: 1fr; }
+    }
+
+    /* SDB feature title — vérification sur 375px */
+    @media (max-width: 375px) {
+      .sdb-feature__title { font-size: clamp(32px,10vw,44px); }
+      .g-hero__top, .gamme-cat, .bientot-section, .g-cta-final,
+      .g-manifeste__left, .g-manifeste__right, .g-examples-intro {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
     }
 
 </style>

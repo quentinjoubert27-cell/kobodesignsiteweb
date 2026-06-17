@@ -38,7 +38,24 @@
     .test-banner strong{ color:var(--accent) }
 
     .layout{ display:grid; grid-template-columns:1fr 340px; gap:24px; align-items:start }
-    @media(max-width:900px){ .layout{ grid-template-columns:1fr } }
+    @media(max-width:900px){
+      .layout{ grid-template-columns:1fr }
+      .ctrl-panel{ overflow-y:auto; -webkit-overflow-scrolling:touch; max-height:none }
+      .page{ padding:24px clamp(14px,4vw,40px) 60px }
+    }
+    @media(max-width:480px){
+      .page{ padding:16px 12px 48px }
+      h1{ font-size:clamp(22px,6vw,34px) }
+      .ctrl-panel{ padding:18px 16px; gap:18px }
+      .divider{ margin:0 -16px }
+      input[type=range]{ min-height:36px; height:36px; padding:10px 0 }
+      .mat-grid{ grid-template-columns:repeat(4,1fr); gap:6px }
+      .edit-btn,.reset-btn,.toggle-doors-btn,.cta-btn{ min-height:44px; padding:12px }
+      .cfg-field{ font-size:16px; padding:10px 10px }/* prevent iOS zoom */
+      textarea.cfg-field{ min-height:60px }
+      .type-btn{ padding:6px 8px; font-size:9px }
+      .edit-bar{ gap:5px; padding:4px 6px 4px 10px }
+    }
 
     /* ── Viewer ──────────────────────────────────────── */
     .viewer-wrap{

@@ -171,6 +171,51 @@
       .sidebar-user { width: 100%; border-top: 1px solid rgba(255,250,240,.08); padding-top: 12px; margin-top: 8px; }
       .main { margin-left: 0; }
       .nav-section-label { display: none; }
+      /* Touch targets */
+      .nav-item { min-height: 44px; }
+      .btn-logout { min-height: 44px; }
+    }
+
+    @media (max-width: 480px) {
+      /* Reduced paddings for small phones */
+      .main { padding: 16px; }
+      .auth-box { padding: 24px 20px; }
+      .stat-card { padding: 16px; }
+      .project-card { padding: 16px; }
+      .doc-item { padding: 12px; gap: 10px; }
+      .messages-list { padding: 12px; }
+      .msg-input-wrap { padding: 10px 12px; gap: 8px; }
+      .empty { padding: 32px 16px; }
+
+      /* Cards grid — single column on small phones */
+      .cards-grid { grid-template-columns: 1fr; }
+
+      /* Touch targets */
+      .nav-item { min-height: 44px; }
+      .btn-logout { min-height: 44px; }
+      .form-btn { min-height: 48px; }
+
+      /* Prevent iOS zoom on inputs */
+      .form-input { font-size: 16px; }
+      .msg-input { font-size: 16px; }
+      .project-select { font-size: 16px; }
+
+      /* Tables / horizontal overflow */
+      .messages-wrap { overflow-x: auto; }
+
+      /* Auth screen spacing */
+      .auth-screen { padding: 16px; }
+      .auth-title { font-size: 28px; }
+
+      /* Sidebar nav items stack better */
+      .sidebar { padding: 12px; }
+      .nav-item { font-size: 12px; padding: 8px 10px; }
+
+      /* Stat card value */
+      .stat-card__value { font-size: 22px; }
+
+      /* Doc download button — prevent overflow */
+      .doc-dl { font-size: 10px; padding: 5px 8px; }
     }
   </style>
 </head>

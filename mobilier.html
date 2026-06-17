@@ -341,7 +341,30 @@
     }
     @media(max-width:375px){
       header{padding:0 16px}
-      .hero__inner,.dilemme__col,.process,.kit,
+      .hero__inner,.dilemme__col,.process,.kit,.pose,.cta-section,footer{padding-left:16px;padding-right:16px}
+    }
+
+    /* ── iOS Safari anti-zoom : font-size 16px sur les inputs ── */
+    @media (max-width: 768px) {
+      input, textarea, select, .form__input {
+        font-size: 16px !important;
+      }
+    }
+
+    /* ── Hero padding réduit sur petits phones ── */
+    @media (max-width: 480px) {
+      .hero {
+        min-height: 480px;
+      }
+      .hero__inner {
+        padding-bottom: clamp(32px,8vw,56px);
+      }
+    }
+
+    /* ── Timeline : 1 colonne sur petits phones ── */
+    @media (max-width: 480px) {
+      .timeline__track { grid-template-columns: 1fr; }
+      .timeline::before { display: none; }
     }
   </style>
 </head>

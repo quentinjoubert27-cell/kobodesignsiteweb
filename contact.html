@@ -337,6 +337,13 @@
       .faq-item:nth-child(4){border-radius:0 0 8px 8px}
       .footer__top{grid-template-columns:1fr 1fr}
     }
+    /* Tablet (641px–900px) — tighten horizontal padding */
+    @media(max-width:900px) and (min-width:641px){
+      .contact-hero{padding-left:clamp(20px,5vw,48px);padding-right:clamp(20px,5vw,48px)}
+      .contact-info,.contact-form-wrap{padding:clamp(32px,5vw,56px) clamp(20px,4vw,48px)}
+      .faq-section{padding-left:clamp(20px,5vw,48px);padding-right:clamp(20px,5vw,48px)}
+      footer{padding-left:clamp(20px,5vw,48px);padding-right:clamp(20px,5vw,48px)}
+    }
     @media(max-width:640px){
       .nav .nav__link,.nav .nav__cta{display:none}
       .burger{display:flex}
@@ -344,6 +351,10 @@
       .nav__login{padding:8px 12px}
       .form-row{grid-template-columns:1fr}
       .footer__top{grid-template-columns:1fr}
+      /* iOS Safari zoom fix — font-size < 16px triggers auto-zoom on focus */
+      .form__input,.form__textarea,select{font-size:16px}
+      /* Comfortable touch targets */
+      .btn-next,.btn-prev,.form__btn{min-height:48px}
     }
     @media(max-width:430px){
       .contact-hero__title{font-size:44px}

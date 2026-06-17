@@ -124,6 +124,40 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   #app{flex-direction:column-reverse}
   #sidebar{width:100%;min-width:0;height:50vh;border-right:none;border-top:1px solid var(--border)}
   #cv-wrap{height:50vh}
+  /* sidebar scrollable */
+  #sb-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px}
+  /* stepper compact */
+  #stepper{padding:10px 14px}
+  .step-lbl{font-size:9px;margin:0 4px}
+  /* step-dots — 44px touch targets */
+  .step-dot{width:44px;height:44px;min-width:44px;min-height:44px;font-size:12px}
+  /* range touch */
+  input[type=range]{min-height:36px;height:36px;padding:10px 0}
+  /* mat-grid tiles smaller */
+  .mat-grid{gap:6px}
+  .mat-sw{width:18px;height:18px}
+  /* form fields — prevent iOS zoom */
+  .cfg-field{font-size:16px}
+  /* footer buttons */
+  #sb-footer,#sb-foot{padding:10px 14px}
+  .btn-back,.btn-next{min-height:44px}
+  /* header */
+  #sb-header{padding:12px 14px 10px}
+}
+@media(max-width:480px){
+  #sb-body{padding:10px 10px}
+  #stepper{padding:8px 10px}
+  .step-lbl{display:none}
+  .step-dot{width:36px;height:36px;min-width:36px;min-height:36px}
+  .mat-grid{grid-template-columns:1fr 1fr;gap:5px}
+  .mat-lbl{font-size:10px}
+  .vasque-grid{grid-template-columns:repeat(3,1fr)}
+  .cfg-field{padding:10px 10px;font-size:16px}
+  .cta-btn{padding:14px;font-size:12px;min-height:44px}
+  #sb-foot{padding:8px 10px}
+  .btn-next,.btn-back{min-height:44px;padding:12px 10px}
+  .sec{margin:14px 0 8px}
+  .sl-row{margin-bottom:12px}
 }
 </style>
 </head>

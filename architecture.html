@@ -319,7 +319,47 @@
     }
     @media(max-width:375px){
       header{padding:0 16px}
-      .hero__left,.profiles .profile,.method,.gallery,.analyse,.cta-section,footer{padding-left:16px;padding-right:16px}
+      .hero__left,.profiles .profile,.method,.gallery,.analyse,.cta-section,footer,
+      .what-we-do,.faq-section{padding-left:16px;padding-right:16px}
+    }
+
+    /* ── iOS Safari anti-zoom : font-size 16px sur les inputs ── */
+    @media (max-width: 768px) {
+      input, textarea, select, .form__input {
+        font-size: 16px !important;
+      }
+    }
+
+    /* ── Hero: réduire padding sur petits phones ── */
+    @media (max-width: 480px) {
+      .hero__left {
+        padding-top: clamp(64px,14vw,96px);
+        padding-bottom: clamp(40px,8vw,64px);
+      }
+      .hero__right {
+        height: 260px;
+      }
+    }
+
+    /* ── Méthode: 2 cols à 768px, 1 col à 480px ── */
+    @media (max-width: 768px) {
+      .method__steps { grid-template-columns: 1fr 1fr; }
+      .mstep + .mstep { border-left: none; }
+      .mstep:nth-child(odd) { border-right: 1px solid rgba(26,26,26,.07); }
+    }
+    @media (max-width: 480px) {
+      .method__steps { grid-template-columns: 1fr; }
+      .mstep:nth-child(odd) { border-right: none; }
+    }
+
+    /* ── Galerie: tous en pleine largeur sous 480px ── */
+    @media (max-width: 480px) {
+      .gallery__mosaic .gitem { grid-column: 1 / 13 !important; }
+    }
+
+    /* ── Analyse: 1 col sous 480px ── */
+    @media (max-width: 480px) {
+      .analyse__grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>

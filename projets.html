@@ -566,6 +566,32 @@
       .contact, .footer { padding-left: 16px; padding-right: 16px; }
       .contact__form { padding: 20px 16px; }
     }
+
+    /* ── iOS Safari anti-zoom : font-size 16px sur les inputs ── */
+    @media (max-width: 768px) {
+      input, textarea, select, .form__input {
+        font-size: 16px !important;
+      }
+    }
+
+    /* ── Filtres : scrollable horizontalement sur mobile ── */
+    @media (max-width: 640px) {
+      .filters-wrap {
+        padding: 0 clamp(12px,3vw,24px);
+      }
+      /* La div .filters a déjà overflow-x:auto — on s'assure qu'elle prend toute la largeur */
+      .filters {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    /* ── Hero padding réduit sur petits phones ── */
+    @media (max-width: 480px) {
+      .page-hero {
+        padding-top: clamp(48px,12vw,72px);
+      }
+    }
   </style>
 </head>
 <body>
