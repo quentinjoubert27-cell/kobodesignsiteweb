@@ -115,6 +115,42 @@
       background:rgba(26,26,26,.03);border-radius:8px;line-height:1.7}
     .fiche-surface strong{color:var(--dark)}
 
+    /* ── CRM ──────────────────────────────────────── */
+    .pipeline-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .pipe-card{flex:1;min-width:88px;background:#fff;border-radius:10px;
+      border:2px solid rgba(26,26,26,.06);padding:10px 14px;
+      display:flex;align-items:center;gap:10px;cursor:pointer;
+      transition:border-color .15s,background .15s}
+    .pipe-card:hover{border-color:rgba(26,26,26,.2)}
+    .pipe-card.active{border-color:var(--accent);background:rgba(205,62,0,.04)}
+    .pipe-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .pipe-count{font-size:20px;font-weight:900;color:var(--dark);line-height:1}
+    .pipe-lbl{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+      color:rgba(26,26,26,.38);margin-top:2px}
+    .crm-toolbar{display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+    .crm-search{flex:1;min-width:200px;padding:10px 14px;font-family:var(--font);font-size:12px;
+      border:1.5px solid rgba(26,26,26,.12);border-radius:10px;outline:none;
+      background:#fff;transition:border-color .2s;color:var(--dark)}
+    .crm-search:focus{border-color:var(--accent)}
+    .crm-search::placeholder{color:rgba(26,26,26,.35)}
+    .status-sel{padding:5px 8px;font-family:var(--font);font-size:9px;font-weight:700;
+      letter-spacing:.06em;text-transform:uppercase;border-radius:100px;border:none;
+      cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;white-space:nowrap}
+    .s-nouveau{background:rgba(205,62,0,.12);color:#CD3E00}
+    .s-contact{background:rgba(37,99,235,.1);color:#2563EB}
+    .s-devis{background:rgba(124,58,237,.1);color:#7C3AED}
+    .s-gagne{background:rgba(34,163,90,.12);color:#1a8a4a}
+    .s-perdu{background:rgba(26,26,26,.07);color:rgba(26,26,26,.4)}
+    .crm-notes-wrap{grid-column:1/-1;padding-top:4px}
+    .crm-notes-lbl{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+      color:rgba(26,26,26,.38);margin-bottom:6px}
+    .crm-notes-ta{width:100%;padding:10px 12px;font-family:var(--font);font-size:11px;
+      border:1.5px solid rgba(26,26,26,.1);border-radius:8px;outline:none;resize:vertical;
+      background:#fff;color:var(--dark);min-height:60px;transition:border-color .2s;line-height:1.5}
+    .crm-notes-ta:focus{border-color:var(--accent)}
+    .crm-notes-hint{font-size:9px;color:rgba(26,26,26,.3);margin-top:4px;min-height:14px}
+    .cfg-hidden{display:none!important}
+
     /* Tabs */
     .tabs{display:flex;gap:4px;margin-bottom:28px;background:#fff;border-radius:12px;
       padding:5px;border:1px solid rgba(26,26,26,.08);width:fit-content}
@@ -161,6 +197,8 @@
     <!-- Tab Biblio -->
     <div class="tab-pane active" id="tab-biblio">
       <div class="stats" id="stats"></div>
+      <div class="pipeline-row" id="pipeline-biblio"></div>
+      <div class="crm-toolbar" id="toolbar-biblio"></div>
       <div class="configs-wrap" id="configsWrap">
         <div class="loading"><div class="spinner"></div><br>Chargement…</div>
       </div>
@@ -169,6 +207,8 @@
     <!-- Tab SDB -->
     <div class="tab-pane" id="tab-sdb">
       <div class="stats" id="stats-sdb"></div>
+      <div class="pipeline-row" id="pipeline-sdb"></div>
+      <div class="crm-toolbar" id="toolbar-sdb"></div>
       <div class="configs-wrap" id="configsWrap-sdb">
         <div class="loading"><div class="spinner"></div><br>Chargement…</div>
       </div>
@@ -177,6 +217,95 @@
 </div>
 
 <script>
+// ═══════════════════════════════════════════════
+//  CRM — PIPELINE / STATUS / NOTES (localStorage)
+// ═══════════════════════════════════════════════
+var STATUS_LIST = [
+  {id:'nouveau', label:'Nouveau',    color:'#CD3E00'},
+  {id:'contact', label:'Contacté',   color:'#2563EB'},
+  {id:'devis',   label:'Devis envoyé', color:'#7C3AED'},
+  {id:'gagne',   label:'Gagné',      color:'#1a8a4a'},
+  {id:'perdu',   label:'Non retenu', color:'rgba(26,26,26,.35)'},
+];
+function getStatus(type,id){ return localStorage.getItem('crm_s_'+type+'_'+id)||'nouveau'; }
+function setStatus(type,id,s){ localStorage.setItem('crm_s_'+type+'_'+id,s); }
+function getNotes(type,id){ return localStorage.getItem('crm_n_'+type+'_'+id)||''; }
+function setNotes(type,id,v){ localStorage.setItem('crm_n_'+type+'_'+id,v); }
+
+function statusSelect(type,id){
+  var cur=getStatus(type,id);
+  var opts=STATUS_LIST.map(function(s){
+    return '<option value="'+s.id+'"'+(cur===s.id?' selected':'')+'>'+s.label+'</option>';
+  }).join('');
+  return '<select class="status-sel s-'+cur+'" onchange="changeStatus(\''+type+'\',\''+id+'\',this)">'+opts+'</select>';
+}
+function changeStatus(type,id,sel){
+  setStatus(type,id,sel.value);
+  sel.className='status-sel s-'+sel.value;
+  refreshPipeline(type);
+}
+window.changeStatus=changeStatus;
+
+function buildPipelineHTML(configs,type){
+  var counts={};
+  STATUS_LIST.forEach(function(s){counts[s.id]=0;});
+  configs.forEach(function(c){ var st=getStatus(type,c.id||c); counts[st]=(counts[st]||0)+1; });
+  var html=STATUS_LIST.map(function(s){
+    return '<div class="pipe-card" id="pc-'+type+'-'+s.id+'" onclick="filterByStatus(\''+type+'\',\''+s.id+'\')">'
+      +'<div class="pipe-dot" style="background:'+s.color+'"></div>'
+      +'<div><div class="pipe-count">'+counts[s.id]+'</div><div class="pipe-lbl">'+s.label+'</div></div>'
+      +'</div>';
+  }).join('');
+  html+='<div class="pipe-card active" id="pc-'+type+'-all" onclick="filterByStatus(\''+type+'\',\'\')">'
+    +'<div class="pipe-dot" style="background:#aaa"></div>'
+    +'<div><div class="pipe-count">'+configs.length+'</div><div class="pipe-lbl">Total</div></div>'
+    +'</div>';
+  return html;
+}
+
+function refreshPipeline(type){
+  var configs=type==='biblio'?(window._configs||[]):(window._configsSDB||[]);
+  var el=document.getElementById('pipeline-'+type); if(el) el.innerHTML=buildPipelineHTML(configs,type);
+  applyFilter(type);
+}
+
+var _activeFilter={biblio:'',sdb:''};
+function filterByStatus(type,status){
+  _activeFilter[type]=status;
+  document.querySelectorAll('[id^="pc-'+type+'-"]').forEach(function(el){el.classList.remove('active');});
+  var pid=status?'pc-'+type+'-'+status:'pc-'+type+'-all';
+  var pel=document.getElementById(pid); if(pel) pel.classList.add('active');
+  applyFilter(type);
+}
+window.filterByStatus=filterByStatus;
+
+function applyFilter(type){
+  var configs=type==='biblio'?(window._configs||[]):(window._configsSDB||[]);
+  var s=(document.getElementById('search-'+type)||{value:''}).value.toLowerCase();
+  var status=_activeFilter[type]||'';
+  configs.forEach(function(c,idx){
+    var row=document.getElementById('cfg-row-'+type+'-'+idx);
+    if(!row) return;
+    var matchS=!s||(c.prenom||'').toLowerCase().indexOf(s)>=0||(c.email||'').toLowerCase().indexOf(s)>=0;
+    var matchF=!status||getStatus(type,c.id||idx)===status;
+    var hide=!matchS||!matchF;
+    row.classList.toggle('cfg-hidden',hide);
+    var fr=document.getElementById('fiche-row-'+type+'-'+idx); if(fr) fr.classList.toggle('cfg-hidden',hide);
+  });
+}
+
+function initSearch(type){
+  var el=document.getElementById('search-'+type); if(!el) return;
+  el.addEventListener('input',function(){ applyFilter(type); });
+}
+
+function saveNotes(type,id,ta,hint){
+  setNotes(type,id,ta.value);
+  hint.textContent='✓ Notes sauvegardées';
+  setTimeout(function(){hint.textContent='';},2000);
+}
+window.saveNotes=saveNotes;
+
 var MATS = {
   chene:'Chêne', noyer:'Noyer', chene_fonce:'Chêne F.', sapelli:'Sapelli',
   vert_sauge:'Vert Sauge', brun_rose:'Brun Rosé', gris_ardoise:'Gris Ardoise', blanc:'Blanc'
@@ -251,6 +380,8 @@ function elemsSummary(cfg){
 }
 
 function render(configs, token){
+  window._configs = configs;
+
   // Stats
   var statsEl = document.getElementById('stats');
   var total = configs.length;
@@ -263,6 +394,14 @@ function render(configs, token){
     stat(avecPortes, 'Avec portes') +
     stat(topEssence?topEssence[0]:'—', 'Essence préférée');
 
+  // Pipeline
+  var pipEl = document.getElementById('pipeline-biblio');
+  if(pipEl) pipEl.innerHTML = buildPipelineHTML(configs, 'biblio');
+
+  // Toolbar recherche
+  var toolEl = document.getElementById('toolbar-biblio');
+  if(toolEl) toolEl.innerHTML = '<input type="search" id="search-biblio" class="crm-search" placeholder="Rechercher par nom ou email…"/>';
+
   // Table
   var wrap = document.getElementById('configsWrap');
   if(!configs.length){
@@ -272,28 +411,34 @@ function render(configs, token){
 
   var rows = configs.map(function(c, idx){
     var viz = makeVizUrl(c);
-    return '<tr id="cfg-row-'+idx+'">'
+    var cid = c.id || idx;
+    return '<tr id="cfg-row-biblio-'+idx+'">'
       + '<td><div class="cfg-date">'+fmtDate(c.created_at)+'</div></td>'
       + '<td><div class="cfg-name">'+esc(c.prenom)+'</div><div class="cfg-email">'+esc(c.email)+'</div></td>'
       + '<td><div class="cfg-dims">'+c.largeur+'×'+c.hauteur+'×'+c.profondeur+' cm</div><div class="cfg-mat">'+esc(c.essence||'')+'</div></td>'
       + '<td><div class="cfg-elems">'+elemsSummary(c)+'</div></td>'
       + '<td>'+(c.message?'<div class="cfg-msg" title="'+esc(c.message)+'">'+esc(c.message)+'</div>':'<span style="color:rgba(26,26,26,.25)">—</span>')+'</td>'
+      + '<td>'+statusSelect('biblio', cid)+'</td>'
       + '<td style="white-space:nowrap">'
         + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
         + '<a href="'+viz+'" class="viz-btn" target="_blank">▶ 3D</a>'
+        + '<button class="fiche-btn" id="fiche-btn-'+idx+'" onclick="toggleFiche('+idx+')">📋 Fiche</button>'
         + '<button class="fiche-btn" onclick="generatePDF('+idx+')">📄 PDF</button>'
         + '</div>'
       + '</td>'
+      + '</tr>'
+      + '<tr id="fiche-row-biblio-'+idx+'" class="fiche-row" style="display:none">'
+        + '<td colspan="7"><div class="fiche-inner" id="fiche-inner-'+idx+'"></div></td>'
       + '</tr>'
       ;
   }).join('');
 
   wrap.innerHTML = '<table>'
-    + '<thead><tr><th>Date</th><th>Contact</th><th>Dimensions</th><th>Aménagement</th><th>Message</th><th></th></tr></thead>'
+    + '<thead><tr><th>Date</th><th>Contact</th><th>Dimensions</th><th>Aménagement</th><th>Message</th><th>Statut</th><th></th></tr></thead>'
     + '<tbody>'+rows+'</tbody>'
     + '</table>';
-  // Stocker configs globalement pour accès dans toggleFiche
-  window._configs = configs;
+
+  setTimeout(function(){ initSearch('biblio'); }, 0);
 }
 
 function stat(val, lbl){
@@ -311,22 +456,23 @@ var BT_m = 0.008; // fond 8mm
 var T_cm = Math.round(T_m * 100 * 10) / 10; // 1.8 cm
 
 function toggleFiche(idx){
-  var row  = document.getElementById('fiche-row-'+idx);
+  var row  = document.getElementById('fiche-row-biblio-'+idx);
   var btn  = document.getElementById('fiche-btn-'+idx);
+  if(!row) return;
   var isOpen = row.style.display !== 'none';
   if(isOpen){
     row.style.display = 'none';
     btn.classList.remove('open');
   } else {
     var cfg = window._configs[idx];
-    document.getElementById('fiche-inner-'+idx).innerHTML = buildFicheHTML(cfg);
+    document.getElementById('fiche-inner-'+idx).innerHTML = buildFicheHTML(cfg, idx);
     row.style.display = '';
     btn.classList.add('open');
   }
 }
 window.toggleFiche = toggleFiche;
 
-function buildFicheHTML(cfg){
+function buildFicheHTML(cfg, idx){
   var W = cfg.largeur, H = cfg.hauteur, D = cfg.profondeur;
   var iW = Math.round((W - 2*T_cm)*10)/10;
   var iH = Math.round((H - 2*T_cm)*10)/10;
@@ -422,6 +568,15 @@ function buildFicheHTML(cfg){
   html += '<div class="fiche-actions">';
   html += '<div class="fiche-surface">'+surf+'</div>';
   html += '<button class="fiche-copy-btn" onclick="copyFiche(this,'+JSON.stringify(cfg).replace(/</g,'\\u003c')+')">⎘ Copier</button>';
+  html += '</div>';
+
+  // ── Notes CRM ─────────────────────────────────
+  var cid = cfg.id || idx;
+  var noteVal = esc(getNotes('biblio', cid));
+  html += '<div class="crm-notes-wrap">';
+  html += '<div class="crm-notes-lbl">Notes internes</div>';
+  html += '<textarea class="crm-notes-ta" id="notes-biblio-'+cid+'" onblur="saveNotes(\'biblio\',\''+cid+'\',this,document.getElementById(\'notes-hint-biblio-'+cid+'\'))">'+noteVal+'</textarea>';
+  html += '<div class="crm-notes-hint" id="notes-hint-biblio-'+cid+'"></div>';
   html += '</div>';
 
   return html;
@@ -830,13 +985,20 @@ function buildPDFHtml(cfg){
 //  SALLE DE BAIN
 // ═══════════════════════════════════════════════
 function renderSDB(configs){
+  window._configsSDB = configs;
+
   var statsEl = document.getElementById('stats-sdb');
   statsEl.innerHTML =
     stat(configs.length, 'Configurations') +
     stat(configs.filter(function(c){return c.nb_tiroirs>0;}).length, 'Avec tiroirs') +
     stat(configs.filter(function(c){return c.nb_vasques>1;}).length, 'Double vasque');
 
-  window._configsSDB = configs;
+  var pipEl = document.getElementById('pipeline-sdb');
+  if(pipEl) pipEl.innerHTML = buildPipelineHTML(configs, 'sdb');
+
+  var toolEl = document.getElementById('toolbar-sdb');
+  if(toolEl) toolEl.innerHTML = '<input type="search" id="search-sdb" class="crm-search" placeholder="Rechercher par nom ou email…"/>';
+
   var wrap = document.getElementById('configsWrap-sdb');
   if(!configs.length){
     wrap.innerHTML='<div class="empty">Aucune configuration reçue pour l\'instant.</div>';
@@ -844,22 +1006,41 @@ function renderSDB(configs){
   }
   var rows = configs.map(function(c,idx){
     var ref='SDB-'+String(c.id||'').padStart(4,'0');
-    return '<div class="cfg-row-sdb">'
-      +'<div class="cfg-num">'+(idx+1)+'</div>'
-      +'<div>'
-        +'<div class="cfg-name">'+esc(c.prenom)+' <span class="cfg-email">'+esc(c.email)+'</span></div>'
-        +'<div class="cfg-mat">'+ref+' · Meuble '+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm · '+esc(c.meuble_mat)
-        +' &nbsp;|&nbsp; Plan '+c.plan_l+'×'+c.plan_p+' cm · '+esc(c.plan_mat)
-        +' &nbsp;|&nbsp; '+c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':'')+(c.vasque_label?' '+esc(c.vasque_label):'')
-        +(c.nb_tiroirs?' · '+c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''):'')
-        +(c.nb_portes?' · '+c.nb_portes+' porte'+(c.nb_portes>1?'s':''):'')+'</div>'
+    var cid = c.id || idx;
+    var noteVal = esc(getNotes('sdb', cid));
+    return '<div id="cfg-row-sdb-'+idx+'">'
+      +'<div class="cfg-row-sdb">'
+        +'<div class="cfg-num">'+(idx+1)+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div class="cfg-name">'+esc(c.prenom)+' <span class="cfg-email">'+esc(c.email)+'</span></div>'
+          +'<div class="cfg-mat">'+ref+' · Meuble '+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm · '+esc(c.meuble_mat)
+          +' &nbsp;|&nbsp; Plan '+c.plan_l+'×'+c.plan_p+' cm · '+esc(c.plan_mat)
+          +' &nbsp;|&nbsp; '+c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':'')+(c.vasque_label?' '+esc(c.vasque_label):'')
+          +(c.nb_tiroirs?' · '+c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''):'')
+          +(c.nb_portes?' · '+c.nb_portes+' porte'+(c.nb_portes>1?'s':''):'')+'</div>'
+        +'</div>'
+        +'<div class="cfg-date">'+fmtDate(c.created_at)+'</div>'
+        +statusSelect('sdb', cid)
+        +'<button class="fiche-btn" onclick="toggleFicheSdb('+idx+')">📋 Notes</button>'
+        +'<button class="fiche-btn" onclick="generatePDFSdb('+idx+')">📄 PDF</button>'
       +'</div>'
-      +'<div class="cfg-date">'+fmtDate(c.created_at)+'</div>'
-      +'<button class="fiche-btn" onclick="generatePDFSdb('+idx+')">📄 PDF</button>'
+      +'<div id="fiche-row-sdb-'+idx+'" style="display:none;padding:12px 20px 16px;background:rgba(255,250,240,.5);border-bottom:1px solid rgba(26,26,26,.06)">'
+        +'<div class="crm-notes-lbl">Notes internes</div>'
+        +'<textarea class="crm-notes-ta" id="notes-sdb-'+cid+'" onblur="saveNotes(\'sdb\',\''+cid+'\',this,document.getElementById(\'notes-hint-sdb-'+cid+'\'))">'+noteVal+'</textarea>'
+        +'<div class="crm-notes-hint" id="notes-hint-sdb-'+cid+'"></div>'
+      +'</div>'
       +'</div>';
   }).join('');
   wrap.innerHTML = rows;
+  setTimeout(function(){ initSearch('sdb'); }, 0);
 }
+
+function toggleFicheSdb(idx){
+  var row = document.getElementById('fiche-row-sdb-'+idx);
+  if(!row) return;
+  row.style.display = row.style.display==='none' ? '' : 'none';
+}
+window.toggleFicheSdb = toggleFicheSdb;
 
 function generatePDFSdb(idx){
   var cfg = window._configsSDB[idx];
