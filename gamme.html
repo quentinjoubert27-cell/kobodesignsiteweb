@@ -2324,7 +2324,15 @@
           if(en.isIntersecting && !started){
             started = true;
             io.disconnect();
-            ensureThreeLoaded(function(){ initShowcase(); });
+            if(window.THREE && window.THREE.GLTFLoader){
+              initShowcase();
+            } else {
+              loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js', function(){
+                loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js', function(){
+                  initShowcase();
+                });
+              });
+            }
           }
         });
       }, { rootMargin: '200px' });
