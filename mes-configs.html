@@ -360,8 +360,8 @@ function makeVizUrl(cfg){
   };
   try{
     var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-    return '/configurateur-biblio-test?c=' + b64;
-  }catch(e){ return '/configurateur-biblio-test'; }
+    return '/configurateur-biblio?c=' + b64;
+  }catch(e){ return '/configurateur-biblio'; }
 }
 
 function fmtDate(iso){

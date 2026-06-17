@@ -954,6 +954,29 @@
       letter-spacing: 0.02em;
     }
 
+    .biblio-config-cta {
+      margin-top: clamp(40px, 5vw, 64px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .biblio-config-cta__badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .biblio-config-cta__text {
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(26,26,26,.55);
+      max-width: 480px;
+      margin: 0;
+    }
+
     .sdb-showcase__cta {
       display: inline-flex;
       align-items: center;
@@ -1739,6 +1762,15 @@
         <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
+  </div>
+
+  <div class="biblio-config-cta reveal">
+    <div class="biblio-config-cta__badge">✦ Configurateur 3D · Exclusif Kōbō</div>
+    <p class="biblio-config-cta__text">Composez votre bibliothèque sur-mesure en 3D — dimensions, étagères, intercalaires, portes — et recevez un devis ferme sous 24h.</p>
+    <a class="sdb-showcase__cta" href="/configurateur-biblio">
+      Lancer le configurateur
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
   </div>
 </section>
 
