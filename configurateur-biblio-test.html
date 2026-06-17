@@ -53,9 +53,8 @@
       .edit-btn,.reset-btn,.toggle-doors-btn,.cta-btn{ min-height:44px; padding:12px }
       .cfg-field{ font-size:16px; padding:10px 10px }/* prevent iOS zoom */
       textarea.cfg-field{ min-height:60px }
-      .edit-bar{ min-width:170px; top:8px; left:8px }
       .tb-desc{ display:none }
-      .type-btn{ padding:6px 8px }
+      .type-btn{ padding:5px 8px }
       .tb-name{ font-size:9px }
     }
 
@@ -80,35 +79,39 @@
     }
     .mode-edit .viewer-hint{ opacity:0 }
 
-    /* Barre d'édition */
+    /* Colonne viewer */
+    .viewer-col{ display:flex; flex-direction:column; gap:0; min-width:0 }
+    .viewer-col.mode-edit .viewer-wrap{ border-radius:0 0 18px 18px }
+
+    /* Barre d'édition — au-dessus du canvas, flux normal */
     .edit-bar{
-      position:absolute; top:12px; left:12px;
-      display:flex; flex-direction:column; gap:2px;
-      background:rgba(26,26,26,.88); backdrop-filter:blur(8px);
-      border-radius:14px; padding:10px 8px;
-      opacity:0; pointer-events:none; transition:opacity .2s; min-width:210px;
+      display:none; flex-direction:row; flex-wrap:wrap; align-items:flex-start; gap:6px;
+      background:rgba(26,26,26,.92); backdrop-filter:blur(8px);
+      border-radius:14px 14px 0 0; padding:10px 12px;
     }
-    .mode-edit .edit-bar{ opacity:1; pointer-events:auto }
+    .viewer-col.mode-edit .edit-bar{ display:flex }
+    .edit-bar-header{ display:flex; align-items:center; gap:10px; width:100%; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:2px }
+    .type-btns{ display:flex; flex-direction:row; flex-wrap:wrap; gap:4px; flex:1 }
     .edit-bar-header{ display:flex; align-items:center; justify-content:space-between; padding:0 6px 8px; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:4px }
     .edit-bar-label{ font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.4) }
     .edit-sep{ display:none }
     .type-btns{ display:flex; flex-direction:column; gap:1px }
     .type-btn{
-      display:grid; grid-template-columns:24px 1fr; align-items:center; gap:0;
-      padding:7px 8px; font-family:var(--font);
-      color:rgba(255,255,255,.55); background:none; border:none; cursor:pointer;
+      display:flex; align-items:flex-start; gap:7px;
+      padding:7px 10px; font-family:var(--font);
+      color:rgba(255,255,255,.55); background:rgba(255,255,255,.06); border:none; cursor:pointer;
       border-radius:8px; transition:background .15s,color .15s; text-align:left;
     }
-    .type-btn:hover{ background:rgba(255,255,255,.08); color:rgba(255,255,255,.85) }
-    .type-btn.active{ background:rgba(205,62,0,.25); color:#fff }
+    .type-btn:hover{ background:rgba(255,255,255,.12); color:rgba(255,255,255,.85) }
+    .type-btn.active{ background:rgba(205,62,0,.3); color:#fff }
     .type-btn.active .tb-icon{ color:var(--accent) }
-    .tb-icon{ font-size:13px; text-align:center; line-height:1; flex-shrink:0 }
+    .tb-icon{ font-size:13px; line-height:1.4; flex-shrink:0 }
     .tb-body{ display:flex; flex-direction:column; gap:1px }
-    .tb-name{ font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; line-height:1 }
+    .tb-name{ font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; line-height:1.2; white-space:nowrap }
     .tb-desc{ font-size:9px; font-weight:400; color:rgba(255,255,255,.35); line-height:1.3; margin-top:2px }
     .type-btn.active .tb-desc{ color:rgba(255,255,255,.5) }
     .type-btn:hover .tb-desc{ color:rgba(255,255,255,.45) }
-    .edit-group-sep{ height:1px; background:rgba(255,255,255,.08); margin:4px 6px }
+    .edit-group-sep{ display:none }
     .edit-close{
       width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.1);
       border:none; cursor:pointer; color:rgba(255,255,255,.6); font-size:12px;
@@ -307,21 +310,10 @@
 
   <div class="layout">
 
-    <!-- VIEWER -->
-    <div class="viewer-wrap mode-rotate" id="viewerWrap">
-      <canvas id="c"></canvas>
-      <div id="selOverlay"></div>
+    <!-- VIEWER COL -->
+    <div class="viewer-col" id="viewerCol">
 
-      <!-- Indice vide -->
-      <div class="empty-hint" id="emptyHint">
-        <div class="eh-icon">□</div>
-        <div class="eh-txt">Structure vide<br>Cliquez « Éditer » pour ajouter des étagères</div>
-      </div>
-
-      <!-- Hint rotation -->
-      <div class="viewer-hint">⟳ Glissez pour tourner</div>
-
-      <!-- Barre édition -->
+      <!-- Barre édition — au-dessus du canvas, hors overlap -->
       <div class="edit-bar">
         <div class="edit-bar-header">
           <span class="edit-bar-label">Mode édition</span>
@@ -358,6 +350,19 @@
         </div>
       </div>
 
+    <div class="viewer-wrap mode-rotate" id="viewerWrap">
+      <canvas id="c"></canvas>
+      <div id="selOverlay"></div>
+
+      <!-- Indice vide -->
+      <div class="empty-hint" id="emptyHint">
+        <div class="eh-icon">□</div>
+        <div class="eh-txt">Structure vide<br>Cliquez « Éditer » pour ajouter des étagères</div>
+      </div>
+
+      <!-- Hint rotation -->
+      <div class="viewer-hint">⟳ Glissez pour tourner</div>
+
       <!-- Hint action -->
       <div class="action-hint" id="actionHint">Clic = poser · Clic sur élément = supprimer</div>
       <!-- Coordonnées live en mode édition -->
@@ -365,7 +370,8 @@
 
       <!-- Dimensions -->
       <div class="dims-badge" id="dimsBadge">120 × 200 × 35 cm</div>
-    </div>
+    </div><!-- /viewer-wrap -->
+    </div><!-- /viewer-col -->
 
     <!-- CONTRÔLES -->
     <div class="ctrl-panel">
@@ -1337,6 +1343,8 @@ function placeOrRemove(e){
 function setEditMode(on){
   editMode=on;
   wrapper.className='viewer-wrap '+(on?'mode-edit':'mode-rotate');
+  var col=document.getElementById('viewerCol');
+  if(col) col.classList.toggle('mode-edit',on);
   document.getElementById('editBtn').classList.toggle('active',on);
   if(on){
     // Sauvegarder la rotation et passer en vue frontale pour un placement précis
