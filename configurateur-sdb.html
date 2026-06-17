@@ -1,1089 +1,1374 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="robots" content="noindex, nofollow"/>
-  <title>Configurateur SDB — Kobo Design</title>
-  <link rel="icon" type="image/png" href="img/logo-kobo.png"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;0,900&display=swap" rel="stylesheet"/>
-  <style>
-    :root{ --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A; --white:#fff; --font:'Poppins',sans-serif }
-    *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0 }
-    body{ font-family:var(--font); background:var(--bg); color:var(--dark); min-height:100vh }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurateur SDB — Kobo Design</title>
+<link rel="icon" type="image/png" href="img/logo-kobo.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Archivo:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FFFAF0;--panel:#FFFFFF;--panel2:#F0EBE0;--border:rgba(26,26,26,.12);
+  --accent:#CD3E00;--accent2:#a83200;--text:#1A1A1A;--text2:rgba(26,26,26,.5);--w:320px;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(--text)}
+#app{display:flex;width:100%;height:100%}
 
-    header{
-      height:64px; display:flex; align-items:center; justify-content:space-between;
-      padding:0 clamp(20px,5vw,72px); border-bottom:1px solid rgba(26,26,26,.08);
-      background:rgba(255,250,240,.96); backdrop-filter:blur(8px); position:sticky; top:0; z-index:10;
-    }
-    .logo img{ height:30px }
-    .header-badge{
-      font-size:9px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
-      color:var(--accent); background:rgba(205,62,0,.08);
-      border:1px solid rgba(205,62,0,.2); border-radius:100px; padding:6px 14px;
-    }
+#sidebar{width:var(--w);min-width:var(--w);background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;box-shadow:2px 0 12px rgba(26,26,26,.06)}
+#sb-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo-txt{font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
+.logo-sub{font-size:10px;color:var(--text2);letter-spacing:.06em;margin-top:2px}
 
-    .page{ max-width:1300px; margin:0 auto; padding:40px clamp(20px,5vw,72px) 80px }
-    .eyebrow{ font-size:9px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); margin-bottom:8px }
-    h1{ font-size:clamp(28px,3.8vw,48px); font-weight:900; letter-spacing:-.03em; margin-bottom:6px; line-height:1.05 }
-    h1 em{ font-style:italic; font-weight:300; color:rgba(26,26,26,.28) }
-    .sub{ font-size:12px; color:rgba(26,26,26,.45); margin-bottom:36px }
+#stepper{display:flex;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0}
+.step-dot{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);flex-shrink:0;transition:all .25s;cursor:pointer}
+.step-dot.active{border-color:var(--accent);background:rgba(205,62,0,.08);color:var(--accent)}
+.step-dot.done{border-color:var(--accent);background:var(--accent);color:#fff}
+.step-dot.done::after{content:'✓';font-size:11px}.step-dot.done .sn{display:none}
+.sn{font-size:10px}
+.step-lbl{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text2);margin:0 8px;flex-shrink:0}
+.step-dot.active+.step-lbl{color:var(--accent)}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 4px}
+.step-line.done{background:var(--accent)}
 
-    .layout{ display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start }
-    @media(max-width:960px){ .layout{ grid-template-columns:1fr } }
+#sb-body{flex:1;overflow-y:auto;padding:20px 22px}
+#sb-body::-webkit-scrollbar{width:3px}
+#sb-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.panel{display:none}.panel.on{display:block}
+.sec{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:20px 0 10px}
+.sec:first-child{margin-top:0}
 
-    /* ── Viewer ── */
-    .viewer-wrap{
-      position:relative; border-radius:18px; overflow:hidden;
-      background:linear-gradient(145deg,#F2EAD8,#F8F3E9);
-      border:1px solid rgba(26,26,26,.09); aspect-ratio:4/3;
-    }
-    canvas{ width:100%!important; height:100%!important; display:block; cursor:grab }
-    canvas:active{ cursor:grabbing }
-    .viewer-hint{
-      position:absolute; top:14px; left:50%; transform:translateX(-50%);
-      font-size:9px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
-      color:rgba(26,26,26,.38); background:rgba(255,250,240,.8);
-      padding:5px 14px; border-radius:100px; pointer-events:none; white-space:nowrap;
-    }
-    .dims-badge{
-      position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
-      font-size:10px; font-weight:700; letter-spacing:.1em;
-      color:var(--dark); background:rgba(255,250,240,.92);
-      padding:6px 18px; border-radius:100px; white-space:nowrap;
-      border:1px solid rgba(26,26,26,.1);
-    }
-    .loading-overlay{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      background:rgba(242,234,216,.8); backdrop-filter:blur(4px); border-radius:18px;
-      font-size:10px; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
-      color:rgba(26,26,26,.45); transition:opacity .3s;
-    }
-    .loading-overlay.hidden{ opacity:0; pointer-events:none }
+.sl-row{margin-bottom:16px}
+.sl-top{display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px}
+.sl-lbl{color:var(--text2)}.sl-val{font-weight:700;color:var(--text);font-size:13px}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(205,62,0,.15);cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 
-    /* ── Panel ── */
-    .ctrl-panel{
-      background:#fff; border-radius:18px; border:1px solid rgba(26,26,26,.09);
-      padding:28px 24px; display:flex; flex-direction:column; gap:0;
-      max-height:calc(100vh - 100px); overflow-y:auto;
-    }
-    .ctrl-panel::-webkit-scrollbar{ width:4px }
-    .ctrl-panel::-webkit-scrollbar-thumb{ background:rgba(26,26,26,.14); border-radius:4px }
-    .ctrl-sect{ padding:20px 0 }
-    .ctrl-sect:first-child{ padding-top:0 }
-    .divider{ height:1px; background:rgba(26,26,26,.07); margin:0 }
-    .sect-lbl{ font-size:9px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:rgba(26,26,26,.4); margin-bottom:14px }
-    .sub-lbl{ font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:rgba(26,26,26,.33); margin:10px 0 8px }
-    .sub-lbl:first-child{ margin-top:0 }
+.mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.mat-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.mat-btn:hover{border-color:rgba(26,26,26,.3)}.mat-btn.on{border-color:var(--accent);background:rgba(205,62,0,.06)}
+.mat-sw{width:22px;height:22px;border-radius:5px;flex-shrink:0;border:1px solid rgba(26,26,26,.1)}
+.mat-lbl{font-size:11px;font-weight:500;color:var(--text2)}.mat-btn.on .mat-lbl{color:var(--accent)}
 
-    /* Vasque cards */
-    .item-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px }
-    .item-card{
-      aspect-ratio:1; border-radius:9px; border:1.5px solid rgba(26,26,26,.1);
-      cursor:pointer; background:#F8F2E5; display:flex; flex-direction:column;
-      align-items:center; justify-content:center; gap:4px;
-      font-size:8px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-      color:rgba(26,26,26,.45); transition:border-color .2s,transform .15s,background .2s;
-    }
-    .item-card:hover{ transform:scale(1.04); border-color:rgba(26,26,26,.28) }
-    .item-card.active{ border-color:var(--accent); border-width:2px; background:rgba(205,62,0,.05); color:var(--accent) }
-    .item-card svg{ width:34px; height:28px; opacity:.35 }
-    .item-card.active svg{ opacity:1 }
+.pos-info{background:rgba(205,62,0,.05);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.pos-info strong{color:var(--text)}
+.tip{background:rgba(205,62,0,.05);border:1px dashed rgba(205,62,0,.25);border-radius:8px;padding:11px 13px;font-size:11px;color:var(--text2);line-height:1.55;margin-bottom:16px}
+.tip-icon{font-size:14px;display:inline-block;margin-right:4px}
+.recap-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
+.warn-alert{display:none;background:rgba(205,62,0,.07);border:1.5px solid rgba(205,62,0,.35);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--accent);line-height:1.55;margin-bottom:14px}
+.warn-alert.show{display:block}
+.recap-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.recap-row:last-child{border-bottom:none}
+.recap-k{color:var(--text2)}.recap-v{color:var(--text);font-weight:600}
 
-    /* Toggles */
-    .toggle-row{ display:flex; gap:8px }
-    .toggle-btn{
-      flex:1; padding:9px 6px; font-family:var(--font); font-size:10px; font-weight:700;
-      letter-spacing:.07em; text-transform:uppercase; border-radius:8px; cursor:pointer;
-      border:1.5px solid rgba(26,26,26,.12); background:#fff; color:rgba(26,26,26,.45);
-      transition:all .2s;
-    }
-    .toggle-btn:hover{ border-color:rgba(26,26,26,.3); color:var(--dark) }
-    .toggle-btn.active{ background:var(--accent); color:#fff; border-color:var(--accent) }
+.amgt-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.amgt-count{font-size:11px;color:var(--text2)}
+.amgt-count strong{color:var(--text)}
+.edit-mode-btn{padding:8px 14px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.04em}
+.edit-mode-btn:hover{border-color:rgba(26,26,26,.3);color:var(--text)}.edit-mode-btn.active{border-color:var(--accent);background:rgba(205,62,0,.08);color:var(--accent)}
+.reset-btn{width:100%;padding:9px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:.08em;transition:all .18s;margin-bottom:6px}
+.reset-btn:hover{border-color:rgba(26,26,26,.3);color:var(--text)}
+.facade-row{display:flex;gap:8px;margin-bottom:4px}
+.facade-btn{flex:1;padding:9px 6px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.04em}
+.facade-btn:hover{border-color:rgba(26,26,26,.3);color:var(--text)}.facade-btn.on{border-color:var(--accent);background:rgba(205,62,0,.08);color:var(--accent)}
+.vasque-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+.vasque-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.vasque-btn:hover{border-color:rgba(26,26,26,.3)}.vasque-btn.on{border-color:var(--accent);background:rgba(205,62,0,.06)}
+.vasque-btn canvas{border-radius:5px;background:var(--panel2)}
+.vasque-lbl{font-size:10px;font-weight:600;color:var(--text2)}.vasque-btn.on .vasque-lbl{color:var(--accent)}
 
-    /* Matière vasque */
-    .vmat-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px }
-    .vmat-btn{
-      aspect-ratio:1; border-radius:7px; border:1.5px solid rgba(26,26,26,.1);
-      cursor:pointer; overflow:hidden; background-size:cover; background-position:center;
-      transition:border-color .2s,transform .15s; position:relative;
-    }
-    .vmat-btn:hover{ transform:scale(1.06) }
-    .vmat-btn.active{ border-color:var(--accent); border-width:2.5px }
-    .vmat-btn::after{
-      content:attr(data-name); position:absolute; bottom:0; left:0; right:0;
-      font-size:7px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
-      text-align:center; background:rgba(255,250,240,.88); color:var(--dark); padding:2px 3px;
-    }
+#sb-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.btn-back{flex:0 0 auto;padding:11px 14px;border-radius:7px;background:transparent;border:1.5px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.btn-back:hover{border-color:rgba(26,26,26,.3);color:var(--text)}.btn-back:disabled{opacity:.3;cursor:not-allowed}
+.btn-next{flex:1;padding:12px;border-radius:7px;background:var(--accent);border:none;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .2s;font-family:'DM Sans',sans-serif}
+.btn-next:hover{background:var(--accent2)}
 
-    /* Matière bois */
-    .mat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px }
-    .mat-btn{
-      aspect-ratio:1; border-radius:9px; border:2px solid transparent;
-      overflow:hidden; cursor:pointer; background:none; padding:0;
-      position:relative; transition:border-color .2s,transform .15s;
-    }
-    .mat-btn:hover{ transform:scale(1.06) }
-    .mat-btn.active{ border-color:var(--accent) }
-    .mat-btn img,.mat-swatch{ width:100%; height:100%; object-fit:cover; border-radius:7px; display:block }
-    .mat-lbl{
-      position:absolute; bottom:0; left:0; right:0; font-size:7px; font-weight:700;
-      letter-spacing:.06em; text-transform:uppercase; text-align:center;
-      background:rgba(255,250,240,.88); color:var(--dark); padding:2px 3px;
-    }
+#cv-wrap{flex:1;position:relative;overflow:hidden}
+#c{width:100%!important;height:100%!important;display:block}
+#hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(255,250,240,.92);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:10px;color:var(--text2);pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px);transition:opacity .4s;opacity:0;letter-spacing:.06em}
+#hint.show{opacity:1}
 
-    /* Dimension inputs */
-    .dims-inputs{ display:flex; flex-direction:column; gap:12px }
-    .dim-row{ display:flex; align-items:center; justify-content:space-between }
-    .dim-label{ font-size:11px; font-weight:600; color:var(--dark) }
-    .dim-input-wrap{ display:flex; align-items:center; gap:6px }
-    .dim-input{
-      width:72px; padding:8px 10px; font-family:var(--font); font-size:15px; font-weight:700;
-      border:1.5px solid rgba(26,26,26,.15); border-radius:8px; background:#fff;
-      color:var(--accent); outline:none; text-align:center;
-      -moz-appearance:textfield; transition:border-color .2s;
-    }
-    .dim-input:focus{ border-color:var(--accent) }
-    .dim-input::-webkit-inner-spin-button,
-    .dim-input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0 }
-    .dim-unit{ font-size:11px; font-weight:600; color:rgba(26,26,26,.45); min-width:18px }
+/* FORMULAIRE ENVOI */
+.cfg-field{width:100%;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;transition:border-color .18s;margin-bottom:10px}
+.cfg-field:focus{border-color:var(--accent)}
+textarea.cfg-field{resize:vertical;min-height:72px}
+.cfg-err{font-size:11px;color:#c00;background:rgba(192,0,0,.06);border-radius:7px;padding:8px 12px}
+.cfg-ok{text-align:center;padding:24px 16px;font-size:14px;font-weight:700;color:var(--text)}
+.cfg-ok-icon{display:block;font-size:36px;margin-bottom:12px;color:var(--accent)}
+.cta-btn{width:100%;padding:13px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.cta-btn:hover{background:var(--accent2)}.cta-btn:disabled{opacity:.5;cursor:not-allowed}
+.cta-note{font-size:10px;color:var(--text2);text-align:center;margin-top:8px}
 
-    /* Form */
-    .cfg-field{
-      width:100%; padding:10px 12px; font-family:var(--font); font-size:12px;
-      border:1.5px solid rgba(26,26,26,.15); border-radius:8px; background:#fff;
-      color:var(--dark); outline:none; transition:border-color .2s;
-    }
-    .cfg-field:focus{ border-color:var(--accent) }
-    .cfg-field::placeholder{ color:rgba(26,26,26,.35) }
-    textarea.cfg-field{ resize:vertical; min-height:60px; line-height:1.5 }
-    .cfg-field-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:8px }
-    .cfg-summary{
-      background:rgba(26,26,26,.04); border-radius:8px; padding:10px 14px;
-      font-size:10px; font-weight:600; color:rgba(26,26,26,.5);
-      line-height:1.6; text-align:center; margin-bottom:12px;
-    }
-    .cfg-summary strong{ color:var(--dark) }
-    .cta-btn{
-      display:block; width:100%; padding:14px; font-family:var(--font);
-      font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
-      text-align:center; background:var(--dark); color:#fff;
-      border:none; border-radius:10px; cursor:pointer; transition:background .2s;
-    }
-    .cta-btn:hover{ background:#2d2d2d }
-    .cta-btn:disabled{ opacity:.5; cursor:not-allowed }
-    .cta-note{ font-size:10px; color:rgba(26,26,26,.38); text-align:center; line-height:1.5; margin-top:8px }
-    .cfg-err{ background:rgba(220,0,0,.07); border:1px solid rgba(220,0,0,.2); border-radius:8px; padding:10px; font-size:11px; color:#c00; text-align:center; margin-bottom:10px }
-    .cfg-ok{ background:rgba(205,62,0,.08); border:1px solid rgba(205,62,0,.2); border-radius:10px; padding:16px; text-align:center; font-size:12px; font-weight:600; color:var(--accent); line-height:1.6 }
-    .cfg-ok .cfg-ok-icon{ font-size:22px; display:block; margin-bottom:6px }
-  </style>
+/* BARRE ÉDITION CAISSON */
+#c-edit-bar{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,250,240,.95);backdrop-filter:blur(8px);
+  border-radius:100px;padding:5px 8px 5px 14px;
+  opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;
+  border:1px solid var(--border);box-shadow:0 4px 20px rgba(26,26,26,.1);
+}
+#cv-wrap.mode-edit #c-edit-bar{opacity:1;pointer-events:auto}
+.c-edit-lbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text2)}
+.c-type-btns{display:flex;border-radius:100px;overflow:hidden;background:rgba(26,26,26,.06)}
+.c-type-btn{padding:5px 11px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);background:none;border:none;cursor:pointer;border-radius:100px;transition:background .15s,color .15s;white-space:nowrap}
+.c-type-btn.active{background:var(--accent);color:#fff}
+.c-edit-sep{width:1px;height:16px;background:var(--border)}
+.c-edit-close{width:28px;height:28px;border-radius:50%;background:rgba(26,26,26,.08);border:none;cursor:pointer;color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.c-edit-close:hover{background:rgba(26,26,26,.14)}
+#c-action-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);background:rgba(255,250,240,.92);padding:6px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .2s;border:1px solid var(--border)}
+#cv-wrap.mode-edit #c-action-hint{opacity:1}
+
+@media(max-width:760px){
+  #app{flex-direction:column-reverse}
+  #sidebar{width:100%;min-width:0;height:50vh;border-right:none;border-top:1px solid var(--border)}
+  #cv-wrap{height:50vh}
+  /* sidebar scrollable */
+  #sb-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px}
+  /* stepper compact */
+  #stepper{padding:10px 14px}
+  .step-lbl{font-size:9px;margin:0 4px}
+  /* step-dots — 44px touch targets */
+  .step-dot{width:44px;height:44px;min-width:44px;min-height:44px;font-size:12px}
+  /* range touch */
+  input[type=range]{min-height:36px;height:36px;padding:10px 0}
+  /* mat-grid tiles smaller */
+  .mat-grid{gap:6px}
+  .mat-sw{width:18px;height:18px}
+  /* form fields — prevent iOS zoom */
+  .cfg-field{font-size:16px}
+  /* footer buttons */
+  #sb-footer,#sb-foot{padding:10px 14px}
+  .btn-back,.btn-next{min-height:44px}
+  /* header */
+  #sb-header{padding:12px 14px 10px}
+}
+@media(max-width:480px){
+  #sb-body{padding:10px 10px}
+  #stepper{padding:8px 10px}
+  .step-lbl{display:none}
+  .step-dot{width:36px;height:36px;min-width:36px;min-height:36px}
+  .mat-grid{grid-template-columns:1fr 1fr;gap:5px}
+  .mat-lbl{font-size:10px}
+  .vasque-grid{grid-template-columns:repeat(3,1fr)}
+  .cfg-field{padding:10px 10px;font-size:16px}
+  .cta-btn{padding:14px;font-size:12px;min-height:44px}
+  #sb-foot{padding:8px 10px}
+  .btn-next,.btn-back{min-height:44px;padding:12px 10px}
+  .sec{margin:14px 0 8px}
+  .sl-row{margin-bottom:12px}
+}
+</style>
 </head>
 <body>
-
-<header>
-  <a href="index.html" class="logo"><img src="img/logo-kobo.png" alt="Kobo Design"/></a>
-  <span class="header-badge">Test · SDB sur-mesure</span>
-</header>
-
-<div class="page">
-  <p class="eyebrow">Configurateur</p>
-  <h1>Salle de bain<br><em>sur-mesure.</em></h1>
-  <p class="sub">Aperçu 3D indicatif — les cotes finales sont confirmées lors du devis.</p>
-
-  <div class="layout">
-
-    <!-- VIEWER -->
-    <div class="viewer-wrap" id="viewerWrap">
-      <canvas id="c"></canvas>
-      <div class="viewer-hint">⟳ Glissez pour tourner</div>
-      <div class="dims-badge" id="dimsBadge">80 × 50 × 48 cm</div>
-      <div class="loading-overlay" id="loadingOverlay">Chargement…</div>
+<div id="app">
+  <div id="sidebar">
+    <div id="sb-header">
+      <div class="logo-txt">Kōbō Design</div>
+      <div class="logo-sub">Configurateur Salle de Bain</div>
+    </div>
+    <div id="stepper">
+      <div class="step-dot active" id="sd1" onclick="goStep(1)"><span class="sn">1</span></div>
+      <span class="step-lbl">Meuble</span>
+      <div class="step-line" id="sl1"></div>
+      <div class="step-dot" id="sd2" onclick="goStep(2)"><span class="sn">2</span></div>
+      <span class="step-lbl">Plan</span>
+      <div class="step-line" id="sl2"></div>
+      <div class="step-dot" id="sd3" onclick="goStep(3)"><span class="sn">3</span></div>
+      <span class="step-lbl">Vasque</span>
+      <div class="step-line" id="sl3"></div>
+      <div class="step-dot" id="sd4" onclick="goStep(4)"><span class="sn">4</span></div>
+      <span class="step-lbl">Envoyer</span>
     </div>
 
-    <!-- CONTRÔLES -->
-    <div class="ctrl-panel">
+    <div id="sb-body">
 
-      <!-- Modèle (meuble + vasque intégré) -->
-      <div class="ctrl-sect">
-        <p class="sect-lbl">✦ Modèle</p>
-        <div class="item-grid" id="modeleGrid"></div>
-        <p class="sub-lbl" style="margin-top:14px">Nombre de vasques</p>
-        <div class="toggle-row" id="vcToggle">
-          <button class="toggle-btn active" data-vc="1" onclick="sdbSetVC(1)">1 Vasque</button>
-          <button class="toggle-btn"        data-vc="2" onclick="sdbSetVC(2)">2 Vasques</button>
+      <!-- STEP 1 — Meuble -->
+      <div class="panel on" id="p1">
+        <div class="sec">Dimensions du meuble</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
+          <input type="range" id="sl-cL" min="40" max="220" step="1" value="120" oninput="setCL(+this.value)">
         </div>
-        <p class="sub-lbl" style="margin-top:12px">Variante</p>
-        <div class="toggle-row" id="variantToggle">
-          <button class="toggle-btn active" data-v="1" onclick="sdbSetVariant(1)">1 Tiroir</button>
-          <button class="toggle-btn"        data-v="2" onclick="sdbSetVariant(2)">2 Tiroirs</button>
-          <button class="toggle-btn"        data-v="3" onclick="sdbSetVariant(3)">1 Niche 1 Tiroir</button>
-          <button class="toggle-btn"        data-v="4" onclick="sdbSetVariant(4)">2 Niches 2 Tiroirs</button>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
+          <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
         </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Finition vasque -->
-      <div class="ctrl-sect">
-        <p class="sect-lbl">✦ Finition vasque</p>
-        <div class="vmat-grid" id="vmatGrid"></div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Essence bois -->
-      <div class="ctrl-sect">
-        <p class="sect-lbl">✦ Essence du meuble</p>
-        <div class="mat-grid" id="matGrid"></div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Dimensions -->
-      <div class="ctrl-sect">
-        <p class="sect-lbl">✦ Dimensions</p>
-        <div class="dims-inputs">
-          <div class="dim-row">
-            <span class="dim-label">Largeur</span>
-            <div class="dim-input-wrap">
-              <input type="number" id="largeurInput" class="dim-input" value="80" min="40" max="300" step="1" oninput="onLargeurInput(this.value)"/>
-              <span class="dim-unit">cm</span>
-            </div>
-          </div>
-          <div class="dim-row">
-            <span class="dim-label">Hauteur</span>
-            <div class="dim-input-wrap">
-              <input type="number" id="hauteurInput" class="dim-input" value="50" min="20" max="120" step="1" oninput="onHauteurInput(this.value)"/>
-              <span class="dim-unit">cm</span>
-            </div>
-          </div>
-          <div class="dim-row">
-            <span class="dim-label">Profondeur</span>
-            <div class="dim-input-wrap">
-              <input type="number" id="profondeurInput" class="dim-input" value="48" min="20" max="100" step="1" oninput="onProfondeurInput(this.value)"/>
-              <span class="dim-unit">cm</span>
-            </div>
-          </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">36 cm</span></div>
+          <input type="range" min="36" max="60" step="1" value="36" oninput="setCP(+this.value)">
         </div>
-        <p style="font-size:9px;color:rgba(26,26,26,.35);margin-top:10px;line-height:1.5">L'aperçu 3D adapte la largeur. Les cotes exactes sont confirmées lors du devis.</p>
+        <div class="sec">Finition bois</div>
+        <div class="mat-grid" id="mg-cais"></div>
+        <div class="sec">Aménagement intérieur</div>
+        <div class="amgt-row">
+          <span class="amgt-count" id="amgt-count">Structure vide</span>
+          <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
+        </div>
+        <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
       </div>
 
-      <div class="divider"></div>
+      <!-- STEP 2 — Plan de travail -->
+      <div class="panel" id="p2">
+        <div class="warn-alert" id="warn-plan"></div>
+        <div class="sec">Dimensions du plan</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Longueur totale</span><span class="sl-val" id="v-L">140 cm</span></div>
+          <input type="range" min="40" max="300" step="1" value="140" oninput="setL(+this.value)">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Profondeur totale</span><span class="sl-val" id="v-P">55 cm</span></div>
+          <input type="range" min="36" max="80" step="1" value="55" oninput="setPro(+this.value)">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Épaisseur</span><span class="sl-val" id="v-E">4.0 cm</span></div>
+          <input type="range" min="2" max="20" step="0.5" value="4" oninput="setEp(+this.value)">
+        </div>
+        <div class="sec">Position du meuble sous le plan</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Décalage gauche/droite</span><span class="sl-val" id="v-OFF">0 cm</span></div>
+          <input type="range" id="sl-off" min="-100" max="100" step="1" value="0" oninput="setCaissonOffset(+this.value)">
+        </div>
+        <div class="sec">Matériau</div>
+        <div class="mat-grid" id="mg-plan"></div>
+      </div>
 
-      <!-- Formulaire -->
-      <div class="ctrl-sect">
-        <p class="sect-lbl">✦ Envoyer ma configuration</p>
+      <!-- STEP 3 — Vasque -->
+      <div class="panel" id="p3">
+        <div class="tip"><span class="tip-icon">✥</span>Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="warn-alert" id="warn-vasque"></div>
+        <div class="sec">Nombre de vasques</div>
+        <div class="facade-row" style="margin-bottom:16px">
+          <button class="facade-btn on" id="nv1" onclick="setNbVasques(1)">1 vasque</button>
+          <button class="facade-btn" id="nv2" onclick="setNbVasques(2)">2 vasques</button>
+        </div>
+        <div class="sec">Modèle de vasque</div>
+        <div class="vasque-grid" id="vg"></div>
+        <div class="sec">Type de pose</div>
+        <div class="facade-row" style="margin-bottom:16px">
+          <button class="facade-btn on" id="vt-poser" onclick="setVasqueType('poser')">À poser</button>
+          <button class="facade-btn" id="vt-encastree" onclick="setVasqueType('encastree')">Encastrée</button>
+        </div>
+        <div class="sec">Finition vasque</div>
+        <div class="mat-grid" id="mg-vasque"></div>
+        <div class="sec">Position</div>
+        <div class="pos-info">
+          Distance bord gauche : <strong id="pos-x">—</strong><br>
+          Distance mur : <strong id="pos-z">—</strong>
+        </div>
+        <div class="sec">Récapitulatif</div>
+        <div class="recap-box" id="recap"></div>
+      </div>
+
+      <!-- STEP 4 — Envoyer -->
+      <div class="panel" id="p4">
+        <div class="sec">Votre configuration</div>
+        <div class="recap-box" id="recap4"></div>
+        <div class="sec">Vos coordonnées</div>
         <div id="cfgFormWrap">
-          <div class="cfg-field-row">
-            <input  type="text"  id="cfgPrenom"  class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
-            <input  type="email" id="cfgEmail"   class="cfg-field" placeholder="Votre email *"  maxlength="200" autocomplete="email"/>
-            <textarea            id="cfgMessage" class="cfg-field" placeholder="Question, précision… (optionnel)" maxlength="2000"></textarea>
-          </div>
-          <div class="cfg-summary" id="cfgSummary">—</div>
+          <input type="text"  id="cfgPrenom"  class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
+          <input type="email" id="cfgEmail"   class="cfg-field" placeholder="Votre email *"  maxlength="200" autocomplete="email"/>
+          <textarea           id="cfgMessage" class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
           <input type="text" id="cfgBot" style="display:none" tabindex="-1" autocomplete="off"/>
-          <div class="cfg-err" id="cfgErr" style="display:none"></div>
+          <div class="cfg-err" id="cfgErr" style="display:none;margin-bottom:10px"></div>
           <button class="cta-btn" id="cfgSubmitBtn" onclick="submitConfig()">Envoyer ma configuration →</button>
           <p class="cta-note">Gratuit · Sans engagement · Réponse sous 24 h</p>
         </div>
         <div class="cfg-ok" id="cfgSuccess" style="display:none">
           <span class="cfg-ok-icon">✓</span>
           Configuration reçue !<br>
-          <span style="font-weight:400;color:rgba(26,26,26,.5)">On revient vers vous dans les 24 h.</span>
+          <span style="font-weight:400;color:var(--text2)">On revient vers vous dans les 24 h.</span>
         </div>
       </div>
+    </div>
 
-    </div><!-- /ctrl-panel -->
-  </div><!-- /layout -->
-</div><!-- /page -->
+    <div id="sb-foot">
+      <button class="btn-back" id="btn-back" onclick="prevStep()" disabled>← Retour</button>
+      <button class="btn-next" id="btn-next" onclick="nextStep()">Suivant →</button>
+    </div>
+  </div>
+
+  <div id="cv-wrap">
+    <canvas id="c"></canvas>
+    <div id="hint">☛ Glissez la vasque pour la repositionner</div>
+    <div id="c-edit-bar">
+      <span class="c-edit-lbl">Ajouter</span>
+      <div class="c-type-btns">
+        <button class="c-type-btn active" id="ct-shelf" onclick="setCaissonType('shelf')">━ Tablette</button>
+        <button class="c-type-btn" id="ct-sep"   onclick="setCaissonType('separator')">┃ Séparateur</button>
+        <button class="c-type-btn" id="ct-door"  onclick="setCaissonType('porte')">🚪 Porte</button>
+        <button class="c-type-btn" id="ct-draw"  onclick="setCaissonType('tiroir')">▤ Tiroir</button>
+      </div>
+      <div class="c-edit-sep"></div>
+      <button class="c-edit-close" onclick="toggleCaissonEdit()">✕</button>
+    </div>
+    <div id="c-action-hint">Clic = poser · Clic sur élément = supprimer</div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-// ═══════════════════════════════════════════════════
-//  DONNÉES
-// ═══════════════════════════════════════════════════
-var MEUBLES_DEF = [1,2,3,4,5,6,7].map(function(n){ return { family:n, label:'Meuble '+n }; });
-
-var BOIS_DEF = [
-  { id:'chene',        label:'Chêne',        src:'img/BOISCHENE.jpg' },
-  { id:'noyer',        label:'Noyer',        src:'img/NOYER.jpg' },
-  { id:'chene_fonce',  label:'Chêne F.',     src:'img/CHENEFONCE.jpg' },
-  { id:'sapelli',      label:'Sapelli',      src:'img/SAPELLI.jpg' },
-  { id:'vert_sauge',   label:'Vert Sauge',   src:'img/VERTSAUGE.jpg' },
-  { id:'brun_rose',    label:'Brun Rosé',    src:'img/BRUNROSE.jpg' },
-  { id:'gris_ardoise', label:'Gris Ardoise', src:'img/GRISARDOISE.jpg' },
-  { id:'blanc',        label:'Blanc',        src:null, hexColor:'#F0EDEA' },
-];
-
-var VMAT_DEF = [
-  { id:'blanc',          label:'Blanc',       color:{r:.95,g:.94,b:.92} },
-  { id:'noir',           label:'Noir',        color:{r:.12,g:.12,b:.12} },
-  { id:'gris',           label:'Gris',        color:{r:.55,g:.55,b:.55} },
-  { id:'terrazzo_blanc', label:'Terrazzo B.', texture:'img/texture-blanc-gris.png' },
-  { id:'terrazzo_color', label:'Terrazzo C.', texture:'img/texture-blanc-multicouleurs.png' },
-];
-
-// Noms de matériaux dans les GLBs
-var MAT_VASQUE = 'Mati_re10';
-var MAT_MEUBLE = 'Capture_d_e_cran_2026_02_27_a__09_59_44';
-var FAUCET_NAMES = ['Robinet','Col_de_cygne','Tige_de','T_te_de','robinet_mural'];
-var CHROME = { r:.72, g:.70, b:.65, roughness:.22, metalness:.9 };
-
-// ═══════════════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════════════
-var state = {
-  meubleFamily:  1,   // 1-7 : détermine le modèle complet (forme vasque + caisson)
-  vc:            1,   // 1 or 2 vasques
-  meubleVariant: 1,   // 1 or 2
-  vasqueMatId:   'blanc',
-  boisId:        'chene',
-  largeur:       80,
-  hauteur:       50,
-  profondeur:    48,
-  _baseScale:    0,
-  _center:       null,
+// ═══════════════════════════════════════════════════════
+// ÉTAT
+// ═══════════════════════════════════════════════════════
+var S = {
+  step:1,
+  // Meuble
+  CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
+  caissonOffset:0,  // décalage X du caisson sous le plan (m)
+  // Plan
+  L:1.40, P:0.55, Ep:0.04, matPlan:0,
+  // Vasque
+  vx:0, vz:0, vx2:0, vz2:0, nbVasques:1,
+  vasqueW:0.50, vasqueD:0.35, vasqueRx:0.256, vasqueRz:0.181,
 };
 
-// ═══════════════════════════════════════════════════
-//  THREE.JS — SCÈNE
-// ═══════════════════════════════════════════════════
-var canvas  = document.getElementById('c');
-var wrapper = document.getElementById('viewerWrap');
-var scene, camera, renderer;
-var rootGroup = null;
-var currentMeubleModel = null;
-var texCache = {};
-var rotX = 0.18, rotY = 0.5;
-var drag = false, lastX = 0, lastY = 0;
+var MATS_PLAN = [
+  // Dekton
+  {n:'Evok',          src:'textures/dekton/evok.png',       r:.18, brand:'Dekton'},
+  {n:'Kedar',         src:'textures/dekton/kedar.png',      r:.20, brand:'Dekton'},
+  {n:'Keena',         src:'textures/dekton/keena.png',      r:.15, brand:'Dekton'},
+  {n:'Thala',         src:'textures/dekton/thala.png',      r:.16, brand:'Dekton'},
+  {n:'Zira',          src:'textures/dekton/zira.png',       r:.18, brand:'Dekton'},
+  // Silestone
+  {n:'Arden Blue',    src:'textures/silestone/ardenblue.png',        r:.20, brand:'Silestone'},
+  {n:'Blanc Elysée',  src:'textures/silestone/blancelysee.png',      r:.14, brand:'Silestone'},
+  {n:'Calacatta Gold',src:'textures/silestone/calacattagold.png',    r:.16, brand:'Silestone'},
+  {n:'Chateau Brown', src:'textures/silestone/chateaubrown.png',     r:.22, brand:'Silestone'},
+  {n:'El Marquina',   src:'textures/silestone/elmarquina.png',       r:.18, brand:'Silestone'},
+  {n:'Jardin Emerald',src:'textures/silestone/jardinemerald.png',    r:.20, brand:'Silestone'},
+  {n:'Linen Cream',   src:'textures/silestone/linencream.png',       r:.18, brand:'Silestone'},
+  {n:'Miami White',   src:'textures/silestone/miamiwhite.png',       r:.12, brand:'Silestone'},
+  {n:'White Arabesque',src:'textures/silestone/whitearabesque.png',  r:.14, brand:'Silestone'},
+];
+var _planTexCache={};
+var MATS_CAIS = [
+  {n:'Chêne',        src:'img/BOISCHENE.jpg',   r:.65},
+  {n:'Noyer',        src:'img/NOYER.jpg',        r:.62},
+  {n:'Chêne Foncé',  src:'img/CHENEFONCE.jpg',  r:.62},
+  {n:'Sapelli',      src:'img/SAPELLI.jpg',      r:.60},
+  {n:'Vert Sauge',   src:'img/VERTSAUGE.jpg',   r:.65},
+  {n:'Brun Rosé',    src:'img/BRUNROSE.jpg',     r:.65},
+  {n:'Gris Ardoise', src:'img/GRISARDOISE.jpg', r:.65},
+  {n:'Blanc',        src:null, color:'#F0EDEA',  r:.70},
+];
+var _caisTexCache={};
 
-function initScene(){
-  var vw = wrapper.clientWidth || 800;
-  var vh = wrapper.clientHeight || 600;
+var EP = 0.018;  // épaisseur panneau 18mm
 
-  scene  = new THREE.Scene();
-  scene.background = new THREE.Color(0xF2EAD8);
-  camera = new THREE.PerspectiveCamera(36, vw/vh, 0.01, 200);
-  camera.position.set(0, 0, 5);
+// ── Aménagement caisson ──────────────────────────────
+// {type:'shelf',     y_cm}
+// {type:'separator', x_cm, y_cm}
+// {type:'porte',     key}   clé = 'bot_left_top_right' en cm
+// {type:'tiroir',    key}
+var caissonElements  = [];
+var caissonOpenState = {};  // {key: bool} tiroirs ouverts
+var caissonType      = 'shelf';
+var caissonEditMode  = false;
+var caissonGhost     = null;
+var caissonHitPlane  = null;
+var caissonElemMeshes= [];
 
-  renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.setSize(vw, vh);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.88;
-  try{ renderer.outputColorSpace = THREE.SRGBColorSpace; }
-  catch(e){ try{ renderer.outputEncoding = THREE.sRGBEncoding; }catch(e2){} }
+// ═══════════════════════════════════════════════════════
+// THREE.JS
+// ═══════════════════════════════════════════════════════
+var wrap = document.getElementById('cv-wrap');
+var cvs  = document.getElementById('c');
+var renderer = new THREE.WebGLRenderer({canvas:cvs,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.LinearToneMapping; renderer.toneMappingExposure=1.0;
 
-  scene.add(new THREE.AmbientLight(0xfff8ef, 0.70));
-  var key = new THREE.DirectionalLight(0xffffff, 0.90);
-  key.position.set(5,10,7); key.castShadow = true;
-  key.shadow.mapSize.set(1024,1024);
-  key.shadow.camera.left = key.shadow.camera.bottom = -6;
-  key.shadow.camera.right = key.shadow.camera.top = 6;
-  key.shadow.bias = -0.001;
-  scene.add(key);
-  var fill = new THREE.DirectionalLight(0xffe8d0,.40); fill.position.set(-6,4,-3); scene.add(fill);
-  var rim  = new THREE.DirectionalLight(0xffffff,.15); rim.position.set(0,-4,-8);  scene.add(rim);
+var scene=new THREE.Scene();
+scene.background=new THREE.Color(0x141210);
+scene.fog=new THREE.FogExp2(0x141210,0.045);
 
-  var sp = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.ShadowMaterial({opacity:.10}));
-  sp.rotation.x = -Math.PI/2; sp.position.y = -1.3; sp.receiveShadow = true; scene.add(sp);
+var camera=new THREE.PerspectiveCamera(42,1,0.01,30);
+camera.position.set(-0.4,0.9,1.6); camera.lookAt(0,0.25,0);
 
-  rootGroup = new THREE.Group();
-  rootGroup.rotation.set(rotX, rotY, 0);
-  scene.add(rootGroup);
+scene.add(new THREE.HemisphereLight(0xffffff,0x707070,0.32));
+var sun=new THREE.DirectionalLight(0xffffff,0.60);
+sun.position.set(3,6,3); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-2; sun.shadow.camera.right=2;
+sun.shadow.camera.top=2;  sun.shadow.camera.bottom=-2;
+sun.shadow.camera.far=20; sun.shadow.bias=-0.0003;
+scene.add(sun);
+var dl2=new THREE.DirectionalLight(0xffffff,0.15); dl2.position.set(-3,3,4); scene.add(dl2);
+var dl3=new THREE.DirectionalLight(0xffffff,0.10); dl3.position.set(3,2,4); scene.add(dl3);
 
-  canvas.addEventListener('mousedown', function(e){ drag=true; lastX=e.clientX; lastY=e.clientY; });
-  window.addEventListener('mouseup',   function(){ drag=false; });
-  window.addEventListener('mousemove', function(e){
-    if(!drag||!rootGroup) return;
-    rotY += (e.clientX-lastX)*.007;
-    rotX = Math.max(-.6, Math.min(.6, rotX+(e.clientY-lastY)*.004));
-    rootGroup.rotation.set(rotX,rotY,0);
-    lastX=e.clientX; lastY=e.clientY;
-  });
-  canvas.addEventListener('touchstart', function(e){ drag=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; },{passive:true});
-  canvas.addEventListener('touchend',   function(){ drag=false; });
-  canvas.addEventListener('touchmove',  function(e){
-    if(!drag||!rootGroup) return;
-    rotY += (e.touches[0].clientX-lastX)*.007;
-    rotX = Math.max(-.6,Math.min(.6,rotX+(e.touches[0].clientY-lastY)*.004));
-    rootGroup.rotation.set(rotX,rotY,0);
-    lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
-  },{passive:true});
-  window.addEventListener('resize', function(){
-    var w=wrapper.clientWidth, h=wrapper.clientHeight;
-    camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
-  });
-  (function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
+var solMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x242018,roughness:0.92,metalness:0.05}));
+solMesh.rotation.x=-Math.PI/2; solMesh.receiveShadow=true; scene.add(solMesh);
+var solSh=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.ShadowMaterial({opacity:0.22}));
+solSh.rotation.x=-Math.PI/2; solSh.position.y=0.001; solSh.receiveShadow=true; scene.add(solSh);
+var murMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,5),new THREE.MeshStandardMaterial({color:0x302a22,roughness:0.94}));
+murMesh.position.set(0,2.5,-0.75); murMesh.receiveShadow=true; scene.add(murMesh);
+
+var mirGrp=new THREE.Group();
+mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.76,0.96,0.012),new THREE.MeshStandardMaterial({color:0xb09060,roughness:0.2,metalness:0.7})));
+mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.70,0.90,0.008),new THREE.MeshPhysicalMaterial({color:0xd8d0c8,metalness:0.92,roughness:0.06,clearcoat:1.0})));
+mirGrp.position.set(0,1.65,-0.73); scene.add(mirGrp);
+
+var controls=new THREE.OrbitControls(camera,cvs);
+controls.enableDamping=true; controls.dampingFactor=0.1;
+controls.target.set(0,0.25,0);
+controls.minPolarAngle=Math.PI*.10; controls.maxPolarAngle=Math.PI*.52;
+controls.minDistance=0.4; controls.maxDistance=4.0; controls.update();
+
+var planMesh=null, caissonGrp=null;
+var vasqueGrp=null, vasqueGrp2=null;
+var vasqueRimOffset=0, vasqueRimOffset2=0;
+var activeVasqueDrag=-1; // 0=vasque1, 1=vasque2, -1=aucune
+
+function disposeMesh(m){
+  if(!m) return;
+  if(m.geometry) m.geometry.dispose();
+  if(m.material){ if(Array.isArray(m.material)) m.material.forEach(function(x){x.dispose();}); else m.material.dispose(); }
+}
+function disposeGroup(g){
+  if(!g) return;
+  g.traverse(function(o){if(o.isMesh) disposeMesh(o);});
+  scene.remove(g);
 }
 
-// ═══════════════════════════════════════════════════
-//  CHARGEMENT GLB
-// ═══════════════════════════════════════════════════
-var _pendingLoad = 0;
-var _loader = null;
+// ═══════════════════════════════════════════════════════
+// HELPERS COORDONNÉES INTÉRIEURES DU CAISSON
+// (0,0) = coin bas-gauche intérieur ; unité = cm
+// ═══════════════════════════════════════════════════════
+function caissonCP(){ return S.CairsonP; } // profondeur caisson (m)
+function localToYcm(y_loc){ return (y_loc-EP)*100; }
+function ycmToLocal(y_cm) { return EP+y_cm/100; }
+function localToXcm(x_loc){ return (x_loc+S.CL/2-EP)*100; }
+function xcmToLocal(x_cm) { return -S.CL/2+EP+x_cm/100; }
 
-function getLoader(){
-  if(!_loader) _loader = new THREE.GLTFLoader();
-  return _loader;
+function getCompartment(y_cm, x_cm){
+  var iH_cm=(S.CH-2*EP)*100;
+  var iW_cm=(S.CL-2*EP)*100;
+  var shelves=caissonElements.filter(function(e){
+    if(e.type!=='shelf') return false;
+    var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
+    var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
+    // Si x_cm fourni : tablette valide si elle couvre ce x
+    if(x_cm!==undefined) return sl<=x_cm&&sr>=x_cm;
+    // Sinon : seulement les tablettes pleine largeur
+    return sl<=1&&sr>=iW_cm-1;
+  }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
+  var bot=0,top=iH_cm;
+  shelves.forEach(function(s){ if(s<y_cm&&s>bot) bot=s; if(s>y_cm&&s<top) top=s; });
+  return {bottom_cm:bot,top_cm:top,height_cm:top-bot,centerY:ycmToLocal((top+bot)/2)};
 }
-
-function loadGLB(path){
-  return new Promise(function(resolve, reject){
-    getLoader().load(path, resolve, null, reject);
-  });
+function getBay(x_cm,y_cm){
+  var iW_cm=(S.CL-2*EP)*100;
+  var comp=getCompartment(y_cm,x_cm);
+  var seps=caissonElements.filter(function(e){
+    return e.type==='separator'&&e.y_cm>=comp.bottom_cm&&e.y_cm<=comp.top_cm;
+  }).map(function(e){return e.x_cm;}).sort(function(a,b){return a-b;});
+  var left=0,right=iW_cm;
+  seps.forEach(function(s){ if(s<x_cm&&s>left) left=s; if(s>x_cm&&s<right) right=s; });
+  return {left_cm:left,right_cm:right,width_cm:right-left,centerX:xcmToLocal((right+left)/2)};
 }
-
-// Noms des variantes pour famille 1 (nouveaux GLBs pré-splittés)
-var MEUBLE1_VARIANTS = ['1TIROIR','2TIROIRS','1NICHE-1TIROIR','2NICHES-2TIROIRS'];
-
-function getMeubleGlb(){
-  var f = state.meubleFamily, vc = state.vc, v = state.meubleVariant;
-  // Famille 1 : nouveaux GLBs V1-{vc}-{variant}.glb (pré-splittés, centre vasque immobile)
-  if(f === 1){
-    var varName = MEUBLE1_VARIANTS[(v-1) % MEUBLE1_VARIANTS.length];
-    return 'models/sdb/meuble1/V1-'+vc+'-'+varName+'.glb';
+function mkKey(comp,bay){
+  return Math.round(comp.bottom_cm)+'_'+Math.round(bay.left_cm)+'_'+Math.round(comp.top_cm)+'_'+Math.round(bay.right_cm);
+}
+function getFacadeFor(comp,bay){
+  var k=mkKey(comp,bay);
+  for(var i=0;i<caissonElements.length;i++){
+    if((caissonElements[i].type==='porte'||caissonElements[i].type==='tiroir')&&caissonElements[i].key===k) return caissonElements[i];
   }
-  // meuble2-7 : ancienne convention
-  return 'models/sdb/meuble'+f+'/'+f+'_'+vc+'v_'+v+'l.glb';
+  return null;
 }
 
-function loadScene(){
-  if(!rootGroup){ console.warn('[SDB] initScene pas encore prêt'); return; }
-  var loading = document.getElementById('loadingOverlay');
-  if(loading) loading.classList.remove('hidden');
+// ═══════════════════════════════════════════════════════
+// BUILD CAISSON
+// ═══════════════════════════════════════════════════════
+function buildCaisson(){
+  disposeGroup(caissonGrp);
+  caissonGrp=new THREE.Group();
+  caissonHitPlane=null;
+  caissonElemMeshes=[];
+  if(caissonGhost) caissonGhost=null;
 
-  // Nettoyer la scène
-  while(rootGroup.children.length){ rootGroup.remove(rootGroup.children[0]); }
-  currentMeubleModel = null;
+  var CL=S.CL, CH=S.CH, CP=caissonCP();
+  var ep=EP, iW=CL-2*ep, iH=CH-2*ep;
 
-  var myLoad = ++_pendingLoad;
-
-  // On charge uniquement le GLB meuble (qui contient la vasque intégrée)
-  loadGLB(getMeubleGlb())
-    .catch(function(e){ console.warn('[SDB] GLB non trouvé:', getMeubleGlb(), e); return null; })
-    .then(function(gltf){
-      if(myLoad !== _pendingLoad){ if(loading) loading.classList.add('hidden'); return; }
-      try{
-        if(!gltf || !gltf.scene){ console.warn('[SDB] Scène GLB vide'); if(loading) loading.classList.add('hidden'); return; }
-
-        currentMeubleModel = gltf.scene;
-        tagMeshesMeuble(currentMeubleModel);
-        storeResizeData(currentMeubleModel); // stocke positions originales AVANT normalisation
-
-        var combined = new THREE.Group();
-        combined.add(currentMeubleModel);
-        rootGroup.add(combined);
-        combined.updateMatrixWorld(true);
-
-        var bbox = new THREE.Box3().setFromObject(combined);
-        if(!bbox.isEmpty()){
-          var bsize = bbox.getSize(new THREE.Vector3());
-          var bctr  = bbox.getCenter(new THREE.Vector3());
-          var maxDim = Math.max(bsize.x, bsize.y, bsize.z, 0.001);
-          var scale  = 2.0 / maxDim;
-          combined.scale.setScalar(scale);
-          combined.position.set(-bctr.x*scale, -bctr.y*scale, -bctr.z*scale);
-          state._baseScale = scale;
-          state._center    = { x:bctr.x, y:bctr.y, z:bctr.z };
-          applyAllMaterials();
-          applyDimensions();
-          updateDimsBadge();
-          updateCfgSummary();
-        }
-      } catch(err){
-        console.error('[SDB] Erreur chargement scène:', err);
-      }
-      if(loading) loading.classList.add('hidden');
-    })
-    .catch(function(err){
-      console.error('[SDB] Erreur inattendue:', err);
-      if(loading) loading.classList.add('hidden');
-    });
-}
-
-// ═══════════════════════════════════════════════════
-//  TAGGING
-// ═══════════════════════════════════════════════════
-function isFaucetNode(child){
-  var p = child.parent;
-  while(p){
-    var pn = p.name||'';
-    for(var k=0; k<FAUCET_NAMES.length; k++){
-      if(pn.indexOf(FAUCET_NAMES[k])>=0) return true;
-    }
-    p = p.parent;
-  }
-  return false;
-}
-
-// Tagger le GLB meuble+vasque :
-//   MAT_VASQUE → 'vasque' (visible, recevra la finition vasque)
-//   MAT_VASQUE sur ancêtre robinet → 'robinet' (chrome)
-//   MAT_MEUBLE → 'meuble' (recevra l'essence bois)
-//   Fallback  → 'meuble'
-function tagMeshesMeuble(model){
-  model.traverse(function(child){
-    if(!child.isMesh||!child.material) return;
-    var mats = Array.isArray(child.material)?child.material:[child.material];
-    for(var i=0;i<mats.length;i++){
-      var m=mats[i]; if(!m) continue;
-      var bn=(m.name||'').replace(/\.\d+$/,'');
-      if(bn===MAT_VASQUE){
-        child.userData.kobok = isFaucetNode(child) ? 'robinet' : 'vasque';
-        break;
-      } else if(bn===MAT_MEUBLE){
-        child.userData.kobok='meuble';
-        break;
-      }
-    }
-  });
-  // Fallback : aucun 'meuble' trouvé → tout ce qui est non-taguё = meuble
-  var hasM=false;
-  model.traverse(function(c){ if(c.userData.kobok==='meuble') hasM=true; });
-  if(!hasM){
-    model.traverse(function(child){
-      if(!child.isMesh||!child.material||child.userData.kobok) return;
-      child.userData.kobok='meuble';
-    });
-  }
-  // Cloner tous les matériaux pour éviter les effets de bord
-  model.traverse(function(child){
-    if(!child.userData.kobok) return;
-    cloneMats(child);
-  });
-  // Stocker le scale X original de chaque mesh → sert à contre-corriger la vasque sans bloquer le PDT
-  model.traverse(function(child){
-    if(!child.isMesh) return;
-    child.userData._origMeshScaleX = child.scale.x;
-  });
-  // Chrome sur les robinets
-  model.traverse(function(child){
-    if(child.userData.kobok!=='robinet') return;
-    var mats=Array.isArray(child.material)?child.material:[child.material];
-    mats.forEach(function(m){
-      if(!m) return;
-      m.map=null; m.color.setRGB(CHROME.r,CHROME.g,CHROME.b);
-      if('roughness' in m) m.roughness=CHROME.roughness;
-      if('metalness' in m) m.metalness=CHROME.metalness;
-      m.needsUpdate=true;
-    });
-  });
-}
-
-function cloneMats(child){
-  var mats=Array.isArray(child.material)?child.material:[child.material];
-  for(var i=0;i<mats.length;i++){
-    if(!mats[i]) continue;
-    var c=mats[i].clone(); c.needsUpdate=true;
-    if(Array.isArray(child.material)) child.material[i]=c;
-    else child.material=c;
-  }
-}
-
-// ═══════════════════════════════════════════════════
-//  MATÉRIAUX
-// ═══════════════════════════════════════════════════
-function applyAllMaterials(){
-  applyVasqueMat();
-  applyBois();
-}
-
-function applyVasqueMat(){
-  if(!currentMeubleModel) return;
-  var def=VMAT_DEF.find(function(d){ return d.id===state.vasqueMatId; });
-  if(!def) return;
-  if(def.texture){
-    loadTex(def.texture, function(tex){ if(currentMeubleModel) setTexOnModel(currentMeubleModel,'vasque',tex); });
-  } else if(def.color){
-    setColorOnModel(currentMeubleModel,'vasque',def.color);
-  }
-}
-
-function applyBois(){
-  if(!currentMeubleModel) return;
-  var def=BOIS_DEF.find(function(d){ return d.id===state.boisId; });
-  if(!def) return;
-  if(def.src){
-    loadTex(def.src, function(tex){ if(currentMeubleModel) setTexOnModel(currentMeubleModel,'meuble',tex); });
-  } else if(def.hexColor){
-    setColorOnModel(currentMeubleModel,'meuble',hexToRGB(def.hexColor));
-  }
-}
-
-function hexToRGB(h){
-  return { r:parseInt(h.slice(1,3),16)/255, g:parseInt(h.slice(3,5),16)/255, b:parseInt(h.slice(5,7),16)/255 };
-}
-
-function loadTex(src,cb){
-  if(texCache[src]){ cb(texCache[src]); return; }
-  new THREE.TextureLoader().load(src,function(tex){
-    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
-    try{ tex.colorSpace=THREE.SRGBColorSpace; }catch(e){ tex.encoding=THREE.sRGBEncoding; }
-    texCache[src]=tex; cb(tex);
-  });
-}
-
-function setTexOnModel(model,tag,tex){
-  model.traverse(function(child){
-    if(child.userData.kobok!==tag) return;
-    var mats=Array.isArray(child.material)?child.material:[child.material];
-    mats.forEach(function(m){
-      if(!m) return;
+  var md=MATS_CAIS[S.matCais];
+  var matLaiton=new THREE.MeshStandardMaterial({color:0xc9a45a,roughness:0.28,metalness:0.88});
+  function makePanelMat(darken,w,h){
+    var tex=_caisTexCache[S.matCais];
+    if(tex){
       var t=tex.clone(); t.needsUpdate=true;
-      t.wrapS=t.wrapT=THREE.RepeatWrapping;
-      try{ t.colorSpace=THREE.SRGBColorSpace; }catch(e){ t.encoding=THREE.sRGBEncoding; }
-      t.minFilter=THREE.LinearMipmapLinearFilter;
-      t.magFilter=THREE.LinearFilter;
-      t.generateMipmaps=true;
-      if(renderer&&renderer.capabilities) t.anisotropy=renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():16;
-      var uvAttr=child.geometry?child.geometry.attributes.uv:null;
-      if(uvAttr){
-        var arr=uvAttr.array, uMn=Infinity,uMx=-Infinity,vMn=Infinity,vMx=-Infinity;
-        for(var k=0;k<arr.length;k+=2){
-          if(arr[k]<uMn)uMn=arr[k]; if(arr[k]>uMx)uMx=arr[k];
-          if(arr[k+1]<vMn)vMn=arr[k+1]; if(arr[k+1]>vMx)vMx=arr[k+1];
-        }
-        var uR=uMx-uMn||1, vR=vMx-vMn||1;
-        if(tag==='meuble'){
-          if(uR>5||vR>5){ t.repeat.set(1,1); t.offset.set(0,0); }
-          else { var eu=Math.max(uR,.5),ev=Math.max(vR,.5); t.repeat.set(1/eu,1/ev); t.offset.set(-uMn/eu,-vMn/ev); }
-        } else {
-          var eu2=Math.max(uR,.5),ev2=Math.max(vR,.5); t.repeat.set(2/eu2,2/ev2); t.offset.set(-uMn*(2/eu2),-vMn*(2/ev2));
-        }
-      }
-      m.map=t; m.color.setRGB(1,1,1);
-      if('roughness' in m) m.roughness=0.4;
-      if('metalness' in m) m.metalness=0.05;
-      m.needsUpdate=true;
-    });
-  });
-}
-
-function setColorOnModel(model,tag,color){
-  model.traverse(function(child){
-    if(child.userData.kobok!==tag) return;
-    var mats=Array.isArray(child.material)?child.material:[child.material];
-    mats.forEach(function(m){
-      if(!m) return;
-      m.map=null; m.color.setRGB(color.r,color.g,color.b);
-      if('roughness' in m) m.roughness=0.4;
-      if('metalness' in m) m.metalness=0.05;
-      m.needsUpdate=true;
-    });
-  });
-}
-
-// ═══════════════════════════════════════════════════
-//  DIMENSIONS — resize 3-part (vertex ou translation)
-// ═══════════════════════════════════════════════════
-// Largeur de référence du GLB (au chargement, r=1)
-function refLargeur(){ return state.vc===2 ? 140 : 80; }
-
-// ── Classification hybride des nœuds (nouvelle architecture) ──
-// Chaque nœud top-level reçoit un rôle :
-//   LEFT   : centre < 30% de W0, largeur < 45% → translation -dW/2
-//   RIGHT  : centre > 70% de W0, largeur < 45% → translation +dW/2
-//   CENTER : entre 30% et 70%, aucune pleine-largeur → IMMOBILE (vasque, robinets, fixings)
-//   FULL   : largeur > 85% de W0 → vertex stretch 3-part uniforme (dos, fond, plafond)
-// Cette classification gère à la fois les GLBs purs (v1.glb) et les hybrides (V1-x-*.glb).
-function classifyHybridNodes(model, xmin, xmax, W0){
-  // Descendre dans la hiérarchie jusqu'au nœud structural (plusieurs enfants)
-  var rootNode=model;
-  for(var safety=0; safety<10; safety++){
-    if(rootNode.children.length!==1) break;
-    rootNode=rootNode.children[0];
+      t.repeat.set(Math.max(w,0.01)/0.40, Math.max(h,0.01)/0.40);
+      return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});
+    }
+    var base=new THREE.Color(md.color||'#D4A96A');
+    return new THREE.MeshStandardMaterial({color:base.multiplyScalar(darken),roughness:md.r,metalness:0.02});
   }
 
-  var hasLR=false; // a-t-on trouvé au moins un nœud LEFT et un RIGHT ?
-  var foundLeft=false, foundRight=false;
+  // Essences bois → intérieur blanc, laques/peintures → tout de la même couleur
+  var isWood=(S.matCais<=3);
+  var matWhite=new THREE.MeshStandardMaterial({color:0xF2EDE8,roughness:0.90,metalness:0.0});
 
-  rootNode.children.forEach(function(child){
-    var cxmin=Infinity, cxmax=-Infinity;
-    child.traverse(function(c){
-      if(!c.isMesh||!c.geometry) return;
-      c.geometry.computeBoundingBox();
-      var bb=c.geometry.boundingBox;
-      if(bb.min.x<cxmin) cxmin=bb.min.x;
-      if(bb.max.x>cxmax) cxmax=bb.max.x;
-    });
-    if(!isFinite(cxmin)) return;
+  var matCais  =makePanelMat(1.00, EP, 0.5);
+  var matFacade=makePanelMat(0.80, 0.3, 0.4);
+  var matFond  =isWood ? matWhite : makePanelMat(0.68, 0.5, 0.4);
+  var matElem  =isWood ? matWhite : makePanelMat(0.88, 0.3, 0.3);
 
-    var cW=cxmax-cxmin;
-    var cCenterRatio=((cxmin+cxmax)/2-xmin)/W0;
+  function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
+  // Boîte avec matériaux différents par face pour l'effet bois/blanc
+  // BoxGeometry faces : [+x, -x, +y, -y, +z, -z]
+  function boxBimat(w,h,d,intFaceIdx){
+    var mats=[matCais,matCais,matCais,matCais,matCais,matCais];
+    if(isWood){ mats[intFaceIdx]=matWhite; mats[4]=matWhite; } // face int + face avant
+    var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats);
+    m.castShadow=true; m.receiveShadow=true; return m;
+  }
 
-    if(cW>W0*0.85){
-      // FULL_WIDTH : structure/fond/plafond → vertex stretch uniforme
-      child.userData._nodeType='full';
-      child.traverse(function(c){
-        if(!c.isMesh||!c.geometry||!c.geometry.attributes.position) return;
-        c.userData._isResizeMesh=true;
-        c.userData._origPositions=new Float32Array(c.geometry.attributes.position.array);
-      });
-    } else if(cCenterRatio<0.30 && cW<W0*0.45){
-      // LEFT : panneau / tiroir / hardware gauche
-      child.userData._nodeType='left';
-      child.userData._isPreSplitLeft=true;
-      child.userData._origPositionX=child.position.x;
-      foundLeft=true;
-    } else if(cCenterRatio>0.70 && cW<W0*0.45){
-      // RIGHT : panneau / tiroir / hardware droit
-      child.userData._nodeType='right';
-      child.userData._isPreSplitRight=true;
-      child.userData._origPositionX=child.position.x;
-      foundRight=true;
-    } else {
-      // CENTER : vasque, robinets, savon, éléments centraux → IMMOBILE
-      child.userData._nodeType='center';
+  // Structure — joue gauche : face int = +x (idx 0), joue droite : face int = -x (idx 1)
+  // tablette haute : face int = -y (idx 3), tablette basse : face int = +y (idx 2)
+  var cg=boxBimat(ep,CH,CP,0); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
+  var cd=boxBimat(ep,CH,CP,1); cd.position.set( CL/2-ep/2,CH/2,0); caissonGrp.add(cd);
+  var dt=boxBimat(iW,ep,CP,3); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
+  var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db);
+  var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
+
+  // Tablettes et séparateurs
+  caissonElements.forEach(function(el,idx){
+    if(el.type==='shelf'){
+      var iW_cm2=(S.CL-2*EP)*100;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
+      var sw=(sr-sl)/100;
+      var scx=xcmToLocal((sl+sr)/2);
+      var m=box(sw,ep,CP-ep,matElem);
+      m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
+      m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
+    } else if(el.type==='separator'){
+      var comp=getCompartment(el.y_cm,el.x_cm);
+      var h=comp.height_cm/100; if(h<0.01) return;
+      var m=box(ep,h,CP-ep,matElem);
+      m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
+      m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
     }
   });
 
-  hasLR=foundLeft&&foundRight;
-  return hasLR;
+  // Façades par compartiment
+  var fz=CP/2+0.001; // collé au meuble (1mm)
+  caissonElements.forEach(function(el,idx){
+    if(el.type!=='porte'&&el.type!=='tiroir') return;
+    var parts=el.key.split('_').map(Number);
+    var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
+    var w=(right-left)/100, h=(top-bot)/100;
+    var cx=xcmToLocal((left+right)/2);
+    var jeu=0.003;
+    if(el.type==='porte'){
+      var cy=ycmToLocal((bot+top)/2);
+      var pm=box(w-jeu,h-jeu,0.020,matFacade); pm.position.set(cx,cy,fz);
+      pm.userData.elemIdx=idx; caissonElemMeshes.push(pm); caissonGrp.add(pm);
+      // Poignée verticale côté droit
+      var pgV=new THREE.CylinderGeometry(0.006,0.006,h*0.35,12);
+      var pv=new THREE.Mesh(pgV,matLaiton);
+      pv.position.set(cx+(w/2-0.028),cy,fz+0.021); caissonGrp.add(pv);
+    } else { // tiroir — couvre toutes les faces blanches de sa zone
+      var isOpen=!!caissonOpenState[el.key];
+      var tirZ=isOpen ? fz+CP*0.55 : fz;
+      var iW_cm=iW*100, iH_cm=iH*100;
+      var jeu=0.003;
+      // Limites X : joue si bord du caisson, sinon face ext du séparateur
+      var tirXleft  = (left<0.5)       ? -CL/2 : xcmToLocal(left)  - EP/2;
+      var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+      // Limites Y : panneau struct si bord du caisson, sinon face ext de la tablette
+      var tirYbot = (bot<0.5)          ?  0  : ycmToLocal(bot) - EP/2;
+      var tirYtop = (top>iH_cm-0.5)    ?  CH : ycmToLocal(top) + EP/2;
+      var tirW = tirXright - tirXleft - jeu;
+      var tirH = tirYtop - tirYbot - jeu;
+      var tirCx = (tirXleft + tirXright) / 2;
+      var tirCy = (tirYbot  + tirYtop)  / 2;
+      var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
+      tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+      caissonElemMeshes.push(tm); caissonGrp.add(tm);
+    }
+  });
+
+  // Plan de frappe invisible
+  var hpGeo=new THREE.PlaneGeometry(iW,iH);
+  caissonHitPlane=new THREE.Mesh(hpGeo,new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide}));
+  caissonHitPlane.position.set(0,EP+iH/2,CP/2-0.002);
+  caissonGrp.add(caissonHitPlane);
+
+  caissonGrp.position.set(S.caissonOffset,0,caissCZ());
+  scene.add(caissonGrp);
+  updateAmgtCount();
 }
 
-// Appelé après tagMeshesMeuble, AVANT la normalisation du combined group.
-// Identifie la stratégie de resize et stocke les données nécessaires.
-function storeResizeData(model){
-  model.updateMatrixWorld(true);
+// ═══════════════════════════════════════════════════════
+// BUILD PLAN DE TRAVAIL
+// ═══════════════════════════════════════════════════════
+var WALL_Z = -0.75;
+function planTopY(){ return S.CH+0.04+S.Ep; }
+function planCZ()  { return WALL_Z + S.P/2; }
+function caissCZ() { return WALL_Z + caissonCP()/2; }
 
-  // Bornes X globales du modèle en local space
-  var xmin=Infinity, xmax=-Infinity;
-  model.traverse(function(child){
-    if(!child.isMesh||!child.geometry) return;
-    child.geometry.computeBoundingBox();
-    var bb=child.geometry.boundingBox;
-    if(bb.min.x<xmin) xmin=bb.min.x;
-    if(bb.max.x>xmax) xmax=bb.max.x;
+function buildPlan(){
+  if(planMesh){disposeMesh(planMesh);scene.remove(planMesh);planMesh=null;}
+  var L=S.L, P=S.P, Ep=S.Ep, topY=planTopY();
+  var vx=clampVasque(S.vx,'x'), vz=clampVasque(S.vz,'z');
+  // vz est en world space ; la shape est en local (avant planMesh.position.z=planCZ())
+  var lz=vz-planCZ();
+
+  var shape=new THREE.Shape();
+  shape.moveTo(-L/2,-P/2); shape.lineTo(L/2,-P/2); shape.lineTo(L/2,P/2); shape.lineTo(-L/2,P/2); shape.closePath();
+
+  function addVasqueHole(hx, hz){
+    var rx=S.vasqueRx, rz=S.vasqueRz, cr=Math.min(rx,rz)*0.12;
+    var lhz=hz-planCZ();
+    var hole=new THREE.Path();
+    hole.moveTo(hx-rx+cr,lhz-rz); hole.lineTo(hx+rx-cr,lhz-rz); hole.quadraticCurveTo(hx+rx,lhz-rz,hx+rx,lhz-rz+cr);
+    hole.lineTo(hx+rx,lhz+rz-cr); hole.quadraticCurveTo(hx+rx,lhz+rz,hx+rx-cr,lhz+rz);
+    hole.lineTo(hx-rx+cr,lhz+rz); hole.quadraticCurveTo(hx-rx,lhz+rz,hx-rx,lhz+rz-cr);
+    hole.lineTo(hx-rx,lhz-rz+cr); hole.quadraticCurveTo(hx-rx,lhz-rz,hx-rx+cr,lhz-rz); hole.closePath();
+    shape.holes.push(hole);
+  }
+  if(vasqueEncastree && S.vasqueRx>0 && S.vasqueRz>0){
+    addVasqueHole(vx, clampVasque(S.vz,'z'));
+    if(S.nbVasques===2) addVasqueHole(clampVasque(S.vx2,'x'), clampVasque(S.vz2,'z'));
+  }
+
+  var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
+  geo.rotateX(Math.PI/2); geo.translate(0,S.CH+0.04,0);
+  var md=MATS_PLAN[S.matPlan];
+  var planMat;
+  if(_planTexCache[S.matPlan]){
+    var t=_planTexCache[S.matPlan].clone(); t.needsUpdate=true;
+    t.repeat.set(Math.max(S.L,0.01)/0.40, Math.max(S.P,0.01)/0.40);
+    planMat=new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.04});
+  } else {
+    planMat=new THREE.MeshStandardMaterial({color:new THREE.Color(md.color||'#C2AB8E'),roughness:md.r,metalness:0.04});
+  }
+  planMesh=new THREE.Mesh(geo,planMat);
+  planMesh.castShadow=true; planMesh.receiveShadow=true;
+  planMesh.position.set(S.caissonOffset,0,planCZ()); planMesh.visible=(S.step>=2); scene.add(planMesh);
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILD VASQUE
+// ═══════════════════════════════════════════════════════
+var _vasqueYOffset=0.10; // à poser=0.10, encastrée=0.06
+var vasqueEncastree=false;
+var MATS_VASQUE=[
+  // Dekton
+  {n:'Evok',          src:'textures/dekton/evok.png',       r:.18, brand:'Dekton'},
+  {n:'Kedar',         src:'textures/dekton/kedar.png',      r:.20, brand:'Dekton'},
+  {n:'Keena',         src:'textures/dekton/keena.png',      r:.15, brand:'Dekton'},
+  {n:'Thala',         src:'textures/dekton/thala.png',      r:.16, brand:'Dekton'},
+  {n:'Zira',          src:'textures/dekton/zira.png',       r:.18, brand:'Dekton'},
+  // Silestone
+  {n:'Arden Blue',    src:'textures/silestone/ardenblue.png',        r:.20, brand:'Silestone'},
+  {n:'Blanc Elysée',  src:'textures/silestone/blancelysee.png',      r:.14, brand:'Silestone'},
+  {n:'Calacatta Gold',src:'textures/silestone/calacattagold.png',    r:.16, brand:'Silestone'},
+  {n:'Chateau Brown', src:'textures/silestone/chateaubrown.png',     r:.22, brand:'Silestone'},
+  {n:'El Marquina',   src:'textures/silestone/elmarquina.png',       r:.18, brand:'Silestone'},
+  {n:'Jardin Emerald',src:'textures/silestone/jardinemerald.png',    r:.20, brand:'Silestone'},
+  {n:'Linen Cream',   src:'textures/silestone/linencream.png',       r:.18, brand:'Silestone'},
+  {n:'Miami White',   src:'textures/silestone/miamiwhite.png',       r:.12, brand:'Silestone'},
+  {n:'White Arabesque',src:'textures/silestone/whitearabesque.png',  r:.14, brand:'Silestone'},
+];
+var S_matVasque=6; // Blanc Elysée par défaut
+var _vasqueTexCache={};
+var _vasqueModels=[
+  {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.05},
+  {id:'v2',label:'V2',file:'models/vasque-v2.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v3',label:'V3',file:'models/vasque-v3.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v4',label:'V4',file:'models/vasque-v4.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v5',label:'V5',file:'models/vasque-v5.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v6',label:'V6',file:'models/vasque-v6.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v7',label:'V7',file:'models/vasque-v7.glb', oPoser:0.09, oEncastree:0.05},
+];
+var _vasqueSelected='v1';
+var _vasqueCache={};  // {id: gltf}
+var _vasqueLoading=false;
+
+function buildVasque(){
+  if(_vasqueLoading) return;
+  var id=_vasqueSelected;
+  if(_vasqueCache[id]){ _applyVasqueGltf(_vasqueCache[id]); return; }
+  _vasqueLoading=true;
+  var model=_vasqueModels.find(function(m){return m.id===id;});
+  var loader=new THREE.GLTFLoader();
+  loader.load(model.file,function(gltf){
+    _vasqueLoading=false; _vasqueCache[id]=gltf; _applyVasqueGltf(gltf);
+  },undefined,function(err){
+    _vasqueLoading=false; console.error('GLB vasque error',err);
   });
-  if(!isFinite(xmin)) return;
-  var W0=xmax-xmin;
-  var cap=W0*0.030;
-  var thr=W0*0.05;
+}
 
-  model.userData._resizeBounds={xmin:xmin, xmax:xmax, W0:W0, cap:cap, isPreSplit:false,
-                                 vGroups:[], simple3Part:true};
+function selectVasque(id){
+  _vasqueSelected=id;
+  document.querySelectorAll('.vasque-btn').forEach(function(b){
+    b.classList.toggle('on', b.dataset.id===id);
+  });
+  _applyOffsetForCurrent();
+  buildVasque();
+}
 
-  // ── Essayer la classification hybride en premier ──
-  // Fonctionne pour v1.glb (pur 3-panneaux) et les nouveaux V1-x-*.glb (hybride)
-  var ok=classifyHybridNodes(model, xmin, xmax, W0);
-  if(ok){
-    model.userData._resizeBounds.isPreSplit=true;
-    // vGroups vide + simple3Part=true : les FULL_WIDTH s'étirent uniformément (cap|stretch|cap)
-    console.log('[SDB] Mode hybride : translation L/R + vertex stretch FULL_WIDTH');
+function _buildOneVasqueGrp(gltf){
+  var grp=new THREE.Group();
+  var model=gltf.scene.clone(true);
+  var box0=new THREE.Box3().setFromObject(model);
+  var sz0=new THREE.Vector3(); box0.getSize(sz0);
+  var sx=S.vasqueW/sz0.x, sz=S.vasqueD/sz0.z;
+  var sy=Math.min(sx,sz);
+  model.scale.set(sx,sy,sz);
+  var box1=new THREE.Box3().setFromObject(model);
+  var sz1=new THREE.Vector3(); box1.getSize(sz1);
+  var ctr=new THREE.Vector3(); box1.getCenter(ctr);
+  model.position.set(-ctr.x,-box1.min.y,-ctr.z);
+  model.traverse(function(o){
+    if(!o.isMesh) return;
+    o.castShadow=true; o.receiveShadow=true;
+    o.userData.origMat=o.material.clone();
+  });
+  grp.add(model);
+  return {grp:grp, rimOffset:sz1.y-_vasqueYOffset, rx:sz1.x/2, rz:sz1.z/2};
+}
+
+function _applyVasqueGltf(gltf){
+  disposeGroup(vasqueGrp); vasqueGrp=null;
+  disposeGroup(vasqueGrp2); vasqueGrp2=null;
+
+  var r1=_buildOneVasqueGrp(gltf);
+  vasqueGrp=r1.grp; vasqueRimOffset=r1.rimOffset;
+  S.vasqueRx=r1.rx; S.vasqueRz=r1.rz;
+  scene.add(vasqueGrp);
+  vasqueGrp.visible=(S.step===3);
+  S.vx=clampVasque(S.vx,'x');
+  S.vz=clampVasque(WALL_Z+S.vasqueRz,'z');
+
+  if(S.nbVasques===2){
+    var r2=_buildOneVasqueGrp(gltf);
+    vasqueGrp2=r2.grp; vasqueRimOffset2=r2.rimOffset;
+    scene.add(vasqueGrp2);
+    vasqueGrp2.visible=(S.step===3);
+    // Positionner à droite si vx1 est à gauche, sinon symétrique
+    S.vx2=clampVasque(S.L/4,'x');
+    S.vx=clampVasque(-S.L/4,'x');
+    S.vz2=S.vz;
+  }
+
+  positionVasque(); buildPlan(); updatePosInfo();
+  applyVasqueMat();
+}
+
+function clampVasque(val,axis){
+  if(axis==='x'){
+    var halfV=S.vasqueRx, h=S.L/2;
+    var mn=-h+halfV+0.005, mx=h-halfV-0.005;
+    if(mn>mx) return 0;
+    return Math.max(mn,Math.min(mx,val));
+  } else {
+    var halfV=S.vasqueRz, pz=planCZ();
+    var mn=pz-S.P/2+halfV, mx=pz+S.P/2-halfV-0.04;
+    if(mn>mx) return pz;
+    return Math.max(mn,Math.min(mx,val));
+  }
+}
+function positionVasque(){
+  if(vasqueGrp){
+    var vx=clampVasque(S.vx,'x'),vz=clampVasque(S.vz,'z');
+    vasqueGrp.position.set(vx,planTopY()-vasqueRimOffset,vz);
+    S.vx=vx; S.vz=vz;
+  }
+  if(vasqueGrp2){
+    var vx2=clampVasque(S.vx2,'x'),vz2=clampVasque(S.vz2,'z');
+    vasqueGrp2.position.set(vx2,planTopY()-vasqueRimOffset2,vz2);
+    S.vx2=vx2; S.vz2=vz2;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// INTERACTIVITÉ CAISSON
+// ═══════════════════════════════════════════════════════
+var MIN_GAP_H=3, MIN_GAP_V=3;
+
+function setCaissonType(t){
+  caissonType=t;
+  ['ct-shelf','ct-sep','ct-door','ct-draw'].forEach(function(id,i){
+    var k=['shelf','separator','porte','tiroir'][i];
+    var el=document.getElementById(id); if(el) el.classList.toggle('active',k===t);
+  });
+  clearCaissonGhost();
+}
+
+function toggleCaissonEdit(){
+  caissonEditMode=!caissonEditMode;
+  var btn=document.getElementById('btn-edit-cais');
+  if(btn) btn.classList.toggle('active',caissonEditMode);
+  wrap.classList.toggle('mode-edit',caissonEditMode);
+  controls.enabled=!caissonEditMode;
+  cvs.style.cursor=caissonEditMode?'crosshair':'';
+  if(!caissonEditMode) clearCaissonGhost();
+}
+
+function clearCaissonGhost(){
+  if(caissonGhost){
+    if(caissonGhost.parent) caissonGhost.parent.remove(caissonGhost);
+    if(caissonGhost.geometry) caissonGhost.geometry.dispose();
+    if(caissonGhost.material) caissonGhost.material.dispose();
+    caissonGhost=null;
+  }
+}
+
+function getCaissonHit(e){
+  if(!caissonHitPlane||!caissonGrp) return null;
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  var hits=raycaster.intersectObject(caissonHitPlane,false);
+  if(!hits.length) return null;
+  var ptGrp=caissonGrp.worldToLocal(hits[0].point.clone());
+  var iW_cm=(S.CL-2*EP)*100, iH_cm=(S.CH-2*EP)*100;
+  var x_cm=Math.round(localToXcm(ptGrp.x));
+  var y_cm=Math.round(localToYcm(ptGrp.y));
+  return {x_cm:Math.min(Math.max(x_cm,0),iW_cm), y_cm:Math.min(Math.max(y_cm,0),iH_cm)};
+}
+
+function updateCaissonGhost(e){
+  if(!caissonEditMode||S.step!==1) return;
+  var hit=getCaissonHit(e);
+  if(!hit){clearCaissonGhost();return;}
+  var CP=caissonCP(), ep=EP;
+  var iW=S.CL-2*ep;
+  var gW,gH,gX,gY,occupied=false;
+
+  if(caissonType==='shelf'){
+    var bay0=getBay(hit.x_cm,hit.y_cm);
+    var bW0=(bay0.right_cm-bay0.left_cm)/100;
+    var bCx0=xcmToLocal((bay0.left_cm+bay0.right_cm)/2);
+    occupied=caissonElements.some(function(el){
+      if(el.type!=='shelf') return false;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
+      return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay0.right_cm&&sr>bay0.left_cm;
+    });
+    gW=bW0; gH=ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
+  } else if(caissonType==='separator'){
+    var comp=getCompartment(hit.y_cm,hit.x_cm);
+    if(comp.height_cm<1){clearCaissonGhost();return;}
+    occupied=caissonElements.some(function(el){
+      if(el.type!=='separator') return false;
+      var ec=getCompartment(el.y_cm,el.x_cm);
+      return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+    });
+    gW=ep; gH=comp.height_cm/100; gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
+  } else {
+    // porte ou tiroir → montre la face avant du compartiment
+    var comp2=getCompartment(hit.y_cm,hit.x_cm);
+    var bay2=getBay(hit.x_cm,hit.y_cm);
+    if(comp2.height_cm<1||bay2.width_cm<1){clearCaissonGhost();return;}
+    occupied=!!getFacadeFor(comp2,bay2);
+    var w2=bay2.width_cm/100, h2=comp2.height_cm/100;
+    gW=w2-0.003; gH=h2-0.003;
+    gX=bay2.centerX; gY=comp2.centerY;
+    // pour le ghost de façade on le place devant, pas dans le plan de frappe
+    if(!caissonGhost){
+      var gMat=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
+      caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat);
+      caissonGhost.renderOrder=1;
+      caissonGrp.add(caissonGhost);
+    }
+    caissonGhost.scale.set(gW,gH,0.020);
+    caissonGhost.position.set(gX,gY,CP/2+0.001);
+    caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
+    caissonGhost.material.opacity=occupied?0.25:0.45;
+    caissonGhost.visible=true;
     return;
   }
 
-  // ── Fallback : mode vertex pur (anciens GLBs meuble2-7) ──
-  console.log('[SDB] Mode vertex pur (fallback)');
-  var vGroups=[];
-  model.traverse(function(child){
-    if(!child.isMesh) return;
-    var k=child.userData.kobok;
-    if(k!=='vasque'&&k!=='robinet') return;
-    child.geometry.computeBoundingBox();
-    var bb=child.geometry.boundingBox;
-    var meshW=bb.max.x-bb.min.x;
-    if(meshW>W0*0.50) return; // exclure meshes pleine-largeur
-    var cx=(bb.min.x+bb.max.x)/2;
-    var found=false;
-    for(var g=0;g<vGroups.length;g++){
-      if(Math.abs(cx-vGroups[g].cx)<W0*0.25){
-        vGroups[g].xmin=Math.min(vGroups[g].xmin,bb.min.x);
-        vGroups[g].xmax=Math.max(vGroups[g].xmax,bb.max.x);
-        vGroups[g].cx=(vGroups[g].xmin+vGroups[g].xmax)/2;
-        found=true; break;
-      }
-    }
-    if(!found) vGroups.push({xmin:bb.min.x,xmax:bb.max.x,cx:cx});
-  });
-  vGroups.sort(function(a,b){ return a.xmin-b.xmin; });
-  var margin=W0*0.05;
-  vGroups.forEach(function(g){ g.xmin-=margin; g.xmax+=margin; });
-
-  var usableW=Math.max(W0-2*cap, 0.001);
-  var vasqueCoverage=vGroups.reduce(function(s,g){ return s+(g.xmax-g.xmin); },0);
-  var simple3Part=(vasqueCoverage/usableW)>0.50;
-
-  model.userData._resizeBounds.vGroups=vGroups;
-  model.userData._resizeBounds.simple3Part=simple3Part;
-
-  var sigW=W0*0.30;
-  model.traverse(function(child){
-    if(!child.isMesh||!child.geometry) return;
-    var geom=child.geometry;
-    var posAttr=geom.attributes.position;
-    if(!posAttr) return;
-    child.geometry.computeBoundingBox();
-    var bb=child.geometry.boundingBox;
-    var meshW=bb.max.x-bb.min.x;
-    var isFullWidth=(bb.min.x<xmin+thr && bb.max.x>xmax-thr);
-    var isWideStructural=simple3Part&&(child.userData.kobok==='meuble'||child.userData.kobok==='vasque')&&meshW>sigW;
-    if(isFullWidth||isWideStructural){
-      child.userData._isResizeMesh=true;
-      child.userData._origPositions=new Float32Array(posAttr.array);
-    } else if(!simple3Part&&(child.userData.kobok==='vasque'||child.userData.kobok==='robinet')){
-      child.userData._isVasqueMesh=true;
-      child.userData._origPositions=new Float32Array(posAttr.array);
-      child.userData._origCenterX=(bb.min.x+bb.max.x)/2;
-    }
-  });
+  if(!caissonGhost){
+    var gMat2=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
+    caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat2);
+    caissonGhost.renderOrder=1; caissonGrp.add(caissonGhost);
+  }
+  caissonGhost.scale.set(gW,gH,CP-ep);
+  caissonGhost.position.set(gX,gY,-ep/2);
+  caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
+  caissonGhost.material.opacity=occupied?0.25:0.45;
+  caissonGhost.visible=true;
 }
 
-// Applique le 3-part scaling en X à toutes les pièces pleine-largeur.
-// Panneaux latéraux : translation pure (pas de déformation).
-// Milieu (dos, fond, plateau) : interpolation linéaire entre les nouvelles bornes.
-// Vasque / robinets : translation rigide — le centre suit le même calcul 3-part,
-//                     la forme n'est pas déformée.
-function applyVertexResize(model, r){
-  var p=model.userData._resizeBounds;
-  if(!p) return;
-  var xmin=p.xmin, xmax=p.xmax, W0=p.W0, cap=p.cap;
-  var W1=W0*r;
-  var dW=W1-W0;
-  var leftEdge =xmin+cap;
-  var rightEdge=xmax-cap;
-  var newLeft  =xmin-dW/2+cap;
-  var newRight =xmax+dW/2-cap;
-  var midSpan    =rightEdge-leftEdge;
-  var newMidSpan =newRight-newLeft;
+function placeOrRemoveCaisson(e){
+  if(!caissonEditMode||S.step!==1) return false;
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
 
-  // Fonction de transformation X :
-  //   Mode simple3Part (2v) : 3-part classique cap|milieu|cap
-  //   Mode 5-part    (1v) : zones vasques FIGÉES (priorité absolue), overhangs s'étendent
-  function tx(ox){
-    // ① PRIORITÉ ABSOLUE : zones vasque+robinet → toujours fixes, quelles que
-    //    soient les bornes cap (évite le cas où le cap chevauche la zone vasque)
-    if(!p.simple3Part){
-      var groups=p.vGroups;
-      if(groups&&groups.length){
-        for(var k=0;k<groups.length;k++){
-          if(ox>=groups[k].xmin&&ox<=groups[k].xmax) return ox;
-        }
-      }
-    }
-
-    // ② Caps gauche / droit
-    if(ox<=leftEdge) return ox-dW/2;
-    if(ox>=rightEdge) return ox+dW/2;
-
-    // ③ Mode 3-part simple (2v) : milieu s'étire uniformément
-    if(p.simple3Part){
-      return newLeft+(ox-leftEdge)/midSpan*newMidSpan;
-    }
-
-    // ④ Mode 5-part (1v) : overhangs et zones intermédiaires
-    var grps=p.vGroups;
-    if(grps&&grps.length){
-      // Overhang gauche (avant le premier groupe)
-      if(ox<grps[0].xmin){
-        var zW=grps[0].xmin-leftEdge;
-        if(zW<=0) return ox-dW/2;
-        var t=(ox-leftEdge)/zW;
-        return (leftEdge-dW/2)+t*(grps[0].xmin-(leftEdge-dW/2));
-      }
-      // Overhang droit (après le dernier groupe)
-      var last=grps[grps.length-1];
-      if(ox>last.xmax){
-        var zW2=rightEdge-last.xmax;
-        if(zW2<=0) return ox+dW/2;
-        var t2=(ox-last.xmax)/zW2;
-        return last.xmax+t2*((rightEdge+dW/2)-last.xmax);
-      }
-      // Zone intermédiaire entre groupes : fixe
-      return ox;
-    }
-
-    // Fallback 3-part
-    return newLeft+(ox-leftEdge)/midSpan*newMidSpan;
+  // Clic sur élément existant → supprime
+  var eh=raycaster.intersectObjects(caissonElemMeshes,false);
+  if(eh.length){
+    var idx=eh[0].object.userData.elemIdx;
+    if(idx!==undefined){ caissonElements.splice(idx,1); clearCaissonGhost(); buildCaisson(); return true; }
   }
 
-  model.traverse(function(child){
-    if(!child.isMesh) return;
-    var orig=child.userData._origPositions;
-    if(!orig) return;
-    var arr=child.geometry.attributes.position.array;
+  var hit=getCaissonHit(e);
+  if(!hit) return false;
 
-    if(child.userData._isResizeMesh){
-      // Pièces pleine-largeur : chaque vertex transformé individuellement
-      for(var i=0;i<arr.length;i+=3) arr[i]=tx(orig[i]);
-    } else if(child.userData._isVasqueMesh){
-      // Vasque / robinets : translation rigide — on déplace le centre, pas les vertices un par un
-      var origCx=child.userData._origCenterX;
-      var newCx =tx(origCx);
-      var delta =newCx-origCx;
-      for(var j=0;j<arr.length;j+=3) arr[j]=orig[j]+delta;
-    } else {
-      return;
+  if(caissonType==='shelf'){
+    var bay1=getBay(hit.x_cm,hit.y_cm);
+    if(caissonElements.some(function(el){
+      if(el.type!=='shelf') return false;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
+      return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay1.right_cm&&sr>bay1.left_cm;
+    })) return true;
+    caissonElements.push({type:'shelf',y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
+  } else if(caissonType==='separator'){
+    var comp=getCompartment(hit.y_cm,hit.x_cm);
+    if(comp.height_cm<1) return true;
+    if(caissonElements.some(function(el){
+      if(el.type!=='separator') return false;
+      var ec=getCompartment(el.y_cm,el.x_cm);
+      return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+    })) return true;
+    caissonElements.push({type:'separator',x_cm:hit.x_cm,y_cm:(comp.bottom_cm+comp.top_cm)/2});
+  } else {
+    // porte / tiroir
+    var comp3=getCompartment(hit.y_cm,hit.x_cm);
+    var bay3=getBay(hit.x_cm,hit.y_cm);
+    if(comp3.height_cm<1||bay3.width_cm<1) return true;
+    var k=mkKey(comp3,bay3);
+    var existing=caissonElements.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&el.key===k; });
+    if(existing>=0){ caissonElements.splice(existing,1); }
+    else { caissonElements.push({type:caissonType,key:k}); }
+  }
+  clearCaissonGhost(); buildCaisson(); return true;
+}
+
+function resetCaissonElements(){
+  caissonElements=[]; caissonOpenState={}; clearCaissonGhost(); buildCaisson();
+}
+function updateAmgtCount(){
+  var el=document.getElementById('amgt-count'); if(!el) return;
+  var nb=caissonElements.length;
+  if(!nb){el.textContent='Structure vide';return;}
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var parts=[];
+  if(counts.shelf)     parts.push(counts.shelf+' tablette'+(counts.shelf>1?'s':''));
+  if(counts.separator) parts.push(counts.separator+' séparateur'+(counts.separator>1?'s':''));
+  if(counts.porte)     parts.push(counts.porte+' porte'+(counts.porte>1?'s':''));
+  if(counts.tiroir)    parts.push(counts.tiroir+' tiroir'+(counts.tiroir>1?'s':''));
+  el.innerHTML='<strong>'+nb+'</strong> — '+parts.join(', ');
+}
+
+// ═══════════════════════════════════════════════════════
+// DRAG VASQUE
+// ═══════════════════════════════════════════════════════
+var isDragging=false,dragOffset=new THREE.Vector3();
+var raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
+var dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0),dragPt=new THREE.Vector3();
+
+function toNDC(e){
+  var r=cvs.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1;
+  mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+}
+
+function _startVasqueDrag(nx, nz){
+  dragPlane.constant=-planTopY();
+  raycaster.ray.intersectPlane(dragPlane,dragPt);
+  if(vasqueGrp && raycaster.intersectObject(vasqueGrp,true).length>0){
+    activeVasqueDrag=0; dragOffset.set(dragPt.x-S.vx,0,dragPt.z-S.vz); return true;
+  }
+  if(vasqueGrp2 && raycaster.intersectObject(vasqueGrp2,true).length>0){
+    activeVasqueDrag=1; dragOffset.set(dragPt.x-S.vx2,0,dragPt.z-S.vz2); return true;
+  }
+  return false;
+}
+function _moveDrag(){
+  dragPlane.constant=-planTopY();
+  if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
+  if(activeVasqueDrag===0){
+    S.vx=clampVasque(dragPt.x-dragOffset.x,'x');
+    S.vz=clampVasque(dragPt.z-dragOffset.z,'z');
+  } else {
+    S.vx2=clampVasque(dragPt.x-dragOffset.x,'x');
+    S.vz2=clampVasque(dragPt.z-dragOffset.z,'z');
+  }
+  positionVasque(); buildPlan(); updatePosInfo();
+}
+cvs.addEventListener('pointerdown',function(e){
+  if(e.button!==0) return;
+  if(S.step===1&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
+  if(S.step===1&&!caissonEditMode){
+    toNDC(e); raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
+    if(hits.length&&hits[0].object.userData.isTiroir){
+      var k=hits[0].object.userData.tirKey;
+      caissonOpenState[k]=!caissonOpenState[k];
+      buildCaisson(); return;
     }
-    child.geometry.attributes.position.needsUpdate=true;
-    child.geometry.boundingBox=null;
+  }
+  if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  if(_startVasqueDrag()){
+    isDragging=true; controls.enabled=false; cvs.style.cursor='grabbing'; e.stopPropagation();
+  }
+});
+cvs.addEventListener('pointermove',function(e){
+  if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  if(!isDragging){
+    if(S.step===3){
+      var hit=(vasqueGrp&&raycaster.intersectObject(vasqueGrp,true).length)||
+              (vasqueGrp2&&raycaster.intersectObject(vasqueGrp2,true).length);
+      cvs.style.cursor=hit?'grab':'';
+    }
+    return;
+  }
+  _moveDrag();
+});
+window.addEventListener('pointerup',function(){
+  if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
+});
+cvs.addEventListener('touchstart',function(e){
+  if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
+  var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
+  raycaster.setFromCamera(mouse,camera);
+  if(_startVasqueDrag()){ isDragging=true; controls.enabled=false; e.preventDefault(); }
+},{passive:false});
+cvs.addEventListener('touchmove',function(e){
+  if(!isDragging) return; e.preventDefault();
+  var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
+  raycaster.setFromCamera(mouse,camera);
+  _moveDrag();
+},{passive:false});
+cvs.addEventListener('touchend',function(){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;});
+
+// ═══════════════════════════════════════════════════════
+// UI CALLBACKS
+// ═══════════════════════════════════════════════════════
+function setCL(v){
+  S.CL=v/100; document.getElementById('v-CL').textContent=v+' cm';
+  var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
+  var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
+  if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
+  buildCaisson(); checkAlerts();
+}
+function setCH(v){ S.CH=v/100; document.getElementById('v-CH').textContent=v+' cm'; buildCaisson(); if(planMesh) buildPlan(); }
+function setCP(v){ S.CairsonP=v/100; document.getElementById('v-CP').textContent=v+' cm'; buildCaisson(); }
+function setL(v){
+  S.L=v/100; document.getElementById('v-L').textContent=v+' cm';
+  var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
+  var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
+  S.caissonOffset=Math.max(-(S.L/2-S.CL/2-0.01),Math.min(S.L/2-S.CL/2-0.01,S.caissonOffset));
+  S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
+  if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
+  positionVasque(); buildPlan(); buildCaisson(); updatePosInfo(); checkAlerts();
+}
+function setPro(v){ S.P=v/100; document.getElementById('v-P').textContent=v+' cm'; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
+function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); }
+function setCaissonOffset(v){
+  S.caissonOffset=v/100; document.getElementById('v-OFF').textContent=(v>=0?'+':'')+v+' cm';
+  if(caissonGrp) caissonGrp.position.x=S.caissonOffset;
+  if(planMesh) planMesh.position.x=S.caissonOffset;
+}
+function setVasqueW(v){ S.vasqueW=v/100; document.getElementById('v-VW').textContent=v+' cm'; buildVasque(); }
+function setVasqueD(v){ S.vasqueD=v/100; document.getElementById('v-VD').textContent=v+' cm'; buildVasque(); }
+function _applyOffsetForCurrent(){
+  var m=_vasqueModels.find(function(x){return x.id===_vasqueSelected;});
+  if(!m) return;
+  var offset=vasqueEncastree?m.oEncastree:m.oPoser;
+  _vasqueYOffset=offset;
+  var sl=document.getElementById('v-VY');
+  if(sl) sl.textContent=Math.round(offset*1000)/10+' cm';
+  var inp=document.querySelector('#p3 input[type=range][oninput*=VasqueYOffset]');
+  if(inp) inp.value=Math.round(offset*1000)/10;
+}
+function setNbVasques(n){
+  if(n===2 && S.CL<1.20 && S.L<1.20){
+    alert('Le meuble et le plan de travail doivent faire au moins 120 cm pour ajouter une 2ème vasque (meuble : '+Math.round(S.CL*100)+' cm, plan : '+Math.round(S.L*100)+' cm).');
+    return;
+  }
+  S.nbVasques=n;
+  document.getElementById('nv1').classList.toggle('on',n===1);
+  document.getElementById('nv2').classList.toggle('on',n===2);
+  if(n===2 && !vasqueGrp2 && _vasqueCache[_vasqueSelected]){
+    _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
+  } else if(n===1 && vasqueGrp2){
+    scene.remove(vasqueGrp2); disposeGroup(vasqueGrp2); vasqueGrp2=null;
+    S.vx=clampVasque(0,'x');
+    positionVasque(); buildPlan();
+  }
+}
+function setVasqueType(t){
+  vasqueEncastree=(t==='encastree');
+  document.getElementById('vt-poser').classList.toggle('on',!vasqueEncastree);
+  document.getElementById('vt-encastree').classList.toggle('on',vasqueEncastree);
+  _applyOffsetForCurrent();
+  if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
+  buildPlan();
+}
+function setVasqueYOffset(v){
+  document.getElementById('v-VY').textContent=v+' cm';
+  _vasqueYOffset=v/100;
+  if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
+}
+function applyVasqueMat(){
+  var md=MATS_VASQUE[S_matVasque];
+  var tex=_vasqueTexCache[S_matVasque];
+  [vasqueGrp,vasqueGrp2].forEach(function(grp){
+    if(!grp) return;
+    grp.traverse(function(o){
+    if(!o.isMesh) return;
+    var orig=o.userData.origMat;
+    if(orig) o.material=orig.clone();
+    if(tex){
+      var newTex=tex.clone();
+      newTex.needsUpdate=true;
+      newTex.wrapS=THREE.RepeatWrapping;
+      newTex.wrapT=THREE.RepeatWrapping;
+      try{newTex.colorSpace=THREE.SRGBColorSpace;}catch(e){newTex.encoding=THREE.sRGBEncoding;}
+      newTex.minFilter=THREE.LinearMipmapLinearFilter;
+      newTex.magFilter=THREE.LinearFilter;
+      newTex.anisotropy=renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():16;
+      newTex.generateMipmaps=true;
+      var uvAttr=o.geometry.attributes.uv;
+      if(uvAttr){
+        var arr=uvAttr.array;
+        var uMin=Infinity,uMax=-Infinity,vMin=Infinity,vMax=-Infinity;
+        for(var k=0;k<arr.length;k+=2){
+          if(arr[k]<uMin)uMin=arr[k]; if(arr[k]>uMax)uMax=arr[k];
+          if(arr[k+1]<vMin)vMin=arr[k+1]; if(arr[k+1]>vMax)vMax=arr[k+1];
+        }
+        var uR=uMax-uMin||1, vR=vMax-vMin||1;
+        var eu=Math.max(uR,0.5), ev=Math.max(vR,0.5);
+        newTex.repeat.set(2/eu,2/ev);
+        newTex.offset.set(-uMin*(2/eu),-vMin*(2/ev));
+      }
+      o.material.map=newTex;
+      o.material.color.setRGB(1,1,1);
+    } else {
+      o.material.map=null;
+      o.material.color.copy(new THREE.Color(md.color||'#F4F1ED'));
+    }
+    if('roughness' in o.material) o.material.roughness=md.r||0.4;
+    if('metalness' in o.material) o.material.metalness=0.05;
+    o.material.needsUpdate=true;
+    });
+  });
+}
+function setMatVasque(i){
+  S_matVasque=i; checkAlerts();
+  document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_VASQUE[i];
+  if(!md.src){ applyVasqueMat(); return; }
+  if(_vasqueTexCache[i]){ applyVasqueMat(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _vasqueTexCache[i]=tex; applyVasqueMat();
+  });
+}
+function setMatPlan(i){
+  S.matPlan=i;
+  document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_PLAN[i];
+  if(!md.src){ buildPlan(); checkAlerts(); return; }
+  if(_planTexCache[i]){ buildPlan(); checkAlerts(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _planTexCache[i]=tex; buildPlan(); checkAlerts();
+  });
+}
+function setMatCais(i){
+  S.matCais=i;
+  document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_CAIS[i];
+  if(!md.src){ buildCaisson(); return; }
+  if(_caisTexCache[i]){ buildCaisson(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _caisTexCache[i]=tex; buildCaisson();
   });
 }
 
-function applyDimensions(){
-  if(!state._baseScale||!state._center) return;
-  var combined=rootGroup.children[0];
-  if(!combined) return;
-  var bs=state._baseScale;
-  var c =state._center;
+function updatePosInfo(){
+  var vx=clampVasque(S.vx,'x'),vz=clampVasque(S.vz,'z');
+  document.getElementById('pos-x').textContent=Math.round((vx+S.L/2)*100)+' cm';
+  document.getElementById('pos-z').textContent=Math.round((vz-WALL_Z)*100)+' cm';
+}
 
-  combined.scale.set(bs, bs, bs);
-  combined.position.set(-c.x*bs, -c.y*bs, -c.z*bs);
+// ═══════════════════════════════════════════════════════
+// WIZARD
+// ═══════════════════════════════════════════════════════
+var step=1;
+function goStep(n){
+  if(n<1||n>4) return;
+  step=n; S.step=Math.min(n,3);
+  ['p1','p2','p3','p4'].forEach(function(id,i){document.getElementById(id).classList.toggle('on',i+1===n);});
+  ['sd1','sd2','sd3','sd4'].forEach(function(id,i){
+    var el=document.getElementById(id); el.classList.remove('active','done');
+    if(i+1===n) el.classList.add('active'); else if(i+1<n) el.classList.add('done');
+  });
+  ['sl1','sl2','sl3'].forEach(function(id,i){document.getElementById(id).classList.toggle('done',i+1<n);});
+  document.getElementById('btn-back').disabled=(n===1);
+  document.getElementById('btn-next').textContent=n<3?'Suivant →':(n===3?'Envoyer →':'');
+  document.getElementById('btn-next').style.display=(n===4?'none':'');
+  document.getElementById('hint').classList.toggle('show',n===3);
+  if(caissonEditMode) toggleCaissonEdit();
+  controls.enabled=true;
 
-  if(currentMeubleModel){
-    var p=currentMeubleModel.userData._resizeBounds;
-    var r=state.largeur/refLargeur();
+  if(planMesh)   planMesh.visible=(n>=2);
+  if(vasqueGrp)  vasqueGrp.visible=(n===3||n===4);
+  if(vasqueGrp2) vasqueGrp2.visible=(n===3||n===4);
+  if(n===1) buildCaisson();
+  if(n===2){
+    S.L=S.CL;
+    var slL=document.getElementById('sl-L')||document.querySelector('#p2 input[oninput*="setL"]');
+    if(slL){ slL.value=Math.round(S.L*100); }
+    document.getElementById('v-L').textContent=Math.round(S.L*100)+' cm';
+    buildPlan();
+  }
+  if(n===3){ buildRecap(); updatePosInfo(); positionVasque(); }
+  if(n===4){ buildRecap4(); }
+  if(n<=3) animCamera(n);
+}
 
-    if(p && p.isPreSplit){
-      // ── Mode pré-splitté : translation pure des panneaux gauche et droit ──
-      // Le panneau central (avec la vasque) reste IMMOBILE.
-      // Les panneaux L et R glissent de ±dW/2 dans l'espace local du modèle.
-      var dW_local=p.W0*(r-1);
-      currentMeubleModel.traverse(function(child){
-        if(child.userData._isPreSplitLeft){
-          child.position.x=(child.userData._origPositionX||0)-dW_local/2;
-        }
-        if(child.userData._isPreSplitRight){
-          child.position.x=(child.userData._origPositionX||0)+dW_local/2;
-        }
-      });
+var camTargets=[
+  {pos:[-0.4,0.9,1.6], tgt:[0,0.22,0]},
+  {pos:[-0.6,1.55,1.65],tgt:[0,0.55,0]},
+  {pos:[0,1.30,1.50],  tgt:[0,0.80,0]},
+];
+var camAnim=null;
+function animCamera(n){
+  var tgt=camTargets[n-1];
+  var p0=camera.position.clone(),t0=controls.target.clone();
+  var p1=new THREE.Vector3().fromArray(tgt.pos),t1=new THREE.Vector3().fromArray(tgt.tgt);
+  var f=0,N=50; if(camAnim) clearInterval(camAnim);
+  camAnim=setInterval(function(){
+    f++; var a=f/N; a=a<.5?2*a*a:-1+(4-2*a)*a;
+    camera.position.lerpVectors(p0,p1,a); controls.target.lerpVectors(t0,t1,a); controls.update();
+    if(f>=N){clearInterval(camAnim);camAnim=null;}
+  },16);
+}
+function checkAlerts(){
+  // Alerte plan vs meuble
+  var wPlan=document.getElementById('warn-plan');
+  if(wPlan){
+    var meubleL=Math.round(S.CL*100), planL=Math.round(S.L*100);
+    if(meubleL>planL){
+      wPlan.textContent='⚠ Le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
+      wPlan.classList.add('show');
+    } else if(planL>meubleL+1){
+      wPlan.textContent='ℹ Le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+( planL-meubleL)+' cm.';
+      wPlan.classList.add('show');
     } else {
-      // ── Mode vertex : 5-part (1v) ou 3-part (2v) ──
-      applyVertexResize(currentMeubleModel, r);
+      wPlan.classList.remove('show');
+    }
+  }
+  // Alerte plan ≠ vasque
+  var wVasque=document.getElementById('warn-vasque');
+  if(wVasque){
+    var pMat=MATS_PLAN[S.matPlan], vMat=MATS_VASQUE[S_matVasque];
+    var planName=pMat?pMat.n:'', vasqueName=vMat?vMat.n:'';
+    if(planName!==vasqueName){
+      wVasque.textContent='⚠ La vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
+      wVasque.classList.add('show');
+    } else {
+      wVasque.classList.remove('show');
     }
   }
 }
 
-// ═══════════════════════════════════════════════════
-//  HANDLERS UI
-// ═══════════════════════════════════════════════════
-// Le sélecteur "Modèle" choisit la famille de meuble (qui détermine aussi la forme de vasque)
-function sdbSetModele(f){
-  state.meubleFamily=f;
-  document.querySelectorAll('#modeleGrid .item-card').forEach(function(b){
-    b.classList.toggle('active',+b.dataset.family===f);
-  });
-  loadScene();
+function prevStep(){goStep(step-1);}
+function nextStep(){goStep(step+1);}
+
+function buildRecapStr(){
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  return '• Meuble : '+Math.round(S.CL*100)+'L × '+Math.round(S.CH*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n'
+       + '• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n'
+       + '• Vasque : '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n'
+       + '• Intérieur : '+counts.shelf+' tablette(s), '+counts.separator+' séparateur(s), '+counts.porte+' porte(s), '+counts.tiroir+' tiroir(s)';
+}
+function buildRecap(){
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var rows=[
+    ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm — '+MATS_CAIS[S.matCais].n],
+    ['Plan',   Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n],
+    ['Vasque', Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
+    ['Tablettes',  counts.shelf+' tablette'+(counts.shelf!==1?'s':'')],
+    ['Séparateurs',counts.separator+' séparateur'+(counts.separator!==1?'s':'')],
+    ['Portes',  counts.porte+' porte'+(counts.porte!==1?'s':'')],
+    ['Tiroirs', counts.tiroir+' tiroir'+(counts.tiroir!==1?'s':'')],
+  ];
+  document.getElementById('recap').innerHTML=rows.map(function(r){
+    return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
+  }).join('');
 }
 
-function sdbSetVC(vc){
-  state.vc=vc;
-  state.largeur=vc===2?140:80;
-  document.querySelectorAll('#vcToggle .toggle-btn').forEach(function(b){
-    b.classList.toggle('active',+b.dataset.vc===vc);
-  });
-  // Mettre à jour le champ largeur
-  var li=document.getElementById('largeurInput');
-  if(li) li.value=state.largeur;
-  loadScene();
-}
-window.sdbSetModele=sdbSetModele;
-window.sdbSetVC=sdbSetVC;
-
-function sdbSetVariant(v){
-  state.meubleVariant=v;
-  document.querySelectorAll('#variantToggle .toggle-btn').forEach(function(b){
-    b.classList.toggle('active',+b.dataset.v===v);
-  });
-  loadScene();
-}
-window.sdbSetVariant=sdbSetVariant;
-
-function sdbSetVasqueMat(id){
-  state.vasqueMatId=id;
-  document.querySelectorAll('.vmat-btn').forEach(function(b){
-    b.classList.toggle('active',b.dataset.id===id);
-  });
-  applyVasqueMat();
-  updateCfgSummary();
+function buildRecap4(){
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var rows=[
+    ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm — '+MATS_CAIS[S.matCais].n],
+    ['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+'×'+Math.round(S.Ep*10)/10+' cm — '+MATS_PLAN[S.matPlan].n],
+    ['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
+    ['Tablettes', counts.shelf],
+    ['Séparateurs', counts.separator],
+    ['Portes', counts.porte],
+    ['Tiroirs', counts.tiroir],
+  ];
+  document.getElementById('recap4').innerHTML=rows.map(function(r){
+    return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
+  }).join('');
 }
 
-function sdbSetBois(id){
-  state.boisId=id;
-  document.querySelectorAll('.mat-btn').forEach(function(b){
-    b.classList.toggle('active',b.dataset.id===id);
-  });
-  applyBois();
-  updateCfgSummary();
-}
-
-function onLargeurInput(val){
-  var v=parseInt(val,10);
-  if(isNaN(v)||v<40) return;
-  state.largeur=v;
-  applyDimensions();
-  updateDimsBadge();
-  updateCfgSummary();
-}
-function onHauteurInput(val){
-  var v=parseInt(val,10);
-  if(isNaN(v)||v<10) return;
-  state.hauteur=v;
-  updateDimsBadge();
-  updateCfgSummary();
-}
-function onProfondeurInput(val){
-  var v=parseInt(val,10);
-  if(isNaN(v)||v<10) return;
-  state.profondeur=v;
-  updateDimsBadge();
-  updateCfgSummary();
-}
-window.onLargeurInput=onLargeurInput;
-window.onHauteurInput=onHauteurInput;
-window.onProfondeurInput=onProfondeurInput;
-
-function updateDimsBadge(){
-  var el=document.getElementById('dimsBadge');
-  if(el) el.textContent=state.largeur+' × '+state.hauteur+' × '+state.profondeur+' cm';
-}
-
-function updateCfgSummary(){
-  var v=VMAT_DEF.find(function(d){ return d.id===state.vasqueMatId; })||VMAT_DEF[0];
-  var b=BOIS_DEF.find(function(d){ return d.id===state.boisId; })||BOIS_DEF[0];
-  var el=document.getElementById('cfgSummary');
-  if(!el) return;
-  el.innerHTML=
-    'Modèle <strong>'+state.meubleFamily+'</strong> · '+state.vc+'V var.'+state.meubleVariant+' · '+
-    'Vasque : '+v.label+' · Meuble : '+b.label+'<br>'+
-    '<strong>L'+state.largeur+' × H'+state.hauteur+' × P'+state.profondeur+' cm</strong>';
-}
-
-// ═══════════════════════════════════════════════════
-//  FORMULAIRE
-// ═══════════════════════════════════════════════════
 async function submitConfig(){
-  var prenom=(document.getElementById('cfgPrenom').value||'').trim();
-  var email=(document.getElementById('cfgEmail').value||'').trim();
-  var message=(document.getElementById('cfgMessage').value||'').trim();
-  var bot=document.getElementById('cfgBot').value;
-  var errEl=document.getElementById('cfgErr');
-  var btn=document.getElementById('cfgSubmitBtn');
+  var prenom  = (document.getElementById('cfgPrenom').value||'').trim();
+  var email   = (document.getElementById('cfgEmail').value||'').trim();
+  var message = (document.getElementById('cfgMessage').value||'').trim();
+  var bot     = document.getElementById('cfgBot').value;
+  var errEl   = document.getElementById('cfgErr');
+  var btn     = document.getElementById('cfgSubmitBtn');
+
   errEl.style.display='none';
   if(!prenom||!email){ errEl.textContent='Prénom et email obligatoires.'; errEl.style.display='block'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
+
   btn.disabled=true; btn.textContent='Envoi en cours…';
-  var vDef=VMAT_DEF.find(function(d){ return d.id===state.vasqueMatId; })||VMAT_DEF[0];
-  var bDef=BOIS_DEF.find(function(d){ return d.id===state.boisId; })||BOIS_DEF[0];
-  try{
-    var resp=await fetch('/api/biblio-config',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ prenom,email,message,botcheck:bot,
-        config:{ type:'sdb', modele:state.meubleFamily, vasqueMat:vDef.label,
-          meubleFamily:state.meubleFamily, vc:state.vc, meubleVariant:state.meubleVariant,
-          essence:bDef.label, largeur:state.largeur,
-          hauteur:state.hauteur, profondeur:state.profondeur }})
+
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+
+  try {
+    var resp=await fetch('/api/sdb-config',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        prenom:prenom, email:email, message:message, botcheck:bot,
+        config:{
+          meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
+                   matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },
+          plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10,
+                 matLabel:MATS_PLAN[S.matPlan].n, matId:S.matPlan },
+          vasques:{ nb:S.nbVasques, W:Math.round(S.vasqueW*100), D:Math.round(S.vasqueD*100),
+                    id:_vasqueSelected,
+                    label:(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label,
+                    vx:Math.round(S.vx*100)/100, vz:Math.round(S.vz*100)/100,
+                    vx2:Math.round(S.vx2*100)/100, vz2:Math.round(S.vz2*100)/100 },
+          elements:caissonElements,
+          counts:counts
+        }
+      })
     });
     var data=await resp.json();
     if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
     document.getElementById('cfgFormWrap').style.display='none';
     document.getElementById('cfgSuccess').style.display='block';
-  }catch(err){
+  } catch(err){
     btn.disabled=false; btn.textContent='Envoyer ma configuration →';
     errEl.textContent=err.message||'Erreur réseau. Réessayez.';
     errEl.style.display='block';
@@ -1091,62 +1376,64 @@ async function submitConfig(){
 }
 window.submitConfig=submitConfig;
 
-// ═══════════════════════════════════════════════════
-//  CONSTRUCTION UI
-// ═══════════════════════════════════════════════════
-(function buildUI(){
-  // SVG meuble+vasque (icône combinée)
-  var svgMod='<svg viewBox="0 0 40 32" fill="none"><path d="M8 10 Q20 20 32 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4" y1="10" x2="36" y2="10" stroke="currentColor" stroke-width="1"/><rect x="4" y="18" width="32" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><line x1="20" y1="18" x2="20" y2="30" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/></svg>';
-
-  // Modèles (meuble + vasque intégré)
-  var mg2=document.getElementById('modeleGrid');
-  MEUBLES_DEF.forEach(function(d){
-    var btn=document.createElement('button');
-    btn.className='item-card'+(d.family===state.meubleFamily?' active':'');
-    btn.dataset.family=d.family;
-    btn.innerHTML=svgMod+'<span>Modèle '+d.family+'</span>';
-    btn.addEventListener('click',function(){ sdbSetModele(d.family); });
-    mg2.appendChild(btn);
+// ═══════════════════════════════════════════════════════
+// INIT GRILLES MATIÈRES
+// ═══════════════════════════════════════════════════════
+function buildMatGrid(id,arr,fn){
+  var el=document.getElementById(id);
+  arr.forEach(function(m,i){
+    var btn=document.createElement('button'); btn.className='mat-btn'+(i===0?' on':'');
+    btn.onclick=function(){fn(i);};
+    if(m.src){
+      var img=document.createElement('img');
+      img.src=m.src; img.style.cssText='width:22px;height:22px;border-radius:5px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.1)';
+      btn.appendChild(img);
+    } else {
+      var sw=document.createElement('span'); sw.className='mat-sw';
+      sw.style.background=m.color||('#'+('000000'+(m.hex||0).toString(16)).slice(-6));
+      btn.appendChild(sw);
+    }
+    var lbl=document.createElement('span'); lbl.className='mat-lbl'; lbl.textContent=m.n;
+    btn.appendChild(lbl); el.appendChild(btn);
   });
+}
+buildMatGrid('mg-plan',MATS_PLAN,setMatPlan);
+buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
+buildMatGrid('mg-vasque',MATS_VASQUE,setMatVasque);
+// Charge les textures par défaut au démarrage
+setMatPlan(0);     // Evok
+setMatCais(0);     // Chêne
+setMatVasque(S_matVasque); // Blanc Elysée
 
-  // Finition vasque
-  var vmg=document.getElementById('vmatGrid');
-  VMAT_DEF.forEach(function(d){
+// Grille sélecteur vasques
+(function(){
+  var grid=document.getElementById('vg');
+  _vasqueModels.forEach(function(m){
     var btn=document.createElement('button');
-    btn.className='vmat-btn'+(d.id===state.vasqueMatId?' active':'');
-    btn.dataset.id=d.id; btn.setAttribute('data-name',d.label);
-    if(d.texture) btn.style.backgroundImage='url('+d.texture+')';
-    else if(d.color) btn.style.background='rgb('+Math.round(d.color.r*255)+','+Math.round(d.color.g*255)+','+Math.round(d.color.b*255)+')';
-    btn.addEventListener('click',function(){ sdbSetVasqueMat(d.id); });
-    vmg.appendChild(btn);
+    btn.className='vasque-btn'+(m.id==='v1'?' on':'');
+    btn.dataset.id=m.id;
+    btn.onclick=function(){ selectVasque(m.id); };
+    var lbl=document.createElement('span');
+    lbl.className='vasque-lbl'; lbl.textContent=m.label;
+    btn.appendChild(lbl); grid.appendChild(btn);
   });
-
-
-  // Bois
-  var bg=document.getElementById('matGrid');
-  BOIS_DEF.forEach(function(d){
-    var btn=document.createElement('button');
-    btn.className='mat-btn'+(d.id===state.boisId?' active':'');
-    btn.dataset.id=d.id; btn.title=d.label;
-    btn.innerHTML=d.src
-      ?'<img src="'+d.src+'" alt="'+d.label+'"/><span class="mat-lbl">'+d.label+'</span>'
-      :'<div class="mat-swatch" style="background:'+d.hexColor+'"></div><span class="mat-lbl">'+d.label+'</span>';
-    btn.addEventListener('click',function(){ sdbSetBois(d.id); });
-    bg.appendChild(btn);
-  });
-
-  // Init badge dimensions
-  updateDimsBadge();
 })();
 
-// ═══════════════════════════════════════════════════
-//  DÉMARRAGE
-// ═══════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded',function(){
-  initScene();
-  updateCfgSummary();
-  loadScene();
-});
+// ═══════════════════════════════════════════════════════
+// RESIZE & LOOP
+// ═══════════════════════════════════════════════════════
+function onResize(){ var w=wrap.clientWidth,h=wrap.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+window.addEventListener('resize',onResize); onResize();
+function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); }
+loop();
+
+// ═══════════════════════════════════════════════════════
+// DÉMARRAGE
+// ═══════════════════════════════════════════════════════
+S.vx=0; S.vz=planCZ();
+buildVasque();
+buildCaisson();
+goStep(1);
 </script>
 </body>
 </html>

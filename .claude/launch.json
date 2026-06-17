@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kobo-local",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3333", "--directory", "/Users/quentinjoubert/Desktop/kobo-design"],
+      "port": 3333
+    }
+  ,
+    {
+      "name": "skarp-landing",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3456", "--directory", "/Users/quentinjoubert/Desktop/kobo-design/skarp"],
+      "port": 3456
+    }
+  ]
+}
