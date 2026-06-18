@@ -479,53 +479,6 @@
       .hero,.gammes,.waiting,footer{padding-left:16px;padding-right:16px}
     }
   
-    /* ── CONFIGURATEUR 3D ── */
-    .configurateur { padding: clamp(64px,9vw,100px) clamp(24px,7vw,100px); background: var(--bg); border-top: 1px solid rgba(26,26,26,.07); }
-    .configurateur__header { text-align: center; margin-bottom: clamp(40px,6vw,64px); }
-    .configurateur__eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
-    .configurateur__title { font-size: clamp(28px,4vw,48px); font-weight: 900; letter-spacing: -.04em; line-height: 1.05; color: var(--dark); margin-bottom: 12px; }
-    .configurateur__title em { font-style: italic; font-weight: 300; color: rgba(26,26,26,.2); }
-    .configurateur__sub { font-size: 14px; font-weight: 300; color: rgba(26,26,26,.5); max-width: 500px; margin: 0 auto; }
-
-    .configurateur__wrap { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
-
-    /* Viewer */
-    .configurateur__viewer { position: relative; border-radius: 12px; overflow: hidden; background: #FAF7F2; border: 1px solid rgba(26,26,26,.1); aspect-ratio: 4/3; box-shadow: 0 4px 32px rgba(26,26,26,.08); }
-    #threeCanvas { width: 100%; height: 100%; display: block; }
-    .viewer__controls { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; }
-    .viewer__btn { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.8); border: 1px solid rgba(26,26,26,.1); color: rgba(26,26,26,.5); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; backdrop-filter: blur(8px); }
-    .viewer__btn:hover { background: rgba(205,62,0,.8); border-color: var(--accent); color: white; }
-    .viewer__hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(26,26,26,.3); white-space: nowrap; pointer-events: none; }
-    .viewer__loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(250,247,242,.95); transition: opacity .4s; }
-    .viewer__loading.hidden { opacity: 0; pointer-events: none; }
-    .viewer__spinner { width: 32px; height: 32px; border: 2px solid rgba(255,250,240,.1); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
-    .viewer__loading p { font-size: 12px; color: rgba(26,26,26,.4); }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Panel */
-    .configurateur__panel { display: flex; flex-direction: column; gap: 24px; }
-    .config__group { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(26,26,26,.04); }
-    .config__label { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 14px; }
-    .config__presets { display: flex; flex-wrap: wrap; gap: 8px; }
-    .preset-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1.5px solid rgba(26,26,26,.12); background: none; cursor: pointer; color: rgba(26,26,26,.6); font-family: var(--font); font-size: 12px; font-weight: 500; transition: all .2s; }
-    .preset-btn:hover { border-color: rgba(26,26,26,.3); color: rgba(26,26,26,.9); }
-    .preset-btn.active { border-color: var(--accent); color: white; background: rgba(205,62,0,.12); }
-    .preset-swatch { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
-
-    /* Récap */
-    .config__summary { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(26,26,26,.04); }
-    .config__recap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
-    .config__recap-item { display: flex; justify-content: space-between; align-items: center; }
-    .config__recap-label { font-size: 11px; color: rgba(26,26,26,.4); font-weight: 500; }
-    .config__recap-val { font-size: 13px; font-weight: 700; color: var(--dark); }
-    .config__cta { display: block; text-align: center; padding: 13px 20px; background: var(--accent); color: white; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em; transition: background .2s, transform .15s; }
-    .config__cta:hover { background: #a83200; transform: translateY(-1px); }
-    .config__note { text-align: center; font-size: 10px; color: rgba(26,26,26,.3); margin-top: 10px; }
-
-    @media (max-width: 900px) {
-      .configurateur__wrap { grid-template-columns: 1fr; }
-    }
-
     :root {
       --accent: #CD3E00;
       --bg: #FFFAF0;
@@ -706,98 +659,6 @@
     }
     .gamme-cta__btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.2); }
 
-    /* ── MODAL CONFIGURATEUR ── */
-    .config-modal {
-      position: fixed; inset: 0; background: rgba(10,10,10,.8); z-index: 2000;
-      display: none; align-items: center; justify-content: center; padding: 24px;
-      backdrop-filter: blur(6px);
-    }
-    .config-modal.open { display: flex; }
-    .config-modal__inner {
-      background: var(--bg); border-radius: 16px; width: 100%;
-      max-width: 1100px; max-height: 92vh; overflow-y: auto;
-      box-shadow: 0 32px 80px rgba(0,0,0,.4);
-    }
-    .config-modal__header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 24px 32px; border-bottom: 1px solid rgba(26,26,26,.07); position: sticky; top: 0; background: var(--bg); z-index: 1;
-    }
-    .config-modal__eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
-    .config-modal__title { font-size: 20px; font-weight: 900; letter-spacing: -.02em; }
-    .config-modal__close {
-      width: 38px; height: 38px; border-radius: 50%;
-      border: 1.5px solid rgba(26,26,26,.15); background: none;
-      font-size: 16px; cursor: pointer; color: rgba(26,26,26,.5);
-      transition: all .2s; display: flex; align-items: center; justify-content: center;
-    }
-    .config-modal__close:hover { border-color: var(--accent); color: var(--accent); }
-    .config-modal__body {
-      display: grid; grid-template-columns: 1fr 340px; gap: 24px;
-      padding: 24px 32px 32px;
-    }
-    @media(max-width:768px){ .config-modal__body{grid-template-columns:1fr} }
-
-    /* ── VIEWER 3D ── */
-    .configurateur__viewer {
-      position: relative; border-radius: 12px; overflow: hidden;
-      background: #FAF7F2; border: 1px solid rgba(26,26,26,.08);
-      aspect-ratio: 4/3; box-shadow: 0 4px 24px rgba(26,26,26,.06);
-    }
-    #threeCanvas { width: 100%; height: 100%; display: block; }
-    .viewer__controls { position: absolute; top: 14px; right: 14px; }
-    .viewer__btn {
-      width: 34px; height: 34px; border-radius: 8px;
-      background: rgba(255,255,255,.85); border: 1px solid rgba(26,26,26,.1);
-      color: rgba(26,26,26,.5); cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: all .2s; backdrop-filter: blur(8px);
-    }
-    .viewer__btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
-    .viewer__hint {
-      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-      display: flex; align-items: center; gap: 6px; font-size: 10px;
-      color: rgba(26,26,26,.3); white-space: nowrap; pointer-events: none;
-    }
-    .viewer__loading {
-      position: absolute; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 14px;
-      background: rgba(250,247,242,.95);
-    }
-    .viewer__loading.hidden { display: none; }
-    .viewer__spinner {
-      width: 28px; height: 28px; border: 2px solid rgba(26,26,26,.1);
-      border-top-color: var(--accent); border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-    .viewer__loading p { font-size: 11px; color: rgba(26,26,26,.4); }
-    @keyframes spin { to{transform:rotate(360deg)} }
-
-    /* ── PANEL MATIÈRES ── */
-    .configurateur__panel { display: flex; flex-direction: column; gap: 16px; }
-    .config__group { background: white; border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(26,26,26,.04); }
-    .config__label { display: flex; align-items: center; gap: 8px; font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 12px; }
-    .config__presets { display: flex; flex-wrap: wrap; gap: 7px; }
-    .preset-btn {
-      display: flex; align-items: center; gap: 7px; padding: 7px 11px;
-      border-radius: 8px; border: 1.5px solid rgba(26,26,26,.1); background: none;
-      cursor: pointer; color: rgba(26,26,26,.6); font-family: var(--font); font-size: 11px; font-weight: 500;
-      transition: all .2s;
-    }
-    .preset-btn:hover { border-color: rgba(26,26,26,.25); color: var(--dark); }
-    .preset-btn.active { border-color: var(--accent); color: var(--dark); background: rgba(205,62,0,.06); }
-    .preset-swatch { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
-    .config__summary { background: white; border: 1px solid rgba(26,26,26,.08); border-radius: 10px; padding: 18px; }
-    .config__recap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-    .config__recap-item { display: flex; justify-content: space-between; align-items: center; }
-    .config__recap-label { font-size: 10px; color: rgba(26,26,26,.4); font-weight: 500; }
-    .config__recap-val { font-size: 12px; font-weight: 700; color: var(--dark); }
-    .config__cta {
-      display: block; text-align: center; padding: 13px 16px;
-      background: var(--accent); color: white; border-radius: 8px;
-      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-      transition: background .2s, transform .15s;
-    }
-    .config__cta:hover { background: #a83200; transform: translateY(-1px); }
-    .config__note { text-align: center; font-size: 10px; color: rgba(26,26,26,.3); margin-top: 10px; }
       /* ═══════════════════════════════════════════════════════════
        SECTION SHOWCASE SALLE DE BAIN (dans gamme.html)
        ═══════════════════════════════════════════════════════════ */
@@ -1473,14 +1334,9 @@
     .produit-card:hover { border-color: var(--accent); transform: translateY(-6px); box-shadow: 0 24px 60px rgba(0,0,0,.3); }
     .produit-card__canvas-wrap { position: relative; aspect-ratio: 3/4; background: #1e1e1e; overflow: hidden; }
     .produit-canvas { width: 100%; height: 100%; display: block; }
-    .produit-card__overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(205,62,0,.9) 0%, rgba(205,62,0,.3) 35%, transparent 65%); opacity: 0; transition: opacity .3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; }
-    .produit-card:hover .produit-card__overlay { opacity: 1; }
-    .produit-card__overlay-label { font-size: 9px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.7); margin-bottom: 4px; }
-    .produit-card__overlay-cta { font-size: 16px; font-weight: 900; color: white; letter-spacing: -.01em; }
     .produit-card__info { padding: 16px 20px 20px; }
     .produit-card__name { font-size: 14px; font-weight: 800; letter-spacing: -.01em; color: var(--bg); margin-bottom: 4px; }
     .produit-card__desc { font-size: 11px; font-weight: 300; color: rgba(255,250,240,.35); line-height: 1.5; }
-    .produit-card__tag { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; background: rgba(205,62,0,.12); color: var(--accent); border: 1px solid rgba(205,62,0,.2); margin-top: 10px; }
 
     /* ── BIENTOT ── */
     .bientot-section { padding: clamp(64px,8vw,100px) clamp(32px,7vw,100px); background: var(--mid); border-top: 1px solid rgba(26,26,26,.06); }
@@ -1500,44 +1356,6 @@
     .g-cta-final__btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,.25); }
     @media(max-width:768px){.g-cta-final{grid-template-columns:1fr}.g-cta-final__btn{width:fit-content}}
 
-    /* ── MODAL ── */
-    .config-modal{position:fixed;inset:0;background:rgba(10,10,10,.85);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
-    .config-modal.open{display:flex}
-    .config-modal__inner{background:var(--bg);border-radius:16px;width:100%;max-width:1040px;max-height:92vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.5)}
-    .config-modal__header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid rgba(26,26,26,.07);position:sticky;top:0;background:var(--bg);z-index:1}
-    .config-modal__eyebrow{font-size:9px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
-    .config-modal__title{font-size:18px;font-weight:900;letter-spacing:-.02em}
-    .config-modal__close{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(26,26,26,.15);background:none;font-size:15px;cursor:pointer;color:rgba(26,26,26,.5);transition:all .2s;display:flex;align-items:center;justify-content:center}
-    .config-modal__close:hover{border-color:var(--accent);color:var(--accent)}
-    .config-modal__body{display:grid;grid-template-columns:1fr 300px;gap:20px;padding:20px 28px 28px}
-    @media(max-width:768px){.config-modal__body{grid-template-columns:1fr}}
-    .configurateur__viewer{position:relative;border-radius:10px;overflow:hidden;background:#FAF7F2;border:1px solid rgba(26,26,26,.08);aspect-ratio:4/3}
-    #threeCanvas{width:100%;height:100%;display:block}
-    .viewer__controls{position:absolute;top:12px;right:12px}
-    .viewer__btn{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.9);border:1px solid rgba(26,26,26,.1);color:rgba(26,26,26,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
-    .viewer__btn:hover{background:var(--accent);border-color:var(--accent);color:white}
-    .viewer__hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(26,26,26,.3);white-space:nowrap;pointer-events:none}
-    .viewer__loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(250,247,242,.96)}
-    .viewer__loading.hidden{display:none}
-    .viewer__spinner{width:26px;height:26px;border:2px solid rgba(26,26,26,.1);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-    .viewer__loading p{font-size:11px;color:rgba(26,26,26,.4)}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .configurateur__panel{display:flex;flex-direction:column;gap:14px}
-    .config__group{background:white;border:1px solid rgba(26,26,26,.08);border-radius:10px;padding:16px}
-    .config__label{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:12px}
-    .config__presets{display:flex;flex-wrap:wrap;gap:6px}
-    .preset-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:1.5px solid rgba(26,26,26,.1);background:none;cursor:pointer;color:rgba(26,26,26,.6);font-family:var(--font);font-size:11px;font-weight:500;transition:all .2s}
-    .preset-btn:hover{border-color:rgba(26,26,26,.25);color:var(--dark)}
-    .preset-btn.active{border-color:var(--accent);color:var(--dark);background:rgba(205,62,0,.06)}
-    .preset-swatch{width:16px;height:16px;border-radius:4px;flex-shrink:0;background-size:cover;background-position:center}
-    .config__summary{background:white;border:1px solid rgba(26,26,26,.08);border-radius:10px;padding:16px}
-    .config__recap{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-    .config__recap-item{display:flex;justify-content:space-between;align-items:center}
-    .config__recap-label{font-size:10px;color:rgba(26,26,26,.4);font-weight:500}
-    .config__recap-val{font-size:12px;font-weight:700;color:var(--dark)}
-    .config__cta{display:block;text-align:center;padding:12px 16px;background:var(--accent);color:white;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:background .2s,transform .15s}
-    .config__cta:hover{background:#a83200;transform:translateY(-1px)}
-    .config__note{text-align:center;font-size:10px;color:rgba(26,26,26,.3);margin-top:8px}
   </style>
 </head>
 <body>
@@ -1720,46 +1538,31 @@
     <div class="gamme-cat__count reveal">3 modèles — personnalisables</div>
   </div>
   <div class="produits-grid">
-    <div class="produit-card reveal" onclick="openConfig('models/bibliotheque/bibliotheque.glb', 'Bibliothèque')">
+    <div class="produit-card reveal">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-1"></canvas>
-        <div class="produit-card__overlay">
-          <div class="produit-card__overlay-label">Cliquez pour configurer</div>
-          <div class="produit-card__overlay-cta">Personnaliser →</div>
-        </div>
       </div>
       <div class="produit-card__info">
         <div class="produit-card__name">Bibliothèque</div>
         <div class="produit-card__desc">Structure ouverte, modulable du sol au plafond.</div>
-        <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
-    <div class="produit-card reveal reveal-delay-1" onclick="openConfig('models/bibliotheque/bibliotheque_portes_hautes.glb', 'Bibliothèque portes hautes')">
+    <div class="produit-card reveal reveal-delay-1">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-2"></canvas>
-        <div class="produit-card__overlay">
-          <div class="produit-card__overlay-label">Cliquez pour configurer</div>
-          <div class="produit-card__overlay-cta">Personnaliser →</div>
-        </div>
       </div>
       <div class="produit-card__info">
         <div class="produit-card__name">Bibliothèque portes hautes</div>
         <div class="produit-card__desc">Rangements fermés en partie haute, étagères ouvertes en bas.</div>
-        <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
-    <div class="produit-card reveal reveal-delay-2" onclick="openConfig('models/bibliotheque/biblio_portes_basses.glb', 'Bibliothèque portes basses')">
+    <div class="produit-card reveal reveal-delay-2">
       <div class="produit-card__canvas-wrap">
         <canvas class="produit-canvas" id="canvas-3"></canvas>
-        <div class="produit-card__overlay">
-          <div class="produit-card__overlay-label">Cliquez pour configurer</div>
-          <div class="produit-card__overlay-cta">Personnaliser →</div>
-        </div>
       </div>
       <div class="produit-card__info">
         <div class="produit-card__name">Bibliothèque portes basses</div>
         <div class="produit-card__desc">Rangements fermés en bas, étagères ouvertes en hauteur.</div>
-        <span class="produit-card__tag">✦ Configurer</span>
       </div>
     </div>
   </div>
@@ -1881,56 +1684,6 @@
     </div>
   </footer>
 
-<!-- ── MODAL CONFIGURATEUR ── -->
-<div class="config-modal" id="configModal">
-  <div class="config-modal__inner">
-    <div class="config-modal__header">
-      <div>
-        <p class="config-modal__eyebrow">Exemple configurable</p>
-        <h3 class="config-modal__title" id="configModalTitle">Bibliothèque</h3>
-      </div>
-      <button class="config-modal__close" onclick="closeConfig()">✕</button>
-    </div>
-    <div class="config-modal__body">
-      <div class="configurateur__viewer" id="viewer3d">
-        <canvas id="threeCanvas"></canvas>
-        <div class="viewer__controls">
-          <button class="viewer__btn" id="btnReset" title="Réinitialiser">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-        <div class="viewer__hint">⟳ Glissez pour tourner</div>
-        <div class="viewer__loading" id="viewerLoading">
-          <div class="viewer__spinner"></div>
-          <p>Chargement…</p>
-        </div>
-      </div>
-      <div class="configurateur__panel">
-        <div class="config__group">
-          <p class="config__label">Choisissez la matière</p>
-          <div class="config__presets" id="presetsWood">
-            <button class="preset-btn active" data-type="wood" data-value="chene" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/BOISCHENE.jpg')"></span>Chêne</button>
-            <button class="preset-btn" data-type="wood" data-value="noyer" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/NOYER.jpg')"></span>Noyer</button>
-            <button class="preset-btn" data-type="wood" data-value="chene_fonce" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/CHENEFONCE.jpg')"></span>Chêne foncé</button>
-            <button class="preset-btn" data-type="wood" data-value="sapelli" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/SAPELLI.jpg')"></span>Sapelli</button>
-            <button class="preset-btn" data-type="wood" data-value="vert_sauge" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/VERTSAUGE.jpg')"></span>Vert sauge</button>
-            <button class="preset-btn" data-type="wood" data-value="brun_rose" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/BRUNROSE.jpg')"></span>Brun rosé</button>
-            <button class="preset-btn" data-type="wood" data-value="gris_ardoise" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background-image:url('img/GRISARDOISE.jpg')"></span>Gris ardoise</button>
-            <button class="preset-btn" data-type="wood" data-value="blanc_mate" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background:#F2F0EC;border:1px solid rgba(0,0,0,.1)"></span>Blanc maté</button>
-            <button class="preset-btn" data-type="wood" data-value="noir_mate" onclick="setMaterial('wood',this)"><span class="preset-swatch" style="background:#141414"></span>Noir maté</button>
-          </div>
-        </div>
-        <div class="config__summary">
-          <div class="config__recap">
-            <div class="config__recap-item"><span class="config__recap-label">Matière sélectionnée</span><span class="config__recap-val" id="recapWood">Chêne</span></div>
-          </div>
-          <a href="contact.html" class="config__cta" id="configCta">Demander un devis →</a>
-          <p class="config__note">Gratuit · Sans engagement · 24h</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
   /* Header shadow */
@@ -2020,24 +1773,6 @@
       document.head.appendChild(s);
     }
 
-    var MAT_OPTIONS = {
-      chene:        { label:'Chêne',        texture: 'img/BOISCHENE.jpg' },
-      noyer:        { label:'Noyer',        texture: 'img/NOYER.jpg' },
-      chene_fonce:  { label:'Chêne foncé',  texture: 'img/CHENEFONCE.jpg' },
-      sapelli:      { label:'Sapelli',      texture: 'img/SAPELLI.jpg' },
-      vert_sauge:   { label:'Vert sauge',   texture: 'img/VERTSAUGE.jpg' },
-      brun_rose:    { label:'Brun rosé',    texture: 'img/BRUNROSE.jpg' },
-      gris_ardoise: { label:'Gris ardoise', texture: 'img/GRISARDOISE.jpg' },
-      blanc_mate:   { label:'Blanc maté',   texture: null, r:0.95, g:0.94, b:0.92 },
-      noir_mate:    { label:'Noir maté',    texture: null, r:0.08, g:0.08, b:0.08 },
-    };
-
-    var textureCache = {};
-    var currentWood = 'chene', currentBody = 'chene';
-    var scene, camera, renderer, model;
-    var isDragging = false, prevX = 0, prevY = 0, rotX = 0, rotY = 0;
-    var originalMaterials = {};
-    var modalRenderer = null;
 
     /* ── PREVIEWS 3D ── */
     function initPreviews() {
@@ -2088,222 +1823,6 @@
       });
     }
 
-    /* ── MODAL CONFIGURATEUR ── */
-    window.openConfig = function(glbFile, title) {
-      document.getElementById('configModalTitle').textContent = title;
-      document.getElementById('configModal').classList.add('open');
-      document.body.style.overflow = 'hidden';
-
-      currentWood = 'chene'; currentBody = 'chene';
-      var rW = document.getElementById('recapWood');
-      if (rW) rW.textContent = 'Chêne';
-      var rB = document.getElementById('recapBody');
-      if (rB) rB.textContent = 'Chêne';
-      document.querySelectorAll('.preset-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.value === 'chene');
-      });
-
-      var loading = document.getElementById('viewerLoading');
-      loading.classList.remove('hidden');
-      loading.style.display = '';
-
-      if (!modalRenderer) {
-        initModalRenderer();
-      } else {
-        if (model) { scene.remove(model); model = null; }
-        originalMaterials = {};
-      }
-
-      loadGLB(glbFile);
-    };
-
-    window.closeConfig = function() {
-      document.getElementById('configModal').classList.remove('open');
-      document.body.style.overflow = '';
-    };
-
-    document.addEventListener('DOMContentLoaded', function() {
-      var modal = document.getElementById('configModal');
-      if (modal) {
-        modal.addEventListener('click', function(e) {
-          if (e.target === modal) closeConfig();
-        });
-      }
-      var btnReset = document.getElementById('btnReset');
-      if (btnReset) {
-        btnReset.addEventListener('click', function() {
-          if (!model) return;
-          rotX = 0; rotY = 0;
-          model.rotation.set(0, 0, 0);
-        });
-      }
-    });
-
-    function initModalRenderer() {
-      var canvas = document.getElementById('threeCanvas');
-      var viewer = document.getElementById('viewer3d');
-      var W = viewer.clientWidth || 600, H = viewer.clientHeight || 450;
-
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xFAF7F2);
-
-      camera = new THREE.PerspectiveCamera(45, W/H, 0.1, 100);
-      camera.position.set(0, 0, 3.5);
-
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-      renderer.setSize(W, H);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.85;
-      try { renderer.outputColorSpace = THREE.SRGBColorSpace; } catch(e) { renderer.outputEncoding = THREE.sRGBEncoding; }
-
-      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-      var key = new THREE.DirectionalLight(0xffffff, 0.8);
-      key.position.set(3, 5, 3);
-      scene.add(key);
-      var fill = new THREE.DirectionalLight(0xffffff, 0.3);
-      fill.position.set(-3, 2, -2);
-      scene.add(fill);
-
-      canvas.addEventListener('mousedown', function(e) { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
-      window.addEventListener('mouseup', function() { isDragging = false; });
-      window.addEventListener('mousemove', function(e) {
-        if (!isDragging || !model) return;
-        rotY += (e.clientX - prevX) * 0.008;
-        rotX = Math.max(-0.5, Math.min(0.5, rotX + (e.clientY - prevY) * 0.004));
-        model.rotation.set(rotX, rotY, 0);
-        prevX = e.clientX; prevY = e.clientY;
-      });
-      canvas.addEventListener('touchstart', function(e) { isDragging = true; prevX = e.touches[0].clientX; }, {passive:true});
-      canvas.addEventListener('touchend', function() { isDragging = false; });
-      canvas.addEventListener('touchmove', function(e) {
-        if (!isDragging || !model) return;
-        rotY += (e.touches[0].clientX - prevX) * 0.008;
-        model.rotation.y = rotY;
-        prevX = e.touches[0].clientX;
-      }, {passive:true});
-
-      window.addEventListener('resize', function() {
-        if (!viewer || !renderer) return;
-        var W2 = viewer.clientWidth, H2 = viewer.clientHeight;
-        camera.aspect = W2/H2;
-        camera.updateProjectionMatrix();
-        renderer.setSize(W2, H2);
-      });
-
-      modalRenderer = renderer;
-      (function loop() {
-        requestAnimationFrame(loop);
-        if (renderer) renderer.render(scene, camera);
-      })();
-    }
-
-    function loadGLB(path) {
-      if (model) { scene.remove(model); model = null; }
-      originalMaterials = {};
-      rotX = 0; rotY = 0;
-
-      console.log('[GLB] Loading:', path);
-
-      var loader = new THREE.GLTFLoader();
-      loader.load(path, function(gltf) {
-        console.log('[GLB] OK:', path);
-        model = gltf.scene;
-        var box = new THREE.Box3().setFromObject(model);
-        var center = box.getCenter(new THREE.Vector3());
-        var size = box.getSize(new THREE.Vector3());
-        var scale = 2.0 / Math.max(size.x, size.y, size.z, 0.001);
-        model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-        model.scale.setScalar(scale);
-        scene.add(model);
-
-        model.traverse(function(child) {
-          if (child.isMesh && child.material && !originalMaterials[child.material.name]) {
-            originalMaterials[child.material.name] = child.material.clone();
-          }
-        });
-
-        loadTexture('img/BOISCHENE.jpg', function(tex) {
-          if (!model) return;
-          model.traverse(function(child) {
-            if (!child.isMesh || !child.material) return;
-            child.material.map = tex;
-            child.material.color.setRGB(1, 1, 1);
-            child.material.needsUpdate = true;
-          });
-        });
-
-        var loading = document.getElementById('viewerLoading');
-        if (loading) loading.classList.add('hidden');
-
-      }, function(progress) {
-        if (progress.lengthComputable) {
-          var pct = Math.round((progress.loaded / progress.total) * 100);
-          console.log('[GLB] Progress:', pct + '%');
-        }
-      }, function(err) {
-        console.error('[GLB] ERROR loading', path, err);
-        var el = document.getElementById('viewerLoading');
-        if (el) {
-          el.innerHTML = '<div style="padding:20px;text-align:center">' +
-            '<p style="color:#CD3E00;font-weight:600;margin-bottom:8px">Modèle introuvable</p>' +
-            '<p style="color:rgba(0,0,0,.5);font-size:12px;font-family:monospace">' + path + '</p>' +
-            '<p style="color:rgba(0,0,0,.4);font-size:11px;margin-top:12px">Vérifie la console (F12)</p>' +
-          '</div>';
-        }
-      });
-    }
-
-    function loadTexture(url, cb) {
-      if (textureCache[url]) { cb(textureCache[url]); return; }
-      var loader = new THREE.TextureLoader();
-      loader.load(url, function(tex) {
-        tex.wrapS = THREE.RepeatWrapping;
-        tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(2, 2);
-        textureCache[url] = tex;
-        cb(tex);
-      });
-    }
-
-    window.setMaterial = function(type, btn) {
-      var value = btn.dataset.value;
-      var group = type === 'wood' ? 'presetsWood' : 'presetsBody';
-      document.querySelectorAll('#' + group + ' .preset-btn').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-
-      var preset = MAT_OPTIONS[value];
-      if (!preset) return;
-
-      if (type === 'wood') { currentWood = value; document.getElementById('recapWood').textContent = preset.label; }
-      else { currentBody = value; /* pas de recapBody */ }
-
-      if (!model) return;
-
-      function apply(tex) {
-        model.traverse(function(child) {
-          if (!child.isMesh || !child.material) return;
-          var orig = originalMaterials[child.material.name];
-          if (orig) { child.material = orig.clone(); child.material.name = child.material.name; }
-          if (tex) { child.material.map = tex; child.material.color.setRGB(1, 1, 1); }
-          else { child.material.map = null; child.material.color.setRGB(preset.r, preset.g, preset.b); }
-          child.material.needsUpdate = true;
-        });
-      }
-
-      if (preset.texture) loadTexture(preset.texture, apply);
-      else apply(null);
-
-      var cta = document.getElementById('configCta');
-      if (cta) {
-        var params = new URLSearchParams({
-          modele: document.getElementById('configModalTitle').textContent,
-          structure: MAT_OPTIONS[currentWood].label,
-          fond: MAT_OPTIONS[currentBody].label
-        });
-        cta.href = 'contact.html?' + params.toString();
-      }
-    };
 
     /* ── INIT ── */
     loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js', function() {
