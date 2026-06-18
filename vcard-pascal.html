@@ -36,7 +36,7 @@
     .card {
       background: var(--white);
       border-radius: 24px;
-      max-width: 400px;
+      max-width: 420px;
       width: 100%;
       overflow: hidden;
       box-shadow: 0 20px 80px rgba(26,26,26,0.12);
@@ -47,6 +47,17 @@
       padding: 36px 32px 28px;
       position: relative;
       overflow: hidden;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; align-items: flex-start; background: var(--dark); }
+      .card { border-radius: 0; min-height: 100vh; box-shadow: none; }
+      .card-header { padding: 48px 24px 28px; }
+      .card-body { padding: 24px 20px; }
+      .card-footer { padding: 16px 20px 32px; }
+      .name { font-size: 26px; }
+      .contact-value { font-size: 14px; }
+      #qrcode canvas, #qrcode img { width: 160px !important; height: 160px !important; }
     }
 
     .avatar {
