@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pascal Olivares — Kobo Design</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #CD3E00;
+      --bg: #FFFAF0;
+      --dark: #1A1A1A;
+      --white: #FFFFFF;
+      --font: 'Poppins', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--dark);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 24px;
+      max-width: 400px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 20px 80px rgba(26,26,26,0.12);
+    }
+
+    .card-header {
+      background: var(--dark);
+      padding: 36px 32px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2.5px solid var(--accent);
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+      display: block;
+    }
+
+    .avatar-placeholder {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(205,62,0,0.2);
+      border: 2.5px solid var(--accent);
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .card-header::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 180px;
+      height: 180px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.15;
+    }
+
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: -60px;
+      left: -30px;
+      width: 140px;
+      height: 140px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.08;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .name {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-top: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-body {
+      padding: 28px 32px;
+    }
+
+    .contact-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .contact-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .contact-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .contact-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(26,26,26,0.4);
+      line-height: 1;
+    }
+
+    .contact-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dark);
+      margin-top: 2px;
+      text-decoration: none;
+    }
+
+    .contact-value:hover { color: var(--accent); }
+
+    .divider {
+      height: 1px;
+      background: rgba(26,26,26,0.08);
+      margin-bottom: 24px;
+    }
+
+    .qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .qr-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(26,26,26,0.35);
+    }
+
+    .qr-wrapper {
+      padding: 14px;
+      background: var(--white);
+      border-radius: 16px;
+      border: 1.5px solid rgba(26,26,26,0.08);
+    }
+
+    #qrcode canvas, #qrcode img {
+      display: block;
+      border-radius: 4px;
+    }
+
+    .btn-add {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.18s, transform 0.18s;
+      margin-top: 20px;
+    }
+
+    .btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-add:active { transform: translateY(0); }
+
+    .btn-add svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .card-footer {
+      padding: 16px 32px 24px;
+      text-align: center;
+    }
+
+    .footer-text {
+      font-size: 10px;
+      color: rgba(26,26,26,0.3);
+      letter-spacing: 0.05em;
+    }
+
+    .footer-text a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="card-header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">Kobo Design</span>
+    </div>
+    <img id="avatar" src="img/pascal.jpg" alt="Pascal Olivares" class="avatar" onerror="this.style.display='none';document.getElementById('avatar-fallback').style.display='flex';"/>
+    <div id="avatar-fallback" class="avatar-placeholder" style="display:none;">PO</div>
+    <div class="name">Pascal<br>Olivares</div>
+    <div class="title">Dirigeant</div>
+  </div>
+
+  <div class="card-body">
+
+    <ul class="contact-list">
+      <li class="contact-item">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42 2 2 0 0 1 3.59 1.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.81a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <div>
+          <div class="contact-label">Téléphone</div>
+          <a class="contact-value" href="tel:+33642899858">+33 6 42 89 98 58</a>
+        </div>
+      </li>
+      <li class="contact-item">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div>
+          <div class="contact-label">Email</div>
+          <a class="contact-value" href="mailto:Pascal@symetry.fr">Pascal@symetry.fr</a>
+        </div>
+      </li>
+      <li class="contact-item">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <div>
+          <div class="contact-label">Site web</div>
+          <a class="contact-value" href="https://www.kobo-design.fr/" target="_blank">kobo-design.fr</a>
+        </div>
+      </li>
+      <li class="contact-item">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </div>
+        <div>
+          <div class="contact-label">Instagram</div>
+          <a class="contact-value" href="https://www.instagram.com/kobodesign_bdx/" target="_blank">@kobodesign_bdx</a>
+        </div>
+      </li>
+    </ul>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 12px; line-height: 1.7; color: rgba(26,26,26,0.55); text-align: center; margin-bottom: 24px; font-weight: 400;">
+      Kobo Design, c'est l'aménagement sur mesure<br>de votre espace de vie, pensé et fabriqué à Bordeaux.
+    </p>
+
+    <div class="divider"></div>
+
+    <div class="qr-section">
+      <div class="qr-label">Scanner pour enregistrer</div>
+      <div class="qr-wrapper">
+        <div id="qrcode"></div>
+      </div>
+    </div>
+
+    <a class="btn-add" id="vcf-btn" href="#" download="pascal-olivares.vcf">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+      Ajouter au contact
+    </a>
+
+  </div>
+
+  <div class="card-footer">
+    <p class="footer-text">
+      <a href="https://www.kobo-design.fr/" target="_blank">kobo-design.fr</a>
+      &nbsp;·&nbsp; Bordeaux, France
+    </p>
+  </div>
+
+</div>
+
+<script>
+  const vcard = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    'FN:Pascal Olivares',
+    'N:Olivares;Pascal;;;',
+    'ORG:Kobo Design',
+    'TITLE:Dirigeant',
+    'TEL;TYPE=CELL:+33642899858',
+    'EMAIL:Pascal@symetry.fr',
+    'URL;TYPE=WORK:https://www.kobo-design.fr/',
+    'X-SOCIALPROFILE;type=instagram:https://www.instagram.com/kobodesign_bdx/',
+    'END:VCARD'
+  ].join('\n');
+
+  new QRCode(document.getElementById('qrcode'), {
+    text: vcard,
+    width: 180,
+    height: 180,
+    colorDark: '#1A1A1A',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  const blob = new Blob([vcard], { type: 'text/vcard' });
+  const url = URL.createObjectURL(blob);
+  document.getElementById('vcf-btn').href = url;
+</script>
+
+</body>
+</html>
