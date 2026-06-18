@@ -419,6 +419,7 @@ var controls=new THREE.OrbitControls(camera,cvs);
 controls.enableDamping=true; controls.dampingFactor=0.1;
 controls.target.set(0,0.25,0);
 controls.minPolarAngle=Math.PI*.10; controls.maxPolarAngle=Math.PI*.52;
+controls.minAzimuthAngle=-Math.PI/2; controls.maxAzimuthAngle=Math.PI/2;
 controls.minDistance=0.4; controls.maxDistance=4.0; controls.update();
 
 var planMesh=null, caissonGrp=null;
