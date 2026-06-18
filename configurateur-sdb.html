@@ -1392,7 +1392,7 @@ function buildRecapStr(){
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
   return '• Meuble : '+Math.round(S.CL*100)+'L × '+Math.round(S.CH*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n'
        + '• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n'
-       + '• Vasque : '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n'
+       + '• Vasque : '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n'
        + '• Intérieur : '+counts.shelf+' tablette(s), '+counts.separator+' séparateur(s), '+counts.porte+' porte(s), '+counts.tiroir+' tiroir(s)';
 }
 function buildRecap(){
@@ -1401,7 +1401,7 @@ function buildRecap(){
   var rows=[
     ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm — '+MATS_CAIS[S.matCais].n],
     ['Plan',   Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n],
-    ['Vasque', Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
+    ['Vasque', (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
     ['Tablettes',  counts.shelf+' tablette'+(counts.shelf!==1?'s':'')],
     ['Séparateurs',counts.separator+' séparateur'+(counts.separator!==1?'s':'')],
     ['Portes',  counts.porte+' porte'+(counts.porte!==1?'s':'')],
@@ -1418,7 +1418,7 @@ function buildRecap4(){
   var rows=[
     ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm — '+MATS_CAIS[S.matCais].n],
     ['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+'×'+Math.round(S.Ep*10)/10+' cm — '+MATS_PLAN[S.matPlan].n],
-    ['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
+    ['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
     ['Tablettes', counts.shelf],
     ['Séparateurs', counts.separator],
     ['Portes', counts.porte],
