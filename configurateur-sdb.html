@@ -568,22 +568,23 @@ function buildCaisson(){
     var cx=xcmToLocal((left+right)/2);
     var jeu=0.003;
     if(el.type==='porte'){
+      var isOpen=!!caissonOpenState[el.key];
       var iW_cm2=iW*100, iH_cm2=iH*100;
-      // Étend jusqu'à la face extérieure des panneaux (comme les tiroirs)
       var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  - EP/2;
       var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
       var porYbot   = (bot<0.5)          ?  0    : ycmToLocal(bot)    - EP/2;
       var porYtop   = (top>iH_cm2-0.5)  ?  CH   : ycmToLocal(top)    + EP/2;
       var porW  = porXright - porXleft - jeu;
       var porH  = porYtop   - porYbot  - jeu;
-      var porCx = (porXleft + porXright) / 2;
-      var porCy = (porYbot  + porYtop)  / 2;
-      var pm=box(porW,porH,0.020,matFacade); pm.position.set(porCx,porCy,fz);
-      pm.userData.elemIdx=idx; caissonElemMeshes.push(pm); caissonGrp.add(pm);
-      // Poignée verticale côté droit
-      var pgV=new THREE.CylinderGeometry(0.006,0.006,porH*0.35,12);
-      var pv=new THREE.Mesh(pgV,matLaiton);
-      pv.position.set(porCx+(porW/2-0.028),porCy,fz+0.021); caissonGrp.add(pv);
+      var porCy = (porYbot + porYtop) / 2;
+      // Pivot sur le bord gauche (charnière)
+      var pivot=new THREE.Group();
+      pivot.position.set(porXleft+jeu/2, porCy, fz);
+      if(isOpen) pivot.rotation.y=-Math.PI/2;
+      var pm=box(porW,porH,0.020,matFacade);
+      pm.position.set(porW/2,0,0);
+      pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
+      pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
     } else { // tiroir — couvre toutes les faces blanches de sa zone
       var isOpen=!!caissonOpenState[el.key];
       var tirZ=isOpen ? fz+CP*0.55 : fz;
@@ -1090,10 +1091,16 @@ cvs.addEventListener('pointerdown',function(e){
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
     var hits=raycaster.intersectObjects(caissonElemMeshes,false);
-    if(hits.length&&hits[0].object.userData.isTiroir){
-      var k=hits[0].object.userData.tirKey;
-      caissonOpenState[k]=!caissonOpenState[k];
-      buildCaisson(); return;
+    if(hits.length){
+      var obj=hits[0].object;
+      if(obj.userData.isTiroir){
+        caissonOpenState[obj.userData.tirKey]=!caissonOpenState[obj.userData.tirKey];
+        buildCaisson(); return;
+      }
+      if(obj.userData.isPorte){
+        caissonOpenState[obj.userData.porKey]=!caissonOpenState[obj.userData.porKey];
+        buildCaisson(); return;
+      }
     }
   }
   if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
