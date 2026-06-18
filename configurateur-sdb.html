@@ -584,10 +584,10 @@ function buildCaisson(){
       var pivot=new THREE.Group();
       if(hingeLeft){
         pivot.position.set(porXleft+jeu/2, porCy, fz);
-        if(isOpen) pivot.rotation.y=Math.PI*0.25;
+        if(isOpen) pivot.rotation.y=-Math.PI*0.25;
       } else {
         pivot.position.set(porXright-jeu/2, porCy, fz);
-        if(isOpen) pivot.rotation.y=-Math.PI*0.25;
+        if(isOpen) pivot.rotation.y=Math.PI*0.25;
       }
       var pm=box(porW,porH,0.020,matFacade);
       pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
