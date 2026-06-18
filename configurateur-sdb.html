@@ -568,13 +568,22 @@ function buildCaisson(){
     var cx=xcmToLocal((left+right)/2);
     var jeu=0.003;
     if(el.type==='porte'){
-      var cy=ycmToLocal((bot+top)/2);
-      var pm=box(w-jeu,h-jeu,0.020,matFacade); pm.position.set(cx,cy,fz);
+      var iW_cm2=iW*100, iH_cm2=iH*100;
+      // Étend jusqu'à la face extérieure des panneaux (comme les tiroirs)
+      var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  - EP/2;
+      var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+      var porYbot   = (bot<0.5)          ?  0    : ycmToLocal(bot)    - EP/2;
+      var porYtop   = (top>iH_cm2-0.5)  ?  CH   : ycmToLocal(top)    + EP/2;
+      var porW  = porXright - porXleft - jeu;
+      var porH  = porYtop   - porYbot  - jeu;
+      var porCx = (porXleft + porXright) / 2;
+      var porCy = (porYbot  + porYtop)  / 2;
+      var pm=box(porW,porH,0.020,matFacade); pm.position.set(porCx,porCy,fz);
       pm.userData.elemIdx=idx; caissonElemMeshes.push(pm); caissonGrp.add(pm);
       // Poignée verticale côté droit
-      var pgV=new THREE.CylinderGeometry(0.006,0.006,h*0.35,12);
+      var pgV=new THREE.CylinderGeometry(0.006,0.006,porH*0.35,12);
       var pv=new THREE.Mesh(pgV,matLaiton);
-      pv.position.set(cx+(w/2-0.028),cy,fz+0.021); caissonGrp.add(pv);
+      pv.position.set(porCx+(porW/2-0.028),porCy,fz+0.021); caissonGrp.add(pv);
     } else { // tiroir — couvre toutes les faces blanches de sa zone
       var isOpen=!!caissonOpenState[el.key];
       var tirZ=isOpen ? fz+CP*0.55 : fz;
