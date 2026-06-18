@@ -1067,6 +1067,7 @@ function updateAmgtCount(){
 // DRAG VASQUE
 // ═══════════════════════════════════════════════════════
 var isDragging=false,dragOffset=new THREE.Vector3();
+var isTouchEditDrag=false;
 var raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
 var dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0),dragPt=new THREE.Vector3();
 
@@ -1101,7 +1102,7 @@ function _moveDrag(){
 }
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
-  if(S.step===1&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
+  if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
     var hits=raycaster.intersectObjects(caissonElemMeshes,false);
@@ -1140,18 +1141,40 @@ window.addEventListener('pointerup',function(){
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
 cvs.addEventListener('touchstart',function(e){
+  // Mode édition meuble : drag-to-place (glisser pour positionner précisément)
+  if(S.step===1&&caissonEditMode){
+    isTouchEditDrag=true; controls.enabled=false;
+    var t=e.touches[0];
+    updateCaissonGhost({clientX:t.clientX,clientY:t.clientY});
+    e.preventDefault(); return;
+  }
   if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
   var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
   raycaster.setFromCamera(mouse,camera);
   if(_startVasqueDrag()){ isDragging=true; controls.enabled=false; e.preventDefault(); }
 },{passive:false});
 cvs.addEventListener('touchmove',function(e){
+  // Mode édition meuble : mise à jour du ghost pendant le glisser
+  if(S.step===1&&caissonEditMode&&isTouchEditDrag){
+    var t=e.touches[0];
+    updateCaissonGhost({clientX:t.clientX,clientY:t.clientY});
+    e.preventDefault(); return;
+  }
   if(!isDragging) return; e.preventDefault();
   var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
   raycaster.setFromCamera(mouse,camera);
   _moveDrag();
 },{passive:false});
 cvs.addEventListener('touchend',function(e){
+  // Mode édition meuble : placement à la position finale du doigt
+  if(S.step===1&&caissonEditMode&&isTouchEditDrag){
+    isTouchEditDrag=false; controls.enabled=true;
+    if(e.changedTouches.length){
+      var t=e.changedTouches[0];
+      placeOrRemoveCaisson({clientX:t.clientX,clientY:t.clientY});
+    }
+    return;
+  }
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;}
   // Ouverture portes / tiroirs au tap (step 1, hors mode édition)
   if(S.step===1&&!caissonEditMode&&e.changedTouches.length){
