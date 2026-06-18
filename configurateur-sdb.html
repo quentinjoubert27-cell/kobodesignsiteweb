@@ -577,12 +577,20 @@ function buildCaisson(){
       var porW  = porXright - porXleft - jeu;
       var porH  = porYtop   - porYbot  - jeu;
       var porCy = (porYbot + porYtop) / 2;
-      // Pivot sur le bord gauche (charnière)
+      // Charnière à l'extérieur : gauche si porte dans la moitié gauche, droite sinon
+      var cabinetMidX = xcmToLocal(iW*50);
+      var porCx = (porXleft + porXright) / 2;
+      var hingeLeft = porCx <= cabinetMidX;
       var pivot=new THREE.Group();
-      pivot.position.set(porXleft+jeu/2, porCy, fz);
-      if(isOpen) pivot.rotation.y=-Math.PI/2;
+      if(hingeLeft){
+        pivot.position.set(porXleft+jeu/2, porCy, fz);
+        if(isOpen) pivot.rotation.y=-Math.PI/2;
+      } else {
+        pivot.position.set(porXright-jeu/2, porCy, fz);
+        if(isOpen) pivot.rotation.y=Math.PI/2;
+      }
       var pm=box(porW,porH,0.020,matFacade);
-      pm.position.set(porW/2,0,0);
+      pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
       pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
       pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
     } else { // tiroir — couvre toutes les faces blanches de sa zone
