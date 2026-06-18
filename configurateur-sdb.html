@@ -1099,23 +1099,7 @@ function _moveDrag(){
 }
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
-  // ── Drag objets déco (mode présentation) ──
-  if(presMode){
-    toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var dh=raycaster.intersectObjects(decoMeshes,false);
-    if(dh.length){
-      var ig=dh[0].object.userData.decoItem;
-      if(ig){
-        _dragDecoGrp=ig;
-        _dragDecoPlane.set(new THREE.Vector3(0,1,0),-ig.position.y);
-        var pt=new THREE.Vector3();
-        raycaster.ray.intersectPlane(_dragDecoPlane,pt);
-        _dragDecoOffset.set(ig.position.x-pt.x,0,ig.position.z-pt.z);
-        controls.enabled=false; cvs.style.cursor='grabbing';
-      }
-    }
-    return;
-  }
+  if(presMode) return;
   if(S.step===1&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
@@ -1139,20 +1123,7 @@ cvs.addEventListener('pointerdown',function(e){
   }
 });
 cvs.addEventListener('pointermove',function(e){
-  if(presMode){
-    toNDC(e); raycaster.setFromCamera(mouse,camera);
-    if(_dragDecoGrp){
-      var pt=new THREE.Vector3();
-      if(raycaster.ray.intersectPlane(_dragDecoPlane,pt)){
-        _dragDecoGrp.position.x=pt.x+_dragDecoOffset.x;
-        _dragDecoGrp.position.z=pt.z+_dragDecoOffset.z;
-      }
-    } else {
-      var hover=raycaster.intersectObjects(decoMeshes,false).length>0;
-      cvs.style.cursor=hover?'grab':'';
-    }
-    return;
-  }
+  if(presMode) return;
   if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
@@ -1166,7 +1137,6 @@ cvs.addEventListener('pointermove',function(e){
   _moveDrag();
 });
 window.addEventListener('pointerup',function(){
-  if(_dragDecoGrp){_dragDecoGrp=null;controls.enabled=true;cvs.style.cursor='';}
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
 cvs.addEventListener('touchstart',function(e){
@@ -1564,13 +1534,10 @@ setMatVasque(S_matVasque); // Blanc Elysée
 function onResize(){ var w=wrap.clientWidth,h=wrap.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 window.addEventListener('resize',onResize); onResize();
 // ═══════════════════════════════════════════════════════
-// MODE PRÉSENTATION + DRAG OBJETS DÉCO
+// MODE PRÉSENTATION
 // ═══════════════════════════════════════════════════════
 var decoGroup=null, presMode=false;
 var decoMeshes=[];
-var _dragDecoGrp=null;
-var _dragDecoPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
-var _dragDecoOffset=new THREE.Vector3();
 
 function camAnimTo(parr,tarr,ms){
   var p0=camera.position.clone(),t0=controls.target.clone();
@@ -1599,7 +1566,7 @@ function enterPres(){
 function exitPres(){
   presMode=false;
   if(decoGroup){scene.remove(decoGroup);decoGroup=null;}
-  decoMeshes=[];_dragDecoGrp=null;
+  decoMeshes=[];
   controls.minAzimuthAngle=-Math.PI/2; controls.maxAzimuthAngle=Math.PI/2;
   animCamera(Math.min(S.step,3));
   var btn=document.getElementById('pres-btn');
