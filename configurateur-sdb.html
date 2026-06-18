@@ -1099,6 +1099,23 @@ function _moveDrag(){
 }
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
+  // ── Drag objets déco (mode présentation) ──
+  if(presMode){
+    toNDC(e); raycaster.setFromCamera(mouse,camera);
+    var dh=raycaster.intersectObjects(decoMeshes,false);
+    if(dh.length){
+      var ig=dh[0].object.userData.decoItem;
+      if(ig){
+        _dragDecoGrp=ig;
+        _dragDecoPlane.set(new THREE.Vector3(0,1,0),-ig.position.y);
+        var pt=new THREE.Vector3();
+        raycaster.ray.intersectPlane(_dragDecoPlane,pt);
+        _dragDecoOffset.set(ig.position.x-pt.x,0,ig.position.z-pt.z);
+        controls.enabled=false; cvs.style.cursor='grabbing';
+      }
+    }
+    return;
+  }
   if(S.step===1&&caissonEditMode){ placeOrRemoveCaisson(e); return; }
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
@@ -1122,6 +1139,20 @@ cvs.addEventListener('pointerdown',function(e){
   }
 });
 cvs.addEventListener('pointermove',function(e){
+  if(presMode){
+    toNDC(e); raycaster.setFromCamera(mouse,camera);
+    if(_dragDecoGrp){
+      var pt=new THREE.Vector3();
+      if(raycaster.ray.intersectPlane(_dragDecoPlane,pt)){
+        _dragDecoGrp.position.x=pt.x+_dragDecoOffset.x;
+        _dragDecoGrp.position.z=pt.z+_dragDecoOffset.z;
+      }
+    } else {
+      var hover=raycaster.intersectObjects(decoMeshes,false).length>0;
+      cvs.style.cursor=hover?'grab':'';
+    }
+    return;
+  }
   if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
@@ -1135,6 +1166,7 @@ cvs.addEventListener('pointermove',function(e){
   _moveDrag();
 });
 window.addEventListener('pointerup',function(){
+  if(_dragDecoGrp){_dragDecoGrp=null;controls.enabled=true;cvs.style.cursor='';}
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
 cvs.addEventListener('touchstart',function(e){
@@ -1532,9 +1564,13 @@ setMatVasque(S_matVasque); // Blanc Elysée
 function onResize(){ var w=wrap.clientWidth,h=wrap.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 window.addEventListener('resize',onResize); onResize();
 // ═══════════════════════════════════════════════════════
-// MODE PRÉSENTATION
+// MODE PRÉSENTATION + DRAG OBJETS DÉCO
 // ═══════════════════════════════════════════════════════
 var decoGroup=null, presMode=false;
+var decoMeshes=[];
+var _dragDecoGrp=null;
+var _dragDecoPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+var _dragDecoOffset=new THREE.Vector3();
 
 function camAnimTo(parr,tarr,ms){
   var p0=camera.position.clone(),t0=controls.target.clone();
@@ -1563,107 +1599,102 @@ function enterPres(){
 function exitPres(){
   presMode=false;
   if(decoGroup){scene.remove(decoGroup);decoGroup=null;}
+  decoMeshes=[];_dragDecoGrp=null;
   controls.minAzimuthAngle=-Math.PI/2; controls.maxAzimuthAngle=Math.PI/2;
   animCamera(Math.min(S.step,3));
   var btn=document.getElementById('pres-btn');
   if(btn){btn.textContent='✨ Présentation';btn.classList.remove('active');}
 }
 
-// ── helpers géométrie déco ───────────────────────────────────
-function _dMat(col,rough,metal){
-  return new THREE.MeshStandardMaterial({color:col,roughness:rough||0.6,metalness:metal||0});
-}
-function _dCyl(r,h,col,rough,sides){
-  return new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sides||16),_dMat(col,rough));
-}
-function _dSph(r,col,rough){
-  return new THREE.Mesh(new THREE.SphereGeometry(r,12,10),_dMat(col,rough));
-}
-function _add(grp,mesh,x,y,z){mesh.position.set(x,y,z);grp.add(mesh);return mesh;}
+// ── constructeurs d'items (centrés x=0 z=0, base y=0) ──────────
+function _dMat(col,ro,met){return new THREE.MeshStandardMaterial({color:col,roughness:ro||0.6,metalness:met||0});}
+function _dCyl(r,h,col,ro,s){return new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,s||16),_dMat(col,ro));}
+function _dSph(r,col,ro){return new THREE.Mesh(new THREE.SphereGeometry(r,12,10),_dMat(col,ro));}
+function _dTor(r1,r2,col,ro){return new THREE.Mesh(new THREE.TorusGeometry(r1,r2,8,20),_dMat(col,ro));}
+function _p(m,x,y,z){m.position.set(x,y,z);return m;}
 
-function addFlacon(grp,x,baseY,z,col){
-  var h=0.14;
-  _add(grp,_dCyl(0.024,h,col,0.5),x,baseY+h/2,z);
-  _add(grp,_dCyl(0.012,0.03,col,0.5),x,baseY+h+0.015,z);
-  _add(grp,_dCyl(0.004,0.04,0xB0AEA8,0.3,8),x,baseY+h+0.05,z);
-  // tête pompe
-  var head=_dCyl(0.010,0.008,0xB0AEA8,0.3,8);
-  head.rotation.z=Math.PI/2;
-  _add(grp,head,x+0.012,baseY+h+0.068,z);
+function mkFlacon(col){
+  var g=new THREE.Group(),h=0.14;
+  g.add(_p(_dCyl(0.024,h,col,0.5),0,h/2,0));
+  g.add(_p(_dCyl(0.012,0.030,col,0.5),0,h+0.015,0));
+  g.add(_p(_dCyl(0.004,0.040,0xB0AEA8,0.3,8),0,h+0.050,0));
+  var head=_dCyl(0.010,0.008,0xB0AEA8,0.3,8); head.rotation.z=Math.PI/2;
+  g.add(_p(head,0.012,h+0.068,0));
+  return g;
 }
-
-function addBouteille(grp,x,baseY,z,col){
-  var h=0.10;
-  _add(grp,_dCyl(0.020,h*0.72,col,0.4),x,baseY+h*0.36,z);
-  _add(grp,_dCyl(0.010,h*0.28,col,0.4),x,baseY+h*0.72+h*0.14,z);
+function mkBouteille(col){
+  var g=new THREE.Group(),h=0.10;
+  g.add(_p(_dCyl(0.020,h*0.72,col,0.4),0,h*0.36,0));
+  g.add(_p(_dCyl(0.010,h*0.28,col,0.4),0,h*0.72+h*0.14,0));
+  return g;
 }
-
-function addDiffuseur(grp,x,baseY,z){
-  addBouteille(grp,x,baseY,z,0xF0EDE8);
+function mkDiffuseur(){
+  var g=new THREE.Group();
+  g.add(mkBouteille(0xF0EDE8));
   for(var i=0;i<6;i++){
-    var a=i/6*Math.PI*2, r2=0.009;
-    var stick=_dCyl(0.003,0.09,0x9E8E78,0.75,6);
-    _add(grp,stick,x+Math.cos(a)*r2,baseY+0.10+0.045,z+Math.sin(a)*r2);
+    var a=i/6*Math.PI*2,r2=0.009;
+    g.add(_p(_dCyl(0.003,0.09,0x9E8E78,0.75,6),Math.cos(a)*r2,0.10+0.045,Math.sin(a)*r2));
   }
+  return g;
 }
-
-function addPlante(grp,x,baseY,z){
-  _add(grp,_dCyl(0.052,0.072,0xBF7050,0.75),x,baseY+0.036,z);
-  _add(grp,_dCyl(0.048,0.010,0x3E2A1E,0.9),x,baseY+0.077,z);
-  var f1=_dSph(0.068,0x4E8040,0.85); f1.scale.y=0.72;
-  _add(grp,f1,x,baseY+0.105,z);
-  var f2=_dSph(0.048,0x3E7030,0.85); f2.scale.y=0.68;
-  _add(grp,f2,x+0.038,baseY+0.132,z-0.01);
-  var f3=_dSph(0.038,0x5A9248,0.85); f3.scale.y=0.65;
-  _add(grp,f3,x-0.03,baseY+0.125,z+0.012);
+function mkPlante(){
+  var g=new THREE.Group();
+  g.add(_p(_dCyl(0.052,0.072,0xBF7050,0.75),0,0.036,0));
+  g.add(_p(_dCyl(0.048,0.010,0x3E2A1E,0.9),0,0.077,0));
+  var f1=_dSph(0.068,0x4E8040,0.85); f1.scale.y=0.72; g.add(_p(f1,0,0.105,0));
+  var f2=_dSph(0.048,0x3E7030,0.85); f2.scale.y=0.68; g.add(_p(f2,0.038,0.132,-0.010));
+  var f3=_dSph(0.038,0x5A9248,0.85); f3.scale.y=0.65; g.add(_p(f3,-0.030,0.125,0.012));
+  return g;
 }
-
-function addServiette(grp,x,baseY,z,col){
-  var r=0.032,len=0.10;
+function mkServiette(col){
+  var g=new THREE.Group(),r=0.032,len=0.10;
   var mat=_dMat(col,0.88);
   var geo=new THREE.CylinderGeometry(r,r,len,16); geo.rotateZ(Math.PI/2);
-  var mesh=new THREE.Mesh(geo,mat); _add(grp,mesh,x,baseY+r,z);
-  // ligne ourlet
-  var ring=new THREE.Mesh(new THREE.TorusGeometry(r,0.003,8,20),_dMat(col,0.9));
-  ring.rotation.set(0,Math.PI/2,0); _add(grp,ring,x+len*0.28,baseY+r,z);
-  var ring2=new THREE.Mesh(new THREE.TorusGeometry(r,0.003,8,20),_dMat(col,0.9));
-  ring2.rotation.set(0,Math.PI/2,0); _add(grp,ring2,x-len*0.28,baseY+r,z);
+  g.add(_p(new THREE.Mesh(geo,mat),0,r,0));
+  var ri1=_dTor(r,0.003,col,0.9); ri1.rotation.set(0,Math.PI/2,0); g.add(_p(ri1, len*0.28,r,0));
+  var ri2=_dTor(r,0.003,col,0.9); ri2.rotation.set(0,Math.PI/2,0); g.add(_p(ri2,-len*0.28,r,0));
+  return g;
+}
+function mkPanier(){
+  var g=new THREE.Group();
+  g.add(_p(_dCyl(0.060,0.068,0xC8A87A,0.92,20),0,0.034,0));
+  var rim=_dTor(0.060,0.006,0xAA8E60,0.88); rim.rotation.x=Math.PI/2;
+  g.add(_p(rim,0,0.068,0));
+  return g;
 }
 
-function addPanier(grp,x,baseY,z){
-  _add(grp,new THREE.Mesh(new THREE.CylinderGeometry(0.060,0.050,0.068,20),_dMat(0xC8A87A,0.92)),x,baseY+0.034,z);
-  var rim=new THREE.Mesh(new THREE.TorusGeometry(0.060,0.006,6,20),_dMat(0xAA8E60,0.88));
-  rim.rotation.x=Math.PI/2; _add(grp,rim,x,baseY+0.068,z);
+// Place un item, enregistre ses meshes pour le drag
+function placeItem(item,x,y,z){
+  item.position.set(x,y,z);
+  item.traverse(function(c){
+    if(c.isMesh){c.userData.decoItem=item; c.userData.dragY=y; decoMeshes.push(c);}
+  });
+  decoGroup.add(item);
 }
 
 function buildDeco(){
   if(decoGroup)scene.remove(decoGroup);
   decoGroup=new THREE.Group(); scene.add(decoGroup);
+  decoMeshes=[];
 
   var topY=planTopY(), pz=planCZ();
-  var ox=S.caissonOffset, cz=caissCZ(), CP=caissonCP();
+  var ox=S.caissonOffset, cz=caissCZ();
   var vx=clampVasque(S.vx,'x'), vrx=S.vasqueRx;
 
-  // ── Objets sur le plan de travail ──────────────────────────
+  // ── Sur le plan de travail ──
   var dR=vx+vrx+0.07;
   if(dR+0.08 < ox+S.L/2){
-    addFlacon(decoGroup, dR,      topY, pz, 0xECE8E2);
-    addBouteille(decoGroup, dR+0.075, topY, pz+0.03, 0xD4C5B2);
+    placeItem(mkFlacon(0xECE8E2),   dR,       topY, pz);
+    placeItem(mkBouteille(0xD4C5B2),dR+0.075, topY, pz+0.03);
   }
   var dL=vx-vrx-0.07;
-  if(dL-0.04 > ox-S.L/2){
-    addDiffuseur(decoGroup, dL, topY, pz);
-  }
-  // plante côté extérieur gauche du caisson
-  addPlante(decoGroup, ox-S.CL/2+0.13, topY, pz-0.04);
+  if(dL-0.04 > ox-S.L/2) placeItem(mkDiffuseur(), dL, topY, pz);
+  placeItem(mkPlante(), ox-S.CL/2+0.13, topY, pz-0.04);
 
-  // ── Serviettes dans les cases ouvertes ─────────────────────
-  var iW_cm=Math.round((S.CL-2*EP)*100);
-  var iH_cm=Math.round((S.CH-2*EP)*100);
+  // ── Serviettes dans les cases ouvertes ──
+  var iW_cm=Math.round((S.CL-2*EP)*100), iH_cm=Math.round((S.CH-2*EP)*100);
   var facadeKeys={};
-  caissonElements.forEach(function(el){
-    if(el.type==='porte'||el.type==='tiroir') facadeKeys[el.key]=true;
-  });
+  caissonElements.forEach(function(el){if(el.type==='porte'||el.type==='tiroir')facadeKeys[el.key]=true;});
   var sepXs=[0,iW_cm], shelfYs=[0,iH_cm];
   caissonElements.forEach(function(el){
     if(el.type==='separator') sepXs.push(Math.round(el.x_cm));
@@ -1671,30 +1702,22 @@ function buildDeco(){
   });
   sepXs  =Array.from(new Set(sepXs)).sort(function(a,b){return a-b;});
   shelfYs=Array.from(new Set(shelfYs)).sort(function(a,b){return a-b;});
-
-  var towelPalette=[0xF5F2EE,0xDDD4C6,0xB8C2C5,0xE8DDD2,0xC8C0B8];
-  var tIdx=0;
+  var towels=[0xF5F2EE,0xDDD4C6,0xB8C2C5,0xE8DDD2,0xC8C0B8]; var ti=0;
   for(var ci=0;ci<sepXs.length-1;ci++){
     for(var ri=0;ri<shelfYs.length-1;ri++){
       var left=sepXs[ci],right=sepXs[ci+1],bot=shelfYs[ri],top=shelfYs[ri+1];
-      var key=bot+'_'+left+'_'+top+'_'+right;
-      if(facadeKeys[key]) continue;
+      if(facadeKeys[bot+'_'+left+'_'+top+'_'+right]) continue;
       var cellW=(right-left)/100, cellH=(top-bot)/100;
       if(cellW<0.08||cellH<0.08) continue;
-      var wx=ox+xcmToLocal((left+right)/2);
       var wy=ycmToLocal(bot)+0.01;
-      var wz=cz; // centre profondeur du caisson
       var nTow=Math.max(1,Math.min(3,Math.floor(cellW/0.12)));
       var step=cellW/(nTow+1);
       for(var t=0;t<nTow;t++){
-        var tx=ox+xcmToLocal(left)+(t+1)*step;
-        addServiette(decoGroup,tx,wy,wz,towelPalette[tIdx%towelPalette.length]);
-        tIdx++;
+        placeItem(mkServiette(towels[ti%towels.length]),ox+xcmToLocal(left)+(t+1)*step,wy,cz);
+        ti++;
       }
-      // Panier dans la case du bas à droite si assez de place
-      if(ri===0&&ci===sepXs.length-2&&cellH>0.15&&cellW>0.14){
-        addPanier(decoGroup,wx,wy+0.008,wz-0.02);
-      }
+      if(ri===0&&ci===sepXs.length-2&&cellH>0.15&&cellW>0.14)
+        placeItem(mkPanier(),ox+xcmToLocal((left+right)/2),wy+0.008,cz-0.02);
     }
   }
 }
