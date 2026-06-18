@@ -144,6 +144,12 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   .btn-back,.btn-next{min-height:44px}
   /* header */
   #sb-header{padding:12px 14px 10px}
+  /* barre d'édition : masque le libellé, réduit les boutons, autorise le retour à la ligne */
+  #c-edit-bar{flex-wrap:wrap;justify-content:center;border-radius:14px;padding:8px;gap:5px;max-width:calc(100vw - 24px);white-space:normal}
+  .c-edit-lbl,.c-edit-sep{display:none}
+  .c-type-btns{flex-wrap:wrap;justify-content:center;border-radius:10px}
+  .c-type-btn{padding:7px 10px;font-size:9px;min-height:36px;min-width:44px}
+  .c-edit-close{min-width:36px;min-height:36px;width:36px;height:36px}
 }
 @media(max-width:480px){
   #sb-body{padding:10px 10px}
@@ -1145,7 +1151,21 @@ cvs.addEventListener('touchmove',function(e){
   raycaster.setFromCamera(mouse,camera);
   _moveDrag();
 },{passive:false});
-cvs.addEventListener('touchend',function(){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;});
+cvs.addEventListener('touchend',function(e){
+  if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;}
+  // Ouverture portes / tiroirs au tap (step 1, hors mode édition)
+  if(S.step===1&&!caissonEditMode&&e.changedTouches.length){
+    var t=e.changedTouches[0];
+    toNDC({clientX:t.clientX,clientY:t.clientY});
+    raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
+    if(hits.length){
+      var obj=hits[0].object;
+      if(obj.userData.isTiroir){caissonOpenState[obj.userData.tirKey]=!caissonOpenState[obj.userData.tirKey];buildCaisson();}
+      if(obj.userData.isPorte){caissonOpenState[obj.userData.porKey]=!caissonOpenState[obj.userData.porKey];buildCaisson();}
+    }
+  }
+});
 
 // ═══════════════════════════════════════════════════════
 // UI CALLBACKS
