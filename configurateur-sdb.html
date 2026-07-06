@@ -516,6 +516,7 @@ function buildCaisson(){
   var matFacade=makePanelMat(0.80, 0.3, 0.4);
   var matFond  =isWood ? matWhite : makePanelMat(0.68, 0.5, 0.4);
   var matElem  =isWood ? matWhite : makePanelMat(0.88, 0.3, 0.3);
+  var matTirInt=new THREE.MeshStandardMaterial({color:0xF5F0EB,roughness:0.85,metalness:0.0,side:THREE.FrontSide});
 
   function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
   // Boîte avec matériaux différents par face pour l'effet bois/blanc
@@ -590,24 +591,51 @@ function buildCaisson(){
       pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
       pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
       pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
-    } else { // tiroir — couvre toutes les faces blanches de sa zone
+    } else { // tiroir
       var isOpen=!!caissonOpenState[el.key];
       var tirZ=isOpen ? fz+CP*0.55 : fz;
       var iW_cm=iW*100, iH_cm=iH*100;
       var jeu=0.003;
-      // Limites X : joue si bord du caisson, sinon face ext du séparateur
-      var tirXleft  = (left<0.5)       ? -CL/2 : xcmToLocal(left)  - EP/2;
+      var tirXleft  = (left<0.5)        ? -CL/2 : xcmToLocal(left)  - EP/2;
       var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
-      // Limites Y : panneau struct si bord du caisson, sinon face ext de la tablette
-      var tirYbot = (bot<0.5)          ?  0  : ycmToLocal(bot) - EP/2;
-      var tirYtop = (top>iH_cm-0.5)    ?  CH : ycmToLocal(top) + EP/2;
+      var tirYbot   = (bot<0.5)         ?  0    : ycmToLocal(bot)   - EP/2;
+      var tirYtop   = (top>iH_cm-0.5)  ?  CH   : ycmToLocal(top)   + EP/2;
       var tirW = tirXright - tirXleft - jeu;
       var tirH = tirYtop - tirYbot - jeu;
       var tirCx = (tirXleft + tirXright) / 2;
       var tirCy = (tirYbot  + tirYtop)  / 2;
+      // Façade
       var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
       tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
       caissonElemMeshes.push(tm); caissonGrp.add(tm);
+      // Caisson intérieur (visible uniquement quand ouvert)
+      if(isOpen){
+        var bep=EP*0.5; // 9mm — parois du caisson tiroir
+        var boxDepth=CP*0.52;
+        // Centre Z : derrière la façade
+        var boxCz=tirZ-0.010-boxDepth/2;
+        var bW=tirW-2*bep, bH=tirH-bep;
+        // fond
+        var bBot=box(bW,bep,boxDepth,matTirInt);
+        bBot.position.set(tirCx, tirCy-tirH/2+bep/2, boxCz);
+        bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
+        caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
+        // côté gauche
+        var bL=box(bep,bH,boxDepth,matTirInt);
+        bL.position.set(tirCx-tirW/2+bep/2, tirCy+bep/2, boxCz);
+        bL.userData.tirKey=el.key; bL.userData.isTiroir=true;
+        caissonElemMeshes.push(bL); caissonGrp.add(bL);
+        // côté droit
+        var bR=box(bep,bH,boxDepth,matTirInt);
+        bR.position.set(tirCx+tirW/2-bep/2, tirCy+bep/2, boxCz);
+        bR.userData.tirKey=el.key; bR.userData.isTiroir=true;
+        caissonElemMeshes.push(bR); caissonGrp.add(bR);
+        // dos
+        var bBk=box(tirW,tirH,bep,matTirInt);
+        bBk.position.set(tirCx, tirCy, tirZ-0.010-boxDepth+bep/2);
+        bBk.userData.tirKey=el.key; bBk.userData.isTiroir=true;
+        caissonElemMeshes.push(bBk); caissonGrp.add(bBk);
+      }
     }
   });
 
