@@ -605,19 +605,21 @@ function buildCaisson(){
 
   // Tablettes et séparateurs
   caissonElements.forEach(function(el,idx){
-    if(el.type==='shelf'){
+    if(el.type==='shelf'||el.type==='shelf_simple'){
       var iW_cm2=(S.CL-2*EP)*100;
       var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
       var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
       var sw=(sr-sl)/100;
       var scx=xcmToLocal((sl+sr)/2);
-      var m=box(sw,ep,CP-ep,matElem);
+      var th=el.type==='shelf_simple'?ep*0.5:ep;
+      var m=box(sw,th,CP-ep,matElem);
       m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
-    } else if(el.type==='separator'){
+    } else if(el.type==='separator'||el.type==='separator_simple'){
       var comp=getCompartment(el.y_cm,el.x_cm);
       var h=comp.height_cm/100; if(h<0.01) return;
-      var m=box(ep,h,CP-ep,matElem);
+      var tw=el.type==='separator_simple'?ep*0.5:ep;
+      var m=box(tw,h,CP-ep,matElem);
       m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
     }
@@ -909,11 +911,29 @@ var MIN_GAP_H=3, MIN_GAP_V=3;
 
 function setCaissonType(t){
   caissonType=t;
-  ['ct-shelf','ct-sep','ct-door','ct-draw'].forEach(function(id,i){
-    var k=['shelf','separator','porte','tiroir'][i];
-    var el=document.getElementById(id); if(el) el.classList.toggle('active',k===t);
+  document.querySelectorAll('.c-type-btn').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.ctype===t);
   });
   clearCaissonGhost();
+}
+
+function _rebuildEditBar(){
+  var btns=document.querySelector('.c-type-btns');
+  if(!btns) return;
+  if(BIBLIO_MODE){
+    btns.innerHTML=
+      '<button class="c-type-btn active" data-ctype="shelf"          onclick="setCaissonType(\'shelf\')">━ Étagère</button>'+
+      '<button class="c-type-btn"        data-ctype="shelf_simple"   onclick="setCaissonType(\'shelf_simple\')">╌ Déco</button>'+
+      '<button class="c-type-btn"        data-ctype="separator"      onclick="setCaissonType(\'separator\')">┃ Intercalaire</button>'+
+      '<button class="c-type-btn"        data-ctype="separator_simple" onclick="setCaissonType(\'separator_simple\')">┊ Déco</button>'+
+      '<button class="c-type-btn"        data-ctype="porte"          onclick="setCaissonType(\'porte\')">🚪 Porte</button>';
+  } else {
+    btns.innerHTML=
+      '<button class="c-type-btn active" data-ctype="shelf"      onclick="setCaissonType(\'shelf\')">━ Tablette</button>'+
+      '<button class="c-type-btn"        data-ctype="separator"  onclick="setCaissonType(\'separator\')">┃ Séparateur</button>'+
+      '<button class="c-type-btn"        data-ctype="porte"      onclick="setCaissonType(\'porte\')">🚪 Porte</button>'+
+      '<button class="c-type-btn"        data-ctype="tiroir"     onclick="setCaissonType(\'tiroir\')">▤ Tiroir</button>';
+  }
 }
 
 function toggleCaissonEdit(){
@@ -1099,7 +1119,9 @@ function placeOrRemoveCaisson(e){
     if(idx!==undefined){
       var elType=caissonElements[idx]&&caissonElements[idx].type;
       var sameType=(caissonType==='shelf'&&elType==='shelf')||
+                   (caissonType==='shelf_simple'&&elType==='shelf_simple')||
                    (caissonType==='separator'&&elType==='separator')||
+                   (caissonType==='separator_simple'&&elType==='separator_simple')||
                    ((caissonType==='porte'||caissonType==='tiroir')&&(elType==='porte'||elType==='tiroir'));
       if(sameType){ caissonElements.splice(idx,1); clearCaissonGhost(); buildCaisson(); return true; }
     }
@@ -1108,37 +1130,39 @@ function placeOrRemoveCaisson(e){
   var hit=getCaissonHit(e);
   if(!hit) return false;
 
-  if(caissonType==='shelf'){
+  if(caissonType==='shelf'||caissonType==='shelf_simple'){
     var bay1=getBay(hit.x_cm,hit.y_cm);
     if(caissonElements.some(function(el){
-      if(el.type!=='shelf') return false;
+      if(el.type!==caissonType) return false;
       var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
       var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
       return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay1.right_cm&&sr>bay1.left_cm;
     })) return true;
-    caissonElements.push({type:'shelf',y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
-  } else if(caissonType==='separator'){
+    caissonElements.push({type:caissonType,y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
+  } else if(caissonType==='separator'||caissonType==='separator_simple'){
     var comp=getCompartment(hit.y_cm,hit.x_cm);
     if(comp.height_cm<1) return true;
     if(caissonElements.some(function(el){
-      if(el.type!=='separator') return false;
+      if(el.type!==caissonType) return false;
       var ec=getCompartment(el.y_cm,el.x_cm);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     })) return true;
     var sepX=hit.x_cm;
-    caissonElements.push({type:'separator',x_cm:sepX,y_cm:(comp.bottom_cm+comp.top_cm)/2});
-    // Auto-split : coupe les tablettes qui traversent ce séparateur
-    var toAdd=[];
-    caissonElements=caissonElements.filter(function(el){
-      if(el.type!=='shelf') return true;
-      if(el.x_left_cm<sepX&&el.x_right_cm>sepX){
-        toAdd.push({type:'shelf',y_cm:el.y_cm,x_left_cm:el.x_left_cm,x_right_cm:sepX});
-        toAdd.push({type:'shelf',y_cm:el.y_cm,x_left_cm:sepX,x_right_cm:el.x_right_cm});
-        return false;
-      }
-      return true;
-    });
-    caissonElements=caissonElements.concat(toAdd);
+    caissonElements.push({type:caissonType,x_cm:sepX,y_cm:(comp.bottom_cm+comp.top_cm)/2});
+    // Auto-split uniquement pour intercalaire structurel
+    if(caissonType==='separator'){
+      var toAdd=[];
+      caissonElements=caissonElements.filter(function(el){
+        if(el.type!=='shelf'&&el.type!=='shelf_simple') return true;
+        if(el.x_left_cm<sepX&&el.x_right_cm>sepX){
+          toAdd.push({type:el.type,y_cm:el.y_cm,x_left_cm:el.x_left_cm,x_right_cm:sepX});
+          toAdd.push({type:el.type,y_cm:el.y_cm,x_left_cm:sepX,x_right_cm:el.x_right_cm});
+          return false;
+        }
+        return true;
+      });
+      caissonElements=caissonElements.concat(toAdd);
+    }
   } else {
     // porte / tiroir
     var comp3=getCompartment(hit.y_cm,hit.x_cm);
@@ -1526,6 +1550,8 @@ function selectFurnitureType(ft){
   // Populate dressing mat grid
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
 
+  _rebuildEditBar();
+  setCaissonType('shelf');
   buildStepper(cfg.steps);
   goStep(1);
 }
