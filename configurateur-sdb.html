@@ -228,6 +228,10 @@ textarea.cfg-field{resize:vertical;min-height:72px}
           <div class="sl-top"><span class="sl-lbl">Profondeur totale</span><span class="sl-val" id="v-P">55 cm</span></div>
           <input type="range" min="36" max="80" step="1" value="55" oninput="setPro(+this.value)">
         </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Épaisseur</span><span class="sl-val" id="v-E">4.0 cm</span></div>
+          <input type="range" min="2" max="20" step="0.5" value="4" oninput="setEp(+this.value)">
+        </div>
         <div class="sec">Matériau</div>
         <div class="mat-grid" id="mg-plan"></div>
       </div>
@@ -630,7 +634,7 @@ function buildCaisson(){
 // BUILD PLAN DE TRAVAIL
 // ═══════════════════════════════════════════════════════
 var WALL_Z = -0.75;
-function planTopY(){ return S.CH+S.Ep; }
+function planTopY(){ return S.CH+0.04+S.Ep; }
 function planCZ()  { return WALL_Z + S.P/2; }
 function caissCZ() { return WALL_Z + caissonCP()/2; }
 
@@ -660,7 +664,7 @@ function buildPlan(){
   }
 
   var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
-  geo.rotateX(Math.PI/2); geo.translate(0,topY,0);
+  geo.rotateX(Math.PI/2); geo.translate(0,S.CH+0.04,0);
   var md=MATS_PLAN[S.matPlan];
   var planMat;
   if(_planTexCache[S.matPlan]){
