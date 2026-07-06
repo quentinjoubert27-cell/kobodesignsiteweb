@@ -115,6 +115,8 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 .c-type-btns{display:flex;border-radius:100px;overflow:hidden;background:rgba(26,26,26,.06)}
 .c-type-btn{padding:5px 11px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);background:none;border:none;cursor:pointer;border-radius:100px;transition:background .15s,color .15s;white-space:nowrap}
 .c-type-btn.active{background:var(--accent);color:#fff}
+.c-caisson-btn{padding:4px 12px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);background:rgba(26,26,26,.06);border:none;cursor:pointer;border-radius:100px;transition:background .15s,color .15s}
+.c-caisson-btn.active{background:var(--accent);color:#fff}
 .c-edit-sep{width:1px;height:16px;background:var(--border)}
 .c-edit-close{width:28px;height:28px;border-radius:50%;background:rgba(26,26,26,.08);border:none;cursor:pointer;color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .c-edit-close:hover{background:rgba(26,26,26,.14)}
@@ -433,6 +435,12 @@ var EP = 0.018;  // épaisseur panneau 18mm
 var BIBLIO_MODE  = false;
 var hasAngle     = false;
 var caissonGrp2  = null;
+
+// ── CAISSON ACTIF (1=C1, 2=C2) ──
+var activeCaisson = 1;
+var caissonElements2 = [], caissonOpenState2 = {};
+var caissonElemMeshes2 = [], caissonHitPlane2 = null;
+var caissonGuidesGrp2 = null, caissonGhost2 = null;
 var bRotX = 0.12, bRotY = 0.40;
 var bSavedRotX = 0.12, bSavedRotY = 0.40;
 var bDrag = false, bLastX = 0, bLastY = 0;
@@ -520,16 +528,28 @@ function disposeGroup(g){
 // HELPERS COORDONNÉES INTÉRIEURES DU CAISSON
 // (0,0) = coin bas-gauche intérieur ; unité = cm
 // ═══════════════════════════════════════════════════════
-function caissonCP(){ return S.CairsonP; } // profondeur caisson (m)
+function caissonCP(){ return S.CairsonP; }
 function localToYcm(y_loc){ return (y_loc-EP)*100; }
 function ycmToLocal(y_cm) { return EP+y_cm/100; }
-function localToXcm(x_loc){ return (x_loc+S.CL/2-EP)*100; }
-function xcmToLocal(x_cm) { return -S.CL/2+EP+x_cm/100; }
+function localToXcm(x_loc){ return (x_loc+getActiveCL()/2-EP)*100; }
+function xcmToLocal(x_cm) { return -getActiveCL()/2+EP+x_cm/100; }
+
+// ── Helpers caisson actif ──────────────────────────────────
+function getActiveCL(){ return activeCaisson===1?S.CL:S.CL2; }
+function getActiveEls(){ return activeCaisson===1?caissonElements:caissonElements2; }
+function setActiveEls(v){ if(activeCaisson===1) caissonElements=v; else caissonElements2=v; }
+function getActiveElemMeshes(){ return activeCaisson===1?caissonElemMeshes:caissonElemMeshes2; }
+function getActiveHP(){ return activeCaisson===1?caissonHitPlane:caissonHitPlane2; }
+function getActiveGrp(){ return activeCaisson===1?caissonGrp:caissonGrp2; }
+function getActiveGhost(){ return activeCaisson===1?caissonGhost:caissonGhost2; }
+function setActiveGhost(v){ if(activeCaisson===1) caissonGhost=v; else caissonGhost2=v; }
+function getActiveGuidesGrp(){ return activeCaisson===1?caissonGuidesGrp:caissonGuidesGrp2; }
+function getActiveOpenState(){ return activeCaisson===1?caissonOpenState:caissonOpenState2; }
 
 function getCompartment(y_cm, x_cm){
   var iH_cm=(S.CH-2*EP)*100;
-  var iW_cm=(S.CL-2*EP)*100;
-  var shelves=caissonElements.filter(function(e){
+  var iW_cm=(getActiveCL()-2*EP)*100;
+  var shelves=getActiveEls().filter(function(e){
     if(e.type!=='shelf') return false;
     var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
     var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
@@ -543,9 +563,9 @@ function getCompartment(y_cm, x_cm){
   return {bottom_cm:bot,top_cm:top,height_cm:top-bot,centerY:ycmToLocal((top+bot)/2)};
 }
 function getBay(x_cm,y_cm){
-  var iW_cm=(S.CL-2*EP)*100;
+  var iW_cm=(getActiveCL()-2*EP)*100;
   var comp=getCompartment(y_cm,x_cm);
-  var seps=caissonElements.filter(function(e){
+  var seps=getActiveEls().filter(function(e){
     return e.type==='separator'&&e.y_cm>=comp.bottom_cm&&e.y_cm<=comp.top_cm;
   }).map(function(e){return e.x_cm;}).sort(function(a,b){return a-b;});
   var left=0,right=iW_cm;
@@ -557,8 +577,9 @@ function mkKey(comp,bay){
 }
 function getFacadeFor(comp,bay){
   var k=mkKey(comp,bay);
-  for(var i=0;i<caissonElements.length;i++){
-    if((caissonElements[i].type==='porte'||caissonElements[i].type==='tiroir')&&caissonElements[i].key===k) return caissonElements[i];
+  var els=getActiveEls();
+  for(var i=0;i<els.length;i++){
+    if((els[i].type==='porte'||els[i].type==='tiroir')&&els[i].key===k) return els[i];
   }
   return null;
 }
@@ -719,8 +740,12 @@ function buildCaisson2(){
     caissonGrp2.traverse(function(o){if(o.isMesh){if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){m.dispose();});}});
     if(caissonGrp2.parent) caissonGrp2.parent.remove(caissonGrp2);
   }
+  caissonGrp2=new THREE.Group();
+  caissonElemMeshes2=[];
+  caissonHitPlane2=null;
+
   var CL2=S.CL2, CH=S.CH, CP=caissonCP(), ep=EP;
-  var iW2=CL2-2*ep;
+  var iW2=CL2-2*ep, iH2=CH-2*ep;
   var md=MATS_CAIS[S.matCais];
   var isWood=(S.matCais<=3);
   var matW=new THREE.MeshStandardMaterial({color:0xF2EDE8,roughness:0.90,metalness:0.0});
@@ -730,20 +755,95 @@ function buildCaisson2(){
     var c=new THREE.Color(md.color||'#D4A96A');return new THREE.MeshStandardMaterial({color:c.multiplyScalar(dk),roughness:md.r,metalness:0.02});
   }
   var matC=pm2(1.00,ep,0.5), matF=isWood?matW:pm2(0.68,0.5,0.4);
+  var matEl=isWood?matW:pm2(0.88,0.3,0.3);
+  var matFac=pm2(0.80,0.3,0.4);
   function bx2(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
   function bm2(w,h,d,fi){
     var ms=[matC,matC,matC,matC,matC,matC];
     if(isWood){ms[fi]=matW;ms[4]=matW;}
     var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),ms);m.castShadow=true;m.receiveShadow=true;return m;
   }
-  caissonGrp2=new THREE.Group();
-  var g=bm2(ep,CH,CP,0); g.position.set(-CL2/2+ep/2,CH/2,0); caissonGrp2.add(g);
-  var d=bm2(ep,CH,CP,1); d.position.set( CL2/2-ep/2,CH/2,0); caissonGrp2.add(d);
-  var t=bm2(iW2,ep,CP,3);t.position.set(0,CH-ep/2,0); caissonGrp2.add(t);
-  var b=bm2(iW2,ep,CP,2);b.position.set(0,ep/2,0);   caissonGrp2.add(b);
-  var f=bx2(CL2,CH,0.008,matF);f.position.set(0,CH/2,-CP/2+0.004); caissonGrp2.add(f);
-  // Positionnement à l'angle : C2 pivote -90° et glisse dans le bord intérieur droit de C1
-  // (offset -EP car C1 n'a plus de joue droite, C2 prend sa place)
+
+  // Structure
+  var cg2=bm2(ep,CH,CP,0); cg2.position.set(-CL2/2+ep/2,CH/2,0); caissonGrp2.add(cg2);
+  var cd2=bm2(ep,CH,CP,1); cd2.position.set( CL2/2-ep/2,CH/2,0); caissonGrp2.add(cd2);
+  var dt2=bm2(iW2,ep,CP,3); dt2.position.set(0,CH-ep/2,0); caissonGrp2.add(dt2);
+  var db2=bm2(iW2,ep,CP,2); db2.position.set(0,ep/2,0);   caissonGrp2.add(db2);
+  var fd2=bx2(CL2,CH,0.008,matF); fd2.position.set(0,CH/2,-CP/2+0.004); caissonGrp2.add(fd2);
+
+  // Éléments intérieurs de C2 — on switch activeCaisson=2 pour que xcmToLocal etc. utilisent CL2
+  var prevAC=activeCaisson; activeCaisson=2;
+  var fz2=CP/2+0.001;
+  caissonElements2.forEach(function(el,idx){
+    if(el.type==='shelf'||el.type==='shelf_simple'){
+      var iW_cm2=(CL2-2*EP)*100;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
+      var sw=(sr-sl)/100;
+      var scx=xcmToLocal((sl+sr)/2);
+      var th=el.type==='shelf_simple'?ep*0.5:ep;
+      var m=bx2(sw,th,CP-ep,matEl);
+      m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
+      m.userData.elemIdx=idx; caissonElemMeshes2.push(m); caissonGrp2.add(m);
+    } else if(el.type==='separator'||el.type==='separator_simple'){
+      var comp=getCompartment(el.y_cm,el.x_cm);
+      var h=comp.height_cm/100; if(h<0.01) return;
+      var tw=el.type==='separator_simple'?ep*0.5:ep;
+      var m=bx2(tw,h,CP-ep,matEl);
+      m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
+      m.userData.elemIdx=idx; caissonElemMeshes2.push(m); caissonGrp2.add(m);
+    }
+  });
+  caissonElements2.forEach(function(el,idx){
+    if(el.type!=='porte'&&el.type!=='tiroir') return;
+    var parts=el.key.split('_').map(Number);
+    var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
+    var porW=(right-left)/100, porH=(top-bot)/100;
+    var cx=xcmToLocal((left+right)/2);
+    var jeu=0.003;
+    if(el.type==='porte'){
+      var isOpen=!!caissonOpenState2[el.key];
+      var iW_cm2=iW2*100, iH_cm2=iH2*100;
+      var porXleft  = (left<0.5)          ? -CL2/2 : xcmToLocal(left)  - ep/2;
+      var porXright = (right>iW_cm2-0.5)  ?  CL2/2 : xcmToLocal(right) + ep/2;
+      var porYbot   = (bot<0.5)           ?  0     : ycmToLocal(bot)   - ep/2;
+      var porYtop   = (top>iH_cm2-0.5)   ?  CH    : ycmToLocal(top)   + ep/2;
+      var pW=porXright-porXleft-jeu, pH=porYtop-porYbot-jeu;
+      var pCy=(porYbot+porYtop)/2;
+      var hingeLeft=(porXleft+porXright)/2 <= 0;
+      var pivot=new THREE.Group();
+      if(hingeLeft){ pivot.position.set(porXleft+jeu/2,pCy,fz2); if(isOpen) pivot.rotation.y=-Math.PI*0.25; }
+      else          { pivot.position.set(porXright-jeu/2,pCy,fz2); if(isOpen) pivot.rotation.y=Math.PI*0.25; }
+      var pm=bx2(pW,pH,0.020,matFac);
+      pm.position.set(hingeLeft?pW/2:-pW/2,0,0);
+      pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
+      pivot.add(pm); caissonElemMeshes2.push(pm); caissonGrp2.add(pivot);
+    } else {
+      var isOpen=!!caissonOpenState2[el.key];
+      var tirZ=isOpen?fz2+CP*0.55:fz2;
+      var iW_cm2=iW2*100, iH_cm2=iH2*100;
+      var tirXleft  = (left<0.5)          ? -CL2/2 : xcmToLocal(left)  - ep/2;
+      var tirXright = (right>iW_cm2-0.5)  ?  CL2/2 : xcmToLocal(right) + ep/2;
+      var tirYbot   = (bot<0.5)           ?  0     : ycmToLocal(bot)   - ep/2;
+      var tirYtop   = (top>iH_cm2-0.5)   ?  CH    : ycmToLocal(top)   + ep/2;
+      var tW=tirXright-tirXleft-jeu, tH=tirYtop-tirYbot-jeu;
+      var tCx=(tirXleft+tirXright)/2, tCy=(tirYbot+tirYtop)/2;
+      var tm=bx2(tW,tH,0.020,matFac); tm.position.set(tCx,tCy,tirZ);
+      tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+      caissonElemMeshes2.push(tm); caissonGrp2.add(tm);
+    }
+  });
+  activeCaisson=prevAC;
+
+  // Plan de frappe et repères
+  var hpGeo2=new THREE.PlaneGeometry(iW2,iH2);
+  caissonHitPlane2=new THREE.Mesh(hpGeo2,new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide}));
+  caissonHitPlane2.position.set(0,ep+iH2/2,CP/2-0.002);
+  caissonGrp2.add(caissonHitPlane2);
+  caissonGuidesGrp2=new THREE.Group(); caissonGuidesGrp2.renderOrder=4;
+  caissonGrp2.add(caissonGuidesGrp2);
+
+  // Positionnement : C2 pivote -90° et s'emboîte dans le coin intérieur droit de C1
   var CL1=S.CL, CP1=caissonCP();
   caissonGrp2.rotation.y = -Math.PI/2;
   caissonGrp2.position.set(CL1/2 - EP + CP/2, 0, -CP1/2 + CL2/2);
@@ -985,21 +1085,38 @@ function setCaissonType(t){
   clearCaissonGhost();
 }
 
+function switchActiveCaisson(n){
+  activeCaisson=n;
+  document.querySelectorAll('.c-caisson-btn').forEach(function(b){
+    b.classList.toggle('active', parseInt(b.dataset.cn)===n);
+  });
+  clearCaissonGhost();
+  updateAmgtCount();
+}
+
 function _rebuildEditBar(){
   var btns=document.querySelector('.c-type-btns');
   if(!btns) return;
+  var selectorHTML='';
+  if(BIBLIO_MODE && hasAngle){
+    selectorHTML=
+      '<div style="display:flex;gap:4px;margin-bottom:6px;">'+
+      '<button class="c-caisson-btn'+(activeCaisson===1?' active':'')+'" data-cn="1" onclick="switchActiveCaisson(1)">Caisson 1</button>'+
+      '<button class="c-caisson-btn'+(activeCaisson===2?' active':'')+'" data-cn="2" onclick="switchActiveCaisson(2)">Caisson 2</button>'+
+      '</div>';
+  }
   if(BIBLIO_MODE){
-    btns.innerHTML=
+    btns.innerHTML=selectorHTML+
       '<button class="c-type-btn active" data-ctype="shelf"          onclick="setCaissonType(\'shelf\')">━ Étagère</button>'+
       '<button class="c-type-btn"        data-ctype="shelf_simple"   onclick="setCaissonType(\'shelf_simple\')">╌ Déco</button>'+
       '<button class="c-type-btn"        data-ctype="separator"      onclick="setCaissonType(\'separator\')">┃ Intercalaire</button>'+
       '<button class="c-type-btn"        data-ctype="separator_simple" onclick="setCaissonType(\'separator_simple\')">┊ Déco</button>'+
-      '<button class="c-type-btn"        data-ctype="porte"          onclick="setCaissonType(\'porte\')">🚪 Porte</button>';
+      '<button class="c-type-btn"        data-ctype="porte"          onclick="setCaissonType(\'porte\')">Porte</button>';
   } else {
     btns.innerHTML=
       '<button class="c-type-btn active" data-ctype="shelf"      onclick="setCaissonType(\'shelf\')">━ Tablette</button>'+
       '<button class="c-type-btn"        data-ctype="separator"  onclick="setCaissonType(\'separator\')">┃ Séparateur</button>'+
-      '<button class="c-type-btn"        data-ctype="porte"      onclick="setCaissonType(\'porte\')">🚪 Porte</button>'+
+      '<button class="c-type-btn"        data-ctype="porte"      onclick="setCaissonType(\'porte\')">Porte</button>'+
       '<button class="c-type-btn"        data-ctype="tiroir"     onclick="setCaissonType(\'tiroir\')">▤ Tiroir</button>';
   }
 }
@@ -1019,11 +1136,12 @@ function toggleCaissonEdit(){
 }
 
 function clearCaissonGhost(){
-  if(caissonGhost){
-    if(caissonGhost.parent) caissonGhost.parent.remove(caissonGhost);
-    if(caissonGhost.geometry) caissonGhost.geometry.dispose();
-    if(caissonGhost.material) caissonGhost.material.dispose();
-    caissonGhost=null;
+  var g=getActiveGhost();
+  if(g){
+    if(g.parent) g.parent.remove(g);
+    if(g.geometry) g.geometry.dispose();
+    if(g.material) g.material.dispose();
+    setActiveGhost(null);
   }
   clearCaissonGuides();
 }
@@ -1032,15 +1150,17 @@ function clearCaissonGhost(){
 var _SDB_GUIDE_SNAP=4; // cm
 
 function clearCaissonGuides(){
-  if(!caissonGuidesGrp)return;
-  caissonGuidesGrp.children.slice().forEach(function(c){
+  var gg=getActiveGuidesGrp();
+  if(!gg)return;
+  gg.children.slice().forEach(function(c){
     if(c.geometry)c.geometry.dispose();
     if(c.material)c.material.dispose();
-    caissonGuidesGrp.remove(c);
+    gg.remove(c);
   });
 }
 
 function _sdbGuideLine(pts,color,dashed,opacity){
+  var gg=getActiveGuidesGrp(); if(!gg) return;
   var geo=new THREE.BufferGeometry().setFromPoints(pts);
   var mat=dashed
     ? new THREE.LineDashedMaterial({color:color,dashSize:.010,gapSize:.007,transparent:true,opacity:opacity,depthWrite:false})
@@ -1048,12 +1168,12 @@ function _sdbGuideLine(pts,color,dashed,opacity){
   var ln=new THREE.Line(geo,mat);
   if(dashed)ln.computeLineDistances();
   ln.renderOrder=5;
-  caissonGuidesGrp.add(ln);
+  gg.add(ln);
 }
 
 function updateCaissonGuides(hit){
   clearCaissonGuides();
-  if(!hit||!caissonEditMode||!caissonGuidesGrp)return;
+  if(!hit||!caissonEditMode||!getActiveGuidesGrp())return;
 
   var bay =getBay(hit.x_cm, hit.y_cm);
   var comp=getCompartment(hit.y_cm, hit.x_cm);
@@ -1099,12 +1219,13 @@ function updateCaissonGuides(hit){
 }
 
 function getCaissonHit(e){
-  if(!caissonHitPlane||!caissonGrp) return null;
+  var hp=getActiveHP(), grp=getActiveGrp();
+  if(!hp||!grp) return null;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
-  var hits=raycaster.intersectObject(caissonHitPlane,false);
+  var hits=raycaster.intersectObject(hp,false);
   if(!hits.length) return null;
-  var ptGrp=caissonGrp.worldToLocal(hits[0].point.clone());
-  var iW_cm=(S.CL-2*EP)*100, iH_cm=(S.CH-2*EP)*100;
+  var ptGrp=grp.worldToLocal(hits[0].point.clone());
+  var iW_cm=(getActiveCL()-2*EP)*100, iH_cm=(S.CH-2*EP)*100;
   var x_cm=Math.round(localToXcm(ptGrp.x));
   var y_cm=Math.round(localToYcm(ptGrp.y));
   return {x_cm:Math.min(Math.max(x_cm,0),iW_cm), y_cm:Math.min(Math.max(y_cm,0),iH_cm)};
@@ -1115,31 +1236,31 @@ function updateCaissonGhost(e){
   var hit=getCaissonHit(e);
   if(!hit){clearCaissonGhost();return;}
   var CP=caissonCP(), ep=EP;
-  var iW=S.CL-2*ep;
+  var iW=getActiveCL()-2*ep;
+  var els=getActiveEls(), grp=getActiveGrp();
   var gW,gH,gX,gY,occupied=false;
 
-  if(caissonType==='shelf'){
+  if(caissonType==='shelf'||caissonType==='shelf_simple'){
     var bay0=getBay(hit.x_cm,hit.y_cm);
     var bW0=(bay0.right_cm-bay0.left_cm)/100;
     var bCx0=xcmToLocal((bay0.left_cm+bay0.right_cm)/2);
-    occupied=caissonElements.some(function(el){
-      if(el.type!=='shelf') return false;
+    occupied=els.some(function(el){
+      if(el.type!==caissonType) return false;
       var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(getActiveCL()-2*EP)*100;
       return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay0.right_cm&&sr>bay0.left_cm;
     });
-    gW=bW0; gH=ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
-  } else if(caissonType==='separator'){
+    gW=bW0; gH=caissonType==='shelf_simple'?ep*0.5:ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
+  } else if(caissonType==='separator'||caissonType==='separator_simple'){
     var comp=getCompartment(hit.y_cm,hit.x_cm);
     if(comp.height_cm<1){clearCaissonGhost();return;}
-    occupied=caissonElements.some(function(el){
-      if(el.type!=='separator') return false;
+    occupied=els.some(function(el){
+      if(el.type!==caissonType) return false;
       var ec=getCompartment(el.y_cm,el.x_cm);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     });
-    gW=ep; gH=comp.height_cm/100; gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
+    gW=caissonType==='separator_simple'?ep*0.5:ep; gH=comp.height_cm/100; gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
   } else {
-    // porte ou tiroir → montre la face avant du compartiment
     var comp2=getCompartment(hit.y_cm,hit.x_cm);
     var bay2=getBay(hit.x_cm,hit.y_cm);
     if(comp2.height_cm<1||bay2.width_cm<1){clearCaissonGhost();return;}
@@ -1147,32 +1268,32 @@ function updateCaissonGhost(e){
     var w2=bay2.width_cm/100, h2=comp2.height_cm/100;
     gW=w2-0.003; gH=h2-0.003;
     gX=bay2.centerX; gY=comp2.centerY;
-    // pour le ghost de façade on le place devant, pas dans le plan de frappe
-    if(!caissonGhost){
+    var ghost=getActiveGhost();
+    if(!ghost){
       var gMat=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
-      caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat);
-      caissonGhost.renderOrder=1;
-      caissonGrp.add(caissonGhost);
+      ghost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat);
+      ghost.renderOrder=1; grp.add(ghost); setActiveGhost(ghost);
     }
-    caissonGhost.scale.set(gW,gH,0.020);
-    caissonGhost.position.set(gX,gY,CP/2+0.001);
-    caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
-    caissonGhost.material.opacity=occupied?0.25:0.45;
-    caissonGhost.visible=true;
+    ghost.scale.set(gW,gH,0.020);
+    ghost.position.set(gX,gY,CP/2+0.001);
+    ghost.material.color.setHex(occupied?0xff3322:0xc8a050);
+    ghost.material.opacity=occupied?0.25:0.45;
+    ghost.visible=true;
     updateCaissonGuides(hit);
     return;
   }
 
-  if(!caissonGhost){
+  var ghost2=getActiveGhost();
+  if(!ghost2){
     var gMat2=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
-    caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat2);
-    caissonGhost.renderOrder=1; caissonGrp.add(caissonGhost);
+    ghost2=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat2);
+    ghost2.renderOrder=1; grp.add(ghost2); setActiveGhost(ghost2);
   }
-  caissonGhost.scale.set(gW,gH,CP-ep);
-  caissonGhost.position.set(gX,gY,-ep/2);
-  caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
-  caissonGhost.material.opacity=occupied?0.25:0.45;
-  caissonGhost.visible=true;
+  ghost2.scale.set(gW,gH,CP-ep);
+  ghost2.position.set(gX,gY,-ep/2);
+  ghost2.material.color.setHex(occupied?0xff3322:0xc8a050);
+  ghost2.material.opacity=occupied?0.25:0.45;
+  ghost2.visible=true;
   updateCaissonGuides(hit);
 }
 
@@ -1180,18 +1301,21 @@ function placeOrRemoveCaisson(e){
   if(!caissonEditMode||S.step!==1) return false;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
 
-  // Clic sur élément existant du même type → supprime (les autres types sont ignorés)
-  var eh=raycaster.intersectObjects(caissonElemMeshes,false);
+  var els=getActiveEls();
+  var activeCL=getActiveCL();
+
+  // Clic sur élément existant du même type → supprime
+  var eh=raycaster.intersectObjects(getActiveElemMeshes(),false);
   if(eh.length){
     var idx=eh[0].object.userData.elemIdx;
     if(idx!==undefined){
-      var elType=caissonElements[idx]&&caissonElements[idx].type;
+      var elType=els[idx]&&els[idx].type;
       var sameType=(caissonType==='shelf'&&elType==='shelf')||
                    (caissonType==='shelf_simple'&&elType==='shelf_simple')||
                    (caissonType==='separator'&&elType==='separator')||
                    (caissonType==='separator_simple'&&elType==='separator_simple')||
                    ((caissonType==='porte'||caissonType==='tiroir')&&(elType==='porte'||elType==='tiroir'));
-      if(sameType){ caissonElements.splice(idx,1); clearCaissonGhost(); buildCaisson(); return true; }
+      if(sameType){ els.splice(idx,1); setActiveEls(els); clearCaissonGhost(); buildCaisson(); return true; }
     }
   }
 
@@ -1200,27 +1324,27 @@ function placeOrRemoveCaisson(e){
 
   if(caissonType==='shelf'||caissonType==='shelf_simple'){
     var bay1=getBay(hit.x_cm,hit.y_cm);
-    if(caissonElements.some(function(el){
+    if(els.some(function(el){
       if(el.type!==caissonType) return false;
       var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(activeCL-2*EP)*100;
       return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay1.right_cm&&sr>bay1.left_cm;
     })) return true;
-    caissonElements.push({type:caissonType,y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
+    els.push({type:caissonType,y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
+    setActiveEls(els);
   } else if(caissonType==='separator'||caissonType==='separator_simple'){
     var comp=getCompartment(hit.y_cm,hit.x_cm);
     if(comp.height_cm<1) return true;
-    if(caissonElements.some(function(el){
+    if(els.some(function(el){
       if(el.type!==caissonType) return false;
       var ec=getCompartment(el.y_cm,el.x_cm);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     })) return true;
     var sepX=hit.x_cm;
-    caissonElements.push({type:caissonType,x_cm:sepX,y_cm:(comp.bottom_cm+comp.top_cm)/2});
-    // Auto-split uniquement pour intercalaire structurel
+    els.push({type:caissonType,x_cm:sepX,y_cm:(comp.bottom_cm+comp.top_cm)/2});
     if(caissonType==='separator'){
       var toAdd=[];
-      caissonElements=caissonElements.filter(function(el){
+      var filtered=els.filter(function(el){
         if(el.type!=='shelf'&&el.type!=='shelf_simple') return true;
         if(el.x_left_cm<sepX&&el.x_right_cm>sepX){
           toAdd.push({type:el.type,y_cm:el.y_cm,x_left_cm:el.x_left_cm,x_right_cm:sepX});
@@ -1229,7 +1353,9 @@ function placeOrRemoveCaisson(e){
         }
         return true;
       });
-      caissonElements=caissonElements.concat(toAdd);
+      setActiveEls(filtered.concat(toAdd));
+    } else {
+      setActiveEls(els);
     }
   } else {
     // porte / tiroir
@@ -1237,27 +1363,31 @@ function placeOrRemoveCaisson(e){
     var bay3=getBay(hit.x_cm,hit.y_cm);
     if(comp3.height_cm<1||bay3.width_cm<1) return true;
     var k=mkKey(comp3,bay3);
-    var existing=caissonElements.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&el.key===k; });
-    if(existing>=0){ caissonElements.splice(existing,1); }
-    else { caissonElements.push({type:caissonType,key:k}); }
+    var existing=els.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&el.key===k; });
+    if(existing>=0){ els.splice(existing,1); } else { els.push({type:caissonType,key:k}); }
+    setActiveEls(els);
   }
   clearCaissonGhost(); buildCaisson(); return true;
 }
 
 function resetCaissonElements(){
-  caissonElements=[]; caissonOpenState={}; clearCaissonGhost(); buildCaisson();
+  setActiveEls([]); if(activeCaisson===1) caissonOpenState={}; else caissonOpenState2={};
+  clearCaissonGhost(); buildCaisson();
 }
 function updateAmgtCount(){
   var el=document.getElementById('amgt-count'); if(!el) return;
-  var nb=caissonElements.length;
+  var els=getActiveEls();
+  var nb=els.length;
   if(!nb){el.textContent='Structure vide';return;}
-  var counts={shelf:0,separator:0,porte:0,tiroir:0};
-  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var counts={shelf:0,shelf_simple:0,separator:0,separator_simple:0,porte:0,tiroir:0};
+  els.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
   var parts=[];
-  if(counts.shelf)     parts.push(counts.shelf+' tablette'+(counts.shelf>1?'s':''));
-  if(counts.separator) parts.push(counts.separator+' séparateur'+(counts.separator>1?'s':''));
-  if(counts.porte)     parts.push(counts.porte+' porte'+(counts.porte>1?'s':''));
-  if(counts.tiroir)    parts.push(counts.tiroir+' tiroir'+(counts.tiroir>1?'s':''));
+  if(counts.shelf)             parts.push(counts.shelf+' étagère'+(counts.shelf>1?'s':''));
+  if(counts.shelf_simple)      parts.push(counts.shelf_simple+' déco');
+  if(counts.separator)         parts.push(counts.separator+' intercalaire'+(counts.separator>1?'s':''));
+  if(counts.separator_simple)  parts.push(counts.separator_simple+' déco');
+  if(counts.porte)             parts.push(counts.porte+' porte'+(counts.porte>1?'s':''));
+  if(counts.tiroir)            parts.push(counts.tiroir+' tiroir'+(counts.tiroir>1?'s':''));
   el.innerHTML='<strong>'+nb+'</strong> — '+parts.join(', ');
 }
 
@@ -1304,17 +1434,14 @@ cvs.addEventListener('pointerdown',function(e){
   if(BIBLIO_MODE&&!caissonEditMode){ bDrag=true; bLastX=e.clientX; bLastY=e.clientY; return; }
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
+    var allMeshes=caissonElemMeshes.concat(caissonElemMeshes2);
+    var hits=raycaster.intersectObjects(allMeshes,false);
     if(hits.length){
       var obj=hits[0].object;
-      if(obj.userData.isTiroir){
-        caissonOpenState[obj.userData.tirKey]=!caissonOpenState[obj.userData.tirKey];
-        buildCaisson(); return;
-      }
-      if(obj.userData.isPorte){
-        caissonOpenState[obj.userData.porKey]=!caissonOpenState[obj.userData.porKey];
-        buildCaisson(); return;
-      }
+      // Determine which caisson owns this mesh
+      var os=caissonElemMeshes2.indexOf(obj)>=0?caissonOpenState2:caissonOpenState;
+      if(obj.userData.isTiroir){ os[obj.userData.tirKey]=!os[obj.userData.tirKey]; buildCaisson(); return; }
+      if(obj.userData.isPorte){  os[obj.userData.porKey]=!os[obj.userData.porKey]; buildCaisson(); return; }
     }
   }
   if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
@@ -1402,11 +1529,13 @@ cvs.addEventListener('touchend',function(e){
     var t=e.changedTouches[0];
     toNDC({clientX:t.clientX,clientY:t.clientY});
     raycaster.setFromCamera(mouse,camera);
-    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
+    var allMeshes2=caissonElemMeshes.concat(caissonElemMeshes2);
+    var hits=raycaster.intersectObjects(allMeshes2,false);
     if(hits.length){
       var obj=hits[0].object;
-      if(obj.userData.isTiroir){caissonOpenState[obj.userData.tirKey]=!caissonOpenState[obj.userData.tirKey];buildCaisson();}
-      if(obj.userData.isPorte){caissonOpenState[obj.userData.porKey]=!caissonOpenState[obj.userData.porKey];buildCaisson();}
+      var os2=caissonElemMeshes2.indexOf(obj)>=0?caissonOpenState2:caissonOpenState;
+      if(obj.userData.isTiroir){os2[obj.userData.tirKey]=!os2[obj.userData.tirKey];buildCaisson();}
+      if(obj.userData.isPorte){os2[obj.userData.porKey]=!os2[obj.userData.porKey];buildCaisson();}
     }
   }
 });
