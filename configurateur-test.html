@@ -250,6 +250,16 @@ textarea.cfg-field{resize:vertical;min-height:72px}
           <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
         </div>
         <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
+        <div class="angle-only" style="display:none">
+          <div class="sec" style="margin-top:18px">Caisson d'angle</div>
+          <button class="reset-btn" id="btn-angle" onclick="toggleAngle()">+ Ajouter un angle</button>
+          <div id="angle-opts" style="display:none;margin-top:10px">
+            <div class="sl-row">
+              <div class="sl-top"><span class="sl-lbl">Largeur caisson 2</span><span class="sl-val" id="v-CL2">120 cm</span></div>
+              <input type="range" id="sl-cl2" min="20" max="300" step="1" value="120" oninput="setCL2(+this.value)">
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- STEP 2 — Plan de travail -->
@@ -377,6 +387,7 @@ var S = {
   step:1,
   // Meuble
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
+  CL2:1.20,          // largeur du caisson d'angle
   caissonOffset:0,  // décalage X du caisson sous le plan (m)
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
@@ -420,6 +431,8 @@ var EP = 0.018;  // épaisseur panneau 18mm
 
 // ── MODE BIBLIO (non-SDB) ──
 var BIBLIO_MODE  = false;
+var hasAngle     = false;
+var caissonGrp2  = null;
 var bRotX = 0.12, bRotY = 0.40;
 var bSavedRotX = 0.12, bSavedRotY = 0.40;
 var bDrag = false, bLastX = 0, bLastY = 0;
@@ -693,8 +706,61 @@ function buildCaisson(){
 
   if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,0,caissCZ());
   scene.add(caissonGrp);
-  if(BIBLIO_MODE) normalizeCaisson();
+  if(BIBLIO_MODE){
+    if(hasAngle) buildCaisson2();
+    normalizeCaisson();
+  }
   updateAmgtCount();
+}
+
+function buildCaisson2(){
+  if(caissonGrp2){
+    caissonGrp2.traverse(function(o){if(o.isMesh){if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){m.dispose();});}});
+    if(caissonGrp2.parent) caissonGrp2.parent.remove(caissonGrp2);
+  }
+  var CL2=S.CL2, CH=S.CH, CP=caissonCP(), ep=EP;
+  var iW2=CL2-2*ep;
+  var md=MATS_CAIS[S.matCais];
+  var isWood=(S.matCais<=3);
+  var matW=new THREE.MeshStandardMaterial({color:0xF2EDE8,roughness:0.90,metalness:0.0});
+  function pm2(dk,w,h){
+    var tex=_caisTexCache[S.matCais];
+    if(tex){var t=tex.clone();t.needsUpdate=true;t.repeat.set(Math.max(w,0.01)/0.40,Math.max(h,0.01)/0.40);return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});}
+    var c=new THREE.Color(md.color||'#D4A96A');return new THREE.MeshStandardMaterial({color:c.multiplyScalar(dk),roughness:md.r,metalness:0.02});
+  }
+  var matC=pm2(1.00,ep,0.5), matF=isWood?matW:pm2(0.68,0.5,0.4);
+  function bx2(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
+  function bm2(w,h,d,fi){
+    var ms=[matC,matC,matC,matC,matC,matC];
+    if(isWood){ms[fi]=matW;ms[4]=matW;}
+    var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),ms);m.castShadow=true;m.receiveShadow=true;return m;
+  }
+  caissonGrp2=new THREE.Group();
+  var g=bm2(ep,CH,CP,0); g.position.set(-CL2/2+ep/2,CH/2,0); caissonGrp2.add(g);
+  var d=bm2(ep,CH,CP,1); d.position.set( CL2/2-ep/2,CH/2,0); caissonGrp2.add(d);
+  var t=bm2(iW2,ep,CP,3);t.position.set(0,CH-ep/2,0); caissonGrp2.add(t);
+  var b=bm2(iW2,ep,CP,2);b.position.set(0,ep/2,0);   caissonGrp2.add(b);
+  var f=bx2(CL2,CH,0.008,matF);f.position.set(0,CH/2,-CP/2+0.004); caissonGrp2.add(f);
+  // Positionnement à l'angle : C2 pivote -90° et se colle au côté droit de C1
+  var CL1=S.CL, CP1=caissonCP();
+  caissonGrp2.rotation.y = -Math.PI/2;
+  caissonGrp2.position.set(CL1/2+CP/2, 0, -CP1/2+CL2/2);
+  caissonGrp.add(caissonGrp2);
+}
+
+function toggleAngle(){
+  hasAngle=!hasAngle;
+  var btn=document.getElementById('btn-angle');
+  var opts=document.getElementById('angle-opts');
+  if(btn) btn.textContent=hasAngle?'− Retirer l\'angle':'+ Ajouter un angle';
+  if(opts) opts.style.display=hasAngle?'':'none';
+  buildCaisson();
+}
+
+function setCL2(v){
+  S.CL2=v/100;
+  document.getElementById('v-CL2').textContent=v+' cm';
+  if(hasAngle) buildCaisson();
 }
 
 function normalizeCaisson(){
@@ -1550,6 +1616,9 @@ function selectFurnitureType(ft){
   // Populate dressing mat grid
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
 
+  document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=BIBLIO_MODE?'':'none'; });
+  // Reset angle si on passe en SDB
+  if(!BIBLIO_MODE&&hasAngle){ hasAngle=false; if(caissonGrp2&&caissonGrp2.parent) caissonGrp2.parent.remove(caissonGrp2); caissonGrp2=null; var btn=document.getElementById('btn-angle'); if(btn) btn.textContent='+ Ajouter un angle'; var opts=document.getElementById('angle-opts'); if(opts) opts.style.display='none'; }
   _rebuildEditBar();
   setCaissonType('shelf');
   buildStepper(cfg.steps);
