@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurateur Mobilier — Kōbō Design</title>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Archivo:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FFFAF0;--panel:#FFFFFF;--panel2:#F0EBE0;--border:rgba(26,26,26,.12);
+  --accent:#CD3E00;--accent2:#a83200;--text:#1A1A1A;--text2:rgba(26,26,26,.5);--w:320px;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(--text)}
+#app{display:flex;width:100%;height:100%}
+
+#sidebar{width:var(--w);min-width:var(--w);background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;box-shadow:2px 0 12px rgba(26,26,26,.06)}
+#sb-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo-txt{font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
+.logo-sub{font-size:10px;color:var(--text2);letter-spacing:.06em;margin-top:2px}
+
+#stepper{display:flex;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0}
+.step-dot{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);flex-shrink:0;transition:all .25s;cursor:pointer}
+.step-dot.active{border-color:var(--accent);background:rgba(205,62,0,.08);color:var(--accent)}
+.step-dot.done{border-color:var(--accent);background:var(--accent);color:#fff}
+.step-dot.done::after{content:'✓';font-size:11px}.step-dot.done .sn{display:none}
+.sn{font-size:10px}
+.step-lbl{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text2);margin:0 8px;flex-shrink:0}
+.step-dot.active+.step-lbl{color:var(--accent)}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 4px}
+.step-line.done{background:var(--accent)}
+
+#sb-body{flex:1;overflow-y:auto;padding:20px 22px}
+#sb-body::-webkit-scrollbar{width:3px}
+#sb-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.panel{display:none}.panel.on{display:block}
+.sec{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:20px 0 10px}
+.sec:first-child{margin-top:0}
+
+.sl-row{margin-bottom:16px}
+.sl-top{display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px}
+.sl-lbl{color:var(--text2)}.sl-val{font-weight:700;color:var(--text);font-size:13px}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(205,62,0,.15);cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+
+.mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.mat-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.mat-btn:hover{border-color:rgba(26,26,26,.3)}.mat-btn.on{border-color:var(--accent);background:rgba(205,62,0,.06)}
+.mat-sw{width:22px;height:22px;border-radius:5px;flex-shrink:0;border:1px solid rgba(26,26,26,.1)}
+.mat-lbl{font-size:11px;font-weight:500;color:var(--text2)}.mat-btn.on .mat-lbl{color:var(--accent)}
+
+.pos-info{background:rgba(205,62,0,.05);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.pos-info strong{color:var(--text)}
+.tip{background:rgba(205,62,0,.05);border:1px dashed rgba(205,62,0,.25);border-radius:8px;padding:11px 13px;font-size:11px;color:var(--text2);line-height:1.55;margin-bottom:16px}
+.tip-icon{font-size:14px;display:inline-block;margin-right:4px}
+.recap-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
+.warn-alert{display:none;background:rgba(205,62,0,.07);border:1.5px solid rgba(205,62,0,.35);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--accent);line-height:1.55;margin-bottom:14px}
+.warn-alert.show{display:block}
+.recap-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.recap-row:last-child{border-bottom:none}
+.recap-k{color:var(--text2)}.recap-v{color:var(--text);font-weight:600}
+
+.amgt-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.amgt-count{font-size:11px;color:var(--text2)}
+.amgt-count strong{color:var(--text)}
+.edit-mode-btn{padding:8px 14px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.04em}
+.edit-mode-btn:hover{border-color:rgba(26,26,26,.3);color:var(--text)}.edit-mode-btn.active{border-color:var(--accent);background:rgba(205,62,0,.08);color:var(--accent)}
+.reset-btn{width:100%;padding:9px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:.08em;transition:all .18s;margin-bottom:6px}
+.reset-btn:hover{border-color:rgba(26,26,26,.3);color:var(--text)}
+.facade-row{display:flex;gap:8px;margin-bottom:4px}
+.facade-btn{flex:1;padding:9px 6px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.04em}
+.facade-btn:hover{border-color:rgba(26,26,26,.3);color:var(--text)}.facade-btn.on{border-color:var(--accent);background:rgba(205,62,0,.08);color:var(--accent)}
+.vasque-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+.vasque-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.vasque-btn:hover{border-color:rgba(26,26,26,.3)}.vasque-btn.on{border-color:var(--accent);background:rgba(205,62,0,.06)}
+.vasque-btn canvas{border-radius:5px;background:var(--panel2)}
+.vasque-lbl{font-size:10px;font-weight:600;color:var(--text2)}.vasque-btn.on .vasque-lbl{color:var(--accent)}
+
+#sb-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.btn-back{flex:0 0 auto;padding:11px 14px;border-radius:7px;background:transparent;border:1.5px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.btn-back:hover{border-color:rgba(26,26,26,.3);color:var(--text)}.btn-back:disabled{opacity:.3;cursor:not-allowed}
+.btn-next{flex:1;padding:12px;border-radius:7px;background:var(--accent);border:none;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .2s;font-family:'DM Sans',sans-serif}
+.btn-next:hover{background:var(--accent2)}
+
+#cv-wrap{flex:1;position:relative;overflow:hidden}
+#c{width:100%!important;height:100%!important;display:block}
+#hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(255,250,240,.92);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:10px;color:var(--text2);pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px);transition:opacity .4s;opacity:0;letter-spacing:.06em}
+#hint.show{opacity:1}
+
+/* FORMULAIRE ENVOI */
+.cfg-field{width:100%;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;transition:border-color .18s;margin-bottom:10px}
+.cfg-field:focus{border-color:var(--accent)}
+textarea.cfg-field{resize:vertical;min-height:72px}
+.cfg-err{font-size:11px;color:#c00;background:rgba(192,0,0,.06);border-radius:7px;padding:8px 12px}
+.cfg-ok{text-align:center;padding:24px 16px;font-size:14px;font-weight:700;color:var(--text)}
+.cfg-ok-icon{display:block;font-size:36px;margin-bottom:12px;color:var(--accent)}
+.cta-btn{width:100%;padding:13px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.cta-btn:hover{background:var(--accent2)}.cta-btn:disabled{opacity:.5;cursor:not-allowed}
+.cta-note{font-size:10px;color:var(--text2);text-align:center;margin-top:8px}
+
+/* BARRE ÉDITION CAISSON */
+#c-edit-bar{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,250,240,.95);backdrop-filter:blur(8px);
+  border-radius:100px;padding:5px 8px 5px 14px;
+  opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;
+  border:1px solid var(--border);box-shadow:0 4px 20px rgba(26,26,26,.1);
+}
+#cv-wrap.mode-edit #c-edit-bar{opacity:1;pointer-events:auto}
+.c-edit-lbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text2)}
+.c-type-btns{display:flex;border-radius:100px;overflow:hidden;background:rgba(26,26,26,.06)}
+.c-type-btn{padding:5px 11px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);background:none;border:none;cursor:pointer;border-radius:100px;transition:background .15s,color .15s;white-space:nowrap}
+.c-type-btn.active{background:var(--accent);color:#fff}
+.c-edit-sep{width:1px;height:16px;background:var(--border)}
+.c-edit-close{width:28px;height:28px;border-radius:50%;background:rgba(26,26,26,.08);border:none;cursor:pointer;color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.c-edit-close:hover{background:rgba(26,26,26,.14)}
+#c-action-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);background:rgba(255,250,240,.92);padding:6px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .2s;border:1px solid var(--border)}
+#cv-wrap.mode-edit #c-action-hint{opacity:1}
+
+@media(max-width:760px){
+  #app{flex-direction:column-reverse}
+  #sidebar{width:100%;min-width:0;height:50vh;border-right:none;border-top:1px solid var(--border)}
+  #cv-wrap{height:50vh}
+  /* sidebar scrollable */
+  #sb-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px}
+  /* stepper compact */
+  #stepper{padding:10px 14px}
+  .step-lbl{font-size:9px;margin:0 4px}
+  /* step-dots — 44px touch targets */
+  .step-dot{width:44px;height:44px;min-width:44px;min-height:44px;font-size:12px}
+  /* range touch */
+  input[type=range]{min-height:36px;height:36px;padding:10px 0}
+  /* mat-grid tiles smaller */
+  .mat-grid{gap:6px}
+  .mat-sw{width:18px;height:18px}
+  /* form fields — prevent iOS zoom */
+  .cfg-field{font-size:16px}
+  /* footer buttons */
+  #sb-footer,#sb-foot{padding:10px 14px}
+  .btn-back,.btn-next{min-height:44px}
+  /* header */
+  #sb-header{padding:12px 14px 10px}
+  /* barre d'édition : masque le libellé, réduit les boutons, autorise le retour à la ligne */
+  #c-edit-bar{flex-wrap:wrap;justify-content:center;border-radius:14px;padding:8px;gap:5px;max-width:calc(100vw - 24px);white-space:normal}
+  .c-edit-lbl,.c-edit-sep{display:none}
+  .c-type-btns{flex-wrap:wrap;justify-content:center;border-radius:10px}
+  .c-type-btn{padding:7px 10px;font-size:9px;min-height:36px;min-width:44px}
+  .c-edit-close{min-width:36px;min-height:36px;width:36px;height:36px}
+}
+@media(max-width:480px){
+  #sb-body{padding:10px 10px}
+  #stepper{padding:8px 10px}
+  .step-lbl{display:none}
+  .step-dot{width:36px;height:36px;min-width:36px;min-height:36px}
+  .mat-grid{grid-template-columns:1fr 1fr;gap:5px}
+  .mat-lbl{font-size:10px}
+  .vasque-grid{grid-template-columns:repeat(3,1fr)}
+  .cfg-field{padding:10px 10px;font-size:16px}
+  .cta-btn{padding:14px;font-size:12px;min-height:44px}
+  #sb-foot{padding:8px 10px}
+  .btn-next,.btn-back{min-height:44px;padding:12px 10px}
+  .sec{margin:14px 0 8px}
+  .sl-row{margin-bottom:12px}
+}
+
+/* ─── TYPE SELECTION OVERLAY ─── */
+#type-overlay{position:fixed;inset:0;background:#1A1A1A;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px}
+#type-overlay .ov-logo{font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#fff;margin-bottom:8px}
+#type-overlay .ov-sub{font-size:11px;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-bottom:40px;text-align:center}
+#type-overlay .ov-title{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:500;color:#fff;margin-bottom:28px;text-align:center}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:600px;width:100%}
+@media(max-width:600px){.type-grid{grid-template-columns:repeat(2,1fr)}}
+.type-card{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:24px 14px 20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.type-card:hover,.type-card:active{border-color:#CD3E00;background:rgba(205,62,0,.12)}
+.type-card .tc-icon{font-size:28px}
+.type-card .tc-lbl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff}
+.type-card .tc-desc{font-size:10px;color:rgba(255,255,255,.4);text-align:center;line-height:1.4}
+</style>
+</head>
+<body>
+
+<!-- OVERLAY TYPE DE MEUBLE -->
+<div id="type-overlay">
+  <div class="ov-logo">Kōbō Design</div>
+  <div class="ov-sub">Configurateur sur mesure</div>
+  <div class="ov-title">Quel meuble souhaitez-vous configurer ?</div>
+  <div class="type-grid">
+    <div class="type-card" onclick="selectFurnitureType('biblio')">
+      <span class="tc-icon">📚</span>
+      <span class="tc-lbl">Bibliothèque</span>
+      <span class="tc-desc">Étagères, séparateurs, portes</span>
+    </div>
+    <div class="type-card" onclick="selectFurnitureType('tv')">
+      <span class="tc-icon">📺</span>
+      <span class="tc-lbl">Meuble TV</span>
+      <span class="tc-desc">Caissons, tiroirs, niches</span>
+    </div>
+    <div class="type-card" onclick="selectFurnitureType('chambre')">
+      <span class="tc-icon">🛏</span>
+      <span class="tc-lbl">Chambre</span>
+      <span class="tc-desc">Tête de lit, rangements</span>
+    </div>
+    <div class="type-card" onclick="selectFurnitureType('dressing')">
+      <span class="tc-icon">👔</span>
+      <span class="tc-lbl">Dressing</span>
+      <span class="tc-desc">Penderie, tringles, étagères</span>
+    </div>
+    <div class="type-card" onclick="selectFurnitureType('sdb')">
+      <span class="tc-icon">🚿</span>
+      <span class="tc-lbl">Salle de bain</span>
+      <span class="tc-desc">Plan de travail, vasques</span>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="sidebar">
+    <div id="sb-header">
+      <div class="logo-txt">Kōbō Design</div>
+      <div class="logo-sub" id="logo-sub">Configurateur</div>
+    </div>
+    <div id="stepper"></div>
+
+    <div id="sb-body">
+
+      <!-- STEP 1 — Meuble -->
+      <div class="panel on" id="p1">
+        <div class="sec">Dimensions du meuble</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
+          <input type="range" id="sl-cL" min="40" max="220" step="1" value="120" oninput="setCL(+this.value)">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
+          <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">36 cm</span></div>
+          <input type="range" min="36" max="60" step="1" value="36" oninput="setCP(+this.value)">
+        </div>
+        <div class="sec">Finition bois</div>
+        <div class="mat-grid" id="mg-cais"></div>
+        <div class="sec">Aménagement intérieur</div>
+        <div class="amgt-row">
+          <span class="amgt-count" id="amgt-count">Structure vide</span>
+          <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
+        </div>
+        <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
+      </div>
+
+      <!-- STEP 2 — Plan de travail -->
+      <div class="panel" id="p2">
+        <div class="warn-alert" id="warn-plan"></div>
+        <div class="sec">Dimensions du plan</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Longueur totale</span><span class="sl-val" id="v-L">140 cm</span></div>
+          <input type="range" min="40" max="300" step="1" value="140" oninput="setL(+this.value)">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Profondeur totale</span><span class="sl-val" id="v-P">55 cm</span></div>
+          <input type="range" min="36" max="80" step="1" value="55" oninput="setPro(+this.value)">
+        </div>
+        <div class="sec">Matériau</div>
+        <div class="mat-grid" id="mg-plan"></div>
+      </div>
+
+      <!-- STEP 3 — Vasque -->
+      <div class="panel" id="p3">
+        <div class="tip"><span class="tip-icon">✥</span>Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="warn-alert" id="warn-vasque"></div>
+        <div class="sec">Nombre de vasques</div>
+        <div class="facade-row" style="margin-bottom:16px">
+          <button class="facade-btn on" id="nv1" onclick="setNbVasques(1)">1 vasque</button>
+          <button class="facade-btn" id="nv2" onclick="setNbVasques(2)">2 vasques</button>
+        </div>
+        <div class="sec">Modèle de vasque</div>
+        <div class="vasque-grid" id="vg"></div>
+        <div class="sec">Type de pose</div>
+        <div class="facade-row" style="margin-bottom:16px">
+          <button class="facade-btn on" id="vt-poser" onclick="setVasqueType('poser')">À poser</button>
+          <button class="facade-btn" id="vt-encastree" onclick="setVasqueType('encastree')">Encastrée</button>
+        </div>
+        <div class="sec">Finition vasque</div>
+        <div class="mat-grid" id="mg-vasque"></div>
+        <div class="sec">Position</div>
+        <div class="pos-info">
+          Distance bord gauche : <strong id="pos-x">—</strong><br>
+          Distance mur : <strong id="pos-z">—</strong>
+        </div>
+        <div class="sec">Récapitulatif</div>
+        <div class="recap-box" id="recap"></div>
+      </div>
+
+      <!-- DRESSING — Options penderie -->
+      <div class="panel" id="pdressing">
+        <div class="sec">Configuration penderie</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Hauteur penderie</span><span class="sl-val" id="v-dresH">160 cm</span></div>
+          <input type="range" min="80" max="240" step="5" value="160" oninput="document.getElementById('v-dresH').textContent=this.value+' cm'">
+        </div>
+        <div class="sec">Tringles</div>
+        <div class="facade-row" style="margin-bottom:16px">
+          <button class="facade-btn on" id="tr-simple" onclick="setTringle('simple')">Simple</button>
+          <button class="facade-btn" id="tr-double" onclick="setTringle('double')">Double</button>
+        </div>
+        <div class="sec">Éléments</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Nombre de colonnes</span><span class="sl-val" id="v-dressCols">3</span></div>
+          <input type="range" min="1" max="8" step="1" value="3" oninput="document.getElementById('v-dressCols').textContent=this.value">
+        </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Étagères par colonne</span><span class="sl-val" id="v-dressEtag">2</span></div>
+          <input type="range" min="0" max="6" step="1" value="2" oninput="document.getElementById('v-dressEtag').textContent=this.value">
+        </div>
+        <div class="sec">Finition</div>
+        <div class="mat-grid" id="mg-dressing"></div>
+      </div>
+
+      <!-- STEP 4 — Envoyer -->
+      <div class="panel" id="p4">
+        <div class="sec">Votre configuration</div>
+        <div class="recap-box" id="recap4"></div>
+        <div class="sec">Vos coordonnées</div>
+        <div id="cfgFormWrap">
+          <input type="text"  id="cfgPrenom"  class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
+          <input type="email" id="cfgEmail"   class="cfg-field" placeholder="Votre email *"  maxlength="200" autocomplete="email"/>
+          <textarea           id="cfgMessage" class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
+          <input type="text" id="cfgBot" style="display:none" tabindex="-1" autocomplete="off"/>
+          <div class="cfg-err" id="cfgErr" style="display:none;margin-bottom:10px"></div>
+          <button class="cta-btn" id="cfgSubmitBtn" onclick="submitConfig()">Envoyer ma configuration →</button>
+          <p class="cta-note">Gratuit · Sans engagement · Réponse sous 24 h</p>
+        </div>
+        <div class="cfg-ok" id="cfgSuccess" style="display:none">
+          <span class="cfg-ok-icon">✓</span>
+          Configuration reçue !<br>
+          <span style="font-weight:400;color:var(--text2)">On revient vers vous dans les 24 h.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="sb-foot">
+      <button class="btn-back" id="btn-back" onclick="prevStep()" disabled>← Retour</button>
+      <button class="btn-next" id="btn-next" onclick="nextStep()">Suivant →</button>
+    </div>
+  </div>
+
+  <div id="cv-wrap">
+    <canvas id="c"></canvas>
+    <div id="hint">☛ Glissez la vasque pour la repositionner</div>
+    <div id="c-edit-bar">
+      <span class="c-edit-lbl">Ajouter</span>
+      <div class="c-type-btns">
+        <button class="c-type-btn active" id="ct-shelf" onclick="setCaissonType('shelf')">━ Tablette</button>
+        <button class="c-type-btn" id="ct-sep"   onclick="setCaissonType('separator')">┃ Séparateur</button>
+        <button class="c-type-btn" id="ct-door"  onclick="setCaissonType('porte')">🚪 Porte</button>
+        <button class="c-type-btn" id="ct-draw"  onclick="setCaissonType('tiroir')">▤ Tiroir</button>
+      </div>
+      <div class="c-edit-sep"></div>
+      <button class="c-edit-close" onclick="toggleCaissonEdit()">✕</button>
+    </div>
+    <div id="c-action-hint">Clic = poser · Clic sur élément = supprimer</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// ÉTAT
+// ═══════════════════════════════════════════════════════
+var S = {
+  step:1,
+  // Meuble
+  CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
+  caissonOffset:0,  // décalage X du caisson sous le plan (m)
+  // Plan
+  L:1.40, P:0.55, Ep:0.04, matPlan:0,
+  // Vasque
+  vx:0, vz:0, vx2:0, vz2:0, nbVasques:1,
+  vasqueW:0.50, vasqueD:0.35, vasqueRx:0.256, vasqueRz:0.181,
+};
+
+var MATS_PLAN = [
+  // Dekton
+  {n:'Evok',          src:'textures/dekton/evok.png',       r:.18, brand:'Dekton'},
+  {n:'Kedar',         src:'textures/dekton/kedar.png',      r:.20, brand:'Dekton'},
+  {n:'Keena',         src:'textures/dekton/keena.png',      r:.15, brand:'Dekton'},
+  {n:'Thala',         src:'textures/dekton/thala.png',      r:.16, brand:'Dekton'},
+  {n:'Zira',          src:'textures/dekton/zira.png',       r:.18, brand:'Dekton'},
+  // Silestone
+  {n:'Arden Blue',    src:'textures/silestone/ardenblue.png',        r:.20, brand:'Silestone'},
+  {n:'Blanc Elysée',  src:'textures/silestone/blancelysee.png',      r:.14, brand:'Silestone'},
+  {n:'Calacatta Gold',src:'textures/silestone/calacattagold.png',    r:.16, brand:'Silestone'},
+  {n:'Chateau Brown', src:'textures/silestone/chateaubrown.png',     r:.22, brand:'Silestone'},
+  {n:'El Marquina',   src:'textures/silestone/elmarquina.png',       r:.18, brand:'Silestone'},
+  {n:'Jardin Emerald',src:'textures/silestone/jardinemerald.png',    r:.20, brand:'Silestone'},
+  {n:'Linen Cream',   src:'textures/silestone/linencream.png',       r:.18, brand:'Silestone'},
+  {n:'Miami White',   src:'textures/silestone/miamiwhite.png',       r:.12, brand:'Silestone'},
+  {n:'White Arabesque',src:'textures/silestone/whitearabesque.png',  r:.14, brand:'Silestone'},
+];
+var _planTexCache={};
+var MATS_CAIS = [
+  {n:'Chêne',        src:'img/BOISCHENE.jpg',   r:.65},
+  {n:'Noyer',        src:'img/NOYER.jpg',        r:.62},
+  {n:'Chêne Foncé',  src:'img/CHENEFONCE.jpg',  r:.62},
+  {n:'Sapelli',      src:'img/SAPELLI.jpg',      r:.60},
+  {n:'Vert Sauge',   src:'img/VERTSAUGE.jpg',   r:.65},
+  {n:'Brun Rosé',    src:'img/BRUNROSE.jpg',     r:.65},
+  {n:'Gris Ardoise', src:'img/GRISARDOISE.jpg', r:.65},
+  {n:'Blanc',        src:null, color:'#F0EDEA',  r:.70},
+];
+var _caisTexCache={};
+
+var EP = 0.018;  // épaisseur panneau 18mm
+
+// ── Aménagement caisson ──────────────────────────────
+// {type:'shelf',     y_cm}
+// {type:'separator', x_cm, y_cm}
+// {type:'porte',     key}   clé = 'bot_left_top_right' en cm
+// {type:'tiroir',    key}
+var caissonElements  = [];
+var caissonOpenState = {};  // {key: bool} tiroirs ouverts
+var caissonType      = 'shelf';
+var caissonEditMode  = false;
+var caissonGhost     = null;
+var caissonHitPlane  = null;
+var caissonGuidesGrp = null;
+var caissonElemMeshes= [];
+
+// ═══════════════════════════════════════════════════════
+// THREE.JS
+// ═══════════════════════════════════════════════════════
+var wrap = document.getElementById('cv-wrap');
+var cvs  = document.getElementById('c');
+var renderer = new THREE.WebGLRenderer({canvas:cvs,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.LinearToneMapping; renderer.toneMappingExposure=1.0;
+
+var scene=new THREE.Scene();
+scene.background=new THREE.Color(0x141210);
+scene.fog=new THREE.FogExp2(0x141210,0.045);
+
+var camera=new THREE.PerspectiveCamera(42,1,0.01,30);
+camera.position.set(-0.4,0.9,1.6); camera.lookAt(0,0.25,0);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x707070,0.32));
+var sun=new THREE.DirectionalLight(0xffffff,0.60);
+sun.position.set(3,6,3); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-2; sun.shadow.camera.right=2;
+sun.shadow.camera.top=2;  sun.shadow.camera.bottom=-2;
+sun.shadow.camera.far=20; sun.shadow.bias=-0.0003;
+scene.add(sun);
+var dl2=new THREE.DirectionalLight(0xffffff,0.15); dl2.position.set(-3,3,4); scene.add(dl2);
+var dl3=new THREE.DirectionalLight(0xffffff,0.10); dl3.position.set(3,2,4); scene.add(dl3);
+
+var solMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x242018,roughness:0.92,metalness:0.05}));
+solMesh.rotation.x=-Math.PI/2; solMesh.receiveShadow=true; scene.add(solMesh);
+var solSh=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.ShadowMaterial({opacity:0.22}));
+solSh.rotation.x=-Math.PI/2; solSh.position.y=0.001; solSh.receiveShadow=true; scene.add(solSh);
+var murMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,5),new THREE.MeshStandardMaterial({color:0x302a22,roughness:0.94}));
+murMesh.position.set(0,2.5,-0.75); murMesh.receiveShadow=true; scene.add(murMesh);
+
+var mirGrp=new THREE.Group();
+mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.76,0.96,0.012),new THREE.MeshStandardMaterial({color:0xb09060,roughness:0.2,metalness:0.7})));
+mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.70,0.90,0.008),new THREE.MeshPhysicalMaterial({color:0xd8d0c8,metalness:0.92,roughness:0.06,clearcoat:1.0})));
+mirGrp.position.set(0,1.65,-0.73); scene.add(mirGrp);
+
+var controls=new THREE.OrbitControls(camera,cvs);
+controls.enableDamping=true; controls.dampingFactor=0.1;
+controls.target.set(0,0.25,0);
+controls.minPolarAngle=Math.PI*.10; controls.maxPolarAngle=Math.PI*.52;
+controls.minAzimuthAngle=-Math.PI/2; controls.maxAzimuthAngle=Math.PI/2;
+controls.minDistance=0.4; controls.maxDistance=4.0; controls.update();
+
+var planMesh=null, caissonGrp=null;
+var vasqueGrp=null, vasqueGrp2=null;
+var vasqueRimOffset=0, vasqueRimOffset2=0;
+var activeVasqueDrag=-1; // 0=vasque1, 1=vasque2, -1=aucune
+
+function disposeMesh(m){
+  if(!m) return;
+  if(m.geometry) m.geometry.dispose();
+  if(m.material){ if(Array.isArray(m.material)) m.material.forEach(function(x){x.dispose();}); else m.material.dispose(); }
+}
+function disposeGroup(g){
+  if(!g) return;
+  g.traverse(function(o){if(o.isMesh) disposeMesh(o);});
+  scene.remove(g);
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS COORDONNÉES INTÉRIEURES DU CAISSON
+// (0,0) = coin bas-gauche intérieur ; unité = cm
+// ═══════════════════════════════════════════════════════
+function caissonCP(){ return S.CairsonP; } // profondeur caisson (m)
+function localToYcm(y_loc){ return (y_loc-EP)*100; }
+function ycmToLocal(y_cm) { return EP+y_cm/100; }
+function localToXcm(x_loc){ return (x_loc+S.CL/2-EP)*100; }
+function xcmToLocal(x_cm) { return -S.CL/2+EP+x_cm/100; }
+
+function getCompartment(y_cm, x_cm){
+  var iH_cm=(S.CH-2*EP)*100;
+  var iW_cm=(S.CL-2*EP)*100;
+  var shelves=caissonElements.filter(function(e){
+    if(e.type!=='shelf') return false;
+    var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
+    var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
+    // Si x_cm fourni : tablette valide si elle couvre ce x
+    if(x_cm!==undefined) return sl<=x_cm&&sr>=x_cm;
+    // Sinon : seulement les tablettes pleine largeur
+    return sl<=1&&sr>=iW_cm-1;
+  }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
+  var bot=0,top=iH_cm;
+  shelves.forEach(function(s){ if(s<y_cm&&s>bot) bot=s; if(s>y_cm&&s<top) top=s; });
+  return {bottom_cm:bot,top_cm:top,height_cm:top-bot,centerY:ycmToLocal((top+bot)/2)};
+}
+function getBay(x_cm,y_cm){
+  var iW_cm=(S.CL-2*EP)*100;
+  var comp=getCompartment(y_cm,x_cm);
+  var seps=caissonElements.filter(function(e){
+    return e.type==='separator'&&e.y_cm>=comp.bottom_cm&&e.y_cm<=comp.top_cm;
+  }).map(function(e){return e.x_cm;}).sort(function(a,b){return a-b;});
+  var left=0,right=iW_cm;
+  seps.forEach(function(s){ if(s<x_cm&&s>left) left=s; if(s>x_cm&&s<right) right=s; });
+  return {left_cm:left,right_cm:right,width_cm:right-left,centerX:xcmToLocal((right+left)/2)};
+}
+function mkKey(comp,bay){
+  return Math.round(comp.bottom_cm)+'_'+Math.round(bay.left_cm)+'_'+Math.round(comp.top_cm)+'_'+Math.round(bay.right_cm);
+}
+function getFacadeFor(comp,bay){
+  var k=mkKey(comp,bay);
+  for(var i=0;i<caissonElements.length;i++){
+    if((caissonElements[i].type==='porte'||caissonElements[i].type==='tiroir')&&caissonElements[i].key===k) return caissonElements[i];
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILD CAISSON
+// ═══════════════════════════════════════════════════════
+function buildCaisson(){
+  disposeGroup(caissonGrp);
+  caissonGrp=new THREE.Group();
+  caissonHitPlane=null;
+  caissonElemMeshes=[];
+  if(caissonGhost) caissonGhost=null;
+
+  var CL=S.CL, CH=S.CH, CP=caissonCP();
+  var ep=EP, iW=CL-2*ep, iH=CH-2*ep;
+
+  var md=MATS_CAIS[S.matCais];
+  var matLaiton=new THREE.MeshStandardMaterial({color:0xc9a45a,roughness:0.28,metalness:0.88});
+  function makePanelMat(darken,w,h){
+    var tex=_caisTexCache[S.matCais];
+    if(tex){
+      var t=tex.clone(); t.needsUpdate=true;
+      t.repeat.set(Math.max(w,0.01)/0.40, Math.max(h,0.01)/0.40);
+      return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});
+    }
+    var base=new THREE.Color(md.color||'#D4A96A');
+    return new THREE.MeshStandardMaterial({color:base.multiplyScalar(darken),roughness:md.r,metalness:0.02});
+  }
+
+  // Essences bois → intérieur blanc, laques/peintures → tout de la même couleur
+  var isWood=(S.matCais<=3);
+  var matWhite=new THREE.MeshStandardMaterial({color:0xF2EDE8,roughness:0.90,metalness:0.0});
+
+  var matCais  =makePanelMat(1.00, EP, 0.5);
+  var matFacade=makePanelMat(0.80, 0.3, 0.4);
+  var matFond  =isWood ? matWhite : makePanelMat(0.68, 0.5, 0.4);
+  var matElem  =isWood ? matWhite : makePanelMat(0.88, 0.3, 0.3);
+
+  function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
+  // Boîte avec matériaux différents par face pour l'effet bois/blanc
+  // BoxGeometry faces : [+x, -x, +y, -y, +z, -z]
+  function boxBimat(w,h,d,intFaceIdx){
+    var mats=[matCais,matCais,matCais,matCais,matCais,matCais];
+    if(isWood){ mats[intFaceIdx]=matWhite; mats[4]=matWhite; } // face int + face avant
+    var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats);
+    m.castShadow=true; m.receiveShadow=true; return m;
+  }
+
+  // Structure — joue gauche : face int = +x (idx 0), joue droite : face int = -x (idx 1)
+  // tablette haute : face int = -y (idx 3), tablette basse : face int = +y (idx 2)
+  var cg=boxBimat(ep,CH,CP,0); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
+  var cd=boxBimat(ep,CH,CP,1); cd.position.set( CL/2-ep/2,CH/2,0); caissonGrp.add(cd);
+  var dt=boxBimat(iW,ep,CP,3); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
+  var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db);
+  var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
+
+  // Tablettes et séparateurs
+  caissonElements.forEach(function(el,idx){
+    if(el.type==='shelf'){
+      var iW_cm2=(S.CL-2*EP)*100;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
+      var sw=(sr-sl)/100;
+      var scx=xcmToLocal((sl+sr)/2);
+      var m=box(sw,ep,CP-ep,matElem);
+      m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
+      m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
+    } else if(el.type==='separator'){
+      var comp=getCompartment(el.y_cm,el.x_cm);
+      var h=comp.height_cm/100; if(h<0.01) return;
+      var m=box(ep,h,CP-ep,matElem);
+      m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
+      m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
+    }
+  });
+
+  // Façades par compartiment
+  var fz=CP/2+0.001; // collé au meuble (1mm)
+  caissonElements.forEach(function(el,idx){
+    if(el.type!=='porte'&&el.type!=='tiroir') return;
+    var parts=el.key.split('_').map(Number);
+    var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
+    var w=(right-left)/100, h=(top-bot)/100;
+    var cx=xcmToLocal((left+right)/2);
+    var jeu=0.003;
+    if(el.type==='porte'){
+      var isOpen=!!caissonOpenState[el.key];
+      var iW_cm2=iW*100, iH_cm2=iH*100;
+      var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  - EP/2;
+      var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+      var porYbot   = (bot<0.5)          ?  0    : ycmToLocal(bot)    - EP/2;
+      var porYtop   = (top>iH_cm2-0.5)  ?  CH   : ycmToLocal(top)    + EP/2;
+      var porW  = porXright - porXleft - jeu;
+      var porH  = porYtop   - porYbot  - jeu;
+      var porCy = (porYbot + porYtop) / 2;
+      // Charnière à l'extérieur : gauche si porte dans la moitié gauche, droite sinon
+      var cabinetMidX = xcmToLocal(iW*50);
+      var porCx = (porXleft + porXright) / 2;
+      var hingeLeft = porCx <= cabinetMidX;
+      var pivot=new THREE.Group();
+      if(hingeLeft){
+        pivot.position.set(porXleft+jeu/2, porCy, fz);
+        if(isOpen) pivot.rotation.y=-Math.PI*0.25;
+      } else {
+        pivot.position.set(porXright-jeu/2, porCy, fz);
+        if(isOpen) pivot.rotation.y=Math.PI*0.25;
+      }
+      var pm=box(porW,porH,0.020,matFacade);
+      pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
+      pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
+      pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
+    } else { // tiroir — couvre toutes les faces blanches de sa zone
+      var isOpen=!!caissonOpenState[el.key];
+      var tirZ=isOpen ? fz+CP*0.55 : fz;
+      var iW_cm=iW*100, iH_cm=iH*100;
+      var jeu=0.003;
+      // Limites X : joue si bord du caisson, sinon face ext du séparateur
+      var tirXleft  = (left<0.5)       ? -CL/2 : xcmToLocal(left)  - EP/2;
+      var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+      // Limites Y : panneau struct si bord du caisson, sinon face ext de la tablette
+      var tirYbot = (bot<0.5)          ?  0  : ycmToLocal(bot) - EP/2;
+      var tirYtop = (top>iH_cm-0.5)    ?  CH : ycmToLocal(top) + EP/2;
+      var tirW = tirXright - tirXleft - jeu;
+      var tirH = tirYtop - tirYbot - jeu;
+      var tirCx = (tirXleft + tirXright) / 2;
+      var tirCy = (tirYbot  + tirYtop)  / 2;
+      var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
+      tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+      caissonElemMeshes.push(tm); caissonGrp.add(tm);
+    }
+  });
+
+  // Plan de frappe invisible
+  var hpGeo=new THREE.PlaneGeometry(iW,iH);
+  caissonHitPlane=new THREE.Mesh(hpGeo,new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide}));
+  caissonHitPlane.position.set(0,EP+iH/2,CP/2-0.002);
+  caissonGrp.add(caissonHitPlane);
+
+  caissonGuidesGrp = new THREE.Group();
+  caissonGuidesGrp.renderOrder = 4;
+  caissonGrp.add(caissonGuidesGrp);
+
+  caissonGrp.position.set(S.caissonOffset,0,caissCZ());
+  scene.add(caissonGrp);
+  updateAmgtCount();
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILD PLAN DE TRAVAIL
+// ═══════════════════════════════════════════════════════
+var WALL_Z = -0.75;
+function planTopY(){ return S.CH+0.04+S.Ep; }
+function planCZ()  { return WALL_Z + S.P/2; }
+function caissCZ() { return WALL_Z + caissonCP()/2; }
+
+function buildPlan(){
+  if(planMesh){disposeMesh(planMesh);scene.remove(planMesh);planMesh=null;}
+  var L=S.L, P=S.P, Ep=S.Ep, topY=planTopY();
+  var vx=clampVasque(S.vx,'x'), vz=clampVasque(S.vz,'z');
+  // vz est en world space ; la shape est en local (avant planMesh.position.z=planCZ())
+  var lz=vz-planCZ();
+
+  var shape=new THREE.Shape();
+  shape.moveTo(-L/2,-P/2); shape.lineTo(L/2,-P/2); shape.lineTo(L/2,P/2); shape.lineTo(-L/2,P/2); shape.closePath();
+
+  function addVasqueHole(hx, hz){
+    var rx=S.vasqueRx, rz=S.vasqueRz, cr=Math.min(rx,rz)*0.12;
+    var lhz=hz-planCZ();
+    var hole=new THREE.Path();
+    hole.moveTo(hx-rx+cr,lhz-rz); hole.lineTo(hx+rx-cr,lhz-rz); hole.quadraticCurveTo(hx+rx,lhz-rz,hx+rx,lhz-rz+cr);
+    hole.lineTo(hx+rx,lhz+rz-cr); hole.quadraticCurveTo(hx+rx,lhz+rz,hx+rx-cr,lhz+rz);
+    hole.lineTo(hx-rx+cr,lhz+rz); hole.quadraticCurveTo(hx-rx,lhz+rz,hx-rx,lhz+rz-cr);
+    hole.lineTo(hx-rx,lhz-rz+cr); hole.quadraticCurveTo(hx-rx,lhz-rz,hx-rx+cr,lhz-rz); hole.closePath();
+    shape.holes.push(hole);
+  }
+  if(vasqueEncastree && S.vasqueRx>0 && S.vasqueRz>0){
+    addVasqueHole(vx, clampVasque(S.vz,'z'));
+    if(S.nbVasques===2) addVasqueHole(clampVasque(S.vx2,'x'), clampVasque(S.vz2,'z'));
+  }
+
+  var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
+  geo.rotateX(Math.PI/2); geo.translate(0,S.CH+0.04,0);
+  var md=MATS_PLAN[S.matPlan];
+  var planMat;
+  if(_planTexCache[S.matPlan]){
+    var t=_planTexCache[S.matPlan].clone(); t.needsUpdate=true;
+    t.repeat.set(Math.max(S.L,0.01)/0.40, Math.max(S.P,0.01)/0.40);
+    planMat=new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.04});
+  } else {
+    planMat=new THREE.MeshStandardMaterial({color:new THREE.Color(md.color||'#C2AB8E'),roughness:md.r,metalness:0.04});
+  }
+  planMesh=new THREE.Mesh(geo,planMat);
+  planMesh.castShadow=true; planMesh.receiveShadow=true;
+  planMesh.position.set(S.caissonOffset,0,planCZ()); planMesh.visible=(S.step>=2); scene.add(planMesh);
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILD VASQUE
+// ═══════════════════════════════════════════════════════
+var _vasqueYOffset=0.10; // à poser=0.10, encastrée=0.06
+var vasqueEncastree=false;
+var MATS_VASQUE=[
+  // Dekton
+  {n:'Evok',          src:'textures/dekton/evok.png',       r:.18, brand:'Dekton'},
+  {n:'Kedar',         src:'textures/dekton/kedar.png',      r:.20, brand:'Dekton'},
+  {n:'Keena',         src:'textures/dekton/keena.png',      r:.15, brand:'Dekton'},
+  {n:'Thala',         src:'textures/dekton/thala.png',      r:.16, brand:'Dekton'},
+  {n:'Zira',          src:'textures/dekton/zira.png',       r:.18, brand:'Dekton'},
+  // Silestone
+  {n:'Arden Blue',    src:'textures/silestone/ardenblue.png',        r:.20, brand:'Silestone'},
+  {n:'Blanc Elysée',  src:'textures/silestone/blancelysee.png',      r:.14, brand:'Silestone'},
+  {n:'Calacatta Gold',src:'textures/silestone/calacattagold.png',    r:.16, brand:'Silestone'},
+  {n:'Chateau Brown', src:'textures/silestone/chateaubrown.png',     r:.22, brand:'Silestone'},
+  {n:'El Marquina',   src:'textures/silestone/elmarquina.png',       r:.18, brand:'Silestone'},
+  {n:'Jardin Emerald',src:'textures/silestone/jardinemerald.png',    r:.20, brand:'Silestone'},
+  {n:'Linen Cream',   src:'textures/silestone/linencream.png',       r:.18, brand:'Silestone'},
+  {n:'Miami White',   src:'textures/silestone/miamiwhite.png',       r:.12, brand:'Silestone'},
+  {n:'White Arabesque',src:'textures/silestone/whitearabesque.png',  r:.14, brand:'Silestone'},
+];
+var S_matVasque=6; // Blanc Elysée par défaut
+var _vasqueTexCache={};
+var _vasqueModels=[
+  {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.0570},
+  {id:'v2',label:'V2',file:'models/vasque-v2.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v3',label:'V3',file:'models/vasque-v3.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v4',label:'V4',file:'models/vasque-v4.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v5',label:'V5',file:'models/vasque-v5.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v6',label:'V6',file:'models/vasque-v6.glb', oPoser:0.09, oEncastree:0.0475},
+  {id:'v7',label:'V7',file:'models/vasque-v7.glb', oPoser:0.09, oEncastree:0.05},
+];
+var _vasqueSelected='v1';
+var _vasqueCache={};  // {id: gltf}
+var _vasqueLoading=false;
+
+function buildVasque(){
+  if(_vasqueLoading) return;
+  var id=_vasqueSelected;
+  if(_vasqueCache[id]){ _applyVasqueGltf(_vasqueCache[id]); return; }
+  _vasqueLoading=true;
+  var model=_vasqueModels.find(function(m){return m.id===id;});
+  var loader=new THREE.GLTFLoader();
+  loader.load(model.file,function(gltf){
+    _vasqueLoading=false; _vasqueCache[id]=gltf; _applyVasqueGltf(gltf);
+  },undefined,function(err){
+    _vasqueLoading=false; console.error('GLB vasque error',err);
+  });
+}
+
+function selectVasque(id){
+  _vasqueSelected=id;
+  document.querySelectorAll('.vasque-btn').forEach(function(b){
+    b.classList.toggle('on', b.dataset.id===id);
+  });
+  _applyOffsetForCurrent();
+  buildVasque();
+}
+
+function _buildOneVasqueGrp(gltf){
+  var grp=new THREE.Group();
+  var model=gltf.scene.clone(true);
+  var box0=new THREE.Box3().setFromObject(model);
+  var sz0=new THREE.Vector3(); box0.getSize(sz0);
+  var sx=S.vasqueW/sz0.x, sz=S.vasqueD/sz0.z;
+  var sy=Math.min(sx,sz);
+  model.scale.set(sx,sy,sz);
+  var box1=new THREE.Box3().setFromObject(model);
+  var sz1=new THREE.Vector3(); box1.getSize(sz1);
+  var ctr=new THREE.Vector3(); box1.getCenter(ctr);
+  model.position.set(-ctr.x,-box1.min.y,-ctr.z);
+  model.traverse(function(o){
+    if(!o.isMesh) return;
+    o.castShadow=true; o.receiveShadow=true;
+    o.userData.origMat=o.material.clone();
+  });
+  grp.add(model);
+  return {grp:grp, rimOffset:sz1.y-_vasqueYOffset, rx:sz1.x/2, rz:sz1.z/2};
+}
+
+function _applyVasqueGltf(gltf){
+  disposeGroup(vasqueGrp); vasqueGrp=null;
+  disposeGroup(vasqueGrp2); vasqueGrp2=null;
+
+  var r1=_buildOneVasqueGrp(gltf);
+  vasqueGrp=r1.grp; vasqueRimOffset=r1.rimOffset;
+  S.vasqueRx=r1.rx; S.vasqueRz=r1.rz;
+  scene.add(vasqueGrp);
+  vasqueGrp.visible=(S.step===3);
+  S.vx=clampVasque(S.vx,'x');
+  S.vz=clampVasque(WALL_Z+S.vasqueRz,'z');
+
+  if(S.nbVasques===2){
+    var r2=_buildOneVasqueGrp(gltf);
+    vasqueGrp2=r2.grp; vasqueRimOffset2=r2.rimOffset;
+    scene.add(vasqueGrp2);
+    vasqueGrp2.visible=(S.step===3);
+    // Positionner à droite si vx1 est à gauche, sinon symétrique
+    S.vx2=clampVasque(S.L/4,'x');
+    S.vx=clampVasque(-S.L/4,'x');
+    S.vz2=S.vz;
+  }
+
+  positionVasque(); buildPlan(); updatePosInfo();
+  applyVasqueMat();
+}
+
+function clampVasque(val,axis){
+  if(axis==='x'){
+    var halfV=S.vasqueRx, h=S.L/2;
+    var mn=-h+halfV+0.005, mx=h-halfV-0.005;
+    if(mn>mx) return 0;
+    return Math.max(mn,Math.min(mx,val));
+  } else {
+    var halfV=S.vasqueRz, pz=planCZ();
+    var mn=pz-S.P/2+halfV, mx=pz+S.P/2-halfV-0.04;
+    if(mn>mx) return pz;
+    return Math.max(mn,Math.min(mx,val));
+  }
+}
+function positionVasque(){
+  if(vasqueGrp){
+    var vx=clampVasque(S.vx,'x'),vz=clampVasque(S.vz,'z');
+    vasqueGrp.position.set(vx,planTopY()-vasqueRimOffset,vz);
+    S.vx=vx; S.vz=vz;
+  }
+  if(vasqueGrp2){
+    var vx2=clampVasque(S.vx2,'x'),vz2=clampVasque(S.vz2,'z');
+    vasqueGrp2.position.set(vx2,planTopY()-vasqueRimOffset2,vz2);
+    S.vx2=vx2; S.vz2=vz2;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// INTERACTIVITÉ CAISSON
+// ═══════════════════════════════════════════════════════
+var MIN_GAP_H=3, MIN_GAP_V=3;
+
+function setCaissonType(t){
+  caissonType=t;
+  ['ct-shelf','ct-sep','ct-door','ct-draw'].forEach(function(id,i){
+    var k=['shelf','separator','porte','tiroir'][i];
+    var el=document.getElementById(id); if(el) el.classList.toggle('active',k===t);
+  });
+  clearCaissonGhost();
+}
+
+function toggleCaissonEdit(){
+  caissonEditMode=!caissonEditMode;
+  var btn=document.getElementById('btn-edit-cais');
+  if(btn) btn.classList.toggle('active',caissonEditMode);
+  wrap.classList.toggle('mode-edit',caissonEditMode);
+  controls.enabled=!caissonEditMode;
+  cvs.style.cursor=caissonEditMode?'crosshair':'';
+  if(!caissonEditMode) clearCaissonGhost();
+}
+
+function clearCaissonGhost(){
+  if(caissonGhost){
+    if(caissonGhost.parent) caissonGhost.parent.remove(caissonGhost);
+    if(caissonGhost.geometry) caissonGhost.geometry.dispose();
+    if(caissonGhost.material) caissonGhost.material.dispose();
+    caissonGhost=null;
+  }
+  clearCaissonGuides();
+}
+
+// ── Repères interactifs de case SDB (style Canva) ─────────────────────────
+var _SDB_GUIDE_SNAP=4; // cm
+
+function clearCaissonGuides(){
+  if(!caissonGuidesGrp)return;
+  caissonGuidesGrp.children.slice().forEach(function(c){
+    if(c.geometry)c.geometry.dispose();
+    if(c.material)c.material.dispose();
+    caissonGuidesGrp.remove(c);
+  });
+}
+
+function _sdbGuideLine(pts,color,dashed,opacity){
+  var geo=new THREE.BufferGeometry().setFromPoints(pts);
+  var mat=dashed
+    ? new THREE.LineDashedMaterial({color:color,dashSize:.010,gapSize:.007,transparent:true,opacity:opacity,depthWrite:false})
+    : new THREE.LineBasicMaterial({color:color,transparent:true,opacity:opacity,depthWrite:false});
+  var ln=new THREE.Line(geo,mat);
+  if(dashed)ln.computeLineDistances();
+  ln.renderOrder=5;
+  caissonGuidesGrp.add(ln);
+}
+
+function updateCaissonGuides(hit){
+  clearCaissonGuides();
+  if(!hit||!caissonEditMode||!caissonGuidesGrp)return;
+
+  var bay =getBay(hit.x_cm, hit.y_cm);
+  var comp=getCompartment(hit.y_cm, hit.x_cm);
+
+  var xL=xcmToLocal(bay.left_cm);
+  var xR=xcmToLocal(bay.right_cm);
+  var yBot=ycmToLocal(comp.bottom_cm);
+  var yTop=ycmToLocal(comp.top_cm);
+  var xMid=(xL+xR)/2;
+  var yMid=(yBot+yTop)/2;
+  var xMid_cm=(bay.left_cm+bay.right_cm)/2;
+  var yMid_cm=(comp.bottom_cm+comp.top_cm)/2;
+  var CP=caissonCP();
+  var z=CP/2+0.004;
+
+  var nearY=Math.abs(hit.y_cm-yMid_cm)<_SDB_GUIDE_SNAP;
+  var nearX=Math.abs(hit.x_cm-xMid_cm)<_SDB_GUIDE_SNAP;
+
+  // Bordures de la case (pointillés gris)
+  var bC=0x94A3B8,bO=0.20;
+  _sdbGuideLine([new THREE.Vector3(xL,yTop,z),new THREE.Vector3(xR,yTop,z)],bC,true,bO);
+  _sdbGuideLine([new THREE.Vector3(xL,yBot,z),new THREE.Vector3(xR,yBot,z)],bC,true,bO);
+  _sdbGuideLine([new THREE.Vector3(xL,yBot,z),new THREE.Vector3(xL,yTop,z)],bC,true,bO);
+  _sdbGuideLine([new THREE.Vector3(xR,yBot,z),new THREE.Vector3(xR,yTop,z)],bC,true,bO);
+
+  // Ligne de centre horizontale
+  var hC=nearY?0x2563EB:0x60A5FA, hO=nearY?0.90:0.48;
+  _sdbGuideLine([new THREE.Vector3(xL,yMid,z),new THREE.Vector3(xR,yMid,z)],hC,!nearY,hO);
+
+  // Ligne de centre verticale
+  var vC=nearX?0x2563EB:0x60A5FA, vO=nearX?0.90:0.48;
+  _sdbGuideLine([new THREE.Vector3(xMid,yBot,z),new THREE.Vector3(xMid,yTop,z)],vC,!nearX,vO);
+
+  // Losange au centre
+  var dC=(nearX||nearY)?0x2563EB:0x60A5FA, dO=(nearX||nearY)?0.95:0.55, s=0.007;
+  _sdbGuideLine([
+    new THREE.Vector3(xMid,yMid+s,z),
+    new THREE.Vector3(xMid+s,yMid,z),
+    new THREE.Vector3(xMid,yMid-s,z),
+    new THREE.Vector3(xMid-s,yMid,z),
+    new THREE.Vector3(xMid,yMid+s,z)
+  ],dC,false,dO);
+}
+
+function getCaissonHit(e){
+  if(!caissonHitPlane||!caissonGrp) return null;
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  var hits=raycaster.intersectObject(caissonHitPlane,false);
+  if(!hits.length) return null;
+  var ptGrp=caissonGrp.worldToLocal(hits[0].point.clone());
+  var iW_cm=(S.CL-2*EP)*100, iH_cm=(S.CH-2*EP)*100;
+  var x_cm=Math.round(localToXcm(ptGrp.x));
+  var y_cm=Math.round(localToYcm(ptGrp.y));
+  return {x_cm:Math.min(Math.max(x_cm,0),iW_cm), y_cm:Math.min(Math.max(y_cm,0),iH_cm)};
+}
+
+function updateCaissonGhost(e){
+  if(!caissonEditMode||S.step!==1) return;
+  var hit=getCaissonHit(e);
+  if(!hit){clearCaissonGhost();return;}
+  var CP=caissonCP(), ep=EP;
+  var iW=S.CL-2*ep;
+  var gW,gH,gX,gY,occupied=false;
+
+  if(caissonType==='shelf'){
+    var bay0=getBay(hit.x_cm,hit.y_cm);
+    var bW0=(bay0.right_cm-bay0.left_cm)/100;
+    var bCx0=xcmToLocal((bay0.left_cm+bay0.right_cm)/2);
+    occupied=caissonElements.some(function(el){
+      if(el.type!=='shelf') return false;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
+      return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay0.right_cm&&sr>bay0.left_cm;
+    });
+    gW=bW0; gH=ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
+  } else if(caissonType==='separator'){
+    var comp=getCompartment(hit.y_cm,hit.x_cm);
+    if(comp.height_cm<1){clearCaissonGhost();return;}
+    occupied=caissonElements.some(function(el){
+      if(el.type!=='separator') return false;
+      var ec=getCompartment(el.y_cm,el.x_cm);
+      return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+    });
+    gW=ep; gH=comp.height_cm/100; gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
+  } else {
+    // porte ou tiroir → montre la face avant du compartiment
+    var comp2=getCompartment(hit.y_cm,hit.x_cm);
+    var bay2=getBay(hit.x_cm,hit.y_cm);
+    if(comp2.height_cm<1||bay2.width_cm<1){clearCaissonGhost();return;}
+    occupied=!!getFacadeFor(comp2,bay2);
+    var w2=bay2.width_cm/100, h2=comp2.height_cm/100;
+    gW=w2-0.003; gH=h2-0.003;
+    gX=bay2.centerX; gY=comp2.centerY;
+    // pour le ghost de façade on le place devant, pas dans le plan de frappe
+    if(!caissonGhost){
+      var gMat=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
+      caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat);
+      caissonGhost.renderOrder=1;
+      caissonGrp.add(caissonGhost);
+    }
+    caissonGhost.scale.set(gW,gH,0.020);
+    caissonGhost.position.set(gX,gY,CP/2+0.001);
+    caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
+    caissonGhost.material.opacity=occupied?0.25:0.45;
+    caissonGhost.visible=true;
+    updateCaissonGuides(hit);
+    return;
+  }
+
+  if(!caissonGhost){
+    var gMat2=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
+    caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat2);
+    caissonGhost.renderOrder=1; caissonGrp.add(caissonGhost);
+  }
+  caissonGhost.scale.set(gW,gH,CP-ep);
+  caissonGhost.position.set(gX,gY,-ep/2);
+  caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
+  caissonGhost.material.opacity=occupied?0.25:0.45;
+  caissonGhost.visible=true;
+  updateCaissonGuides(hit);
+}
+
+function placeOrRemoveCaisson(e){
+  if(!caissonEditMode||S.step!==1) return false;
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+
+  // Clic sur élément existant du même type → supprime (les autres types sont ignorés)
+  var eh=raycaster.intersectObjects(caissonElemMeshes,false);
+  if(eh.length){
+    var idx=eh[0].object.userData.elemIdx;
+    if(idx!==undefined){
+      var elType=caissonElements[idx]&&caissonElements[idx].type;
+      var sameType=(caissonType==='shelf'&&elType==='shelf')||
+                   (caissonType==='separator'&&elType==='separator')||
+                   ((caissonType==='porte'||caissonType==='tiroir')&&(elType==='porte'||elType==='tiroir'));
+      if(sameType){ caissonElements.splice(idx,1); clearCaissonGhost(); buildCaisson(); return true; }
+    }
+  }
+
+  var hit=getCaissonHit(e);
+  if(!hit) return false;
+
+  if(caissonType==='shelf'){
+    var bay1=getBay(hit.x_cm,hit.y_cm);
+    if(caissonElements.some(function(el){
+      if(el.type!=='shelf') return false;
+      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
+      return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay1.right_cm&&sr>bay1.left_cm;
+    })) return true;
+    caissonElements.push({type:'shelf',y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
+  } else if(caissonType==='separator'){
+    var comp=getCompartment(hit.y_cm,hit.x_cm);
+    if(comp.height_cm<1) return true;
+    if(caissonElements.some(function(el){
+      if(el.type!=='separator') return false;
+      var ec=getCompartment(el.y_cm,el.x_cm);
+      return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
+    })) return true;
+    var sepX=hit.x_cm;
+    caissonElements.push({type:'separator',x_cm:sepX,y_cm:(comp.bottom_cm+comp.top_cm)/2});
+    // Auto-split : coupe les tablettes qui traversent ce séparateur
+    var toAdd=[];
+    caissonElements=caissonElements.filter(function(el){
+      if(el.type!=='shelf') return true;
+      if(el.x_left_cm<sepX&&el.x_right_cm>sepX){
+        toAdd.push({type:'shelf',y_cm:el.y_cm,x_left_cm:el.x_left_cm,x_right_cm:sepX});
+        toAdd.push({type:'shelf',y_cm:el.y_cm,x_left_cm:sepX,x_right_cm:el.x_right_cm});
+        return false;
+      }
+      return true;
+    });
+    caissonElements=caissonElements.concat(toAdd);
+  } else {
+    // porte / tiroir
+    var comp3=getCompartment(hit.y_cm,hit.x_cm);
+    var bay3=getBay(hit.x_cm,hit.y_cm);
+    if(comp3.height_cm<1||bay3.width_cm<1) return true;
+    var k=mkKey(comp3,bay3);
+    var existing=caissonElements.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&el.key===k; });
+    if(existing>=0){ caissonElements.splice(existing,1); }
+    else { caissonElements.push({type:caissonType,key:k}); }
+  }
+  clearCaissonGhost(); buildCaisson(); return true;
+}
+
+function resetCaissonElements(){
+  caissonElements=[]; caissonOpenState={}; clearCaissonGhost(); buildCaisson();
+}
+function updateAmgtCount(){
+  var el=document.getElementById('amgt-count'); if(!el) return;
+  var nb=caissonElements.length;
+  if(!nb){el.textContent='Structure vide';return;}
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var parts=[];
+  if(counts.shelf)     parts.push(counts.shelf+' tablette'+(counts.shelf>1?'s':''));
+  if(counts.separator) parts.push(counts.separator+' séparateur'+(counts.separator>1?'s':''));
+  if(counts.porte)     parts.push(counts.porte+' porte'+(counts.porte>1?'s':''));
+  if(counts.tiroir)    parts.push(counts.tiroir+' tiroir'+(counts.tiroir>1?'s':''));
+  el.innerHTML='<strong>'+nb+'</strong> — '+parts.join(', ');
+}
+
+// ═══════════════════════════════════════════════════════
+// DRAG VASQUE
+// ═══════════════════════════════════════════════════════
+var isDragging=false,dragOffset=new THREE.Vector3();
+var isTouchEditDrag=false;
+var raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
+var dragPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0),dragPt=new THREE.Vector3();
+
+function toNDC(e){
+  var r=cvs.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1;
+  mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+}
+
+function _startVasqueDrag(nx, nz){
+  dragPlane.constant=-planTopY();
+  raycaster.ray.intersectPlane(dragPlane,dragPt);
+  if(vasqueGrp && raycaster.intersectObject(vasqueGrp,true).length>0){
+    activeVasqueDrag=0; dragOffset.set(dragPt.x-S.vx,0,dragPt.z-S.vz); return true;
+  }
+  if(vasqueGrp2 && raycaster.intersectObject(vasqueGrp2,true).length>0){
+    activeVasqueDrag=1; dragOffset.set(dragPt.x-S.vx2,0,dragPt.z-S.vz2); return true;
+  }
+  return false;
+}
+function _moveDrag(){
+  dragPlane.constant=-planTopY();
+  if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
+  if(activeVasqueDrag===0){
+    S.vx=clampVasque(dragPt.x-dragOffset.x,'x');
+    S.vz=clampVasque(dragPt.z-dragOffset.z,'z');
+  } else {
+    S.vx2=clampVasque(dragPt.x-dragOffset.x,'x');
+    S.vz2=clampVasque(dragPt.z-dragOffset.z,'z');
+  }
+  positionVasque(); buildPlan(); updatePosInfo();
+}
+cvs.addEventListener('pointerdown',function(e){
+  if(e.button!==0) return;
+  if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
+  if(S.step===1&&!caissonEditMode){
+    toNDC(e); raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
+    if(hits.length){
+      var obj=hits[0].object;
+      if(obj.userData.isTiroir){
+        caissonOpenState[obj.userData.tirKey]=!caissonOpenState[obj.userData.tirKey];
+        buildCaisson(); return;
+      }
+      if(obj.userData.isPorte){
+        caissonOpenState[obj.userData.porKey]=!caissonOpenState[obj.userData.porKey];
+        buildCaisson(); return;
+      }
+    }
+  }
+  if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  if(_startVasqueDrag()){
+    isDragging=true; controls.enabled=false; cvs.style.cursor='grabbing'; e.stopPropagation();
+  }
+});
+cvs.addEventListener('pointermove',function(e){
+  if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  if(!isDragging){
+    if(S.step===3){
+      var hit=(vasqueGrp&&raycaster.intersectObject(vasqueGrp,true).length)||
+              (vasqueGrp2&&raycaster.intersectObject(vasqueGrp2,true).length);
+      cvs.style.cursor=hit?'grab':'';
+    }
+    return;
+  }
+  _moveDrag();
+});
+window.addEventListener('pointerup',function(){
+  if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
+});
+cvs.addEventListener('touchstart',function(e){
+  // Mode édition meuble : drag-to-place (glisser pour positionner précisément)
+  if(S.step===1&&caissonEditMode){
+    isTouchEditDrag=true; controls.enabled=false;
+    var t=e.touches[0];
+    updateCaissonGhost({clientX:t.clientX,clientY:t.clientY});
+    e.preventDefault(); return;
+  }
+  if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
+  var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
+  raycaster.setFromCamera(mouse,camera);
+  if(_startVasqueDrag()){ isDragging=true; controls.enabled=false; e.preventDefault(); }
+},{passive:false});
+cvs.addEventListener('touchmove',function(e){
+  // Mode édition meuble : mise à jour du ghost pendant le glisser
+  if(S.step===1&&caissonEditMode&&isTouchEditDrag){
+    var t=e.touches[0];
+    updateCaissonGhost({clientX:t.clientX,clientY:t.clientY});
+    e.preventDefault(); return;
+  }
+  if(!isDragging) return; e.preventDefault();
+  var t=e.touches[0]; toNDC({clientX:t.clientX,clientY:t.clientY});
+  raycaster.setFromCamera(mouse,camera);
+  _moveDrag();
+},{passive:false});
+cvs.addEventListener('touchend',function(e){
+  // Mode édition meuble : placement à la position finale du doigt
+  if(S.step===1&&caissonEditMode&&isTouchEditDrag){
+    isTouchEditDrag=false; controls.enabled=true;
+    if(e.changedTouches.length){
+      var t=e.changedTouches[0];
+      placeOrRemoveCaisson({clientX:t.clientX,clientY:t.clientY});
+    }
+    return;
+  }
+  if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;}
+  // Ouverture portes / tiroirs au tap (step 1, hors mode édition)
+  if(S.step===1&&!caissonEditMode&&e.changedTouches.length){
+    var t=e.changedTouches[0];
+    toNDC({clientX:t.clientX,clientY:t.clientY});
+    raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
+    if(hits.length){
+      var obj=hits[0].object;
+      if(obj.userData.isTiroir){caissonOpenState[obj.userData.tirKey]=!caissonOpenState[obj.userData.tirKey];buildCaisson();}
+      if(obj.userData.isPorte){caissonOpenState[obj.userData.porKey]=!caissonOpenState[obj.userData.porKey];buildCaisson();}
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// UI CALLBACKS
+// ═══════════════════════════════════════════════════════
+function setCL(v){
+  S.CL=v/100; document.getElementById('v-CL').textContent=v+' cm';
+  var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
+  var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
+  if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
+  buildCaisson(); checkAlerts();
+}
+function setCH(v){ S.CH=v/100; document.getElementById('v-CH').textContent=v+' cm'; buildCaisson(); if(planMesh) buildPlan(); }
+function setCP(v){ S.CairsonP=v/100; document.getElementById('v-CP').textContent=v+' cm'; buildCaisson(); }
+function setL(v){
+  S.L=v/100; document.getElementById('v-L').textContent=v+' cm';
+  var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
+  var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
+  S.caissonOffset=Math.max(-(S.L/2-S.CL/2-0.01),Math.min(S.L/2-S.CL/2-0.01,S.caissonOffset));
+  S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
+  if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
+  positionVasque(); buildPlan(); buildCaisson(); updatePosInfo(); checkAlerts();
+}
+function setPro(v){ S.P=v/100; document.getElementById('v-P').textContent=v+' cm'; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
+function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); }
+function setCaissonOffset(v){
+  S.caissonOffset=v/100; document.getElementById('v-OFF').textContent=(v>=0?'+':'')+v+' cm';
+  if(caissonGrp) caissonGrp.position.x=S.caissonOffset;
+  if(planMesh) planMesh.position.x=S.caissonOffset;
+}
+function setVasqueW(v){ S.vasqueW=v/100; document.getElementById('v-VW').textContent=v+' cm'; buildVasque(); }
+function setVasqueD(v){ S.vasqueD=v/100; document.getElementById('v-VD').textContent=v+' cm'; buildVasque(); }
+function _applyOffsetForCurrent(){
+  var m=_vasqueModels.find(function(x){return x.id===_vasqueSelected;});
+  if(!m) return;
+  var offset=vasqueEncastree?m.oEncastree:m.oPoser;
+  _vasqueYOffset=offset;
+  var sl=document.getElementById('v-VY');
+  if(sl) sl.textContent=Math.round(offset*1000)/10+' cm';
+  var inp=document.querySelector('#p3 input[type=range][oninput*=VasqueYOffset]');
+  if(inp) inp.value=Math.round(offset*1000)/10;
+}
+function setNbVasques(n){
+  if(n===2 && S.CL<1.20 && S.L<1.20){
+    alert('Le meuble et le plan de travail doivent faire au moins 120 cm pour ajouter une 2ème vasque (meuble : '+Math.round(S.CL*100)+' cm, plan : '+Math.round(S.L*100)+' cm).');
+    return;
+  }
+  S.nbVasques=n;
+  document.getElementById('nv1').classList.toggle('on',n===1);
+  document.getElementById('nv2').classList.toggle('on',n===2);
+  if(n===2 && !vasqueGrp2 && _vasqueCache[_vasqueSelected]){
+    _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
+  } else if(n===1 && vasqueGrp2){
+    scene.remove(vasqueGrp2); disposeGroup(vasqueGrp2); vasqueGrp2=null;
+    S.vx=clampVasque(0,'x');
+    positionVasque(); buildPlan();
+  }
+}
+function setVasqueType(t){
+  vasqueEncastree=(t==='encastree');
+  document.getElementById('vt-poser').classList.toggle('on',!vasqueEncastree);
+  document.getElementById('vt-encastree').classList.toggle('on',vasqueEncastree);
+  _applyOffsetForCurrent();
+  if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
+  buildPlan();
+}
+function setVasqueYOffset(v){
+  document.getElementById('v-VY').textContent=v+' cm';
+  _vasqueYOffset=v/100;
+  if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
+}
+function applyVasqueMat(){
+  var md=MATS_VASQUE[S_matVasque];
+  var tex=_vasqueTexCache[S_matVasque];
+  [vasqueGrp,vasqueGrp2].forEach(function(grp){
+    if(!grp) return;
+    grp.traverse(function(o){
+    if(!o.isMesh) return;
+    var orig=o.userData.origMat;
+    if(orig) o.material=orig.clone();
+    if(tex){
+      var newTex=tex.clone();
+      newTex.needsUpdate=true;
+      newTex.wrapS=THREE.RepeatWrapping;
+      newTex.wrapT=THREE.RepeatWrapping;
+      try{newTex.colorSpace=THREE.SRGBColorSpace;}catch(e){newTex.encoding=THREE.sRGBEncoding;}
+      newTex.minFilter=THREE.LinearMipmapLinearFilter;
+      newTex.magFilter=THREE.LinearFilter;
+      newTex.anisotropy=renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():16;
+      newTex.generateMipmaps=true;
+      var uvAttr=o.geometry.attributes.uv;
+      if(uvAttr){
+        var arr=uvAttr.array;
+        var uMin=Infinity,uMax=-Infinity,vMin=Infinity,vMax=-Infinity;
+        for(var k=0;k<arr.length;k+=2){
+          if(arr[k]<uMin)uMin=arr[k]; if(arr[k]>uMax)uMax=arr[k];
+          if(arr[k+1]<vMin)vMin=arr[k+1]; if(arr[k+1]>vMax)vMax=arr[k+1];
+        }
+        var uR=uMax-uMin||1, vR=vMax-vMin||1;
+        var eu=Math.max(uR,0.5), ev=Math.max(vR,0.5);
+        newTex.repeat.set(2/eu,2/ev);
+        newTex.offset.set(-uMin*(2/eu),-vMin*(2/ev));
+      }
+      o.material.map=newTex;
+      o.material.color.setRGB(1,1,1);
+    } else {
+      o.material.map=null;
+      o.material.color.copy(new THREE.Color(md.color||'#F4F1ED'));
+    }
+    if('roughness' in o.material) o.material.roughness=md.r||0.4;
+    if('metalness' in o.material) o.material.metalness=0.05;
+    o.material.needsUpdate=true;
+    });
+  });
+}
+function setMatVasque(i){
+  S_matVasque=i; checkAlerts();
+  document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_VASQUE[i];
+  if(!md.src){ applyVasqueMat(); return; }
+  if(_vasqueTexCache[i]){ applyVasqueMat(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _vasqueTexCache[i]=tex; applyVasqueMat();
+  });
+}
+function setMatPlan(i){
+  S.matPlan=i;
+  document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_PLAN[i];
+  if(!md.src){ buildPlan(); checkAlerts(); return; }
+  if(_planTexCache[i]){ buildPlan(); checkAlerts(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _planTexCache[i]=tex; buildPlan(); checkAlerts();
+  });
+}
+function setMatCais(i){
+  S.matCais=i;
+  document.querySelectorAll('#mg-cais .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
+  var md=MATS_CAIS[i];
+  if(!md.src){ buildCaisson(); return; }
+  if(_caisTexCache[i]){ buildCaisson(); return; }
+  new THREE.TextureLoader().load(md.src,function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    try{tex.colorSpace=THREE.SRGBColorSpace;}catch(e){tex.encoding=THREE.sRGBEncoding;}
+    _caisTexCache[i]=tex; buildCaisson();
+  });
+}
+
+function updatePosInfo(){
+  var vx=clampVasque(S.vx,'x'),vz=clampVasque(S.vz,'z');
+  document.getElementById('pos-x').textContent=Math.round((vx+S.L/2)*100)+' cm';
+  document.getElementById('pos-z').textContent=Math.round((vz-WALL_Z)*100)+' cm';
+}
+
+// ═══════════════════════════════════════════════════════
+// WIZARD MULTI-TYPE
+// ═══════════════════════════════════════════════════════
+
+var FT_CONFIGS = {
+  biblio:  { label:'Bibliothèque',  sub:'Configurateur bibliothèque', panels:['p1','p4'], steps:['Meuble','Envoyer'], dimL:[40,300,120], dimH:[80,240,200], dimP:[25,50,30] },
+  tv:      { label:'Meuble TV',     sub:'Configurateur meuble TV',    panels:['p1','p4'], steps:['Meuble','Envoyer'], dimL:[80,300,150], dimH:[20,60,40],  dimP:[30,60,40] },
+  chambre: { label:'Meuble chambre',sub:'Configurateur chambre',      panels:['p1','p4'], steps:['Meuble','Envoyer'], dimL:[60,300,120], dimH:[40,120,60], dimP:[30,60,40] },
+  dressing:{ label:'Dressing',      sub:'Configurateur dressing',     panels:['p1','pdressing','p4'], steps:['Structure','Options','Envoyer'], dimL:[80,500,200], dimH:[180,280,230], dimP:[50,80,60] },
+  sdb:     { label:'Salle de bain', sub:'Configurateur salle de bain',panels:['p1','p2','p3','p4'], steps:['Meuble','Plan','Vasque','Envoyer'], dimL:[40,220,120], dimH:[30,70,45], dimP:[36,60,36] }
+};
+
+var currentFT = null;
+var currentPanels = [];
+var step = 1;
+
+function selectFurnitureType(ft){
+  currentFT = ft;
+  var cfg = FT_CONFIGS[ft];
+  currentPanels = cfg.panels;
+
+  document.getElementById('logo-sub').textContent = cfg.sub;
+  document.getElementById('type-overlay').style.display = 'none';
+
+  // Adapt dimension sliders
+  var slCL = document.getElementById('sl-cL');
+  if(slCL){ slCL.min=cfg.dimL[0]; slCL.max=cfg.dimL[1]; slCL.value=cfg.dimL[2]; setCL(cfg.dimL[2]); }
+  var slCH = document.querySelector('#p1 input[oninput*="setCH"]');
+  if(slCH){ slCH.min=cfg.dimH[0]; slCH.max=cfg.dimH[1]; slCH.value=cfg.dimH[2]; setCH(cfg.dimH[2]); }
+  var slCP = document.querySelector('#p1 input[oninput*="setCP"]');
+  if(slCP){ slCP.min=cfg.dimP[0]; slCP.max=cfg.dimP[1]; slCP.value=cfg.dimP[2]; setCP(cfg.dimP[2]); }
+
+  // Populate dressing mat grid
+  if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
+
+  buildStepper(cfg.steps);
+  goStep(1);
+}
+
+function buildStepper(labels){
+  var el = document.getElementById('stepper');
+  el.innerHTML = '';
+  labels.forEach(function(lbl, i){
+    var n = i+1;
+    var dot = document.createElement('div');
+    dot.className = 'step-dot' + (n===1?' active':'');
+    dot.id = 'sd'+n;
+    dot.onclick = (function(nn){ return function(){ goStep(nn); }; })(n);
+    dot.innerHTML = '<span class="sn">'+n+'</span>';
+    el.appendChild(dot);
+
+    var lblEl = document.createElement('span');
+    lblEl.className = 'step-lbl' + (n===1?' active':'');
+    lblEl.textContent = lbl;
+    el.appendChild(lblEl);
+
+    if(i < labels.length-1){
+      var line = document.createElement('div');
+      line.className = 'step-line';
+      line.id = 'sl'+n;
+      el.appendChild(line);
+    }
+  });
+}
+
+function goStep(n){
+  var total = currentPanels.length;
+  if(n<1||n>total) return;
+  step = n;
+  // S.step used by Three.js: for SDB map panel index, else keep at 1
+  S.step = (currentFT==='sdb') ? Math.min(n,3) : 1;
+
+  // Panels
+  currentPanels.forEach(function(id,i){ document.getElementById(id).classList.toggle('on',i===n-1); });
+
+  // Dots + lines
+  for(var i=1;i<=total;i++){
+    var dot=document.getElementById('sd'+i); if(!dot) continue;
+    dot.classList.remove('active','done');
+    if(i===n) dot.classList.add('active'); else if(i<n) dot.classList.add('done');
+    var line=document.getElementById('sl'+i); if(line) line.classList.toggle('done',i<n);
+  }
+
+  document.getElementById('btn-back').disabled=(n===1);
+  var isLast=(n===total);
+  document.getElementById('btn-next').textContent=isLast?'':'Suivant →';
+  document.getElementById('btn-next').style.display=isLast?'none':'';
+  document.getElementById('hint').classList.toggle('show',currentFT==='sdb'&&n===3);
+
+  if(caissonEditMode) toggleCaissonEdit();
+  controls.enabled=true;
+
+  if(planMesh)   planMesh.visible=(currentFT==='sdb'&&n>=2);
+  if(vasqueGrp)  vasqueGrp.visible=(currentFT==='sdb'&&n===3);
+  if(vasqueGrp2) vasqueGrp2.visible=(currentFT==='sdb'&&n===3);
+
+  if(n===1) buildCaisson();
+  if(currentFT==='sdb'){
+    if(n===2){
+      S.L=S.CL;
+      var slL=document.getElementById('sl-L')||document.querySelector('#p2 input[oninput*="setL"]');
+      if(slL){ slL.value=Math.round(S.L*100); }
+      document.getElementById('v-L').textContent=Math.round(S.L*100)+' cm';
+      buildPlan();
+    }
+    if(n===3){ buildRecap(); updatePosInfo(); positionVasque(); }
+  }
+  if(isLast){ buildRecap4(); }
+  if(n<=3) animCamera(currentFT==='sdb'?Math.min(n,3):1);
+}
+
+function setTringle(t){
+  document.getElementById('tr-simple').classList.toggle('on',t==='simple');
+  document.getElementById('tr-double').classList.toggle('on',t==='double');
+}
+
+var camTargets=[
+  {pos:[-0.4,0.9,1.6], tgt:[0,0.22,0]},
+  {pos:[-0.6,1.55,1.65],tgt:[0,0.55,0]},
+  {pos:[0,1.30,1.50],  tgt:[0,0.80,0]},
+];
+var camAnim=null;
+function animCamera(n){
+  var tgt=camTargets[n-1];
+  var p0=camera.position.clone(),t0=controls.target.clone();
+  var p1=new THREE.Vector3().fromArray(tgt.pos),t1=new THREE.Vector3().fromArray(tgt.tgt);
+  var f=0,N=50; if(camAnim) clearInterval(camAnim);
+  camAnim=setInterval(function(){
+    f++; var a=f/N; a=a<.5?2*a*a:-1+(4-2*a)*a;
+    camera.position.lerpVectors(p0,p1,a); controls.target.lerpVectors(t0,t1,a); controls.update();
+    if(f>=N){clearInterval(camAnim);camAnim=null;}
+  },16);
+}
+function checkAlerts(){
+  // Alerte plan vs meuble
+  var wPlan=document.getElementById('warn-plan');
+  if(wPlan){
+    var meubleL=Math.round(S.CL*100), planL=Math.round(S.L*100);
+    if(meubleL>planL){
+      wPlan.textContent='⚠ Le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
+      wPlan.classList.add('show');
+    } else if(planL>meubleL+1){
+      wPlan.textContent='ℹ Le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+( planL-meubleL)+' cm.';
+      wPlan.classList.add('show');
+    } else {
+      wPlan.classList.remove('show');
+    }
+  }
+  // Alerte plan ≠ vasque
+  var wVasque=document.getElementById('warn-vasque');
+  if(wVasque){
+    var pMat=MATS_PLAN[S.matPlan], vMat=MATS_VASQUE[S_matVasque];
+    var planName=pMat?pMat.n:'', vasqueName=vMat?vMat.n:'';
+    if(planName!==vasqueName){
+      wVasque.textContent='⚠ La vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
+      wVasque.classList.add('show');
+    } else {
+      wVasque.classList.remove('show');
+    }
+  }
+}
+
+function prevStep(){goStep(step-1);}
+function nextStep(){goStep(step+1);}
+
+function buildRecapStr(){
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var cfg=currentFT&&FT_CONFIGS[currentFT];
+  var s='• Type : '+(cfg?cfg.label:'—')+'\n'
+       +'• Meuble : '+Math.round(S.CL*100)+'L × '+Math.round(S.CH*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n';
+  if(currentFT==='sdb'){
+    s+='• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n';
+    s+='• Vasque : '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n';
+  }
+  s+='• Intérieur : '+counts.shelf+' tablette(s), '+counts.separator+' séparateur(s), '+counts.porte+' porte(s), '+counts.tiroir+' tiroir(s)';
+  return s;
+}
+function buildRecap(){
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var rows=[
+    ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm — '+MATS_CAIS[S.matCais].n],
+    ['Plan',   Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n],
+    ['Vasque', (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
+    ['Tablettes',  counts.shelf+' tablette'+(counts.shelf!==1?'s':'')],
+    ['Séparateurs',counts.separator+' séparateur'+(counts.separator!==1?'s':'')],
+    ['Portes',  counts.porte+' porte'+(counts.porte!==1?'s':'')],
+    ['Tiroirs', counts.tiroir+' tiroir'+(counts.tiroir!==1?'s':'')],
+  ];
+  document.getElementById('recap').innerHTML=rows.map(function(r){
+    return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
+  }).join('');
+}
+
+function buildRecap4(){
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var cfg=currentFT&&FT_CONFIGS[currentFT];
+  var rows=[
+    ['Type de meuble', cfg?cfg.label:'—'],
+    ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm — '+MATS_CAIS[S.matCais].n],
+  ];
+  if(currentFT==='sdb'){
+    rows.push(['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n]);
+    rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
+  }
+  if(counts.shelf)     rows.push(['Tablettes', counts.shelf]);
+  if(counts.separator) rows.push(['Séparateurs', counts.separator]);
+  if(counts.porte)     rows.push(['Portes', counts.porte]);
+  if(counts.tiroir)    rows.push(['Tiroirs', counts.tiroir]);
+  document.getElementById('recap4').innerHTML=rows.map(function(r){
+    return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
+  }).join('');
+}
+
+async function submitConfig(){
+  var prenom  = (document.getElementById('cfgPrenom').value||'').trim();
+  var email   = (document.getElementById('cfgEmail').value||'').trim();
+  var message = (document.getElementById('cfgMessage').value||'').trim();
+  var bot     = document.getElementById('cfgBot').value;
+  var errEl   = document.getElementById('cfgErr');
+  var btn     = document.getElementById('cfgSubmitBtn');
+
+  errEl.style.display='none';
+  if(!prenom||!email){ errEl.textContent='Prénom et email obligatoires.'; errEl.style.display='block'; return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
+
+  btn.disabled=true; btn.textContent='Envoi en cours…';
+
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+
+  try {
+    var resp=await fetch('/api/sdb-config',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        prenom:prenom, email:email, message:message, botcheck:bot,
+        config:{
+          meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
+                   matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },
+          plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10,
+                 matLabel:MATS_PLAN[S.matPlan].n, matId:S.matPlan },
+          vasques:{ nb:S.nbVasques, W:Math.round(S.vasqueW*100), D:Math.round(S.vasqueD*100),
+                    id:_vasqueSelected,
+                    label:(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label,
+                    vx:Math.round(S.vx*100)/100, vz:Math.round(S.vz*100)/100,
+                    vx2:Math.round(S.vx2*100)/100, vz2:Math.round(S.vz2*100)/100 },
+          elements:caissonElements,
+          counts:counts
+        }
+      })
+    });
+    var data=await resp.json();
+    if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
+    document.getElementById('cfgFormWrap').style.display='none';
+    document.getElementById('cfgSuccess').style.display='block';
+  } catch(err){
+    btn.disabled=false; btn.textContent='Envoyer ma configuration →';
+    errEl.textContent=err.message||'Erreur réseau. Réessayez.';
+    errEl.style.display='block';
+  }
+}
+window.submitConfig=submitConfig;
+
+// ═══════════════════════════════════════════════════════
+// INIT GRILLES MATIÈRES
+// ═══════════════════════════════════════════════════════
+function buildMatGrid(id,arr,fn){
+  var el=document.getElementById(id);
+  arr.forEach(function(m,i){
+    var btn=document.createElement('button'); btn.className='mat-btn'+(i===0?' on':'');
+    btn.onclick=function(){fn(i);};
+    if(m.src){
+      var img=document.createElement('img');
+      img.src=m.src; img.style.cssText='width:22px;height:22px;border-radius:5px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.1)';
+      btn.appendChild(img);
+    } else {
+      var sw=document.createElement('span'); sw.className='mat-sw';
+      sw.style.background=m.color||('#'+('000000'+(m.hex||0).toString(16)).slice(-6));
+      btn.appendChild(sw);
+    }
+    var lbl=document.createElement('span'); lbl.className='mat-lbl'; lbl.textContent=m.n;
+    btn.appendChild(lbl); el.appendChild(btn);
+  });
+}
+buildMatGrid('mg-plan',MATS_PLAN,setMatPlan);
+buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
+buildMatGrid('mg-vasque',MATS_VASQUE,setMatVasque);
+// Charge les textures par défaut au démarrage
+setMatPlan(0);     // Evok
+setMatCais(0);     // Chêne
+setMatVasque(S_matVasque); // Blanc Elysée
+
+// Grille sélecteur vasques
+(function(){
+  var grid=document.getElementById('vg');
+  _vasqueModels.forEach(function(m){
+    var btn=document.createElement('button');
+    btn.className='vasque-btn'+(m.id==='v1'?' on':'');
+    btn.dataset.id=m.id;
+    btn.onclick=function(){ selectVasque(m.id); };
+    var lbl=document.createElement('span');
+    lbl.className='vasque-lbl'; lbl.textContent=m.label;
+    btn.appendChild(lbl); grid.appendChild(btn);
+  });
+})();
+
+// ═══════════════════════════════════════════════════════
+// RESIZE & LOOP
+// ═══════════════════════════════════════════════════════
+function onResize(){ var w=wrap.clientWidth,h=wrap.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+window.addEventListener('resize',onResize); onResize();
+
+function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); }
+loop();
+
+// ═══════════════════════════════════════════════════════
+// DÉMARRAGE
+// ═══════════════════════════════════════════════════════
+S.vx=0; S.vz=planCZ();
+buildVasque();
+buildCaisson();
+goStep(1);
+</script>
+</body>
+</html>
