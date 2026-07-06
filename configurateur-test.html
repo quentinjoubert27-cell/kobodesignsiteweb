@@ -418,6 +418,13 @@ var _caisTexCache={};
 
 var EP = 0.018;  // épaisseur panneau 18mm
 
+// ── MODE BIBLIO (non-SDB) ──
+var BIBLIO_MODE  = false;
+var bRotX = 0.12, bRotY = 0.40;
+var bSavedRotX = 0.12, bSavedRotY = 0.40;
+var bDrag = false, bLastX = 0, bLastY = 0;
+var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
+
 // ── Aménagement caisson ──────────────────────────────
 // {type:'shelf',     y_cm}
 // {type:'separator', x_cm, y_cm}
@@ -682,9 +689,33 @@ function buildCaisson(){
   caissonGuidesGrp.renderOrder = 4;
   caissonGrp.add(caissonGuidesGrp);
 
-  caissonGrp.position.set(S.caissonOffset,0,caissCZ());
+  if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,0,caissCZ());
   scene.add(caissonGrp);
+  if(BIBLIO_MODE) normalizeCaisson();
   updateAmgtCount();
+}
+
+function normalizeCaisson(){
+  if(!caissonGrp) return;
+  caissonGrp.updateMatrixWorld(true);
+  var bbox=new THREE.Box3().setFromObject(caissonGrp);
+  var size=bbox.getSize(new THREE.Vector3());
+  var center=bbox.getCenter(new THREE.Vector3());
+  var maxDim=Math.max(size.x,size.y,size.z,0.001);
+  var ns=1.8/maxDim;
+  caissonGrp.scale.setScalar(ns);
+  caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
+  caissonGrp.rotation.set(bRotX,bRotY,0);
+}
+
+function bibl_animateTo(tx,ty,ms){
+  var startX=bRotX,startY=bRotY,t0=performance.now();
+  (function step(now){
+    var p=Math.min((now-t0)/ms,1), e=1-Math.pow(1-p,3);
+    bRotX=startX+(tx-startX)*e; bRotY=startY+(ty-startY)*e;
+    if(caissonGrp) caissonGrp.rotation.set(bRotX,bRotY,0);
+    if(p<1) requestAnimationFrame(step);
+  })(performance.now());
 }
 
 // ═══════════════════════════════════════════════════════
@@ -890,9 +921,13 @@ function toggleCaissonEdit(){
   var btn=document.getElementById('btn-edit-cais');
   if(btn) btn.classList.toggle('active',caissonEditMode);
   wrap.classList.toggle('mode-edit',caissonEditMode);
-  controls.enabled=!caissonEditMode;
+  if(!BIBLIO_MODE) controls.enabled=!caissonEditMode;
   cvs.style.cursor=caissonEditMode?'crosshair':'';
   if(!caissonEditMode) clearCaissonGhost();
+  if(BIBLIO_MODE){
+    if(caissonEditMode){ bSavedRotX=bRotX; bSavedRotY=bRotY; bibl_animateTo(0.05,0,350); }
+    else { bibl_animateTo(bSavedRotX,bSavedRotY,350); }
+  }
 }
 
 function clearCaissonGhost(){
@@ -1174,6 +1209,7 @@ function _moveDrag(){
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
+  if(BIBLIO_MODE&&!caissonEditMode){ bDrag=true; bLastX=e.clientX; bLastY=e.clientY; return; }
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
     var hits=raycaster.intersectObjects(caissonElemMeshes,false);
@@ -1197,6 +1233,14 @@ cvs.addEventListener('pointerdown',function(e){
 });
 cvs.addEventListener('pointermove',function(e){
   if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
+  if(BIBLIO_MODE&&bDrag){
+    var dx=e.clientX-bLastX, dy=e.clientY-bLastY;
+    bLastX=e.clientX; bLastY=e.clientY;
+    bRotY+=dx*0.008; bRotX+=dy*0.008;
+    bRotX=Math.max(-0.5,Math.min(0.5,bRotX));
+    if(caissonGrp) caissonGrp.rotation.set(bRotX,bRotY,0);
+    return;
+  }
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
     if(S.step===3){
@@ -1209,9 +1253,14 @@ cvs.addEventListener('pointermove',function(e){
   _moveDrag();
 });
 window.addEventListener('pointerup',function(){
+  if(BIBLIO_MODE){ bDrag=false; return; }
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
 cvs.addEventListener('touchstart',function(e){
+  if(BIBLIO_MODE&&!caissonEditMode&&e.touches.length===1){
+    bTouchRotating=true; bTouchLastX=e.touches[0].clientX; bTouchLastY=e.touches[0].clientY;
+    e.preventDefault(); return;
+  }
   // Mode édition meuble : drag-to-place (glisser pour positionner précisément)
   if(S.step===1&&caissonEditMode){
     isTouchEditDrag=true; controls.enabled=false;
@@ -1225,6 +1274,14 @@ cvs.addEventListener('touchstart',function(e){
   if(_startVasqueDrag()){ isDragging=true; controls.enabled=false; e.preventDefault(); }
 },{passive:false});
 cvs.addEventListener('touchmove',function(e){
+  if(BIBLIO_MODE&&bTouchRotating&&!caissonEditMode&&e.touches.length===1){
+    var dx=e.touches[0].clientX-bTouchLastX, dy=e.touches[0].clientY-bTouchLastY;
+    bTouchLastX=e.touches[0].clientX; bTouchLastY=e.touches[0].clientY;
+    bRotY+=dx*0.008; bRotX+=dy*0.008;
+    bRotX=Math.max(-0.5,Math.min(0.5,bRotX));
+    if(caissonGrp) caissonGrp.rotation.set(bRotX,bRotY,0);
+    e.preventDefault(); return;
+  }
   // Mode édition meuble : mise à jour du ghost pendant le glisser
   if(S.step===1&&caissonEditMode&&isTouchEditDrag){
     var t=e.touches[0];
@@ -1237,6 +1294,7 @@ cvs.addEventListener('touchmove',function(e){
   _moveDrag();
 },{passive:false});
 cvs.addEventListener('touchend',function(e){
+  if(BIBLIO_MODE){ bTouchRotating=false; return; }
   // Mode édition meuble : placement à la position finale du doigt
   if(S.step===1&&caissonEditMode&&isTouchEditDrag){
     isTouchEditDrag=false; controls.enabled=true;
@@ -1436,9 +1494,26 @@ function selectFurnitureType(ft){
   currentFT = ft;
   var cfg = FT_CONFIGS[ft];
   currentPanels = cfg.panels;
+  BIBLIO_MODE = (ft !== 'sdb');
 
   document.getElementById('logo-sub').textContent = cfg.sub;
   document.getElementById('type-overlay').style.display = 'none';
+
+  if(BIBLIO_MODE){
+    controls.enabled = false;
+    camera.position.set(0,0,3.5); camera.lookAt(0,0,0);
+    controls.target.set(0,0,0);
+    scene.background = new THREE.Color(0xF2EAD8);
+    scene.fog = null;
+    solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
+  } else {
+    controls.enabled = true;
+    camera.position.set(-0.4,0.9,1.6); camera.lookAt(0,0.25,0);
+    controls.target.set(0,0.25,0); controls.update();
+    scene.background = new THREE.Color(0x141210);
+    scene.fog = new THREE.FogExp2(0x141210,0.045);
+    solMesh.visible=true; solSh.visible=true; murMesh.visible=true; mirGrp.visible=true;
+  }
 
   // Adapt dimension sliders
   var slCL = document.getElementById('sl-cL');
@@ -1539,6 +1614,7 @@ var camTargets=[
 ];
 var camAnim=null;
 function animCamera(n){
+  if(BIBLIO_MODE) return;
   var tgt=camTargets[n-1];
   var p0=camera.position.clone(),t0=controls.target.clone();
   var p1=new THREE.Vector3().fromArray(tgt.pos),t1=new THREE.Vector3().fromArray(tgt.tgt);
