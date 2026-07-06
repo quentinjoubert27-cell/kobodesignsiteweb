@@ -617,6 +617,10 @@ function buildCaisson(){
         bBot.position.set(tirCx, tirCy-tirH/2+bep/2, boxCz);
         bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
         caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
+        var bBk=box(tirW,tirH,bep,matTirInt);
+        bBk.position.set(tirCx, tirCy, tirZ-0.010-boxDepth+bep/2);
+        bBk.userData.tirKey=el.key; bBk.userData.isTiroir=true;
+        caissonElemMeshes.push(bBk); caissonGrp.add(bBk);
         // dos
       }
     }
