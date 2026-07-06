@@ -611,16 +611,15 @@ function buildCaisson(){
       // Caisson intérieur (visible uniquement quand ouvert)
       if(isOpen){
         var bep=EP*0.5;
-        var boxDepth=CP*0.52;
-        var boxCz=tirZ-0.010-boxDepth/2;
+        // Fond qui couvre tout le slot jusqu'au fond du caisson
+        var botFront=tirZ-0.010;
+        var botBack=-CP/2+0.015;
+        var boxDepth=botFront-botBack;
+        var boxCz=(botFront+botBack)/2;
         var bBot=box(tirW,bep,boxDepth,matTirInt);
         bBot.position.set(tirCx, tirCy-tirH/2+bep/2, boxCz);
         bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
         caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
-        var bBk=box(tirW,tirH,bep,matTirInt);
-        bBk.position.set(tirCx, tirCy, tirZ-0.010-boxDepth+bep/2);
-        bBk.userData.tirKey=el.key; bBk.userData.isTiroir=true;
-        caissonElemMeshes.push(bBk); caissonGrp.add(bBk);
         // dos
       }
     }

@@ -713,15 +713,13 @@ function buildCaisson(){
       tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
       caissonElemMeshes.push(tm); caissonGrp.add(tm);
       if(isOpen){
-        var bep=EP*0.5, boxDepth=CP*0.52, boxCz=tirZ-0.010-boxDepth/2;
+        var bep=EP*0.5;
+        var botFront=tirZ-0.010, botBack=-CP/2+0.015;
+        var boxDepth=botFront-botBack, boxCz=(botFront+botBack)/2;
         var bBot=box(tirW,bep,boxDepth,matTirInt);
         bBot.position.set(tirCx,tirCy-tirH/2+bep/2,boxCz);
         bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
         caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
-        var bBk=box(tirW,tirH,bep,matTirInt);
-        bBk.position.set(tirCx,tirCy,tirZ-0.010-boxDepth+bep/2);
-        bBk.userData.tirKey=el.key; bBk.userData.isTiroir=true;
-        caissonElemMeshes.push(bBk); caissonGrp.add(bBk);
       }
     }
   });
@@ -843,15 +841,13 @@ function buildCaisson2(){
       tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
       caissonElemMeshes2.push(tm); caissonGrp2.add(tm);
       if(isOpen){
-        var bep2=ep*0.5, bd2=CP*0.52, bcz2=tirZ-0.010-bd2/2;
+        var bep2=ep*0.5;
+        var bf2=tirZ-0.010, bb2=-CP/2+0.015;
+        var bd2=bf2-bb2, bcz2=(bf2+bb2)/2;
         var bBot2=bx2(tW,bep2,bd2,matTirInt);
         bBot2.position.set(tCx,tCy-tH/2+bep2/2,bcz2);
         bBot2.userData.tirKey=el.key; bBot2.userData.isTiroir=true;
         caissonElemMeshes2.push(bBot2); caissonGrp2.add(bBot2);
-        var bBk2=bx2(tW,tH,bep2,matTirInt);
-        bBk2.position.set(tCx,tCy,tirZ-0.010-bd2+bep2/2);
-        bBk2.userData.tirKey=el.key; bBk2.userData.isTiroir=true;
-        caissonElemMeshes2.push(bBk2); caissonGrp2.add(bBk2);
       }
     }
   });
