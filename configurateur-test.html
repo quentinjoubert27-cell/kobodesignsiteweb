@@ -959,6 +959,7 @@ function toggleAngle(){
     var vl=document.getElementById('v-C2rot'); if(vl) vl.textContent='-90°';
   }
   buildCaisson();
+  if(caissonEditMode) _rebuildEditBar();
 }
 
 function setCL2(v){
@@ -1241,6 +1242,7 @@ function toggleCaissonEdit(){
   if(!BIBLIO_MODE) controls.enabled=!caissonEditMode;
   cvs.style.cursor=caissonEditMode?'crosshair':'';
   if(!caissonEditMode) clearCaissonGhost();
+  _rebuildEditBar();
   if(BIBLIO_MODE){
     if(caissonEditMode){ bSavedRotX=bRotX; bSavedRotY=bRotY; bibl_animateTo(0.05,0,350); }
     else { bibl_animateTo(bSavedRotX,bSavedRotY,350); }
