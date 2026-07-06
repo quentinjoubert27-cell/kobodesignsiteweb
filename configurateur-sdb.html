@@ -610,26 +610,13 @@ function buildCaisson(){
       caissonElemMeshes.push(tm); caissonGrp.add(tm);
       // Caisson intérieur (visible uniquement quand ouvert)
       if(isOpen){
-        var bep=EP*0.5; // 9mm — parois du caisson tiroir
+        var bep=EP*0.5;
         var boxDepth=CP*0.52;
-        // Centre Z : derrière la façade
         var boxCz=tirZ-0.010-boxDepth/2;
-        var bW=tirW-2*bep, bH=tirH-bep;
-        // fond
-        var bBot=box(bW,bep,boxDepth,matTirInt);
+        var bBot=box(tirW,bep,boxDepth,matTirInt);
         bBot.position.set(tirCx, tirCy-tirH/2+bep/2, boxCz);
         bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
         caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
-        // côté gauche
-        var bL=box(bep,bH,boxDepth,matTirInt);
-        bL.position.set(tirCx-tirW/2+bep/2, tirCy+bep/2, boxCz);
-        bL.userData.tirKey=el.key; bL.userData.isTiroir=true;
-        caissonElemMeshes.push(bL); caissonGrp.add(bL);
-        // côté droit
-        var bR=box(bep,bH,boxDepth,matTirInt);
-        bR.position.set(tirCx+tirW/2-bep/2, tirCy+bep/2, boxCz);
-        bR.userData.tirKey=el.key; bR.userData.isTiroir=true;
-        caissonElemMeshes.push(bR); caissonGrp.add(bR);
         // dos
       }
     }

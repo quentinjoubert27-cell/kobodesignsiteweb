@@ -714,18 +714,10 @@ function buildCaisson(){
       caissonElemMeshes.push(tm); caissonGrp.add(tm);
       if(isOpen){
         var bep=EP*0.5, boxDepth=CP*0.52, boxCz=tirZ-0.010-boxDepth/2;
-        var bBot=box(tirW-2*bep,bep,boxDepth,matTirInt);
+        var bBot=box(tirW,bep,boxDepth,matTirInt);
         bBot.position.set(tirCx,tirCy-tirH/2+bep/2,boxCz);
         bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
         caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
-        var bL=box(bep,tirH-bep,boxDepth,matTirInt);
-        bL.position.set(tirCx-tirW/2+bep/2,tirCy+bep/2,boxCz);
-        bL.userData.tirKey=el.key; bL.userData.isTiroir=true;
-        caissonElemMeshes.push(bL); caissonGrp.add(bL);
-        var bR=box(bep,tirH-bep,boxDepth,matTirInt);
-        bR.position.set(tirCx+tirW/2-bep/2,tirCy+bep/2,boxCz);
-        bR.userData.tirKey=el.key; bR.userData.isTiroir=true;
-        caissonElemMeshes.push(bR); caissonGrp.add(bR);
       }
     }
   });
@@ -848,18 +840,10 @@ function buildCaisson2(){
       caissonElemMeshes2.push(tm); caissonGrp2.add(tm);
       if(isOpen){
         var bep2=ep*0.5, bd2=CP*0.52, bcz2=tirZ-0.010-bd2/2;
-        var bBot2=bx2(tW-2*bep2,bep2,bd2,matTirInt);
+        var bBot2=bx2(tW,bep2,bd2,matTirInt);
         bBot2.position.set(tCx,tCy-tH/2+bep2/2,bcz2);
         bBot2.userData.tirKey=el.key; bBot2.userData.isTiroir=true;
         caissonElemMeshes2.push(bBot2); caissonGrp2.add(bBot2);
-        var bL2=bx2(bep2,tH-bep2,bd2,matTirInt);
-        bL2.position.set(tCx-tW/2+bep2/2,tCy+bep2/2,bcz2);
-        bL2.userData.tirKey=el.key; bL2.userData.isTiroir=true;
-        caissonElemMeshes2.push(bL2); caissonGrp2.add(bL2);
-        var bR2=bx2(bep2,tH-bep2,bd2,matTirInt);
-        bR2.position.set(tCx+tW/2-bep2/2,tCy+bep2/2,bcz2);
-        bR2.userData.tirKey=el.key; bR2.userData.isTiroir=true;
-        caissonElemMeshes2.push(bR2); caissonGrp2.add(bR2);
       }
     }
   });
