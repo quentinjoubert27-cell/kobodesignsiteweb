@@ -1005,11 +1005,17 @@ function placeOrRemoveCaisson(e){
   if(!caissonEditMode||S.step!==1) return false;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
 
-  // Clic sur élément existant → supprime
+  // Clic sur élément existant du même type → supprime (les autres types sont ignorés)
   var eh=raycaster.intersectObjects(caissonElemMeshes,false);
   if(eh.length){
     var idx=eh[0].object.userData.elemIdx;
-    if(idx!==undefined){ caissonElements.splice(idx,1); clearCaissonGhost(); buildCaisson(); return true; }
+    if(idx!==undefined){
+      var elType=caissonElements[idx]&&caissonElements[idx].type;
+      var sameType=(caissonType==='shelf'&&elType==='shelf')||
+                   (caissonType==='separator'&&elType==='separator')||
+                   ((caissonType==='porte'||caissonType==='tiroir')&&(elType==='porte'||elType==='tiroir'));
+      if(sameType){ caissonElements.splice(idx,1); clearCaissonGhost(); buildCaisson(); return true; }
+    }
   }
 
   var hit=getCaissonHit(e);
