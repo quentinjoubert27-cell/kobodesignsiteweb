@@ -664,7 +664,7 @@ function buildPlan(){
   }
 
   var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
-  geo.rotateX(Math.PI/2); geo.translate(0,S.CH+0.04,0);
+  geo.rotateX(Math.PI/2); geo.translate(0,topY,0);
   var md=MATS_PLAN[S.matPlan];
   var planMat;
   if(_planTexCache[S.matPlan]){
