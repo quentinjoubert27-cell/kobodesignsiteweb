@@ -611,7 +611,8 @@ function buildCaisson(){
   // Structure — joue gauche : face int = +x (idx 0), joue droite : face int = -x (idx 1)
   // tablette haute : face int = -y (idx 3), tablette basse : face int = +y (idx 2)
   var cg=boxBimat(ep,CH,CP,0); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
-  var cd=boxBimat(ep,CH,CP,1); cd.position.set( CL/2-ep/2,CH/2,0); caissonGrp.add(cd);
+  // Joue droite : supprimée quand caisson d'angle (C2 prend sa place)
+  if(!hasAngle){ var cd=boxBimat(ep,CH,CP,1); cd.position.set(CL/2-ep/2,CH/2,0); caissonGrp.add(cd); }
   var dt=boxBimat(iW,ep,CP,3); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
   var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db);
   var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
@@ -741,10 +742,11 @@ function buildCaisson2(){
   var t=bm2(iW2,ep,CP,3);t.position.set(0,CH-ep/2,0); caissonGrp2.add(t);
   var b=bm2(iW2,ep,CP,2);b.position.set(0,ep/2,0);   caissonGrp2.add(b);
   var f=bx2(CL2,CH,0.008,matF);f.position.set(0,CH/2,-CP/2+0.004); caissonGrp2.add(f);
-  // Positionnement à l'angle : C2 pivote -90° et se colle au côté droit de C1
+  // Positionnement à l'angle : C2 pivote -90° et glisse dans le bord intérieur droit de C1
+  // (offset -EP car C1 n'a plus de joue droite, C2 prend sa place)
   var CL1=S.CL, CP1=caissonCP();
   caissonGrp2.rotation.y = -Math.PI/2;
-  caissonGrp2.position.set(CL1/2+CP/2, 0, -CP1/2+CL2/2);
+  caissonGrp2.position.set(CL1/2 - EP + CP/2, 0, -CP1/2 + CL2/2);
   caissonGrp.add(caissonGrp2);
 }
 
