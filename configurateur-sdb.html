@@ -1038,7 +1038,20 @@ function placeOrRemoveCaisson(e){
       var ec=getCompartment(el.y_cm,el.x_cm);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     })) return true;
-    caissonElements.push({type:'separator',x_cm:hit.x_cm,y_cm:(comp.bottom_cm+comp.top_cm)/2});
+    var sepX=hit.x_cm;
+    caissonElements.push({type:'separator',x_cm:sepX,y_cm:(comp.bottom_cm+comp.top_cm)/2});
+    // Auto-split : coupe les tablettes qui traversent ce séparateur
+    var toAdd=[];
+    caissonElements=caissonElements.filter(function(el){
+      if(el.type!=='shelf') return true;
+      if(el.x_left_cm<sepX&&el.x_right_cm>sepX){
+        toAdd.push({type:'shelf',y_cm:el.y_cm,x_left_cm:el.x_left_cm,x_right_cm:sepX});
+        toAdd.push({type:'shelf',y_cm:el.y_cm,x_left_cm:sepX,x_right_cm:el.x_right_cm});
+        return false;
+      }
+      return true;
+    });
+    caissonElements=caissonElements.concat(toAdd);
   } else {
     // porte / tiroir
     var comp3=getCompartment(hit.y_cm,hit.x_cm);
