@@ -625,6 +625,26 @@ function getFacadeFor(comp,bay){
 // ═══════════════════════════════════════════════════════
 // BUILD CAISSON
 // ═══════════════════════════════════════════════════════
+var _matHinge=null;
+function addDoorHinges(pm,porW,porH,hingeLeft){
+  if(!_matHinge) _matHinge=new THREE.MeshStandardMaterial({color:0xBFBFBF,roughness:0.12,metalness:0.92});
+  var nH=porH>0.70?3:2;
+  for(var hi=0;hi<nH;hi++){
+    var t=(hi+1)/(nH+1);
+    var hy=-porH/2+porH*t;
+    var hx=hingeLeft?-porW/2:porW/2;
+    // Plaque sur la face avant
+    var plate=new THREE.Mesh(new THREE.BoxGeometry(0.020,0.040,0.004),_matHinge);
+    plate.castShadow=false;
+    plate.position.set(hx+(hingeLeft?0.010:-0.010),hy,0.012);
+    // Barreau vertical au bord
+    var barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.0048,0.0048,0.042,8),_matHinge);
+    barrel.castShadow=false;
+    barrel.position.set(hx,hy,0.002);
+    pm.add(plate); pm.add(barrel);
+  }
+}
+
 function buildCaisson(){
   disposeGroup(caissonGrp);
   caissonGrp=new THREE.Group();
@@ -752,6 +772,7 @@ function buildCaisson(){
       }
       var pm=box(porW,porH,0.020,matFacade);
       pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
+      addDoorHinges(pm, porW, porH, hingeLeft);
       pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
       pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
     } else { // tiroir
@@ -903,6 +924,7 @@ function buildCaisson2(){
       else          { pivot.position.set(porXright-jeu/2,pCy,fz2); if(isOpen) pivot.rotation.y=Math.PI*0.25; }
       var pm=bx2(pW,pH,0.020,matFac);
       pm.position.set(hingeLeft?pW/2:-pW/2,0,0);
+      addDoorHinges(pm, pW, pH, hingeLeft);
       pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
       pivot.add(pm); caissonElemMeshes2.push(pm); caissonGrp2.add(pivot);
     } else {
