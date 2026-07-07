@@ -1231,28 +1231,50 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
 
       } else if(el.type==='porte'){
-        var left=el.x_left_cm||0, right=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
-        var bot2=el.y_bot_cm||0, top2=el.y_top_cm!==undefined?el.y_top_cm:iHcm;
-        var porW=(right-left)/100, porH=(top2-bot2)/100;
-        var porCx=xcm((left+right)/2), porCy=ycm((bot2+top2)/2);
+        var kp=el.key.split('_').map(Number);
+        var kBot=kp[0],kLeft=kp[1],kTop=kp[2],kRight=kp[3];
+        var jeuP=0.003;
+        var pxL=kLeft<0.5       ?-W/2     :xcm(kLeft) -ep2/2;
+        var pxR=kRight>iWcm-0.5 ? W/2     :xcm(kRight)+ep2/2;
+        var pyB=kBot<0.5        ? 0       :ycm(kBot)  -ep2/2;
+        var pyT=kTop>iHcm-0.5   ? H       :ycm(kTop)  +ep2/2;
+        var porW=pxR-pxL-jeuP, porH=pyT-pyB-jeuP;
+        var porCy=(pyB+pyT)/2;
+        var hingeLeft=xcm((kLeft+kRight)/2)<xcm(iWcm/2);
         var isOpen=!!openSt[el.key];
-        var pivot=new THREE.Group(); pivot.position.set(el.hinge==='right'?porCx+porW/2:porCx-porW/2,porCy,fz);
-        var pm=box(porW,porH,0.018,matFacade); pm.position.set(el.hinge==='right'?-porW/2:porW/2,0,0.009);
+        var pivot=new THREE.Group();
+        pivot.position.set(hingeLeft?pxL+jeuP/2:pxR-jeuP/2,porCy,fz);
+        if(isOpen) pivot.rotation.y=hingeLeft?Math.PI*0.5:-Math.PI*0.5;
+        var pm=box(porW,porH,0.020,matFacade);
+        pm.position.set(hingeLeft?porW/2:-porW/2,0,0);
+        addDoorHinges(pm,porW,porH,hingeLeft);
         pm.userData.elemIdx=eidx; pm.userData.porKey=el.key; pm.userData.isPorte=true;
-        if(isOpen) pivot.rotation.y=el.hinge==='right'?-Math.PI/2:Math.PI/2;
-        addDoorHinges(pm,porW,porH,el.hinge!=='right');
         pivot.add(pm); meshArr.push(pm); g.add(pivot);
 
       } else if(el.type==='tiroir'){
-        var left2=el.x_left_cm||0, right2=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
-        var bot3=el.y_bot_cm||0, top3=el.y_top_cm!==undefined?el.y_top_cm:iHcm;
-        var tirW=(right2-left2)/100-0.003, tirH=(top3-bot3)/100-0.003;
-        var tirCx=xcm((left2+right2)/2), tirCy=ycm((bot3+top3)/2);
+        var kt=el.key.split('_').map(Number);
+        var ktBot=kt[0],ktLeft=kt[1],ktTop=kt[2],ktRight=kt[3];
+        var jeuT=0.003;
+        var txL=ktLeft<0.5       ?-W/2    :xcm(ktLeft) -ep2/2;
+        var txR=ktRight>iWcm-0.5 ? W/2    :xcm(ktRight)+ep2/2;
+        var tyB=ktBot<0.5        ? 0      :ycm(ktBot)  -ep2/2;
+        var tyT=ktTop>iHcm-0.5   ? H      :ycm(ktTop)  +ep2/2;
+        var tirW=txR-txL-jeuT, tirH=tyT-tyB-jeuT;
+        var tirCx=(txL+txR)/2, tirCy=(tyB+tyT)/2;
         var isOpen2=!!openSt[el.key];
         var tirZ=isOpen2?fz+CP*0.55:fz;
         var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
         tm.userData.elemIdx=eidx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
         meshArr.push(tm); g.add(tm);
+        if(isOpen2){
+          var bep=ep2*0.5, botFt=tirZ-0.010, botBk=-CP/2+0.015, bd=botFt-botBk, bcz=(botFt+botBk)/2;
+          var bBot=box(tirW,bep,bd,matTirInt); bBot.position.set(tirCx,tirCy-tirH/2+bep/2,bcz);
+          bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true; meshArr.push(bBot); g.add(bBot);
+          var bL=box(bep,tirH-bep,bd,matTirInt); bL.position.set(tirCx-tirW/2+bep/2,tirCy+bep/2,bcz);
+          bL.userData.tirKey=el.key; bL.userData.isTiroir=true; meshArr.push(bL); g.add(bL);
+          var bR=box(bep,tirH-bep,bd,matTirInt); bR.position.set(tirCx+tirW/2-bep/2,tirCy+bep/2,bcz);
+          bR.userData.tirKey=el.key; bR.userData.isTiroir=true; meshArr.push(bR); g.add(bR);
+        }
       }
     });
 
@@ -1749,7 +1771,7 @@ function getCaissonHit(e){
   var hits=raycaster.intersectObject(hp,false);
   if(!hits.length) return null;
   var ptGrp=grp.worldToLocal(hits[0].point.clone());
-  var iW_cm=(getActiveCL()-2*EP)*100, iH_cm=(S.CH-2*EP)*100;
+  var iW_cm=(getActiveCL()-2*EP)*100, iH_cm=(getActiveCH()-2*EP)*100;
   var x_cm=Math.round(localToXcm(ptGrp.x));
   var y_cm=Math.round(localToYcm(ptGrp.y));
   return {x_cm:Math.min(Math.max(x_cm,0),iW_cm), y_cm:Math.min(Math.max(y_cm,0),iH_cm)};
@@ -2005,11 +2027,17 @@ cvs.addEventListener('pointerdown',function(e){
   // Tester porte/tiroir AVANT de démarrer la rotation
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var allMeshes=caissonElemMeshes.concat(caissonElemMeshes2);
+    var allMeshes=caissonElemMeshes.concat(caissonElemMeshes2)
+      .concat(tvMeshes[0]).concat(tvMeshes[1]).concat(tvMeshes[2]);
     var hits=raycaster.intersectObjects(allMeshes,false);
     if(hits.length){
       var obj=hits[0].object;
-      var os=caissonElemMeshes2.indexOf(obj)>=0?caissonOpenState2:caissonOpenState;
+      var os=null;
+      if(tvMeshes[0].indexOf(obj)>=0)      os=tvOpenState[0];
+      else if(tvMeshes[1].indexOf(obj)>=0) os=tvOpenState[1];
+      else if(tvMeshes[2].indexOf(obj)>=0) os=tvOpenState[2];
+      else if(caissonElemMeshes2.indexOf(obj)>=0) os=caissonOpenState2;
+      else os=caissonOpenState;
       if(obj.userData.isTiroir){ os[obj.userData.tirKey]=!os[obj.userData.tirKey]; buildCaisson(); return; }
       if(obj.userData.isPorte){  os[obj.userData.porKey]=!os[obj.userData.porKey]; buildCaisson(); return; }
     }
