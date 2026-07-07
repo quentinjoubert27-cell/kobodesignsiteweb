@@ -101,6 +101,18 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 .cta-btn:hover{background:var(--accent2)}.cta-btn:disabled{opacity:.5;cursor:not-allowed}
 .cta-note{font-size:10px;color:var(--text2);text-align:center;margin-top:8px}
 
+/* ─── ONGLETS SIDEBAR ─── */
+.sb-tabs{display:flex;border-bottom:1px solid var(--border);margin:-20px -22px 0;flex-shrink:0}
+.sb-tab{flex:1;padding:14px 8px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;transition:color .2s,border-color .2s}
+.sb-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.sb-tab-panel{display:none;padding-top:20px}
+.sb-tab-panel.on{display:block}
+
+/* ─── COTES OVERLAY ─── */
+#cotes-overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cote-lbl{position:absolute;transform:translate(-50%,-50%);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:rgba(26,26,26,.75);background:rgba(255,250,240,.92);padding:3px 9px;border-radius:12px;white-space:nowrap;border:1px solid rgba(26,26,26,.15);line-height:1.2}
+.cote-inner{position:absolute;transform:translate(-50%,-50%);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;color:rgba(255,255,255,.82);white-space:nowrap;line-height:1;background:rgba(26,26,26,.28);padding:2px 6px;border-radius:8px}
+
 /* BARRE ÉDITION CAISSON */
 #c-edit-bar{
   position:absolute;top:14px;left:50%;transform:translateX(-50%);
@@ -231,37 +243,66 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 
       <!-- STEP 1 — Meuble -->
       <div class="panel on" id="p1">
-        <div class="sec">Dimensions du meuble</div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
-          <input type="range" id="sl-cL" min="40" max="220" step="1" value="120" oninput="setCL(+this.value)">
+
+        <!-- Onglets — visibles uniquement en BIBLIO_MODE -->
+        <div class="sb-tabs" id="p1-tabs" style="display:none">
+          <button class="sb-tab active" data-tab="formulaire" onclick="switchSbTab('formulaire')">Formulaire</button>
+          <button class="sb-tab" data-tab="fonction" onclick="switchSbTab('fonction')">Fonction</button>
         </div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
-          <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
-        </div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">36 cm</span></div>
-          <input type="range" min="36" max="60" step="1" value="36" oninput="setCP(+this.value)">
-        </div>
-        <div class="sec">Finition bois</div>
-        <div class="mat-grid" id="mg-cais"></div>
-        <div class="sec">Aménagement intérieur</div>
-        <div class="amgt-row">
-          <span class="amgt-count" id="amgt-count">Structure vide</span>
-          <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
-        </div>
-        <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
-        <div class="angle-only" style="display:none">
-          <div class="sec" style="margin-top:18px">Caisson d'angle</div>
-          <button class="reset-btn" id="btn-angle" onclick="toggleAngle()">+ Ajouter un angle</button>
-          <div id="angle-opts" style="display:none;margin-top:10px">
-            <div class="sl-row">
-              <div class="sl-top"><span class="sl-lbl">Largeur caisson 2</span><span class="sl-val" id="v-CL2">120 cm</span></div>
-              <input type="range" id="sl-cl2" min="20" max="300" step="1" value="120" oninput="setCL2(+this.value)">
+
+        <!-- ── ONGLET FORMULAIRE ── -->
+        <div class="sb-tab-panel on" id="sbt-formulaire">
+          <div class="sec" style="margin-top:0">Dimensions</div>
+          <div class="sl-row">
+            <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
+            <input type="range" id="sl-cL" min="40" max="220" step="1" value="120" oninput="setCL(+this.value)">
+          </div>
+          <div class="sl-row">
+            <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
+            <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
+          </div>
+          <div class="sl-row">
+            <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">36 cm</span></div>
+            <input type="range" min="36" max="60" step="1" value="36" oninput="setCP(+this.value)">
+          </div>
+          <div class="sec">Finition bois</div>
+          <div class="mat-grid" id="mg-cais"></div>
+          <div class="angle-only" style="display:none">
+            <div class="sec" style="margin-top:18px">Caisson d'angle</div>
+            <button class="reset-btn" id="btn-angle" onclick="toggleAngle()">+ Ajouter un angle</button>
+            <div id="angle-opts" style="display:none;margin-top:10px">
+              <div class="sl-row">
+                <div class="sl-top"><span class="sl-lbl">Largeur caisson 2</span><span class="sl-val" id="v-CL2">120 cm</span></div>
+                <input type="range" id="sl-cl2" min="20" max="300" step="1" value="120" oninput="setCL2(+this.value)">
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- ── ONGLET FONCTION ── -->
+        <div class="sb-tab-panel" id="sbt-fonction">
+          <div class="sec" style="margin-top:0">Aménagement</div>
+          <div class="amgt-row">
+            <span class="amgt-count" id="amgt-count">Structure vide</span>
+            <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
+          </div>
+          <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider</button>
+          <!-- Boutons de type injectés ici en mode édition -->
+          <div id="fn-edit-content" style="display:none;margin-top:16px">
+            <div class="c-type-btns" style="display:flex;flex-wrap:wrap;gap:5px;background:none;border-radius:0;padding:0"></div>
+          </div>
+        </div>
+
+        <!-- ── SECTION TOUJOURS VISIBLE EN MODE SDB (hors tabs) ── -->
+        <div id="p1-sdb-amgt" style="display:none">
+          <div class="sec">Aménagement intérieur</div>
+          <div class="amgt-row">
+            <span class="amgt-count" id="amgt-count-sdb">Structure vide</span>
+            <button class="edit-mode-btn" id="btn-edit-cais-sdb" onclick="toggleCaissonEdit()">✏ Éditer</button>
+          </div>
+          <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
+        </div>
+
       </div>
 
       <!-- STEP 2 — Plan de travail -->
@@ -362,17 +403,12 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 
   <div id="cv-wrap">
     <canvas id="c"></canvas>
+    <div id="cotes-overlay"></div>
     <div id="hint">☛ Glissez la vasque pour la repositionner</div>
     <div id="c-edit-bar">
-      <span class="c-edit-lbl">Ajouter</span>
-      <div class="c-type-btns">
-        <button class="c-type-btn active" id="ct-shelf" onclick="setCaissonType('shelf')">━ Tablette</button>
-        <button class="c-type-btn" id="ct-sep"   onclick="setCaissonType('separator')">┃ Séparateur</button>
-        <button class="c-type-btn" id="ct-door"  onclick="setCaissonType('porte')">🚪 Porte</button>
-        <button class="c-type-btn" id="ct-draw"  onclick="setCaissonType('tiroir')">▤ Tiroir</button>
-      </div>
+      <span class="c-edit-lbl">Mode édition</span>
       <div class="c-edit-sep"></div>
-      <button class="c-edit-close" onclick="toggleCaissonEdit()">✕</button>
+      <button class="c-edit-close" onclick="toggleCaissonEdit()">✕ Terminer</button>
     </div>
     <div id="c-action-hint">Clic = poser · Clic sur élément = supprimer</div>
   </div>
@@ -769,6 +805,7 @@ function buildCaisson(){
   if(BIBLIO_MODE){
     if(hasAngle) buildCaisson2();
     normalizeCaisson();
+    buildSilhouette();
   }
   updateAmgtCount();
 }
@@ -1168,7 +1205,18 @@ function switchActiveCaisson(n){
 }
 
 function _rebuildEditBar(){
-  var btns=document.querySelector('.c-type-btns');
+  var btns;
+  if(BIBLIO_MODE){
+    btns=document.querySelector('#fn-edit-content .c-type-btns');
+  } else {
+    // SDB : injecte dans c-edit-bar si pas encore présent
+    var bar=document.getElementById('c-edit-bar');
+    btns=bar&&bar.querySelector('.c-type-btns');
+    if(bar&&!btns){
+      btns=document.createElement('div'); btns.className='c-type-btns';
+      bar.insertBefore(btns, bar.querySelector('.c-edit-sep')||bar.firstChild);
+    }
+  }
   if(!btns) return;
   var selectorHTML='';
   if(BIBLIO_MODE && hasAngle){
@@ -1213,8 +1261,10 @@ function toggleCaissonEdit(){
   cvs.style.cursor=caissonEditMode?'crosshair':'';
   if(!caissonEditMode) clearCaissonGhost();
   _rebuildEditBar();
+  var fnContent=document.getElementById('fn-edit-content');
+  if(fnContent) fnContent.style.display=caissonEditMode?'':'none';
   if(BIBLIO_MODE){
-    if(caissonEditMode){ bSavedRotX=bRotX; bSavedRotY=bRotY; bibl_animateTo(0.05,0,350); }
+    if(caissonEditMode){ switchSbTab('fonction'); bSavedRotX=bRotX; bSavedRotY=bRotY; bibl_animateTo(0.05,0,350); }
     else { bibl_animateTo(bSavedRotX,bSavedRotY,350); }
   }
 }
@@ -1496,7 +1546,9 @@ function updateAmgtCount(){
   if(counts.separator_simple)  parts.push(counts.separator_simple+' déco');
   if(counts.porte)             parts.push(counts.porte+' porte'+(counts.porte>1?'s':''));
   if(counts.tiroir)            parts.push(counts.tiroir+' tiroir'+(counts.tiroir>1?'s':''));
-  el.innerHTML='<strong>'+nb+'</strong> — '+parts.join(', ');
+  var txt='<strong>'+nb+'</strong> — '+parts.join(', ');
+  el.innerHTML=txt;
+  var el2=document.getElementById('amgt-count-sdb'); if(el2) el2.innerHTML=txt;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1856,6 +1908,17 @@ function selectFurnitureType(ft){
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
 
   document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=BIBLIO_MODE?'':'none'; });
+  // Onglets Formulaire/Fonction — uniquement BIBLIO_MODE
+  var tabs=document.getElementById('p1-tabs');
+  if(tabs) tabs.style.display=BIBLIO_MODE?'':'none';
+  var sdbAmgt=document.getElementById('p1-sdb-amgt');
+  if(sdbAmgt) sdbAmgt.style.display=BIBLIO_MODE?'none':'';
+  if(BIBLIO_MODE){ switchSbTab('formulaire'); }
+  else {
+    // SDB : les deux panels toujours visibles (pas d'onglets)
+    var f=document.getElementById('sbt-formulaire'),fn=document.getElementById('sbt-fonction');
+    if(f) f.classList.add('on'); if(fn) fn.classList.remove('on');
+  }
   // Reset angle si on passe en SDB
   if(!BIBLIO_MODE&&hasAngle){ hasAngle=false; if(caissonGrp2&&caissonGrp2.parent) caissonGrp2.parent.remove(caissonGrp2); caissonGrp2=null; var btn=document.getElementById('btn-angle'); if(btn) btn.textContent='+ Ajouter un angle'; var opts=document.getElementById('angle-opts'); if(opts) opts.style.display='none'; }
   _rebuildEditBar();
@@ -2136,12 +2199,96 @@ setMatVasque(S_matVasque); // Blanc Elysée
 })();
 
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// ONGLETS SIDEBAR
+// ═══════════════════════════════════════════════════════
+function switchSbTab(tab){
+  var tabs=document.getElementById('p1-tabs');
+  if(!tabs) return;
+  tabs.querySelectorAll('.sb-tab').forEach(function(b){ b.classList.toggle('active',b.dataset.tab===tab); });
+  var f=document.getElementById('sbt-formulaire'), fn=document.getElementById('sbt-fonction');
+  if(f) f.classList.toggle('on',tab==='formulaire');
+  if(fn) fn.classList.toggle('on',tab==='fonction');
+}
+
+// ═══════════════════════════════════════════════════════
+// SILHOUETTE HUMAINE
+// ═══════════════════════════════════════════════════════
+var silhouetteMesh=null;
+function buildSilhouette(){
+  if(silhouetteMesh&&silhouetteMesh.parent) silhouetteMesh.parent.remove(silhouetteMesh);
+  silhouetteMesh=null;
+  if(!BIBLIO_MODE||!caissonGrp) return;
+  var cv=document.createElement('canvas'); cv.width=80; cv.height=230;
+  var ctx=cv.getContext('2d');
+  ctx.fillStyle='rgba(140,140,140,0.45)';
+  // Tête
+  ctx.beginPath(); ctx.arc(40,17,14,0,Math.PI*2); ctx.fill();
+  // Cou
+  ctx.fillRect(35,30,10,10);
+  // Torse
+  ctx.beginPath(); ctx.moveTo(17,40); ctx.lineTo(63,40); ctx.lineTo(57,115); ctx.lineTo(23,115); ctx.closePath(); ctx.fill();
+  // Bras gauche
+  ctx.beginPath(); ctx.moveTo(17,40); ctx.lineTo(2,82); ctx.lineTo(10,85); ctx.lineTo(24,48); ctx.closePath(); ctx.fill();
+  // Bras droit
+  ctx.beginPath(); ctx.moveTo(63,40); ctx.lineTo(78,82); ctx.lineTo(70,85); ctx.lineTo(56,48); ctx.closePath(); ctx.fill();
+  // Jambe gauche
+  ctx.beginPath(); ctx.moveTo(23,115); ctx.lineTo(38,115); ctx.lineTo(36,230); ctx.lineTo(19,230); ctx.closePath(); ctx.fill();
+  // Jambe droite
+  ctx.beginPath(); ctx.moveTo(42,115); ctx.lineTo(57,115); ctx.lineTo(61,230); ctx.lineTo(44,230); ctx.closePath(); ctx.fill();
+  var tex=new THREE.CanvasTexture(cv);
+  var geo=new THREE.PlaneGeometry(0.46,1.75);
+  var mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,side:THREE.DoubleSide,alphaTest:0.01});
+  silhouetteMesh=new THREE.Mesh(geo,mat);
+  silhouetteMesh.renderOrder=-1;
+  // Placé à gauche du meuble, debout sur le sol (Y=0 = bas du meuble)
+  silhouetteMesh.position.set(-S.CL/2-0.55, 1.75/2, 0);
+  caissonGrp.add(silhouetteMesh);
+}
+
+// ═══════════════════════════════════════════════════════
+// COTATION OVERLAY
+// ═══════════════════════════════════════════════════════
+function projectPt(v3){
+  var v=v3.clone(); v.project(camera);
+  return {x:(v.x+1)*cvs.clientWidth/2, y:(-v.y+1)*cvs.clientHeight/2};
+}
+function updateCotes(){
+  var ov=document.getElementById('cotes-overlay');
+  if(!ov) return;
+  if(!BIBLIO_MODE||!caissonGrp||S.step!==1){ ov.innerHTML=''; return; }
+  caissonGrp.updateMatrixWorld(true);
+  var CL=S.CL, CH=S.CH;
+  var TL=projectPt(caissonGrp.localToWorld(new THREE.Vector3(-CL/2,CH,0)));
+  var TR=projectPt(caissonGrp.localToWorld(new THREE.Vector3( CL/2,CH,0)));
+  var BL=projectPt(caissonGrp.localToWorld(new THREE.Vector3(-CL/2,0, 0)));
+  var html='';
+  // Largeur totale (au-dessus)
+  html+='<div class="cote-lbl" style="left:'+((TL.x+TR.x)/2)+'px;top:'+(Math.min(TL.y,TR.y)-26)+'px">'+Math.round(CL*100)+' cm</div>';
+  // Hauteur totale (à gauche)
+  html+='<div class="cote-lbl" style="left:'+(Math.min(TL.x,BL.x)-50)+'px;top:'+((TL.y+BL.y)/2)+'px">'+Math.round(CH*100)+' cm</div>';
+  // Hauteurs des baies (entre étagères) — affichées à droite
+  var els=caissonElements.filter(function(e){return e.type==='shelf'||e.type==='shelf_simple';});
+  var ys=[0].concat(els.map(function(e){return e.y_cm;})).concat([Math.round(CH*100)]);
+  ys.sort(function(a,b){return a-b;});
+  ys=ys.filter(function(v,i){return i===0||v!==ys[i-1];});
+  for(var i=0;i<ys.length-1;i++){
+    var y0=ys[i],y1=ys[i+1], hcm=y1-y0;
+    var cy=(y0+hcm/2)/100;
+    var pt=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,cy,0)));
+    var ptT=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,y1/100,0)));
+    var ptB=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,y0/100,0)));
+    if(Math.abs(ptT.y-ptB.y)>16) html+='<div class="cote-inner" style="left:'+pt.x+'px;top:'+pt.y+'px">'+hcm+'</div>';
+  }
+  ov.innerHTML=html;
+}
+
 // RESIZE & LOOP
 // ═══════════════════════════════════════════════════════
 function onResize(){ var w=wrap.clientWidth,h=wrap.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 window.addEventListener('resize',onResize); onResize();
 
-function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); }
+function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); updateCotes(); }
 loop();
 
 // ═══════════════════════════════════════════════════════
