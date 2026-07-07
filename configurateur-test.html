@@ -367,10 +367,11 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 
           <!-- ── CAISSONS LATÉRAUX (TV uniquement) ── -->
           <div class="tv-only" style="display:none">
-            <div class="sec" style="margin-top:18px">Caissons latéraux</div>
-            <div class="facade-row" style="margin-bottom:10px">
+            <div class="sec" style="margin-top:18px">Caissons supplémentaires</div>
+            <div class="facade-row" style="margin-bottom:10px;flex-wrap:wrap;gap:5px">
               <button class="facade-btn" id="tvl-btn" onclick="toggleTVLeft()">+ Gauche</button>
               <button class="facade-btn" id="tvr-btn" onclick="toggleTVRight()">+ Droite</button>
+              <button class="facade-btn" id="tvt-btn" onclick="toggleTVTop()">+ Dessus</button>
             </div>
             <div id="tvl-opts" style="display:none">
               <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson gauche</div>
@@ -392,6 +393,17 @@ textarea.cfg-field{resize:vertical;min-height:72px}
               <div class="sl-row">
                 <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-tvRH">120 cm</span></div>
                 <input type="range" min="20" max="280" step="1" value="120" oninput="setTVSide('right','H',+this.value)">
+              </div>
+            </div>
+            <div id="tvt-opts" style="display:none">
+              <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson dessus</div>
+              <div class="sl-row">
+                <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-tvTW">80 cm</span></div>
+                <input type="range" min="20" max="300" step="1" value="80" oninput="setTVSide('top','W',+this.value)">
+              </div>
+              <div class="sl-row">
+                <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-tvTH">100 cm</span></div>
+                <input type="range" min="20" max="280" step="1" value="100" oninput="setTVSide('top','H',+this.value)">
               </div>
             </div>
           </div>
@@ -599,7 +611,16 @@ var bDrag = false, bLastX = 0, bLastY = 0;
 var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
 
 // ── CAISSONS LATÉRAUX (meuble TV) ──
-var S_tvSide = { leftActive:false, leftW:40, leftH:120, rightActive:false, rightW:40, rightH:120 };
+// activeCaisson: 1=centre, 2=angle, 3=tv-gauche, 4=tv-droite, 5=tv-dessus
+var S_tvSide = { leftActive:false, leftW:40, leftH:120, rightActive:false, rightW:40, rightH:120, topActive:false, topW:80, topH:100 };
+// TV extra caissons — groupes + données édition (activeCaisson 3/4/5)
+var tvGrp=[null,null,null]; // [left,right,top]
+var tvElems=[[],[],[]];
+var tvOpenState=[{},{},{}];
+var tvMeshes=[[],[],[]];
+var tvHP=[null,null,null];
+var tvGuides=[null,null,null];
+var tvGhost=[null,null,null];
 
 // ── C2 DRAG / POSITION LIBRE ──
 
@@ -704,20 +725,35 @@ function ycmToLocal(y_cm) { return EP+y_cm/100; }
 function localToXcm(x_loc){ return (x_loc+getActiveCL()/2-EP)*100; }
 function xcmToLocal(x_cm) { return -getActiveCL()/2+EP+x_cm/100; }
 
-// ── Helpers caisson actif ──────────────────────────────────
-function getActiveCL(){ return activeCaisson===1?S.CL:S.CL2; }
-function getActiveEls(){ return activeCaisson===1?caissonElements:caissonElements2; }
-function setActiveEls(v){ if(activeCaisson===1) caissonElements=v; else caissonElements2=v; }
-function getActiveElemMeshes(){ return activeCaisson===1?caissonElemMeshes:caissonElemMeshes2; }
-function getActiveHP(){ return activeCaisson===1?caissonHitPlane:caissonHitPlane2; }
-function getActiveGrp(){ return activeCaisson===1?caissonGrp:caissonGrp2; }
-function getActiveGhost(){ return activeCaisson===1?caissonGhost:caissonGhost2; }
-function setActiveGhost(v){ if(activeCaisson===1) caissonGhost=v; else caissonGhost2=v; }
-function getActiveGuidesGrp(){ return activeCaisson===1?caissonGuidesGrp:caissonGuidesGrp2; }
-function getActiveOpenState(){ return activeCaisson===1?caissonOpenState:caissonOpenState2; }
+// ── Helpers caisson actif (1=centre, 2=angle, 3=tv-gauche, 4=tv-droite, 5=tv-dessus) ──
+function _tvIdx(){ return activeCaisson-3; } // 0=left,1=right,2=top
+function _isTVExtra(){ return activeCaisson>=3; }
+function getActiveCL(){
+  if(activeCaisson===1) return S.CL;
+  if(activeCaisson===2) return S.CL2;
+  if(activeCaisson===3) return S_tvSide.leftW/100;
+  if(activeCaisson===4) return S_tvSide.rightW/100;
+  if(activeCaisson===5) return S_tvSide.topW/100;
+  return S.CL;
+}
+function getActiveCH(){
+  if(activeCaisson===3) return S_tvSide.leftH/100;
+  if(activeCaisson===4) return S_tvSide.rightH/100;
+  if(activeCaisson===5) return S_tvSide.topH/100;
+  return S.CH;
+}
+function getActiveEls(){ return _isTVExtra()?tvElems[_tvIdx()]:(activeCaisson===1?caissonElements:caissonElements2); }
+function setActiveEls(v){ if(_isTVExtra()) tvElems[_tvIdx()]=v; else if(activeCaisson===1) caissonElements=v; else caissonElements2=v; }
+function getActiveElemMeshes(){ return _isTVExtra()?tvMeshes[_tvIdx()]:(activeCaisson===1?caissonElemMeshes:caissonElemMeshes2); }
+function getActiveHP(){ return _isTVExtra()?tvHP[_tvIdx()]:(activeCaisson===1?caissonHitPlane:caissonHitPlane2); }
+function getActiveGrp(){ return _isTVExtra()?tvGrp[_tvIdx()]:(activeCaisson===1?caissonGrp:caissonGrp2); }
+function getActiveGhost(){ return _isTVExtra()?tvGhost[_tvIdx()]:(activeCaisson===1?caissonGhost:caissonGhost2); }
+function setActiveGhost(v){ if(_isTVExtra()) tvGhost[_tvIdx()]=v; else if(activeCaisson===1) caissonGhost=v; else caissonGhost2=v; }
+function getActiveGuidesGrp(){ return _isTVExtra()?tvGuides[_tvIdx()]:(activeCaisson===1?caissonGuidesGrp:caissonGuidesGrp2); }
+function getActiveOpenState(){ return _isTVExtra()?tvOpenState[_tvIdx()]:(activeCaisson===1?caissonOpenState:caissonOpenState2); }
 
 function getCompartment(y_cm, x_cm){
-  var iH_cm=(S.CH-2*EP)*100;
+  var iH_cm=(getActiveCH()-2*EP)*100;
   var iW_cm=(getActiveCL()-2*EP)*100;
   var shelves=getActiveEls().filter(function(e){
     if(e.type!=='shelf') return false;
@@ -967,27 +1003,8 @@ function buildCaisson(){
   caissonGuidesGrp.renderOrder = 4;
   caissonGrp.add(caissonGuidesGrp);
 
-  // ── Caissons latéraux meuble TV ──
-  if(currentFT==='tv'){
-    function addTVSide(side, sW, sH){
-      var xOffset = side==='left' ? -(CL/2+sW/2) : (CL/2+sW/2);
-      var g=new THREE.Group(); g.position.set(xOffset,0,0);
-      var iWs=sW-2*ep;
-      // Structure
-      var jg=box(ep,sH,CP,matCais); jg.position.set(-sW/2+ep/2,sH/2,0); g.add(jg);
-      var jd=box(ep,sH,CP,matCais); jd.position.set(sW/2-ep/2,sH/2,0); g.add(jd);
-      var tt=box(iWs,ep,CP,matCais); tt.position.set(0,sH-ep/2,0); g.add(tt);
-      var bb=box(iWs,ep,CP,matCais); bb.position.set(0,ep/2,0); g.add(bb);
-      var fd=box(sW,sH,0.008,matFond); fd.position.set(0,sH/2,-CP/2+0.004); g.add(fd);
-      // Une étagère médiane
-      if(sH>0.30){
-        var mid=box(iWs,ep,CP-ep,matElem); mid.position.set(0,sH/2,-ep/2); g.add(mid);
-      }
-      caissonGrp.add(g);
-    }
-    if(S_tvSide.leftActive)  addTVSide('left',  S_tvSide.leftW/100,  S_tvSide.leftH/100);
-    if(S_tvSide.rightActive) addTVSide('right', S_tvSide.rightW/100, S_tvSide.rightH/100);
-  }
+  // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
+  if(currentFT==='tv') buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, matWhite, isWood, CL, CH, CP, ep);
 
   if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,0,caissCZ());
   scene.add(caissonGrp);
@@ -1149,6 +1166,102 @@ function getC2DefaultPos(){
 }
 
 
+// ═══════════════════════════════════════════════════════
+// BUILD CAISSONS TV EXTRA (gauche=3, droite=4, dessus=5)
+// ═══════════════════════════════════════════════════════
+function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,matWhite,isWood,mainCL,mainCH,CP,ep){
+  tvGrp=[null,null,null]; tvHP=[null,null,null]; tvGuides=[null,null,null]; tvGhost=[null,null,null];
+  tvMeshes=[[],[],[]];
+
+  var defs=[
+    {active:S_tvSide.leftActive,  idx:0, acId:3, W:S_tvSide.leftW/100,  H:S_tvSide.leftH/100,  px:function(W){return -(mainCL/2+W/2);}, py:0},
+    {active:S_tvSide.rightActive, idx:1, acId:4, W:S_tvSide.rightW/100, H:S_tvSide.rightH/100, px:function(W){return  (mainCL/2+W/2);}, py:0},
+    {active:S_tvSide.topActive,   idx:2, acId:5, W:S_tvSide.topW/100,   H:S_tvSide.topH/100,   px:function()  {return 0;},             py:mainCH}
+  ];
+
+  defs.forEach(function(d){
+    if(!d.active) return;
+    var W=d.W, H=d.H, ep2=ep, iWc=W-2*ep2, iHc=H-2*ep2;
+    var fz=CP/2-0.001;
+
+    var g=new THREE.Group(); g.position.set(d.px(W),d.py,0);
+    tvGrp[d.idx]=g;
+
+    // ── Structure ──
+    var jg=box(ep2,H,CP,matCais); jg.position.set(-W/2+ep2/2,H/2,0); g.add(jg);
+    var jd=box(ep2,H,CP,matCais); jd.position.set( W/2-ep2/2,H/2,0); g.add(jd);
+    var tt=box(iWc,ep2,CP,matCais); tt.position.set(0,H-ep2/2,0); g.add(tt);
+    var bb=box(iWc,ep2,CP,matCais); bb.position.set(0,ep2/2,0); g.add(bb);
+    var fd=box(W,H,0.008,matFond); fd.position.set(0,H/2,-CP/2+0.004); g.add(fd);
+
+    // ── Éléments éditables ──
+    var iWcm=Math.round(iWc*100), iHcm=Math.round(iHc*100);
+    var elems=tvElems[d.idx], openSt=tvOpenState[d.idx], meshArr=tvMeshes[d.idx];
+    meshArr.length=0;
+
+    function xcm(v){ return -W/2+ep2+v/100; }
+    function ycm(v){ return ep2+v/100; }
+
+    elems.forEach(function(el,eidx){
+      var compShelves=elems.filter(function(e){
+        if(e.type!=='shelf') return false;
+        var sl=e.x_left_cm!==undefined?e.x_left_cm:0, sr=e.x_right_cm!==undefined?e.x_right_cm:iWcm;
+        return sl<=1&&sr>=iWcm-1;
+      }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
+
+      if(el.type==='shelf'||el.type==='shelf_simple'){
+        var sl=el.x_left_cm!==undefined?el.x_left_cm:0, sr=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
+        var sw=(sr-sl)/100, scx=xcm((sl+sr)/2), th=el.type==='shelf_simple'?ep2*0.5:ep2;
+        var m=box(sw,th,CP-ep2,matElem); m.position.set(scx,ycm(el.y_cm),-ep2/2);
+        m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
+
+      } else if(el.type==='separator'||el.type==='separator_simple'){
+        var bot=0,top=iHcm;
+        compShelves.forEach(function(s){if(s<el.y_cm&&s>bot)bot=s;if(s>el.y_cm&&s<top)top=s;});
+        var h=(top-bot)/100; if(h<0.01) return;
+        var tw=el.type==='separator_simple'?ep2*0.5:ep2;
+        var m=box(tw,h,CP-ep2,matElem); m.position.set(xcm(el.x_cm),ep2+(bot+top)/200,-ep2/2);
+        m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
+
+      } else if(el.type==='porte'){
+        var left=el.x_left_cm||0, right=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
+        var bot2=el.y_bot_cm||0, top2=el.y_top_cm!==undefined?el.y_top_cm:iHcm;
+        var porW=(right-left)/100, porH=(top2-bot2)/100;
+        var porCx=xcm((left+right)/2), porCy=ycm((bot2+top2)/2);
+        var isOpen=!!openSt[el.key];
+        var pivot=new THREE.Group(); pivot.position.set(el.hinge==='right'?porCx+porW/2:porCx-porW/2,porCy,fz);
+        var pm=box(porW,porH,0.018,matFacade); pm.position.set(el.hinge==='right'?-porW/2:porW/2,0,0.009);
+        pm.userData.elemIdx=eidx; pm.userData.porKey=el.key; pm.userData.isPorte=true;
+        if(isOpen) pivot.rotation.y=el.hinge==='right'?-Math.PI/2:Math.PI/2;
+        addDoorHinges(pm,porW,porH,el.hinge!=='right');
+        pivot.add(pm); meshArr.push(pm); g.add(pivot);
+
+      } else if(el.type==='tiroir'){
+        var left2=el.x_left_cm||0, right2=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
+        var bot3=el.y_bot_cm||0, top3=el.y_top_cm!==undefined?el.y_top_cm:iHcm;
+        var tirW=(right2-left2)/100-0.003, tirH=(top3-bot3)/100-0.003;
+        var tirCx=xcm((left2+right2)/2), tirCy=ycm((bot3+top3)/2);
+        var isOpen2=!!openSt[el.key];
+        var tirZ=isOpen2?fz+CP*0.55:fz;
+        var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
+        tm.userData.elemIdx=eidx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+        meshArr.push(tm); g.add(tm);
+      }
+    });
+
+    // ── Hit plane ──
+    var hp=new THREE.Mesh(new THREE.PlaneGeometry(iWc,iHc),new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide}));
+    hp.position.set(0,ep2+iHc/2,CP/2-0.002); g.add(hp);
+    tvHP[d.idx]=hp;
+
+    // ── Guides ──
+    var gg=new THREE.Group(); gg.renderOrder=4; g.add(gg);
+    tvGuides[d.idx]=gg;
+
+    caissonGrp.add(g);
+  });
+}
+
 function toggleAngle(){
   hasAngle=!hasAngle;
   var btn=document.getElementById('btn-angle');
@@ -1167,23 +1280,30 @@ function setCL2(v){
 
 function toggleTVLeft(){
   S_tvSide.leftActive=!S_tvSide.leftActive;
-  var btn=document.getElementById('tvl-btn');
-  if(btn) btn.textContent=S_tvSide.leftActive?'- Gauche':'+ Gauche';
-  var opts=document.getElementById('tvl-opts');
-  if(opts) opts.style.display=S_tvSide.leftActive?'':'none';
-  buildCaisson();
+  if(!S_tvSide.leftActive && activeCaisson===3) activeCaisson=1;
+  var btn=document.getElementById('tvl-btn'); if(btn) btn.textContent=S_tvSide.leftActive?'− Gauche':'+ Gauche';
+  var opts=document.getElementById('tvl-opts'); if(opts) opts.style.display=S_tvSide.leftActive?'':'none';
+  buildCaisson(); if(caissonEditMode) _rebuildEditBar();
 }
 function toggleTVRight(){
   S_tvSide.rightActive=!S_tvSide.rightActive;
-  var btn=document.getElementById('tvr-btn');
-  if(btn) btn.textContent=S_tvSide.rightActive?'- Droite':'+ Droite';
-  var opts=document.getElementById('tvr-opts');
-  if(opts) opts.style.display=S_tvSide.rightActive?'':'none';
-  buildCaisson();
+  if(!S_tvSide.rightActive && activeCaisson===4) activeCaisson=1;
+  var btn=document.getElementById('tvr-btn'); if(btn) btn.textContent=S_tvSide.rightActive?'− Droite':'+ Droite';
+  var opts=document.getElementById('tvr-opts'); if(opts) opts.style.display=S_tvSide.rightActive?'':'none';
+  buildCaisson(); if(caissonEditMode) _rebuildEditBar();
+}
+function toggleTVTop(){
+  S_tvSide.topActive=!S_tvSide.topActive;
+  if(!S_tvSide.topActive && activeCaisson===5) activeCaisson=1;
+  var btn=document.getElementById('tvt-btn'); if(btn) btn.textContent=S_tvSide.topActive?'− Dessus':'+ Dessus';
+  var opts=document.getElementById('tvt-opts'); if(opts) opts.style.display=S_tvSide.topActive?'':'none';
+  buildCaisson(); if(caissonEditMode) _rebuildEditBar();
 }
 function setTVSide(side, dim, v){
-  if(side==='left')  { S_tvSide['left'+dim]=v;  document.getElementById('v-tvL'+dim).textContent=v+' cm'; }
-  if(side==='right') { S_tvSide['right'+dim]=v; document.getElementById('v-tvR'+dim).textContent=v+' cm'; }
+  var key=side==='left'?'left':side==='right'?'right':'top';
+  S_tvSide[key+dim]=v;
+  var elId='v-tv'+(side==='left'?'L':side==='right'?'R':'T')+dim;
+  var el=document.getElementById(elId); if(el) el.textContent=v+' cm';
   buildCaisson();
 }
 
@@ -1422,9 +1542,7 @@ function setCaissonType(t){
 
 function switchActiveCaisson(n){
   activeCaisson=n;
-  document.querySelectorAll('.c-caisson-btn').forEach(function(b){
-    b.classList.toggle('active', parseInt(b.dataset.cn)===n);
-  });
+  _rebuildEditBar(); // re-render pour mettre à jour active state
   clearCaissonGhost();
   updateAmgtCount();
 }
@@ -1444,12 +1562,26 @@ function _rebuildEditBar(){
   }
   if(!btns) return;
   var selectorHTML='';
-  if(BIBLIO_MODE && hasAngle){
-    selectorHTML=
-      '<div style="display:flex;gap:4px;margin-bottom:6px;">'+
-      '<button class="c-caisson-btn'+(activeCaisson===1?' active':'')+'" data-cn="1" onclick="switchActiveCaisson(1)">Caisson 1</button>'+
-      '<button class="c-caisson-btn'+(activeCaisson===2?' active':'')+'" data-cn="2" onclick="switchActiveCaisson(2)">Caisson 2</button>'+
-      '</div>';
+  if(BIBLIO_MODE){
+    var cBtns=[];
+    // Caisson angle (non-TV)
+    if(hasAngle && currentFT!=='tv'){
+      cBtns.push({id:1,lbl:'Caisson 1'}); cBtns.push({id:2,lbl:'Caisson 2'});
+    }
+    // Caissons TV
+    if(currentFT==='tv'){
+      cBtns.push({id:1,lbl:'Centre'});
+      if(S_tvSide.leftActive)  cBtns.push({id:3,lbl:'Gauche'});
+      if(S_tvSide.rightActive) cBtns.push({id:4,lbl:'Droite'});
+      if(S_tvSide.topActive)   cBtns.push({id:5,lbl:'Dessus'});
+    }
+    if(cBtns.length>1){
+      selectorHTML='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">';
+      cBtns.forEach(function(b){
+        selectorHTML+='<button class="c-caisson-btn'+(activeCaisson===b.id?' active':'')+'" onclick="switchActiveCaisson('+b.id+')">'+b.lbl+'</button>';
+      });
+      selectorHTML+='</div>';
+    }
   }
   if(BIBLIO_MODE){
     var isDressing=(typeof currentFT!=='undefined'&&currentFT==='dressing');
@@ -1750,7 +1882,9 @@ function placeOrRemoveCaisson(e){
 }
 
 function resetCaissonElements(){
-  setActiveEls([]); if(activeCaisson===1) caissonOpenState={}; else caissonOpenState2={};
+  setActiveEls([]);
+  if(_isTVExtra()) tvOpenState[_tvIdx()]={};
+  else if(activeCaisson===1) caissonOpenState={}; else caissonOpenState2={};
   clearCaissonGhost(); buildCaisson();
 }
 function updateAmgtCount(){
@@ -2120,12 +2254,11 @@ function selectFurnitureType(ft){
 
   document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=(BIBLIO_MODE&&cfg.hasAngleOpt)?'':'none'; });
   // Caissons latéraux TV — reset + show/hide
-  S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120};
+  S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120,topActive:false,topW:80,topH:100};
+  tvElems=[[],[],[]]; tvOpenState=[{},{},{}]; activeCaisson=1;
   document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=(ft==='tv')?'':'none'; });
-  var tvlb=document.getElementById('tvl-btn'); if(tvlb) tvlb.textContent='+ Gauche';
-  var tvrb=document.getElementById('tvr-btn'); if(tvrb) tvrb.textContent='+ Droite';
-  var tvlo=document.getElementById('tvl-opts'); if(tvlo) tvlo.style.display='none';
-  var tvro=document.getElementById('tvr-opts'); if(tvro) tvro.style.display='none';
+  ['tvl-btn','tvr-btn','tvt-btn'].forEach(function(id,i){ var b=document.getElementById(id); if(b) b.textContent=['+Gauche','+Droite','+Dessus'][i].replace('+',' + ').trim(); });
+  ['tvl-opts','tvr-opts','tvt-opts'].forEach(function(id){ var o=document.getElementById(id); if(o) o.style.display='none'; });
   // Onglets Formulaire/Fonction — uniquement BIBLIO_MODE
   var tabs=document.getElementById('p1-tabs');
   if(tabs) tabs.style.display=BIBLIO_MODE?'':'none';
