@@ -140,9 +140,12 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 #cv-wrap.mode-edit #c-action-hint{opacity:1}
 
 @media(max-width:760px){
+  body{overscroll-behavior:none}
   #app{flex-direction:column-reverse}
-  #sidebar{width:100%;min-width:0;height:50vh;border-right:none;border-top:1px solid var(--border)}
-  #cv-wrap{height:50vh}
+  #sidebar{width:100%;min-width:0;height:52vh;border-right:none;border-top:1px solid var(--border)}
+  #cv-wrap{height:48vh}
+  /* canvas : désactive le scroll natif pour que le touch serve à la 3D */
+  #c{touch-action:none}
   /* sidebar scrollable */
   #sb-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px}
   /* stepper compact */
@@ -151,25 +154,36 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   /* step-dots — 44px touch targets */
   .step-dot{width:44px;height:44px;min-width:44px;min-height:44px;font-size:12px}
   /* range touch */
-  input[type=range]{min-height:36px;height:36px;padding:10px 0}
+  input[type=range]{min-height:40px;height:40px;padding:10px 0}
   /* mat-grid tiles smaller */
   .mat-grid{gap:6px}
   .mat-sw{width:18px;height:18px}
-  /* form fields — prevent iOS zoom */
+  /* form fields — prevent iOS zoom (min 16px) */
   .cfg-field{font-size:16px}
+  input[type=text],input[type=email],textarea,select{font-size:16px}
   /* footer buttons */
-  #sb-footer,#sb-foot{padding:10px 14px}
-  .btn-back,.btn-next{min-height:44px}
+  #sb-footer,#sb-foot{padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  .btn-back,.btn-next{min-height:48px}
   /* header */
   #sb-header{padding:12px 14px 10px}
+  /* onglets formulaire/fonction */
+  .sb-tab{min-height:44px;padding:0 14px}
+  /* boutons TV (+Gauche, +Droite, +Dessus) */
+  .facade-btn{min-height:44px;font-size:12px}
+  /* boutons sélecteur de caisson dans la barre d'édition */
+  .c-caisson-btn{min-height:36px;min-width:48px;padding:5px 12px}
   /* barre d'édition : masque le libellé, réduit les boutons, autorise le retour à la ligne */
   #c-edit-bar{flex-wrap:wrap;justify-content:center;border-radius:14px;padding:8px;gap:5px;max-width:calc(100vw - 24px);white-space:normal}
   .c-edit-lbl,.c-edit-sep{display:none}
   .c-type-btns{flex-wrap:wrap;justify-content:center;border-radius:10px}
   .c-type-btn{padding:7px 10px;font-size:9px;min-height:36px;min-width:44px}
-  .c-edit-close{min-width:36px;min-height:36px;width:36px;height:36px}
+  .c-edit-close{min-width:40px;min-height:40px;width:40px;height:40px}
+  /* bouton mesures */
+  #btn-cotes{bottom:10px;right:10px;padding:6px 12px;font-size:10.5px}
 }
 @media(max-width:480px){
+  #sidebar{height:54vh}
+  #cv-wrap{height:46vh}
   #sb-body{padding:10px 10px}
   #stepper{padding:8px 10px}
   .step-lbl{display:none}
@@ -178,11 +192,15 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   .mat-lbl{font-size:10px}
   .vasque-grid{grid-template-columns:repeat(3,1fr)}
   .cfg-field{padding:10px 10px;font-size:16px}
-  .cta-btn{padding:14px;font-size:12px;min-height:44px}
+  .cta-btn{padding:14px;font-size:12px;min-height:48px}
   #sb-foot{padding:8px 10px}
-  .btn-next,.btn-back{min-height:44px;padding:12px 10px}
-  .sec{margin:14px 0 8px}
-  .sl-row{margin-bottom:12px}
+  .btn-next,.btn-back{min-height:48px;padding:12px 10px}
+  .sec{margin:12px 0 6px}
+  .sl-row{margin-bottom:10px}
+  /* sl-top compact */
+  .sl-top{margin-bottom:4px}
+  /* boutons TV plus petits mais toujours tactiles */
+  .facade-btn{min-height:44px;padding:8px 4px;font-size:11px}
 }
 
 /* ─── TYPE SELECTION OVERLAY ─── */
@@ -214,6 +232,27 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   .to-left{width:100%;min-width:0;padding:32px 28px;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
   .to-right{padding:28px 20px}
   .to-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .to-left{padding:20px 20px 18px}
+  .to-left-title{font-size:22px;margin-bottom:6px}
+  .to-left-sub,.to-left-badge{display:none}
+  .to-left-logo{margin-bottom:14px}
+  .to-right{padding:20px 16px;overflow:auto}
+  .to-question{font-size:12px;margin-bottom:18px}
+  .to-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .tc{padding:14px 10px 12px}
+  .tc-svg{margin-bottom:10px}
+  .tc-name{font-size:10px}
+  .tc-spec{display:none}
+  .to-grid-1 .tc{padding:14px 16px;gap:14px}
+}
+@media(max-width:380px){
+  .to-left{padding:14px 16px 12px}
+  .to-left-title{font-size:18px}
+  .to-right{padding:14px 12px}
+  .to-grid{gap:6px}
+  .tc{padding:12px 8px 10px}
 }
 </style>
 </head>
