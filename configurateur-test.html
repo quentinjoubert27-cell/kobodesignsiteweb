@@ -55,7 +55,6 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .pos-info{background:rgba(205,62,0,.05);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:14px}
 .pos-info strong{color:var(--text)}
 .tip{background:rgba(205,62,0,.05);border:1px dashed rgba(205,62,0,.25);border-radius:8px;padding:11px 13px;font-size:11px;color:var(--text2);line-height:1.55;margin-bottom:16px}
-.tip-icon{font-size:14px;display:inline-block;margin-right:4px}
 .recap-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
 .warn-alert{display:none;background:rgba(205,62,0,.07);border:1.5px solid rgba(205,62,0,.35);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--accent);line-height:1.55;margin-bottom:14px}
 .warn-alert.show{display:block}
@@ -182,51 +181,139 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 }
 
 /* ─── TYPE SELECTION OVERLAY ─── */
-#type-overlay{position:fixed;inset:0;background:#1A1A1A;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px}
-#type-overlay .ov-logo{font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#fff;margin-bottom:8px}
-#type-overlay .ov-sub{font-size:11px;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-bottom:40px;text-align:center}
-#type-overlay .ov-title{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:500;color:#fff;margin-bottom:28px;text-align:center}
-.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:600px;width:100%}
-@media(max-width:600px){.type-grid{grid-template-columns:repeat(2,1fr)}}
-.type-card{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:24px 14px 20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .2s;-webkit-tap-highlight-color:transparent}
-.type-card:hover,.type-card:active{border-color:#CD3E00;background:rgba(205,62,0,.12)}
-.type-card .tc-icon{font-size:28px}
-.type-card .tc-lbl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff}
-.type-card .tc-desc{font-size:10px;color:rgba(255,255,255,.4);text-align:center;line-height:1.4}
+#type-overlay{position:fixed;inset:0;background:#111;z-index:9999;display:flex;overflow:auto}
+.to-left{width:38%;min-width:240px;background:#0D0D0D;border-right:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;justify-content:center;padding:52px 44px}
+.to-left-logo{font-family:'Archivo',sans-serif;font-size:12px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#fff;margin-bottom:36px}
+.to-left-title{font-size:30px;font-weight:300;line-height:1.25;color:#fff;margin-bottom:16px}
+.to-left-title strong{font-weight:700}
+.to-left-sub{font-size:12px;line-height:1.7;color:rgba(255,255,255,.38);max-width:240px}
+.to-left-badge{margin-top:48px;display:inline-flex;align-items:center;gap:8px;background:rgba(205,62,0,.15);border:1px solid rgba(205,62,0,.3);border-radius:30px;padding:6px 14px}
+.to-left-badge span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#CD3E00;font-weight:600}
+.to-right{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 48px;overflow:auto}
+.to-question{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:32px;font-weight:500}
+.to-section{margin-bottom:28px}
+.to-cat{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:12px;font-weight:600;padding-left:2px}
+.to-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.to-grid-1{grid-template-columns:1fr}
+.tc{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.09);border-radius:10px;padding:20px 12px 16px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:0;transition:all .18s;-webkit-tap-highlight-color:transparent;text-align:left}
+.tc:hover,.tc:active{border-color:#CD3E00;background:rgba(205,62,0,.10)}
+.tc-svg{color:rgba(255,255,255,.55);margin-bottom:14px;transition:color .18s;flex-shrink:0}
+.tc:hover .tc-svg{color:#CD3E00}
+.tc-name{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;margin-bottom:4px}
+.tc-spec{font-size:10px;color:rgba(255,255,255,.35);line-height:1.5}
+.to-grid-1 .tc{flex-direction:row;align-items:center;gap:20px;padding:18px 22px}
+.to-grid-1 .tc-svg{margin-bottom:0}
+.to-grid-1 .tc-info{display:flex;flex-direction:column}
+@media(max-width:860px){
+  #type-overlay{flex-direction:column}
+  .to-left{width:100%;min-width:0;padding:32px 28px;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+  .to-right{padding:28px 20px}
+  .to-grid{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
 
 <!-- OVERLAY TYPE DE MEUBLE -->
 <div id="type-overlay">
-  <div class="ov-logo">Kōbō Design</div>
-  <div class="ov-sub">Configurateur sur mesure</div>
-  <div class="ov-title">Quel meuble souhaitez-vous configurer ?</div>
-  <div class="type-grid">
-    <div class="type-card" onclick="selectFurnitureType('biblio')">
-      <span class="tc-icon">📚</span>
-      <span class="tc-lbl">Bibliothèque</span>
-      <span class="tc-desc">Étagères, séparateurs, portes</span>
+  <div class="to-left">
+    <div class="to-left-logo">Kōbō Design</div>
+    <div class="to-left-title">Créez votre<br><strong>meuble sur mesure</strong></div>
+    <div class="to-left-sub">Chaque pièce est unique. Configurez vos dimensions, finitions et aménagements intérieurs en quelques étapes.</div>
+    <div class="to-left-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#CD3E00"/><circle cx="5" cy="5" r="2" fill="#CD3E00"/></svg>
+      <span>Fabrication française</span>
     </div>
-    <div class="type-card" onclick="selectFurnitureType('tv')">
-      <span class="tc-icon">📺</span>
-      <span class="tc-lbl">Meuble TV</span>
-      <span class="tc-desc">Caissons, tiroirs, niches</span>
+  </div>
+  <div class="to-right">
+    <div class="to-question">Quel espace souhaitez-vous aménager ?</div>
+
+    <div class="to-section">
+      <div class="to-cat">Rangement</div>
+      <div class="to-grid">
+
+        <button class="tc" onclick="selectFurnitureType('biblio')">
+          <div class="tc-svg">
+            <svg width="38" height="52" viewBox="0 0 38 52" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="1" y="1" width="36" height="50" rx="1"/>
+              <line x1="1" y1="17" x2="37" y2="17"/>
+              <line x1="1" y1="31" x2="37" y2="31"/>
+              <line x1="1" y1="44" x2="37" y2="44"/>
+            </svg>
+          </div>
+          <div class="tc-name">Bibliothèque</div>
+          <div class="tc-spec">Étagères · Portes · Intercalaires</div>
+        </button>
+
+        <button class="tc" onclick="selectFurnitureType('dressing')">
+          <div class="tc-svg">
+            <svg width="46" height="52" viewBox="0 0 46 52" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="1" y="1" width="44" height="50" rx="1"/>
+              <line x1="23" y1="1" x2="23" y2="51"/>
+              <line x1="5" y1="10" x2="20" y2="10"/>
+              <line x1="26" y1="10" x2="41" y2="10"/>
+              <line x1="5" y1="34" x2="20" y2="34"/>
+              <line x1="5" y1="42" x2="20" y2="42"/>
+              <line x1="26" y1="34" x2="41" y2="34"/>
+              <line x1="26" y1="42" x2="41" y2="42"/>
+            </svg>
+          </div>
+          <div class="tc-name">Dressing</div>
+          <div class="tc-spec">Penderie · Tringles · Étagères</div>
+        </button>
+
+        <button class="tc" onclick="selectFurnitureType('tv')">
+          <div class="tc-svg">
+            <svg width="50" height="28" viewBox="0 0 50 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="1" y="1" width="48" height="26" rx="1"/>
+              <line x1="17" y1="1" x2="17" y2="27"/>
+              <line x1="33" y1="1" x2="33" y2="27"/>
+              <line x1="4" y1="14" x2="14" y2="14"/>
+            </svg>
+          </div>
+          <div class="tc-name">Meuble TV</div>
+          <div class="tc-spec">Caissons · Tiroirs · Niches</div>
+        </button>
+
+        <button class="tc" onclick="selectFurnitureType('chambre')">
+          <div class="tc-svg">
+            <svg width="44" height="40" viewBox="0 0 44 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="1" y="1" width="42" height="20" rx="2"/>
+              <line x1="1" y1="25" x2="43" y2="25"/>
+              <rect x="1" y="25" width="42" height="14" rx="0"/>
+              <line x1="22" y1="25" x2="22" y2="39"/>
+              <line x1="5" y1="32" x2="18" y2="32"/>
+              <line x1="26" y1="32" x2="39" y2="32"/>
+            </svg>
+          </div>
+          <div class="tc-name">Chambre</div>
+          <div class="tc-spec">Tête de lit · Rangements</div>
+        </button>
+
+      </div>
     </div>
-    <div class="type-card" onclick="selectFurnitureType('chambre')">
-      <span class="tc-icon">🛏</span>
-      <span class="tc-lbl">Chambre</span>
-      <span class="tc-desc">Tête de lit, rangements</span>
-    </div>
-    <div class="type-card" onclick="selectFurnitureType('dressing')">
-      <span class="tc-icon">👔</span>
-      <span class="tc-lbl">Dressing</span>
-      <span class="tc-desc">Penderie, tringles, étagères</span>
-    </div>
-    <div class="type-card" onclick="selectFurnitureType('sdb')">
-      <span class="tc-icon">🚿</span>
-      <span class="tc-lbl">Salle de bain</span>
-      <span class="tc-desc">Plan de travail, vasques</span>
+
+    <div class="to-section">
+      <div class="to-cat">Salle de bain</div>
+      <div class="to-grid to-grid-1">
+        <button class="tc" onclick="selectFurnitureType('sdb')">
+          <div class="tc-svg">
+            <svg width="54" height="36" viewBox="0 0 54 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="1" y="10" width="52" height="25" rx="1"/>
+              <line x1="1" y1="18" x2="53" y2="18"/>
+              <path d="M14 14 Q27 8 40 14" stroke-width="1.5"/>
+              <line x1="19" y1="18" x2="19" y2="35"/>
+              <line x1="35" y1="18" x2="35" y2="35"/>
+              <line x1="4" y1="26" x2="16" y2="26"/>
+              <line x1="38" y1="26" x2="50" y2="26"/>
+            </svg>
+          </div>
+          <div class="tc-info">
+            <div class="tc-name">Salle de bain</div>
+            <div class="tc-spec">Plan de travail · Vasques · Finitions · Aménagement intérieur</div>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -284,9 +371,9 @@ textarea.cfg-field{resize:vertical;min-height:72px}
           <div class="sec" style="margin-top:0">Aménagement</div>
           <div class="amgt-row">
             <span class="amgt-count" id="amgt-count">Structure vide</span>
-            <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
+            <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">Modifier</button>
           </div>
-          <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider</button>
+          <button class="reset-btn" onclick="resetCaissonElements()">Vider</button>
           <!-- Boutons de type injectés ici en mode édition -->
           <div id="fn-edit-content" style="display:none;margin-top:16px">
             <div class="c-type-btns" style="display:flex;flex-wrap:wrap;gap:5px;background:none;border-radius:0;padding:0"></div>
@@ -298,9 +385,9 @@ textarea.cfg-field{resize:vertical;min-height:72px}
           <div class="sec">Aménagement intérieur</div>
           <div class="amgt-row">
             <span class="amgt-count" id="amgt-count-sdb">Structure vide</span>
-            <button class="edit-mode-btn" id="btn-edit-cais-sdb" onclick="toggleCaissonEdit()">✏ Éditer</button>
+            <button class="edit-mode-btn" id="btn-edit-cais-sdb" onclick="toggleCaissonEdit()">Modifier</button>
           </div>
-          <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
+          <button class="reset-btn" onclick="resetCaissonElements()">Vider l'aménagement</button>
         </div>
 
       </div>
@@ -323,7 +410,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 
       <!-- STEP 3 — Vasque -->
       <div class="panel" id="p3">
-        <div class="tip"><span class="tip-icon">✥</span>Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="tip">Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
         <div class="warn-alert" id="warn-vasque"></div>
         <div class="sec">Nombre de vasques</div>
         <div class="facade-row" style="margin-bottom:16px">
@@ -404,7 +491,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   <div id="cv-wrap">
     <canvas id="c"></canvas>
     <div id="cotes-overlay"></div>
-    <div id="hint">☛ Glissez la vasque pour la repositionner</div>
+    <div id="hint">Glissez la vasque pour la repositionner</div>
     <div id="c-edit-bar">
       <span class="c-edit-lbl">Mode édition</span>
       <div class="c-edit-sep"></div>
@@ -1896,11 +1983,11 @@ function updatePosInfo(){
 // ═══════════════════════════════════════════════════════
 
 var FT_CONFIGS = {
-  biblio:  { label:'Bibliothèque',  sub:'Configurateur bibliothèque', panels:['p1','p4'], steps:['Meuble','Envoyer'], dimL:[40,300,120], dimH:[80,240,200], dimP:[25,50,30] },
-  tv:      { label:'Meuble TV',     sub:'Configurateur meuble TV',    panels:['p1','p4'], steps:['Meuble','Envoyer'], dimL:[80,300,150], dimH:[20,60,40],  dimP:[30,60,40] },
-  chambre: { label:'Meuble chambre',sub:'Configurateur chambre',      panels:['p1','p4'], steps:['Meuble','Envoyer'], dimL:[60,300,120], dimH:[40,120,60], dimP:[30,60,40] },
-  dressing:{ label:'Dressing',      sub:'Configurateur dressing',     panels:['p1','pdressing','p4'], steps:['Structure','Options','Envoyer'], dimL:[80,500,200], dimH:[180,280,230], dimP:[50,80,60] },
-  sdb:     { label:'Salle de bain', sub:'Configurateur salle de bain',panels:['p1','p2','p3','p4'], steps:['Meuble','Plan','Vasque','Envoyer'], dimL:[40,220,120], dimH:[30,70,45], dimP:[36,60,36] }
+  biblio:  { label:'Bibliothèque',  sub:'Bibliothèque sur mesure',    panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[40,300,120], dimH:[80,240,200], dimP:[25,50,30],  cam:{pos:[0,0,3.6], tgt:[0,0,0]},    hasAngleOpt:true },
+  tv:      { label:'Meuble TV',     sub:'Meuble TV sur mesure',        panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[80,300,150], dimH:[20,60,40],  dimP:[30,60,40],  cam:{pos:[0,-0.1,3.2], tgt:[0,-0.1,0]}, hasAngleOpt:false },
+  chambre: { label:'Chambre',       sub:'Meuble chambre sur mesure',   panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[60,300,120], dimH:[40,120,60], dimP:[30,60,40],  cam:{pos:[0,0,3.4], tgt:[0,0,0]},    hasAngleOpt:true },
+  dressing:{ label:'Dressing',      sub:'Dressing sur mesure',         panels:['p1','pdressing','p4'],    steps:['Structure','Options','Envoyer'],       dimL:[80,500,200], dimH:[180,280,230],dimP:[50,80,60],  cam:{pos:[0,0.3,4.2], tgt:[0,0.2,0]},hasAngleOpt:true },
+  sdb:     { label:'Salle de bain', sub:'Meuble salle de bain sur mesure',panels:['p1','p2','p3','p4'],   steps:['Meuble','Plan de travail','Vasque','Envoyer'], dimL:[40,220,120], dimH:[30,70,45],  dimP:[36,60,36],  cam:{pos:[-0.4,0.9,1.6],tgt:[0,0.25,0]},hasAngleOpt:false }
 };
 
 var currentFT = null;
@@ -1916,17 +2003,21 @@ function selectFurnitureType(ft){
   document.getElementById('logo-sub').textContent = cfg.sub;
   document.getElementById('type-overlay').style.display = 'none';
 
+  var camCfg = cfg.cam || {pos:[0,0,3.5], tgt:[0,0,0]};
   if(BIBLIO_MODE){
     controls.enabled = false;
-    camera.position.set(0,0,3.5); camera.lookAt(0,0,0);
-    controls.target.set(0,0,0);
+    camera.position.set(camCfg.pos[0],camCfg.pos[1],camCfg.pos[2]);
+    camera.lookAt(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
+    controls.target.set(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
     scene.background = new THREE.Color(0xF2EAD8);
     scene.fog = null;
     solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
   } else {
     controls.enabled = true;
-    camera.position.set(-0.4,0.9,1.6); camera.lookAt(0,0.25,0);
-    controls.target.set(0,0.25,0); controls.update();
+    camera.position.set(camCfg.pos[0],camCfg.pos[1],camCfg.pos[2]);
+    camera.lookAt(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
+    controls.target.set(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
+    controls.update();
     scene.background = new THREE.Color(0x141210);
     scene.fog = new THREE.FogExp2(0x141210,0.045);
     solMesh.visible=true; solSh.visible=true; murMesh.visible=true; mirGrp.visible=true;
@@ -1943,7 +2034,7 @@ function selectFurnitureType(ft){
   // Populate dressing mat grid
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
 
-  document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=BIBLIO_MODE?'':'none'; });
+  document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=(BIBLIO_MODE&&cfg.hasAngleOpt)?'':'none'; });
   // Onglets Formulaire/Fonction — uniquement BIBLIO_MODE
   var tabs=document.getElementById('p1-tabs');
   if(tabs) tabs.style.display=BIBLIO_MODE?'':'none';
@@ -2064,10 +2155,10 @@ function checkAlerts(){
   if(wPlan){
     var meubleL=Math.round(S.CL*100), planL=Math.round(S.L*100);
     if(meubleL>planL){
-      wPlan.textContent='⚠ Le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
+      wPlan.textContent='Attention — le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
       wPlan.classList.add('show');
     } else if(planL>meubleL+1){
-      wPlan.textContent='ℹ Le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+( planL-meubleL)+' cm.';
+      wPlan.textContent='Note — le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+(planL-meubleL)+' cm.';
       wPlan.classList.add('show');
     } else {
       wPlan.classList.remove('show');
@@ -2079,7 +2170,7 @@ function checkAlerts(){
     var pMat=MATS_PLAN[S.matPlan], vMat=MATS_VASQUE[S_matVasque];
     var planName=pMat?pMat.n:'', vasqueName=vMat?vMat.n:'';
     if(planName!==vasqueName){
-      wVasque.textContent='⚠ La vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
+      wVasque.textContent='Attention — la vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
       wVasque.classList.add('show');
     } else {
       wVasque.classList.remove('show');
