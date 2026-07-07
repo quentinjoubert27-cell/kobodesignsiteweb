@@ -626,6 +626,19 @@ mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.76,0.96,0.012),new THREE.MeshS
 mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.70,0.90,0.008),new THREE.MeshPhysicalMaterial({color:0xd8d0c8,metalness:0.92,roughness:0.06,clearcoat:1.0})));
 mirGrp.position.set(0,1.65,-0.73); scene.add(mirGrp);
 
+/* ── Mur et sol en BIBLIO_MODE (mis à jour dans normalizeCaisson) ── */
+var wallBiblio=new THREE.Mesh(
+  new THREE.PlaneGeometry(8,6),
+  new THREE.MeshStandardMaterial({color:0xEFEADF,roughness:0.92,metalness:0.0})
+);
+wallBiblio.receiveShadow=true; wallBiblio.visible=false; scene.add(wallBiblio);
+
+var floorBiblio=new THREE.Mesh(
+  new THREE.PlaneGeometry(8,4),
+  new THREE.MeshStandardMaterial({color:0xD5CFC4,roughness:0.88,metalness:0.0})
+);
+floorBiblio.rotation.x=-Math.PI/2; floorBiblio.receiveShadow=true; floorBiblio.visible=false; scene.add(floorBiblio);
+
 var controls=new THREE.OrbitControls(camera,cvs);
 controls.enableDamping=true; controls.dampingFactor=0.1;
 controls.target.set(0,0.25,0);
@@ -1109,6 +1122,14 @@ function normalizeCaisson(){
   caissonGrp.scale.setScalar(ns);
   caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
   caissonGrp.rotation.set(bRotX,bRotY,0);
+
+  // Positionner mur et sol selon la bounding box finale
+  if(BIBLIO_MODE && wallBiblio && floorBiblio){
+    var backZ  = (-size.z/2 - center.z) * ns - 0.008;
+    var bottomY= (-size.y/2 - center.y) * ns;
+    wallBiblio.position.set(0, 0, backZ);
+    floorBiblio.position.set(0, bottomY, backZ + size.z * ns * 0.5);
+  }
 }
 
 function bibl_animateTo(tx,ty,ms){
@@ -2012,6 +2033,7 @@ function selectFurnitureType(ft){
     scene.background = new THREE.Color(0xF2EAD8);
     scene.fog = null;
     solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
+    wallBiblio.visible=true; floorBiblio.visible=true;
   } else {
     controls.enabled = true;
     camera.position.set(camCfg.pos[0],camCfg.pos[1],camCfg.pos[2]);
@@ -2021,6 +2043,7 @@ function selectFurnitureType(ft){
     scene.background = new THREE.Color(0x141210);
     scene.fog = new THREE.FogExp2(0x141210,0.045);
     solMesh.visible=true; solSh.visible=true; murMesh.visible=true; mirGrp.visible=true;
+    wallBiblio.visible=false; floorBiblio.visible=false;
   }
 
   // Adapt dimension sliders
