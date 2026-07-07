@@ -1123,14 +1123,6 @@ function normalizeCaisson(){
   caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
   caissonGrp.rotation.set(bRotX,bRotY,0);
 
-  // Positionner mur et sol selon la bounding box finale
-  // Après scale+translate, world_pos = (local - center) * ns
-  if(BIBLIO_MODE && wallBiblio && floorBiblio){
-    var halfDepth  = size.z / 2 * ns;
-    var halfHeight = size.y / 2 * ns;
-    wallBiblio.position.set(0, 0, -halfDepth - 0.005);
-    floorBiblio.position.set(0, -halfHeight, 0);
-  }
 }
 
 function bibl_animateTo(tx,ty,ms){
@@ -2034,6 +2026,8 @@ function selectFurnitureType(ft){
     scene.background = new THREE.Color(0xF2EAD8);
     scene.fog = null;
     solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
+    wallBiblio.position.set(0, 0, -1.1);
+    floorBiblio.position.set(0, -0.92, 0);
     wallBiblio.visible=true; floorBiblio.visible=true;
   } else {
     controls.enabled = true;
