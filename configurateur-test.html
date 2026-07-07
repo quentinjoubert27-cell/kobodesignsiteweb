@@ -364,6 +364,37 @@ textarea.cfg-field{resize:vertical;min-height:72px}
               </div>
             </div>
           </div>
+
+          <!-- ── CAISSONS LATÉRAUX (TV uniquement) ── -->
+          <div class="tv-only" style="display:none">
+            <div class="sec" style="margin-top:18px">Caissons latéraux</div>
+            <div class="facade-row" style="margin-bottom:10px">
+              <button class="facade-btn" id="tvl-btn" onclick="toggleTVLeft()">+ Gauche</button>
+              <button class="facade-btn" id="tvr-btn" onclick="toggleTVRight()">+ Droite</button>
+            </div>
+            <div id="tvl-opts" style="display:none">
+              <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson gauche</div>
+              <div class="sl-row">
+                <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-tvLW">40 cm</span></div>
+                <input type="range" min="20" max="120" step="1" value="40" oninput="setTVSide('left','W',+this.value)">
+              </div>
+              <div class="sl-row">
+                <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-tvLH">120 cm</span></div>
+                <input type="range" min="20" max="280" step="1" value="120" oninput="setTVSide('left','H',+this.value)">
+              </div>
+            </div>
+            <div id="tvr-opts" style="display:none">
+              <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson droit</div>
+              <div class="sl-row">
+                <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-tvRW">40 cm</span></div>
+                <input type="range" min="20" max="120" step="1" value="40" oninput="setTVSide('right','W',+this.value)">
+              </div>
+              <div class="sl-row">
+                <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-tvRH">120 cm</span></div>
+                <input type="range" min="20" max="280" step="1" value="120" oninput="setTVSide('right','H',+this.value)">
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- ── ONGLET FONCTION ── -->
@@ -564,10 +595,11 @@ var activeCaisson = 1;
 var caissonElements2 = [], caissonOpenState2 = {};
 var caissonElemMeshes2 = [], caissonHitPlane2 = null;
 var caissonGuidesGrp2 = null, caissonGhost2 = null;
-var bRotX = 0.12, bRotY = 0.40;
-var bSavedRotX = 0.12, bSavedRotY = 0.40;
 var bDrag = false, bLastX = 0, bLastY = 0;
 var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
+
+// ── CAISSONS LATÉRAUX (meuble TV) ──
+var S_tvSide = { leftActive:false, leftW:40, leftH:120, rightActive:false, rightW:40, rightH:120 };
 
 // ── C2 DRAG / POSITION LIBRE ──
 
@@ -935,6 +967,28 @@ function buildCaisson(){
   caissonGuidesGrp.renderOrder = 4;
   caissonGrp.add(caissonGuidesGrp);
 
+  // ── Caissons latéraux meuble TV ──
+  if(currentFT==='tv'){
+    function addTVSide(side, sW, sH){
+      var xOffset = side==='left' ? -(CL/2+sW/2) : (CL/2+sW/2);
+      var g=new THREE.Group(); g.position.set(xOffset,0,0);
+      var iWs=sW-2*ep;
+      // Structure
+      var jg=box(ep,sH,CP,matCais); jg.position.set(-sW/2+ep/2,sH/2,0); g.add(jg);
+      var jd=box(ep,sH,CP,matCais); jd.position.set(sW/2-ep/2,sH/2,0); g.add(jd);
+      var tt=box(iWs,ep,CP,matCais); tt.position.set(0,sH-ep/2,0); g.add(tt);
+      var bb=box(iWs,ep,CP,matCais); bb.position.set(0,ep/2,0); g.add(bb);
+      var fd=box(sW,sH,0.008,matFond); fd.position.set(0,sH/2,-CP/2+0.004); g.add(fd);
+      // Une étagère médiane
+      if(sH>0.30){
+        var mid=box(iWs,ep,CP-ep,matElem); mid.position.set(0,sH/2,-ep/2); g.add(mid);
+      }
+      caissonGrp.add(g);
+    }
+    if(S_tvSide.leftActive)  addTVSide('left',  S_tvSide.leftW/100,  S_tvSide.leftH/100);
+    if(S_tvSide.rightActive) addTVSide('right', S_tvSide.rightW/100, S_tvSide.rightH/100);
+  }
+
   if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,0,caissCZ());
   scene.add(caissonGrp);
   if(BIBLIO_MODE){
@@ -1109,6 +1163,28 @@ function setCL2(v){
   S.CL2=v/100;
   document.getElementById('v-CL2').textContent=v+' cm';
   if(hasAngle) buildCaisson();
+}
+
+function toggleTVLeft(){
+  S_tvSide.leftActive=!S_tvSide.leftActive;
+  var btn=document.getElementById('tvl-btn');
+  if(btn) btn.textContent=S_tvSide.leftActive?'- Gauche':'+ Gauche';
+  var opts=document.getElementById('tvl-opts');
+  if(opts) opts.style.display=S_tvSide.leftActive?'':'none';
+  buildCaisson();
+}
+function toggleTVRight(){
+  S_tvSide.rightActive=!S_tvSide.rightActive;
+  var btn=document.getElementById('tvr-btn');
+  if(btn) btn.textContent=S_tvSide.rightActive?'- Droite':'+ Droite';
+  var opts=document.getElementById('tvr-opts');
+  if(opts) opts.style.display=S_tvSide.rightActive?'':'none';
+  buildCaisson();
+}
+function setTVSide(side, dim, v){
+  if(side==='left')  { S_tvSide['left'+dim]=v;  document.getElementById('v-tvL'+dim).textContent=v+' cm'; }
+  if(side==='right') { S_tvSide['right'+dim]=v; document.getElementById('v-tvR'+dim).textContent=v+' cm'; }
+  buildCaisson();
 }
 
 var WALL_BIBLIO_Z = -1.1;
@@ -2043,6 +2119,13 @@ function selectFurnitureType(ft){
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
 
   document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=(BIBLIO_MODE&&cfg.hasAngleOpt)?'':'none'; });
+  // Caissons latéraux TV — reset + show/hide
+  S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120};
+  document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=(ft==='tv')?'':'none'; });
+  var tvlb=document.getElementById('tvl-btn'); if(tvlb) tvlb.textContent='+ Gauche';
+  var tvrb=document.getElementById('tvr-btn'); if(tvrb) tvrb.textContent='+ Droite';
+  var tvlo=document.getElementById('tvl-opts'); if(tvlo) tvlo.style.display='none';
+  var tvro=document.getElementById('tvr-opts'); if(tvro) tvro.style.display='none';
   // Onglets Formulaire/Fonction — uniquement BIBLIO_MODE
   var tabs=document.getElementById('p1-tabs');
   if(tabs) tabs.style.display=BIBLIO_MODE?'':'none';
