@@ -1111,6 +1111,9 @@ function setCL2(v){
   if(hasAngle) buildCaisson();
 }
 
+var WALL_BIBLIO_Z = -1.1;
+var FLOOR_BIBLIO_Y = -0.92;
+
 function normalizeCaisson(){
   if(!caissonGrp) return;
   caissonGrp.updateMatrixWorld(true);
@@ -1120,9 +1123,18 @@ function normalizeCaisson(){
   var maxDim=Math.max(size.x,size.y,size.z,0.001);
   var ns=1.8/maxDim;
   caissonGrp.scale.setScalar(ns);
-  caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
-  caissonGrp.rotation.set(bRotX,bRotY,0);
 
+  if(BIBLIO_MODE){
+    // Dos contre le mur, pieds sur le sol
+    var halfDepth  = size.z / 2 * ns;
+    var halfHeight = size.y / 2 * ns;
+    var pz = -center.z * ns + (WALL_BIBLIO_Z + halfDepth);
+    var py = -center.y * ns + (FLOOR_BIBLIO_Y + halfHeight);
+    caissonGrp.position.set(-center.x * ns, py, pz);
+  } else {
+    caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
+  }
+  caissonGrp.rotation.set(bRotX,bRotY,0);
 }
 
 function bibl_animateTo(tx,ty,ms){
