@@ -260,12 +260,6 @@ textarea.cfg-field{resize:vertical;min-height:72px}
               <div class="sl-top"><span class="sl-lbl">Largeur caisson 2</span><span class="sl-val" id="v-CL2">120 cm</span></div>
               <input type="range" id="sl-cl2" min="20" max="300" step="1" value="120" oninput="setCL2(+this.value)">
             </div>
-            <div class="sl-row">
-              <div class="sl-top"><span class="sl-lbl">Rotation caisson 2</span><span class="sl-val" id="v-C2rot">−90°</span></div>
-              <input type="range" id="sl-c2rot" min="-180" max="0" step="1" value="-90" oninput="setC2Rot(+this.value)">
-            </div>
-            <div style="font-size:10px;color:var(--text2);margin-bottom:8px;line-height:1.5">Glissez le caisson 2 directement dans la vue pour le repositionner.</div>
-            <button class="reset-btn" onclick="resetC2Pos()">↺ Remettre au coin</button>
           </div>
         </div>
       </div>
@@ -396,9 +390,6 @@ var S = {
   // Meuble
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
   CL2:1.20,          // largeur du caisson d'angle
-  C2rotY:-Math.PI/2, // rotation Y du caisson d'angle (rad)
-  C2posX:null,       // position X libre (null = coin auto)
-  C2posZ:null,       // position Z libre
   caissonOffset:0,  // décalage X du caisson sous le plan (m)
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
@@ -456,8 +447,6 @@ var bDrag = false, bLastX = 0, bLastY = 0;
 var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
 
 // ── C2 DRAG / POSITION LIBRE ──
-var c2DragActive = false;
-var c2DragLastX = 0, c2DragLastY = 0;
 
 // ── Aménagement caisson ──────────────────────────────
 // {type:'shelf',     y_cm}
@@ -921,12 +910,9 @@ function buildCaisson2(){
   caissonGuidesGrp2=new THREE.Group(); caissonGuidesGrp2.renderOrder=4;
   caissonGrp2.add(caissonGuidesGrp2);
 
-  // Positionnement libre ou coin par défaut
   var c2p = getC2DefaultPos();
-  var px = S.C2posX !== null ? S.C2posX : c2p.x;
-  var pz = S.C2posZ !== null ? S.C2posZ : c2p.z;
-  caissonGrp2.rotation.y = S.C2rotY;
-  caissonGrp2.position.set(px, 0, pz);
+  caissonGrp2.rotation.y = -Math.PI/2;
+  caissonGrp2.position.set(c2p.x, 0, c2p.z);
   caissonGrp.add(caissonGrp2);
 }
 
@@ -935,16 +921,6 @@ function getC2DefaultPos(){
   return { x: CL1/2 - EP + CP/2, z: -CP/2 + CL2/2 };
 }
 
-function setC2Rot(deg){
-  S.C2rotY = deg * Math.PI / 180;
-  document.getElementById('v-C2rot').textContent = deg + '°';
-  if(hasAngle) buildCaisson();
-}
-
-function resetC2Pos(){
-  S.C2posX = null; S.C2posZ = null;
-  if(hasAngle) buildCaisson();
-}
 
 function toggleAngle(){
   hasAngle=!hasAngle;
@@ -952,12 +928,6 @@ function toggleAngle(){
   var opts=document.getElementById('angle-opts');
   if(btn) btn.textContent=hasAngle?'− Retirer l\'angle':'+ Ajouter un angle';
   if(opts) opts.style.display=hasAngle?'':'none';
-  if(hasAngle){
-    // Reset C2 position/rotation à chaque nouvel ajout
-    S.C2posX=null; S.C2posZ=null; S.C2rotY=-Math.PI/2;
-    var sl=document.getElementById('sl-c2rot'); if(sl) sl.value=-90;
-    var vl=document.getElementById('v-C2rot'); if(vl) vl.textContent='-90°';
-  }
   buildCaisson();
   if(caissonEditMode) _rebuildEditBar();
 }
@@ -1569,15 +1539,6 @@ function _moveDrag(){
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
-  // Détection drag C2
-  if(BIBLIO_MODE&&!caissonEditMode&&hasAngle&&caissonGrp2){
-    toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var c2Meshes=[]; caissonGrp2.traverse(function(o){if(o.isMesh) c2Meshes.push(o);});
-    if(raycaster.intersectObjects(c2Meshes,false).length){
-      c2DragActive=true; c2DragLastX=e.clientX; c2DragLastY=e.clientY;
-      cvs.style.cursor='grabbing'; return;
-    }
-  }
   if(BIBLIO_MODE&&!caissonEditMode){ bDrag=true; bLastX=e.clientX; bLastY=e.clientY; return; }
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
@@ -1599,27 +1560,6 @@ cvs.addEventListener('pointerdown',function(e){
 });
 cvs.addEventListener('pointermove',function(e){
   if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
-  // Drag C2
-  if(BIBLIO_MODE&&c2DragActive&&caissonGrp2){
-    var dx=e.clientX-c2DragLastX, dy=e.clientY-c2DragLastY;
-    c2DragLastX=e.clientX; c2DragLastY=e.clientY;
-    var ns=caissonGrp?caissonGrp.scale.x:1;
-    var camDist=camera.position.length();
-    var pxToLocal=2*Math.tan(camera.fov*Math.PI/360)*camDist/cvs.clientHeight/ns;
-    var cosY=Math.cos(bRotY), sinY=Math.sin(bRotY);
-    var posX=S.C2posX!==null?S.C2posX:getC2DefaultPos().x;
-    var posZ=S.C2posZ!==null?S.C2posZ:getC2DefaultPos().z;
-    S.C2posX=posX+(dx*cosY+dy*sinY)*pxToLocal*(cvs.clientWidth/cvs.clientHeight);
-    S.C2posZ=posZ+(-dx*sinY+dy*cosY)*pxToLocal;
-    if(caissonGrp2){ caissonGrp2.position.set(S.C2posX,0,S.C2posZ); normalizeCaisson(); }
-    return;
-  }
-  // Curseur survol C2
-  if(BIBLIO_MODE&&!caissonEditMode&&hasAngle&&caissonGrp2&&!bDrag){
-    toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var c2M=[]; caissonGrp2.traverse(function(o){if(o.isMesh) c2M.push(o);});
-    cvs.style.cursor=raycaster.intersectObjects(c2M,false).length?'grab':'';
-  }
   if(BIBLIO_MODE&&bDrag){
     var dx=e.clientX-bLastX, dy=e.clientY-bLastY;
     bLastX=e.clientX; bLastY=e.clientY;
@@ -1640,10 +1580,6 @@ cvs.addEventListener('pointermove',function(e){
   _moveDrag();
 });
 window.addEventListener('pointerup',function(){
-  if(c2DragActive){
-    c2DragActive=false; cvs.style.cursor='';
-    buildCaisson(); return;
-  }
   if(BIBLIO_MODE){ bDrag=false; return; }
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
