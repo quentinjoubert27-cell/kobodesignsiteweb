@@ -109,8 +109,13 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 
 /* ─── COTES OVERLAY ─── */
 #cotes-overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.cote-lbl{position:absolute;transform:translate(-50%,-50%);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:rgba(26,26,26,.75);background:rgba(255,250,240,.92);padding:3px 9px;border-radius:12px;white-space:nowrap;border:1px solid rgba(26,26,26,.15);line-height:1.2}
+.cote-lbl{position:absolute;transform:translate(-50%,-50%);font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:700;color:rgba(26,26,26,.80);background:rgba(255,250,240,.95);padding:3px 9px;border-radius:12px;white-space:nowrap;border:1px solid rgba(26,26,26,.15);line-height:1.2}
 .cote-inner{position:absolute;transform:translate(-50%,-50%);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;color:rgba(255,255,255,.82);white-space:nowrap;line-height:1;background:rgba(26,26,26,.28);padding:2px 6px;border-radius:8px}
+/* Bouton mesures */
+#btn-cotes{position:absolute;bottom:18px;right:16px;display:none;align-items:center;gap:6px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;background:rgba(255,250,240,.95);border:1.5px solid rgba(26,26,26,.14);border-radius:100px;cursor:pointer;color:var(--text2);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(26,26,26,.08);transition:border-color .15s,color .15s,background .15s;white-space:nowrap;pointer-events:auto;z-index:5}
+#btn-cotes svg{flex-shrink:0;transition:opacity .15s}
+#btn-cotes.active{background:var(--accent);border-color:var(--accent);color:#fff}
+#btn-cotes.active svg{filter:brightness(10)}
 
 /* BARRE ÉDITION CAISSON */
 #c-edit-bar{
@@ -537,6 +542,10 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   <div id="cv-wrap">
     <canvas id="c"></canvas>
     <div id="cotes-overlay"></div>
+    <button id="btn-cotes" onclick="toggleCotes()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="13" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="1" x2="1" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="7" x2="8" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="4" x2="5" y2="4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="10" x2="11" y2="10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Mesures
+    </button>
     <div id="tv-snap-v" style="position:absolute;top:0;bottom:0;width:1.5px;background:#CD3E00;display:none;pointer-events:none;z-index:10;transform:translateX(-50%)"></div>
     <div id="tv-snap-h" style="position:absolute;left:0;right:0;height:1.5px;background:#CD3E00;display:none;pointer-events:none;z-index:10;transform:translateY(-50%)"></div>
     <div id="hint">Glissez la vasque pour la repositionner</div>
@@ -620,6 +629,7 @@ var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
 var S_tvSide = { leftActive:false, leftW:40, leftH:120, rightActive:false, rightW:40, rightH:120, topActive:false, topW:80, topH:100, topX:0, topY:0 };
 var currentNS = 1;
 var tvTopDragging = false, tvTopDragPlane = null, tvTopDragOffsetX = 0, tvTopDragOffsetY = 0;
+var showCotes = false;
 // TV extra caissons — groupes + données édition (activeCaisson 3/4/5)
 var tvGrp=[null,null,null]; // [left,right,top]
 var tvElems=[[],[],[]];
@@ -2406,7 +2416,9 @@ function selectFurnitureType(ft){
   _rebuildEditBar();
   setCaissonType('shelf');
   buildStepper(cfg.steps);
+  showCotes=false;
   goStep(1);
+  _syncCotesBtn();
 }
 
 function buildStepper(labels){
@@ -2458,6 +2470,7 @@ function goStep(n){
   document.getElementById('btn-next').textContent=isLast?'':'Suivant →';
   document.getElementById('btn-next').style.display=isLast?'none':'';
   document.getElementById('hint').classList.toggle('show',currentFT==='sdb'&&n===3);
+  _syncCotesBtn();
 
   if(caissonEditMode) toggleCaissonEdit();
   controls.enabled=true;
@@ -2735,10 +2748,21 @@ function projectPt(v3){
   var v=v3.clone(); v.project(camera);
   return {x:(v.x+1)*cvs.clientWidth/2, y:(-v.y+1)*cvs.clientHeight/2};
 }
+function toggleCotes(){
+  showCotes=!showCotes;
+  var btn=document.getElementById('btn-cotes');
+  if(btn) btn.classList.toggle('active',showCotes);
+}
+function _syncCotesBtn(){
+  var btn=document.getElementById('btn-cotes');
+  if(btn) btn.style.display=(BIBLIO_MODE&&S.step===1)?'flex':'none';
+}
+
 function updateCotes(){
   var ov=document.getElementById('cotes-overlay');
   if(!ov) return;
   if(!BIBLIO_MODE||!caissonGrp||S.step!==1){ov.innerHTML='';return;}
+  if(!showCotes){ov.innerHTML='';return;}
   caissonGrp.updateMatrixWorld(true);
 
   var CL=S.CL, CH=S.CH;
