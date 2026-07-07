@@ -805,32 +805,30 @@ function addDoorHinges(pm,porW,porH,hingeLeft){
   var nH=porH>0.70?3:2;
   var edgeX=hingeLeft?-porW/2:porW/2;
   var inset=0.022; // 22 mm du bord (standard charnière encastrée)
+  var zBack=-0.012; // face arrière porte — visible uniquement depuis l'intérieur
   for(var hi=0;hi<nH;hi++){
     var t=(hi+1)/(nH+1);
     var hy=-porH/2+porH*t;
     var cupX=hingeLeft?edgeX+inset:edgeX-inset;
-    var zBack=-0.015; // face arrière porte
 
-    // ① Coupe ronde (disque encastré dans le dos de la porte)
+    // ① Coupe ronde (encastrée dans le dos de la porte, invisible de l'extérieur)
     var cupGeo=new THREE.CylinderGeometry(0.018,0.018,0.008,16);
     cupGeo.rotateX(Math.PI/2);
     var cup=new THREE.Mesh(cupGeo,matH); cup.castShadow=false;
     cup.position.set(cupX,hy,zBack);
     pm.add(cup);
 
-    // ② Bras (rectangle reliant la coupe au bord)
-    var armLen=Math.abs(cupX-edgeX)+0.014;
-    var armCx=hingeLeft?(cupX+edgeX)/2-0.007:(cupX+edgeX)/2+0.007;
-    var arm=new THREE.Mesh(new THREE.BoxGeometry(armLen,0.010,0.012),matH);
-    arm.castShadow=false;
-    arm.position.set(armCx,hy,zBack+0.002);
-    pm.add(arm);
-
-    // ③ Plaque de fixation sur le panneau latéral (bord extérieur de la porte)
-    var mountPlate=new THREE.Mesh(new THREE.BoxGeometry(0.006,0.044,0.022),matH);
-    mountPlate.castShadow=false;
-    mountPlate.position.set(edgeX+(hingeLeft?-0.003:0.003),hy,-0.010);
-    pm.add(mountPlate);
+    // ② Bras (reste à l'intérieur du volume de la porte, caché par les joues du meuble)
+    var armLen=Math.abs(cupX-edgeX)-0.002; // stoppe avant le bord → pas de débord extérieur
+    if(armLen>0.004){
+      var armCx=hingeLeft?(cupX+edgeX)/2+0.003:(cupX+edgeX)/2-0.003;
+      var arm=new THREE.Mesh(new THREE.BoxGeometry(armLen,0.010,0.010),matH);
+      arm.castShadow=false;
+      arm.position.set(armCx,hy,zBack+0.002);
+      pm.add(arm);
+    }
+    // La plaque de fixation (sur la joue du meuble) n'est PAS enfant de la porte :
+    // elle ne tourne pas avec la porte et n'est visible que depuis l'intérieur.
   }
 }
 
@@ -1244,7 +1242,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         var isOpen=!!openSt[el.key];
         var pivot=new THREE.Group();
         pivot.position.set(hingeLeft?pxL+jeuP/2:pxR-jeuP/2,porCy,fz);
-        if(isOpen) pivot.rotation.y=hingeLeft?Math.PI*0.5:-Math.PI*0.5;
+        if(isOpen) pivot.rotation.y=hingeLeft?-Math.PI*0.25:Math.PI*0.25;
         var pm=box(porW,porH,0.020,matFacade);
         pm.position.set(hingeLeft?porW/2:-porW/2,0,0);
         addDoorHinges(pm,porW,porH,hingeLeft);
