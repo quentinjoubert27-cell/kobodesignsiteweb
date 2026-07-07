@@ -405,6 +405,9 @@ textarea.cfg-field{resize:vertical;min-height:72px}
                 <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-tvTH">100 cm</span></div>
                 <input type="range" min="20" max="280" step="1" value="100" oninput="setTVSide('top','H',+this.value)">
               </div>
+              <div style="margin-top:8px;padding:7px 10px;background:rgba(205,62,0,.10);border:1px solid rgba(205,62,0,.25);border-radius:6px;font-size:10.5px;color:var(--text2);line-height:1.4">
+                Glissez le caisson dans la vue 3D pour le repositionner — des repères s'affichent automatiquement.
+              </div>
             </div>
           </div>
         </div>
@@ -534,6 +537,8 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   <div id="cv-wrap">
     <canvas id="c"></canvas>
     <div id="cotes-overlay"></div>
+    <div id="tv-snap-v" style="position:absolute;top:0;bottom:0;width:1.5px;background:#CD3E00;display:none;pointer-events:none;z-index:10;transform:translateX(-50%)"></div>
+    <div id="tv-snap-h" style="position:absolute;left:0;right:0;height:1.5px;background:#CD3E00;display:none;pointer-events:none;z-index:10;transform:translateY(-50%)"></div>
     <div id="hint">Glissez la vasque pour la repositionner</div>
     <div id="c-edit-bar">
       <span class="c-edit-lbl">Mode édition</span>
@@ -612,7 +617,9 @@ var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
 
 // ── CAISSONS LATÉRAUX (meuble TV) ──
 // activeCaisson: 1=centre, 2=angle, 3=tv-gauche, 4=tv-droite, 5=tv-dessus
-var S_tvSide = { leftActive:false, leftW:40, leftH:120, rightActive:false, rightW:40, rightH:120, topActive:false, topW:80, topH:100 };
+var S_tvSide = { leftActive:false, leftW:40, leftH:120, rightActive:false, rightW:40, rightH:120, topActive:false, topW:80, topH:100, topX:0, topY:0 };
+var currentNS = 1;
+var tvTopDragging = false, tvTopDragPlane = null, tvTopDragOffsetX = 0, tvTopDragOffsetY = 0;
 // TV extra caissons — groupes + données édition (activeCaisson 3/4/5)
 var tvGrp=[null,null,null]; // [left,right,top]
 var tvElems=[[],[],[]];
@@ -1176,7 +1183,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
   var defs=[
     {active:S_tvSide.leftActive,  idx:0, acId:3, W:S_tvSide.leftW/100,  H:S_tvSide.leftH/100,  px:function(W){return -(mainCL/2+W/2);}, py:0},
     {active:S_tvSide.rightActive, idx:1, acId:4, W:S_tvSide.rightW/100, H:S_tvSide.rightH/100, px:function(W){return  (mainCL/2+W/2);}, py:0},
-    {active:S_tvSide.topActive,   idx:2, acId:5, W:S_tvSide.topW/100,   H:S_tvSide.topH/100,   px:function()  {return 0;},             py:mainCH}
+    {active:S_tvSide.topActive,   idx:2, acId:5, W:S_tvSide.topW/100,   H:S_tvSide.topH/100,   px:function()  {return S_tvSide.topX;},  py:mainCH+S_tvSide.topY}
   ];
 
   defs.forEach(function(d){
@@ -1294,7 +1301,7 @@ function toggleTVRight(){
 }
 function toggleTVTop(){
   S_tvSide.topActive=!S_tvSide.topActive;
-  if(!S_tvSide.topActive && activeCaisson===5) activeCaisson=1;
+  if(!S_tvSide.topActive){ if(activeCaisson===5) activeCaisson=1; S_tvSide.topX=0; S_tvSide.topY=0; }
   var btn=document.getElementById('tvt-btn'); if(btn) btn.textContent=S_tvSide.topActive?'− Dessus':'+ Dessus';
   var opts=document.getElementById('tvt-opts'); if(opts) opts.style.display=S_tvSide.topActive?'':'none';
   buildCaisson(); if(caissonEditMode) _rebuildEditBar();
@@ -1318,6 +1325,7 @@ function normalizeCaisson(){
   var center=bbox.getCenter(new THREE.Vector3());
   var maxDim=Math.max(size.x,size.y,size.z,0.001);
   var ns=1.8/maxDim;
+  currentNS=ns;
   caissonGrp.scale.setScalar(ns);
 
   if(BIBLIO_MODE){
@@ -1331,6 +1339,34 @@ function normalizeCaisson(){
     caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
   }
   caissonGrp.rotation.set(0, 0, 0);
+}
+
+function _project3DtoScreen(v3){
+  var w=v3.clone().project(camera);
+  var rect=cvs.getBoundingClientRect();
+  return {x:(w.x*0.5+0.5)*rect.width, y:(-w.y*0.5+0.5)*rect.height};
+}
+
+function updateTVSnapGuides(snapX, snapY){
+  var vLine=document.getElementById('tv-snap-v');
+  var hLine=document.getElementById('tv-snap-h');
+  if(snapX!==null){
+    var pt=new THREE.Vector3(snapX, S.CH+S_tvSide.topY+S_tvSide.topH/200, 0);
+    caissonGrp.localToWorld(pt);
+    var s=_project3DtoScreen(pt);
+    vLine.style.left=s.x+'px'; vLine.style.display='';
+  } else { vLine.style.display='none'; }
+  if(snapY!==null){
+    var pt2=new THREE.Vector3(S_tvSide.topX, snapY, 0);
+    caissonGrp.localToWorld(pt2);
+    var s2=_project3DtoScreen(pt2);
+    hLine.style.top=s2.y+'px'; hLine.style.display='';
+  } else { hLine.style.display='none'; }
+}
+
+function hideTVSnapGuides(){
+  var v=document.getElementById('tv-snap-v'); if(v) v.style.display='none';
+  var h=document.getElementById('tv-snap-h'); if(h) h.style.display='none';
 }
 
 function bibl_animateTo(tx,ty,ms){
@@ -1947,6 +1983,25 @@ function _moveDrag(){
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
+
+  // Drag du caisson dessus TV
+  if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1){
+    toNDC(e); raycaster.setFromCamera(mouse,camera);
+    var topMeshes=tvMeshes[2].concat(tvHP[2]?[tvHP[2]]:[]);
+    var hits0=raycaster.intersectObjects(topMeshes,false);
+    if(hits0.length){
+      tvTopDragging=true; controls.enabled=false; cvs.style.cursor='grabbing';
+      tvGrp[2].updateMatrixWorld(true);
+      var localFront=new THREE.Vector3(0,0,S.CairsonP/200);
+      var worldFront=localFront.applyMatrix4(tvGrp[2].matrixWorld);
+      tvTopDragPlane=new THREE.Plane(new THREE.Vector3(0,0,1),-worldFront.z);
+      var hitW=hits0[0].point.clone(); caissonGrp.worldToLocal(hitW);
+      tvTopDragOffsetX=hitW.x-tvGrp[2].position.x;
+      tvTopDragOffsetY=hitW.y-tvGrp[2].position.y;
+      e.stopPropagation(); return;
+    }
+  }
+
   // Tester porte/tiroir AVANT de démarrer la rotation
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
@@ -1967,8 +2022,51 @@ cvs.addEventListener('pointerdown',function(e){
 });
 cvs.addEventListener('pointermove',function(e){
   if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
+  if(tvTopDragging&&tvTopDragPlane&&tvGrp[2]){
+    toNDC(e); raycaster.setFromCamera(mouse,camera);
+    var tgt=new THREE.Vector3();
+    if(raycaster.ray.intersectPlane(tvTopDragPlane,tgt)){
+      caissonGrp.worldToLocal(tgt);
+      var newX=tgt.x-tvTopDragOffsetX;
+      var newY=tgt.y-tvTopDragOffsetY;
+      var mainCH=S.CH, topW=S_tvSide.topW/100, mainCL=S.CL;
+      // Contrainte Y : toujours au-dessus du caisson centre
+      newY=Math.max(mainCH, Math.min(mainCH+1.2, newY));
+      // Snap X
+      var thresh=0.025, snapX=null, snapY=null;
+      var snapsX=[
+        {v:0,              lbl:'centre'},
+        {v:-(mainCL-topW)/2, lbl:'bord-gauche'},
+        {v: (mainCL-topW)/2, lbl:'bord-droit'},
+        {v:-(mainCL/2+topW/2), lbl:'ext-gauche'},
+        {v: (mainCL/2-topW/2), lbl:'ext-droit'},
+      ];
+      if(S_tvSide.leftActive)  snapsX.push({v:-(mainCL/2+S_tvSide.leftW/200), lbl:'centre-gauche'});
+      if(S_tvSide.rightActive) snapsX.push({v: (mainCL/2+S_tvSide.rightW/200), lbl:'centre-droite'});
+      snapsX.forEach(function(s){ if(Math.abs(newX-s.v)<thresh){ newX=s.v; snapX=s.v; } });
+      // Snap Y
+      var snapsY=[mainCH];
+      if(S_tvSide.leftActive)  snapsY.push(S_tvSide.leftH/100);
+      if(S_tvSide.rightActive) snapsY.push(S_tvSide.rightH/100);
+      snapsY.forEach(function(sy){ if(Math.abs(newY-sy)<thresh){ newY=sy; snapY=sy+S_tvSide.topH/100; } });
+      tvGrp[2].position.x=newX;
+      tvGrp[2].position.y=newY;
+      S_tvSide.topX=newX;
+      S_tvSide.topY=newY-mainCH;
+      updateTVSnapGuides(snapX,snapY);
+      // Hover cursor
+      cvs.style.cursor='grabbing';
+    }
+    return;
+  }
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
+    if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1){
+      var topMeshes2=tvMeshes[2].concat(tvHP[2]?[tvHP[2]]:[]);
+      var hovHit=raycaster.intersectObjects(topMeshes2,false).length>0;
+      cvs.style.cursor=hovHit?'grab':'';
+      if(hovHit) return;
+    }
     if(S.step===3){
       var hit=(vasqueGrp&&raycaster.intersectObject(vasqueGrp,true).length)||
               (vasqueGrp2&&raycaster.intersectObject(vasqueGrp2,true).length);
@@ -1979,6 +2077,12 @@ cvs.addEventListener('pointermove',function(e){
   _moveDrag();
 });
 window.addEventListener('pointerup',function(){
+  if(tvTopDragging){
+    tvTopDragging=false; controls.enabled=true; cvs.style.cursor='';
+    hideTVSnapGuides();
+    buildCaisson();
+    return;
+  }
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
 cvs.addEventListener('touchstart',function(e){
@@ -2254,7 +2358,8 @@ function selectFurnitureType(ft){
 
   document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=(BIBLIO_MODE&&cfg.hasAngleOpt)?'':'none'; });
   // Caissons latéraux TV — reset + show/hide
-  S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120,topActive:false,topW:80,topH:100};
+  S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120,topActive:false,topW:80,topH:100,topX:0,topY:0};
+  tvTopDragging=false; hideTVSnapGuides();
   tvElems=[[],[],[]]; tvOpenState=[{},{},{}]; activeCaisson=1;
   document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=(ft==='tv')?'':'none'; });
   ['tvl-btn','tvr-btn','tvt-btn'].forEach(function(id,i){ var b=document.getElementById(id); if(b) b.textContent=['+Gauche','+Droite','+Dessus'][i].replace('+',' + ').trim(); });
