@@ -1131,14 +1131,10 @@ function normalizeCaisson(){
     var py = FLOOR_BIBLIO_Y - bbox.min.y * ns;
     var pz = WALL_BIBLIO_Z  - bbox.min.z * ns;
     caissonGrp.position.set(-center.x * ns, py, pz);
-    // Caméra lookAt centre du meuble en world
-    var cy = FLOOR_BIBLIO_Y + size.y * ns * 0.5;
-    var cz = WALL_BIBLIO_Z  + size.z * ns * 0.5;
-    camera.lookAt(0, cy, cz);
   } else {
     caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
   }
-  caissonGrp.rotation.set(bRotX,bRotY,0);
+  caissonGrp.rotation.set(0, 0, 0);
 }
 
 function bibl_animateTo(tx,ty,ms){
@@ -1416,10 +1412,7 @@ function toggleCaissonEdit(){
   _rebuildEditBar();
   var fnContent=document.getElementById('fn-edit-content');
   if(fnContent) fnContent.style.display=caissonEditMode?'':'none';
-  if(BIBLIO_MODE){
-    if(caissonEditMode){ switchSbTab('fonction'); bSavedRotX=bRotX; bSavedRotY=bRotY; bibl_animateTo(0.05,0,350); }
-    else { bibl_animateTo(bSavedRotX,bSavedRotY,350); }
-  }
+  if(BIBLIO_MODE && caissonEditMode){ switchSbTab('fonction'); }
 }
 
 function clearCaissonGhost(){
@@ -1756,7 +1749,6 @@ cvs.addEventListener('pointerdown',function(e){
       if(obj.userData.isPorte){  os[obj.userData.porKey]=!os[obj.userData.porKey]; buildCaisson(); return; }
     }
   }
-  if(BIBLIO_MODE&&!caissonEditMode){ bDrag=true; bLastX=e.clientX; bLastY=e.clientY; return; }
   if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(_startVasqueDrag()){
@@ -1765,14 +1757,6 @@ cvs.addEventListener('pointerdown',function(e){
 });
 cvs.addEventListener('pointermove',function(e){
   if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
-  if(BIBLIO_MODE&&bDrag){
-    var dx=e.clientX-bLastX, dy=e.clientY-bLastY;
-    bLastX=e.clientX; bLastY=e.clientY;
-    bRotY+=dx*0.008; bRotX+=dy*0.008;
-    bRotX=Math.max(-0.5,Math.min(0.5,bRotX));
-    if(caissonGrp) caissonGrp.rotation.set(bRotX,bRotY,0);
-    return;
-  }
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
     if(S.step===3){
@@ -1785,14 +1769,9 @@ cvs.addEventListener('pointermove',function(e){
   _moveDrag();
 });
 window.addEventListener('pointerup',function(){
-  if(BIBLIO_MODE){ bDrag=false; return; }
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
 cvs.addEventListener('touchstart',function(e){
-  if(BIBLIO_MODE&&!caissonEditMode&&e.touches.length===1){
-    bTouchRotating=true; bTouchLastX=e.touches[0].clientX; bTouchLastY=e.touches[0].clientY;
-    e.preventDefault(); return;
-  }
   // Mode édition meuble : drag-to-place (glisser pour positionner précisément)
   if(S.step===1&&caissonEditMode){
     isTouchEditDrag=true; controls.enabled=false;
@@ -1806,14 +1785,6 @@ cvs.addEventListener('touchstart',function(e){
   if(_startVasqueDrag()){ isDragging=true; controls.enabled=false; e.preventDefault(); }
 },{passive:false});
 cvs.addEventListener('touchmove',function(e){
-  if(BIBLIO_MODE&&bTouchRotating&&!caissonEditMode&&e.touches.length===1){
-    var dx=e.touches[0].clientX-bTouchLastX, dy=e.touches[0].clientY-bTouchLastY;
-    bTouchLastX=e.touches[0].clientX; bTouchLastY=e.touches[0].clientY;
-    bRotY+=dx*0.008; bRotX+=dy*0.008;
-    bRotX=Math.max(-0.5,Math.min(0.5,bRotX));
-    if(caissonGrp) caissonGrp.rotation.set(bRotX,bRotY,0);
-    e.preventDefault(); return;
-  }
   // Mode édition meuble : mise à jour du ghost pendant le glisser
   if(S.step===1&&caissonEditMode&&isTouchEditDrag){
     var t=e.touches[0];
@@ -1826,7 +1797,6 @@ cvs.addEventListener('touchmove',function(e){
   _moveDrag();
 },{passive:false});
 cvs.addEventListener('touchend',function(e){
-  if(BIBLIO_MODE){ bTouchRotating=false; return; }
   // Mode édition meuble : placement à la position finale du doigt
   if(S.step===1&&caissonEditMode&&isTouchEditDrag){
     isTouchEditDrag=false; controls.enabled=true;
@@ -2033,17 +2003,21 @@ function selectFurnitureType(ft){
   document.getElementById('logo-sub').textContent = cfg.sub;
   document.getElementById('type-overlay').style.display = 'none';
 
-  var camCfg = cfg.cam || {pos:[0,0,3.5], tgt:[0,0,0]};
   if(BIBLIO_MODE){
-    controls.enabled = false;
-    camera.position.set(camCfg.pos[0],camCfg.pos[1],camCfg.pos[2]);
-    camera.lookAt(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
-    controls.target.set(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
+    // OrbitControls actifs — l'utilisateur orbite autour du meuble fixe
+    controls.enabled = true;
+    controls.target.set(0, -0.02, -0.9);
+    camera.position.set(1.4, 0.7, 1.6);
+    camera.lookAt(0, -0.02, -0.9);
+    controls.minPolarAngle = Math.PI*0.05; controls.maxPolarAngle = Math.PI*0.52;
+    controls.minAzimuthAngle = -Math.PI/2;  controls.maxAzimuthAngle = Math.PI/2;
+    controls.minDistance = 0.8; controls.maxDistance = 6.0;
+    controls.update();
     scene.background = new THREE.Color(0xF2EAD8);
     scene.fog = null;
     solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
-    wallBiblio.position.set(0, 0, -1.1);
-    floorBiblio.position.set(0, -0.92, 0);
+    wallBiblio.position.set(0, 0, WALL_BIBLIO_Z);
+    floorBiblio.position.set(0, FLOOR_BIBLIO_Y, 0);
     wallBiblio.visible=true; floorBiblio.visible=true;
   } else {
     controls.enabled = true;
