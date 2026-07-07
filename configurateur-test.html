@@ -2006,8 +2006,8 @@ cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
 
-  // Drag du caisson dessus TV
-  if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1){
+  // Drag du caisson dessus TV (désactivé en mode édition)
+  if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
     var topMeshes=tvMeshes[2].concat(tvHP[2]?[tvHP[2]]:[]);
     var hits0=raycaster.intersectObjects(topMeshes,false);
