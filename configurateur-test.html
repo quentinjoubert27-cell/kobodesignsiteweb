@@ -626,21 +626,36 @@ function getFacadeFor(comp,bay){
 // BUILD CAISSON
 // ═══════════════════════════════════════════════════════
 function addDoorHinges(pm,porW,porH,hingeLeft){
-  var _matHinge=new THREE.MeshStandardMaterial({color:0xBFBFBF,roughness:0.12,metalness:0.92});
+  var matH=new THREE.MeshStandardMaterial({color:0xA6A6A6,roughness:0.18,metalness:0.90});
   var nH=porH>0.70?3:2;
+  var edgeX=hingeLeft?-porW/2:porW/2;
+  var inset=0.022; // 22 mm du bord (standard charnière encastrée)
   for(var hi=0;hi<nH;hi++){
     var t=(hi+1)/(nH+1);
     var hy=-porH/2+porH*t;
-    var hx=hingeLeft?-porW/2:porW/2;
-    // Plaque sur la face arrière (intérieur de la porte)
-    var plate=new THREE.Mesh(new THREE.BoxGeometry(0.020,0.040,0.004),_matHinge);
-    plate.castShadow=false;
-    plate.position.set(hx+(hingeLeft?0.010:-0.010),hy,-0.012);
-    // Barreau vertical au bord (côté intérieur)
-    var barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.0048,0.0048,0.042,8),_matHinge);
-    barrel.castShadow=false;
-    barrel.position.set(hx,hy,-0.002);
-    pm.add(plate); pm.add(barrel);
+    var cupX=hingeLeft?edgeX+inset:edgeX-inset;
+    var zBack=-0.015; // face arrière porte
+
+    // ① Coupe ronde (disque encastré dans le dos de la porte)
+    var cupGeo=new THREE.CylinderGeometry(0.018,0.018,0.008,16);
+    cupGeo.rotateX(Math.PI/2);
+    var cup=new THREE.Mesh(cupGeo,matH); cup.castShadow=false;
+    cup.position.set(cupX,hy,zBack);
+    pm.add(cup);
+
+    // ② Bras (rectangle reliant la coupe au bord)
+    var armLen=Math.abs(cupX-edgeX)+0.014;
+    var armCx=hingeLeft?(cupX+edgeX)/2-0.007:(cupX+edgeX)/2+0.007;
+    var arm=new THREE.Mesh(new THREE.BoxGeometry(armLen,0.010,0.012),matH);
+    arm.castShadow=false;
+    arm.position.set(armCx,hy,zBack+0.002);
+    pm.add(arm);
+
+    // ③ Plaque de fixation sur le panneau latéral (bord extérieur de la porte)
+    var mountPlate=new THREE.Mesh(new THREE.BoxGeometry(0.006,0.044,0.022),matH);
+    mountPlate.castShadow=false;
+    mountPlate.position.set(edgeX+(hingeLeft?-0.003:0.003),hy,-0.010);
+    pm.add(mountPlate);
   }
 }
 
