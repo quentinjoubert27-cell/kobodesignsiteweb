@@ -625,9 +625,8 @@ function getFacadeFor(comp,bay){
 // ═══════════════════════════════════════════════════════
 // BUILD CAISSON
 // ═══════════════════════════════════════════════════════
-var _matHinge=null;
 function addDoorHinges(pm,porW,porH,hingeLeft){
-  if(!_matHinge) _matHinge=new THREE.MeshStandardMaterial({color:0xBFBFBF,roughness:0.12,metalness:0.92});
+  var _matHinge=new THREE.MeshStandardMaterial({color:0xBFBFBF,roughness:0.12,metalness:0.92});
   var nH=porH>0.70?3:2;
   for(var hi=0;hi<nH;hi++){
     var t=(hi+1)/(nH+1);
@@ -1613,19 +1612,19 @@ function _moveDrag(){
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
-  if(BIBLIO_MODE&&!caissonEditMode){ bDrag=true; bLastX=e.clientX; bLastY=e.clientY; return; }
+  // Tester porte/tiroir AVANT de démarrer la rotation
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
     var allMeshes=caissonElemMeshes.concat(caissonElemMeshes2);
     var hits=raycaster.intersectObjects(allMeshes,false);
     if(hits.length){
       var obj=hits[0].object;
-      // Determine which caisson owns this mesh
       var os=caissonElemMeshes2.indexOf(obj)>=0?caissonOpenState2:caissonOpenState;
       if(obj.userData.isTiroir){ os[obj.userData.tirKey]=!os[obj.userData.tirKey]; buildCaisson(); return; }
       if(obj.userData.isPorte){  os[obj.userData.porKey]=!os[obj.userData.porKey]; buildCaisson(); return; }
     }
   }
+  if(BIBLIO_MODE&&!caissonEditMode){ bDrag=true; bLastX=e.clientX; bLastY=e.clientY; return; }
   if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(_startVasqueDrag()){
