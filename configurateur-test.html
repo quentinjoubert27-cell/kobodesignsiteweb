@@ -1124,11 +1124,12 @@ function normalizeCaisson(){
   caissonGrp.rotation.set(bRotX,bRotY,0);
 
   // Positionner mur et sol selon la bounding box finale
+  // Après scale+translate, world_pos = (local - center) * ns
   if(BIBLIO_MODE && wallBiblio && floorBiblio){
-    var backZ  = (-size.z/2 - center.z) * ns - 0.008;
-    var bottomY= (-size.y/2 - center.y) * ns;
-    wallBiblio.position.set(0, 0, backZ);
-    floorBiblio.position.set(0, bottomY, backZ + size.z * ns * 0.5);
+    var halfDepth  = size.z / 2 * ns;
+    var halfHeight = size.y / 2 * ns;
+    wallBiblio.position.set(0, 0, -halfDepth - 0.005);
+    floorBiblio.position.set(0, -halfHeight, 0);
   }
 }
 
