@@ -1125,12 +1125,16 @@ function normalizeCaisson(){
   caissonGrp.scale.setScalar(ns);
 
   if(BIBLIO_MODE){
-    // Dos contre le mur, pieds sur le sol
-    var halfDepth  = size.z / 2 * ns;
-    var halfHeight = size.y / 2 * ns;
-    var pz = -center.z * ns + (WALL_BIBLIO_Z + halfDepth);
-    var py = -center.y * ns + (FLOOR_BIBLIO_Y + halfHeight);
+    // bbox en coordonnées locales (scale=1 sur un groupe neuf)
+    // Après scale ns : world = local*ns + position
+    // On veut : bbox.min.y*ns + py = FLOOR_BIBLIO_Y  et  bbox.min.z*ns + pz = WALL_BIBLIO_Z
+    var py = FLOOR_BIBLIO_Y - bbox.min.y * ns;
+    var pz = WALL_BIBLIO_Z  - bbox.min.z * ns;
     caissonGrp.position.set(-center.x * ns, py, pz);
+    // Caméra lookAt centre du meuble en world
+    var cy = FLOOR_BIBLIO_Y + size.y * ns * 0.5;
+    var cz = WALL_BIBLIO_Z  + size.z * ns * 0.5;
+    camera.lookAt(0, cy, cz);
   } else {
     caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
   }
