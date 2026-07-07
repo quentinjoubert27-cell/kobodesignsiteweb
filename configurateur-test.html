@@ -633,14 +633,14 @@ function addDoorHinges(pm,porW,porH,hingeLeft){
     var t=(hi+1)/(nH+1);
     var hy=-porH/2+porH*t;
     var hx=hingeLeft?-porW/2:porW/2;
-    // Plaque sur la face avant
+    // Plaque sur la face arrière (intérieur de la porte)
     var plate=new THREE.Mesh(new THREE.BoxGeometry(0.020,0.040,0.004),_matHinge);
     plate.castShadow=false;
-    plate.position.set(hx+(hingeLeft?0.010:-0.010),hy,0.012);
-    // Barreau vertical au bord
+    plate.position.set(hx+(hingeLeft?0.010:-0.010),hy,-0.012);
+    // Barreau vertical au bord (côté intérieur)
     var barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.0048,0.0048,0.042,8),_matHinge);
     barrel.castShadow=false;
-    barrel.position.set(hx,hy,0.002);
+    barrel.position.set(hx,hy,-0.002);
     pm.add(plate); pm.add(barrel);
   }
 }
