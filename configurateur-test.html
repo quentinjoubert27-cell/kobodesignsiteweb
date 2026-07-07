@@ -2738,31 +2738,109 @@ function projectPt(v3){
 function updateCotes(){
   var ov=document.getElementById('cotes-overlay');
   if(!ov) return;
-  if(!BIBLIO_MODE||!caissonGrp||S.step!==1){ ov.innerHTML=''; return; }
+  if(!BIBLIO_MODE||!caissonGrp||S.step!==1){ov.innerHTML='';return;}
   caissonGrp.updateMatrixWorld(true);
+
   var CL=S.CL, CH=S.CH;
-  var TL=projectPt(caissonGrp.localToWorld(new THREE.Vector3(-CL/2,CH,0)));
-  var TR=projectPt(caissonGrp.localToWorld(new THREE.Vector3( CL/2,CH,0)));
-  var BL=projectPt(caissonGrp.localToWorld(new THREE.Vector3(-CL/2,0, 0)));
-  var html='';
-  // Largeur totale (au-dessus)
-  html+='<div class="cote-lbl" style="left:'+((TL.x+TR.x)/2)+'px;top:'+(Math.min(TL.y,TR.y)-26)+'px">'+Math.round(CL*100)+' cm</div>';
-  // Hauteur totale (à gauche)
-  html+='<div class="cote-lbl" style="left:'+(Math.min(TL.x,BL.x)-50)+'px;top:'+((TL.y+BL.y)/2)+'px">'+Math.round(CH*100)+' cm</div>';
-  // Hauteurs des baies (entre étagères) — affichées à droite
+  var isTVMode=currentFT==='tv';
+  var html='', svgLines='';
+
+  function pp(x,y){ return projectPt(caissonGrp.localToWorld(new THREE.Vector3(x,y,0))); }
+
+  // Ligne de cote horizontale entre deux points écran
+  function hDim(pL,pR,txt,yOff){
+    var x1=pL.x, x2=pR.x;
+    if(Math.abs(x2-x1)<24) return;
+    if(x1>x2){var t=x1;x1=x2;x2=t;}
+    var y=Math.min(pL.y,pR.y)+(yOff!=null?yOff:-22);
+    svgLines+='<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="rgba(20,20,20,.28)" stroke-width="1.2"/>';
+    svgLines+='<line x1="'+x1+'" y1="'+(y-5)+'" x2="'+x1+'" y2="'+(y+5)+'" stroke="rgba(20,20,20,.5)" stroke-width="1.5"/>';
+    svgLines+='<line x1="'+x2+'" y1="'+(y-5)+'" x2="'+x2+'" y2="'+(y+5)+'" stroke="rgba(20,20,20,.5)" stroke-width="1.5"/>';
+    html+='<div class="cote-lbl" style="left:'+Math.round((x1+x2)/2)+'px;top:'+Math.round(y)+'px">'+txt+'</div>';
+  }
+
+  // Ligne de cote verticale — xOff<0=gauche, xOff>0=droite du segment
+  function vDim(pTop,pBot,txt,xOff){
+    var y1=Math.min(pTop.y,pBot.y), y2=Math.max(pTop.y,pBot.y);
+    if(y2-y1<18) return;
+    var xRef=xOff<0?Math.min(pTop.x,pBot.x):Math.max(pTop.x,pBot.x);
+    var x=xRef+xOff;
+    svgLines+='<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="rgba(20,20,20,.28)" stroke-width="1.2"/>';
+    svgLines+='<line x1="'+(x-5)+'" y1="'+y1+'" x2="'+(x+5)+'" y2="'+y1+'" stroke="rgba(20,20,20,.5)" stroke-width="1.5"/>';
+    svgLines+='<line x1="'+(x-5)+'" y1="'+y2+'" x2="'+(x+5)+'" y2="'+y2+'" stroke="rgba(20,20,20,.5)" stroke-width="1.5"/>';
+    html+='<div class="cote-lbl" style="left:'+Math.round(x)+'px;top:'+Math.round((y1+y2)/2)+'px">'+txt+'</div>';
+  }
+
+  // ── Caisson principal ────────────────────────────────────────────
+  var BL=pp(-CL/2,0), BR=pp(CL/2,0), TL=pp(-CL/2,CH), TR=pp(CL/2,CH);
+
+  var hasLeft =isTVMode&&S_tvSide.leftActive;
+  var hasRight=isTVMode&&S_tvSide.rightActive;
+  var hasTop  =isTVMode&&S_tvSide.topActive;
+
+  // Largeur caisson principal (au-dessus)
+  hDim(TL,TR,Math.round(CL*100)+' cm',-20);
+  // Hauteur caisson principal (à droite si pas de caisson droit, sinon plus près)
+  vDim(TR,BR,Math.round(CH*100)+' cm',hasRight?16:38);
+
+  // ── Caissons TV extra ────────────────────────────────────────────
+  if(isTVMode){
+    var lW=S_tvSide.leftW/100, lH=S_tvSide.leftH/100;
+    var rW=S_tvSide.rightW/100, rH=S_tvSide.rightH/100;
+    var tW=S_tvSide.topW/100, tH=S_tvSide.topH/100;
+    var tX=S_tvSide.topX, tY=S_tvSide.topY;
+
+    if(hasLeft){
+      var LBL=pp(-(CL/2+lW),0), LTL=pp(-(CL/2+lW),lH), LTR=pp(-CL/2,lH);
+      hDim(LTL,LTR,Math.round(lW*100)+' cm',-20);
+      vDim(LTL,LBL,Math.round(lH*100)+' cm',-38);
+    }
+    if(hasRight){
+      var RBR=pp(CL/2+rW,0), RTL=pp(CL/2,rH), RTR=pp(CL/2+rW,rH);
+      hDim(RTL,RTR,Math.round(rW*100)+' cm',-20);
+      vDim(RTR,RBR,Math.round(rH*100)+' cm',38);
+    }
+    if(hasTop){
+      var topY_loc=CH+tY;
+      var TTL=pp(tX-tW/2,topY_loc+tH), TTR=pp(tX+tW/2,topY_loc+tH);
+      var TBR=pp(tX+tW/2,topY_loc);
+      hDim(TTL,TTR,Math.round(tW*100)+' cm',-20);
+      vDim(TTR,TBR,Math.round(tH*100)+' cm',28);
+    }
+
+    // ── Dimensions d'ensemble ────────────────────────────────────
+    if(hasLeft||hasRight||hasTop){
+      var xMin=-CL/2, xMax=CL/2, yMax=CH;
+      if(hasLeft)  { xMin=Math.min(xMin,-(CL/2+lW)); yMax=Math.max(yMax,lH); }
+      if(hasRight) { xMax=Math.max(xMax, CL/2+rW);   yMax=Math.max(yMax,rH); }
+      if(hasTop)   { xMin=Math.min(xMin,tX-tW/2); xMax=Math.max(xMax,tX+tW/2); yMax=Math.max(yMax,CH+tY+tH); }
+
+      var farBL=pp(xMin,0), farBR=pp(xMax,0);
+      var farTL=pp(xMin,yMax);
+
+      // Largeur totale (en dessous)
+      hDim(farBL,farBR,Math.round((xMax-xMin)*100)+' cm total',30);
+      // Hauteur totale (à gauche, reculée)
+      vDim(farTL,farBL,Math.round(yMax*100)+' cm total',-56);
+    }
+  }
+
+  // ── Hauteurs des baies intérieures (caisson principal) ──────────
   var els=caissonElements.filter(function(e){return e.type==='shelf'||e.type==='shelf_simple';});
   var ys=[0].concat(els.map(function(e){return e.y_cm;})).concat([Math.round(CH*100)]);
   ys.sort(function(a,b){return a-b;});
   ys=ys.filter(function(v,i){return i===0||v!==ys[i-1];});
   for(var i=0;i<ys.length-1;i++){
-    var y0=ys[i],y1=ys[i+1], hcm=y1-y0;
+    var y0=ys[i],y1=ys[i+1],hcm=y1-y0;
     var cy=(y0+hcm/2)/100;
     var pt=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,cy,0)));
     var ptT=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,y1/100,0)));
     var ptB=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,y0/100,0)));
     if(Math.abs(ptT.y-ptB.y)>16) html+='<div class="cote-inner" style="left:'+pt.x+'px;top:'+pt.y+'px">'+hcm+'</div>';
   }
-  ov.innerHTML=html;
+
+  var svgW=cvs.clientWidth, svgH=cvs.clientHeight;
+  ov.innerHTML='<svg width="'+svgW+'" height="'+svgH+'" style="position:absolute;inset:0;pointer-events:none">'+svgLines+'</svg>'+html;
 }
 
 // RESIZE & LOOP
