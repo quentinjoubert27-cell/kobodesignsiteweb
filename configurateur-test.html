@@ -1065,7 +1065,7 @@ function buildCaisson(){
   if(BIBLIO_MODE){
     if(hasAngle) buildCaisson2();
     normalizeCaisson();
-    buildSilhouette();
+
   }
   updateAmgtCount();
 }
@@ -2745,40 +2745,6 @@ function switchSbTab(tab){
   if(fn) fn.classList.toggle('on',tab==='fonction');
 }
 
-// ═══════════════════════════════════════════════════════
-// SILHOUETTE HUMAINE
-// ═══════════════════════════════════════════════════════
-var silhouetteMesh=null;
-function buildSilhouette(){
-  if(silhouetteMesh&&silhouetteMesh.parent) silhouetteMesh.parent.remove(silhouetteMesh);
-  silhouetteMesh=null;
-  if(!BIBLIO_MODE||!caissonGrp) return;
-  var cv=document.createElement('canvas'); cv.width=80; cv.height=230;
-  var ctx=cv.getContext('2d');
-  ctx.fillStyle='rgba(140,140,140,0.45)';
-  // Tête
-  ctx.beginPath(); ctx.arc(40,17,14,0,Math.PI*2); ctx.fill();
-  // Cou
-  ctx.fillRect(35,30,10,10);
-  // Torse
-  ctx.beginPath(); ctx.moveTo(17,40); ctx.lineTo(63,40); ctx.lineTo(57,115); ctx.lineTo(23,115); ctx.closePath(); ctx.fill();
-  // Bras gauche
-  ctx.beginPath(); ctx.moveTo(17,40); ctx.lineTo(2,82); ctx.lineTo(10,85); ctx.lineTo(24,48); ctx.closePath(); ctx.fill();
-  // Bras droit
-  ctx.beginPath(); ctx.moveTo(63,40); ctx.lineTo(78,82); ctx.lineTo(70,85); ctx.lineTo(56,48); ctx.closePath(); ctx.fill();
-  // Jambe gauche
-  ctx.beginPath(); ctx.moveTo(23,115); ctx.lineTo(38,115); ctx.lineTo(36,230); ctx.lineTo(19,230); ctx.closePath(); ctx.fill();
-  // Jambe droite
-  ctx.beginPath(); ctx.moveTo(42,115); ctx.lineTo(57,115); ctx.lineTo(61,230); ctx.lineTo(44,230); ctx.closePath(); ctx.fill();
-  var tex=new THREE.CanvasTexture(cv);
-  var geo=new THREE.PlaneGeometry(0.46,1.75);
-  var mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,side:THREE.DoubleSide,alphaTest:0.01});
-  silhouetteMesh=new THREE.Mesh(geo,mat);
-  silhouetteMesh.renderOrder=-1;
-  // Placé à gauche du meuble, debout sur le sol (Y=0 = bas du meuble)
-  silhouetteMesh.position.set(-S.CL/2-0.55, 1.75/2, 0);
-  caissonGrp.add(silhouetteMesh);
-}
 
 // ═══════════════════════════════════════════════════════
 // COTATION OVERLAY
