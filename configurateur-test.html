@@ -2397,21 +2397,33 @@ cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){
     if(!isTouchEditDrag){
-      toNDC(e); raycaster.setFromCamera(mouse,camera);
-      // Tenter de picker un élément existant (étagère/intercalaire/tringle)
-      var pickMeshes=getActiveElemMeshes();
-      var pickHits=raycaster.intersectObjects(pickMeshes,false);
       editPickedEl=null; editPickedIdx=-1;
-      if(pickHits.length){
-        var pidx=pickHits[0].object.userData.elemIdx;
+      // Détecter un élément existant proche du clic (plus fiable que le raycaster sur mesh fin)
+      var hitPos=getCaissonHit(e);
+      if(hitPos){
         var pels=getActiveEls();
-        var pel=pels[pidx];
-        if(pel && pel.type!=='porte' && pel.type!=='tiroir'){
+        var PICK_TOL_H=5, PICK_TOL_V=5; // tolérance pick en cm
+        var bestD=9999, bestI=-1;
+        pels.forEach(function(pel,i){
+          if(pel.type==='porte'||pel.type==='tiroir') return;
+          var d;
+          if(pel.type==='separator'||pel.type==='separator_simple'){
+            d=Math.abs(hitPos.x_cm-pel.x_cm);
+            if(d<PICK_TOL_V && d<bestD){ bestD=d; bestI=i; }
+          } else {
+            // shelf / shelf_simple / barre — cherche par y
+            d=Math.abs(hitPos.y_cm-pel.y_cm);
+            // vérifier que le hit est dans le bay de l'étagère
+            var inBay=(hitPos.x_cm>=( pel.x_left_cm||0)-1)&&(hitPos.x_cm<=(pel.x_right_cm||(getActiveCL()-2*EP)*100)+1);
+            if(d<PICK_TOL_H && inBay && d<bestD){ bestD=d; bestI=i; }
+          }
+        });
+        if(bestI>=0){
+          var pel=pels[bestI];
           pushUndo();
           editPickedEl=JSON.parse(JSON.stringify(pel));
-          editPickedIdx=pidx;
-          pels.splice(pidx,1); setActiveEls(pels); buildCaisson();
-          // Forcer le type ghost au type de l'élément ramassé
+          editPickedIdx=bestI;
+          pels.splice(bestI,1); setActiveEls(pels); buildCaisson();
           document.querySelectorAll('.c-type-btn').forEach(function(b){b.classList.toggle('active',b.dataset.ctype===pel.type);});
           caissonType=pel.type;
         }
