@@ -2394,6 +2394,7 @@ function _moveDrag(){
 var editMouseDragging=false, editMouseLastE=null;
 var editPickedEl=null, editPickedIdx=-1;
 var _hoverElIdx=-1; // index de l'élément sous le curseur (mis à jour en pointermove)
+var _pointerDownX=0, _pointerDownY=0; // position du pointerdown pour détecter vrai glisser
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){
@@ -2414,6 +2415,7 @@ cvs.addEventListener('pointerdown',function(e){
         }
       }
       _hoverElIdx=-1;
+      _pointerDownX=e.clientX; _pointerDownY=e.clientY;
       editMouseDragging=true; editMouseLastE=e;
       updateCaissonGhost(e);
       controls.enabled=false;
@@ -2557,12 +2559,19 @@ window.addEventListener('pointerup',function(e){
     _hideDragLabel();
     if(editMouseLastE){
       if(editPickedEl!==null){
-        var dropped=_dropPickedEl(editMouseLastE);
-        if(!dropped){
-          var restEls=getActiveEls();
-          restEls.splice(Math.min(editPickedIdx,restEls.length),0,editPickedEl);
-          setActiveEls(restEls); buildCaisson();
+        var dx=e.clientX-_pointerDownX, dy=e.clientY-_pointerDownY;
+        var didDrag=Math.sqrt(dx*dx+dy*dy)>8;
+        if(didDrag){
+          // Vrai glisser → repositionner
+          var dropped=_dropPickedEl(editMouseLastE);
+          if(!dropped){
+            // Position invalide → remettre à l'ancienne place
+            var restEls=getActiveEls();
+            restEls.splice(Math.min(editPickedIdx,restEls.length),0,editPickedEl);
+            setActiveEls(restEls); buildCaisson();
+          }
         }
+        // Clic court → l'élément est déjà retiré du tableau → suppression effective
       } else {
         placeOrRemoveCaisson(editMouseLastE);
       }
@@ -3311,16 +3320,17 @@ function updateCotes(){
   }
 
   // ── Hauteurs des baies intérieures (caisson principal) ──────────
+  var iH_cote=Math.round((CH-2*EP)*100); // hauteur intérieure en cm (sans panneaux)
   var els=caissonElements.filter(function(e){return e.type==='shelf'||e.type==='shelf_simple';});
-  var ys=[0].concat(els.map(function(e){return e.y_cm;})).concat([Math.round(CH*100)]);
+  var ys=[0].concat(els.map(function(e){return e.y_cm;})).concat([iH_cote]);
   ys.sort(function(a,b){return a-b;});
   ys=ys.filter(function(v,i){return i===0||v!==ys[i-1];});
   for(var i=0;i<ys.length-1;i++){
     var y0=ys[i],y1=ys[i+1],hcm=y1-y0;
-    var cy=(y0+hcm/2)/100;
+    var cy=EP+((y0+hcm/2)/100);
     var pt=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,cy,0)));
-    var ptT=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,y1/100,0)));
-    var ptB=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,y0/100,0)));
+    var ptT=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,EP+y1/100,0)));
+    var ptB=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,EP+y0/100,0)));
     if(Math.abs(ptT.y-ptB.y)>16) html+='<div class="cote-inner" style="left:'+pt.x+'px;top:'+pt.y+'px">'+hcm+'</div>';
   }
 
