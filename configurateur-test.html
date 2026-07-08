@@ -1791,6 +1791,10 @@ function toggleCaissonEdit(){
   var fnContent=document.getElementById('fn-edit-content');
   if(fnContent) fnContent.style.display=caissonEditMode?'':'none';
   if(BIBLIO_MODE && caissonEditMode){ switchSbTab('fonction'); }
+  if(caissonEditMode){ showCotes=true; } else { showCotes=false; }
+  updateCotes();
+  var btnC=document.getElementById('btn-cotes');
+  if(btnC) btnC.classList.toggle('active', showCotes);
   _syncEditCta();
 }
 
@@ -2115,9 +2119,17 @@ function _moveDrag(){
   }
   positionVasque(); buildPlan(); updatePosInfo();
 }
+var editMouseDragging=false, editMouseLastE=null;
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
-  if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
+  if(S.step===1&&caissonEditMode){
+    if(!isTouchEditDrag){
+      editMouseDragging=true; editMouseLastE=e;
+      updateCaissonGhost(e);
+      controls.enabled=false;
+    }
+    return;
+  }
 
   // Drag du caisson dessus TV (désactivé en mode édition)
   if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1&&!caissonEditMode){
@@ -2162,7 +2174,7 @@ cvs.addEventListener('pointerdown',function(e){
   }
 });
 cvs.addEventListener('pointermove',function(e){
-  if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
+  if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); editMouseLastE=e; return; }
   if(tvTopDragging&&tvTopDragPlane&&tvGrp[2]){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
     var tgt=new THREE.Vector3();
@@ -2217,11 +2229,17 @@ cvs.addEventListener('pointermove',function(e){
   }
   _moveDrag();
 });
-window.addEventListener('pointerup',function(){
+window.addEventListener('pointerup',function(e){
   if(tvTopDragging){
     tvTopDragging=false; controls.enabled=true; cvs.style.cursor='';
     hideTVSnapGuides();
     buildCaisson();
+    return;
+  }
+  if(editMouseDragging){
+    editMouseDragging=false; controls.enabled=true;
+    if(editMouseLastE) placeOrRemoveCaisson(editMouseLastE);
+    editMouseLastE=null;
     return;
   }
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
