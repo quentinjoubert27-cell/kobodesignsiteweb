@@ -199,6 +199,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 .recap-v{font-weight:600;color:var(--text)}
 #c-action-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);background:rgba(255,250,240,.92);padding:6px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .2s;border:1px solid var(--border)}
 #cv-wrap.mode-edit #c-action-hint{opacity:1}
+#drag-height-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:5px;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px;pointer-events:none;z-index:20;letter-spacing:.01em;box-shadow:0 2px 8px rgba(205,62,0,.3)}
 
 @media(max-width:760px){
   body{overscroll-behavior:none}
@@ -719,6 +720,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
       </div>
       <span id="edit-cta-arrow">›</span>
     </button>
+    <div id="drag-height-label"></div>
     <div id="c-edit-bar">
       <span class="c-edit-lbl">Mode édition</span>
       <div class="c-edit-sep"></div>
@@ -1990,7 +1992,7 @@ function getCaissonHit(e){
 function updateCaissonGhost(e){
   if(!caissonEditMode||S.step!==1) return;
   var hit=getCaissonHit(e);
-  if(!hit){clearCaissonGhost();return;}
+  if(!hit){clearCaissonGhost();_hideDragLabel();return;}
   var CP=caissonCP(), ep=EP;
   var iW=getActiveCL()-2*ep;
   var els=getActiveEls(), grp=getActiveGrp();
@@ -2073,12 +2075,31 @@ function updateCaissonGhost(e){
   ghost2.material.opacity=occupied?0.25:0.45;
   ghost2.visible=true;
   updateCaissonGuides(hit);
+  _showDragLabel(hit);
 }
 
-function placeOrRemoveCaisson(e){
+function _showDragLabel(hit){
+  var lbl=document.getElementById('drag-height-label');
+  if(!lbl) return;
+  var iH_cm=Math.round((getActiveCH()-2*EP)*100);
+  var fromTop=iH_cm-Math.round(hit.y_cm);
+  var fromBot=Math.round(hit.y_cm);
+  var icon=(caissonType==='separator'||caissonType==='separator_simple')?'↔':'↕';
+  var dim=(caissonType==='separator'||caissonType==='separator_simple')
+    ? Math.round(hit.x_cm)+' cm'
+    : fromBot+' cm du bas · '+fromTop+' cm du haut';
+  lbl.textContent=icon+' '+dim;
+  lbl.style.display='flex';
+}
+function _hideDragLabel(){
+  var lbl=document.getElementById('drag-height-label');
+  if(lbl) lbl.style.display='none';
+}
+
+function placeOrRemoveCaisson(e, skipUndo){
   if(!caissonEditMode||S.step!==1) return false;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
-  pushUndo();
+  if(!skipUndo) pushUndo();
 
   var els=getActiveEls();
   var activeCL=getActiveCL();
@@ -2339,10 +2360,30 @@ function _moveDrag(){
   positionVasque(); buildPlan(); updatePosInfo();
 }
 var editMouseDragging=false, editMouseLastE=null;
+var editPickedEl=null, editPickedIdx=-1;
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){
     if(!isTouchEditDrag){
+      toNDC(e); raycaster.setFromCamera(mouse,camera);
+      // Tenter de picker un élément existant (étagère/intercalaire/tringle)
+      var pickMeshes=getActiveElemMeshes();
+      var pickHits=raycaster.intersectObjects(pickMeshes,false);
+      editPickedEl=null; editPickedIdx=-1;
+      if(pickHits.length){
+        var pidx=pickHits[0].object.userData.elemIdx;
+        var pels=getActiveEls();
+        var pel=pels[pidx];
+        if(pel && pel.type!=='porte' && pel.type!=='tiroir'){
+          pushUndo();
+          editPickedEl=JSON.parse(JSON.stringify(pel));
+          editPickedIdx=pidx;
+          pels.splice(pidx,1); setActiveEls(pels); buildCaisson();
+          // Forcer le type ghost au type de l'élément ramassé
+          document.querySelectorAll('.c-type-btn').forEach(function(b){b.classList.toggle('active',b.dataset.ctype===pel.type);});
+          caissonType=pel.type;
+        }
+      }
       editMouseDragging=true; editMouseLastE=e;
       updateCaissonGhost(e);
       controls.enabled=false;
@@ -2457,8 +2498,17 @@ window.addEventListener('pointerup',function(e){
   }
   if(editMouseDragging){
     editMouseDragging=false; controls.enabled=true;
-    if(editMouseLastE) placeOrRemoveCaisson(editMouseLastE);
-    editMouseLastE=null;
+    _hideDragLabel();
+    if(editMouseLastE){
+      var placed=placeOrRemoveCaisson(editMouseLastE, editPickedEl!==null);
+      if(!placed && editPickedEl!==null){
+        // Restore original element if drop was invalid
+        var restEls=getActiveEls();
+        restEls.splice(editPickedIdx,0,editPickedEl);
+        setActiveEls(restEls); buildCaisson();
+      }
+    }
+    editPickedEl=null; editPickedIdx=-1; editMouseLastE=null;
     return;
   }
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
