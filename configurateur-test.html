@@ -2081,14 +2081,18 @@ function updateCaissonGhost(e){
 function _showDragLabel(hit){
   var lbl=document.getElementById('drag-height-label');
   if(!lbl) return;
-  var iH_cm=Math.round((getActiveCH()-2*EP)*100);
-  var fromTop=iH_cm-Math.round(hit.y_cm);
-  var fromBot=Math.round(hit.y_cm);
-  var icon=(caissonType==='separator'||caissonType==='separator_simple')?'↔':'↕';
-  var dim=(caissonType==='separator'||caissonType==='separator_simple')
-    ? Math.round(hit.x_cm)+' cm'
-    : fromBot+' cm du bas · '+fromTop+' cm du haut';
-  lbl.textContent=icon+' '+dim;
+  var y=Math.round(hit.y_cm);
+  var dim;
+  if(caissonType==='separator'||caissonType==='separator_simple'){
+    dim='↔ '+Math.round(hit.x_cm)+' cm';
+  } else {
+    // Trouver l'étagère la plus proche en dessous et au-dessus
+    var comp=getCompartment(hit.y_cm, hit.x_cm);
+    var below=Math.round(y-comp.bottom_cm); // espace sous la future étagère
+    var above=Math.round(comp.top_cm-y);    // espace au-dessus
+    dim='↓ '+below+' cm  ·  ↑ '+above+' cm';
+  }
+  lbl.textContent=dim;
   lbl.style.display='flex';
 }
 function _hideDragLabel(){
