@@ -89,6 +89,24 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 #hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(255,250,240,.92);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:10px;color:var(--text2);pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px);transition:opacity .4s;opacity:0;letter-spacing:.06em}
 #hint.show{opacity:1}
 
+/* ── CTA mode édition ── */
+#edit-cta{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%) translateY(12px);
+  display:none;align-items:center;gap:14px;
+  background:var(--accent);border:none;border-radius:14px;
+  padding:13px 20px 13px 16px;cursor:pointer;
+  box-shadow:0 4px 24px rgba(205,62,0,.35),0 1px 4px rgba(0,0,0,.12);
+  font-family:'DM Sans',sans-serif;
+  opacity:0;transition:opacity .35s ease,transform .35s ease;
+  pointer-events:none;white-space:nowrap;z-index:6;
+}
+#edit-cta.visible{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+#edit-cta-icon{width:34px;height:34px;background:rgba(255,255,255,.18);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#edit-cta-text{text-align:left}
+#edit-cta-title{font-size:12.5px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:.01em}
+#edit-cta-sub{font-size:10px;color:rgba(255,255,255,.65);margin-top:2px;line-height:1.3}
+#edit-cta-arrow{color:rgba(255,255,255,.7);font-size:16px;margin-left:4px;flex-shrink:0}
+
 /* FORMULAIRE ENVOI */
 .cfg-field{width:100%;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;transition:border-color .18s;margin-bottom:10px}
 .cfg-field:focus{border-color:var(--accent)}
@@ -588,6 +606,23 @@ textarea.cfg-field{resize:vertical;min-height:72px}
     <div id="tv-snap-v" style="position:absolute;top:0;bottom:0;width:1.5px;background:#CD3E00;display:none;pointer-events:none;z-index:10;transform:translateX(-50%)"></div>
     <div id="tv-snap-h" style="position:absolute;left:0;right:0;height:1.5px;background:#CD3E00;display:none;pointer-events:none;z-index:10;transform:translateY(-50%)"></div>
     <div id="hint">Glissez la vasque pour la repositionner</div>
+    <button id="edit-cta" onclick="startEditMode()">
+      <div id="edit-cta-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".9"/>
+          <rect x="10" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".9"/>
+          <rect x="2" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".9"/>
+          <rect x="10" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".5"/>
+          <line x1="13" y1="10.5" x2="13" y2="15.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="10.5" y1="13" x2="15.5" y2="13" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="edit-cta-text">
+        <div id="edit-cta-title">Personnaliser l'intérieur</div>
+        <div id="edit-cta-sub">Étagères · Portes · Tiroirs</div>
+      </div>
+      <span id="edit-cta-arrow">›</span>
+    </button>
     <div id="c-edit-bar">
       <span class="c-edit-lbl">Mode édition</span>
       <div class="c-edit-sep"></div>
@@ -1726,6 +1761,7 @@ function toggleCaissonEdit(){
   var fnContent=document.getElementById('fn-edit-content');
   if(fnContent) fnContent.style.display=caissonEditMode?'':'none';
   if(BIBLIO_MODE && caissonEditMode){ switchSbTab('fonction'); }
+  _syncEditCta();
 }
 
 function clearCaissonGhost(){
@@ -2761,6 +2797,21 @@ function toggleCotes(){
 function _syncCotesBtn(){
   var btn=document.getElementById('btn-cotes');
   if(btn) btn.style.display=(BIBLIO_MODE&&S.step===1)?'flex':'none';
+  _syncEditCta();
+}
+
+function _syncEditCta(){
+  var cta=document.getElementById('edit-cta');
+  if(!cta) return;
+  var show=BIBLIO_MODE&&S.step===1&&!caissonEditMode;
+  cta.style.display=show?'flex':'none';
+  // trigger transition
+  if(show){ requestAnimationFrame(function(){ cta.classList.add('visible'); }); }
+  else { cta.classList.remove('visible'); }
+}
+
+function startEditMode(){
+  if(!caissonEditMode) toggleCaissonEdit();
 }
 
 function updateCotes(){
