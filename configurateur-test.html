@@ -3325,13 +3325,15 @@ function updateCotes(){
   var ys=[0].concat(els.map(function(e){return e.y_cm;})).concat([iH_cote]);
   ys.sort(function(a,b){return a-b;});
   ys=ys.filter(function(v,i){return i===0||v!==ys[i-1];});
+  // Lignes de cote verticales pour chaque compartiment (côté gauche)
+  var hasLeftTV=isTVMode&&S_tvSide.leftActive;
+  var xCoteL=-CL/2; // bord gauche du caisson principal
   for(var i=0;i<ys.length-1;i++){
     var y0=ys[i],y1=ys[i+1],hcm=y1-y0;
-    var cy=EP+((y0+hcm/2)/100);
-    var pt=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,cy,0)));
-    var ptT=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,EP+y1/100,0)));
-    var ptB=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,EP+y0/100,0)));
-    if(Math.abs(ptT.y-ptB.y)>16) html+='<div class="cote-inner" style="left:'+pt.x+'px;top:'+pt.y+'px">'+hcm+'</div>';
+    var pTop2=pp(xCoteL, EP+y1/100);
+    var pBot2=pp(xCoteL, EP+y0/100);
+    var xOff2=hasLeftTV?-16:-38;
+    vDim(pTop2,pBot2,hcm+' cm',xOff2);
   }
 
   var svgW=cvs.clientWidth, svgH=cvs.clientHeight;
