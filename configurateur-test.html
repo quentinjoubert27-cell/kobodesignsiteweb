@@ -2393,44 +2393,30 @@ function _moveDrag(){
 }
 var editMouseDragging=false, editMouseLastE=null;
 var editPickedEl=null, editPickedIdx=-1;
+var _hoverElIdx=-1; // index de l'élément sous le curseur (mis à jour en pointermove)
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){
     if(!isTouchEditDrag){
       editPickedEl=null; editPickedIdx=-1;
-      // Détecter un élément existant proche du clic (plus fiable que le raycaster sur mesh fin)
-      var hitPos=getCaissonHit(e);
-      if(hitPos){
+      // _hoverElIdx est tenu à jour dans pointermove — fiable et sans recalcul
+      if(_hoverElIdx>=0){
         var pels=getActiveEls();
-        var PICK_TOL_H=5, PICK_TOL_V=5; // tolérance pick en cm
-        var bestD=9999, bestI=-1;
-        pels.forEach(function(pel,i){
-          if(pel.type==='porte'||pel.type==='tiroir') return;
-          var d;
-          if(pel.type==='separator'||pel.type==='separator_simple'){
-            d=Math.abs(hitPos.x_cm-pel.x_cm);
-            if(d<PICK_TOL_V && d<bestD){ bestD=d; bestI=i; }
-          } else {
-            // shelf / shelf_simple / barre — cherche par y
-            d=Math.abs(hitPos.y_cm-pel.y_cm);
-            // vérifier que le hit est dans le bay de l'étagère
-            var inBay=(hitPos.x_cm>=( pel.x_left_cm||0)-1)&&(hitPos.x_cm<=(pel.x_right_cm||(getActiveCL()-2*EP)*100)+1);
-            if(d<PICK_TOL_H && inBay && d<bestD){ bestD=d; bestI=i; }
-          }
-        });
-        if(bestI>=0){
-          var pel=pels[bestI];
+        var pel=pels[_hoverElIdx];
+        if(pel){
           pushUndo();
           editPickedEl=JSON.parse(JSON.stringify(pel));
-          editPickedIdx=bestI;
-          pels.splice(bestI,1); setActiveEls(pels); buildCaisson();
+          editPickedIdx=_hoverElIdx;
+          pels.splice(_hoverElIdx,1); setActiveEls(pels); buildCaisson();
           document.querySelectorAll('.c-type-btn').forEach(function(b){b.classList.toggle('active',b.dataset.ctype===pel.type);});
           caissonType=pel.type;
         }
       }
+      _hoverElIdx=-1;
       editMouseDragging=true; editMouseLastE=e;
       updateCaissonGhost(e);
       controls.enabled=false;
+      cvs.style.cursor=editPickedEl?'grabbing':'crosshair';
     }
     return;
   }
@@ -2477,8 +2463,33 @@ cvs.addEventListener('pointerdown',function(e){
     isDragging=true; controls.enabled=false; cvs.style.cursor='grabbing'; e.stopPropagation();
   }
 });
+function _updateHoverEl(hitPos){
+  _hoverElIdx=-1;
+  if(!hitPos) { cvs.style.cursor='crosshair'; return; }
+  var iW_cm=(getActiveCL()-2*EP)*100;
+  var els=getActiveEls(), bestD=9, bestI=-1;
+  els.forEach(function(pel,i){
+    if(pel.type==='porte'||pel.type==='tiroir') return;
+    var d, inRange=true;
+    if(pel.type==='separator'||pel.type==='separator_simple'){
+      d=Math.abs(hitPos.x_cm-pel.x_cm);
+    } else {
+      d=Math.abs(hitPos.y_cm-pel.y_cm);
+      inRange=(hitPos.x_cm>=(pel.x_left_cm||0)-2)&&(hitPos.x_cm<=(pel.x_right_cm||iW_cm)+2);
+    }
+    if(inRange&&d<bestD){bestD=d;bestI=i;}
+  });
+  _hoverElIdx=bestI;
+  cvs.style.cursor=bestI>=0?'grab':'crosshair';
+}
+
 cvs.addEventListener('pointermove',function(e){
-  if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); editMouseLastE=e; return; }
+  if(S.step===1&&caissonEditMode){
+    updateCaissonGhost(e); editMouseLastE=e;
+    if(!editMouseDragging){ _updateHoverEl(getCaissonHit(e)); }
+    else { cvs.style.cursor=editPickedEl?'grabbing':'crosshair'; }
+    return;
+  }
   if(tvTopDragging&&tvTopDragPlane&&tvGrp[2]){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
     var tgt=new THREE.Vector3();
