@@ -2399,7 +2399,8 @@ cvs.addEventListener('pointerdown',function(e){
   if(S.step===1&&caissonEditMode){
     if(!isTouchEditDrag){
       editPickedEl=null; editPickedIdx=-1;
-      // _hoverElIdx est tenu à jour dans pointermove — fiable et sans recalcul
+      // Rafraîchir au moment du clic (couvre touch + cas où pointermove n'a pas encore tourné)
+      _updateHoverEl(getCaissonHit(e));
       if(_hoverElIdx>=0){
         var pels=getActiveEls();
         var pel=pels[_hoverElIdx];
