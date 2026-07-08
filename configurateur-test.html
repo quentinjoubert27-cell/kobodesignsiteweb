@@ -3232,7 +3232,7 @@ function updateCotes(){
   var ov=document.getElementById('cotes-overlay');
   if(!ov) return;
   if(!BIBLIO_MODE||!caissonGrp||S.step!==1){ov.innerHTML='';return;}
-  if(!showCotes){ov.innerHTML='';return;}
+  if(!showCotes&&!caissonEditMode){ov.innerHTML='';return;}
   caissonGrp.updateMatrixWorld(true);
 
   var CL=S.CL, CH=S.CH;
