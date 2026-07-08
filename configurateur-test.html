@@ -2096,6 +2096,38 @@ function _hideDragLabel(){
   if(lbl) lbl.style.display='none';
 }
 
+function _dropPickedEl(e){
+  var hit=getCaissonHit(e);
+  if(!hit) return false;
+  var iW_cm=Math.round((getActiveCL()-2*EP)*100);
+  var els=getActiveEls();
+  var el=editPickedEl;
+  if(el.type==='shelf'||el.type==='shelf_simple'||el.type==='barre'){
+    var bay=getBay(hit.x_cm,hit.y_cm);
+    var occ=els.some(function(e2){
+      if(e2.type!==el.type) return false;
+      var sl=e2.x_left_cm!==undefined?e2.x_left_cm:0;
+      var sr=e2.x_right_cm!==undefined?e2.x_right_cm:iW_cm;
+      return Math.abs(e2.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay.right_cm&&sr>bay.left_cm;
+    });
+    if(occ) return false;
+    els.push({type:el.type,y_cm:hit.y_cm,x_left_cm:bay.left_cm,x_right_cm:bay.right_cm});
+    setActiveEls(els); clearCaissonGhost(); buildCaisson(); return true;
+  } else if(el.type==='separator'||el.type==='separator_simple'){
+    var comp=getCompartment(hit.y_cm,hit.x_cm);
+    if(comp.height_cm<1) return false;
+    var occ2=els.some(function(e2){
+      if(e2.type!==el.type) return false;
+      var ec=getCompartment(e2.y_cm,e2.x_cm);
+      return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(e2.x_cm-hit.x_cm)<MIN_GAP_V;
+    });
+    if(occ2) return false;
+    els.push({type:el.type,x_cm:hit.x_cm,y_cm:(comp.bottom_cm+comp.top_cm)/2});
+    setActiveEls(els); clearCaissonGhost(); buildCaisson(); return true;
+  }
+  return false;
+}
+
 function placeOrRemoveCaisson(e, skipUndo){
   if(!caissonEditMode||S.step!==1) return false;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
@@ -2500,12 +2532,15 @@ window.addEventListener('pointerup',function(e){
     editMouseDragging=false; controls.enabled=true;
     _hideDragLabel();
     if(editMouseLastE){
-      var placed=placeOrRemoveCaisson(editMouseLastE, editPickedEl!==null);
-      if(!placed && editPickedEl!==null){
-        // Restore original element if drop was invalid
-        var restEls=getActiveEls();
-        restEls.splice(editPickedIdx,0,editPickedEl);
-        setActiveEls(restEls); buildCaisson();
+      if(editPickedEl!==null){
+        var dropped=_dropPickedEl(editMouseLastE);
+        if(!dropped){
+          var restEls=getActiveEls();
+          restEls.splice(Math.min(editPickedIdx,restEls.length),0,editPickedEl);
+          setActiveEls(restEls); buildCaisson();
+        }
+      } else {
+        placeOrRemoveCaisson(editMouseLastE);
       }
     }
     editPickedEl=null; editPickedIdx=-1; editMouseLastE=null;
