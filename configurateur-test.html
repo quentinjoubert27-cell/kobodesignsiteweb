@@ -42,9 +42,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .sl-row{margin-bottom:16px}
 .sl-top{display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px}
 .sl-lbl{color:var(--text2)}.sl-val{font-weight:700;color:var(--text);font-size:13px}
-input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(205,62,0,.15);cursor:pointer;transition:transform .15s}
-input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+/* dimension number inputs */
+.dim-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(26,26,26,.06)}
+.dim-row:last-of-type{border-bottom:none}
+.dim-lbl{font-size:12px;color:var(--text2);font-weight:500}
+.dim-ctrl{display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
+.dim-step{width:32px;height:36px;border:none;background:none;color:var(--text2);font-size:20px;font-weight:300;cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1;transition:background .12s,color .12s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.dim-step:hover{background:rgba(26,26,26,.07);color:var(--text)}
+.dim-step:active{background:rgba(26,26,26,.13)}
+.dim-inp{width:46px;height:36px;border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);text-align:center;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:none;outline:none;-moz-appearance:textfield}
+.dim-inp::-webkit-outer-spin-button,.dim-inp::-webkit-inner-spin-button{-webkit-appearance:none}
+.dim-unit{font-size:10.5px;color:var(--text2);padding:0 8px;font-weight:500;pointer-events:none}
 
 .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
 .mat-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
@@ -437,17 +445,32 @@ textarea.cfg-field{resize:vertical;min-height:72px}
         <!-- ── ONGLET FORMULAIRE ── -->
         <div class="sb-tab-panel on" id="sbt-formulaire">
           <div class="sec" style="margin-top:0">Dimensions</div>
-          <div class="sl-row">
-            <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
-            <input type="range" id="sl-cL" min="40" max="220" step="1" value="120" oninput="setCL(+this.value)">
+          <div class="dim-row">
+            <span class="dim-lbl">Largeur</span>
+            <div class="dim-ctrl">
+              <button class="dim-step" onclick="stepDim('inp-CL',setCL,-1)">−</button>
+              <input class="dim-inp" type="number" id="inp-CL" min="40" max="220" value="120" oninput="setCL(+this.value)" onblur="clampDim(this,setCL)">
+              <span class="dim-unit">cm</span>
+              <button class="dim-step" onclick="stepDim('inp-CL',setCL,+1)">+</button>
+            </div>
           </div>
-          <div class="sl-row">
-            <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
-            <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
+          <div class="dim-row">
+            <span class="dim-lbl">Hauteur</span>
+            <div class="dim-ctrl">
+              <button class="dim-step" onclick="stepDim('inp-CH',setCH,-1)">−</button>
+              <input class="dim-inp" type="number" id="inp-CH" min="30" max="70" value="45" oninput="setCH(+this.value)" onblur="clampDim(this,setCH)">
+              <span class="dim-unit">cm</span>
+              <button class="dim-step" onclick="stepDim('inp-CH',setCH,+1)">+</button>
+            </div>
           </div>
-          <div class="sl-row">
-            <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">36 cm</span></div>
-            <input type="range" min="36" max="60" step="1" value="36" oninput="setCP(+this.value)">
+          <div class="dim-row">
+            <span class="dim-lbl">Profondeur</span>
+            <div class="dim-ctrl">
+              <button class="dim-step" onclick="stepDim('inp-CP',setCP,-1)">−</button>
+              <input class="dim-inp" type="number" id="inp-CP" min="36" max="60" value="36" oninput="setCP(+this.value)" onblur="clampDim(this,setCP)">
+              <span class="dim-unit">cm</span>
+              <button class="dim-step" onclick="stepDim('inp-CP',setCP,+1)">+</button>
+            </div>
           </div>
           <div class="sec">Finition bois</div>
           <div class="mat-grid" id="mg-cais"></div>
@@ -455,9 +478,14 @@ textarea.cfg-field{resize:vertical;min-height:72px}
             <div class="sec" style="margin-top:18px">Caisson d'angle</div>
             <button class="reset-btn" id="btn-angle" onclick="toggleAngle()">+ Ajouter un angle</button>
             <div id="angle-opts" style="display:none;margin-top:10px">
-              <div class="sl-row">
-                <div class="sl-top"><span class="sl-lbl">Largeur caisson 2</span><span class="sl-val" id="v-CL2">120 cm</span></div>
-                <input type="range" id="sl-cl2" min="20" max="300" step="1" value="120" oninput="setCL2(+this.value)">
+              <div class="dim-row">
+                <span class="dim-lbl">Largeur caisson 2</span>
+                <div class="dim-ctrl">
+                  <button class="dim-step" onclick="stepDim('inp-CL2',setCL2,-1)">−</button>
+                  <input class="dim-inp" type="number" id="inp-CL2" min="20" max="300" value="120" oninput="setCL2(+this.value)" onblur="clampDim(this,setCL2)">
+                  <span class="dim-unit">cm</span>
+                  <button class="dim-step" onclick="stepDim('inp-CL2',setCL2,+1)">+</button>
+                </div>
               </div>
             </div>
           </div>
@@ -472,35 +500,65 @@ textarea.cfg-field{resize:vertical;min-height:72px}
             </div>
             <div id="tvl-opts" style="display:none">
               <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson gauche</div>
-              <div class="sl-row">
-                <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-tvLW">40 cm</span></div>
-                <input type="range" min="20" max="120" step="1" value="40" oninput="setTVSide('left','W',+this.value)">
+              <div class="dim-row">
+                <span class="dim-lbl">Largeur</span>
+                <div class="dim-ctrl">
+                  <button class="dim-step" onclick="stepDim('inp-tvLW',function(v){setTVSide('left','W',v)},-1)">−</button>
+                  <input class="dim-inp" type="number" id="inp-tvLW" min="20" max="120" value="40" oninput="setTVSide('left','W',+this.value)" onblur="clampDim(this,function(v){setTVSide('left','W',v)})">
+                  <span class="dim-unit">cm</span>
+                  <button class="dim-step" onclick="stepDim('inp-tvLW',function(v){setTVSide('left','W',v)},+1)">+</button>
+                </div>
               </div>
-              <div class="sl-row">
-                <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-tvLH">120 cm</span></div>
-                <input type="range" min="20" max="280" step="1" value="120" oninput="setTVSide('left','H',+this.value)">
+              <div class="dim-row">
+                <span class="dim-lbl">Hauteur</span>
+                <div class="dim-ctrl">
+                  <button class="dim-step" onclick="stepDim('inp-tvLH',function(v){setTVSide('left','H',v)},-1)">−</button>
+                  <input class="dim-inp" type="number" id="inp-tvLH" min="20" max="280" value="120" oninput="setTVSide('left','H',+this.value)" onblur="clampDim(this,function(v){setTVSide('left','H',v)})">
+                  <span class="dim-unit">cm</span>
+                  <button class="dim-step" onclick="stepDim('inp-tvLH',function(v){setTVSide('left','H',v)},+1)">+</button>
+                </div>
               </div>
             </div>
             <div id="tvr-opts" style="display:none">
               <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson droit</div>
-              <div class="sl-row">
-                <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-tvRW">40 cm</span></div>
-                <input type="range" min="20" max="120" step="1" value="40" oninput="setTVSide('right','W',+this.value)">
+              <div class="dim-row">
+                <span class="dim-lbl">Largeur</span>
+                <div class="dim-ctrl">
+                  <button class="dim-step" onclick="stepDim('inp-tvRW',function(v){setTVSide('right','W',v)},-1)">−</button>
+                  <input class="dim-inp" type="number" id="inp-tvRW" min="20" max="120" value="40" oninput="setTVSide('right','W',+this.value)" onblur="clampDim(this,function(v){setTVSide('right','W',v)})">
+                  <span class="dim-unit">cm</span>
+                  <button class="dim-step" onclick="stepDim('inp-tvRW',function(v){setTVSide('right','W',v)},+1)">+</button>
+                </div>
               </div>
-              <div class="sl-row">
-                <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-tvRH">120 cm</span></div>
-                <input type="range" min="20" max="280" step="1" value="120" oninput="setTVSide('right','H',+this.value)">
+              <div class="dim-row">
+                <span class="dim-lbl">Hauteur</span>
+                <div class="dim-ctrl">
+                  <button class="dim-step" onclick="stepDim('inp-tvRH',function(v){setTVSide('right','H',v)},-1)">−</button>
+                  <input class="dim-inp" type="number" id="inp-tvRH" min="20" max="280" value="120" oninput="setTVSide('right','H',+this.value)" onblur="clampDim(this,function(v){setTVSide('right','H',v)})">
+                  <span class="dim-unit">cm</span>
+                  <button class="dim-step" onclick="stepDim('inp-tvRH',function(v){setTVSide('right','H',v)},+1)">+</button>
+                </div>
               </div>
             </div>
             <div id="tvt-opts" style="display:none">
               <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson dessus</div>
-              <div class="sl-row">
-                <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-tvTW">80 cm</span></div>
-                <input type="range" min="20" max="300" step="1" value="80" oninput="setTVSide('top','W',+this.value)">
+              <div class="dim-row">
+                <span class="dim-lbl">Largeur</span>
+                <div class="dim-ctrl">
+                  <button class="dim-step" onclick="stepDim('inp-tvTW',function(v){setTVSide('top','W',v)},-1)">−</button>
+                  <input class="dim-inp" type="number" id="inp-tvTW" min="20" max="300" value="80" oninput="setTVSide('top','W',+this.value)" onblur="clampDim(this,function(v){setTVSide('top','W',v)})">
+                  <span class="dim-unit">cm</span>
+                  <button class="dim-step" onclick="stepDim('inp-tvTW',function(v){setTVSide('top','W',v)},+1)">+</button>
+                </div>
               </div>
-              <div class="sl-row">
-                <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-tvTH">100 cm</span></div>
-                <input type="range" min="20" max="280" step="1" value="100" oninput="setTVSide('top','H',+this.value)">
+              <div class="dim-row">
+                <span class="dim-lbl">Hauteur</span>
+                <div class="dim-ctrl">
+                  <button class="dim-step" onclick="stepDim('inp-tvTH',function(v){setTVSide('top','H',v)},-1)">−</button>
+                  <input class="dim-inp" type="number" id="inp-tvTH" min="20" max="280" value="100" oninput="setTVSide('top','H',+this.value)" onblur="clampDim(this,function(v){setTVSide('top','H',v)})">
+                  <span class="dim-unit">cm</span>
+                  <button class="dim-step" onclick="stepDim('inp-tvTH',function(v){setTVSide('top','H',v)},+1)">+</button>
+                </div>
               </div>
               <div style="margin-top:8px;padding:7px 10px;background:rgba(205,62,0,.10);border:1px solid rgba(205,62,0,.25);border-radius:6px;font-size:10.5px;color:var(--text2);line-height:1.4">
                 Glissez le caisson dans la vue 3D pour le repositionner — des repères s'affichent automatiquement.
@@ -1431,8 +1489,8 @@ function toggleAngle(){
 }
 
 function setCL2(v){
-  S.CL2=v/100;
-  document.getElementById('v-CL2').textContent=v+' cm';
+  v=Math.round(v); S.CL2=v/100;
+  var inp=document.getElementById('inp-CL2'); if(inp) inp.value=v;
   if(hasAngle) buildCaisson();
 }
 
@@ -1458,10 +1516,11 @@ function toggleTVTop(){
   buildCaisson(); if(caissonEditMode) _rebuildEditBar();
 }
 function setTVSide(side, dim, v){
+  v=Math.round(v);
   var key=side==='left'?'left':side==='right'?'right':'top';
   S_tvSide[key+dim]=v;
-  var elId='v-tv'+(side==='left'?'L':side==='right'?'R':'T')+dim;
-  var el=document.getElementById(elId); if(el) el.textContent=v+' cm';
+  var inpId='inp-tv'+(side==='left'?'L':side==='right'?'R':'T')+dim;
+  var inp=document.getElementById(inpId); if(inp) inp.value=v;
   buildCaisson();
 }
 
@@ -2459,15 +2518,25 @@ cvs.addEventListener('touchend',function(e){
 // ═══════════════════════════════════════════════════════
 // UI CALLBACKS
 // ═══════════════════════════════════════════════════════
+function stepDim(id,fn,delta){
+  var inp=document.getElementById(id); if(!inp) return;
+  var v=Math.min(+inp.max,Math.max(+inp.min,Math.round(+inp.value)+delta));
+  inp.value=v; fn(v);
+}
+function clampDim(inp,fn){
+  var v=Math.min(+inp.max,Math.max(+inp.min,Math.round(+inp.value)||+inp.min));
+  inp.value=v; fn(v);
+}
 function setCL(v){
-  S.CL=v/100; document.getElementById('v-CL').textContent=v+' cm';
+  v=Math.round(v); S.CL=v/100;
+  var inp=document.getElementById('inp-CL'); if(inp) inp.value=v;
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
   var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
   if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
   buildCaisson(); checkAlerts();
 }
-function setCH(v){ S.CH=v/100; document.getElementById('v-CH').textContent=v+' cm'; buildCaisson(); if(planMesh) buildPlan(); }
-function setCP(v){ S.CairsonP=v/100; document.getElementById('v-CP').textContent=v+' cm'; buildCaisson(); }
+function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; buildCaisson(); if(planMesh) buildPlan(); }
+function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; buildCaisson(); }
 function setL(v){
   S.L=v/100; document.getElementById('v-L').textContent=v+' cm';
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
@@ -2664,13 +2733,13 @@ function selectFurnitureType(ft){
     wallBiblio.visible=false; floorBiblio.visible=false;
   }
 
-  // Adapt dimension sliders
-  var slCL = document.getElementById('sl-cL');
-  if(slCL){ slCL.min=cfg.dimL[0]; slCL.max=cfg.dimL[1]; slCL.value=cfg.dimL[2]; setCL(cfg.dimL[2]); }
-  var slCH = document.querySelector('#p1 input[oninput*="setCH"]');
-  if(slCH){ slCH.min=cfg.dimH[0]; slCH.max=cfg.dimH[1]; slCH.value=cfg.dimH[2]; setCH(cfg.dimH[2]); }
-  var slCP = document.querySelector('#p1 input[oninput*="setCP"]');
-  if(slCP){ slCP.min=cfg.dimP[0]; slCP.max=cfg.dimP[1]; slCP.value=cfg.dimP[2]; setCP(cfg.dimP[2]); }
+  // Adapt dimension inputs
+  var inpCL=document.getElementById('inp-CL');
+  if(inpCL){ inpCL.min=cfg.dimL[0]; inpCL.max=cfg.dimL[1]; setCL(cfg.dimL[2]); }
+  var inpCH=document.getElementById('inp-CH');
+  if(inpCH){ inpCH.min=cfg.dimH[0]; inpCH.max=cfg.dimH[1]; setCH(cfg.dimH[2]); }
+  var inpCP=document.getElementById('inp-CP');
+  if(inpCP){ inpCP.min=cfg.dimP[0]; inpCP.max=cfg.dimP[1]; setCP(cfg.dimP[2]); }
 
   // Populate dressing mat grid
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
