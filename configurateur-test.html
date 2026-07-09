@@ -2490,13 +2490,27 @@ cvs.addEventListener('pointerdown',function(e){
     isDragging=true; controls.enabled=false; cvs.style.cursor='grabbing'; e.stopPropagation();
   }
 });
+function _sameFamily(a, b){
+  var shelves=['shelf','shelf_simple','barre'];
+  var seps=['separator','separator_simple'];
+  var doors=['porte','tiroir'];
+  var inArr=function(t,arr){return arr.indexOf(t)>=0;};
+  if(inArr(a,shelves)&&inArr(b,shelves)) return true;
+  if(inArr(a,seps)&&inArr(b,seps)) return true;
+  if(inArr(a,doors)&&inArr(b,doors)) return true;
+  return false;
+}
+
 function _updateHoverEl(hitPos){
   _hoverElIdx=-1;
   if(!hitPos) { cvs.style.cursor='crosshair'; return; }
   var iW_cm=(getActiveCL()-2*EP)*100;
-  var els=getActiveEls(), bestD=9, bestI=-1;
+  var els=getActiveEls(), bestI=-1;
+  var isSep=caissonType==='separator'||caissonType==='separator_simple';
+  var TOL=isSep?2:5; // tolérance réduite pour intercalaires
+  var bestD=TOL;
   els.forEach(function(pel,i){
-    if(pel.type==='porte'||pel.type==='tiroir') return;
+    if(!_sameFamily(caissonType, pel.type)) return; // Bug 1 : ignore autre famille
     var d, inRange=true;
     if(pel.type==='separator'||pel.type==='separator_simple'){
       d=Math.abs(hitPos.x_cm-pel.x_cm);
