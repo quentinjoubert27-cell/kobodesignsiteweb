@@ -954,7 +954,7 @@ function getCompartment(y_cm, x_cm){
   var iH_cm=(getActiveCH()-2*EP)*100;
   var iW_cm=(getActiveCL()-2*EP)*100;
   var shelves=getActiveEls().filter(function(e){
-    if(e.type!=='shelf') return false;
+    if(e.type!=='shelf'&&e.type!=='shelf_simple') return false;
     var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
     var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
     // Si x_cm fourni : tablette valide si elle couvre ce x
