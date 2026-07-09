@@ -2262,36 +2262,18 @@ function applyPreset(id){
       {type:'shelf',y_cm:Math.round(iH*0.75),x_left_cm:0,x_right_cm:iW},
     ];
   } else if(id==='biblio1'){
-    // Structure basée sur la config client : colonne gauche étroite + sections variées
-    // Proportions : 9 étagères horizontales, intercalaires à ~22% et ~78% de la largeur
-    var xL=Math.round(iW*0.22), xR=Math.round(iW*0.78), xM=Math.round(iW*0.50);
-    // Positions des étagères (proportions des mesures visibles : 21+25+21+18+25+17+15+23+16+14)
-    var s1=Math.round(iH*0.107), s2=Math.round(iH*0.235), s3=Math.round(iH*0.342);
-    var s4=Math.round(iH*0.434), s5=Math.round(iH*0.561), s6=Math.round(iH*0.648);
-    var s7=Math.round(iH*0.724), s8=Math.round(iH*0.842), s9=Math.round(iH*0.924);
-    // Étagères pleine largeur
-    els=[
-      {type:'shelf',y_cm:s1,x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:s2,x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:s3,x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:s4,x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:s5,x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:s6,x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:s7,x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:s8,x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:s9,x_left_cm:0,x_right_cm:iW},
-    ];
-    // Intercalaires colonne gauche (toutes les bandes sauf quelques-unes)
-    [[0,s1],[s1,s2],[s2,s3],[s3,s4],[s5,s6],[s6,s7],[s7,s8],[s8,s9],[s9,iH]].forEach(function(band){
-      els.push({type:'separator',x_cm:xL,y_cm:Math.round((band[0]+band[1])/2)});
-    });
-    // Intercalaires colonne droite (bandes basses)
-    [[0,s1],[s1,s2],[s2,s3],[s3,s4]].forEach(function(band){
-      els.push({type:'separator',x_cm:xR,y_cm:Math.round((band[0]+band[1])/2)});
-    });
-    // Intercalaire central dans quelques bandes du haut
-    [[s5,s6],[s6,s7]].forEach(function(band){
-      els.push({type:'separator',x_cm:xM,y_cm:Math.round((band[0]+band[1])/2)});
+    // Vue de dessus : 6 colonnes de 16+11+22+22+12+14 cm, 5 étagères horizontales
+    var cols=[16,11,22,22,12,14], colTotal=97;
+    var xs=[]; var acc=0;
+    for(var ci=0;ci<cols.length-1;ci++){ acc+=cols[ci]; xs.push(Math.round(iW*acc/colTotal)); }
+    // 5 étagères pleine largeur créant 6 bandes horizontales
+    var sy=[Math.round(iH*0.17),Math.round(iH*0.34),Math.round(iH*0.51),Math.round(iH*0.68),Math.round(iH*0.85)];
+    els=[];
+    sy.forEach(function(y){ els.push({type:'shelf',y_cm:y,x_left_cm:0,x_right_cm:iW}); });
+    // Intercalaires dans chaque bande pour les 5 colonnes
+    var bands=[[0,sy[0]],[sy[0],sy[1]],[sy[1],sy[2]],[sy[2],sy[3]],[sy[3],sy[4]],[sy[4],iH]];
+    xs.forEach(function(x){
+      bands.forEach(function(b){ els.push({type:'separator',x_cm:x,y_cm:Math.round((b[0]+b[1])/2)}); });
     });
   } else if(id==='compartiments'){
     var sx=Math.round(iW/2);
