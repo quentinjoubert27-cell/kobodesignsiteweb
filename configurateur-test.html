@@ -2241,9 +2241,12 @@ var PRESETS=[
 function saveCurrentAsPreset(){
   var els=JSON.parse(JSON.stringify(getActiveEls()));
   if(!els.length){ alert('Le meuble est vide, rien à sauvegarder.'); return; }
-  localStorage.setItem('kobo_preset_biblio1', JSON.stringify(els));
-  alert('✓ Config sauvegardée comme "Biblio 1" !');
-  buildPresetGrid();
+  var json=JSON.stringify(els);
+  navigator.clipboard.writeText(json).then(function(){
+    alert('✓ Config copiée dans le presse-papier !\nColle-la à Claude pour la mettre en ligne pour tout le monde.');
+  }).catch(function(){
+    prompt('Copie ce JSON et envoie-le à Claude :', json);
+  });
 }
 
 function buildPresetGrid(){
