@@ -2501,6 +2501,10 @@ function _updateHoverEl(hitPos){
     var d, inRange=true;
     if(pel.type==='separator'||pel.type==='separator_simple'){
       d=Math.abs(hitPos.x_cm-pel.x_cm);
+      // Vérifier même compartiment vertical (ne pas détecter intercalaire dans un autre compartiment)
+      var compCursor=getCompartment(hitPos.y_cm, hitPos.x_cm);
+      var compEl=getCompartment(pel.y_cm, pel.x_cm);
+      if(compCursor.bottom_cm!==compEl.bottom_cm||compCursor.top_cm!==compEl.top_cm) return;
     } else {
       d=Math.abs(hitPos.y_cm-pel.y_cm);
       inRange=(hitPos.x_cm>=(pel.x_left_cm||0)-2)&&(hitPos.x_cm<=(pel.x_right_cm||iW_cm)+2);
