@@ -1898,7 +1898,7 @@ function toggleCaissonEdit(){
   var btn=document.getElementById('btn-edit-cais');
   if(btn) btn.classList.toggle('active',caissonEditMode);
   wrap.classList.toggle('mode-edit',caissonEditMode);
-  if(!BIBLIO_MODE) controls.enabled=!caissonEditMode;
+  controls.enabled=!caissonEditMode;
   cvs.style.cursor=caissonEditMode?'crosshair':'';
   if(!caissonEditMode) clearCaissonGhost();
   _rebuildEditBar();
