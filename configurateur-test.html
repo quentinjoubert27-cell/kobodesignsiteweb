@@ -2140,21 +2140,8 @@ function placeOrRemoveCaisson(e, skipUndo){
   var els=getActiveEls();
   var activeCL=getActiveCL();
 
-  // Clic sur élément existant du même type → supprime
-  var eh=raycaster.intersectObjects(getActiveElemMeshes(),false);
-  if(eh.length){
-    var idx=eh[0].object.userData.elemIdx;
-    if(idx!==undefined){
-      var elType=els[idx]&&els[idx].type;
-      var sameType=(caissonType==='shelf'&&elType==='shelf')||
-                   (caissonType==='shelf_simple'&&elType==='shelf_simple')||
-                   (caissonType==='barre'&&elType==='barre')||
-                   (caissonType==='separator'&&elType==='separator')||
-                   (caissonType==='separator_simple'&&elType==='separator_simple')||
-                   ((caissonType==='porte'||caissonType==='tiroir')&&(elType==='porte'||elType==='tiroir'));
-      if(sameType){ els.splice(idx,1); setActiveEls(els); clearCaissonGhost(); buildCaisson(); return true; }
-    }
-  }
+  // La suppression est gérée uniquement via le mécanisme clic-court (_hoverElIdx)
+  // pour éviter toute suppression cross-type par raycaster
 
   var hit=getCaissonHit(e);
   if(!hit) return false;
