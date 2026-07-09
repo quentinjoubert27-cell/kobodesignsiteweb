@@ -2262,19 +2262,20 @@ function applyPreset(id){
       {type:'shelf',y_cm:Math.round(iH*0.75),x_left_cm:0,x_right_cm:iW},
     ];
   } else if(id==='biblio1'){
-    // Vue de dessus : 6 colonnes de 16+11+22+22+12+14 cm, 5 étagères horizontales
-    var cols=[16,11,22,22,12,14], colTotal=97;
-    var xs=[]; var acc=0;
-    for(var ci=0;ci<cols.length-1;ci++){ acc+=cols[ci]; xs.push(Math.round(iW*acc/colTotal)); }
-    // 5 étagères pleine largeur créant 6 bandes horizontales
-    var sy=[Math.round(iH*0.17),Math.round(iH*0.34),Math.round(iH*0.51),Math.round(iH*0.68),Math.round(iH*0.85)];
+    // 9 étagères pleine largeur (bas→haut : 21+25+21+18+25+17+23+16+14 cm)
+    var sh9=[0.107,0.235,0.342,0.434,0.561,0.648,0.766,0.867,0.934].map(function(p){return Math.round(iH*p);});
+    var xL1=Math.round(iW*0.22), xR1=Math.round(iW*0.78), xMR=Math.round(iW*0.60);
     els=[];
-    sy.forEach(function(y){ els.push({type:'shelf',y_cm:y,x_left_cm:0,x_right_cm:iW}); });
-    // Intercalaires dans chaque bande pour les 5 colonnes
-    var bands=[[0,sy[0]],[sy[0],sy[1]],[sy[1],sy[2]],[sy[2],sy[3]],[sy[3],sy[4]],[sy[4],iH]];
-    xs.forEach(function(x){
-      bands.forEach(function(b){ els.push({type:'separator',x_cm:x,y_cm:Math.round((b[0]+b[1])/2)}); });
-    });
+    sh9.forEach(function(y){ els.push({type:'shelf',y_cm:y,x_left_cm:0,x_right_cm:iW}); });
+    // Construire toutes les bandes
+    var bds=[]; var prev=0;
+    sh9.forEach(function(y){bds.push([prev,y]);prev=y;}); bds.push([prev,iH]);
+    // Intercalaire gauche dans toutes les bandes
+    bds.forEach(function(b){ els.push({type:'separator',x_cm:xL1,y_cm:Math.round((b[0]+b[1])/2)}); });
+    // Intercalaire droit dans les 4 bandes basses
+    bds.slice(0,4).forEach(function(b){ els.push({type:'separator',x_cm:xR1,y_cm:Math.round((b[0]+b[1])/2)}); });
+    // Intercalaire central-droit dans les bandes 5 et 6 (zone 17/15cm)
+    bds.slice(4,6).forEach(function(b){ els.push({type:'separator',x_cm:xMR,y_cm:Math.round((b[0]+b[1])/2)}); });
   } else if(id==='compartiments'){
     var sx=Math.round(iW/2);
     els=[
