@@ -578,7 +578,10 @@ textarea.cfg-field{resize:vertical;min-height:72px}
           <button class="reset-btn" onclick="resetCaissonElements()">Vider</button>
           <!-- Boutons de type injectés ici en mode édition -->
           <div id="fn-edit-content" style="display:none;margin-top:16px">
-            <div class="sec" style="margin-bottom:8px">Point de départ</div>
+            <div class="sec" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+              Point de départ
+              <button onclick="saveCurrentAsPreset()" style="font-size:9px;font-weight:700;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--text2);font-family:'DM Sans',sans-serif">💾 Sauvegarder ici</button>
+            </div>
             <div class="preset-grid" id="preset-grid"></div>
             <div class="sec" style="margin-bottom:8px;margin-top:4px">Ajouter un élément</div>
             <div class="c-type-btns"></div>
@@ -2235,6 +2238,14 @@ var PRESETS=[
    svg:'<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="1" y="12" width="34" height="1.5" fill="currentColor"/><rect x="7" y="12" width="1.5" height="11" fill="currentColor"/><rect x="29" y="12" width="1.5" height="11" fill="currentColor"/><rect x="9" y="16" width="19" height="1.2" fill="currentColor"/><rect x="9" y="20" width="19" height="1.2" fill="currentColor"/><rect x="3" y="16" width="3" height="1.2" fill="currentColor"/><rect x="31" y="16" width="3" height="1.2" fill="currentColor"/><rect x="13" y="1" width="1.5" height="11" fill="currentColor"/><rect x="3" y="4" width="9" height="1.2" fill="currentColor"/><rect x="3" y="7" width="9" height="1.2" fill="currentColor"/><rect x="3" y="10" width="9" height="1.2" fill="currentColor"/><rect x="15" y="4" width="19" height="1.2" fill="currentColor"/><rect x="15" y="7.5" width="19" height="1.2" fill="currentColor"/></svg>'},
 ];
 
+function saveCurrentAsPreset(){
+  var els=JSON.parse(JSON.stringify(getActiveEls()));
+  if(!els.length){ alert('Le meuble est vide, rien à sauvegarder.'); return; }
+  localStorage.setItem('kobo_preset_biblio1', JSON.stringify(els));
+  alert('✓ Config sauvegardée comme "Biblio 1" !');
+  buildPresetGrid();
+}
+
 function buildPresetGrid(){
   var grid=document.getElementById('preset-grid');
   if(!grid) return;
@@ -2262,6 +2273,9 @@ function applyPreset(id){
       {type:'shelf',y_cm:Math.round(iH*0.75),x_left_cm:0,x_right_cm:iW},
     ];
   } else if(id==='biblio1'){
+    var saved=localStorage.getItem('kobo_preset_biblio1');
+    if(saved){ try{ els=JSON.parse(saved); setActiveEls(els); clearCaissonGhost(); buildCaisson(); return; }catch(e){} }
+    // Fallback hardcodé si rien de sauvegardé
     // 9 étagères pleine largeur (bas→haut : 21+25+21+18+25+17+23+16+14 cm)
     var sh9=[0.107,0.235,0.342,0.434,0.561,0.648,0.766,0.867,0.934].map(function(p){return Math.round(iH*p);});
     var xL1=Math.round(iW*0.22), xR1=Math.round(iW*0.78), xMR=Math.round(iW*0.60);
