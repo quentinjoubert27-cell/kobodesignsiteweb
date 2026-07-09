@@ -2429,7 +2429,8 @@ cvs.addEventListener('pointerdown',function(e){
       if(_hoverElIdx>=0){
         var pels=getActiveEls();
         var pel=pels[_hoverElIdx];
-        if(pel){
+        // Double-check : on ne ramasse que si l'élément est bien de la même famille que le type actif
+        if(pel && _sameFamily(caissonType, pel.type)){
           pushUndo();
           editPickedEl=JSON.parse(JSON.stringify(pel));
           editPickedIdx=_hoverElIdx;
