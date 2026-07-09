@@ -1863,9 +1863,9 @@ function _rebuildEditBar(){
     } else {
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes s\'accrochent dessus')+
-        cBtn('shelf_simple',     false, svgShelfSimple,'Liseré horiz.','Trait décoratif horizontal, sans zone fonctionnelle')+
+        cBtn('shelf_simple',     false, svgShelfSimple,'Étagère déco', 'Étagère secondaire décorative — ignorée par les portes')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
-        cBtn('separator_simple', false, svgSepSimple,  'Liseré vert.', 'Trait décoratif vertical, sans zone fonctionnelle')+
+        cBtn('separator_simple', false, svgSepSimple,  'Intercal. déco','Intercalaire décoratif — ignoré par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires');
     }
   } else {
