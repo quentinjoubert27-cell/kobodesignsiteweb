@@ -12,6 +12,49 @@
     :root{ --accent:#CD3E00; --bg:#FFFAF0; --dark:#1A1A1A; --font:'Poppins',sans-serif }
     *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0 }
     body{ font-family:var(--font); background:var(--bg); color:var(--dark); min-height:100vh }
+    .coming-soon-overlay{
+      min-height:calc(100vh - 64px);
+      display:flex; align-items:center; justify-content:center;
+      padding:40px 24px;
+    }
+    .coming-soon-inner{
+      display:flex; flex-direction:column; align-items:center;
+      text-align:center; gap:20px; max-width:520px;
+    }
+    .coming-soon-badge{
+      display:inline-flex; align-items:center; gap:9px;
+      font-size:10px; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
+      color:var(--accent); background:rgba(205,62,0,.07);
+      border:1px solid rgba(205,62,0,.2); border-radius:100px; padding:8px 18px;
+    }
+    .coming-soon-dot{
+      width:8px; height:8px; border-radius:50%; background:var(--accent); flex-shrink:0;
+      animation:pdot 2s ease-in-out infinite;
+    }
+    @keyframes pdot{
+      0%,100%{ box-shadow:0 0 0 0 rgba(205,62,0,.4); }
+      50%{ box-shadow:0 0 0 7px rgba(205,62,0,0); }
+    }
+    .coming-soon-title{
+      font-size:clamp(36px,6vw,64px); font-weight:900; letter-spacing:-.03em; line-height:1.05;
+    }
+    .coming-soon-title em{ font-style:normal; color:var(--accent); }
+    .coming-soon-text{
+      font-size:15px; font-weight:300; color:rgba(26,26,26,.55); line-height:1.7;
+    }
+    .coming-soon-cta{
+      display:inline-flex; align-items:center; gap:8px;
+      background:var(--accent); color:#fff;
+      font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+      padding:14px 28px; border-radius:100px; text-decoration:none;
+      transition:opacity .2s;
+    }
+    .coming-soon-cta:hover{ opacity:.85; }
+    .coming-soon-back{
+      font-size:12px; color:rgba(26,26,26,.4); text-decoration:none;
+      letter-spacing:.04em;
+    }
+    .coming-soon-back:hover{ color:var(--accent); }
 
     header{
       height:64px; display:flex; align-items:center; justify-content:space-between;
@@ -297,10 +340,26 @@
 
 <header>
   <a href="index.html" class="logo"><img src="img/logo-kobo.png" alt="Kobo Design"/></a>
-  <span class="header-badge">Test · Bibliothèque PAM</span>
+  <span class="header-badge">Configurateur Bibliothèque</span>
 </header>
 
-<div class="page">
+<div class="coming-soon-overlay">
+  <div class="coming-soon-inner">
+    <div class="coming-soon-badge">
+      <span class="coming-soon-dot"></span>
+      En cours de création
+    </div>
+    <h1 class="coming-soon-title">Configurateur<br><em>Bibliothèque</em></h1>
+    <p class="coming-soon-text">Notre équipe travaille actuellement sur cet outil.<br>Il sera disponible très prochainement.</p>
+    <a href="contact.html" class="coming-soon-cta">
+      Être notifié à la sortie
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <a href="gamme.html" class="coming-soon-back">← Retour à la gamme</a>
+  </div>
+</div>
+
+<div class="page" style="display:none">
   <p class="eyebrow">Configurateur</p>
   <h1>Bibliothèque<br><em>sur-mesure.</em></h1>
   <p class="sub">Aperçu 3D indicatif — les cotes finales sont confirmées lors du devis.</p>
