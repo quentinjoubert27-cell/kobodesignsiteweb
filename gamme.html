@@ -837,7 +837,7 @@
       max-width: 480px;
       margin: 0;
     }
-    .biblio-config-cta__soon {
+    .cfg-soon {
       display: flex;
       align-items: center;
       gap: 14px;
@@ -848,26 +848,25 @@
       max-width: 460px;
       text-align: left;
     }
-    .biblio-config-cta__soon-dot {
+    .cfg-soon__dot {
       flex-shrink: 0;
       width: 10px;
       height: 10px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 0 0 rgba(205,62,0,.4);
       animation: pulse-dot 2s ease-in-out infinite;
     }
     @keyframes pulse-dot {
       0%,100% { box-shadow: 0 0 0 0 rgba(205,62,0,.4); }
-      50%      { box-shadow: 0 0 0 7px rgba(205,62,0,.0); }
+      50%      { box-shadow: 0 0 0 7px rgba(205,62,0,0); }
     }
-    .biblio-config-cta__soon-title {
+    .cfg-soon__title {
       font-size: 13px;
       font-weight: 600;
       color: var(--text);
       margin-bottom: 3px;
     }
-    .biblio-config-cta__soon-sub {
+    .cfg-soon__sub {
       font-size: 12px;
       font-weight: 400;
       color: rgba(26,26,26,.5);
@@ -1607,11 +1606,11 @@
   <div class="biblio-config-cta reveal">
     <div class="biblio-config-cta__badge">✦ Configurateur 3D · Exclusif Kōbō</div>
     <p class="biblio-config-cta__text">Composez votre bibliothèque sur-mesure en 3D — dimensions, étagères, intercalaires, portes — et recevez un devis ferme sous 24h.</p>
-    <div class="biblio-config-cta__soon">
-      <span class="biblio-config-cta__soon-dot"></span>
+    <div class="cfg-soon">
+      <span class="cfg-soon__dot"></span>
       <div>
-        <div class="biblio-config-cta__soon-title">En cours de développement</div>
-        <div class="biblio-config-cta__soon-sub">Notre équipe finalise le configurateur bibliothèque — disponible très prochainement.</div>
+        <div class="cfg-soon__title">En cours de création</div>
+        <div class="cfg-soon__sub">Notre équipe finalise ce configurateur — disponible très prochainement.</div>
       </div>
     </div>
   </div>
@@ -1647,10 +1646,13 @@
         <li><span class="sdb-showcase__list-num">3</span><div><strong>Validez votre devis</strong><span>Gratuit · sans engagement · 24h</span></div></li>
       </ul>
 
-      <a class="sdb-showcase__cta reveal reveal-delay-3" href="/configurateur-sdb">
-        Lancer le configurateur
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
+      <div class="cfg-soon reveal reveal-delay-3">
+        <span class="cfg-soon__dot"></span>
+        <div>
+          <div class="cfg-soon__title">En cours de création</div>
+          <div class="cfg-soon__sub">Notre équipe finalise ce configurateur — disponible très prochainement.</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
