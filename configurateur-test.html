@@ -416,7 +416,10 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 <div id="app">
   <div id="sidebar">
     <div id="sb-header">
-      <div class="logo-txt">Kōbō Design</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="logo-txt">Kōbō Design</div>
+        <a href="index.html" style="font-size:10px;font-weight:600;color:var(--text2);text-decoration:none;letter-spacing:.04em;display:flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid var(--border);border-radius:100px;transition:color .15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">← Site</a>
+      </div>
       <div class="logo-sub" id="logo-sub">Configurateur</div>
     </div>
     <div id="stepper"></div>
