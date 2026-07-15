@@ -2031,7 +2031,7 @@ function toggleCaissonEdit(){
   var btn=document.getElementById('btn-edit-cais');
   if(btn) btn.classList.toggle('active',caissonEditMode);
   wrap.classList.toggle('mode-edit',caissonEditMode);
-  controls.enabled=!caissonEditMode;
+  if(!caissonEditMode) controls.enabled=true;
   cvs.style.cursor=caissonEditMode?'crosshair':'';
   if(!caissonEditMode) clearCaissonGhost();
   _rebuildEditBar();
@@ -2679,8 +2679,14 @@ function _updateHoverEl(hitPos){
 cvs.addEventListener('pointermove',function(e){
   if(S.step===1&&caissonEditMode){
     updateCaissonGhost(e); editMouseLastE=e;
-    if(!editMouseDragging){ _updateHoverEl(getCaissonHit(e)); }
-    else { cvs.style.cursor=editPickedEl?'grabbing':'crosshair'; }
+    if(!editMouseDragging){
+      var _hit=getCaissonHit(e);
+      _updateHoverEl(_hit);
+      controls.enabled=!_hit;
+      cvs.style.cursor=_hit?'grab':'crosshair';
+    } else {
+      cvs.style.cursor=editPickedEl?'grabbing':'crosshair';
+    }
     return;
   }
   if(tvTopDragging&&tvTopDragPlane&&tvGrp[2]){
