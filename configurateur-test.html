@@ -961,7 +961,7 @@ function getCompartment(y_cm, x_cm){
     var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
     var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
     // Si x_cm fourni : tablette valide si elle couvre ce x
-    if(x_cm!==undefined) return sl<=x_cm&&sr>=x_cm;
+    if(x_cm!==undefined) return sl<x_cm&&sr>x_cm;
     // Sinon : seulement les tablettes pleine largeur
     return sl<=1&&sr>=iW_cm-1;
   }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
