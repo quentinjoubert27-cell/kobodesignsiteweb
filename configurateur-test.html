@@ -988,7 +988,11 @@ function getBay(x_cm,y_cm){
   var iW_cm=(getActiveCL()-2*EP)*100;
   var comp=getCompartment(y_cm,x_cm);
   var seps=getActiveEls().filter(function(e){
-    return e.type==='separator'&&e.y_cm>=comp.bottom_cm&&e.y_cm<=comp.top_cm;
+    if(e.type!=='separator') return false;
+    // Un séparateur est actif au y du clic si son propre compartiment contient ce y
+    // (évite le bug où des étagères d'un seul côté excluent le séparateur)
+    var sepComp=getCompartment(e.y_cm,e.x_cm);
+    return y_cm>=sepComp.bottom_cm&&y_cm<=sepComp.top_cm;
   }).map(function(e){return e.x_cm;}).sort(function(a,b){return a-b;});
   var left=0,right=iW_cm;
   seps.forEach(function(s){ if(s<x_cm&&s>left) left=s; if(s>x_cm&&s<right) right=s; });
