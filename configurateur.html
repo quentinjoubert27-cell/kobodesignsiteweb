@@ -1915,7 +1915,7 @@ function switchActiveCaisson(n){
 function _rebuildEditBar(){
   var btns;
   if(BIBLIO_MODE){
-    btns=document.querySelector('#fn-edit-content .c-type-btns');
+    btns=document.querySelector('.panel.on .c-type-btns')||document.querySelector('#fn-edit-content .c-type-btns');
   } else {
     // SDB : injecte dans c-edit-bar si pas encore présent
     var bar=document.getElementById('c-edit-bar');
