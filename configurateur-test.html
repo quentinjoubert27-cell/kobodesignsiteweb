@@ -956,15 +956,30 @@ function getActiveOpenState(){ return _isTVExtra()?tvOpenState[_tvIdx()]:(active
 function getCompartment(y_cm, x_cm){
   var iH_cm=(getActiveCH()-2*EP)*100;
   var iW_cm=(getActiveCL()-2*EP)*100;
-  var shelves=getActiveEls().filter(function(e){
-    if(e.type!=='shelf'&&e.type!=='shelf_simple') return false;
-    var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
-    var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
-    // Si x_cm fourni : tablette valide si elle couvre ce x
-    if(x_cm!==undefined) return sl<x_cm&&sr>x_cm;
-    // Sinon : seulement les tablettes pleine largeur
-    return sl<=1&&sr>=iW_cm-1;
-  }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
+  var shelves;
+  if(x_cm!==undefined){
+    // Fusionner les étagères par y_cm : deux demi-étagères qui se rejoignent en x_cm
+    // (ex: [0→60] + [60→120]) comptent ensemble comme une frontière complète
+    var byY={};
+    getActiveEls().forEach(function(e){
+      if(e.type!=='shelf'&&e.type!=='shelf_simple') return;
+      var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
+      var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
+      if(sl>x_cm||sr<x_cm) return; // ne touche pas x_cm du tout
+      if(!byY[e.y_cm]) byY[e.y_cm]={l:sl,r:sr};
+      else { byY[e.y_cm].l=Math.min(byY[e.y_cm].l,sl); byY[e.y_cm].r=Math.max(byY[e.y_cm].r,sr); }
+    });
+    shelves=Object.keys(byY).filter(function(y){
+      return byY[y].l<x_cm&&byY[y].r>x_cm; // la couverture fusionnée traverse strictement x_cm
+    }).map(Number).sort(function(a,b){return a-b;});
+  } else {
+    shelves=getActiveEls().filter(function(e){
+      if(e.type!=='shelf'&&e.type!=='shelf_simple') return false;
+      var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
+      var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
+      return sl<=1&&sr>=iW_cm-1;
+    }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
+  }
   var bot=0,top=iH_cm;
   shelves.forEach(function(s){ if(s<y_cm&&s>bot) bot=s; if(s>y_cm&&s<top) top=s; });
   return {bottom_cm:bot,top_cm:top,height_cm:top-bot,centerY:ycmToLocal((top+bot)/2)};
