@@ -1875,33 +1875,54 @@ function _rebuildEditBar(){
     var isTV=(typeof currentFT!=='undefined'&&currentFT==='tv');
     if(isDressing){
       btns.innerHTML=selectorHTML+
-        cBtn('shelf',    true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
-        cBtn('barre',    false, svgBarre,       'Tringle',      'Barre pour suspendre les vêtements')+
-        cBtn('separator',false, svgSep,         'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
-        cBtn('porte',    false, svgPorte,       'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
-        cBtn('tiroir',   false, svgTiroir,      'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
+        cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
+        cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire — non prise en compte par les portes')+
+        cBtn('barre',            false, svgBarre,      'Tringle',      'Barre pour suspendre les vêtements')+
+        cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
+        cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
+        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
+        cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && activeCaisson===1){
-      // Caisson central bas : tablette, séparateur, porte, tiroir
+      // Caisson central bas : étagère, intercalaire, porte, tiroir
       btns.innerHTML=selectorHTML+
-        cBtn('shelf',     true,  svgShelf,   'Tablette',    'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
-        cBtn('separator', false, svgSep,     'Séparateur',  'Crée une zone latérale — délimite l\'espace pour une porte')+
-        cBtn('porte',     false, svgPorte,   'Porte',       'Remplit la zone définie par les tablettes + séparateurs')+
-        cBtn('tiroir',    false, svgTiroir,  'Tiroir',      'Remplit la zone définie par les tablettes + séparateurs');
-    } else if(isTV && activeCaisson>=3){
-      // Caissons latéraux / dessus : étagère, intercalaire, porte
-      btns.innerHTML=selectorHTML+
-        cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes s\'accrochent dessus')+
+        cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
         cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire — non prise en compte par les portes')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
-        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires');
+        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
+        cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
+    } else if(isTV && activeCaisson>=3){
+      // Caissons latéraux / dessus : étagère, intercalaire, porte, tiroir
+      btns.innerHTML=selectorHTML+
+        cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
+        cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire — non prise en compte par les portes')+
+        cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
+        cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
+        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
+        cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else {
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes s\'accrochent dessus')+
         cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire — non prise en compte par les portes')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
-        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires');
+        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
+        cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
+    }
+    if(isTV){
+      // Bouton ouvrir/fermer toutes les portes
+      var allEls=[caissonElements,caissonElements2].concat(tvElems);
+      var allOs=[caissonOpenState,caissonOpenState2].concat(tvOpenState);
+      var hasAny=allEls.some(function(els){ return els.some(function(e){ return e.type==='porte'||e.type==='tiroir'; }); });
+      if(hasAny){
+        var allOpen=allEls.every(function(els){ return els.filter(function(e){ return e.type==='porte'||e.type==='tiroir'; }).every(function(e){ return allOs.some(function(os){ return os[e.key]; }); }); });
+        var openBtn=document.createElement('button');
+        openBtn.className='reset-btn';
+        openBtn.style.marginTop='10px';
+        openBtn.textContent=allOpen?'Fermer toutes les portes':'Ouvrir toutes les portes';
+        openBtn.onclick=toggleAllDoorsTv;
+        btns.appendChild(openBtn);
+      }
     }
   } else {
     btns.innerHTML=
@@ -2376,6 +2397,20 @@ function resetCaissonElements(){
   if(_isTVExtra()) tvOpenState[_tvIdx()]={};
   else if(activeCaisson===1) caissonOpenState={}; else caissonOpenState2={};
   clearCaissonGhost(); buildCaisson();
+}
+
+function toggleAllDoorsTv(){
+  // Collecte toutes les portes/tiroirs de tous les caissons TV
+  var allKeys=[];
+  var allStates=[caissonOpenState, caissonOpenState2, tvOpenState[0], tvOpenState[1], tvOpenState[2]];
+  var allEls=[caissonElements, caissonElements2].concat(tvElems);
+  allEls.forEach(function(els){ els.forEach(function(e){ if(e.type==='porte'||e.type==='tiroir') allKeys.push(e.key); }); });
+  // Si au moins une est fermée → tout ouvrir, sinon tout fermer
+  var anyClose=allKeys.some(function(k){ return !allStates.some(function(os){ return os[k]; }); });
+  pushUndo();
+  allStates.forEach(function(os){ allKeys.forEach(function(k){ os[k]=anyClose; }); });
+  buildCaisson();
+  _rebuildEditBar();
 }
 function updateAmgtCount(){
   var el=document.getElementById('amgt-count'); if(!el) return;
@@ -2907,10 +2942,12 @@ function selectFurnitureType(ft){
     camera.lookAt(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
     controls.target.set(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
     controls.update();
-    scene.background = new THREE.Color(0x141210);
-    scene.fog = new THREE.FogExp2(0x141210,0.045);
-    solMesh.visible=true; solSh.visible=true; murMesh.visible=true; mirGrp.visible=true;
-    wallBiblio.visible=false; floorBiblio.visible=false;
+    scene.background = new THREE.Color(0xF2EAD8);
+    scene.fog = null;
+    solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
+    wallBiblio.position.set(0, 0, WALL_BIBLIO_Z);
+    floorBiblio.position.set(0, FLOOR_BIBLIO_Y, 0);
+    wallBiblio.visible=true; floorBiblio.visible=true;
   }
 
   // Adapt dimension inputs
@@ -3382,7 +3419,7 @@ function updateCotes(){
   }
 
   // ── Hauteurs des baies intérieures (caisson principal) ──────────
-  var iH_cote=Math.round((CH-2*EP)*100); // hauteur intérieure en cm (sans panneaux)
+  var iH_cote=Math.round(CH*100); // hauteur extérieure en cm (correspond à la dimension configurée)
   var els=caissonElements.filter(function(e){return e.type==='shelf'||e.type==='shelf_simple';});
   var ys=[0].concat(els.map(function(e){return e.y_cm;})).concat([iH_cote]);
   ys.sort(function(a,b){return a-b;});
