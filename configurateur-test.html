@@ -1003,9 +1003,8 @@ function mkKey(comp,bay){
 }
 function getFacadeFor(comp,bay){
   var k=mkKey(comp,bay);
-  var els=getActiveEls();
-  for(var i=0;i<els.length;i++){
-    if((els[i].type==='porte'||els[i].type==='tiroir')&&els[i].key===k) return els[i];
+  for(var i=0;i<caissonElements.length;i++){
+    if((caissonElements[i].type==='porte'||caissonElements[i].type==='tiroir')&&caissonElements[i].key===k) return caissonElements[i];
   }
   return null;
 }
@@ -1098,118 +1097,216 @@ function buildCaisson(){
   var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db);
   var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
 
-  // Tablettes et séparateurs
-  caissonElements.forEach(function(el,idx){
-    if(el.type==='shelf'||el.type==='shelf_simple'){
-      var iW_cm2=(S.CL-2*EP)*100;
-      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
-      var sw=(sr-sl)/100;
-      var scx=xcmToLocal((sl+sr)/2);
-      var th=ep;
-      var m=box(sw,th,CP-ep,matElem);
-      m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
-      m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
-    } else if(el.type==='separator'||el.type==='separator_simple'){
-      var comp=getCompartment(el.y_cm,el.x_cm);
-      var h=comp.height_cm/100; if(h<0.01) return;
-      var tw=ep;
-      var m=box(tw,h,CP-ep,matElem);
-      m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
-      m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
-    } else if(el.type==='barre'){
-      var iW_cm2=(S.CL-2*EP)*100;
-      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
-      var barLen=(sr-sl)/100;
-      var barGeo=new THREE.CylinderGeometry(0.014,0.014,barLen,16);
-      barGeo.rotateZ(Math.PI/2);
-      var bm=new THREE.Mesh(barGeo,matBarre);
-      bm.castShadow=true;
-      bm.position.set(xcmToLocal((sl+sr)/2), ycmToLocal(el.y_cm), -CP*0.25);
-      bm.userData.elemIdx=idx; caissonElemMeshes.push(bm); caissonGrp.add(bm);
-      // Support gauche
-      var supG=box(0.020,0.020,CP*0.5-0.014,matBarre);
-      supG.position.set(xcmToLocal(sl)+0.010, ycmToLocal(el.y_cm), -CP*0.25+0.014);
-      caissonGrp.add(supG);
-      // Support droit
-      var supD=box(0.020,0.020,CP*0.5-0.014,matBarre);
-      supD.position.set(xcmToLocal(sr)-0.010, ycmToLocal(el.y_cm), -CP*0.25+0.014);
-      caissonGrp.add(supD);
-    }
-  });
+  if(!BIBLIO_MODE){
+    // ── Bloc SDB (identique à configurateur-sdb.html) ──────────────────────
+    // Tablettes et séparateurs
+    caissonElements.forEach(function(el,idx){
+      if(el.type==='shelf'){
+        var iW_cm2=(S.CL-2*EP)*100;
+        var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+        var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
+        var sw=(sr-sl)/100;
+        var scx=xcmToLocal((sl+sr)/2);
+        var m=box(sw,ep,CP-ep,matElem);
+        m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
+        m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
+      } else if(el.type==='separator'){
+        var comp=getCompartment(el.y_cm,el.x_cm);
+        var h=comp.height_cm/100; if(h<0.01) return;
+        var m=box(ep,h,CP-ep,matElem);
+        m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
+        m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
+      }
+    });
 
-  // Façades par compartiment
-  var fz=CP/2+0.001; // collé au meuble (1mm)
-  caissonElements.forEach(function(el,idx){
-    if(el.type!=='porte'&&el.type!=='tiroir') return;
-    var parts=el.key.split('_').map(Number);
-    var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
-    var w=(right-left)/100, h=(top-bot)/100;
-    var cx=xcmToLocal((left+right)/2);
-    var jeu=0.003;
-    if(el.type==='porte'){
-      var isOpen=!!caissonOpenState[el.key];
-      var iW_cm2=iW*100, iH_cm2=iH*100;
-      var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  - EP/2;
-      var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
-      var porYbot   = (bot<0.5)          ?  0    : ycmToLocal(bot)    - EP/2;
-      var porYtop   = (top>iH_cm2-0.5)  ?  CH   : ycmToLocal(top)    + EP/2;
-      var porW  = porXright - porXleft - jeu;
-      var porH  = porYtop   - porYbot  - jeu;
-      var porCy = (porYbot + porYtop) / 2;
-      // Charnière à l'extérieur : gauche si porte dans la moitié gauche, droite sinon
-      var cabinetMidX = xcmToLocal(iW*50);
-      var porCx = (porXleft + porXright) / 2;
-      var hingeLeft = porCx <= cabinetMidX;
-      var pivot=new THREE.Group();
-      if(hingeLeft){
-        pivot.position.set(porXleft+jeu/2, porCy, fz);
-        if(isOpen) pivot.rotation.y=-Math.PI*0.25;
-      } else {
-        pivot.position.set(porXright-jeu/2, porCy, fz);
-        if(isOpen) pivot.rotation.y=Math.PI*0.25;
-      }
-      var pm=box(porW,porH,0.020,matFacade);
-      pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
-      addDoorHinges(pm, porW, porH, hingeLeft);
-      pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
-      pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
-    } else { // tiroir
-      var isOpen=!!caissonOpenState[el.key];
-      var tirZ=isOpen ? fz+CP*0.55 : fz;
-      var iW_cm=iW*100, iH_cm=iH*100;
+    // Façades par compartiment
+    var fz=CP/2+0.001; // collé au meuble (1mm)
+    caissonElements.forEach(function(el,idx){
+      if(el.type!=='porte'&&el.type!=='tiroir') return;
+      var parts=el.key.split('_').map(Number);
+      var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
+      var w=(right-left)/100, h=(top-bot)/100;
+      var cx=xcmToLocal((left+right)/2);
       var jeu=0.003;
-      var tirXleft  = (left<0.5)        ? -CL/2 : xcmToLocal(left)  - EP/2;
-      var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
-      var tirYbot   = (bot<0.5)         ?  0    : ycmToLocal(bot)   - EP/2;
-      var tirYtop   = (top>iH_cm-0.5)  ?  CH   : ycmToLocal(top)   + EP/2;
-      var tirW = tirXright - tirXleft - jeu;
-      var tirH = tirYtop - tirYbot - jeu;
-      var tirCx = (tirXleft + tirXright) / 2;
-      var tirCy = (tirYbot  + tirYtop)  / 2;
-      var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
-      tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
-      caissonElemMeshes.push(tm); caissonGrp.add(tm);
-      if(isOpen){
-        var bep=EP*0.5;
-        var botFront=tirZ-0.010, botBack=-CP/2+0.015;
-        var boxDepth=botFront-botBack, boxCz=(botFront+botBack)/2;
-        var bBot=box(tirW,bep,boxDepth,matTirInt);
-        bBot.position.set(tirCx,tirCy-tirH/2+bep/2,boxCz);
-        bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
-        caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
-        var bL=box(bep,tirH-bep,boxDepth,matTirInt);
-        bL.position.set(tirCx-tirW/2+bep/2,tirCy+bep/2,boxCz);
-        bL.userData.tirKey=el.key; bL.userData.isTiroir=true;
-        caissonElemMeshes.push(bL); caissonGrp.add(bL);
-        var bR=box(bep,tirH-bep,boxDepth,matTirInt);
-        bR.position.set(tirCx+tirW/2-bep/2,tirCy+bep/2,boxCz);
-        bR.userData.tirKey=el.key; bR.userData.isTiroir=true;
-        caissonElemMeshes.push(bR); caissonGrp.add(bR);
+      if(el.type==='porte'){
+        var isOpen=!!caissonOpenState[el.key];
+        var iW_cm2=iW*100, iH_cm2=iH*100;
+        var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  - EP/2;
+        var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+        var porYbot   = (bot<0.5)          ?  0    : ycmToLocal(bot)    - EP/2;
+        var porYtop   = (top>iH_cm2-0.5)  ?  CH   : ycmToLocal(top)    + EP/2;
+        var porW  = porXright - porXleft - jeu;
+        var porH  = porYtop   - porYbot  - jeu;
+        var porCy = (porYbot + porYtop) / 2;
+        // Charnière à l'extérieur : gauche si porte dans la moitié gauche, droite sinon
+        var cabinetMidX = xcmToLocal(iW*50);
+        var porCx = (porXleft + porXright) / 2;
+        var hingeLeft = porCx <= cabinetMidX;
+        var pivot=new THREE.Group();
+        if(hingeLeft){
+          pivot.position.set(porXleft+jeu/2, porCy, fz);
+          if(isOpen) pivot.rotation.y=-Math.PI*0.25;
+        } else {
+          pivot.position.set(porXright-jeu/2, porCy, fz);
+          if(isOpen) pivot.rotation.y=Math.PI*0.25;
+        }
+        var pm=box(porW,porH,0.020,matFacade);
+        pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
+        pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
+        pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
+      } else { // tiroir
+        var isOpen=!!caissonOpenState[el.key];
+        var tirZ=isOpen ? fz+CP*0.55 : fz;
+        var iW_cm=iW*100, iH_cm=iH*100;
+        var jeu=0.003;
+        var tirXleft  = (left<0.5)        ? -CL/2 : xcmToLocal(left)  - EP/2;
+        var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+        var tirYbot   = (bot<0.5)         ?  0    : ycmToLocal(bot)   - EP/2;
+        var tirYtop   = (top>iH_cm-0.5)  ?  CH   : ycmToLocal(top)   + EP/2;
+        var tirW = tirXright - tirXleft - jeu;
+        var tirH = tirYtop - tirYbot - jeu;
+        var tirCx = (tirXleft + tirXright) / 2;
+        var tirCy = (tirYbot  + tirYtop)  / 2;
+        // Façade
+        var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
+        tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+        caissonElemMeshes.push(tm); caissonGrp.add(tm);
+        // Caisson intérieur (visible uniquement quand ouvert)
+        if(isOpen){
+          var bep=EP*0.5;
+          var botFront=tirZ-0.010, botBack=-CP/2+0.015;
+          var boxDepth=botFront-botBack, boxCz=(botFront+botBack)/2;
+          var bBot=box(tirW,bep,boxDepth,matTirInt);
+          bBot.position.set(tirCx, tirCy-tirH/2+bep/2, boxCz);
+          bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
+          caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
+          var bL=box(bep,tirH-bep,boxDepth,matTirInt);
+          bL.position.set(tirCx-tirW/2+bep/2, tirCy+bep/2, boxCz);
+          bL.userData.tirKey=el.key; bL.userData.isTiroir=true;
+          caissonElemMeshes.push(bL); caissonGrp.add(bL);
+          var bR=box(bep,tirH-bep,boxDepth,matTirInt);
+          bR.position.set(tirCx+tirW/2-bep/2, tirCy+bep/2, boxCz);
+          bR.userData.tirKey=el.key; bR.userData.isTiroir=true;
+          caissonElemMeshes.push(bR); caissonGrp.add(bR);
+          // dos
+        }
       }
-    }
-  });
+    });
+  } else {
+    // ── Bloc BIBLIO_MODE (biblio, tv, dressing, chambre) ───────────────────
+    // Tablettes et séparateurs
+    caissonElements.forEach(function(el,idx){
+      if(el.type==='shelf'||el.type==='shelf_simple'){
+        var iW_cm2=(S.CL-2*EP)*100;
+        var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+        var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
+        var sw=(sr-sl)/100;
+        var scx=xcmToLocal((sl+sr)/2);
+        var th=ep;
+        var m=box(sw,th,CP-ep,matElem);
+        m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
+        m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
+      } else if(el.type==='separator'||el.type==='separator_simple'){
+        var comp=getCompartment(el.y_cm,el.x_cm);
+        var h=comp.height_cm/100; if(h<0.01) return;
+        var tw=ep;
+        var m=box(tw,h,CP-ep,matElem);
+        m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
+        m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
+      } else if(el.type==='barre'){
+        var iW_cm2=(S.CL-2*EP)*100;
+        var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
+        var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
+        var barLen=(sr-sl)/100;
+        var barGeo=new THREE.CylinderGeometry(0.014,0.014,barLen,16);
+        barGeo.rotateZ(Math.PI/2);
+        var bm=new THREE.Mesh(barGeo,matBarre);
+        bm.castShadow=true;
+        bm.position.set(xcmToLocal((sl+sr)/2), ycmToLocal(el.y_cm), -CP*0.25);
+        bm.userData.elemIdx=idx; caissonElemMeshes.push(bm); caissonGrp.add(bm);
+        // Support gauche
+        var supG=box(0.020,0.020,CP*0.5-0.014,matBarre);
+        supG.position.set(xcmToLocal(sl)+0.010, ycmToLocal(el.y_cm), -CP*0.25+0.014);
+        caissonGrp.add(supG);
+        // Support droit
+        var supD=box(0.020,0.020,CP*0.5-0.014,matBarre);
+        supD.position.set(xcmToLocal(sr)-0.010, ycmToLocal(el.y_cm), -CP*0.25+0.014);
+        caissonGrp.add(supD);
+      }
+    });
+
+    // Façades par compartiment
+    var fz=CP/2+0.001; // collé au meuble (1mm)
+    caissonElements.forEach(function(el,idx){
+      if(el.type!=='porte'&&el.type!=='tiroir') return;
+      var parts=el.key.split('_').map(Number);
+      var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
+      var w=(right-left)/100, h=(top-bot)/100;
+      var cx=xcmToLocal((left+right)/2);
+      var jeu=0.003;
+      if(el.type==='porte'){
+        var isOpen=!!caissonOpenState[el.key];
+        var iW_cm2=iW*100, iH_cm2=iH*100;
+        var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  - EP/2;
+        var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+        var porYbot   = (bot<0.5)          ?  0    : ycmToLocal(bot)    - EP/2;
+        var porYtop   = (top>iH_cm2-0.5)  ?  CH   : ycmToLocal(top)    + EP/2;
+        var porW  = porXright - porXleft - jeu;
+        var porH  = porYtop   - porYbot  - jeu;
+        var porCy = (porYbot + porYtop) / 2;
+        // Charnière à l'extérieur : gauche si porte dans la moitié gauche, droite sinon
+        var cabinetMidX = xcmToLocal(iW*50);
+        var porCx = (porXleft + porXright) / 2;
+        var hingeLeft = porCx <= cabinetMidX;
+        var pivot=new THREE.Group();
+        if(hingeLeft){
+          pivot.position.set(porXleft+jeu/2, porCy, fz);
+          if(isOpen) pivot.rotation.y=-Math.PI*0.25;
+        } else {
+          pivot.position.set(porXright-jeu/2, porCy, fz);
+          if(isOpen) pivot.rotation.y=Math.PI*0.25;
+        }
+        var pm=box(porW,porH,0.020,matFacade);
+        pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
+        addDoorHinges(pm, porW, porH, hingeLeft);
+        pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
+        pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
+      } else { // tiroir
+        var isOpen=!!caissonOpenState[el.key];
+        var tirZ=isOpen ? fz+CP*0.55 : fz;
+        var iW_cm=iW*100, iH_cm=iH*100;
+        var jeu=0.003;
+        var tirXleft  = (left<0.5)        ? -CL/2 : xcmToLocal(left)  - EP/2;
+        var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+        var tirYbot   = (bot<0.5)         ?  0    : ycmToLocal(bot)   - EP/2;
+        var tirYtop   = (top>iH_cm-0.5)  ?  CH   : ycmToLocal(top)   + EP/2;
+        var tirW = tirXright - tirXleft - jeu;
+        var tirH = tirYtop - tirYbot - jeu;
+        var tirCx = (tirXleft + tirXright) / 2;
+        var tirCy = (tirYbot  + tirYtop)  / 2;
+        var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
+        tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+        caissonElemMeshes.push(tm); caissonGrp.add(tm);
+        if(isOpen){
+          var bep=EP*0.5;
+          var botFront=tirZ-0.010, botBack=-CP/2+0.015;
+          var boxDepth=botFront-botBack, boxCz=(botFront+botBack)/2;
+          var bBot=box(tirW,bep,boxDepth,matTirInt);
+          bBot.position.set(tirCx,tirCy-tirH/2+bep/2,boxCz);
+          bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
+          caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
+          var bL=box(bep,tirH-bep,boxDepth,matTirInt);
+          bL.position.set(tirCx-tirW/2+bep/2,tirCy+bep/2,boxCz);
+          bL.userData.tirKey=el.key; bL.userData.isTiroir=true;
+          caissonElemMeshes.push(bL); caissonGrp.add(bL);
+          var bR=box(bep,tirH-bep,boxDepth,matTirInt);
+          bR.position.set(tirCx+tirW/2-bep/2,tirCy+bep/2,boxCz);
+          bR.userData.tirKey=el.key; bR.userData.isTiroir=true;
+          caissonElemMeshes.push(bR); caissonGrp.add(bR);
+        }
+      }
+    });
+  }
 
   // Plan de frappe invisible
   var hpGeo=new THREE.PlaneGeometry(iW,iH);
@@ -3092,10 +3189,10 @@ function checkAlerts(){
   if(wPlan){
     var meubleL=Math.round(S.CL*100), planL=Math.round(S.L*100);
     if(meubleL>planL){
-      wPlan.textContent='Attention — le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
+      wPlan.textContent='⚠ Le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
       wPlan.classList.add('show');
     } else if(planL>meubleL+1){
-      wPlan.textContent='Note — le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+(planL-meubleL)+' cm.';
+      wPlan.textContent='ℹ Le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+( planL-meubleL)+' cm.';
       wPlan.classList.add('show');
     } else {
       wPlan.classList.remove('show');
@@ -3107,7 +3204,7 @@ function checkAlerts(){
     var pMat=MATS_PLAN[S.matPlan], vMat=MATS_VASQUE[S_matVasque];
     var planName=pMat?pMat.n:'', vasqueName=vMat?vMat.n:'';
     if(planName!==vasqueName){
-      wVasque.textContent='Attention — la vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
+      wVasque.textContent='⚠ La vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
       wVasque.classList.add('show');
     } else {
       wVasque.classList.remove('show');
