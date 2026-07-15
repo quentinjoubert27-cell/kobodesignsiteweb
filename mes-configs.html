@@ -233,11 +233,11 @@ window.changeStatus=changeStatus;
 
 // ── Types ────────────────────────────────────────
 var TYPE_META = {
-  biblio:   {label:'Bibliothèque',  badgeClass:'tb-biblio'},
-  sdb:      {label:'Salle de bain', badgeClass:'tb-sdb'},
-  tv:       {label:'Meuble TV',     badgeClass:'tb-tv'},
-  dressing: {label:'Dressing',      badgeClass:'tb-dressing'},
-  mobilier: {label:'Mobilier',      badgeClass:'tb-mobilier'},
+  biblio:   {label:'Bibliothèque',  plural:'Bibliothèques',  badgeClass:'tb-biblio'},
+  sdb:      {label:'Salle de bain', plural:'Salles de bain', badgeClass:'tb-sdb'},
+  tv:       {label:'Meuble TV',     plural:'Meubles TV',     badgeClass:'tb-tv'},
+  dressing: {label:'Dressing',      plural:'Dressings',      badgeClass:'tb-dressing'},
+  mobilier: {label:'Mobilier',      plural:'Mobilier',       badgeClass:'tb-mobilier'},
 };
 
 function normalizeConfig(c, source){
@@ -378,12 +378,13 @@ function fmtDate(iso){
 
 function renderAll(configs){
   window._allConfigs=configs;
-  var nb={biblio:0,sdb:0,mobilier:0};
+  var nb={};
+  Object.keys(TYPE_META).forEach(function(k){ nb[k]=0; });
   configs.forEach(function(c){ nb[c._type]=(nb[c._type]||0)+1; });
 
   // Stats
-  var statsHtml=stat(configs.length,'Total')+stat(nb.biblio,'Bibliothèques')+stat(nb.sdb,'Salles de bain');
-  if(nb.mobilier) statsHtml+=stat(nb.mobilier,'Mobilier');
+  var statsHtml=stat(configs.length,'Total');
+  Object.keys(TYPE_META).forEach(function(k){ if(nb[k]) statsHtml+=stat(nb[k],TYPE_META[k].plural); });
   document.getElementById('stats').innerHTML=statsHtml;
 
   // Pipeline
@@ -391,10 +392,10 @@ function renderAll(configs){
   if(pipEl) pipEl.innerHTML=buildPipelineHTML(configs);
 
   // Filtres type
-  var typeKeys=Object.keys(nb).filter(function(k){return nb[k]>0;});
   var filterHtml='<button class="tf-btn active" id="tf-all" onclick="filterByType(\'\')">Tous</button>';
-  typeKeys.forEach(function(k){
-    filterHtml+='<button class="tf-btn" id="tf-'+k+'" onclick="filterByType(\''+k+'\')">'+TYPE_META[k].label+'s</button>';
+  Object.keys(TYPE_META).forEach(function(k){
+    if(!nb[k]) return;
+    filterHtml+='<button class="tf-btn" id="tf-'+k+'" onclick="filterByType(\''+k+'\')">'+TYPE_META[k].plural+'</button>';
   });
   document.getElementById('type-filters').innerHTML=filterHtml;
 
