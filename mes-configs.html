@@ -242,11 +242,15 @@ var TYPE_META = {
 
 function normalizeConfig(c, source){
   var type;
-  if(source==='biblio') type='biblio';
-  else if(c.furniture_type && c.furniture_type!=='sdb') type=c.furniture_type;
-  else if(c.plan_l>0 && c.nb_vasques>0) type='sdb';
-  else if(c.furniture_type==='sdb') type='sdb';
-  else type='mobilier';
+  if(source==='biblio'){
+    type='biblio';
+  } else if(c.vasque_label && c.vasque_label.startsWith('__ft:')){
+    type=c.vasque_label.slice(5); // extrait 'biblio'|'tv'|'dressing' etc.
+  } else if(c.plan_l>0 && c.nb_vasques>0){
+    type='sdb';
+  } else {
+    type='mobilier';
+  }
   var dims, mat, summary, vizUrl;
   if(source==='biblio'){
     dims=c.largeur+'×'+c.hauteur+'×'+c.profondeur+' cm'; mat=c.essence||'—';

@@ -58,7 +58,6 @@ module.exports = async function handler(req, res) {
         email,
         message: message || null,
         // meuble
-        furniture_type,
         meuble_l: meuble.L || 0,
         meuble_h: meuble.H || 0,
         meuble_p: meuble.P || 0,
@@ -72,7 +71,9 @@ module.exports = async function handler(req, res) {
         nb_vasques: vasques.nb || 1,
         vasque_w: vasques.W || 0,
         vasque_d: vasques.D || 0,
-        vasque_label: (vasques.label || vasques.id || '').toString().slice(0, 40),
+        vasque_label: furniture_type !== 'sdb'
+          ? ('__ft:' + furniture_type)
+          : (vasques.label || vasques.id || '').toString().slice(0, 40),
         // intérieur
         nb_tablettes: counts.shelf || 0,
         nb_separateurs: counts.separator || 0,
