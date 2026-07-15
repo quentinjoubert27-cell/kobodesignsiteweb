@@ -3542,6 +3542,12 @@ buildVasque();
 buildCaisson();
 goStep(1);
 
+// ── Auto-sélection via ?ft= ───────────────────────────
+(function(){
+  var ft=new URLSearchParams(location.search).get('ft');
+  if(ft) selectFurnitureType(ft);
+})();
+
 // ── Chargement depuis ?c= (aperçu admin) ──────────────
 (function(){
   try{
