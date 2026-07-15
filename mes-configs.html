@@ -190,8 +190,8 @@
   <!-- Contenu (caché jusqu'à auth) -->
   <div id="content" style="display:none">
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('biblio')">📚 Bibliothèques</button>
-      <button class="tab-btn" onclick="switchTab('sdb')">🚿 Salles de bain</button>
+      <button class="tab-btn active" onclick="switchTab('biblio')">Bibliothèques</button>
+      <button class="tab-btn" onclick="switchTab('sdb')">Configurateur 3D</button>
     </div>
 
     <!-- Tab Biblio -->
@@ -422,8 +422,8 @@ function render(configs, token){
       + '<td style="white-space:nowrap">'
         + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
         + '<a href="'+viz+'" class="viz-btn" target="_blank">▶ 3D</a>'
-        + '<button class="fiche-btn" id="fiche-btn-'+idx+'" onclick="toggleFiche('+idx+')">📋 Fiche</button>'
-        + '<button class="fiche-btn" onclick="generatePDF('+idx+')">📄 PDF</button>'
+        + '<button class="fiche-btn" id="fiche-btn-'+idx+'" onclick="toggleFiche('+idx+')">Fiche</button>'
+        + '<button class="fiche-btn" onclick="generatePDF('+idx+')">PDF</button>'
         + '</div>'
       + '</td>'
       + '</tr>'
@@ -984,14 +984,21 @@ function buildPDFHtml(cfg){
 // ═══════════════════════════════════════════════
 //  SALLE DE BAIN
 // ═══════════════════════════════════════════════
+function detectType(c){
+  if(c.plan_l > 0 && c.nb_vasques > 0) return 'sdb';
+  return 'mobilier';
+}
+
 function renderSDB(configs){
   window._configsSDB = configs;
 
+  var nbSdb = configs.filter(function(c){ return detectType(c)==='sdb'; }).length;
+  var nbMob = configs.filter(function(c){ return detectType(c)==='mobilier'; }).length;
   var statsEl = document.getElementById('stats-sdb');
   statsEl.innerHTML =
-    stat(configs.length, 'Configurations') +
-    stat(configs.filter(function(c){return c.nb_tiroirs>0;}).length, 'Avec tiroirs') +
-    stat(configs.filter(function(c){return c.nb_vasques>1;}).length, 'Double vasque');
+    stat(configs.length, 'Total') +
+    stat(nbSdb, 'Salles de bain') +
+    stat(nbMob, 'Mobilier');
 
   var pipEl = document.getElementById('pipeline-sdb');
   if(pipEl) pipEl.innerHTML = buildPipelineHTML(configs, 'sdb');
@@ -1004,25 +1011,42 @@ function renderSDB(configs){
     wrap.innerHTML='<div class="empty">Aucune configuration reçue pour l\'instant.</div>';
     return;
   }
+  var TYPE_LABELS = {sdb:'Salle de bain', mobilier:'Mobilier'};
+  var TYPE_COLORS = {sdb:'#2563EB', mobilier:'#7C3AED'};
   var rows = configs.map(function(c,idx){
-    var ref='SDB-'+String(c.id||'').padStart(4,'0');
+    var type = detectType(c);
+    var ref=(type==='sdb'?'SDB':'MOB')+'-'+String(c.id||'').padStart(4,'0');
     var cid = c.id || idx;
     var noteVal = esc(getNotes('sdb', cid));
+    var typeBadge='<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba('+(type==='sdb'?'37,99,235':'124,58,237')+',.1);color:'+TYPE_COLORS[type]+'">'+TYPE_LABELS[type]+'</span>';
+    var detailLine;
+    if(type==='sdb'){
+      detailLine = ref+' · Meuble '+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm · '+esc(c.meuble_mat)
+        +' &nbsp;|&nbsp; Plan '+c.plan_l+'×'+c.plan_p+' cm · '+esc(c.plan_mat)
+        +' &nbsp;|&nbsp; '+c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':'')+(c.vasque_label?' '+esc(c.vasque_label):'')
+        +(c.nb_tiroirs?' · '+c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''):'')
+        +(c.nb_portes?' · '+c.nb_portes+' porte'+(c.nb_portes>1?'s':''):'');
+    } else {
+      var parts=[];
+      if(c.meuble_l) parts.push(c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm');
+      if(c.meuble_mat) parts.push(esc(c.meuble_mat));
+      if(c.nb_tablettes) parts.push(c.nb_tablettes+' étagère'+(c.nb_tablettes>1?'s':''));
+      if(c.nb_separateurs) parts.push(c.nb_separateurs+' intercalaire'+(c.nb_separateurs>1?'s':''));
+      if(c.nb_portes) parts.push(c.nb_portes+' porte'+(c.nb_portes>1?'s':''));
+      if(c.nb_tiroirs) parts.push(c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''));
+      detailLine = ref+' · '+(parts.join(' &nbsp;|&nbsp; ')||'—');
+    }
     return '<div id="cfg-row-sdb-'+idx+'">'
       +'<div class="cfg-row-sdb">'
         +'<div class="cfg-num">'+(idx+1)+'</div>'
         +'<div style="flex:1;min-width:0">'
-          +'<div class="cfg-name">'+esc(c.prenom)+' <span class="cfg-email">'+esc(c.email)+'</span></div>'
-          +'<div class="cfg-mat">'+ref+' · Meuble '+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm · '+esc(c.meuble_mat)
-          +' &nbsp;|&nbsp; Plan '+c.plan_l+'×'+c.plan_p+' cm · '+esc(c.plan_mat)
-          +' &nbsp;|&nbsp; '+c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':'')+(c.vasque_label?' '+esc(c.vasque_label):'')
-          +(c.nb_tiroirs?' · '+c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''):'')
-          +(c.nb_portes?' · '+c.nb_portes+' porte'+(c.nb_portes>1?'s':''):'')+'</div>'
+          +'<div class="cfg-name" style="display:flex;align-items:center;gap:8px">'+esc(c.prenom)+' <span class="cfg-email">'+esc(c.email)+'</span>'+typeBadge+'</div>'
+          +'<div class="cfg-mat">'+detailLine+'</div>'
         +'</div>'
         +'<div class="cfg-date">'+fmtDate(c.created_at)+'</div>'
         +statusSelect('sdb', cid)
-        +'<button class="fiche-btn" onclick="toggleFicheSdb('+idx+')">📋 Notes</button>'
-        +'<button class="fiche-btn" onclick="generatePDFSdb('+idx+')">📄 PDF</button>'
+        +'<button class="fiche-btn" onclick="toggleFicheSdb('+idx+')">Notes</button>'
+        +'<button class="fiche-btn" onclick="generatePDFSdb('+idx+')">PDF</button>'
       +'</div>'
       +'<div id="fiche-row-sdb-'+idx+'" style="display:none;padding:12px 20px 16px;background:rgba(255,250,240,.5);border-bottom:1px solid rgba(26,26,26,.06)">'
         +'<div class="crm-notes-lbl">Notes internes</div>'
