@@ -3037,9 +3037,9 @@ function selectFurnitureType(ft){
     wallBiblio.visible=true; floorBiblio.visible=true;
   } else {
     controls.enabled = true;
-    camera.position.set(camCfg.pos[0],camCfg.pos[1],camCfg.pos[2]);
-    camera.lookAt(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
-    controls.target.set(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
+    camera.position.set(cfg.cam.pos[0],cfg.cam.pos[1],cfg.cam.pos[2]);
+    camera.lookAt(cfg.cam.tgt[0],cfg.cam.tgt[1],cfg.cam.tgt[2]);
+    controls.target.set(cfg.cam.tgt[0],cfg.cam.tgt[1],cfg.cam.tgt[2]);
     controls.update();
     scene.background = new THREE.Color(0xF2EAD8);
     scene.fog = null;
