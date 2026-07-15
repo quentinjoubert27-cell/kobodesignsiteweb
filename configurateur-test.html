@@ -1247,8 +1247,8 @@ function buildCaisson(){
       if(el.type==='porte'){
         var isOpen=!!caissonOpenState[el.key];
         var iW_cm2=iW*100, iH_cm2=iH*100;
-        var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  - EP/2;
-        var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+        var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  + EP/2;
+        var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) - EP/2;
         var porYbot   = (bot<0.5)          ?  0    : ycmToLocal(bot)    - EP/2;
         var porYtop   = (top>iH_cm2-0.5)  ?  CH   : ycmToLocal(top)    + EP/2;
         var porW  = porXright - porXleft - jeu;
@@ -1276,8 +1276,8 @@ function buildCaisson(){
         var tirZ=isOpen ? fz+CP*0.55 : fz;
         var iW_cm=iW*100, iH_cm=iH*100;
         var jeu=0.003;
-        var tirXleft  = (left<0.5)        ? -CL/2 : xcmToLocal(left)  - EP/2;
-        var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
+        var tirXleft  = (left<0.5)        ? -CL/2 : xcmToLocal(left)  + EP/2;
+        var tirXright = (right>iW_cm-0.5) ?  CL/2 : xcmToLocal(right) - EP/2;
         var tirYbot   = (bot<0.5)         ?  0    : ycmToLocal(bot)   - EP/2;
         var tirYtop   = (top>iH_cm-0.5)  ?  CH   : ycmToLocal(top)   + EP/2;
         var tirW = tirXright - tirXleft - jeu;
