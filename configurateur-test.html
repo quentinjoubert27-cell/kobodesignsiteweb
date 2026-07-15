@@ -3516,18 +3516,21 @@ function updateCotes(){
   }
 
   // ── Hauteurs des baies intérieures (caisson principal) ──────────
-  var iH_cote=Math.round(CH*100); // hauteur extérieure en cm (correspond à la dimension configurée)
-  var els=caissonElements.filter(function(e){return e.type==='shelf'||e.type==='shelf_simple';});
-  var ys=[0].concat(els.map(function(e){return e.y_cm;})).concat([iH_cote]);
+  // Tout en cm EXTÉRIEUR : 0 = bas du meuble, CH*100 = haut du meuble
+  var EP_cm=Math.round(EP*100); // ≈ 2 cm (épaisseur panneau)
+  var iH_cote=Math.round(CH*100);
+  var shelvesEl=caissonElements.filter(function(e){return e.type==='shelf'||e.type==='shelf_simple';});
+  // Position extérieure d'une étagère : EP_cm (panneau bas) + y_cm intérieur
+  var ys=[0].concat(shelvesEl.map(function(e){return e.y_cm+EP_cm;})).concat([iH_cote]);
   ys.sort(function(a,b){return a-b;});
   ys=ys.filter(function(v,i){return i===0||v!==ys[i-1];});
-  // Badge de hauteur au centre de chaque compartiment
   for(var i=0;i<ys.length-1;i++){
     var y0=ys[i],y1=ys[i+1],hcm=y1-y0;
-    var cy=EP+((y0+hcm/2)/100);
-    var pt=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,cy,0)));
-    var ptT=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,EP+y1/100,0)));
-    var ptB=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,EP+y0/100,0)));
+    // Position locale (m) : cm extérieur / 100
+    var cyLocal=(y0+y1)/2/100;
+    var pt=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,cyLocal,0)));
+    var ptT=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,y1/100,0)));
+    var ptB=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,y0/100,0)));
     if(Math.abs(ptT.y-ptB.y)>20) html+='<div class="cote-inner" style="left:'+pt.x+'px;top:'+pt.y+'px">'+hcm+' cm</div>';
   }
 
