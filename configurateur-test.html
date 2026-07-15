@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Configurateur Mobilier — Kōbō Design</title>
+<title>Configurateur SDB — Kobo Design</title>
 <link rel="icon" type="image/png" href="favicon.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Archivo:wght@700;800;900&display=swap" rel="stylesheet">
@@ -42,17 +42,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .sl-row{margin-bottom:16px}
 .sl-top{display:flex;justify-content:space-between;margin-bottom:7px;font-size:11px}
 .sl-lbl{color:var(--text2)}.sl-val{font-weight:700;color:var(--text);font-size:13px}
-/* dimension number inputs */
-.dim-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(26,26,26,.06)}
-.dim-row:last-of-type{border-bottom:none}
-.dim-lbl{font-size:12px;color:var(--text2);font-weight:500}
-.dim-ctrl{display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
-.dim-step{width:32px;height:36px;border:none;background:none;color:var(--text2);font-size:20px;font-weight:300;cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1;transition:background .12s,color .12s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.dim-step:hover{background:rgba(26,26,26,.07);color:var(--text)}
-.dim-step:active{background:rgba(26,26,26,.13)}
-.dim-inp{width:46px;height:36px;border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);text-align:center;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:none;outline:none;-moz-appearance:textfield}
-.dim-inp::-webkit-outer-spin-button,.dim-inp::-webkit-inner-spin-button{-webkit-appearance:none}
-.dim-unit{font-size:10.5px;color:var(--text2);padding:0 8px;font-weight:500;pointer-events:none}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(205,62,0,.15);cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 
 .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
 .mat-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
@@ -63,6 +55,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .pos-info{background:rgba(205,62,0,.05);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:14px}
 .pos-info strong{color:var(--text)}
 .tip{background:rgba(205,62,0,.05);border:1px dashed rgba(205,62,0,.25);border-radius:8px;padding:11px 13px;font-size:11px;color:var(--text2);line-height:1.55;margin-bottom:16px}
+.tip-icon{font-size:14px;display:inline-block;margin-right:4px}
 .recap-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
 .warn-alert{display:none;background:rgba(205,62,0,.07);border:1.5px solid rgba(205,62,0,.35);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--accent);line-height:1.55;margin-bottom:14px}
 .warn-alert.show{display:block}
@@ -97,24 +90,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 #hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(255,250,240,.92);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:10px;color:var(--text2);pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px);transition:opacity .4s;opacity:0;letter-spacing:.06em}
 #hint.show{opacity:1}
 
-/* ── CTA mode édition ── */
-#edit-cta{
-  position:absolute;bottom:20px;left:50%;transform:translateX(-50%) translateY(12px);
-  display:none;align-items:center;gap:14px;
-  background:var(--accent);border:none;border-radius:14px;
-  padding:13px 20px 13px 16px;cursor:pointer;
-  box-shadow:0 4px 24px rgba(205,62,0,.35),0 1px 4px rgba(0,0,0,.12);
-  font-family:'DM Sans',sans-serif;
-  opacity:0;transition:opacity .35s ease,transform .35s ease;
-  pointer-events:none;white-space:nowrap;z-index:6;
-}
-#edit-cta.visible{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
-#edit-cta-icon{width:34px;height:34px;background:rgba(255,255,255,.18);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-#edit-cta-text{text-align:left}
-#edit-cta-title{font-size:12.5px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:.01em}
-#edit-cta-sub{font-size:10px;color:rgba(255,255,255,.65);margin-top:2px;line-height:1.3}
-#edit-cta-arrow{color:rgba(255,255,255,.7);font-size:16px;margin-left:4px;flex-shrink:0}
-
 /* FORMULAIRE ENVOI */
 .cfg-field{width:100%;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;transition:border-color .18s;margin-bottom:10px}
 .cfg-field:focus{border-color:var(--accent)}
@@ -125,23 +100,6 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 .cta-btn{width:100%;padding:13px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
 .cta-btn:hover{background:var(--accent2)}.cta-btn:disabled{opacity:.5;cursor:not-allowed}
 .cta-note{font-size:10px;color:var(--text2);text-align:center;margin-top:8px}
-
-/* ─── ONGLETS SIDEBAR ─── */
-.sb-tabs{display:flex;border-bottom:1px solid var(--border);margin:-20px -22px 0;flex-shrink:0}
-.sb-tab{flex:1;padding:14px 8px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;transition:color .2s,border-color .2s}
-.sb-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.sb-tab-panel{display:none;padding-top:20px}
-.sb-tab-panel.on{display:block}
-
-/* ─── COTES OVERLAY ─── */
-#cotes-overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.cote-lbl{position:absolute;transform:translate(-50%,-50%);font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:700;color:rgba(26,26,26,.80);background:rgba(255,250,240,.95);padding:3px 9px;border-radius:12px;white-space:nowrap;border:1px solid rgba(26,26,26,.15);line-height:1.2}
-.cote-inner{position:absolute;transform:translate(-50%,-50%);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;color:rgba(255,255,255,.82);white-space:nowrap;line-height:1;background:rgba(26,26,26,.28);padding:2px 6px;border-radius:8px}
-/* Bouton mesures */
-#btn-cotes{position:absolute;bottom:18px;right:16px;display:none;align-items:center;gap:6px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;background:rgba(255,250,240,.95);border:1.5px solid rgba(26,26,26,.14);border-radius:100px;cursor:pointer;color:var(--text2);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(26,26,26,.08);transition:border-color .15s,color .15s,background .15s;white-space:nowrap;pointer-events:auto;z-index:5}
-#btn-cotes svg{flex-shrink:0;transition:opacity .15s}
-#btn-cotes.active{background:var(--accent);border-color:var(--accent);color:#fff}
-#btn-cotes.active svg{filter:brightness(10)}
 
 /* BARRE ÉDITION CAISSON */
 #c-edit-bar{
@@ -154,60 +112,19 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 }
 #cv-wrap.mode-edit #c-edit-bar{opacity:1;pointer-events:auto}
 .c-edit-lbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text2)}
-.c-type-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;background:none;border-radius:0;overflow:visible}
-.c-type-btn{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:10px 6px 8px;
-  font-family:'DM Sans',sans-serif;
-  color:var(--text2);background:var(--bg);border:1.5px solid var(--border);
-  cursor:pointer;border-radius:10px;transition:border-color .15s,color .15s,background .15s;
-  text-align:center;
-}
-.c-type-btn-label{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;line-height:1.2}
-.c-type-btn-desc{font-size:8.5px;font-weight:400;letter-spacing:0;text-transform:none;opacity:.7;line-height:1.3;white-space:normal}
-.c-type-btn svg{flex-shrink:0;opacity:.55;transition:opacity .15s}
-.c-type-btn:hover{border-color:rgba(26,26,26,.3);color:var(--text)}
-.c-type-btn:hover svg{opacity:.75}
-.c-type-btn.active{border-color:var(--accent);background:rgba(205,62,0,.07);color:var(--accent)}
-.c-type-btn.active svg{opacity:1}
-.c-caisson-btn{padding:4px 12px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);background:rgba(26,26,26,.06);border:none;cursor:pointer;border-radius:100px;transition:background .15s,color .15s}
-.c-caisson-btn.active{background:var(--accent);color:#fff}
+.c-type-btns{display:flex;border-radius:100px;overflow:hidden;background:rgba(26,26,26,.06)}
+.c-type-btn{padding:5px 11px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);background:none;border:none;cursor:pointer;border-radius:100px;transition:background .15s,color .15s;white-space:nowrap}
+.c-type-btn.active{background:var(--accent);color:#fff}
 .c-edit-sep{width:1px;height:16px;background:var(--border)}
-.c-edit-close{height:28px;padding:0 12px;border-radius:100px;background:rgba(26,26,26,.08);border:none;cursor:pointer;color:var(--text2);font-size:12px;font-family:'DM Sans',sans-serif;font-weight:600;display:flex;align-items:center;transition:background .15s}
+.c-edit-close{width:28px;height:28px;border-radius:50%;background:rgba(26,26,26,.08);border:none;cursor:pointer;color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .c-edit-close:hover{background:rgba(26,26,26,.14)}
-.c-undo-btn{height:28px;padding:0 10px;border-radius:100px;background:none;border:1px solid var(--border);cursor:pointer;color:var(--text2);font-size:12px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px;transition:background .15s,opacity .15s}
-.c-undo-btn:hover{background:rgba(26,26,26,.06)}
-.c-undo-btn:disabled{opacity:.3;pointer-events:none}
-
-/* Présets */
-.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
-.preset-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 7px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;font-family:'DM Sans',sans-serif;text-align:center}
-.preset-btn:hover{border-color:rgba(26,26,26,.35)}
-.preset-btn svg{opacity:.6}
-.preset-btn-label{font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text2);line-height:1.2}
-
-/* Screenshot btn */
-#btn-screenshot{position:absolute;bottom:18px;left:16px;display:none;align-items:center;gap:6px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;background:rgba(255,250,240,.95);border:1.5px solid rgba(26,26,26,.14);border-radius:100px;cursor:pointer;color:var(--text2);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(26,26,26,.08);transition:border-color .15s;white-space:nowrap;pointer-events:auto;z-index:5}
-#btn-screenshot:hover{border-color:rgba(26,26,26,.35)}
-
-/* Récap visuel */
-.recap-thumb{width:100%;border-radius:10px;margin-bottom:12px;display:block;border:1px solid var(--border)}
-.recap-box{background:rgba(26,26,26,.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
-.recap-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(26,26,26,.06);font-size:12px}
-.recap-row:last-child{border-bottom:none;padding-bottom:0}
-.recap-k{color:var(--text2);font-weight:400}
-.recap-v{font-weight:600;color:var(--text)}
 #c-action-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);background:rgba(255,250,240,.92);padding:6px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .2s;border:1px solid var(--border)}
 #cv-wrap.mode-edit #c-action-hint{opacity:1}
-#drag-height-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:5px;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px;pointer-events:none;z-index:20;letter-spacing:.01em;box-shadow:0 2px 8px rgba(205,62,0,.3)}
 
 @media(max-width:760px){
-  body{overscroll-behavior:none}
   #app{flex-direction:column-reverse}
-  #sidebar{width:100%;min-width:0;height:52vh;border-right:none;border-top:1px solid var(--border)}
-  #cv-wrap{height:48vh}
-  /* canvas : désactive le scroll natif pour que le touch serve à la 3D */
-  #c{touch-action:none}
+  #sidebar{width:100%;min-width:0;height:50vh;border-right:none;border-top:1px solid var(--border)}
+  #cv-wrap{height:50vh}
   /* sidebar scrollable */
   #sb-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px}
   /* stepper compact */
@@ -216,36 +133,25 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   /* step-dots — 44px touch targets */
   .step-dot{width:44px;height:44px;min-width:44px;min-height:44px;font-size:12px}
   /* range touch */
-  input[type=range]{min-height:40px;height:40px;padding:10px 0}
+  input[type=range]{min-height:36px;height:36px;padding:10px 0}
   /* mat-grid tiles smaller */
   .mat-grid{gap:6px}
   .mat-sw{width:18px;height:18px}
-  /* form fields — prevent iOS zoom (min 16px) */
+  /* form fields — prevent iOS zoom */
   .cfg-field{font-size:16px}
-  input[type=text],input[type=email],textarea,select{font-size:16px}
   /* footer buttons */
-  #sb-footer,#sb-foot{padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
-  .btn-back,.btn-next{min-height:48px}
+  #sb-footer,#sb-foot{padding:10px 14px}
+  .btn-back,.btn-next{min-height:44px}
   /* header */
   #sb-header{padding:12px 14px 10px}
-  /* onglets formulaire/fonction */
-  .sb-tab{min-height:44px;padding:0 14px}
-  /* boutons TV (+Gauche, +Droite, +Dessus) */
-  .facade-btn{min-height:44px;font-size:12px}
-  /* boutons sélecteur de caisson dans la barre d'édition */
-  .c-caisson-btn{min-height:36px;min-width:48px;padding:5px 12px}
   /* barre d'édition : masque le libellé, réduit les boutons, autorise le retour à la ligne */
   #c-edit-bar{flex-wrap:wrap;justify-content:center;border-radius:14px;padding:8px;gap:5px;max-width:calc(100vw - 24px);white-space:normal}
   .c-edit-lbl,.c-edit-sep{display:none}
-  .c-type-btns{grid-template-columns:repeat(3,1fr)}
-  .c-type-btn{padding:8px 4px 7px;font-size:9px}
-  .c-edit-close{min-width:40px;min-height:40px;width:40px;height:40px}
-  /* bouton mesures */
-  #btn-cotes{bottom:10px;right:10px;padding:6px 12px;font-size:10.5px}
+  .c-type-btns{flex-wrap:wrap;justify-content:center;border-radius:10px}
+  .c-type-btn{padding:7px 10px;font-size:9px;min-height:36px;min-width:44px}
+  .c-edit-close{min-width:36px;min-height:36px;width:36px;height:36px}
 }
 @media(max-width:480px){
-  #sidebar{height:54vh}
-  #cv-wrap{height:46vh}
   #sb-body{padding:10px 10px}
   #stepper{padding:8px 10px}
   .step-lbl{display:none}
@@ -254,350 +160,60 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   .mat-lbl{font-size:10px}
   .vasque-grid{grid-template-columns:repeat(3,1fr)}
   .cfg-field{padding:10px 10px;font-size:16px}
-  .cta-btn{padding:14px;font-size:12px;min-height:48px}
+  .cta-btn{padding:14px;font-size:12px;min-height:44px}
   #sb-foot{padding:8px 10px}
-  .btn-next,.btn-back{min-height:48px;padding:12px 10px}
-  .sec{margin:12px 0 6px}
-  .sl-row{margin-bottom:10px}
-  /* sl-top compact */
-  .sl-top{margin-bottom:4px}
-  /* boutons TV plus petits mais toujours tactiles */
-  .facade-btn{min-height:44px;padding:8px 4px;font-size:11px}
-}
-
-/* ─── TYPE SELECTION OVERLAY ─── */
-#type-overlay{position:fixed;inset:0;background:#111;z-index:9999;display:flex;overflow:auto}
-.to-left{width:38%;min-width:240px;background:#0D0D0D;border-right:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;justify-content:center;padding:52px 44px}
-.to-left-logo{font-family:'Archivo',sans-serif;font-size:12px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#fff;margin-bottom:36px}
-.to-left-title{font-size:30px;font-weight:300;line-height:1.25;color:#fff;margin-bottom:16px}
-.to-left-title strong{font-weight:700}
-.to-left-sub{font-size:12px;line-height:1.7;color:rgba(255,255,255,.38);max-width:240px}
-.to-left-badge{margin-top:48px;display:inline-flex;align-items:center;gap:8px;background:rgba(205,62,0,.15);border:1px solid rgba(205,62,0,.3);border-radius:30px;padding:6px 14px}
-.to-left-badge span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#CD3E00;font-weight:600}
-.to-right{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 48px;overflow:auto}
-.to-question{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:32px;font-weight:500}
-.to-section{margin-bottom:28px}
-.to-cat{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:12px;font-weight:600;padding-left:2px}
-.to-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.to-grid-1{grid-template-columns:1fr}
-.tc{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.09);border-radius:10px;padding:20px 12px 16px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:0;transition:all .18s;-webkit-tap-highlight-color:transparent;text-align:left}
-.tc:hover,.tc:active{border-color:#CD3E00;background:rgba(205,62,0,.10)}
-.tc-svg{color:rgba(255,255,255,.55);margin-bottom:14px;transition:color .18s;flex-shrink:0}
-.tc:hover .tc-svg{color:#CD3E00}
-.tc-name{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;margin-bottom:4px}
-.tc-spec{font-size:10px;color:rgba(255,255,255,.35);line-height:1.5}
-.to-grid-1 .tc{flex-direction:row;align-items:center;gap:20px;padding:18px 22px}
-.to-grid-1 .tc-svg{margin-bottom:0}
-.to-grid-1 .tc-info{display:flex;flex-direction:column}
-@media(max-width:860px){
-  #type-overlay{flex-direction:column}
-  .to-left{width:100%;min-width:0;padding:32px 28px;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
-  .to-right{padding:28px 20px}
-  .to-grid{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:600px){
-  .to-left{padding:20px 20px 18px}
-  .to-left-title{font-size:22px;margin-bottom:6px}
-  .to-left-sub,.to-left-badge{display:none}
-  .to-left-logo{margin-bottom:14px}
-  .to-right{padding:20px 16px;overflow:auto}
-  .to-question{font-size:12px;margin-bottom:18px}
-  .to-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-  .tc{padding:14px 10px 12px}
-  .tc-svg{margin-bottom:10px}
-  .tc-name{font-size:10px}
-  .tc-spec{display:none}
-  .to-grid-1 .tc{padding:14px 16px;gap:14px}
-}
-@media(max-width:380px){
-  .to-left{padding:14px 16px 12px}
-  .to-left-title{font-size:18px}
-  .to-right{padding:14px 12px}
-  .to-grid{gap:6px}
-  .tc{padding:12px 8px 10px}
+  .btn-next,.btn-back{min-height:44px;padding:12px 10px}
+  .sec{margin:14px 0 8px}
+  .sl-row{margin-bottom:12px}
 }
 </style>
 </head>
 <body>
-
-<!-- OVERLAY TYPE DE MEUBLE -->
-<div id="type-overlay">
-  <div class="to-left">
-    <div class="to-left-logo">Kōbō Design</div>
-    <div class="to-left-title">Créez votre<br><strong>meuble sur mesure</strong></div>
-    <div class="to-left-sub">Chaque pièce est unique. Configurez vos dimensions, finitions et aménagements intérieurs en quelques étapes.</div>
-    <div class="to-left-badge">
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#CD3E00"/><circle cx="5" cy="5" r="2" fill="#CD3E00"/></svg>
-      <span>Fabrication française</span>
-    </div>
-  </div>
-  <div class="to-right">
-    <div class="to-question">Quel espace souhaitez-vous aménager ?</div>
-
-    <div class="to-section">
-      <div class="to-cat">Rangement</div>
-      <div class="to-grid">
-
-        <button class="tc" onclick="selectFurnitureType('biblio')">
-          <div class="tc-svg">
-            <svg width="38" height="52" viewBox="0 0 38 52" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="1" y="1" width="36" height="50" rx="1"/>
-              <line x1="1" y1="17" x2="37" y2="17"/>
-              <line x1="1" y1="31" x2="37" y2="31"/>
-              <line x1="1" y1="44" x2="37" y2="44"/>
-            </svg>
-          </div>
-          <div class="tc-name">Bibliothèque</div>
-          <div class="tc-spec">Étagères · Portes · Intercalaires</div>
-        </button>
-
-        <button class="tc" onclick="selectFurnitureType('dressing')">
-          <div class="tc-svg">
-            <svg width="46" height="52" viewBox="0 0 46 52" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="1" y="1" width="44" height="50" rx="1"/>
-              <line x1="23" y1="1" x2="23" y2="51"/>
-              <line x1="5" y1="10" x2="20" y2="10"/>
-              <line x1="26" y1="10" x2="41" y2="10"/>
-              <line x1="5" y1="34" x2="20" y2="34"/>
-              <line x1="5" y1="42" x2="20" y2="42"/>
-              <line x1="26" y1="34" x2="41" y2="34"/>
-              <line x1="26" y1="42" x2="41" y2="42"/>
-            </svg>
-          </div>
-          <div class="tc-name">Dressing</div>
-          <div class="tc-spec">Penderie · Tringles · Étagères</div>
-        </button>
-
-        <button class="tc" onclick="selectFurnitureType('tv')">
-          <div class="tc-svg">
-            <svg width="50" height="28" viewBox="0 0 50 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="1" y="1" width="48" height="26" rx="1"/>
-              <line x1="17" y1="1" x2="17" y2="27"/>
-              <line x1="33" y1="1" x2="33" y2="27"/>
-              <line x1="4" y1="14" x2="14" y2="14"/>
-            </svg>
-          </div>
-          <div class="tc-name">Meuble TV</div>
-          <div class="tc-spec">Caissons · Tiroirs · Niches</div>
-        </button>
-
-        <button class="tc" onclick="selectFurnitureType('chambre')">
-          <div class="tc-svg">
-            <svg width="44" height="40" viewBox="0 0 44 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="1" y="1" width="42" height="20" rx="2"/>
-              <line x1="1" y1="25" x2="43" y2="25"/>
-              <rect x="1" y="25" width="42" height="14" rx="0"/>
-              <line x1="22" y1="25" x2="22" y2="39"/>
-              <line x1="5" y1="32" x2="18" y2="32"/>
-              <line x1="26" y1="32" x2="39" y2="32"/>
-            </svg>
-          </div>
-          <div class="tc-name">Chambre</div>
-          <div class="tc-spec">Tête de lit · Rangements</div>
-        </button>
-
-      </div>
-    </div>
-
-    <div class="to-section">
-      <div class="to-cat">Salle de bain</div>
-      <div class="to-grid to-grid-1">
-        <button class="tc" onclick="selectFurnitureType('sdb')">
-          <div class="tc-svg">
-            <svg width="54" height="36" viewBox="0 0 54 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="1" y="10" width="52" height="25" rx="1"/>
-              <line x1="1" y1="18" x2="53" y2="18"/>
-              <path d="M14 14 Q27 8 40 14" stroke-width="1.5"/>
-              <line x1="19" y1="18" x2="19" y2="35"/>
-              <line x1="35" y1="18" x2="35" y2="35"/>
-              <line x1="4" y1="26" x2="16" y2="26"/>
-              <line x1="38" y1="26" x2="50" y2="26"/>
-            </svg>
-          </div>
-          <div class="tc-info">
-            <div class="tc-name">Salle de bain</div>
-            <div class="tc-spec">Plan de travail · Vasques · Finitions · Aménagement intérieur</div>
-          </div>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div id="app">
   <div id="sidebar">
     <div id="sb-header">
       <div class="logo-txt">Kōbō Design</div>
-      <div class="logo-sub" id="logo-sub">Configurateur</div>
+      <div class="logo-sub">Configurateur Salle de Bain</div>
     </div>
-    <div id="stepper"></div>
+    <div id="stepper">
+      <div class="step-dot active" id="sd1" onclick="goStep(1)"><span class="sn">1</span></div>
+      <span class="step-lbl">Meuble</span>
+      <div class="step-line" id="sl1"></div>
+      <div class="step-dot" id="sd2" onclick="goStep(2)"><span class="sn">2</span></div>
+      <span class="step-lbl">Plan</span>
+      <div class="step-line" id="sl2"></div>
+      <div class="step-dot" id="sd3" onclick="goStep(3)"><span class="sn">3</span></div>
+      <span class="step-lbl">Vasque</span>
+      <div class="step-line" id="sl3"></div>
+      <div class="step-dot" id="sd4" onclick="goStep(4)"><span class="sn">4</span></div>
+      <span class="step-lbl">Envoyer</span>
+    </div>
 
     <div id="sb-body">
 
       <!-- STEP 1 — Meuble -->
       <div class="panel on" id="p1">
-
-        <!-- Onglets — visibles uniquement en BIBLIO_MODE -->
-        <div class="sb-tabs" id="p1-tabs" style="display:none">
-          <button class="sb-tab active" data-tab="formulaire" onclick="switchSbTab('formulaire')">Formulaire</button>
-          <button class="sb-tab" data-tab="fonction" onclick="switchSbTab('fonction')">Fonction</button>
+        <div class="sec">Dimensions du meuble</div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Largeur</span><span class="sl-val" id="v-CL">120 cm</span></div>
+          <input type="range" id="sl-cL" min="40" max="220" step="1" value="120" oninput="setCL(+this.value)">
         </div>
-
-        <!-- ── ONGLET FORMULAIRE ── -->
-        <div class="sb-tab-panel on" id="sbt-formulaire">
-          <div class="sec" style="margin-top:0">Dimensions</div>
-          <div class="dim-row">
-            <span class="dim-lbl">Largeur</span>
-            <div class="dim-ctrl">
-              <button class="dim-step" onclick="stepDim('inp-CL',setCL,-1)">−</button>
-              <input class="dim-inp" type="number" id="inp-CL" min="40" max="220" value="120" oninput="setCL(+this.value)" onblur="clampDim(this,setCL)">
-              <span class="dim-unit">cm</span>
-              <button class="dim-step" onclick="stepDim('inp-CL',setCL,+1)">+</button>
-            </div>
-          </div>
-          <div class="dim-row">
-            <span class="dim-lbl">Hauteur</span>
-            <div class="dim-ctrl">
-              <button class="dim-step" onclick="stepDim('inp-CH',setCH,-1)">−</button>
-              <input class="dim-inp" type="number" id="inp-CH" min="30" max="70" value="45" oninput="setCH(+this.value)" onblur="clampDim(this,setCH)">
-              <span class="dim-unit">cm</span>
-              <button class="dim-step" onclick="stepDim('inp-CH',setCH,+1)">+</button>
-            </div>
-          </div>
-          <div class="dim-row">
-            <span class="dim-lbl">Profondeur</span>
-            <div class="dim-ctrl">
-              <button class="dim-step" onclick="stepDim('inp-CP',setCP,-1)">−</button>
-              <input class="dim-inp" type="number" id="inp-CP" min="36" max="60" value="36" oninput="setCP(+this.value)" onblur="clampDim(this,setCP)">
-              <span class="dim-unit">cm</span>
-              <button class="dim-step" onclick="stepDim('inp-CP',setCP,+1)">+</button>
-            </div>
-          </div>
-          <div class="sec">Finition bois</div>
-          <div class="mat-grid" id="mg-cais"></div>
-          <div class="angle-only" style="display:none">
-            <div class="sec" style="margin-top:18px">Caisson d'angle</div>
-            <button class="reset-btn" id="btn-angle" onclick="toggleAngle()">+ Ajouter un angle</button>
-            <div id="angle-opts" style="display:none;margin-top:10px">
-              <div class="dim-row">
-                <span class="dim-lbl">Largeur caisson 2</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-CL2',setCL2,-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-CL2" min="20" max="300" value="120" oninput="setCL2(+this.value)" onblur="clampDim(this,setCL2)">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-CL2',setCL2,+1)">+</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ── CAISSONS LATÉRAUX (TV uniquement) ── -->
-          <div class="tv-only" style="display:none">
-            <div class="sec" style="margin-top:18px">Caissons supplémentaires</div>
-            <div class="facade-row" style="margin-bottom:10px;flex-wrap:wrap;gap:5px">
-              <button class="facade-btn" id="tvl-btn" onclick="toggleTVLeft()">+ Gauche</button>
-              <button class="facade-btn" id="tvr-btn" onclick="toggleTVRight()">+ Droite</button>
-              <button class="facade-btn" id="tvt-btn" onclick="toggleTVTop()">+ Dessus</button>
-            </div>
-            <div id="tvl-opts" style="display:none">
-              <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson gauche</div>
-              <div class="dim-row">
-                <span class="dim-lbl">Largeur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvLW',function(v){setTVSide('left','W',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvLW" min="20" max="120" value="40" oninput="setTVSide('left','W',+this.value)" onblur="clampDim(this,function(v){setTVSide('left','W',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvLW',function(v){setTVSide('left','W',v)},+1)">+</button>
-                </div>
-              </div>
-              <div class="dim-row">
-                <span class="dim-lbl">Hauteur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvLH',function(v){setTVSide('left','H',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvLH" min="20" max="280" value="120" oninput="setTVSide('left','H',+this.value)" onblur="clampDim(this,function(v){setTVSide('left','H',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvLH',function(v){setTVSide('left','H',v)},+1)">+</button>
-                </div>
-              </div>
-            </div>
-            <div id="tvr-opts" style="display:none">
-              <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson droit</div>
-              <div class="dim-row">
-                <span class="dim-lbl">Largeur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvRW',function(v){setTVSide('right','W',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvRW" min="20" max="120" value="40" oninput="setTVSide('right','W',+this.value)" onblur="clampDim(this,function(v){setTVSide('right','W',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvRW',function(v){setTVSide('right','W',v)},+1)">+</button>
-                </div>
-              </div>
-              <div class="dim-row">
-                <span class="dim-lbl">Hauteur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvRH',function(v){setTVSide('right','H',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvRH" min="20" max="280" value="120" oninput="setTVSide('right','H',+this.value)" onblur="clampDim(this,function(v){setTVSide('right','H',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvRH',function(v){setTVSide('right','H',v)},+1)">+</button>
-                </div>
-              </div>
-            </div>
-            <div id="tvt-opts" style="display:none">
-              <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson dessus</div>
-              <div class="dim-row">
-                <span class="dim-lbl">Largeur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvTW',function(v){setTVSide('top','W',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvTW" min="20" max="300" value="80" oninput="setTVSide('top','W',+this.value)" onblur="clampDim(this,function(v){setTVSide('top','W',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvTW',function(v){setTVSide('top','W',v)},+1)">+</button>
-                </div>
-              </div>
-              <div class="dim-row">
-                <span class="dim-lbl">Hauteur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvTH',function(v){setTVSide('top','H',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvTH" min="20" max="280" value="100" oninput="setTVSide('top','H',+this.value)" onblur="clampDim(this,function(v){setTVSide('top','H',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvTH',function(v){setTVSide('top','H',v)},+1)">+</button>
-                </div>
-              </div>
-              <div style="margin-top:8px;padding:7px 10px;background:rgba(205,62,0,.10);border:1px solid rgba(205,62,0,.25);border-radius:6px;font-size:10.5px;color:var(--text2);line-height:1.4">
-                Glissez le caisson dans la vue 3D pour le repositionner — des repères s'affichent automatiquement.
-              </div>
-            </div>
-          </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Hauteur</span><span class="sl-val" id="v-CH">45 cm</span></div>
+          <input type="range" min="30" max="70" step="1" value="45" oninput="setCH(+this.value)">
         </div>
-
-        <!-- ── ONGLET FONCTION ── -->
-        <div class="sb-tab-panel" id="sbt-fonction">
-          <div class="sec" style="margin-top:0">Aménagement</div>
-          <div class="amgt-row">
-            <span class="amgt-count" id="amgt-count">Structure vide</span>
-            <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">Modifier</button>
-          </div>
-          <button class="reset-btn" onclick="resetCaissonElements()">Vider</button>
-          <!-- Boutons de type injectés ici en mode édition -->
-          <div id="fn-edit-content" style="display:none;margin-top:16px">
-            <div class="sec" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-              Point de départ
-              <button onclick="saveCurrentAsPreset()" style="font-size:9px;font-weight:700;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--text2);font-family:'DM Sans',sans-serif">💾 Sauvegarder ici</button>
-            </div>
-            <div class="preset-grid" id="preset-grid"></div>
-            <div class="sec" style="margin-bottom:8px;margin-top:4px">Ajouter un élément</div>
-            <div class="c-type-btns"></div>
-          </div>
+        <div class="sl-row">
+          <div class="sl-top"><span class="sl-lbl">Profondeur</span><span class="sl-val" id="v-CP">36 cm</span></div>
+          <input type="range" min="36" max="60" step="1" value="36" oninput="setCP(+this.value)">
         </div>
-
-        <!-- ── SECTION TOUJOURS VISIBLE EN MODE SDB (hors tabs) ── -->
-        <div id="p1-sdb-amgt" style="display:none">
-          <div class="sec">Aménagement intérieur</div>
-          <div class="amgt-row">
-            <span class="amgt-count" id="amgt-count-sdb">Structure vide</span>
-            <button class="edit-mode-btn" id="btn-edit-cais-sdb" onclick="toggleCaissonEdit()">Modifier</button>
-          </div>
-          <button class="reset-btn" onclick="resetCaissonElements()">Vider l'aménagement</button>
+        <div class="sec">Finition bois</div>
+        <div class="mat-grid" id="mg-cais"></div>
+        <div class="sec">Aménagement intérieur</div>
+        <div class="amgt-row">
+          <span class="amgt-count" id="amgt-count">Structure vide</span>
+          <button class="edit-mode-btn" id="btn-edit-cais" onclick="toggleCaissonEdit()">✏ Éditer</button>
         </div>
-
+        <button class="reset-btn" onclick="resetCaissonElements()">↺ Vider l'aménagement</button>
       </div>
 
       <!-- STEP 2 — Plan de travail -->
@@ -618,7 +234,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 
       <!-- STEP 3 — Vasque -->
       <div class="panel" id="p3">
-        <div class="tip">Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
+        <div class="tip"><span class="tip-icon">✥</span>Choisissez une vasque puis glissez-la sur le plan pour la repositionner.</div>
         <div class="warn-alert" id="warn-vasque"></div>
         <div class="sec">Nombre de vasques</div>
         <div class="facade-row" style="margin-bottom:16px">
@@ -641,31 +257,6 @@ textarea.cfg-field{resize:vertical;min-height:72px}
         </div>
         <div class="sec">Récapitulatif</div>
         <div class="recap-box" id="recap"></div>
-      </div>
-
-      <!-- DRESSING — Options penderie -->
-      <div class="panel" id="pdressing">
-        <div class="sec">Configuration penderie</div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Hauteur penderie</span><span class="sl-val" id="v-dresH">160 cm</span></div>
-          <input type="range" min="80" max="240" step="5" value="160" oninput="document.getElementById('v-dresH').textContent=this.value+' cm'">
-        </div>
-        <div class="sec">Tringles</div>
-        <div class="facade-row" style="margin-bottom:16px">
-          <button class="facade-btn on" id="tr-simple" onclick="setTringle('simple')">Simple</button>
-          <button class="facade-btn" id="tr-double" onclick="setTringle('double')">Double</button>
-        </div>
-        <div class="sec">Éléments</div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Nombre de colonnes</span><span class="sl-val" id="v-dressCols">3</span></div>
-          <input type="range" min="1" max="8" step="1" value="3" oninput="document.getElementById('v-dressCols').textContent=this.value">
-        </div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Étagères par colonne</span><span class="sl-val" id="v-dressEtag">2</span></div>
-          <input type="range" min="0" max="6" step="1" value="2" oninput="document.getElementById('v-dressEtag').textContent=this.value">
-        </div>
-        <div class="sec">Finition</div>
-        <div class="mat-grid" id="mg-dressing"></div>
       </div>
 
       <!-- STEP 4 — Envoyer -->
@@ -698,46 +289,18 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 
   <div id="cv-wrap">
     <canvas id="c"></canvas>
-    <div id="cotes-overlay"></div>
-    <button id="btn-cotes" onclick="toggleCotes()">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="13" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="1" x2="1" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="7" x2="8" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="4" x2="5" y2="4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="10" x2="11" y2="10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-      Mesures
-    </button>
-    <div id="tv-snap-v" style="position:absolute;top:0;bottom:0;width:1.5px;background:#CD3E00;display:none;pointer-events:none;z-index:10;transform:translateX(-50%)"></div>
-    <div id="tv-snap-h" style="position:absolute;left:0;right:0;height:1.5px;background:#CD3E00;display:none;pointer-events:none;z-index:10;transform:translateY(-50%)"></div>
-    <div id="hint">Glissez la vasque pour la repositionner</div>
-    <button id="edit-cta" onclick="startEditMode()">
-      <div id="edit-cta-icon">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".9"/>
-          <rect x="10" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".9"/>
-          <rect x="2" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".9"/>
-          <rect x="10" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".5"/>
-          <line x1="13" y1="10.5" x2="13" y2="15.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
-          <line x1="10.5" y1="13" x2="15.5" y2="13" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div id="edit-cta-text">
-        <div id="edit-cta-title">Personnaliser l'intérieur</div>
-        <div id="edit-cta-sub">Étagères · Portes · Tiroirs</div>
-      </div>
-      <span id="edit-cta-arrow">›</span>
-    </button>
-    <div id="drag-height-label"></div>
+    <div id="hint">☛ Glissez la vasque pour la repositionner</div>
     <div id="c-edit-bar">
-      <span class="c-edit-lbl">Mode édition</span>
+      <span class="c-edit-lbl">Ajouter</span>
+      <div class="c-type-btns">
+        <button class="c-type-btn active" id="ct-shelf" onclick="setCaissonType('shelf')">━ Tablette</button>
+        <button class="c-type-btn" id="ct-sep"   onclick="setCaissonType('separator')">┃ Séparateur</button>
+        <button class="c-type-btn" id="ct-door"  onclick="setCaissonType('porte')">🚪 Porte</button>
+        <button class="c-type-btn" id="ct-draw"  onclick="setCaissonType('tiroir')">▤ Tiroir</button>
+      </div>
       <div class="c-edit-sep"></div>
-      <button class="c-undo-btn" id="btn-undo" onclick="undoLast()" disabled title="Annuler (Ctrl+Z)">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 5.5 L5 2.5 L5 4.5 C9 4.5 11 7 10.5 10.5 C9.5 8 7.5 7 5 7 L5 8.5 Z" fill="currentColor"/></svg>
-        Annuler
-      </button>
-      <div class="c-edit-sep"></div>
-      <button class="c-edit-close" onclick="toggleCaissonEdit()">✕ Terminer</button>
+      <button class="c-edit-close" onclick="toggleCaissonEdit()">✕</button>
     </div>
-    <button id="btn-screenshot" onclick="downloadScreenshot()">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7.5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 3 L5.8 1.5 H8.2 L9 3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-      Télécharger
-    </button>
     <div id="c-action-hint">Clic = poser · Clic sur élément = supprimer</div>
   </div>
 </div>
@@ -753,7 +316,6 @@ var S = {
   step:1,
   // Meuble
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
-  CL2:1.20,          // largeur du caisson d'angle
   caissonOffset:0,  // décalage X du caisson sous le plan (m)
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
@@ -795,36 +357,6 @@ var _caisTexCache={};
 
 var EP = 0.018;  // épaisseur panneau 18mm
 
-// ── MODE BIBLIO (non-SDB) ──
-var BIBLIO_MODE  = false;
-var hasAngle     = false;
-var caissonGrp2  = null;
-
-// ── CAISSON ACTIF (1=C1, 2=C2) ──
-var activeCaisson = 1;
-var caissonElements2 = [], caissonOpenState2 = {};
-var caissonElemMeshes2 = [], caissonHitPlane2 = null;
-var caissonGuidesGrp2 = null, caissonGhost2 = null;
-var bDrag = false, bLastX = 0, bLastY = 0;
-var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
-
-// ── CAISSONS LATÉRAUX (meuble TV) ──
-// activeCaisson: 1=centre, 2=angle, 3=tv-gauche, 4=tv-droite, 5=tv-dessus
-var S_tvSide = { leftActive:false, leftW:40, leftH:120, rightActive:false, rightW:40, rightH:120, topActive:false, topW:80, topH:100, topX:0, topY:0 };
-var currentNS = 1;
-var tvTopDragging = false, tvTopDragPlane = null, tvTopDragOffsetX = 0, tvTopDragOffsetY = 0;
-var showCotes = false;
-// TV extra caissons — groupes + données édition (activeCaisson 3/4/5)
-var tvGrp=[null,null,null]; // [left,right,top]
-var tvElems=[[],[],[]];
-var tvOpenState=[{},{},{}];
-var tvMeshes=[[],[],[]];
-var tvHP=[null,null,null];
-var tvGuides=[null,null,null];
-var tvGhost=[null,null,null];
-
-// ── C2 DRAG / POSITION LIBRE ──
-
 // ── Aménagement caisson ──────────────────────────────
 // {type:'shelf',     y_cm}
 // {type:'separator', x_cm, y_cm}
@@ -844,7 +376,7 @@ var caissonElemMeshes= [];
 // ═══════════════════════════════════════════════════════
 var wrap = document.getElementById('cv-wrap');
 var cvs  = document.getElementById('c');
-var renderer = new THREE.WebGLRenderer({canvas:cvs,antialias:true,preserveDrawingBuffer:true});
+var renderer = new THREE.WebGLRenderer({canvas:cvs,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputEncoding=THREE.sRGBEncoding;
@@ -880,19 +412,6 @@ mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.76,0.96,0.012),new THREE.MeshS
 mirGrp.add(new THREE.Mesh(new THREE.BoxGeometry(0.70,0.90,0.008),new THREE.MeshPhysicalMaterial({color:0xd8d0c8,metalness:0.92,roughness:0.06,clearcoat:1.0})));
 mirGrp.position.set(0,1.65,-0.73); scene.add(mirGrp);
 
-/* ── Mur et sol en BIBLIO_MODE (mis à jour dans normalizeCaisson) ── */
-var wallBiblio=new THREE.Mesh(
-  new THREE.PlaneGeometry(8,6),
-  new THREE.MeshStandardMaterial({color:0xEFEADF,roughness:0.92,metalness:0.0})
-);
-wallBiblio.receiveShadow=true; wallBiblio.visible=false; scene.add(wallBiblio);
-
-var floorBiblio=new THREE.Mesh(
-  new THREE.PlaneGeometry(8,4),
-  new THREE.MeshStandardMaterial({color:0xD5CFC4,roughness:0.88,metalness:0.0})
-);
-floorBiblio.rotation.x=-Math.PI/2; floorBiblio.receiveShadow=true; floorBiblio.visible=false; scene.add(floorBiblio);
-
 var controls=new THREE.OrbitControls(camera,cvs);
 controls.enableDamping=true; controls.dampingFactor=0.1;
 controls.target.set(0,0.25,0);
@@ -920,79 +439,33 @@ function disposeGroup(g){
 // HELPERS COORDONNÉES INTÉRIEURES DU CAISSON
 // (0,0) = coin bas-gauche intérieur ; unité = cm
 // ═══════════════════════════════════════════════════════
-function caissonCP(){ return S.CairsonP; }
+function caissonCP(){ return S.CairsonP; } // profondeur caisson (m)
 function localToYcm(y_loc){ return (y_loc-EP)*100; }
 function ycmToLocal(y_cm) { return EP+y_cm/100; }
-function localToXcm(x_loc){ return (x_loc+getActiveCL()/2-EP)*100; }
-function xcmToLocal(x_cm) { return -getActiveCL()/2+EP+x_cm/100; }
-
-// ── Helpers caisson actif (1=centre, 2=angle, 3=tv-gauche, 4=tv-droite, 5=tv-dessus) ──
-function _tvIdx(){ return activeCaisson-3; } // 0=left,1=right,2=top
-function _isTVExtra(){ return activeCaisson>=3; }
-function getActiveCL(){
-  if(activeCaisson===1) return S.CL;
-  if(activeCaisson===2) return S.CL2;
-  if(activeCaisson===3) return S_tvSide.leftW/100;
-  if(activeCaisson===4) return S_tvSide.rightW/100;
-  if(activeCaisson===5) return S_tvSide.topW/100;
-  return S.CL;
-}
-function getActiveCH(){
-  if(activeCaisson===3) return S_tvSide.leftH/100;
-  if(activeCaisson===4) return S_tvSide.rightH/100;
-  if(activeCaisson===5) return S_tvSide.topH/100;
-  return S.CH;
-}
-function getActiveEls(){ return _isTVExtra()?tvElems[_tvIdx()]:(activeCaisson===1?caissonElements:caissonElements2); }
-function setActiveEls(v){ if(_isTVExtra()) tvElems[_tvIdx()]=v; else if(activeCaisson===1) caissonElements=v; else caissonElements2=v; }
-function getActiveElemMeshes(){ return _isTVExtra()?tvMeshes[_tvIdx()]:(activeCaisson===1?caissonElemMeshes:caissonElemMeshes2); }
-function getActiveHP(){ return _isTVExtra()?tvHP[_tvIdx()]:(activeCaisson===1?caissonHitPlane:caissonHitPlane2); }
-function getActiveGrp(){ return _isTVExtra()?tvGrp[_tvIdx()]:(activeCaisson===1?caissonGrp:caissonGrp2); }
-function getActiveGhost(){ return _isTVExtra()?tvGhost[_tvIdx()]:(activeCaisson===1?caissonGhost:caissonGhost2); }
-function setActiveGhost(v){ if(_isTVExtra()) tvGhost[_tvIdx()]=v; else if(activeCaisson===1) caissonGhost=v; else caissonGhost2=v; }
-function getActiveGuidesGrp(){ return _isTVExtra()?tvGuides[_tvIdx()]:(activeCaisson===1?caissonGuidesGrp:caissonGuidesGrp2); }
-function getActiveOpenState(){ return _isTVExtra()?tvOpenState[_tvIdx()]:(activeCaisson===1?caissonOpenState:caissonOpenState2); }
+function localToXcm(x_loc){ return (x_loc+S.CL/2-EP)*100; }
+function xcmToLocal(x_cm) { return -S.CL/2+EP+x_cm/100; }
 
 function getCompartment(y_cm, x_cm){
-  var iH_cm=(getActiveCH()-2*EP)*100;
-  var iW_cm=(getActiveCL()-2*EP)*100;
-  var shelves;
-  if(x_cm!==undefined){
-    // Fusionner les étagères par y_cm : deux demi-étagères qui se rejoignent en x_cm
-    // (ex: [0→60] + [60→120]) comptent ensemble comme une frontière complète
-    var byY={};
-    getActiveEls().forEach(function(e){
-      if(e.type!=='shelf'&&e.type!=='shelf_simple') return;
-      var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
-      var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
-      if(sl>x_cm||sr<x_cm) return; // ne touche pas x_cm du tout
-      if(!byY[e.y_cm]) byY[e.y_cm]={l:sl,r:sr};
-      else { byY[e.y_cm].l=Math.min(byY[e.y_cm].l,sl); byY[e.y_cm].r=Math.max(byY[e.y_cm].r,sr); }
-    });
-    shelves=Object.keys(byY).filter(function(y){
-      return byY[y].l<x_cm&&byY[y].r>x_cm; // la couverture fusionnée traverse strictement x_cm
-    }).map(Number).sort(function(a,b){return a-b;});
-  } else {
-    shelves=getActiveEls().filter(function(e){
-      if(e.type!=='shelf'&&e.type!=='shelf_simple') return false;
-      var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
-      var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
-      return sl<=1&&sr>=iW_cm-1;
-    }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
-  }
+  var iH_cm=(S.CH-2*EP)*100;
+  var iW_cm=(S.CL-2*EP)*100;
+  var shelves=caissonElements.filter(function(e){
+    if(e.type!=='shelf') return false;
+    var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
+    var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
+    // Si x_cm fourni : tablette valide si elle couvre ce x
+    if(x_cm!==undefined) return sl<=x_cm&&sr>=x_cm;
+    // Sinon : seulement les tablettes pleine largeur
+    return sl<=1&&sr>=iW_cm-1;
+  }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
   var bot=0,top=iH_cm;
   shelves.forEach(function(s){ if(s<y_cm&&s>bot) bot=s; if(s>y_cm&&s<top) top=s; });
   return {bottom_cm:bot,top_cm:top,height_cm:top-bot,centerY:ycmToLocal((top+bot)/2)};
 }
 function getBay(x_cm,y_cm){
-  var iW_cm=(getActiveCL()-2*EP)*100;
+  var iW_cm=(S.CL-2*EP)*100;
   var comp=getCompartment(y_cm,x_cm);
-  var seps=getActiveEls().filter(function(e){
-    if(e.type!=='separator') return false;
-    // Un séparateur est actif au y du clic si son propre compartiment contient ce y
-    // (évite le bug où des étagères d'un seul côté excluent le séparateur)
-    var sepComp=getCompartment(e.y_cm,e.x_cm);
-    return y_cm>=sepComp.bottom_cm&&y_cm<=sepComp.top_cm;
+  var seps=caissonElements.filter(function(e){
+    return e.type==='separator'&&e.y_cm>=comp.bottom_cm&&e.y_cm<=comp.top_cm;
   }).map(function(e){return e.x_cm;}).sort(function(a,b){return a-b;});
   var left=0,right=iW_cm;
   seps.forEach(function(s){ if(s<x_cm&&s>left) left=s; if(s>x_cm&&s<right) right=s; });
@@ -1003,9 +476,8 @@ function mkKey(comp,bay){
 }
 function getFacadeFor(comp,bay){
   var k=mkKey(comp,bay);
-  var els=getActiveEls();
-  for(var i=0;i<els.length;i++){
-    if((els[i].type==='porte'||els[i].type==='tiroir')&&els[i].key===k) return els[i];
+  for(var i=0;i<caissonElements.length;i++){
+    if((caissonElements[i].type==='porte'||caissonElements[i].type==='tiroir')&&caissonElements[i].key===k) return caissonElements[i];
   }
   return null;
 }
@@ -1013,38 +485,6 @@ function getFacadeFor(comp,bay){
 // ═══════════════════════════════════════════════════════
 // BUILD CAISSON
 // ═══════════════════════════════════════════════════════
-function addDoorHinges(pm,porW,porH,hingeLeft){
-  var matH=new THREE.MeshStandardMaterial({color:0xA6A6A6,roughness:0.18,metalness:0.90});
-  var nH=porH>0.70?3:2;
-  var edgeX=hingeLeft?-porW/2:porW/2;
-  var inset=0.022; // 22 mm du bord (standard charnière encastrée)
-  var zBack=-0.012; // face arrière porte — visible uniquement depuis l'intérieur
-  for(var hi=0;hi<nH;hi++){
-    var t=(hi+1)/(nH+1);
-    var hy=-porH/2+porH*t;
-    var cupX=hingeLeft?edgeX+inset:edgeX-inset;
-
-    // ① Coupe ronde (encastrée dans le dos de la porte, invisible de l'extérieur)
-    var cupGeo=new THREE.CylinderGeometry(0.018,0.018,0.008,16);
-    cupGeo.rotateX(Math.PI/2);
-    var cup=new THREE.Mesh(cupGeo,matH); cup.castShadow=false;
-    cup.position.set(cupX,hy,zBack);
-    pm.add(cup);
-
-    // ② Bras (reste à l'intérieur du volume de la porte, caché par les joues du meuble)
-    var armLen=Math.abs(cupX-edgeX)-0.002; // stoppe avant le bord → pas de débord extérieur
-    if(armLen>0.004){
-      var armCx=hingeLeft?(cupX+edgeX)/2+0.003:(cupX+edgeX)/2-0.003;
-      var arm=new THREE.Mesh(new THREE.BoxGeometry(armLen,0.010,0.010),matH);
-      arm.castShadow=false;
-      arm.position.set(armCx,hy,zBack+0.002);
-      pm.add(arm);
-    }
-    // La plaque de fixation (sur la joue du meuble) n'est PAS enfant de la porte :
-    // elle ne tourne pas avec la porte et n'est visible que depuis l'intérieur.
-  }
-}
-
 function buildCaisson(){
   disposeGroup(caissonGrp);
   caissonGrp=new THREE.Group();
@@ -1076,8 +516,7 @@ function buildCaisson(){
   var matFacade=makePanelMat(0.80, 0.3, 0.4);
   var matFond  =isWood ? matWhite : makePanelMat(0.68, 0.5, 0.4);
   var matElem  =isWood ? matWhite : makePanelMat(0.88, 0.3, 0.3);
-  var matTirInt=new THREE.MeshStandardMaterial({color:0xF5F0EB,roughness:0.85,metalness:0.0});
-  var matBarre =new THREE.MeshStandardMaterial({color:0xC8C8C8,roughness:0.10,metalness:0.90});
+  var matTirInt=new THREE.MeshStandardMaterial({color:0xF5F0EB,roughness:0.85,metalness:0.0,side:THREE.FrontSide});
 
   function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
   // Boîte avec matériaux différents par face pour l'effet bois/blanc
@@ -1092,50 +531,28 @@ function buildCaisson(){
   // Structure — joue gauche : face int = +x (idx 0), joue droite : face int = -x (idx 1)
   // tablette haute : face int = -y (idx 3), tablette basse : face int = +y (idx 2)
   var cg=boxBimat(ep,CH,CP,0); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
-  // Joue droite : supprimée quand caisson d'angle (C2 prend sa place)
-  if(!hasAngle){ var cd=boxBimat(ep,CH,CP,1); cd.position.set(CL/2-ep/2,CH/2,0); caissonGrp.add(cd); }
+  var cd=boxBimat(ep,CH,CP,1); cd.position.set( CL/2-ep/2,CH/2,0); caissonGrp.add(cd);
   var dt=boxBimat(iW,ep,CP,3); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
   var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db);
   var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
 
   // Tablettes et séparateurs
   caissonElements.forEach(function(el,idx){
-    if(el.type==='shelf'||el.type==='shelf_simple'){
+    if(el.type==='shelf'){
       var iW_cm2=(S.CL-2*EP)*100;
       var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
       var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
       var sw=(sr-sl)/100;
       var scx=xcmToLocal((sl+sr)/2);
-      var th=ep;
-      var m=box(sw,th,CP-ep,matElem);
+      var m=box(sw,ep,CP-ep,matElem);
       m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
-    } else if(el.type==='separator'||el.type==='separator_simple'){
+    } else if(el.type==='separator'){
       var comp=getCompartment(el.y_cm,el.x_cm);
       var h=comp.height_cm/100; if(h<0.01) return;
-      var tw=ep;
-      var m=box(tw,h,CP-ep,matElem);
+      var m=box(ep,h,CP-ep,matElem);
       m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
-    } else if(el.type==='barre'){
-      var iW_cm2=(S.CL-2*EP)*100;
-      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
-      var barLen=(sr-sl)/100;
-      var barGeo=new THREE.CylinderGeometry(0.014,0.014,barLen,16);
-      barGeo.rotateZ(Math.PI/2);
-      var bm=new THREE.Mesh(barGeo,matBarre);
-      bm.castShadow=true;
-      bm.position.set(xcmToLocal((sl+sr)/2), ycmToLocal(el.y_cm), -CP*0.25);
-      bm.userData.elemIdx=idx; caissonElemMeshes.push(bm); caissonGrp.add(bm);
-      // Support gauche
-      var supG=box(0.020,0.020,CP*0.5-0.014,matBarre);
-      supG.position.set(xcmToLocal(sl)+0.010, ycmToLocal(el.y_cm), -CP*0.25+0.014);
-      caissonGrp.add(supG);
-      // Support droit
-      var supD=box(0.020,0.020,CP*0.5-0.014,matBarre);
-      supD.position.set(xcmToLocal(sr)-0.010, ycmToLocal(el.y_cm), -CP*0.25+0.014);
-      caissonGrp.add(supD);
     }
   });
 
@@ -1172,7 +589,6 @@ function buildCaisson(){
       }
       var pm=box(porW,porH,0.020,matFacade);
       pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
-      addDoorHinges(pm, porW, porH, hingeLeft);
       pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
       pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
     } else { // tiroir
@@ -1188,25 +604,28 @@ function buildCaisson(){
       var tirH = tirYtop - tirYbot - jeu;
       var tirCx = (tirXleft + tirXright) / 2;
       var tirCy = (tirYbot  + tirYtop)  / 2;
+      // Façade
       var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
       tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
       caissonElemMeshes.push(tm); caissonGrp.add(tm);
+      // Caisson intérieur (visible uniquement quand ouvert)
       if(isOpen){
         var bep=EP*0.5;
         var botFront=tirZ-0.010, botBack=-CP/2+0.015;
         var boxDepth=botFront-botBack, boxCz=(botFront+botBack)/2;
         var bBot=box(tirW,bep,boxDepth,matTirInt);
-        bBot.position.set(tirCx,tirCy-tirH/2+bep/2,boxCz);
+        bBot.position.set(tirCx, tirCy-tirH/2+bep/2, boxCz);
         bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
         caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
         var bL=box(bep,tirH-bep,boxDepth,matTirInt);
-        bL.position.set(tirCx-tirW/2+bep/2,tirCy+bep/2,boxCz);
+        bL.position.set(tirCx-tirW/2+bep/2, tirCy+bep/2, boxCz);
         bL.userData.tirKey=el.key; bL.userData.isTiroir=true;
         caissonElemMeshes.push(bL); caissonGrp.add(bL);
         var bR=box(bep,tirH-bep,boxDepth,matTirInt);
-        bR.position.set(tirCx+tirW/2-bep/2,tirCy+bep/2,boxCz);
+        bR.position.set(tirCx+tirW/2-bep/2, tirCy+bep/2, boxCz);
         bR.userData.tirKey=el.key; bR.userData.isTiroir=true;
         caissonElemMeshes.push(bR); caissonGrp.add(bR);
+        // dos
       }
     }
   });
@@ -1221,396 +640,9 @@ function buildCaisson(){
   caissonGuidesGrp.renderOrder = 4;
   caissonGrp.add(caissonGuidesGrp);
 
-  // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
-  if(currentFT==='tv') buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, matWhite, isWood, CL, CH, CP, ep);
-
-  if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,0,caissCZ());
+  caissonGrp.position.set(S.caissonOffset,0,caissCZ());
   scene.add(caissonGrp);
-  if(BIBLIO_MODE){
-    if(hasAngle) buildCaisson2();
-    normalizeCaisson();
-
-  }
   updateAmgtCount();
-}
-
-function buildCaisson2(){
-  if(caissonGrp2){
-    caissonGrp2.traverse(function(o){if(o.isMesh){if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){m.dispose();});}});
-    if(caissonGrp2.parent) caissonGrp2.parent.remove(caissonGrp2);
-  }
-  caissonGrp2=new THREE.Group();
-  caissonElemMeshes2=[];
-  caissonHitPlane2=null;
-
-  var CL2=S.CL2, CH=S.CH, CP=caissonCP(), ep=EP;
-  var iW2=CL2-2*ep, iH2=CH-2*ep;
-  var md=MATS_CAIS[S.matCais];
-  var isWood=(S.matCais<=3);
-  var matW=new THREE.MeshStandardMaterial({color:0xF2EDE8,roughness:0.90,metalness:0.0});
-  function pm2(dk,w,h){
-    var tex=_caisTexCache[S.matCais];
-    if(tex){var t=tex.clone();t.needsUpdate=true;t.repeat.set(Math.max(w,0.01)/0.40,Math.max(h,0.01)/0.40);return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});}
-    var c=new THREE.Color(md.color||'#D4A96A');return new THREE.MeshStandardMaterial({color:c.multiplyScalar(dk),roughness:md.r,metalness:0.02});
-  }
-  var matC=pm2(1.00,ep,0.5), matF=isWood?matW:pm2(0.68,0.5,0.4);
-  var matEl=isWood?matW:pm2(0.88,0.3,0.3);
-  var matFac=pm2(0.80,0.3,0.4);
-  var matTirInt=new THREE.MeshStandardMaterial({color:0xF5F0EB,roughness:0.85,metalness:0.0});
-  var matBarre2=new THREE.MeshStandardMaterial({color:0xC8C8C8,roughness:0.10,metalness:0.90});
-  function bx2(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
-  function bm2(w,h,d,fi){
-    var ms=[matC,matC,matC,matC,matC,matC];
-    if(isWood){ms[fi]=matW;ms[4]=matW;}
-    var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),ms);m.castShadow=true;m.receiveShadow=true;return m;
-  }
-
-  // Structure
-  var cg2=bm2(ep,CH,CP,0); cg2.position.set(-CL2/2+ep/2,CH/2,0); caissonGrp2.add(cg2);
-  var cd2=bm2(ep,CH,CP,1); cd2.position.set( CL2/2-ep/2,CH/2,0); caissonGrp2.add(cd2);
-  var dt2=bm2(iW2,ep,CP,3); dt2.position.set(0,CH-ep/2,0); caissonGrp2.add(dt2);
-  var db2=bm2(iW2,ep,CP,2); db2.position.set(0,ep/2,0);   caissonGrp2.add(db2);
-  var fd2=bx2(CL2,CH,0.008,matF); fd2.position.set(0,CH/2,-CP/2+0.004); caissonGrp2.add(fd2);
-
-  // Éléments intérieurs de C2 — on switch activeCaisson=2 pour que xcmToLocal etc. utilisent CL2
-  var prevAC=activeCaisson; activeCaisson=2;
-  var fz2=CP/2+0.001;
-  caissonElements2.forEach(function(el,idx){
-    if(el.type==='shelf'||el.type==='shelf_simple'){
-      var iW_cm2=(CL2-2*EP)*100;
-      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
-      var sw=(sr-sl)/100;
-      var scx=xcmToLocal((sl+sr)/2);
-      var th=ep;
-      var m=bx2(sw,th,CP-ep,matEl);
-      m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
-      m.userData.elemIdx=idx; caissonElemMeshes2.push(m); caissonGrp2.add(m);
-    } else if(el.type==='separator'||el.type==='separator_simple'){
-      var comp=getCompartment(el.y_cm,el.x_cm);
-      var h=comp.height_cm/100; if(h<0.01) return;
-      var tw=ep;
-      var m=bx2(tw,h,CP-ep,matEl);
-      m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
-      m.userData.elemIdx=idx; caissonElemMeshes2.push(m); caissonGrp2.add(m);
-    } else if(el.type==='barre'){
-      var iW_cm2=(CL2-2*EP)*100;
-      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
-      var barLen=(sr-sl)/100;
-      var barGeo2=new THREE.CylinderGeometry(0.014,0.014,barLen,16);
-      barGeo2.rotateZ(Math.PI/2);
-      var bm2b=new THREE.Mesh(barGeo2,matBarre2); bm2b.castShadow=true;
-      bm2b.position.set(xcmToLocal((sl+sr)/2), ycmToLocal(el.y_cm), -CP*0.25);
-      bm2b.userData.elemIdx=idx; caissonElemMeshes2.push(bm2b); caissonGrp2.add(bm2b);
-    }
-  });
-  caissonElements2.forEach(function(el,idx){
-    if(el.type!=='porte'&&el.type!=='tiroir') return;
-    var parts=el.key.split('_').map(Number);
-    var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
-    var porW=(right-left)/100, porH=(top-bot)/100;
-    var cx=xcmToLocal((left+right)/2);
-    var jeu=0.003;
-    if(el.type==='porte'){
-      var isOpen=!!caissonOpenState2[el.key];
-      var iW_cm2=iW2*100, iH_cm2=iH2*100;
-      var porXleft  = (left<0.5)          ? -CL2/2 : xcmToLocal(left)  - ep/2;
-      var porXright = (right>iW_cm2-0.5)  ?  CL2/2 : xcmToLocal(right) + ep/2;
-      var porYbot   = (bot<0.5)           ?  0     : ycmToLocal(bot)   - ep/2;
-      var porYtop   = (top>iH_cm2-0.5)   ?  CH    : ycmToLocal(top)   + ep/2;
-      var pW=porXright-porXleft-jeu, pH=porYtop-porYbot-jeu;
-      var pCy=(porYbot+porYtop)/2;
-      var hingeLeft=(porXleft+porXright)/2 <= 0;
-      var pivot=new THREE.Group();
-      if(hingeLeft){ pivot.position.set(porXleft+jeu/2,pCy,fz2); if(isOpen) pivot.rotation.y=-Math.PI*0.25; }
-      else          { pivot.position.set(porXright-jeu/2,pCy,fz2); if(isOpen) pivot.rotation.y=Math.PI*0.25; }
-      var pm=bx2(pW,pH,0.020,matFac);
-      pm.position.set(hingeLeft?pW/2:-pW/2,0,0);
-      addDoorHinges(pm, pW, pH, hingeLeft);
-      pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
-      pivot.add(pm); caissonElemMeshes2.push(pm); caissonGrp2.add(pivot);
-    } else {
-      var isOpen=!!caissonOpenState2[el.key];
-      var tirZ=isOpen?fz2+CP*0.55:fz2;
-      var iW_cm2=iW2*100, iH_cm2=iH2*100;
-      var tirXleft  = (left<0.5)          ? -CL2/2 : xcmToLocal(left)  - ep/2;
-      var tirXright = (right>iW_cm2-0.5)  ?  CL2/2 : xcmToLocal(right) + ep/2;
-      var tirYbot   = (bot<0.5)           ?  0     : ycmToLocal(bot)   - ep/2;
-      var tirYtop   = (top>iH_cm2-0.5)   ?  CH    : ycmToLocal(top)   + ep/2;
-      var tW=tirXright-tirXleft-jeu, tH=tirYtop-tirYbot-jeu;
-      var tCx=(tirXleft+tirXright)/2, tCy=(tirYbot+tirYtop)/2;
-      var tm=bx2(tW,tH,0.020,matFac); tm.position.set(tCx,tCy,tirZ);
-      tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
-      caissonElemMeshes2.push(tm); caissonGrp2.add(tm);
-      if(isOpen){
-        var bep2=ep*0.5;
-        var bf2=tirZ-0.010, bb2=-CP/2+0.015;
-        var bd2=bf2-bb2, bcz2=(bf2+bb2)/2;
-        var bBot2=bx2(tW,bep2,bd2,matTirInt);
-        bBot2.position.set(tCx,tCy-tH/2+bep2/2,bcz2);
-        bBot2.userData.tirKey=el.key; bBot2.userData.isTiroir=true;
-        caissonElemMeshes2.push(bBot2); caissonGrp2.add(bBot2);
-        var bL2=bx2(bep2,tH-bep2,bd2,matTirInt);
-        bL2.position.set(tCx-tW/2+bep2/2,tCy+bep2/2,bcz2);
-        bL2.userData.tirKey=el.key; bL2.userData.isTiroir=true;
-        caissonElemMeshes2.push(bL2); caissonGrp2.add(bL2);
-        var bR2=bx2(bep2,tH-bep2,bd2,matTirInt);
-        bR2.position.set(tCx+tW/2-bep2/2,tCy+bep2/2,bcz2);
-        bR2.userData.tirKey=el.key; bR2.userData.isTiroir=true;
-        caissonElemMeshes2.push(bR2); caissonGrp2.add(bR2);
-      }
-    }
-  });
-  activeCaisson=prevAC;
-
-  // Plan de frappe et repères
-  var hpGeo2=new THREE.PlaneGeometry(iW2,iH2);
-  caissonHitPlane2=new THREE.Mesh(hpGeo2,new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide}));
-  caissonHitPlane2.position.set(0,ep+iH2/2,CP/2-0.002);
-  caissonGrp2.add(caissonHitPlane2);
-  caissonGuidesGrp2=new THREE.Group(); caissonGuidesGrp2.renderOrder=4;
-  caissonGrp2.add(caissonGuidesGrp2);
-
-  var c2p = getC2DefaultPos();
-  caissonGrp2.rotation.y = -Math.PI/2;
-  caissonGrp2.position.set(c2p.x, 0, c2p.z);
-  caissonGrp.add(caissonGrp2);
-}
-
-function getC2DefaultPos(){
-  var CL1=S.CL, CP=caissonCP(), CL2=S.CL2;
-  return { x: CL1/2 - EP + CP/2, z: -CP/2 + CL2/2 };
-}
-
-
-// ═══════════════════════════════════════════════════════
-// BUILD CAISSONS TV EXTRA (gauche=3, droite=4, dessus=5)
-// ═══════════════════════════════════════════════════════
-function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,matWhite,isWood,mainCL,mainCH,CP,ep){
-  tvGrp=[null,null,null]; tvHP=[null,null,null]; tvGuides=[null,null,null]; tvGhost=[null,null,null];
-  tvMeshes=[[],[],[]];
-
-  var defs=[
-    {active:S_tvSide.leftActive,  idx:0, acId:3, W:S_tvSide.leftW/100,  H:S_tvSide.leftH/100,  px:function(W){return -(mainCL/2+W/2);}, py:0},
-    {active:S_tvSide.rightActive, idx:1, acId:4, W:S_tvSide.rightW/100, H:S_tvSide.rightH/100, px:function(W){return  (mainCL/2+W/2);}, py:0},
-    {active:S_tvSide.topActive,   idx:2, acId:5, W:S_tvSide.topW/100,   H:S_tvSide.topH/100,   px:function()  {return S_tvSide.topX;},  py:mainCH+S_tvSide.topY}
-  ];
-
-  defs.forEach(function(d){
-    if(!d.active) return;
-    var W=d.W, H=d.H, ep2=ep, iWc=W-2*ep2, iHc=H-2*ep2;
-    var fz=CP/2-0.001;
-
-    var g=new THREE.Group(); g.position.set(d.px(W),d.py,0);
-    tvGrp[d.idx]=g;
-
-    // ── Structure ──
-    var jg=box(ep2,H,CP,matCais); jg.position.set(-W/2+ep2/2,H/2,0); g.add(jg);
-    var jd=box(ep2,H,CP,matCais); jd.position.set( W/2-ep2/2,H/2,0); g.add(jd);
-    var tt=box(iWc,ep2,CP,matCais); tt.position.set(0,H-ep2/2,0); g.add(tt);
-    var bb=box(iWc,ep2,CP,matCais); bb.position.set(0,ep2/2,0); g.add(bb);
-    var fd=box(W,H,0.008,matFond); fd.position.set(0,H/2,-CP/2+0.004); g.add(fd);
-
-    // ── Éléments éditables ──
-    var iWcm=Math.round(iWc*100), iHcm=Math.round(iHc*100);
-    var elems=tvElems[d.idx], openSt=tvOpenState[d.idx], meshArr=tvMeshes[d.idx];
-    meshArr.length=0;
-
-    function xcm(v){ return -W/2+ep2+v/100; }
-    function ycm(v){ return ep2+v/100; }
-
-    elems.forEach(function(el,eidx){
-      var compShelves=elems.filter(function(e){
-        if(e.type!=='shelf') return false;
-        var sl=e.x_left_cm!==undefined?e.x_left_cm:0, sr=e.x_right_cm!==undefined?e.x_right_cm:iWcm;
-        return sl<=1&&sr>=iWcm-1;
-      }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
-
-      if(el.type==='shelf'||el.type==='shelf_simple'){
-        var sl=el.x_left_cm!==undefined?el.x_left_cm:0, sr=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
-        var sw=(sr-sl)/100, scx=xcm((sl+sr)/2), th=ep2;
-        var m=box(sw,th,CP-ep2,matElem); m.position.set(scx,ycm(el.y_cm),-ep2/2);
-        m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
-
-      } else if(el.type==='separator'||el.type==='separator_simple'){
-        var bot=0,top=iHcm;
-        compShelves.forEach(function(s){if(s<el.y_cm&&s>bot)bot=s;if(s>el.y_cm&&s<top)top=s;});
-        var h=(top-bot)/100; if(h<0.01) return;
-        var tw=ep2;
-        var m=box(tw,h,CP-ep2,matElem); m.position.set(xcm(el.x_cm),ep2+(bot+top)/200,-ep2/2);
-        m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
-
-      } else if(el.type==='porte'){
-        var kp=el.key.split('_').map(Number);
-        var kBot=kp[0],kLeft=kp[1],kTop=kp[2],kRight=kp[3];
-        var jeuP=0.003;
-        var pxL=kLeft<0.5       ?-W/2     :xcm(kLeft) -ep2/2;
-        var pxR=kRight>iWcm-0.5 ? W/2     :xcm(kRight)+ep2/2;
-        var pyB=kBot<0.5        ? 0       :ycm(kBot)  -ep2/2;
-        var pyT=kTop>iHcm-0.5   ? H       :ycm(kTop)  +ep2/2;
-        var porW=pxR-pxL-jeuP, porH=pyT-pyB-jeuP;
-        var porCy=(pyB+pyT)/2;
-        var hingeLeft=xcm((kLeft+kRight)/2)<xcm(iWcm/2);
-        var isOpen=!!openSt[el.key];
-        var pivot=new THREE.Group();
-        pivot.position.set(hingeLeft?pxL+jeuP/2:pxR-jeuP/2,porCy,fz);
-        if(isOpen) pivot.rotation.y=hingeLeft?-Math.PI*0.25:Math.PI*0.25;
-        var pm=box(porW,porH,0.020,matFacade);
-        pm.position.set(hingeLeft?porW/2:-porW/2,0,0);
-        addDoorHinges(pm,porW,porH,hingeLeft);
-        pm.userData.elemIdx=eidx; pm.userData.porKey=el.key; pm.userData.isPorte=true;
-        pivot.add(pm); meshArr.push(pm); g.add(pivot);
-
-      } else if(el.type==='tiroir'){
-        var kt=el.key.split('_').map(Number);
-        var ktBot=kt[0],ktLeft=kt[1],ktTop=kt[2],ktRight=kt[3];
-        var jeuT=0.003;
-        var txL=ktLeft<0.5       ?-W/2    :xcm(ktLeft) -ep2/2;
-        var txR=ktRight>iWcm-0.5 ? W/2    :xcm(ktRight)+ep2/2;
-        var tyB=ktBot<0.5        ? 0      :ycm(ktBot)  -ep2/2;
-        var tyT=ktTop>iHcm-0.5   ? H      :ycm(ktTop)  +ep2/2;
-        var tirW=txR-txL-jeuT, tirH=tyT-tyB-jeuT;
-        var tirCx=(txL+txR)/2, tirCy=(tyB+tyT)/2;
-        var isOpen2=!!openSt[el.key];
-        var tirZ=isOpen2?fz+CP*0.55:fz;
-        var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
-        tm.userData.elemIdx=eidx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
-        meshArr.push(tm); g.add(tm);
-        if(isOpen2){
-          var bep=ep2*0.5, botFt=tirZ-0.010, botBk=-CP/2+0.015, bd=botFt-botBk, bcz=(botFt+botBk)/2;
-          var bBot=box(tirW,bep,bd,matTirInt); bBot.position.set(tirCx,tirCy-tirH/2+bep/2,bcz);
-          bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true; meshArr.push(bBot); g.add(bBot);
-          var bL=box(bep,tirH-bep,bd,matTirInt); bL.position.set(tirCx-tirW/2+bep/2,tirCy+bep/2,bcz);
-          bL.userData.tirKey=el.key; bL.userData.isTiroir=true; meshArr.push(bL); g.add(bL);
-          var bR=box(bep,tirH-bep,bd,matTirInt); bR.position.set(tirCx+tirW/2-bep/2,tirCy+bep/2,bcz);
-          bR.userData.tirKey=el.key; bR.userData.isTiroir=true; meshArr.push(bR); g.add(bR);
-        }
-      }
-    });
-
-    // ── Hit plane ──
-    var hp=new THREE.Mesh(new THREE.PlaneGeometry(iWc,iHc),new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide}));
-    hp.position.set(0,ep2+iHc/2,CP/2-0.002); g.add(hp);
-    tvHP[d.idx]=hp;
-
-    // ── Guides ──
-    var gg=new THREE.Group(); gg.renderOrder=4; g.add(gg);
-    tvGuides[d.idx]=gg;
-
-    caissonGrp.add(g);
-  });
-}
-
-function toggleAngle(){
-  hasAngle=!hasAngle;
-  var btn=document.getElementById('btn-angle');
-  var opts=document.getElementById('angle-opts');
-  if(btn) btn.textContent=hasAngle?'− Retirer l\'angle':'+ Ajouter un angle';
-  if(opts) opts.style.display=hasAngle?'':'none';
-  buildCaisson();
-  if(caissonEditMode) _rebuildEditBar();
-}
-
-function setCL2(v){
-  v=Math.round(v); S.CL2=v/100;
-  var inp=document.getElementById('inp-CL2'); if(inp) inp.value=v;
-  if(hasAngle) buildCaisson();
-}
-
-function toggleTVLeft(){
-  S_tvSide.leftActive=!S_tvSide.leftActive;
-  if(!S_tvSide.leftActive && activeCaisson===3) activeCaisson=1;
-  var btn=document.getElementById('tvl-btn'); if(btn) btn.textContent=S_tvSide.leftActive?'− Gauche':'+ Gauche';
-  var opts=document.getElementById('tvl-opts'); if(opts) opts.style.display=S_tvSide.leftActive?'':'none';
-  buildCaisson(); if(caissonEditMode) _rebuildEditBar();
-}
-function toggleTVRight(){
-  S_tvSide.rightActive=!S_tvSide.rightActive;
-  if(!S_tvSide.rightActive && activeCaisson===4) activeCaisson=1;
-  var btn=document.getElementById('tvr-btn'); if(btn) btn.textContent=S_tvSide.rightActive?'− Droite':'+ Droite';
-  var opts=document.getElementById('tvr-opts'); if(opts) opts.style.display=S_tvSide.rightActive?'':'none';
-  buildCaisson(); if(caissonEditMode) _rebuildEditBar();
-}
-function toggleTVTop(){
-  S_tvSide.topActive=!S_tvSide.topActive;
-  if(!S_tvSide.topActive){ if(activeCaisson===5) activeCaisson=1; S_tvSide.topX=0; S_tvSide.topY=0; }
-  var btn=document.getElementById('tvt-btn'); if(btn) btn.textContent=S_tvSide.topActive?'− Dessus':'+ Dessus';
-  var opts=document.getElementById('tvt-opts'); if(opts) opts.style.display=S_tvSide.topActive?'':'none';
-  buildCaisson(); if(caissonEditMode) _rebuildEditBar();
-}
-function setTVSide(side, dim, v){
-  v=Math.round(v);
-  var key=side==='left'?'left':side==='right'?'right':'top';
-  S_tvSide[key+dim]=v;
-  var inpId='inp-tv'+(side==='left'?'L':side==='right'?'R':'T')+dim;
-  var inp=document.getElementById(inpId); if(inp) inp.value=v;
-  buildCaisson();
-}
-
-var WALL_BIBLIO_Z = -1.1;
-var FLOOR_BIBLIO_Y = -0.92;
-
-function normalizeCaisson(){
-  if(!caissonGrp) return;
-  caissonGrp.updateMatrixWorld(true);
-  var bbox=new THREE.Box3().setFromObject(caissonGrp);
-  var size=bbox.getSize(new THREE.Vector3());
-  var center=bbox.getCenter(new THREE.Vector3());
-  var maxDim=Math.max(size.x,size.y,size.z,0.001);
-  var ns=1.8/maxDim;
-  currentNS=ns;
-  caissonGrp.scale.setScalar(ns);
-
-  if(BIBLIO_MODE){
-    // bbox en coordonnées locales (scale=1 sur un groupe neuf)
-    // Après scale ns : world = local*ns + position
-    // On veut : bbox.min.y*ns + py = FLOOR_BIBLIO_Y  et  bbox.min.z*ns + pz = WALL_BIBLIO_Z
-    var py = FLOOR_BIBLIO_Y - bbox.min.y * ns;
-    var pz = WALL_BIBLIO_Z  - bbox.min.z * ns;
-    caissonGrp.position.set(-center.x * ns, py, pz);
-  } else {
-    caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
-  }
-  caissonGrp.rotation.set(0, 0, 0);
-}
-
-function _project3DtoScreen(v3){
-  var w=v3.clone().project(camera);
-  var rect=cvs.getBoundingClientRect();
-  return {x:(w.x*0.5+0.5)*rect.width, y:(-w.y*0.5+0.5)*rect.height};
-}
-
-function updateTVSnapGuides(snapX, snapY){
-  var vLine=document.getElementById('tv-snap-v');
-  var hLine=document.getElementById('tv-snap-h');
-  if(snapX!==null){
-    var pt=new THREE.Vector3(snapX, S.CH+S_tvSide.topY+S_tvSide.topH/200, 0);
-    caissonGrp.localToWorld(pt);
-    var s=_project3DtoScreen(pt);
-    vLine.style.left=s.x+'px'; vLine.style.display='';
-  } else { vLine.style.display='none'; }
-  if(snapY!==null){
-    var pt2=new THREE.Vector3(S_tvSide.topX, snapY, 0);
-    caissonGrp.localToWorld(pt2);
-    var s2=_project3DtoScreen(pt2);
-    hLine.style.top=s2.y+'px'; hLine.style.display='';
-  } else { hLine.style.display='none'; }
-}
-
-function hideTVSnapGuides(){
-  var v=document.getElementById('tv-snap-v'); if(v) v.style.display='none';
-  var h=document.getElementById('tv-snap-h'); if(h) h.style.display='none';
-}
-
-function bibl_animateTo(tx,ty,ms){
-  var startX=bRotX,startY=bRotY,t0=performance.now();
-  (function step(now){
-    var p=Math.min((now-t0)/ms,1), e=1-Math.pow(1-p,3);
-    bRotX=startX+(tx-startX)*e; bRotY=startY+(ty-startY)*e;
-    if(caissonGrp) caissonGrp.rotation.set(bRotX,bRotY,0);
-    if(p<1) requestAnimationFrame(step);
-  })(performance.now());
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1804,133 +836,11 @@ var MIN_GAP_H=3, MIN_GAP_V=3;
 
 function setCaissonType(t){
   caissonType=t;
-  document.querySelectorAll('.c-type-btn').forEach(function(btn){
-    btn.classList.toggle('active', btn.dataset.ctype===t);
+  ['ct-shelf','ct-sep','ct-door','ct-draw'].forEach(function(id,i){
+    var k=['shelf','separator','porte','tiroir'][i];
+    var el=document.getElementById(id); if(el) el.classList.toggle('active',k===t);
   });
   clearCaissonGhost();
-}
-
-function switchActiveCaisson(n){
-  activeCaisson=n;
-  _rebuildEditBar(); // re-render pour mettre à jour active state
-  clearCaissonGhost();
-  updateAmgtCount();
-}
-
-function _rebuildEditBar(){
-  var btns;
-  if(BIBLIO_MODE){
-    btns=document.querySelector('#fn-edit-content .c-type-btns');
-  } else {
-    // SDB : injecte dans c-edit-bar si pas encore présent
-    var bar=document.getElementById('c-edit-bar');
-    btns=bar&&bar.querySelector('.c-type-btns');
-    if(bar&&!btns){
-      btns=document.createElement('div'); btns.className='c-type-btns';
-      bar.insertBefore(btns, bar.querySelector('.c-edit-sep')||bar.firstChild);
-    }
-  }
-  if(!btns) return;
-  var selectorHTML='';
-  if(BIBLIO_MODE){
-    var cBtns=[];
-    // Caisson angle (non-TV)
-    if(hasAngle && currentFT!=='tv'){
-      cBtns.push({id:1,lbl:'Caisson 1'}); cBtns.push({id:2,lbl:'Caisson 2'});
-    }
-    // Caissons TV
-    if(currentFT==='tv'){
-      cBtns.push({id:1,lbl:'Centre'});
-      if(S_tvSide.leftActive)  cBtns.push({id:3,lbl:'Gauche'});
-      if(S_tvSide.rightActive) cBtns.push({id:4,lbl:'Droite'});
-      if(S_tvSide.topActive)   cBtns.push({id:5,lbl:'Dessus'});
-    }
-    if(cBtns.length>1){
-      selectorHTML='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">';
-      cBtns.forEach(function(b){
-        selectorHTML+='<button class="c-caisson-btn'+(activeCaisson===b.id?' active':'')+'" onclick="switchActiveCaisson('+b.id+')">'+b.lbl+'</button>';
-      });
-      selectorHTML+='</div>';
-    }
-  }
-  // SVG icons + helper to build a card button
-  var svgShelf='<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.2"/><rect x="4" y="11" width="28" height="3" rx="1" fill="currentColor"/></svg>';
-  var svgShelfSimple='<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.2"/><line x1="4" y1="12.5" x2="32" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2.5"/></svg>';
-  var svgSep='<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.2"/><rect x="16.5" y="4" width="3" height="16" rx="1" fill="currentColor"/></svg>';
-  var svgSepSimple='<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.2"/><line x1="18" y1="4" x2="18" y2="20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2.5"/></svg>';
-  var svgPorte='<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.2"/><rect x="4" y="4" width="28" height="16" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="26" cy="12" r="1.5" fill="currentColor"/></svg>';
-  var svgTiroir='<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.2"/><rect x="4" y="8" width="28" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="14" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
-  var svgBarre='<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.2"/><line x1="4" y1="12" x2="32" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="12" r="2.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>';
-
-  function cBtn(ctype, active, svg, label, desc){
-    return '<button class="c-type-btn'+(active?' active':'')+'" data-ctype="'+ctype+'" onclick="setCaissonType(\''+ctype+'\')">'+
-      svg+
-      '<span class="c-type-btn-label">'+label+'</span>'+
-      '<span class="c-type-btn-desc">'+desc+'</span>'+
-    '</button>';
-  }
-
-  if(BIBLIO_MODE){
-    var isDressing=(typeof currentFT!=='undefined'&&currentFT==='dressing');
-    var isTV=(typeof currentFT!=='undefined'&&currentFT==='tv');
-    if(isDressing){
-      btns.innerHTML=selectorHTML+
-        cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
-        cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire — non prise en compte par les portes')+
-        cBtn('barre',            false, svgBarre,      'Tringle',      'Barre pour suspendre les vêtements')+
-        cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
-        cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
-        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
-        cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
-    } else if(isTV && activeCaisson===1){
-      // Caisson central bas : étagère, intercalaire, porte, tiroir
-      btns.innerHTML=selectorHTML+
-        cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
-        cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire — non prise en compte par les portes')+
-        cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
-        cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
-        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
-        cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
-    } else if(isTV && activeCaisson>=3){
-      // Caissons latéraux / dessus : étagère, intercalaire, porte, tiroir
-      btns.innerHTML=selectorHTML+
-        cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
-        cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire — non prise en compte par les portes')+
-        cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
-        cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
-        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
-        cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
-    } else {
-      btns.innerHTML=selectorHTML+
-        cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes s\'accrochent dessus')+
-        cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire — non prise en compte par les portes')+
-        cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale — délimite l\'espace pour une porte')+
-        cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
-        cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
-        cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
-    }
-    if(isTV){
-      // Bouton ouvrir/fermer toutes les portes
-      var allEls=[caissonElements,caissonElements2].concat(tvElems);
-      var allOs=[caissonOpenState,caissonOpenState2].concat(tvOpenState);
-      var hasAny=allEls.some(function(els){ return els.some(function(e){ return e.type==='porte'||e.type==='tiroir'; }); });
-      if(hasAny){
-        var allOpen=allEls.every(function(els){ return els.filter(function(e){ return e.type==='porte'||e.type==='tiroir'; }).every(function(e){ return allOs.some(function(os){ return os[e.key]; }); }); });
-        var openBtn=document.createElement('button');
-        openBtn.className='reset-btn';
-        openBtn.style.marginTop='10px';
-        openBtn.textContent=allOpen?'Fermer toutes les portes':'Ouvrir toutes les portes';
-        openBtn.onclick=toggleAllDoorsTv;
-        btns.appendChild(openBtn);
-      }
-    }
-  } else {
-    btns.innerHTML=
-      cBtn('shelf',     true,  svgShelf,  'Tablette',   'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
-      cBtn('separator', false, svgSep,    'Séparateur', 'Crée une zone latérale — délimite l\'espace pour une porte')+
-      cBtn('porte',     false, svgPorte,  'Porte',      'Remplit la zone définie par les tablettes + séparateurs')+
-      cBtn('tiroir',    false, svgTiroir, 'Tiroir',     'Remplit la zone définie par les tablettes + séparateurs');
-  }
 }
 
 function toggleCaissonEdit(){
@@ -1941,24 +851,14 @@ function toggleCaissonEdit(){
   controls.enabled=!caissonEditMode;
   cvs.style.cursor=caissonEditMode?'crosshair':'';
   if(!caissonEditMode) clearCaissonGhost();
-  _rebuildEditBar();
-  var fnContent=document.getElementById('fn-edit-content');
-  if(fnContent) fnContent.style.display=caissonEditMode?'':'none';
-  if(BIBLIO_MODE && caissonEditMode){ switchSbTab('fonction'); buildPresetGrid(); }
-  if(caissonEditMode){ showCotes=true; } else { showCotes=false; }
-  updateCotes();
-  var btnC=document.getElementById('btn-cotes');
-  if(btnC) btnC.classList.toggle('active', showCotes);
-  _syncEditCta();
 }
 
 function clearCaissonGhost(){
-  var g=getActiveGhost();
-  if(g){
-    if(g.parent) g.parent.remove(g);
-    if(g.geometry) g.geometry.dispose();
-    if(g.material) g.material.dispose();
-    setActiveGhost(null);
+  if(caissonGhost){
+    if(caissonGhost.parent) caissonGhost.parent.remove(caissonGhost);
+    if(caissonGhost.geometry) caissonGhost.geometry.dispose();
+    if(caissonGhost.material) caissonGhost.material.dispose();
+    caissonGhost=null;
   }
   clearCaissonGuides();
 }
@@ -1967,17 +867,15 @@ function clearCaissonGhost(){
 var _SDB_GUIDE_SNAP=4; // cm
 
 function clearCaissonGuides(){
-  var gg=getActiveGuidesGrp();
-  if(!gg)return;
-  gg.children.slice().forEach(function(c){
+  if(!caissonGuidesGrp)return;
+  caissonGuidesGrp.children.slice().forEach(function(c){
     if(c.geometry)c.geometry.dispose();
     if(c.material)c.material.dispose();
-    gg.remove(c);
+    caissonGuidesGrp.remove(c);
   });
 }
 
 function _sdbGuideLine(pts,color,dashed,opacity){
-  var gg=getActiveGuidesGrp(); if(!gg) return;
   var geo=new THREE.BufferGeometry().setFromPoints(pts);
   var mat=dashed
     ? new THREE.LineDashedMaterial({color:color,dashSize:.010,gapSize:.007,transparent:true,opacity:opacity,depthWrite:false})
@@ -1985,12 +883,12 @@ function _sdbGuideLine(pts,color,dashed,opacity){
   var ln=new THREE.Line(geo,mat);
   if(dashed)ln.computeLineDistances();
   ln.renderOrder=5;
-  gg.add(ln);
+  caissonGuidesGrp.add(ln);
 }
 
 function updateCaissonGuides(hit){
   clearCaissonGuides();
-  if(!hit||!caissonEditMode||!getActiveGuidesGrp())return;
+  if(!hit||!caissonEditMode||!caissonGuidesGrp)return;
 
   var bay =getBay(hit.x_cm, hit.y_cm);
   var comp=getCompartment(hit.y_cm, hit.x_cm);
@@ -2036,13 +934,12 @@ function updateCaissonGuides(hit){
 }
 
 function getCaissonHit(e){
-  var hp=getActiveHP(), grp=getActiveGrp();
-  if(!hp||!grp) return null;
+  if(!caissonHitPlane||!caissonGrp) return null;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
-  var hits=raycaster.intersectObject(hp,false);
+  var hits=raycaster.intersectObject(caissonHitPlane,false);
   if(!hits.length) return null;
-  var ptGrp=grp.worldToLocal(hits[0].point.clone());
-  var iW_cm=(getActiveCL()-2*EP)*100, iH_cm=(getActiveCH()-2*EP)*100;
+  var ptGrp=caissonGrp.worldToLocal(hits[0].point.clone());
+  var iW_cm=(S.CL-2*EP)*100, iH_cm=(S.CH-2*EP)*100;
   var x_cm=Math.round(localToXcm(ptGrp.x));
   var y_cm=Math.round(localToYcm(ptGrp.y));
   return {x_cm:Math.min(Math.max(x_cm,0),iW_cm), y_cm:Math.min(Math.max(y_cm,0),iH_cm)};
@@ -2051,55 +948,33 @@ function getCaissonHit(e){
 function updateCaissonGhost(e){
   if(!caissonEditMode||S.step!==1) return;
   var hit=getCaissonHit(e);
-  if(!hit){clearCaissonGhost();_hideDragLabel();return;}
+  if(!hit){clearCaissonGhost();return;}
   var CP=caissonCP(), ep=EP;
-  var iW=getActiveCL()-2*ep;
-  var els=getActiveEls(), grp=getActiveGrp();
+  var iW=S.CL-2*ep;
   var gW,gH,gX,gY,occupied=false;
 
-  if(caissonType==='barre'){
-    var bay0b=getBay(hit.x_cm,hit.y_cm);
-    var bW0b=(bay0b.right_cm-bay0b.left_cm)/100;
-    var bCx0b=xcmToLocal((bay0b.left_cm+bay0b.right_cm)/2);
-    occupied=els.some(function(el){
-      if(el.type!=='barre') return false;
-      var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:(getActiveCL()-2*EP)*100;
-      return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay0b.right_cm&&sr>bay0b.left_cm;
-    });
-    var ghost0=getActiveGhost();
-    if(!ghost0){
-      var gGeo=new THREE.CylinderGeometry(0.014,0.014,1,16); gGeo.rotateZ(Math.PI/2);
-      var gMat0=new THREE.MeshStandardMaterial({transparent:true,opacity:0.5,color:0xC8C8C8,roughness:0.1,metalness:0.8,depthWrite:false});
-      ghost0=new THREE.Mesh(gGeo,gMat0); ghost0.renderOrder=1; grp.add(ghost0); setActiveGhost(ghost0);
-    }
-    ghost0.scale.set(bW0b,1,1);
-    ghost0.position.set(bCx0b, ycmToLocal(hit.y_cm), -CP*0.25);
-    ghost0.material.color.setHex(occupied?0xff3322:0xC8C8C8);
-    ghost0.material.opacity=occupied?0.25:0.55;
-    ghost0.visible=true;
-    updateCaissonGuides(hit); return;
-  } else if(caissonType==='shelf'||caissonType==='shelf_simple'){
+  if(caissonType==='shelf'){
     var bay0=getBay(hit.x_cm,hit.y_cm);
     var bW0=(bay0.right_cm-bay0.left_cm)/100;
     var bCx0=xcmToLocal((bay0.left_cm+bay0.right_cm)/2);
-    occupied=els.some(function(el){
-      if(el.type!==caissonType) return false;
+    occupied=caissonElements.some(function(el){
+      if(el.type!=='shelf') return false;
       var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:(getActiveCL()-2*EP)*100;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
       return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay0.right_cm&&sr>bay0.left_cm;
     });
     gW=bW0; gH=ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
-  } else if(caissonType==='separator'||caissonType==='separator_simple'){
+  } else if(caissonType==='separator'){
     var comp=getCompartment(hit.y_cm,hit.x_cm);
     if(comp.height_cm<1){clearCaissonGhost();return;}
-    occupied=els.some(function(el){
-      if(el.type!==caissonType) return false;
+    occupied=caissonElements.some(function(el){
+      if(el.type!=='separator') return false;
       var ec=getCompartment(el.y_cm,el.x_cm);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     });
     gW=ep; gH=comp.height_cm/100; gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
   } else {
+    // porte ou tiroir → montre la face avant du compartiment
     var comp2=getCompartment(hit.y_cm,hit.x_cm);
     var bay2=getBay(hit.x_cm,hit.y_cm);
     if(comp2.height_cm<1||bay2.width_cm<1){clearCaissonGhost();return;}
@@ -2107,329 +982,114 @@ function updateCaissonGhost(e){
     var w2=bay2.width_cm/100, h2=comp2.height_cm/100;
     gW=w2-0.003; gH=h2-0.003;
     gX=bay2.centerX; gY=comp2.centerY;
-    var ghost=getActiveGhost();
-    if(!ghost){
+    // pour le ghost de façade on le place devant, pas dans le plan de frappe
+    if(!caissonGhost){
       var gMat=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
-      ghost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat);
-      ghost.renderOrder=1; grp.add(ghost); setActiveGhost(ghost);
+      caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat);
+      caissonGhost.renderOrder=1;
+      caissonGrp.add(caissonGhost);
     }
-    ghost.scale.set(gW,gH,0.020);
-    ghost.position.set(gX,gY,CP/2+0.001);
-    ghost.material.color.setHex(occupied?0xff3322:0xc8a050);
-    ghost.material.opacity=occupied?0.25:0.45;
-    ghost.visible=true;
+    caissonGhost.scale.set(gW,gH,0.020);
+    caissonGhost.position.set(gX,gY,CP/2+0.001);
+    caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
+    caissonGhost.material.opacity=occupied?0.25:0.45;
+    caissonGhost.visible=true;
     updateCaissonGuides(hit);
     return;
   }
 
-  var ghost2=getActiveGhost();
-  if(!ghost2){
+  if(!caissonGhost){
     var gMat2=new THREE.MeshStandardMaterial({transparent:true,opacity:0.45,roughness:0.4,depthWrite:false});
-    ghost2=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat2);
-    ghost2.renderOrder=1; grp.add(ghost2); setActiveGhost(ghost2);
+    caissonGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),gMat2);
+    caissonGhost.renderOrder=1; caissonGrp.add(caissonGhost);
   }
-  ghost2.scale.set(gW,gH,CP-ep);
-  ghost2.position.set(gX,gY,-ep/2);
-  ghost2.material.color.setHex(occupied?0xff3322:0xc8a050);
-  ghost2.material.opacity=occupied?0.25:0.45;
-  ghost2.visible=true;
+  caissonGhost.scale.set(gW,gH,CP-ep);
+  caissonGhost.position.set(gX,gY,-ep/2);
+  caissonGhost.material.color.setHex(occupied?0xff3322:0xc8a050);
+  caissonGhost.material.opacity=occupied?0.25:0.45;
+  caissonGhost.visible=true;
   updateCaissonGuides(hit);
-  _showDragLabel(hit);
 }
 
-function _showDragLabel(hit){
-  var lbl=document.getElementById('drag-height-label');
-  if(!lbl) return;
-  var y=Math.round(hit.y_cm);
-  var dim;
-  if(caissonType==='separator'||caissonType==='separator_simple'){
-    dim='↔ '+Math.round(hit.x_cm)+' cm';
-  } else {
-    // Trouver l'étagère la plus proche en dessous et au-dessus
-    var comp=getCompartment(hit.y_cm, hit.x_cm);
-    var below=Math.round(y-comp.bottom_cm); // espace sous la future étagère
-    var above=Math.round(comp.top_cm-y);    // espace au-dessus
-    dim='↓ '+below+' cm  ·  ↑ '+above+' cm';
-  }
-  lbl.textContent=dim;
-  lbl.style.display='flex';
-}
-function _hideDragLabel(){
-  var lbl=document.getElementById('drag-height-label');
-  if(lbl) lbl.style.display='none';
-}
-
-function _dropPickedEl(e){
-  var hit=getCaissonHit(e);
-  if(!hit) return false;
-  var iW_cm=Math.round((getActiveCL()-2*EP)*100);
-  var els=getActiveEls();
-  var el=editPickedEl;
-  if(el.type==='shelf'||el.type==='shelf_simple'||el.type==='barre'){
-    var bay=getBay(hit.x_cm,hit.y_cm);
-    var occ=els.some(function(e2){
-      if(e2.type!==el.type) return false;
-      var sl=e2.x_left_cm!==undefined?e2.x_left_cm:0;
-      var sr=e2.x_right_cm!==undefined?e2.x_right_cm:iW_cm;
-      return Math.abs(e2.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay.right_cm&&sr>bay.left_cm;
-    });
-    if(occ) return false;
-    els.push({type:el.type,y_cm:hit.y_cm,x_left_cm:bay.left_cm,x_right_cm:bay.right_cm});
-    setActiveEls(els); clearCaissonGhost(); buildCaisson(); return true;
-  } else if(el.type==='separator'||el.type==='separator_simple'){
-    var comp=getCompartment(hit.y_cm,hit.x_cm);
-    if(comp.height_cm<1) return false;
-    var occ2=els.some(function(e2){
-      if(e2.type!==el.type) return false;
-      var ec=getCompartment(e2.y_cm,e2.x_cm);
-      return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(e2.x_cm-hit.x_cm)<MIN_GAP_V;
-    });
-    if(occ2) return false;
-    els.push({type:el.type,x_cm:hit.x_cm,y_cm:(comp.bottom_cm+comp.top_cm)/2});
-    setActiveEls(els); clearCaissonGhost(); buildCaisson(); return true;
-  }
-  return false;
-}
-
-function placeOrRemoveCaisson(e, skipUndo){
+function placeOrRemoveCaisson(e){
   if(!caissonEditMode||S.step!==1) return false;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
-  if(!skipUndo) pushUndo();
 
-  var els=getActiveEls();
-  var activeCL=getActiveCL();
-
-  // La suppression est gérée uniquement via le mécanisme clic-court (_hoverElIdx)
-  // pour éviter toute suppression cross-type par raycaster
+  // Clic sur élément existant du même type → supprime (les autres types sont ignorés)
+  var eh=raycaster.intersectObjects(caissonElemMeshes,false);
+  if(eh.length){
+    var idx=eh[0].object.userData.elemIdx;
+    if(idx!==undefined){
+      var elType=caissonElements[idx]&&caissonElements[idx].type;
+      var sameType=(caissonType==='shelf'&&elType==='shelf')||
+                   (caissonType==='separator'&&elType==='separator')||
+                   ((caissonType==='porte'||caissonType==='tiroir')&&(elType==='porte'||elType==='tiroir'));
+      if(sameType){ caissonElements.splice(idx,1); clearCaissonGhost(); buildCaisson(); return true; }
+    }
+  }
 
   var hit=getCaissonHit(e);
   if(!hit) return false;
 
-  if(caissonType==='shelf'||caissonType==='shelf_simple'||caissonType==='barre'){
+  if(caissonType==='shelf'){
     var bay1=getBay(hit.x_cm,hit.y_cm);
-    if(els.some(function(el){
-      if(el.type!==caissonType) return false;
+    if(caissonElements.some(function(el){
+      if(el.type!=='shelf') return false;
       var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
-      var sr=el.x_right_cm!==undefined?el.x_right_cm:(activeCL-2*EP)*100;
+      var sr=el.x_right_cm!==undefined?el.x_right_cm:(S.CL-2*EP)*100;
       return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay1.right_cm&&sr>bay1.left_cm;
     })) return true;
-    els.push({type:caissonType,y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
-    setActiveEls(els);
-  } else if(caissonType==='separator'||caissonType==='separator_simple'){
+    caissonElements.push({type:'shelf',y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
+  } else if(caissonType==='separator'){
     var comp=getCompartment(hit.y_cm,hit.x_cm);
     if(comp.height_cm<1) return true;
-    if(els.some(function(el){
-      if(el.type!==caissonType) return false;
+    if(caissonElements.some(function(el){
+      if(el.type!=='separator') return false;
       var ec=getCompartment(el.y_cm,el.x_cm);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     })) return true;
     var sepX=hit.x_cm;
-    els.push({type:caissonType,x_cm:sepX,y_cm:(comp.bottom_cm+comp.top_cm)/2});
-    if(caissonType==='separator'){
-      var toAdd=[];
-      var filtered=els.filter(function(el){
-        if(el.type!=='shelf'&&el.type!=='shelf_simple') return true;
-        if(el.x_left_cm<sepX&&el.x_right_cm>sepX){
-          toAdd.push({type:el.type,y_cm:el.y_cm,x_left_cm:el.x_left_cm,x_right_cm:sepX});
-          toAdd.push({type:el.type,y_cm:el.y_cm,x_left_cm:sepX,x_right_cm:el.x_right_cm});
-          return false;
-        }
-        return true;
-      });
-      setActiveEls(filtered.concat(toAdd));
-    } else {
-      setActiveEls(els);
-    }
+    caissonElements.push({type:'separator',x_cm:sepX,y_cm:(comp.bottom_cm+comp.top_cm)/2});
+    // Auto-split : coupe les tablettes qui traversent ce séparateur
+    var toAdd=[];
+    caissonElements=caissonElements.filter(function(el){
+      if(el.type!=='shelf') return true;
+      if(el.x_left_cm<sepX&&el.x_right_cm>sepX){
+        toAdd.push({type:'shelf',y_cm:el.y_cm,x_left_cm:el.x_left_cm,x_right_cm:sepX});
+        toAdd.push({type:'shelf',y_cm:el.y_cm,x_left_cm:sepX,x_right_cm:el.x_right_cm});
+        return false;
+      }
+      return true;
+    });
+    caissonElements=caissonElements.concat(toAdd);
   } else {
     // porte / tiroir
     var comp3=getCompartment(hit.y_cm,hit.x_cm);
     var bay3=getBay(hit.x_cm,hit.y_cm);
     if(comp3.height_cm<1||bay3.width_cm<1) return true;
     var k=mkKey(comp3,bay3);
-    var existing=els.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&el.key===k; });
-    if(existing>=0){ els.splice(existing,1); } else { els.push({type:caissonType,key:k}); }
-    setActiveEls(els);
+    var existing=caissonElements.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&el.key===k; });
+    if(existing>=0){ caissonElements.splice(existing,1); }
+    else { caissonElements.push({type:caissonType,key:k}); }
   }
   clearCaissonGhost(); buildCaisson(); return true;
 }
 
-// ── Undo stack ──────────────────────────────────────────────────────────────
-var _undoStack=[];
-function _elsSnapshot(){
-  return {
-    els:  JSON.parse(JSON.stringify(caissonElements)),
-    els2: JSON.parse(JSON.stringify(caissonElements2)),
-    tv:   JSON.parse(JSON.stringify(tvElems)),
-    os:   JSON.parse(JSON.stringify(caissonOpenState)),
-    os2:  JSON.parse(JSON.stringify(caissonOpenState2)),
-    tvo:  JSON.parse(JSON.stringify(tvOpenState)),
-  };
-}
-function pushUndo(){
-  _undoStack.push(_elsSnapshot());
-  if(_undoStack.length>10) _undoStack.shift();
-  var btn=document.getElementById('btn-undo');
-  if(btn) btn.disabled=false;
-}
-function undoLast(){
-  if(!_undoStack.length) return;
-  var snap=_undoStack.pop();
-  caissonElements=snap.els; caissonElements2=snap.els2; tvElems=snap.tv;
-  caissonOpenState=snap.os; caissonOpenState2=snap.os2; tvOpenState=snap.tvo;
-  clearCaissonGhost(); buildCaisson();
-  var btn=document.getElementById('btn-undo');
-  if(btn) btn.disabled=(_undoStack.length===0);
-}
-document.addEventListener('keydown',function(e){
-  if((e.ctrlKey||e.metaKey)&&e.key==='z'&&caissonEditMode){ e.preventDefault(); undoLast(); }
-});
-
-// ── Présets ─────────────────────────────────────────────────────────────────
-var PRESETS=[
-  {id:'vide', label:'Vide',
-   svg:'<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.4"/></svg>'},
-  {id:'classique', label:'Classique',
-   svg:'<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="4" y="7" width="28" height="1.5" rx=".75" fill="currentColor"/><rect x="4" y="13" width="28" height="1.5" rx=".75" fill="currentColor"/><rect x="4" y="19" width="28" height="1.5" rx=".75" fill="currentColor"/></svg>'},
-  {id:'biblio2', label:'Biblio 2',
-   svg:'<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="1" y="1" width="34" height="22" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="5" y="1" width="1.2" height="22" fill="currentColor"/><rect x="31" y="1" width="1.2" height="22" fill="currentColor"/><rect x="1" y="8" width="34" height="1.2" fill="currentColor"/><rect x="1" y="14" width="34" height="1.2" fill="currentColor"/><rect x="1" y="19" width="34" height="1.2" fill="currentColor"/><rect x="13" y="8" width="1.2" height="15" fill="currentColor"/><rect x="23" y="8" width="1.2" height="15" fill="currentColor"/></svg>'},
-];
-
-function saveCurrentAsPreset(){
-  var els=JSON.parse(JSON.stringify(getActiveEls()));
-  if(!els.length){ alert('Le meuble est vide, rien à sauvegarder.'); return; }
-  var json=JSON.stringify(els);
-  navigator.clipboard.writeText(json).then(function(){
-    alert('✓ Config copiée dans le presse-papier !\nColle-la à Claude pour la mettre en ligne pour tout le monde.');
-  }).catch(function(){
-    prompt('Copie ce JSON et envoie-le à Claude :', json);
-  });
-}
-
-function buildPresetGrid(){
-  var grid=document.getElementById('preset-grid');
-  if(!grid) return;
-  grid.innerHTML=PRESETS.map(function(p){
-    return '<button class="preset-btn" onclick="applyPreset(\''+p.id+'\')">'+
-      p.svg+
-      '<span class="preset-btn-label">'+p.label+'</span>'+
-    '</button>';
-  }).join('');
-}
-
-function applyPreset(id){
-  pushUndo();
-  var EP_cm=Math.round(EP*100);
-  var iW=Math.round((getActiveCL()-2*EP)*100);
-  var iH=Math.round((getActiveCH()-2*EP)*100);
-  var els=[];
-
-  if(id==='vide'){
-    // nothing
-  } else if(id==='biblio2'){
-    var _b2ref=[{"type":"separator","x_cm":58,"y_cm":180.8},{"type":"separator","x_cm":17,"y_cm":180.8},{"type":"separator","x_cm":100,"y_cm":180.8},{"type":"shelf","y_cm":166,"x_left_cm":100,"x_right_cm":102},{"type":"separator","x_cm":17,"y_cm":173.1},{"type":"separator","x_cm":100,"y_cm":173.1},{"type":"separator","x_cm":59,"y_cm":120.8},{"type":"shelf","y_cm":166,"x_left_cm":58,"x_right_cm":59},{"type":"shelf","y_cm":166,"x_left_cm":59,"x_right_cm":60},{"type":"shelf","y_cm":181,"x_left_cm":58,"x_right_cm":59},{"type":"shelf","y_cm":76,"x_left_cm":58,"x_right_cm":59},{"type":"separator","x_cm":59,"y_cm":153.2},{"type":"separator","x_cm":59,"y_cm":90.3},{"type":"separator","x_cm":37,"y_cm":121.3},{"type":"shelf","y_cm":166,"x_left_cm":37,"x_right_cm":58},{"type":"shelf","y_cm":181,"x_left_cm":37,"x_right_cm":58},{"type":"shelf","y_cm":76,"x_left_cm":37,"x_right_cm":58},{"type":"shelf","y_cm":138,"x_left_cm":37,"x_right_cm":59},{"type":"shelf","y_cm":105,"x_left_cm":37,"x_right_cm":59},{"type":"separator","x_cm":78,"y_cm":121.3},{"type":"shelf","y_cm":166,"x_left_cm":60,"x_right_cm":78},{"type":"shelf","y_cm":181,"x_left_cm":59,"x_right_cm":78},{"type":"shelf","y_cm":76,"x_left_cm":59,"x_right_cm":78},{"type":"shelf","y_cm":138,"x_left_cm":59,"x_right_cm":78},{"type":"shelf","y_cm":105,"x_left_cm":59,"x_right_cm":78},{"type":"separator","x_cm":37,"y_cm":112.8},{"type":"separator","x_cm":78,"y_cm":112.8},{"type":"shelf","y_cm":166,"x_left_cm":16,"x_right_cm":17},{"type":"shelf","y_cm":166,"x_left_cm":31,"x_right_cm":37},{"type":"shelf","y_cm":181,"x_left_cm":31,"x_right_cm":37},{"type":"shelf","y_cm":76,"x_left_cm":31,"x_right_cm":37},{"type":"shelf","y_cm":138,"x_left_cm":31,"x_right_cm":37},{"type":"shelf","y_cm":105,"x_left_cm":31,"x_right_cm":37},{"type":"shelf","y_cm":121,"x_left_cm":31,"x_right_cm":37},{"type":"separator","x_cm":13,"y_cm":59.9},{"type":"shelf","y_cm":166,"x_left_cm":0,"x_right_cm":13},{"type":"shelf","y_cm":166,"x_left_cm":13,"x_right_cm":16},{"type":"shelf","y_cm":76,"x_left_cm":0,"x_right_cm":13},{"type":"shelf","y_cm":76,"x_left_cm":13,"x_right_cm":16},{"type":"shelf","y_cm":138,"x_left_cm":0,"x_right_cm":13},{"type":"shelf","y_cm":138,"x_left_cm":13,"x_right_cm":16},{"type":"shelf","y_cm":105,"x_left_cm":0,"x_right_cm":13},{"type":"shelf","y_cm":105,"x_left_cm":13,"x_right_cm":16},{"type":"shelf","y_cm":121,"x_left_cm":0,"x_right_cm":13},{"type":"shelf","y_cm":121,"x_left_cm":13,"x_right_cm":16},{"type":"shelf","y_cm":44,"x_left_cm":0,"x_right_cm":13},{"type":"shelf","y_cm":44,"x_left_cm":13,"x_right_cm":16},{"type":"shelf","y_cm":20,"x_left_cm":0,"x_right_cm":13},{"type":"shelf","y_cm":20,"x_left_cm":13,"x_right_cm":16},{"type":"separator","x_cm":26,"y_cm":59.9},{"type":"shelf","y_cm":166,"x_left_cm":17,"x_right_cm":26},{"type":"shelf","y_cm":181,"x_left_cm":17,"x_right_cm":26},{"type":"separator","x_cm":104,"y_cm":59.9},{"type":"shelf","y_cm":166,"x_left_cm":102,"x_right_cm":104},{"type":"shelf","y_cm":166,"x_left_cm":104,"x_right_cm":116},{"type":"shelf","y_cm":76,"x_left_cm":104,"x_right_cm":116},{"type":"shelf","y_cm":138,"x_left_cm":104,"x_right_cm":116},{"type":"shelf","y_cm":105,"x_left_cm":104,"x_right_cm":116},{"type":"shelf","y_cm":121,"x_left_cm":104,"x_right_cm":116},{"type":"shelf","y_cm":44,"x_left_cm":104,"x_right_cm":116},{"type":"shelf","y_cm":20,"x_left_cm":104,"x_right_cm":116},{"type":"separator","x_cm":92,"y_cm":59.9},{"type":"shelf","y_cm":166,"x_left_cm":78,"x_right_cm":92},{"type":"shelf","y_cm":166,"x_left_cm":92,"x_right_cm":100},{"type":"shelf","y_cm":181,"x_left_cm":78,"x_right_cm":92},{"type":"shelf","y_cm":181,"x_left_cm":92,"x_right_cm":100},{"type":"shelf","y_cm":76,"x_left_cm":78,"x_right_cm":92},{"type":"shelf","y_cm":138,"x_left_cm":78,"x_right_cm":92},{"type":"shelf","y_cm":105,"x_left_cm":78,"x_right_cm":92},{"type":"shelf","y_cm":121,"x_left_cm":78,"x_right_cm":92},{"type":"shelf","y_cm":44,"x_left_cm":31,"x_right_cm":92},{"type":"shelf","y_cm":20,"x_left_cm":31,"x_right_cm":92},{"type":"shelf","y_cm":166,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":166,"x_left_cm":26,"x_right_cm":31},{"type":"shelf","y_cm":181,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":181,"x_left_cm":26,"x_right_cm":31},{"type":"shelf","y_cm":76,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":76,"x_left_cm":26,"x_right_cm":31},{"type":"shelf","y_cm":138,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":138,"x_left_cm":26,"x_right_cm":31},{"type":"shelf","y_cm":105,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":105,"x_left_cm":26,"x_right_cm":31},{"type":"shelf","y_cm":121,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":121,"x_left_cm":26,"x_right_cm":31},{"type":"shelf","y_cm":44,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":44,"x_left_cm":26,"x_right_cm":31},{"type":"shelf","y_cm":20,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":20,"x_left_cm":26,"x_right_cm":31},{"type":"shelf","y_cm":60,"x_left_cm":26,"x_right_cm":26},{"type":"shelf","y_cm":60,"x_left_cm":26,"x_right_cm":92},{"type":"separator","x_cm":26,"y_cm":31.9},{"type":"separator","x_cm":26,"y_cm":10},{"type":"separator","x_cm":92,"y_cm":31.9},{"type":"separator","x_cm":92,"y_cm":10},{"type":"separator","x_cm":26,"y_cm":68},{"type":"separator","x_cm":92,"y_cm":68},{"type":"separator","x_cm":17,"y_cm":188.7},{"type":"shelf","y_cm":76,"x_left_cm":16,"x_right_cm":17},{"type":"shelf","y_cm":76,"x_left_cm":17,"x_right_cm":26},{"type":"shelf","y_cm":138,"x_left_cm":16,"x_right_cm":17},{"type":"shelf","y_cm":138,"x_left_cm":17,"x_right_cm":26},{"type":"shelf","y_cm":105,"x_left_cm":16,"x_right_cm":17},{"type":"shelf","y_cm":105,"x_left_cm":17,"x_right_cm":26},{"type":"shelf","y_cm":121,"x_left_cm":16,"x_right_cm":17},{"type":"shelf","y_cm":121,"x_left_cm":17,"x_right_cm":26},{"type":"shelf","y_cm":44,"x_left_cm":16,"x_right_cm":17},{"type":"shelf","y_cm":44,"x_left_cm":17,"x_right_cm":26},{"type":"shelf","y_cm":20,"x_left_cm":16,"x_right_cm":17},{"type":"shelf","y_cm":20,"x_left_cm":17,"x_right_cm":26},{"type":"separator","x_cm":100,"y_cm":188.7},{"type":"shelf","y_cm":76,"x_left_cm":92,"x_right_cm":100},{"type":"shelf","y_cm":76,"x_left_cm":100,"x_right_cm":104},{"type":"shelf","y_cm":138,"x_left_cm":92,"x_right_cm":100},{"type":"shelf","y_cm":138,"x_left_cm":100,"x_right_cm":104},{"type":"shelf","y_cm":105,"x_left_cm":92,"x_right_cm":100},{"type":"shelf","y_cm":105,"x_left_cm":100,"x_right_cm":104},{"type":"shelf","y_cm":121,"x_left_cm":92,"x_right_cm":100},{"type":"shelf","y_cm":121,"x_left_cm":100,"x_right_cm":104},{"type":"shelf","y_cm":44,"x_left_cm":92,"x_right_cm":100},{"type":"shelf","y_cm":44,"x_left_cm":100,"x_right_cm":104},{"type":"shelf","y_cm":20,"x_left_cm":92,"x_right_cm":100},{"type":"shelf","y_cm":20,"x_left_cm":100,"x_right_cm":104}];
-    var _b2refW=116, _b2refH=196.4;
-    var _b2sw=iW/_b2refW, _b2sh=iH/_b2refH;
-    els=_b2ref.map(function(el){
-      if(el.type==='separator') return {type:'separator',x_cm:Math.round(el.x_cm*_b2sw),y_cm:Math.round(el.y_cm*_b2sh*10)/10};
-      return {type:el.type,y_cm:Math.round(el.y_cm*_b2sh),x_left_cm:Math.round(el.x_left_cm*_b2sw),x_right_cm:Math.round(el.x_right_cm*_b2sw)};
-    });
-    setActiveEls(els); clearCaissonGhost(); buildCaisson(); return;
-  } else if(id==='classique'){
-    els=[
-      {type:'shelf',y_cm:Math.round(iH*0.25),x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:Math.round(iH*0.50),x_left_cm:0,x_right_cm:iW},
-      {type:'shelf',y_cm:Math.round(iH*0.75),x_left_cm:0,x_right_cm:iW},
-    ];
-  } else if(id==='compartiments'){
-    var sx=Math.round(iW/2);
-    els=[
-      {type:'separator',x_cm:sx,y_cm:Math.round(iH/2)},
-      {type:'shelf',y_cm:Math.round(iH*0.5),x_left_cm:0,x_right_cm:sx},
-      {type:'shelf',y_cm:Math.round(iH*0.5),x_left_cm:sx,x_right_cm:iW},
-    ];
-  } else if(id==='bas_portes'){
-    var midH=Math.round(iH*0.55);
-    var sx2=Math.round(iW/2);
-    els=[
-      {type:'shelf',y_cm:midH,x_left_cm:0,x_right_cm:iW},
-      {type:'separator',x_cm:sx2,y_cm:Math.round(midH/2)},
-      {type:'porte',key:'0_0_'+midH+'_'+sx2},
-      {type:'porte',key:'0_'+sx2+'_'+midH+'_'+iW},
-      {type:'shelf',y_cm:Math.round((midH+iH)*0.6),x_left_cm:0,x_right_cm:iW},
-    ];
-  } else if(id==='tiroirs'){
-    var t1=Math.round(iH*0.22), t2=Math.round(iH*0.44), t3=Math.round(iH*0.66);
-    els=[
-      {type:'tiroir',key:'0_0_'+t1+'_'+iW},
-      {type:'shelf',y_cm:t1,x_left_cm:0,x_right_cm:iW},
-      {type:'tiroir',key:t1+'_0_'+t2+'_'+iW},
-      {type:'shelf',y_cm:t2,x_left_cm:0,x_right_cm:iW},
-      {type:'tiroir',key:t2+'_0_'+t3+'_'+iW},
-      {type:'shelf',y_cm:t3,x_left_cm:0,x_right_cm:iW},
-    ];
-  } else if(id==='mix'){
-    var sx3=Math.round(iW/2);
-    var sh1=Math.round(iH*0.33), sh2=Math.round(iH*0.66);
-    els=[
-      {type:'separator',x_cm:sx3,y_cm:Math.round(iH/2)},
-      {type:'shelf',y_cm:sh1,x_left_cm:0,x_right_cm:sx3},
-      {type:'shelf',y_cm:sh2,x_left_cm:0,x_right_cm:sx3},
-      {type:'porte',key:'0_'+sx3+'_'+iH+'_'+iW},
-    ];
-  }
-
-  setActiveEls(els);
-  if(activeCaisson===1) caissonOpenState={}; else caissonOpenState2={};
-  clearCaissonGhost(); buildCaisson();
-}
-
-// ── Screenshot ───────────────────────────────────────────────────────────────
-function downloadScreenshot(){
-  renderer.render(scene,camera);
-  var url=renderer.domElement.toDataURL('image/png');
-  var a=document.createElement('a');
-  a.href=url; a.download='kobo-meuble.png'; a.click();
-}
-
 function resetCaissonElements(){
-  pushUndo();
-  setActiveEls([]);
-  if(_isTVExtra()) tvOpenState[_tvIdx()]={};
-  else if(activeCaisson===1) caissonOpenState={}; else caissonOpenState2={};
-  clearCaissonGhost(); buildCaisson();
-}
-
-function toggleAllDoorsTv(){
-  // Collecte toutes les portes/tiroirs de tous les caissons TV
-  var allKeys=[];
-  var allStates=[caissonOpenState, caissonOpenState2, tvOpenState[0], tvOpenState[1], tvOpenState[2]];
-  var allEls=[caissonElements, caissonElements2].concat(tvElems);
-  allEls.forEach(function(els){ els.forEach(function(e){ if(e.type==='porte'||e.type==='tiroir') allKeys.push(e.key); }); });
-  // Si au moins une est fermée → tout ouvrir, sinon tout fermer
-  var anyClose=allKeys.some(function(k){ return !allStates.some(function(os){ return os[k]; }); });
-  pushUndo();
-  allStates.forEach(function(os){ allKeys.forEach(function(k){ os[k]=anyClose; }); });
-  buildCaisson();
-  _rebuildEditBar();
+  caissonElements=[]; caissonOpenState={}; clearCaissonGhost(); buildCaisson();
 }
 function updateAmgtCount(){
   var el=document.getElementById('amgt-count'); if(!el) return;
-  var els=getActiveEls();
-  var nb=els.length;
+  var nb=caissonElements.length;
   if(!nb){el.textContent='Structure vide';return;}
-  var counts={shelf:0,shelf_simple:0,barre:0,separator:0,separator_simple:0,porte:0,tiroir:0};
-  els.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
+  caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
   var parts=[];
-  if(counts.shelf)             parts.push(counts.shelf+' étagère'+(counts.shelf>1?'s':''));
-  if(counts.shelf_simple)      parts.push(counts.shelf_simple+' déco');
-  if(counts.barre)             parts.push(counts.barre+' tringle'+(counts.barre>1?'s':''));
-  if(counts.separator)         parts.push(counts.separator+' intercalaire'+(counts.separator>1?'s':''));
-  if(counts.separator_simple)  parts.push(counts.separator_simple+' déco');
-  if(counts.porte)             parts.push(counts.porte+' porte'+(counts.porte>1?'s':''));
-  if(counts.tiroir)            parts.push(counts.tiroir+' tiroir'+(counts.tiroir>1?'s':''));
-  var txt='<strong>'+nb+'</strong> — '+parts.join(', ');
-  el.innerHTML=txt;
-  var el2=document.getElementById('amgt-count-sdb'); if(el2) el2.innerHTML=txt;
+  if(counts.shelf)     parts.push(counts.shelf+' tablette'+(counts.shelf>1?'s':''));
+  if(counts.separator) parts.push(counts.separator+' séparateur'+(counts.separator>1?'s':''));
+  if(counts.porte)     parts.push(counts.porte+' porte'+(counts.porte>1?'s':''));
+  if(counts.tiroir)    parts.push(counts.tiroir+' tiroir'+(counts.tiroir>1?'s':''));
+  el.innerHTML='<strong>'+nb+'</strong> — '+parts.join(', ');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2469,74 +1129,22 @@ function _moveDrag(){
   }
   positionVasque(); buildPlan(); updatePosInfo();
 }
-var editMouseDragging=false, editMouseLastE=null;
-var editPickedEl=null, editPickedIdx=-1;
-var _hoverElIdx=-1; // index de l'élément sous le curseur (mis à jour en pointermove)
-var _pointerDownX=0, _pointerDownY=0; // position du pointerdown pour détecter vrai glisser
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
-  if(S.step===1&&caissonEditMode){
-    if(!isTouchEditDrag){
-      editPickedEl=null; editPickedIdx=-1;
-      // Rafraîchir au moment du clic (couvre touch + cas où pointermove n'a pas encore tourné)
-      _updateHoverEl(getCaissonHit(e));
-      if(_hoverElIdx>=0){
-        var pels=getActiveEls();
-        var pel=pels[_hoverElIdx];
-        // Double-check : on ne ramasse que si l'élément est bien de la même famille que le type actif
-        if(pel && _sameFamily(caissonType, pel.type)){
-          pushUndo();
-          editPickedEl=JSON.parse(JSON.stringify(pel));
-          editPickedIdx=_hoverElIdx;
-          pels.splice(_hoverElIdx,1); setActiveEls(pels); buildCaisson();
-          document.querySelectorAll('.c-type-btn').forEach(function(b){b.classList.toggle('active',b.dataset.ctype===pel.type);});
-          caissonType=pel.type;
-        }
-      }
-      _hoverElIdx=-1;
-      _pointerDownX=e.clientX; _pointerDownY=e.clientY;
-      editMouseDragging=true; editMouseLastE=e;
-      updateCaissonGhost(e);
-      controls.enabled=false;
-      cvs.style.cursor=editPickedEl?'grabbing':'crosshair';
-    }
-    return;
-  }
-
-  // Drag du caisson dessus TV (désactivé en mode édition)
-  if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1&&!caissonEditMode){
-    toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var topMeshes=tvMeshes[2].concat(tvHP[2]?[tvHP[2]]:[]);
-    var hits0=raycaster.intersectObjects(topMeshes,false);
-    if(hits0.length){
-      tvTopDragging=true; controls.enabled=false; cvs.style.cursor='grabbing';
-      tvGrp[2].updateMatrixWorld(true);
-      var localFront=new THREE.Vector3(0,0,S.CairsonP/200);
-      var worldFront=localFront.applyMatrix4(tvGrp[2].matrixWorld);
-      tvTopDragPlane=new THREE.Plane(new THREE.Vector3(0,0,1),-worldFront.z);
-      var hitW=hits0[0].point.clone(); caissonGrp.worldToLocal(hitW);
-      tvTopDragOffsetX=hitW.x-tvGrp[2].position.x;
-      tvTopDragOffsetY=hitW.y-tvGrp[2].position.y;
-      e.stopPropagation(); return;
-    }
-  }
-
-  // Tester porte/tiroir AVANT de démarrer la rotation
+  if(S.step===1&&caissonEditMode){ if(!isTouchEditDrag) placeOrRemoveCaisson(e); return; }
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var allMeshes=caissonElemMeshes.concat(caissonElemMeshes2)
-      .concat(tvMeshes[0]).concat(tvMeshes[1]).concat(tvMeshes[2]);
-    var hits=raycaster.intersectObjects(allMeshes,false);
+    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
     if(hits.length){
       var obj=hits[0].object;
-      var os=null;
-      if(tvMeshes[0].indexOf(obj)>=0)      os=tvOpenState[0];
-      else if(tvMeshes[1].indexOf(obj)>=0) os=tvOpenState[1];
-      else if(tvMeshes[2].indexOf(obj)>=0) os=tvOpenState[2];
-      else if(caissonElemMeshes2.indexOf(obj)>=0) os=caissonOpenState2;
-      else os=caissonOpenState;
-      if(obj.userData.isTiroir){ os[obj.userData.tirKey]=!os[obj.userData.tirKey]; buildCaisson(); return; }
-      if(obj.userData.isPorte){  os[obj.userData.porKey]=!os[obj.userData.porKey]; buildCaisson(); return; }
+      if(obj.userData.isTiroir){
+        caissonOpenState[obj.userData.tirKey]=!caissonOpenState[obj.userData.tirKey];
+        buildCaisson(); return;
+      }
+      if(obj.userData.isPorte){
+        caissonOpenState[obj.userData.porKey]=!caissonOpenState[obj.userData.porKey];
+        buildCaisson(); return;
+      }
     }
   }
   if(S.step!==3||(!vasqueGrp&&!vasqueGrp2)) return;
@@ -2545,96 +1153,10 @@ cvs.addEventListener('pointerdown',function(e){
     isDragging=true; controls.enabled=false; cvs.style.cursor='grabbing'; e.stopPropagation();
   }
 });
-function _sameFamily(a, b){
-  var shelves=['shelf','shelf_simple','barre'];
-  var seps=['separator','separator_simple'];
-  var doors=['porte','tiroir'];
-  var inArr=function(t,arr){return arr.indexOf(t)>=0;};
-  if(inArr(a,shelves)&&inArr(b,shelves)) return true;
-  if(inArr(a,seps)&&inArr(b,seps)) return true;
-  if(inArr(a,doors)&&inArr(b,doors)) return true;
-  return false;
-}
-
-function _updateHoverEl(hitPos){
-  _hoverElIdx=-1;
-  if(!hitPos) { cvs.style.cursor='crosshair'; return; }
-  var iW_cm=(getActiveCL()-2*EP)*100;
-  var els=getActiveEls(), bestI=-1;
-  var isSep=caissonType==='separator'||caissonType==='separator_simple';
-  var TOL=isSep?2:5; // tolérance réduite pour intercalaires
-  var bestD=TOL;
-  els.forEach(function(pel,i){
-    if(!_sameFamily(caissonType, pel.type)) return; // Bug 1 : ignore autre famille
-    var d, inRange=true;
-    if(pel.type==='separator'||pel.type==='separator_simple'){
-      d=Math.abs(hitPos.x_cm-pel.x_cm);
-      // Vérifier même compartiment vertical (ne pas détecter intercalaire dans un autre compartiment)
-      var compCursor=getCompartment(hitPos.y_cm, hitPos.x_cm);
-      var compEl=getCompartment(pel.y_cm, pel.x_cm);
-      if(compCursor.bottom_cm!==compEl.bottom_cm||compCursor.top_cm!==compEl.top_cm) return;
-    } else {
-      d=Math.abs(hitPos.y_cm-pel.y_cm);
-      inRange=(hitPos.x_cm>=(pel.x_left_cm||0)-2)&&(hitPos.x_cm<=(pel.x_right_cm||iW_cm)+2);
-    }
-    if(inRange&&d<bestD){bestD=d;bestI=i;}
-  });
-  _hoverElIdx=bestI;
-  cvs.style.cursor=bestI>=0?'grab':'crosshair';
-}
-
 cvs.addEventListener('pointermove',function(e){
-  if(S.step===1&&caissonEditMode){
-    updateCaissonGhost(e); editMouseLastE=e;
-    if(!editMouseDragging){ _updateHoverEl(getCaissonHit(e)); }
-    else { cvs.style.cursor=editPickedEl?'grabbing':'crosshair'; }
-    return;
-  }
-  if(tvTopDragging&&tvTopDragPlane&&tvGrp[2]){
-    toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var tgt=new THREE.Vector3();
-    if(raycaster.ray.intersectPlane(tvTopDragPlane,tgt)){
-      caissonGrp.worldToLocal(tgt);
-      var newX=tgt.x-tvTopDragOffsetX;
-      var newY=tgt.y-tvTopDragOffsetY;
-      var mainCH=S.CH, topW=S_tvSide.topW/100, mainCL=S.CL;
-      // Contrainte Y : toujours au-dessus du caisson centre
-      newY=Math.max(mainCH, Math.min(mainCH+1.2, newY));
-      // Snap X
-      var thresh=0.025, snapX=null, snapY=null;
-      var snapsX=[
-        {v:0,              lbl:'centre'},
-        {v:-(mainCL-topW)/2, lbl:'bord-gauche'},
-        {v: (mainCL-topW)/2, lbl:'bord-droit'},
-        {v:-(mainCL/2+topW/2), lbl:'ext-gauche'},
-        {v: (mainCL/2-topW/2), lbl:'ext-droit'},
-      ];
-      if(S_tvSide.leftActive)  snapsX.push({v:-(mainCL/2+S_tvSide.leftW/200), lbl:'centre-gauche'});
-      if(S_tvSide.rightActive) snapsX.push({v: (mainCL/2+S_tvSide.rightW/200), lbl:'centre-droite'});
-      snapsX.forEach(function(s){ if(Math.abs(newX-s.v)<thresh){ newX=s.v; snapX=s.v; } });
-      // Snap Y
-      var snapsY=[mainCH];
-      if(S_tvSide.leftActive)  snapsY.push(S_tvSide.leftH/100);
-      if(S_tvSide.rightActive) snapsY.push(S_tvSide.rightH/100);
-      snapsY.forEach(function(sy){ if(Math.abs(newY-sy)<thresh){ newY=sy; snapY=sy+S_tvSide.topH/100; } });
-      tvGrp[2].position.x=newX;
-      tvGrp[2].position.y=newY;
-      S_tvSide.topX=newX;
-      S_tvSide.topY=newY-mainCH;
-      updateTVSnapGuides(snapX,snapY);
-      // Hover cursor
-      cvs.style.cursor='grabbing';
-    }
-    return;
-  }
+  if(S.step===1&&caissonEditMode){ updateCaissonGhost(e); return; }
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
-    if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1){
-      var topMeshes2=tvMeshes[2].concat(tvHP[2]?[tvHP[2]]:[]);
-      var hovHit=raycaster.intersectObjects(topMeshes2,false).length>0;
-      cvs.style.cursor=hovHit?'grab':'';
-      if(hovHit) return;
-    }
     if(S.step===3){
       var hit=(vasqueGrp&&raycaster.intersectObject(vasqueGrp,true).length)||
               (vasqueGrp2&&raycaster.intersectObject(vasqueGrp2,true).length);
@@ -2644,38 +1166,7 @@ cvs.addEventListener('pointermove',function(e){
   }
   _moveDrag();
 });
-window.addEventListener('pointerup',function(e){
-  if(tvTopDragging){
-    tvTopDragging=false; controls.enabled=true; cvs.style.cursor='';
-    hideTVSnapGuides();
-    buildCaisson();
-    return;
-  }
-  if(editMouseDragging){
-    editMouseDragging=false; controls.enabled=true;
-    _hideDragLabel();
-    if(editMouseLastE){
-      if(editPickedEl!==null){
-        var dx=e.clientX-_pointerDownX, dy=e.clientY-_pointerDownY;
-        var didDrag=Math.sqrt(dx*dx+dy*dy)>8;
-        if(didDrag){
-          // Vrai glisser → repositionner
-          var dropped=_dropPickedEl(editMouseLastE);
-          if(!dropped){
-            // Position invalide → remettre à l'ancienne place
-            var restEls=getActiveEls();
-            restEls.splice(Math.min(editPickedIdx,restEls.length),0,editPickedEl);
-            setActiveEls(restEls); buildCaisson();
-          }
-        }
-        // Clic court → l'élément est déjà retiré du tableau → suppression effective
-      } else {
-        placeOrRemoveCaisson(editMouseLastE);
-      }
-    }
-    editPickedEl=null; editPickedIdx=-1; editMouseLastE=null;
-    return;
-  }
+window.addEventListener('pointerup',function(){
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;cvs.style.cursor='';}
 });
 cvs.addEventListener('touchstart',function(e){
@@ -2719,13 +1210,11 @@ cvs.addEventListener('touchend',function(e){
     var t=e.changedTouches[0];
     toNDC({clientX:t.clientX,clientY:t.clientY});
     raycaster.setFromCamera(mouse,camera);
-    var allMeshes2=caissonElemMeshes.concat(caissonElemMeshes2);
-    var hits=raycaster.intersectObjects(allMeshes2,false);
+    var hits=raycaster.intersectObjects(caissonElemMeshes,false);
     if(hits.length){
       var obj=hits[0].object;
-      var os2=caissonElemMeshes2.indexOf(obj)>=0?caissonOpenState2:caissonOpenState;
-      if(obj.userData.isTiroir){os2[obj.userData.tirKey]=!os2[obj.userData.tirKey];buildCaisson();}
-      if(obj.userData.isPorte){os2[obj.userData.porKey]=!os2[obj.userData.porKey];buildCaisson();}
+      if(obj.userData.isTiroir){caissonOpenState[obj.userData.tirKey]=!caissonOpenState[obj.userData.tirKey];buildCaisson();}
+      if(obj.userData.isPorte){caissonOpenState[obj.userData.porKey]=!caissonOpenState[obj.userData.porKey];buildCaisson();}
     }
   }
 });
@@ -2733,25 +1222,15 @@ cvs.addEventListener('touchend',function(e){
 // ═══════════════════════════════════════════════════════
 // UI CALLBACKS
 // ═══════════════════════════════════════════════════════
-function stepDim(id,fn,delta){
-  var inp=document.getElementById(id); if(!inp) return;
-  var v=Math.min(+inp.max,Math.max(+inp.min,Math.round(+inp.value)+delta));
-  inp.value=v; fn(v);
-}
-function clampDim(inp,fn){
-  var v=Math.min(+inp.max,Math.max(+inp.min,Math.round(+inp.value)||+inp.min));
-  inp.value=v; fn(v);
-}
 function setCL(v){
-  v=Math.round(v); S.CL=v/100;
-  var inp=document.getElementById('inp-CL'); if(inp) inp.value=v;
+  S.CL=v/100; document.getElementById('v-CL').textContent=v+' cm';
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
   var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
   if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
   buildCaisson(); checkAlerts();
 }
-function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; buildCaisson(); if(planMesh) buildPlan(); }
-function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; buildCaisson(); }
+function setCH(v){ S.CH=v/100; document.getElementById('v-CH').textContent=v+' cm'; buildCaisson(); if(planMesh) buildPlan(); }
+function setCP(v){ S.CairsonP=v/100; document.getElementById('v-CP').textContent=v+' cm'; buildCaisson(); }
 function setL(v){
   S.L=v/100; document.getElementById('v-L').textContent=v+' cm';
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
@@ -2896,176 +1375,39 @@ function updatePosInfo(){
 }
 
 // ═══════════════════════════════════════════════════════
-// WIZARD MULTI-TYPE
+// WIZARD
 // ═══════════════════════════════════════════════════════
-
-var FT_CONFIGS = {
-  biblio:  { label:'Bibliothèque',  sub:'Bibliothèque sur mesure',    panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[40,300,120], dimH:[80,240,200], dimP:[25,50,30],  cam:{pos:[0,0,3.6], tgt:[0,0,0]},    hasAngleOpt:false },
-  tv:      { label:'Meuble TV',     sub:'Meuble TV sur mesure',        panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[80,300,150], dimH:[20,60,40],  dimP:[30,60,40],  cam:{pos:[0,-0.1,3.2], tgt:[0,-0.1,0]}, hasAngleOpt:false },
-  chambre: { label:'Chambre',       sub:'Meuble chambre sur mesure',   panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[60,300,120], dimH:[40,120,60], dimP:[30,60,40],  cam:{pos:[0,0,3.4], tgt:[0,0,0]},    hasAngleOpt:true },
-  dressing:{ label:'Dressing',      sub:'Dressing sur mesure',         panels:['p1','pdressing','p4'],    steps:['Structure','Options','Envoyer'],       dimL:[80,500,200], dimH:[180,280,230],dimP:[50,80,60],  cam:{pos:[0,0.3,4.2], tgt:[0,0.2,0]},hasAngleOpt:true },
-  sdb:     { label:'Salle de bain', sub:'Meuble salle de bain sur mesure',panels:['p1','p2','p3','p4'],   steps:['Meuble','Plan de travail','Vasque','Envoyer'], dimL:[40,220,120], dimH:[30,70,45],  dimP:[36,60,36],  cam:{pos:[-0.4,0.9,1.6],tgt:[0,0.25,0]},hasAngleOpt:false }
-};
-
-var currentFT = null;
-var currentPanels = [];
-var step = 1;
-
-function selectFurnitureType(ft){
-  currentFT = ft;
-  var cfg = FT_CONFIGS[ft];
-  currentPanels = cfg.panels;
-  BIBLIO_MODE = (ft !== 'sdb');
-
-  document.getElementById('logo-sub').textContent = cfg.sub;
-  document.getElementById('type-overlay').style.display = 'none';
-
-  if(BIBLIO_MODE){
-    // OrbitControls actifs — l'utilisateur orbite autour du meuble fixe
-    controls.enabled = true;
-    controls.target.set(0, -0.02, -0.9);
-    camera.position.set(1.4, 0.7, 1.6);
-    camera.lookAt(0, -0.02, -0.9);
-    controls.minPolarAngle = Math.PI*0.05; controls.maxPolarAngle = Math.PI*0.52;
-    controls.minAzimuthAngle = -Math.PI/2;  controls.maxAzimuthAngle = Math.PI/2;
-    controls.minDistance = 0.8; controls.maxDistance = 6.0;
-    controls.update();
-    scene.background = new THREE.Color(0xF2EAD8);
-    scene.fog = null;
-    solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
-    wallBiblio.position.set(0, 0, WALL_BIBLIO_Z);
-    floorBiblio.position.set(0, FLOOR_BIBLIO_Y, 0);
-    wallBiblio.visible=true; floorBiblio.visible=true;
-  } else {
-    controls.enabled = true;
-    camera.position.set(camCfg.pos[0],camCfg.pos[1],camCfg.pos[2]);
-    camera.lookAt(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
-    controls.target.set(camCfg.tgt[0],camCfg.tgt[1],camCfg.tgt[2]);
-    controls.update();
-    scene.background = new THREE.Color(0xF2EAD8);
-    scene.fog = null;
-    solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
-    wallBiblio.position.set(0, 0, WALL_BIBLIO_Z);
-    floorBiblio.position.set(0, FLOOR_BIBLIO_Y, 0);
-    wallBiblio.visible=true; floorBiblio.visible=true;
-  }
-
-  // Adapt dimension inputs
-  var inpCL=document.getElementById('inp-CL');
-  if(inpCL){ inpCL.min=cfg.dimL[0]; inpCL.max=cfg.dimL[1]; setCL(cfg.dimL[2]); }
-  var inpCH=document.getElementById('inp-CH');
-  if(inpCH){ inpCH.min=cfg.dimH[0]; inpCH.max=cfg.dimH[1]; setCH(cfg.dimH[2]); }
-  var inpCP=document.getElementById('inp-CP');
-  if(inpCP){ inpCP.min=cfg.dimP[0]; inpCP.max=cfg.dimP[1]; setCP(cfg.dimP[2]); }
-
-  // Populate dressing mat grid
-  if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
-
-  document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=(BIBLIO_MODE&&cfg.hasAngleOpt)?'':'none'; });
-  // Caissons latéraux TV — reset + show/hide
-  S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120,topActive:false,topW:80,topH:100,topX:0,topY:0};
-  tvTopDragging=false; hideTVSnapGuides();
-  tvElems=[[],[],[]]; tvOpenState=[{},{},{}]; activeCaisson=1;
-  document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=(ft==='tv')?'':'none'; });
-  ['tvl-btn','tvr-btn','tvt-btn'].forEach(function(id,i){ var b=document.getElementById(id); if(b) b.textContent=['+Gauche','+Droite','+Dessus'][i].replace('+',' + ').trim(); });
-  ['tvl-opts','tvr-opts','tvt-opts'].forEach(function(id){ var o=document.getElementById(id); if(o) o.style.display='none'; });
-  // Onglets Formulaire/Fonction — uniquement BIBLIO_MODE
-  var tabs=document.getElementById('p1-tabs');
-  if(tabs) tabs.style.display=BIBLIO_MODE?'':'none';
-  var sdbAmgt=document.getElementById('p1-sdb-amgt');
-  if(sdbAmgt) sdbAmgt.style.display=BIBLIO_MODE?'none':'';
-  if(BIBLIO_MODE){ switchSbTab('formulaire'); }
-  else {
-    // SDB : les deux panels toujours visibles (pas d'onglets)
-    var f=document.getElementById('sbt-formulaire'),fn=document.getElementById('sbt-fonction');
-    if(f) f.classList.add('on'); if(fn) fn.classList.remove('on');
-  }
-  // Reset angle si on passe en SDB
-  if(!BIBLIO_MODE&&hasAngle){ hasAngle=false; if(caissonGrp2&&caissonGrp2.parent) caissonGrp2.parent.remove(caissonGrp2); caissonGrp2=null; var btn=document.getElementById('btn-angle'); if(btn) btn.textContent='+ Ajouter un angle'; var opts=document.getElementById('angle-opts'); if(opts) opts.style.display='none'; }
-  _rebuildEditBar();
-  setCaissonType('shelf');
-  buildStepper(cfg.steps);
-  showCotes=false;
-  goStep(1);
-  _syncCotesBtn();
-}
-
-function buildStepper(labels){
-  var el = document.getElementById('stepper');
-  el.innerHTML = '';
-  labels.forEach(function(lbl, i){
-    var n = i+1;
-    var dot = document.createElement('div');
-    dot.className = 'step-dot' + (n===1?' active':'');
-    dot.id = 'sd'+n;
-    dot.onclick = (function(nn){ return function(){ goStep(nn); }; })(n);
-    dot.innerHTML = '<span class="sn">'+n+'</span>';
-    el.appendChild(dot);
-
-    var lblEl = document.createElement('span');
-    lblEl.className = 'step-lbl' + (n===1?' active':'');
-    lblEl.textContent = lbl;
-    el.appendChild(lblEl);
-
-    if(i < labels.length-1){
-      var line = document.createElement('div');
-      line.className = 'step-line';
-      line.id = 'sl'+n;
-      el.appendChild(line);
-    }
-  });
-}
-
+var step=1;
 function goStep(n){
-  var total = currentPanels.length;
-  if(n<1||n>total) return;
-  step = n;
-  // S.step used by Three.js: for SDB map panel index, else keep at 1
-  S.step = (currentFT==='sdb') ? Math.min(n,3) : 1;
-
-  // Panels
-  currentPanels.forEach(function(id,i){ document.getElementById(id).classList.toggle('on',i===n-1); });
-
-  // Dots + lines
-  for(var i=1;i<=total;i++){
-    var dot=document.getElementById('sd'+i); if(!dot) continue;
-    dot.classList.remove('active','done');
-    if(i===n) dot.classList.add('active'); else if(i<n) dot.classList.add('done');
-    var line=document.getElementById('sl'+i); if(line) line.classList.toggle('done',i<n);
-  }
-
+  if(n<1||n>4) return;
+  step=n; S.step=Math.min(n,3);
+  ['p1','p2','p3','p4'].forEach(function(id,i){document.getElementById(id).classList.toggle('on',i+1===n);});
+  ['sd1','sd2','sd3','sd4'].forEach(function(id,i){
+    var el=document.getElementById(id); el.classList.remove('active','done');
+    if(i+1===n) el.classList.add('active'); else if(i+1<n) el.classList.add('done');
+  });
+  ['sl1','sl2','sl3'].forEach(function(id,i){document.getElementById(id).classList.toggle('done',i+1<n);});
   document.getElementById('btn-back').disabled=(n===1);
-  var isLast=(n===total);
-  document.getElementById('btn-next').textContent=isLast?'':'Suivant →';
-  document.getElementById('btn-next').style.display=isLast?'none':'';
-  document.getElementById('hint').classList.toggle('show',currentFT==='sdb'&&n===3);
-  _syncCotesBtn();
-
+  document.getElementById('btn-next').textContent=n<3?'Suivant →':(n===3?'Envoyer →':'');
+  document.getElementById('btn-next').style.display=(n===4?'none':'');
+  document.getElementById('hint').classList.toggle('show',n===3);
   if(caissonEditMode) toggleCaissonEdit();
   controls.enabled=true;
 
-  if(planMesh)   planMesh.visible=(currentFT==='sdb'&&n>=2);
-  if(vasqueGrp)  vasqueGrp.visible=(currentFT==='sdb'&&n===3);
-  if(vasqueGrp2) vasqueGrp2.visible=(currentFT==='sdb'&&n===3);
-
+  if(planMesh)   planMesh.visible=(n>=2);
+  if(vasqueGrp)  vasqueGrp.visible=(n===3||n===4);
+  if(vasqueGrp2) vasqueGrp2.visible=(n===3||n===4);
   if(n===1) buildCaisson();
-  if(currentFT==='sdb'){
-    if(n===2){
-      S.L=S.CL;
-      var slL=document.getElementById('sl-L')||document.querySelector('#p2 input[oninput*="setL"]');
-      if(slL){ slL.value=Math.round(S.L*100); }
-      document.getElementById('v-L').textContent=Math.round(S.L*100)+' cm';
-      buildPlan();
-    }
-    if(n===3){ buildRecap(); updatePosInfo(); positionVasque(); }
+  if(n===2){
+    S.L=S.CL;
+    var slL=document.getElementById('sl-L')||document.querySelector('#p2 input[oninput*="setL"]');
+    if(slL){ slL.value=Math.round(S.L*100); }
+    document.getElementById('v-L').textContent=Math.round(S.L*100)+' cm';
+    buildPlan();
   }
-  if(isLast){ buildRecap4(); }
-  if(n<=3) animCamera(currentFT==='sdb'?Math.min(n,3):1);
-}
-
-function setTringle(t){
-  document.getElementById('tr-simple').classList.toggle('on',t==='simple');
-  document.getElementById('tr-double').classList.toggle('on',t==='double');
+  if(n===3){ buildRecap(); updatePosInfo(); positionVasque(); }
+  if(n===4){ buildRecap4(); }
+  if(n<=3) animCamera(n);
 }
 
 var camTargets=[
@@ -3075,7 +1417,6 @@ var camTargets=[
 ];
 var camAnim=null;
 function animCamera(n){
-  if(BIBLIO_MODE) return;
   var tgt=camTargets[n-1];
   var p0=camera.position.clone(),t0=controls.target.clone();
   var p1=new THREE.Vector3().fromArray(tgt.pos),t1=new THREE.Vector3().fromArray(tgt.tgt);
@@ -3092,10 +1433,10 @@ function checkAlerts(){
   if(wPlan){
     var meubleL=Math.round(S.CL*100), planL=Math.round(S.L*100);
     if(meubleL>planL){
-      wPlan.textContent='Attention — le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
+      wPlan.textContent='⚠ Le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
       wPlan.classList.add('show');
     } else if(planL>meubleL+1){
-      wPlan.textContent='Note — le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+(planL-meubleL)+' cm.';
+      wPlan.textContent='ℹ Le plan de travail ('+planL+' cm) dépasse le meuble ('+meubleL+' cm) de '+( planL-meubleL)+' cm.';
       wPlan.classList.add('show');
     } else {
       wPlan.classList.remove('show');
@@ -3107,7 +1448,7 @@ function checkAlerts(){
     var pMat=MATS_PLAN[S.matPlan], vMat=MATS_VASQUE[S_matVasque];
     var planName=pMat?pMat.n:'', vasqueName=vMat?vMat.n:'';
     if(planName!==vasqueName){
-      wVasque.textContent='Attention — la vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
+      wVasque.textContent='⚠ La vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
       wVasque.classList.add('show');
     } else {
       wVasque.classList.remove('show');
@@ -3121,15 +1462,10 @@ function nextStep(){goStep(step+1);}
 function buildRecapStr(){
   var counts={shelf:0,separator:0,porte:0,tiroir:0};
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
-  var cfg=currentFT&&FT_CONFIGS[currentFT];
-  var s='• Type : '+(cfg?cfg.label:'—')+'\n'
-       +'• Meuble : '+Math.round(S.CL*100)+'L × '+Math.round(S.CH*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n';
-  if(currentFT==='sdb'){
-    s+='• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n';
-    s+='• Vasque : '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n';
-  }
-  s+='• Intérieur : '+counts.shelf+' tablette(s), '+counts.separator+' séparateur(s), '+counts.porte+' porte(s), '+counts.tiroir+' tiroir(s)';
-  return s;
+  return '• Meuble : '+Math.round(S.CL*100)+'L × '+Math.round(S.CH*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n'
+       + '• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n'
+       + '• Vasque : '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n'
+       + '• Intérieur : '+counts.shelf+' tablette(s), '+counts.separator+' séparateur(s), '+counts.porte+' porte(s), '+counts.tiroir+' tiroir(s)';
 }
 function buildRecap(){
   var counts={shelf:0,separator:0,porte:0,tiroir:0};
@@ -3149,35 +1485,20 @@ function buildRecap(){
 }
 
 function buildRecap4(){
-  var counts={shelf:0,'shelf_simple':0,separator:0,'separator_simple':0,porte:0,tiroir:0,barre:0};
+  var counts={shelf:0,separator:0,porte:0,tiroir:0};
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
-  var cfg=currentFT&&FT_CONFIGS[currentFT];
-
-  // Capture screenshot
-  renderer.render(scene,camera);
-  var thumbSrc=renderer.domElement.toDataURL('image/jpeg',0.85);
-
   var rows=[
-    ['Type de meuble', cfg?cfg.label:'—'],
-    ['Dimensions', Math.round(S.CL*100)+' × '+Math.round(S.CH*100)+' × '+Math.round(S.CairsonP*100)+' cm'],
-    ['Matière', MATS_CAIS[S.matCais].n],
+    ['Meuble', Math.round(S.CL*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm — '+MATS_CAIS[S.matCais].n],
+    ['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+'×'+Math.round(S.Ep*10)/10+' cm — '+MATS_PLAN[S.matPlan].n],
+    ['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
+    ['Tablettes', counts.shelf],
+    ['Séparateurs', counts.separator],
+    ['Portes', counts.porte],
+    ['Tiroirs', counts.tiroir],
   ];
-  if(currentFT==='sdb'){
-    rows.push(['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n]);
-    rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
-  }
-  var elemLabels={shelf:'Étagère',shelf_simple:'Liseré horiz.',separator:'Intercalaire',separator_simple:'Liseré vert.',porte:'Porte',tiroir:'Tiroir',barre:'Tringle'};
-  Object.keys(counts).forEach(function(k){ if(counts[k]) rows.push([elemLabels[k]||k, counts[k]]); });
-
-  var totalEls=Object.values(counts).reduce(function(a,b){return a+b;},0);
-  var elSummary=totalEls?totalEls+' élément'+(totalEls>1?'s':''):'Structure vide';
-
-  document.getElementById('recap4').innerHTML=
-    '<img src="'+thumbSrc+'" class="recap-thumb" alt="Aperçu du meuble"/>'+
-    '<div style="font-size:11px;color:var(--text2);margin-bottom:10px">'+elSummary+'</div>'+
-    rows.map(function(r){
-      return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
-    }).join('');
+  document.getElementById('recap4').innerHTML=rows.map(function(r){
+    return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
+  }).join('');
 }
 
 async function submitConfig(){
@@ -3274,176 +1595,12 @@ setMatVasque(S_matVasque); // Blanc Elysée
 })();
 
 // ═══════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════
-// ONGLETS SIDEBAR
-// ═══════════════════════════════════════════════════════
-function switchSbTab(tab){
-  var tabs=document.getElementById('p1-tabs');
-  if(!tabs) return;
-  tabs.querySelectorAll('.sb-tab').forEach(function(b){ b.classList.toggle('active',b.dataset.tab===tab); });
-  var f=document.getElementById('sbt-formulaire'), fn=document.getElementById('sbt-fonction');
-  if(f) f.classList.toggle('on',tab==='formulaire');
-  if(fn) fn.classList.toggle('on',tab==='fonction');
-}
-
-
-// ═══════════════════════════════════════════════════════
-// COTATION OVERLAY
-// ═══════════════════════════════════════════════════════
-function projectPt(v3){
-  var v=v3.clone(); v.project(camera);
-  return {x:(v.x+1)*cvs.clientWidth/2, y:(-v.y+1)*cvs.clientHeight/2};
-}
-function toggleCotes(){
-  showCotes=!showCotes;
-  var btn=document.getElementById('btn-cotes');
-  if(btn) btn.classList.toggle('active',showCotes);
-}
-function _syncCotesBtn(){
-  var show=BIBLIO_MODE&&S.step===1;
-  var btn=document.getElementById('btn-cotes');
-  if(btn) btn.style.display=show?'flex':'none';
-  var sBtn=document.getElementById('btn-screenshot');
-  if(sBtn) sBtn.style.display=show?'flex':'none';
-  _syncEditCta();
-}
-
-function _syncEditCta(){
-  var cta=document.getElementById('edit-cta');
-  if(!cta) return;
-  var show=BIBLIO_MODE&&S.step===1&&!caissonEditMode;
-  if(show){
-    cta.style.display='flex';
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){ cta.classList.add('visible'); });
-    });
-  } else {
-    cta.classList.remove('visible');
-    setTimeout(function(){ if(!cta.classList.contains('visible')) cta.style.display='none'; },350);
-  }
-}
-
-function startEditMode(){
-  if(!caissonEditMode) toggleCaissonEdit();
-}
-
-function updateCotes(){
-  var ov=document.getElementById('cotes-overlay');
-  if(!ov) return;
-  if(!BIBLIO_MODE||!caissonGrp||S.step!==1){ov.innerHTML='';return;}
-  if(!showCotes&&!caissonEditMode){ov.innerHTML='';return;}
-  caissonGrp.updateMatrixWorld(true);
-
-  var CL=S.CL, CH=S.CH;
-  var isTVMode=currentFT==='tv';
-  var html='', svgLines='';
-
-  function pp(x,y){ return projectPt(caissonGrp.localToWorld(new THREE.Vector3(x,y,0))); }
-
-  // Ligne de cote horizontale entre deux points écran
-  function hDim(pL,pR,txt,yOff){
-    var x1=pL.x, x2=pR.x;
-    if(Math.abs(x2-x1)<24) return;
-    if(x1>x2){var t=x1;x1=x2;x2=t;}
-    var y=Math.min(pL.y,pR.y)+(yOff!=null?yOff:-22);
-    svgLines+='<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="rgba(20,20,20,.28)" stroke-width="1.2"/>';
-    svgLines+='<line x1="'+x1+'" y1="'+(y-5)+'" x2="'+x1+'" y2="'+(y+5)+'" stroke="rgba(20,20,20,.5)" stroke-width="1.5"/>';
-    svgLines+='<line x1="'+x2+'" y1="'+(y-5)+'" x2="'+x2+'" y2="'+(y+5)+'" stroke="rgba(20,20,20,.5)" stroke-width="1.5"/>';
-    html+='<div class="cote-lbl" style="left:'+Math.round((x1+x2)/2)+'px;top:'+Math.round(y)+'px">'+txt+'</div>';
-  }
-
-  // Ligne de cote verticale — xOff<0=gauche, xOff>0=droite du segment
-  function vDim(pTop,pBot,txt,xOff){
-    var y1=Math.min(pTop.y,pBot.y), y2=Math.max(pTop.y,pBot.y);
-    if(y2-y1<18) return;
-    var xRef=xOff<0?Math.min(pTop.x,pBot.x):Math.max(pTop.x,pBot.x);
-    var x=xRef+xOff;
-    svgLines+='<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="rgba(20,20,20,.28)" stroke-width="1.2"/>';
-    svgLines+='<line x1="'+(x-5)+'" y1="'+y1+'" x2="'+(x+5)+'" y2="'+y1+'" stroke="rgba(20,20,20,.5)" stroke-width="1.5"/>';
-    svgLines+='<line x1="'+(x-5)+'" y1="'+y2+'" x2="'+(x+5)+'" y2="'+y2+'" stroke="rgba(20,20,20,.5)" stroke-width="1.5"/>';
-    html+='<div class="cote-lbl" style="left:'+Math.round(x)+'px;top:'+Math.round((y1+y2)/2)+'px">'+txt+'</div>';
-  }
-
-  // ── Caisson principal ────────────────────────────────────────────
-  var BL=pp(-CL/2,0), BR=pp(CL/2,0), TL=pp(-CL/2,CH), TR=pp(CL/2,CH);
-
-  var hasLeft =isTVMode&&S_tvSide.leftActive;
-  var hasRight=isTVMode&&S_tvSide.rightActive;
-  var hasTop  =isTVMode&&S_tvSide.topActive;
-
-  // Largeur caisson principal (au-dessus)
-  hDim(TL,TR,Math.round(CL*100)+' cm',-20);
-  // Hauteur caisson principal (à droite si pas de caisson droit, sinon plus près)
-  vDim(TR,BR,Math.round(CH*100)+' cm',hasRight?16:38);
-
-  // ── Caissons TV extra ────────────────────────────────────────────
-  if(isTVMode){
-    var lW=S_tvSide.leftW/100, lH=S_tvSide.leftH/100;
-    var rW=S_tvSide.rightW/100, rH=S_tvSide.rightH/100;
-    var tW=S_tvSide.topW/100, tH=S_tvSide.topH/100;
-    var tX=S_tvSide.topX, tY=S_tvSide.topY;
-
-    if(hasLeft){
-      var LBL=pp(-(CL/2+lW),0), LTL=pp(-(CL/2+lW),lH), LTR=pp(-CL/2,lH);
-      hDim(LTL,LTR,Math.round(lW*100)+' cm',-20);
-      vDim(LTL,LBL,Math.round(lH*100)+' cm',-38);
-    }
-    if(hasRight){
-      var RBR=pp(CL/2+rW,0), RTL=pp(CL/2,rH), RTR=pp(CL/2+rW,rH);
-      hDim(RTL,RTR,Math.round(rW*100)+' cm',-20);
-      vDim(RTR,RBR,Math.round(rH*100)+' cm',38);
-    }
-    if(hasTop){
-      var topY_loc=CH+tY;
-      var TTL=pp(tX-tW/2,topY_loc+tH), TTR=pp(tX+tW/2,topY_loc+tH);
-      var TBR=pp(tX+tW/2,topY_loc);
-      hDim(TTL,TTR,Math.round(tW*100)+' cm',-20);
-      vDim(TTR,TBR,Math.round(tH*100)+' cm',28);
-    }
-
-    // ── Dimensions d'ensemble ────────────────────────────────────
-    if(hasLeft||hasRight||hasTop){
-      var xMin=-CL/2, xMax=CL/2, yMax=CH;
-      if(hasLeft)  { xMin=Math.min(xMin,-(CL/2+lW)); yMax=Math.max(yMax,lH); }
-      if(hasRight) { xMax=Math.max(xMax, CL/2+rW);   yMax=Math.max(yMax,rH); }
-      if(hasTop)   { xMin=Math.min(xMin,tX-tW/2); xMax=Math.max(xMax,tX+tW/2); yMax=Math.max(yMax,CH+tY+tH); }
-
-      var farBL=pp(xMin,0), farBR=pp(xMax,0);
-      var farTL=pp(xMin,yMax);
-
-      // Largeur totale (en dessous)
-      hDim(farBL,farBR,Math.round((xMax-xMin)*100)+' cm total',30);
-      // Hauteur totale (à gauche, reculée)
-      vDim(farTL,farBL,Math.round(yMax*100)+' cm total',-56);
-    }
-  }
-
-  // ── Hauteurs des baies intérieures (caisson principal) ──────────
-  var iH_cote=Math.round(CH*100); // hauteur extérieure en cm (correspond à la dimension configurée)
-  var els=caissonElements.filter(function(e){return e.type==='shelf'||e.type==='shelf_simple';});
-  var ys=[0].concat(els.map(function(e){return e.y_cm;})).concat([iH_cote]);
-  ys.sort(function(a,b){return a-b;});
-  ys=ys.filter(function(v,i){return i===0||v!==ys[i-1];});
-  // Badge de hauteur au centre de chaque compartiment
-  for(var i=0;i<ys.length-1;i++){
-    var y0=ys[i],y1=ys[i+1],hcm=y1-y0;
-    var cy=EP+((y0+hcm/2)/100);
-    var pt=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,cy,0)));
-    var ptT=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,EP+y1/100,0)));
-    var ptB=projectPt(caissonGrp.localToWorld(new THREE.Vector3(0,EP+y0/100,0)));
-    if(Math.abs(ptT.y-ptB.y)>20) html+='<div class="cote-inner" style="left:'+pt.x+'px;top:'+pt.y+'px">'+hcm+' cm</div>';
-  }
-
-  var svgW=cvs.clientWidth, svgH=cvs.clientHeight;
-  ov.innerHTML='<svg width="'+svgW+'" height="'+svgH+'" style="position:absolute;inset:0;pointer-events:none">'+svgLines+'</svg>'+html;
-}
-
 // RESIZE & LOOP
 // ═══════════════════════════════════════════════════════
 function onResize(){ var w=wrap.clientWidth,h=wrap.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 window.addEventListener('resize',onResize); onResize();
 
-function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); updateCotes(); }
+function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); }
 loop();
 
 // ═══════════════════════════════════════════════════════
