@@ -86,6 +86,11 @@
       "source": "/home",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/configurateur-test",
+      "destination": "/configurateur",
+      "permanent": true
     }
   ],
   "installCommand": "npm install",

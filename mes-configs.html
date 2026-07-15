@@ -271,7 +271,7 @@ function normalizeConfig(c, source){
     if(type==='sdb')     p.push(c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':''));
     summary=p.length?p.join(' · '):'Structure vide';
     var pl={ft:type,L:c.meuble_l,H:c.meuble_h,P:c.meuble_p,matLabel:c.meuble_mat,elements:Array.isArray(c.elements)?c.elements:[],plan:{L:c.plan_l,P:c.plan_p,Ep:c.plan_ep,matLabel:c.plan_mat},vasques:{nb:c.nb_vasques,W:c.vasque_w,D:c.vasque_d,label:c.vasque_label}};
-    try{ vizUrl='/configurateur-test?c='+btoa(unescape(encodeURIComponent(JSON.stringify(pl)))); }catch(e){ vizUrl='/configurateur-test'; }
+    try{ vizUrl='/configurateur?c='+btoa(unescape(encodeURIComponent(JSON.stringify(pl)))); }catch(e){ vizUrl='/configurateur'; }
   }
   return {_type:type,_source:source,_raw:c,_rawId:c.id,created_at:c.created_at,prenom:c.prenom,email:c.email,message:c.message,dims:dims,mat:mat,summary:summary,vizUrl:vizUrl};
 }
