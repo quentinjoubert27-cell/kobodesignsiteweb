@@ -3538,6 +3538,41 @@ S.vx=0; S.vz=planCZ();
 buildVasque();
 buildCaisson();
 goStep(1);
+
+// ── Chargement depuis ?c= (aperçu admin) ──────────────
+(function(){
+  try{
+    var param=new URLSearchParams(location.search).get('c');
+    if(!param) return;
+    var cfg=JSON.parse(decodeURIComponent(escape(atob(param))));
+    var ft=cfg.ft||'sdb';
+    selectFurnitureType(ft);
+    if(cfg.L) setCL(Math.round(cfg.L));
+    if(cfg.H) setCH(Math.round(cfg.H));
+    if(cfg.P) setCP(Math.round(cfg.P));
+    if(cfg.matLabel){
+      var mi=-1; for(var _i=0;_i<MATS_CAIS.length;_i++){ if(MATS_CAIS[_i].n===cfg.matLabel){mi=_i;break;} }
+      if(mi>=0) setMatCais(mi);
+    }
+    if(Array.isArray(cfg.elements)){ caissonElements=cfg.elements; buildCaisson(); }
+    if(ft==='sdb'){
+      if(cfg.plan){
+        if(cfg.plan.L) setL(Math.round(cfg.plan.L));
+        if(cfg.plan.P) setPro(Math.round(cfg.plan.P));
+        if(cfg.plan.matLabel){
+          var pi=-1; for(var _j=0;_j<MATS_PLAN.length;_j++){ if(MATS_PLAN[_j].n===cfg.plan.matLabel){pi=_j;break;} }
+          if(pi>=0) setMatPlan(pi);
+        }
+      }
+      if(cfg.vasques&&cfg.vasques.nb>1) setNbVasques(2);
+      goStep(3);
+    }
+    var badge=document.createElement('div');
+    badge.style.cssText='position:fixed;top:70px;right:16px;background:#1A1A1A;color:#FFFAF0;padding:6px 14px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;z-index:9999;pointer-events:none';
+    badge.textContent='Aperçu admin';
+    document.body.appendChild(badge);
+  }catch(e){ console.warn('Param ?c= invalide',e); }
+})();
 </script>
 </body>
 </html>

@@ -984,6 +984,20 @@ function buildPDFHtml(cfg){
 // ═══════════════════════════════════════════════
 //  SALLE DE BAIN
 // ═══════════════════════════════════════════════
+function make3dUrl(c){
+  var payload = {
+    ft: 'sdb',
+    L: c.meuble_l, H: c.meuble_h, P: c.meuble_p,
+    matLabel: c.meuble_mat,
+    elements: Array.isArray(c.elements) ? c.elements : [],
+    plan: { L: c.plan_l, P: c.plan_p, Ep: c.plan_ep, matLabel: c.plan_mat },
+    vasques: { nb: c.nb_vasques, W: c.vasque_w, D: c.vasque_d, label: c.vasque_label }
+  };
+  try{
+    return '/configurateur-test?c='+btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  }catch(e){ return '/configurateur-test'; }
+}
+
 function renderSDB(configs){
   window._configsSDB = configs;
 
@@ -1008,6 +1022,7 @@ function renderSDB(configs){
     var ref='SDB-'+String(c.id||'').padStart(4,'0');
     var cid = c.id || idx;
     var noteVal = esc(getNotes('sdb', cid));
+    var viz3d = make3dUrl(c);
     return '<div id="cfg-row-sdb-'+idx+'">'
       +'<div class="cfg-row-sdb">'
         +'<div class="cfg-num">'+(idx+1)+'</div>'
@@ -1021,6 +1036,7 @@ function renderSDB(configs){
         +'</div>'
         +'<div class="cfg-date">'+fmtDate(c.created_at)+'</div>'
         +statusSelect('sdb', cid)
+        +'<a href="'+viz3d+'" class="viz-btn" target="_blank">▶ 3D</a>'
         +'<button class="fiche-btn" onclick="toggleFicheSdb('+idx+')">📋 Notes</button>'
         +'<button class="fiche-btn" onclick="generatePDFSdb('+idx+')">📄 PDF</button>'
       +'</div>'
