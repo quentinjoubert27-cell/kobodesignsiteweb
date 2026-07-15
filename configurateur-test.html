@@ -567,11 +567,13 @@ textarea.cfg-field{resize:vertical;min-height:72px}
           <button class="reset-btn" onclick="resetCaissonElements()">Vider</button>
           <!-- Boutons de type injectés ici en mode édition -->
           <div id="fn-edit-content" style="display:none;margin-top:16px">
-            <div class="sec" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-              Point de départ
-              <button onclick="saveCurrentAsPreset()" style="font-size:9px;font-weight:700;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--text2);font-family:'DM Sans',sans-serif">💾 Sauvegarder ici</button>
+            <div id="preset-wrap">
+              <div class="sec" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+                Point de départ
+                <button onclick="saveCurrentAsPreset()" style="font-size:9px;font-weight:700;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--text2);font-family:'DM Sans',sans-serif">💾 Sauvegarder ici</button>
+              </div>
+              <div class="preset-grid" id="preset-grid"></div>
             </div>
-            <div class="preset-grid" id="preset-grid"></div>
             <div class="sec" style="margin-bottom:8px;margin-top:4px">Ajouter un élément</div>
             <div class="c-type-btns"></div>
           </div>
@@ -2030,7 +2032,7 @@ function toggleCaissonEdit(){
   _rebuildEditBar();
   var fnContent=document.getElementById('fn-edit-content');
   if(fnContent) fnContent.style.display=caissonEditMode?'':'none';
-  if(BIBLIO_MODE && caissonEditMode){ switchSbTab('fonction'); buildPresetGrid(); }
+  if(BIBLIO_MODE && caissonEditMode){ switchSbTab('fonction'); if(currentFT==='biblio') buildPresetGrid(); }
   if(caissonEditMode){ showCotes=true; } else { showCotes=false; }
   updateCotes();
   var btnC=document.getElementById('btn-cotes');
@@ -3004,6 +3006,8 @@ function selectFurnitureType(ft){
 
   document.getElementById('logo-sub').textContent = cfg.sub;
   document.getElementById('type-overlay').style.display = 'none';
+  var pw=document.getElementById('preset-wrap');
+  if(pw) pw.style.display = (ft==='biblio') ? '' : 'none';
 
   if(BIBLIO_MODE){
     // OrbitControls actifs — l'utilisateur orbite autour du meuble fixe
