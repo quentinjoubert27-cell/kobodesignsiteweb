@@ -151,20 +151,18 @@
     .crm-notes-hint{font-size:9px;color:rgba(26,26,26,.3);margin-top:4px;min-height:14px}
     .cfg-hidden{display:none!important}
 
-    /* Tabs */
-    .tabs{display:flex;gap:4px;margin-bottom:28px;background:#fff;border-radius:12px;
-      padding:5px;border:1px solid rgba(26,26,26,.08);width:fit-content}
-    .tab-btn{padding:9px 20px;border-radius:8px;border:none;background:none;font-family:var(--font);
-      font-size:11px;font-weight:700;letter-spacing:.06em;color:rgba(26,26,26,.45);cursor:pointer;transition:all .18s}
-    .tab-btn.active{background:var(--accent);color:#fff}
-    .tab-pane{display:none}.tab-pane.active{display:block}
-
-    /* SDB table */
-    .cfg-row-sdb{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;
-      gap:16px;padding:14px 20px;border-bottom:1px solid rgba(26,26,26,.06);transition:background .15s}
-    .cfg-row-sdb:hover{background:#FAFAF8}
-    .cfg-row-sdb:last-child{border-bottom:none}
-    .cfg-num{font-size:11px;font-weight:700;color:rgba(26,26,26,.25);min-width:28px}
+    /* Type filters */
+    .type-filters{display:flex;gap:6px;flex-wrap:wrap}
+    .tf-btn{padding:7px 16px;border-radius:100px;border:1.5px solid rgba(26,26,26,.12);
+      background:#fff;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:.06em;
+      text-transform:uppercase;color:rgba(26,26,26,.45);cursor:pointer;transition:all .18s;white-space:nowrap}
+    .tf-btn:hover{border-color:rgba(26,26,26,.3);color:var(--dark)}
+    .tf-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+    .type-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:9px;
+      font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;margin-left:4px}
+    .tb-biblio{background:rgba(34,163,90,.1);color:#1a8a4a}
+    .tb-sdb{background:rgba(37,99,235,.1);color:#2563EB}
+    .tb-mobilier{background:rgba(124,58,237,.1);color:#7C3AED}
   </style>
 </head>
 <body>
@@ -189,29 +187,14 @@
 
   <!-- Contenu (caché jusqu'à auth) -->
   <div id="content" style="display:none">
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('biblio')">📚 Bibliothèques</button>
-      <button class="tab-btn" onclick="switchTab('sdb')">🚿 Salles de bain</button>
+    <div class="stats" id="stats"></div>
+    <div class="pipeline-row" id="pipeline"></div>
+    <div class="crm-toolbar">
+      <input type="search" id="search-all" class="crm-search" placeholder="Rechercher par nom ou email…"/>
+      <div class="type-filters" id="type-filters"></div>
     </div>
-
-    <!-- Tab Biblio -->
-    <div class="tab-pane active" id="tab-biblio">
-      <div class="stats" id="stats"></div>
-      <div class="pipeline-row" id="pipeline-biblio"></div>
-      <div class="crm-toolbar" id="toolbar-biblio"></div>
-      <div class="configs-wrap" id="configsWrap">
-        <div class="loading"><div class="spinner"></div><br>Chargement…</div>
-      </div>
-    </div>
-
-    <!-- Tab SDB -->
-    <div class="tab-pane" id="tab-sdb">
-      <div class="stats" id="stats-sdb"></div>
-      <div class="pipeline-row" id="pipeline-sdb"></div>
-      <div class="crm-toolbar" id="toolbar-sdb"></div>
-      <div class="configs-wrap" id="configsWrap-sdb">
-        <div class="loading"><div class="spinner"></div><br>Chargement…</div>
-      </div>
+    <div class="configs-wrap" id="configsWrap">
+      <div class="loading"><div class="spinner"></div><br>Chargement…</div>
     </div>
   </div>
 </div>
@@ -242,61 +225,98 @@ function statusSelect(type,id){
 function changeStatus(type,id,sel){
   setStatus(type,id,sel.value);
   sel.className='status-sel s-'+sel.value;
-  refreshPipeline(type);
+  refreshPipeline();
 }
 window.changeStatus=changeStatus;
 
-function buildPipelineHTML(configs,type){
+// ── Types ────────────────────────────────────────
+var TYPE_META = {
+  biblio:  {label:'Bibliothèque', badgeClass:'tb-biblio'},
+  sdb:     {label:'Salle de bain',badgeClass:'tb-sdb'},
+  mobilier:{label:'Mobilier',     badgeClass:'tb-mobilier'},
+};
+
+function normalizeConfig(c, source){
+  var type = source==='biblio' ? 'biblio' : (c.plan_l>0&&c.nb_vasques>0 ? 'sdb' : 'mobilier');
+  var dims, mat, summary, vizUrl;
+  if(source==='biblio'){
+    dims=c.largeur+'×'+c.hauteur+'×'+c.profondeur+' cm'; mat=c.essence||'—';
+    var p=[];
+    if(c.nb_etageres)     p.push(c.nb_etageres+' étagère'+(c.nb_etageres>1?'s':''));
+    if(c.nb_traverses)    p.push(c.nb_traverses+' traverse'+(c.nb_traverses>1?'s':''));
+    if(c.nb_intercalaires)p.push(c.nb_intercalaires+' intercalaire'+(c.nb_intercalaires>1?'s':''));
+    if(c.nb_portes)       p.push(c.nb_portes+' porte'+(c.nb_portes>1?'s':''));
+    summary=p.length?p.join(' · '):'Structure vide';
+    try{ vizUrl='/configurateur-biblio?c='+btoa(unescape(encodeURIComponent(JSON.stringify({W:c.largeur,H:c.hauteur,D:c.profondeur,matId:c.matId||'chene',elements:c.elements||[]})))); }catch(e){ vizUrl='/configurateur-biblio'; }
+  } else {
+    dims=c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm'; mat=c.meuble_mat||'—';
+    var p=[];
+    if(c.nb_tablettes)   p.push(c.nb_tablettes+' étagère'+(c.nb_tablettes>1?'s':''));
+    if(c.nb_separateurs) p.push(c.nb_separateurs+' intercalaire'+(c.nb_separateurs>1?'s':''));
+    if(c.nb_portes)      p.push(c.nb_portes+' porte'+(c.nb_portes>1?'s':''));
+    if(c.nb_tiroirs)     p.push(c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''));
+    if(type==='sdb')     p.push(c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':''));
+    summary=p.length?p.join(' · '):'Structure vide';
+    var pl={ft:'sdb',L:c.meuble_l,H:c.meuble_h,P:c.meuble_p,matLabel:c.meuble_mat,elements:Array.isArray(c.elements)?c.elements:[],plan:{L:c.plan_l,P:c.plan_p,Ep:c.plan_ep,matLabel:c.plan_mat},vasques:{nb:c.nb_vasques,W:c.vasque_w,D:c.vasque_d,label:c.vasque_label}};
+    try{ vizUrl='/configurateur-test?c='+btoa(unescape(encodeURIComponent(JSON.stringify(pl)))); }catch(e){ vizUrl='/configurateur-test'; }
+  }
+  return {_type:type,_source:source,_raw:c,_rawId:c.id,created_at:c.created_at,prenom:c.prenom,email:c.email,message:c.message,dims:dims,mat:mat,summary:summary,vizUrl:vizUrl};
+}
+
+// ── Pipeline unifié ───────────────────────────────
+function buildPipelineHTML(configs){
   var counts={};
   STATUS_LIST.forEach(function(s){counts[s.id]=0;});
-  configs.forEach(function(c){ var st=getStatus(type,c.id||c); counts[st]=(counts[st]||0)+1; });
+  configs.forEach(function(c){ var st=getStatus(c._source,c._rawId); counts[st]=(counts[st]||0)+1; });
   var html=STATUS_LIST.map(function(s){
-    return '<div class="pipe-card" id="pc-'+type+'-'+s.id+'" onclick="filterByStatus(\''+type+'\',\''+s.id+'\')">'
+    return '<div class="pipe-card" id="pc-'+s.id+'" onclick="filterByStatus(\''+s.id+'\')">'
       +'<div class="pipe-dot" style="background:'+s.color+'"></div>'
       +'<div><div class="pipe-count">'+counts[s.id]+'</div><div class="pipe-lbl">'+s.label+'</div></div>'
       +'</div>';
   }).join('');
-  html+='<div class="pipe-card active" id="pc-'+type+'-all" onclick="filterByStatus(\''+type+'\',\'\')">'
+  html+='<div class="pipe-card active" id="pc-all" onclick="filterByStatus(\'\')">'
     +'<div class="pipe-dot" style="background:#aaa"></div>'
     +'<div><div class="pipe-count">'+configs.length+'</div><div class="pipe-lbl">Total</div></div>'
     +'</div>';
   return html;
 }
 
-function refreshPipeline(type){
-  var configs=type==='biblio'?(window._configs||[]):(window._configsSDB||[]);
-  var el=document.getElementById('pipeline-'+type); if(el) el.innerHTML=buildPipelineHTML(configs,type);
-  applyFilter(type);
+function refreshPipeline(){
+  var el=document.getElementById('pipeline');
+  if(el) el.innerHTML=buildPipelineHTML(window._allConfigs||[]);
+  applyFilter();
 }
 
-var _activeFilter={biblio:'',sdb:''};
-function filterByStatus(type,status){
-  _activeFilter[type]=status;
-  document.querySelectorAll('[id^="pc-'+type+'-"]').forEach(function(el){el.classList.remove('active');});
-  var pid=status?'pc-'+type+'-'+status:'pc-'+type+'-all';
+var _statusFilter='', _typeFilter='';
+function filterByStatus(status){
+  _statusFilter=status;
+  document.querySelectorAll('[id^="pc-"]').forEach(function(el){el.classList.remove('active');});
+  var pid=status?'pc-'+status:'pc-all';
   var pel=document.getElementById(pid); if(pel) pel.classList.add('active');
-  applyFilter(type);
+  applyFilter();
 }
 window.filterByStatus=filterByStatus;
 
-function applyFilter(type){
-  var configs=type==='biblio'?(window._configs||[]):(window._configsSDB||[]);
-  var s=(document.getElementById('search-'+type)||{value:''}).value.toLowerCase();
-  var status=_activeFilter[type]||'';
-  configs.forEach(function(c,idx){
-    var row=document.getElementById('cfg-row-'+type+'-'+idx);
-    if(!row) return;
-    var matchS=!s||(c.prenom||'').toLowerCase().indexOf(s)>=0||(c.email||'').toLowerCase().indexOf(s)>=0;
-    var matchF=!status||getStatus(type,c.id||idx)===status;
-    var hide=!matchS||!matchF;
-    row.classList.toggle('cfg-hidden',hide);
-    var fr=document.getElementById('fiche-row-'+type+'-'+idx); if(fr) fr.classList.toggle('cfg-hidden',hide);
-  });
+function filterByType(type){
+  _typeFilter=type;
+  document.querySelectorAll('.tf-btn').forEach(function(b){b.classList.remove('active');});
+  var tid=type?'tf-'+type:'tf-all';
+  var tel=document.getElementById(tid); if(tel) tel.classList.add('active');
+  applyFilter();
 }
+window.filterByType=filterByType;
 
-function initSearch(type){
-  var el=document.getElementById('search-'+type); if(!el) return;
-  el.addEventListener('input',function(){ applyFilter(type); });
+function applyFilter(){
+  var s=(document.getElementById('search-all')||{value:''}).value.toLowerCase();
+  (window._allConfigs||[]).forEach(function(c,idx){
+    var row=document.getElementById('cfg-row-'+idx); if(!row) return;
+    var matchS=!s||(c.prenom||'').toLowerCase().indexOf(s)>=0||(c.email||'').toLowerCase().indexOf(s)>=0;
+    var matchF=!_statusFilter||getStatus(c._source,c._rawId)===_statusFilter;
+    var matchT=!_typeFilter||c._type===_typeFilter;
+    var hide=!matchS||!matchF||!matchT;
+    row.classList.toggle('cfg-hidden',hide);
+    var fr=document.getElementById('fiche-row-'+idx); if(fr) fr.classList.toggle('cfg-hidden',hide);
+  });
 }
 
 function saveNotes(type,id,ta,hint){
@@ -305,11 +325,6 @@ function saveNotes(type,id,ta,hint){
   setTimeout(function(){hint.textContent='';},2000);
 }
 window.saveNotes=saveNotes;
-
-var MATS = {
-  chene:'Chêne', noyer:'Noyer', chene_fonce:'Chêne F.', sapelli:'Sapelli',
-  vert_sauge:'Vert Sauge', brun_rose:'Brun Rosé', gris_ardoise:'Gris Ardoise', blanc:'Blanc'
-};
 
 function auth(){
   var token = document.getElementById('tokenInput').value.trim();
@@ -321,13 +336,12 @@ function auth(){
 function loadConfigs(token){
   document.getElementById('authWrap').style.display='none';
   document.getElementById('content').style.display='block';
-
-  var t = encodeURIComponent(token);
+  var t=encodeURIComponent(token);
   Promise.all([
     fetch('/api/list-configs?token='+t).then(function(r){return r.json();}),
     fetch('/api/list-configs-sdb?token='+t).then(function(r){return r.json();})
   ]).then(function(results){
-    var biblio = results[0], sdb = results[1];
+    var biblio=results[0], sdb=results[1];
     if(biblio.error){
       document.getElementById('authWrap').style.display='block';
       document.getElementById('content').style.display='none';
@@ -335,8 +349,11 @@ function loadConfigs(token){
       document.getElementById('authErr').textContent='Token invalide.';
       return;
     }
-    render(biblio.configs || [], token);
-    renderSDB(sdb.configs || []);
+    var all=[];
+    (biblio.configs||[]).forEach(function(c){ all.push(normalizeConfig(c,'biblio')); });
+    (sdb.configs||[]).forEach(function(c){ all.push(normalizeConfig(c,'sdb')); });
+    all.sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+    renderAll(all);
   }).catch(function(){
     document.getElementById('authWrap').style.display='block';
     document.getElementById('content').style.display='none';
@@ -344,101 +361,77 @@ function loadConfigs(token){
   });
 }
 
-function switchTab(tab){
-  document.querySelectorAll('.tab-btn').forEach(function(b,i){
-    b.classList.toggle('active', (i===0&&tab==='biblio')||(i===1&&tab==='sdb'));
-  });
-  document.getElementById('tab-biblio').classList.toggle('active', tab==='biblio');
-  document.getElementById('tab-sdb').classList.toggle('active', tab==='sdb');
-}
-
-function makeVizUrl(cfg){
-  var payload = {
-    W: cfg.largeur, H: cfg.hauteur, D: cfg.profondeur,
-    matId: cfg.matId || 'chene',
-    elements: cfg.elements || []
-  };
-  try{
-    var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-    return '/configurateur-biblio?c=' + b64;
-  }catch(e){ return '/configurateur-biblio'; }
-}
-
 function fmtDate(iso){
-  var d = new Date(iso);
+  var d=new Date(iso);
   return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})
-    + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    +' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 }
 
-function elemsSummary(cfg){
-  var parts=[];
-  if(cfg.nb_etageres)   parts.push(cfg.nb_etageres+' étagère'+(cfg.nb_etageres>1?'s':''));
-  if(cfg.nb_traverses)  parts.push(cfg.nb_traverses+' traverse'+(cfg.nb_traverses>1?'s':''));
-  if(cfg.nb_intercalaires) parts.push(cfg.nb_intercalaires+' intercalaire'+(cfg.nb_intercalaires>1?'s':''));
-  if(cfg.nb_portes)     parts.push(cfg.nb_portes+' porte'+(cfg.nb_portes>1?'s':''));
-  return parts.length ? parts.join(' · ') : 'Structure vide';
-}
-
-function render(configs, token){
-  window._configs = configs;
+function renderAll(configs){
+  window._allConfigs=configs;
+  var nb={biblio:0,sdb:0,mobilier:0};
+  configs.forEach(function(c){ nb[c._type]=(nb[c._type]||0)+1; });
 
   // Stats
-  var statsEl = document.getElementById('stats');
-  var total = configs.length;
-  var avecPortes = configs.filter(function(c){return c.nb_portes>0;}).length;
-  var essences = {};
-  configs.forEach(function(c){ essences[c.essence]=(essences[c.essence]||0)+1; });
-  var topEssence = Object.entries(essences).sort(function(a,b){return b[1]-a[1];})[0];
-  statsEl.innerHTML =
-    stat(total, 'Configurations') +
-    stat(avecPortes, 'Avec portes') +
-    stat(topEssence?topEssence[0]:'—', 'Essence préférée');
+  var statsHtml=stat(configs.length,'Total')+stat(nb.biblio,'Bibliothèques')+stat(nb.sdb,'Salles de bain');
+  if(nb.mobilier) statsHtml+=stat(nb.mobilier,'Mobilier');
+  document.getElementById('stats').innerHTML=statsHtml;
 
   // Pipeline
-  var pipEl = document.getElementById('pipeline-biblio');
-  if(pipEl) pipEl.innerHTML = buildPipelineHTML(configs, 'biblio');
+  var pipEl=document.getElementById('pipeline');
+  if(pipEl) pipEl.innerHTML=buildPipelineHTML(configs);
 
-  // Toolbar recherche
-  var toolEl = document.getElementById('toolbar-biblio');
-  if(toolEl) toolEl.innerHTML = '<input type="search" id="search-biblio" class="crm-search" placeholder="Rechercher par nom ou email…"/>';
+  // Filtres type
+  var typeKeys=Object.keys(nb).filter(function(k){return nb[k]>0;});
+  var filterHtml='<button class="tf-btn active" id="tf-all" onclick="filterByType(\'\')">Tous</button>';
+  typeKeys.forEach(function(k){
+    filterHtml+='<button class="tf-btn" id="tf-'+k+'" onclick="filterByType(\''+k+'\')">'+TYPE_META[k].label+'s</button>';
+  });
+  document.getElementById('type-filters').innerHTML=filterHtml;
 
   // Table
-  var wrap = document.getElementById('configsWrap');
-  if(!configs.length){
-    wrap.innerHTML='<div class="empty">Aucune configuration reçue pour l\'instant.</div>';
-    return;
-  }
+  var wrap=document.getElementById('configsWrap');
+  if(!configs.length){ wrap.innerHTML='<div class="empty">Aucune configuration reçue.</div>'; return; }
 
-  var rows = configs.map(function(c, idx){
-    var viz = makeVizUrl(c);
-    var cid = c.id || idx;
-    return '<tr id="cfg-row-biblio-'+idx+'">'
-      + '<td><div class="cfg-date">'+fmtDate(c.created_at)+'</div></td>'
-      + '<td><div class="cfg-name">'+esc(c.prenom)+'</div><div class="cfg-email">'+esc(c.email)+'</div></td>'
-      + '<td><div class="cfg-dims">'+c.largeur+'×'+c.hauteur+'×'+c.profondeur+' cm</div><div class="cfg-mat">'+esc(c.essence||'')+'</div></td>'
-      + '<td><div class="cfg-elems">'+elemsSummary(c)+'</div></td>'
-      + '<td>'+(c.message?'<div class="cfg-msg" title="'+esc(c.message)+'">'+esc(c.message)+'</div>':'<span style="color:rgba(26,26,26,.25)">—</span>')+'</td>'
-      + '<td>'+statusSelect('biblio', cid)+'</td>'
-      + '<td style="white-space:nowrap">'
-        + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
-        + '<a href="'+viz+'" class="viz-btn" target="_blank">▶ 3D</a>'
-        + '<button class="fiche-btn" id="fiche-btn-'+idx+'" onclick="toggleFiche('+idx+')">📋 Fiche</button>'
-        + '<button class="fiche-btn" onclick="generatePDF('+idx+')">📄 PDF</button>'
-        + '</div>'
-      + '</td>'
-      + '</tr>'
-      + '<tr id="fiche-row-biblio-'+idx+'" class="fiche-row" style="display:none">'
-        + '<td colspan="7"><div class="fiche-inner" id="fiche-inner-'+idx+'"></div></td>'
-      + '</tr>'
-      ;
+  var rows=configs.map(function(c,idx){
+    var tm=TYPE_META[c._type];
+    var cid=c._rawId||idx;
+    var isBiblio=(c._source==='biblio');
+    var badge='<span class="type-badge '+tm.badgeClass+'">'+tm.label+'</span>';
+    var ficheBtn=isBiblio
+      ?'<button class="fiche-btn" id="fiche-btn-'+idx+'" onclick="toggleFiche('+idx+')">Fiche</button>'
+      :'<button class="fiche-btn" onclick="toggleFicheSdb('+idx+')">Notes</button>';
+    var pdfBtn=isBiblio
+      ?'<button class="fiche-btn" onclick="generatePDF('+idx+')">PDF</button>'
+      :'<button class="fiche-btn" onclick="generatePDFSdb('+idx+')">PDF</button>';
+    return '<tr id="cfg-row-'+idx+'">'
+      +'<td><div class="cfg-date">'+fmtDate(c.created_at)+'</div></td>'
+      +'<td><div class="cfg-name">'+esc(c.prenom)+badge+'</div><div class="cfg-email">'+esc(c.email)+'</div></td>'
+      +'<td><div class="cfg-dims">'+esc(c.dims)+'</div><div class="cfg-mat">'+esc(c.mat)+'</div></td>'
+      +'<td><div class="cfg-elems">'+esc(c.summary)+'</div></td>'
+      +'<td>'+(c.message?'<div class="cfg-msg" title="'+esc(c.message)+'">'+esc(c.message)+'</div>':'<span style="color:rgba(26,26,26,.25)">—</span>')+'</td>'
+      +'<td>'+statusSelect(c._source,cid)+'</td>'
+      +'<td style="white-space:nowrap"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+        +'<a href="'+c.vizUrl+'" class="viz-btn" target="_blank">▶ 3D</a>'
+        +ficheBtn+pdfBtn
+      +'</div></td>'
+      +'</tr>'
+      +'<tr id="fiche-row-'+idx+'" class="fiche-row" style="display:none">'
+        +'<td colspan="7">'+(isBiblio
+          ?'<div class="fiche-inner" id="fiche-inner-'+idx+'"></div>'
+          :'<div style="padding:16px 20px;background:rgba(255,250,240,.5)"><div class="crm-notes-lbl">Notes internes</div>'
+            +'<textarea class="crm-notes-ta" onblur="saveNotes(\''+c._source+'\',\''+cid+'\',this,document.getElementById(\'nh-'+idx+'\'))">'+esc(getNotes(c._source,cid))+'</textarea>'
+            +'<div class="crm-notes-hint" id="nh-'+idx+'"></div></div>'
+        )+'</td>'
+      +'</tr>';
   }).join('');
 
-  wrap.innerHTML = '<table>'
-    + '<thead><tr><th>Date</th><th>Contact</th><th>Dimensions</th><th>Aménagement</th><th>Message</th><th>Statut</th><th></th></tr></thead>'
-    + '<tbody>'+rows+'</tbody>'
-    + '</table>';
+  wrap.innerHTML='<table>'
+    +'<thead><tr><th>Date</th><th>Contact</th><th>Dimensions</th><th>Aménagement</th><th>Message</th><th>Statut</th><th></th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table>';
 
-  setTimeout(function(){ initSearch('biblio'); }, 0);
+  var searchEl=document.getElementById('search-all');
+  if(searchEl) searchEl.addEventListener('input',applyFilter);
 }
 
 function stat(val, lbl){
@@ -456,7 +449,7 @@ var BT_m = 0.008; // fond 8mm
 var T_cm = Math.round(T_m * 100 * 10) / 10; // 1.8 cm
 
 function toggleFiche(idx){
-  var row  = document.getElementById('fiche-row-biblio-'+idx);
+  var row  = document.getElementById('fiche-row-'+idx);
   var btn  = document.getElementById('fiche-btn-'+idx);
   if(!row) return;
   var isOpen = row.style.display !== 'none';
@@ -464,7 +457,7 @@ function toggleFiche(idx){
     row.style.display = 'none';
     btn.classList.remove('open');
   } else {
-    var cfg = window._configs[idx];
+    var cfg = (window._allConfigs[idx]||{})._raw;
     document.getElementById('fiche-inner-'+idx).innerHTML = buildFicheHTML(cfg, idx);
     row.style.display = '';
     btn.classList.add('open');
@@ -690,7 +683,7 @@ window.copyFiche = copyFiche;
 //  GÉNÉRATION PDF (print-to-PDF via nouvelle fenêtre)
 // ═══════════════════════════════════════════════
 function generatePDF(idx){
-  var cfg = window._configs[idx];
+  var cfg = (window._allConfigs[idx]||{})._raw;
   if(!cfg) return;
   var html = buildPDFHtml(cfg);
   var win = window.open('', '_blank', 'width=900,height=700');
@@ -981,85 +974,16 @@ function buildPDFHtml(cfg){
     +'</body></html>';
 }
 
-// ═══════════════════════════════════════════════
-//  SALLE DE BAIN
-// ═══════════════════════════════════════════════
-function make3dUrl(c){
-  var payload = {
-    ft: 'sdb',
-    L: c.meuble_l, H: c.meuble_h, P: c.meuble_p,
-    matLabel: c.meuble_mat,
-    elements: Array.isArray(c.elements) ? c.elements : [],
-    plan: { L: c.plan_l, P: c.plan_p, Ep: c.plan_ep, matLabel: c.plan_mat },
-    vasques: { nb: c.nb_vasques, W: c.vasque_w, D: c.vasque_d, label: c.vasque_label }
-  };
-  try{
-    return '/configurateur-test?c='+btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  }catch(e){ return '/configurateur-test'; }
-}
-
-function renderSDB(configs){
-  window._configsSDB = configs;
-
-  var statsEl = document.getElementById('stats-sdb');
-  statsEl.innerHTML =
-    stat(configs.length, 'Configurations') +
-    stat(configs.filter(function(c){return c.nb_tiroirs>0;}).length, 'Avec tiroirs') +
-    stat(configs.filter(function(c){return c.nb_vasques>1;}).length, 'Double vasque');
-
-  var pipEl = document.getElementById('pipeline-sdb');
-  if(pipEl) pipEl.innerHTML = buildPipelineHTML(configs, 'sdb');
-
-  var toolEl = document.getElementById('toolbar-sdb');
-  if(toolEl) toolEl.innerHTML = '<input type="search" id="search-sdb" class="crm-search" placeholder="Rechercher par nom ou email…"/>';
-
-  var wrap = document.getElementById('configsWrap-sdb');
-  if(!configs.length){
-    wrap.innerHTML='<div class="empty">Aucune configuration reçue pour l\'instant.</div>';
-    return;
-  }
-  var rows = configs.map(function(c,idx){
-    var ref='SDB-'+String(c.id||'').padStart(4,'0');
-    var cid = c.id || idx;
-    var noteVal = esc(getNotes('sdb', cid));
-    var viz3d = make3dUrl(c);
-    return '<div id="cfg-row-sdb-'+idx+'">'
-      +'<div class="cfg-row-sdb">'
-        +'<div class="cfg-num">'+(idx+1)+'</div>'
-        +'<div style="flex:1;min-width:0">'
-          +'<div class="cfg-name">'+esc(c.prenom)+' <span class="cfg-email">'+esc(c.email)+'</span></div>'
-          +'<div class="cfg-mat">'+ref+' · Meuble '+c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm · '+esc(c.meuble_mat)
-          +' &nbsp;|&nbsp; Plan '+c.plan_l+'×'+c.plan_p+' cm · '+esc(c.plan_mat)
-          +' &nbsp;|&nbsp; '+c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':'')+(c.vasque_label?' '+esc(c.vasque_label):'')
-          +(c.nb_tiroirs?' · '+c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''):'')
-          +(c.nb_portes?' · '+c.nb_portes+' porte'+(c.nb_portes>1?'s':''):'')+'</div>'
-        +'</div>'
-        +'<div class="cfg-date">'+fmtDate(c.created_at)+'</div>'
-        +statusSelect('sdb', cid)
-        +'<a href="'+viz3d+'" class="viz-btn" target="_blank">▶ 3D</a>'
-        +'<button class="fiche-btn" onclick="toggleFicheSdb('+idx+')">📋 Notes</button>'
-        +'<button class="fiche-btn" onclick="generatePDFSdb('+idx+')">📄 PDF</button>'
-      +'</div>'
-      +'<div id="fiche-row-sdb-'+idx+'" style="display:none;padding:12px 20px 16px;background:rgba(255,250,240,.5);border-bottom:1px solid rgba(26,26,26,.06)">'
-        +'<div class="crm-notes-lbl">Notes internes</div>'
-        +'<textarea class="crm-notes-ta" id="notes-sdb-'+cid+'" onblur="saveNotes(\'sdb\',\''+cid+'\',this,document.getElementById(\'notes-hint-sdb-'+cid+'\'))">'+noteVal+'</textarea>'
-        +'<div class="crm-notes-hint" id="notes-hint-sdb-'+cid+'"></div>'
-      +'</div>'
-      +'</div>';
-  }).join('');
-  wrap.innerHTML = rows;
-  setTimeout(function(){ initSearch('sdb'); }, 0);
-}
 
 function toggleFicheSdb(idx){
-  var row = document.getElementById('fiche-row-sdb-'+idx);
+  var row = document.getElementById('fiche-row-'+idx);
   if(!row) return;
   row.style.display = row.style.display==='none' ? '' : 'none';
 }
 window.toggleFicheSdb = toggleFicheSdb;
 
 function generatePDFSdb(idx){
-  var cfg = window._configsSDB[idx];
+  var cfg = (window._allConfigs[idx]||{})._raw;
   if(!cfg) return;
   var html = buildPDFHtmlSdb(cfg);
   var win = window.open('', '_blank', 'width=1000,height=800');
