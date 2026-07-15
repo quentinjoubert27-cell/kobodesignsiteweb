@@ -3289,6 +3289,7 @@ async function submitConfig(){
       body:JSON.stringify({
         prenom:prenom, email:email, message:message, botcheck:bot,
         config:{
+          furniture_type: currentFT,
           meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },
           plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10,

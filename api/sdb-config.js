@@ -44,6 +44,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Email invalide.' });
     if (body.botcheck) return res.status(200).json({ success: true });
 
+    const furniture_type = (cfg.furniture_type || 'sdb').toString().slice(0, 20);
     const meuble  = cfg.meuble  || {};
     const plan    = cfg.plan    || {};
     const vasques = cfg.vasques || {};
@@ -57,6 +58,7 @@ module.exports = async function handler(req, res) {
         email,
         message: message || null,
         // meuble
+        furniture_type,
         meuble_l: meuble.L || 0,
         meuble_h: meuble.H || 0,
         meuble_p: meuble.P || 0,

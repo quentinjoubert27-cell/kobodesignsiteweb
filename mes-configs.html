@@ -162,6 +162,8 @@
       font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;margin-left:4px}
     .tb-biblio{background:rgba(34,163,90,.1);color:#1a8a4a}
     .tb-sdb{background:rgba(37,99,235,.1);color:#2563EB}
+    .tb-tv{background:rgba(205,62,0,.1);color:#CD3E00}
+    .tb-dressing{background:rgba(180,83,9,.1);color:#b45309}
     .tb-mobilier{background:rgba(124,58,237,.1);color:#7C3AED}
   </style>
 </head>
@@ -231,13 +233,20 @@ window.changeStatus=changeStatus;
 
 // ── Types ────────────────────────────────────────
 var TYPE_META = {
-  biblio:  {label:'Bibliothèque', badgeClass:'tb-biblio'},
-  sdb:     {label:'Salle de bain',badgeClass:'tb-sdb'},
-  mobilier:{label:'Mobilier',     badgeClass:'tb-mobilier'},
+  biblio:   {label:'Bibliothèque',  badgeClass:'tb-biblio'},
+  sdb:      {label:'Salle de bain', badgeClass:'tb-sdb'},
+  tv:       {label:'Meuble TV',     badgeClass:'tb-tv'},
+  dressing: {label:'Dressing',      badgeClass:'tb-dressing'},
+  mobilier: {label:'Mobilier',      badgeClass:'tb-mobilier'},
 };
 
 function normalizeConfig(c, source){
-  var type = source==='biblio' ? 'biblio' : (c.plan_l>0&&c.nb_vasques>0 ? 'sdb' : 'mobilier');
+  var type;
+  if(source==='biblio') type='biblio';
+  else if(c.furniture_type && c.furniture_type!=='sdb') type=c.furniture_type;
+  else if(c.plan_l>0 && c.nb_vasques>0) type='sdb';
+  else if(c.furniture_type==='sdb') type='sdb';
+  else type='mobilier';
   var dims, mat, summary, vizUrl;
   if(source==='biblio'){
     dims=c.largeur+'×'+c.hauteur+'×'+c.profondeur+' cm'; mat=c.essence||'—';
@@ -257,7 +266,7 @@ function normalizeConfig(c, source){
     if(c.nb_tiroirs)     p.push(c.nb_tiroirs+' tiroir'+(c.nb_tiroirs>1?'s':''));
     if(type==='sdb')     p.push(c.nb_vasques+' vasque'+(c.nb_vasques>1?'s':''));
     summary=p.length?p.join(' · '):'Structure vide';
-    var pl={ft:'sdb',L:c.meuble_l,H:c.meuble_h,P:c.meuble_p,matLabel:c.meuble_mat,elements:Array.isArray(c.elements)?c.elements:[],plan:{L:c.plan_l,P:c.plan_p,Ep:c.plan_ep,matLabel:c.plan_mat},vasques:{nb:c.nb_vasques,W:c.vasque_w,D:c.vasque_d,label:c.vasque_label}};
+    var pl={ft:type,L:c.meuble_l,H:c.meuble_h,P:c.meuble_p,matLabel:c.meuble_mat,elements:Array.isArray(c.elements)?c.elements:[],plan:{L:c.plan_l,P:c.plan_p,Ep:c.plan_ep,matLabel:c.plan_mat},vasques:{nb:c.nb_vasques,W:c.vasque_w,D:c.vasque_d,label:c.vasque_label}};
     try{ vizUrl='/configurateur-test?c='+btoa(unescape(encodeURIComponent(JSON.stringify(pl)))); }catch(e){ vizUrl='/configurateur-test'; }
   }
   return {_type:type,_source:source,_raw:c,_rawId:c.id,created_at:c.created_at,prenom:c.prenom,email:c.email,message:c.message,dims:dims,mat:mat,summary:summary,vizUrl:vizUrl};
