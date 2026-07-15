@@ -1222,15 +1222,15 @@ function buildCaisson(){
         barGeo.rotateZ(Math.PI/2);
         var bm=new THREE.Mesh(barGeo,matBarre);
         bm.castShadow=true;
-        bm.position.set(xcmToLocal((sl+sr)/2), ycmToLocal(el.y_cm), -CP*0.25);
+        bm.position.set(xcmToLocal((sl+sr)/2), ycmToLocal(el.y_cm), 0);
         bm.userData.elemIdx=idx; caissonElemMeshes.push(bm); caissonGrp.add(bm);
         // Support gauche
         var supG=box(0.020,0.020,CP*0.5-0.014,matBarre);
-        supG.position.set(xcmToLocal(sl)+0.010, ycmToLocal(el.y_cm), -CP*0.25+0.014);
+        supG.position.set(xcmToLocal(sl)+0.010, ycmToLocal(el.y_cm), 0);
         caissonGrp.add(supG);
         // Support droit
         var supD=box(0.020,0.020,CP*0.5-0.014,matBarre);
-        supD.position.set(xcmToLocal(sr)-0.010, ycmToLocal(el.y_cm), -CP*0.25+0.014);
+        supD.position.set(xcmToLocal(sr)-0.010, ycmToLocal(el.y_cm), 0);
         caissonGrp.add(supD);
       }
     });
@@ -1398,7 +1398,7 @@ function buildCaisson2(){
       var barGeo2=new THREE.CylinderGeometry(0.014,0.014,barLen,16);
       barGeo2.rotateZ(Math.PI/2);
       var bm2b=new THREE.Mesh(barGeo2,matBarre2); bm2b.castShadow=true;
-      bm2b.position.set(xcmToLocal((sl+sr)/2), ycmToLocal(el.y_cm), -CP*0.25);
+      bm2b.position.set(xcmToLocal((sl+sr)/2), ycmToLocal(el.y_cm), 0);
       bm2b.userData.elemIdx=idx; caissonElemMeshes2.push(bm2b); caissonGrp2.add(bm2b);
     }
   });
