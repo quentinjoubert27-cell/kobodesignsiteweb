@@ -1087,14 +1087,14 @@ function buildCaisson(){
       var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
       var sw=(sr-sl)/100;
       var scx=xcmToLocal((sl+sr)/2);
-      var th=el.type==='shelf_simple'?ep*0.5:ep;
+      var th=ep;
       var m=box(sw,th,CP-ep,matElem);
       m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
     } else if(el.type==='separator'||el.type==='separator_simple'){
       var comp=getCompartment(el.y_cm,el.x_cm);
       var h=comp.height_cm/100; if(h<0.01) return;
-      var tw=el.type==='separator_simple'?ep*0.5:ep;
+      var tw=ep;
       var m=box(tw,h,CP-ep,matElem);
       m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
@@ -1263,14 +1263,14 @@ function buildCaisson2(){
       var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
       var sw=(sr-sl)/100;
       var scx=xcmToLocal((sl+sr)/2);
-      var th=el.type==='shelf_simple'?ep*0.5:ep;
+      var th=ep;
       var m=bx2(sw,th,CP-ep,matEl);
       m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes2.push(m); caissonGrp2.add(m);
     } else if(el.type==='separator'||el.type==='separator_simple'){
       var comp=getCompartment(el.y_cm,el.x_cm);
       var h=comp.height_cm/100; if(h<0.01) return;
-      var tw=el.type==='separator_simple'?ep*0.5:ep;
+      var tw=ep;
       var m=bx2(tw,h,CP-ep,matEl);
       m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes2.push(m); caissonGrp2.add(m);
@@ -1410,7 +1410,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
 
       if(el.type==='shelf'||el.type==='shelf_simple'){
         var sl=el.x_left_cm!==undefined?el.x_left_cm:0, sr=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
-        var sw=(sr-sl)/100, scx=xcm((sl+sr)/2), th=el.type==='shelf_simple'?ep2*0.5:ep2;
+        var sw=(sr-sl)/100, scx=xcm((sl+sr)/2), th=ep2;
         var m=box(sw,th,CP-ep2,matElem); m.position.set(scx,ycm(el.y_cm),-ep2/2);
         m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
 
@@ -1418,7 +1418,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         var bot=0,top=iHcm;
         compShelves.forEach(function(s){if(s<el.y_cm&&s>bot)bot=s;if(s>el.y_cm&&s<top)top=s;});
         var h=(top-bot)/100; if(h<0.01) return;
-        var tw=el.type==='separator_simple'?ep2*0.5:ep2;
+        var tw=ep2;
         var m=box(tw,h,CP-ep2,matElem); m.position.set(xcm(el.x_cm),ep2+(bot+top)/200,-ep2/2);
         m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
 
@@ -2049,7 +2049,7 @@ function updateCaissonGhost(e){
       var sr=el.x_right_cm!==undefined?el.x_right_cm:(getActiveCL()-2*EP)*100;
       return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay0.right_cm&&sr>bay0.left_cm;
     });
-    gW=bW0; gH=caissonType==='shelf_simple'?ep*0.5:ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
+    gW=bW0; gH=ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
   } else if(caissonType==='separator'||caissonType==='separator_simple'){
     var comp=getCompartment(hit.y_cm,hit.x_cm);
     if(comp.height_cm<1){clearCaissonGhost();return;}
@@ -2058,7 +2058,7 @@ function updateCaissonGhost(e){
       var ec=getCompartment(el.y_cm,el.x_cm);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     });
-    gW=caissonType==='separator_simple'?ep*0.5:ep; gH=comp.height_cm/100; gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
+    gW=ep; gH=comp.height_cm/100; gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
   } else {
     var comp2=getCompartment(hit.y_cm,hit.x_cm);
     var bay2=getBay(hit.x_cm,hit.y_cm);
