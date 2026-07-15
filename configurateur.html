@@ -2564,12 +2564,12 @@ cvs.addEventListener('pointerdown',function(e){
   if(S.step===1&&caissonEditMode){
     if(!isTouchEditDrag){
       editPickedEl=null; editPickedIdx=-1;
-      // Rafraîchir au moment du clic (couvre touch + cas où pointermove n'a pas encore tourné)
-      _updateHoverEl(getCaissonHit(e));
+      var _editHit=getCaissonHit(e);
+      _updateHoverEl(_editHit);
+      if(!_editHit){ controls.enabled=true; return; } // pas sur le meuble → orbite libre
       if(_hoverElIdx>=0){
         var pels=getActiveEls();
         var pel=pels[_hoverElIdx];
-        // Double-check : on ne ramasse que si l'élément est bien de la même famille que le type actif
         if(pel && _sameFamily(caissonType, pel.type)){
           pushUndo();
           editPickedEl=JSON.parse(JSON.stringify(pel));
