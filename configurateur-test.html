@@ -381,20 +381,6 @@ textarea.cfg-field{resize:vertical;min-height:72px}
           <div class="tc-spec">Caissons · Tiroirs · Niches</div>
         </button>
 
-        <button class="tc" onclick="selectFurnitureType('chambre')">
-          <div class="tc-svg">
-            <svg width="44" height="40" viewBox="0 0 44 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="1" y="1" width="42" height="20" rx="2"/>
-              <line x1="1" y1="25" x2="43" y2="25"/>
-              <rect x="1" y="25" width="42" height="14" rx="0"/>
-              <line x1="22" y1="25" x2="22" y2="39"/>
-              <line x1="5" y1="32" x2="18" y2="32"/>
-              <line x1="26" y1="32" x2="39" y2="32"/>
-            </svg>
-          </div>
-          <div class="tc-name">Chambre</div>
-          <div class="tc-spec">Tête de lit · Rangements</div>
-        </button>
 
       </div>
     </div>
@@ -2999,7 +2985,6 @@ function updatePosInfo(){
 var FT_CONFIGS = {
   biblio:  { label:'Bibliothèque',  sub:'Bibliothèque sur mesure',    panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[40,300,120], dimH:[80,240,200], dimP:[25,50,30],  cam:{pos:[0,0,3.6], tgt:[0,0,0]},    hasAngleOpt:false },
   tv:      { label:'Meuble TV',     sub:'Meuble TV sur mesure',        panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[80,300,150], dimH:[20,60,40],  dimP:[30,60,40],  cam:{pos:[0,-0.1,3.2], tgt:[0,-0.1,0]}, hasAngleOpt:false },
-  chambre: { label:'Chambre',       sub:'Meuble chambre sur mesure',   panels:['p1','p4'],                steps:['Dimensions','Envoyer'],               dimL:[60,300,120], dimH:[40,120,60], dimP:[30,60,40],  cam:{pos:[0,0,3.4], tgt:[0,0,0]},    hasAngleOpt:false },
   dressing:{ label:'Dressing',      sub:'Dressing sur mesure',         panels:['p1','pdressing','p4'],    steps:['Structure','Options','Envoyer'],       dimL:[80,500,200], dimH:[180,280,230],dimP:[50,80,60],  cam:{pos:[0,0.3,4.2], tgt:[0,0.2,0]},hasAngleOpt:false },
   sdb:     { label:'Salle de bain', sub:'Meuble salle de bain sur mesure',panels:['p1','p2','p3','p4'],   steps:['Meuble','Plan de travail','Vasque','Envoyer'], dimL:[40,220,120], dimH:[30,70,45],  dimP:[36,60,36],  cam:{pos:[-0.4,0.9,1.6],tgt:[0,0.25,0]},hasAngleOpt:false }
 };
