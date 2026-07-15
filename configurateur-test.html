@@ -3003,11 +3003,17 @@ var currentFT = null;
 var currentPanels = [];
 var step = 1;
 
+function showTypeOverlay(){
+  document.getElementById('type-overlay').style.display='flex';
+}
+window.addEventListener('popstate', function(){ showTypeOverlay(); });
+
 function selectFurnitureType(ft){
   currentFT = ft;
   var cfg = FT_CONFIGS[ft];
   currentPanels = cfg.panels;
   BIBLIO_MODE = (ft !== 'sdb');
+  history.pushState({ft:ft}, '');
 
   document.getElementById('logo-sub').textContent = cfg.sub;
   document.getElementById('type-overlay').style.display = 'none';
