@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>Admin — Kobo Design</title>
+  <meta name="robots" content="noindex, nofollow"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,800;0,900;1,300&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --accent: #CD3E00;
+      --bg: #FFFAF0;
+      --dark: #1A1A1A;
+      --mid: #F0EBE0;
+      --white: #fff;
+      --font: 'Poppins', sans-serif;
+      --ease: cubic-bezier(0.16,1,0.3,1);
+      --sidebar-w: 260px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--dark); min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    button { font-family: var(--font); cursor: pointer; }
+
+    /* ── AUTH ── */
+    .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--dark); padding: 24px; }
+    .auth-box { background: var(--bg); border-radius: 16px; padding: 48px; width: 100%; max-width: 400px; box-shadow: 0 24px 80px rgba(0,0,0,.4); }
+    .auth-logo { margin-bottom: 28px; }
+    .auth-logo svg { height: 32px; }
+    .auth-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .auth-title { font-size: 28px; font-weight: 900; letter-spacing: -.03em; margin-bottom: 28px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.5); margin-bottom: 6px; }
+    .form-input { width: 100%; padding: 12px 14px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 14px; background: var(--bg); transition: border-color .2s; }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-btn { width: 100%; padding: 14px; background: var(--accent); color: var(--white); border: none; border-radius: 8px; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; transition: background .2s; margin-top: 8px; }
+    .form-btn:hover { background: #a83200; }
+    .auth-error { font-size: 12px; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; display: none; }
+    .auth-error.show { display: block; }
+
+    /* ── LAYOUT ── */
+    .app { display: none; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--dark); padding: 28px 20px; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
+    .sidebar-logo { margin-bottom: 32px; }
+    .sidebar-logo svg { height: 28px; }
+    .sidebar-badge { display: inline-block; margin-top: 6px; font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); background: rgba(205,62,0,.15); padding: 3px 8px; border-radius: 100px; }
+    .nav-label { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,250,240,.2); padding: 0 10px; margin: 20px 0 6px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; font-size: 13px; color: rgba(255,250,240,.5); transition: background .2s, color .2s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+    .nav-item:hover { background: rgba(255,250,240,.06); color: rgba(255,250,240,.85); }
+    .nav-item.active { background: var(--accent); color: #fff; font-weight: 600; }
+    .nav-badge { margin-left: auto; background: #ef4444; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 100px; min-width: 18px; text-align: center; }
+    .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,250,240,.07); }
+    .sidebar-admin { font-size: 11px; color: rgba(255,250,240,.3); margin-bottom: 12px; }
+    .btn-logout { width: 100%; padding: 9px; border: 1.5px solid rgba(255,250,240,.1); border-radius: 6px; background: none; color: rgba(255,250,240,.35); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; transition: border-color .2s, color .2s; }
+    .btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Main */
+    .main { margin-left: var(--sidebar-w); padding: 40px 48px; min-height: 100vh; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .view-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+    .view-title-wrap {}
+    .view-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .view-title { font-size: clamp(22px,3vw,34px); font-weight: 900; letter-spacing: -.03em; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; border: none; transition: background .2s, transform .1s; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #a83200; }
+    .btn-ghost { background: transparent; color: var(--dark); border: 1.5px solid rgba(26,26,26,.15); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 7px 12px; font-size: 11px; }
+    .btn-danger { background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; }
+    .btn-danger:hover { background: #dc2626; color: #fff; }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 32px; }
+    .stat { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; padding: 20px; }
+    .stat__label { font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 6px; }
+    .stat__val { font-size: 30px; font-weight: 900; letter-spacing: -.03em; }
+
+    /* Table */
+    .table-wrap { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(26,26,26,.4); padding: 14px 20px; text-align: left; border-bottom: 1px solid rgba(26,26,26,.06); }
+    tbody tr { border-bottom: 1px solid rgba(26,26,26,.04); transition: background .15s; cursor: pointer; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(205,62,0,.03); }
+    td { padding: 14px 20px; font-size: 13px; vertical-align: middle; }
+    td.td-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* Status badge */
+    .sbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; padding: 4px 9px; border-radius: 100px; white-space: nowrap; }
+    .sbadge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+    .sb-etude { background: #fef3c7; color: #92400e; } .sb-etude::before { background: #f59e0b; }
+    .sb-fabrication { background: #dbeafe; color: #1e40af; } .sb-fabrication::before { background: #3b82f6; }
+    .sb-livraison { background: #dcfce7; color: #166534; } .sb-livraison::before { background: #22c55e; }
+    .sb-termine { background: var(--mid); color: rgba(26,26,26,.45); } .sb-termine::before { background: rgba(26,26,26,.25); }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(26,26,26,.55); backdrop-filter: blur(4px); z-index: 500; display: none; align-items: center; justify-content: center; padding: 24px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--bg); border-radius: 16px; padding: 36px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,.25); }
+    .modal-title { font-size: 20px; font-weight: 900; letter-spacing: -.02em; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
+    .modal-sep { height: 1px; background: rgba(26,26,26,.07); margin: 20px 0; }
+
+    /* Form elements inside modal */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.45); margin-bottom: 6px; }
+    .field input, .field select, .field textarea { width: 100%; padding: 11px 13px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--white); transition: border-color .2s; }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Client detail panel */
+    .detail-panel { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+    .detail-panel h3 { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 16px; }
+
+    /* Messages */
+    .msg-thread { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 4px 0 16px; }
+    .msg { max-width: 78%; }
+    .msg--client { align-self: flex-start; }
+    .msg--kobo { align-self: flex-end; }
+    .msg__bubble { padding: 11px 15px; border-radius: 12px; font-size: 13px; font-weight: 300; line-height: 1.6; }
+    .msg--client .msg__bubble { background: var(--mid); border-radius: 12px 12px 12px 2px; }
+    .msg--kobo .msg__bubble { background: var(--accent); color: #fff; border-radius: 12px 12px 2px 12px; }
+    .msg__meta { font-size: 10px; color: rgba(26,26,26,.35); margin-top: 4px; }
+    .msg--kobo .msg__meta { text-align: right; }
+    .msg-compose { display: flex; gap: 10px; margin-top: 12px; }
+    .msg-compose textarea { flex: 1; padding: 10px 13px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--bg); resize: none; height: 42px; }
+    .msg-compose textarea:focus { outline: none; border-color: var(--accent); }
+
+    /* Documents */
+    .doc-item { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border: 1px solid rgba(26,26,26,.07); border-radius: 9px; margin-bottom: 8px; transition: border-color .15s; }
+    .doc-item:hover { border-color: rgba(205,62,0,.3); }
+    .doc-icon { width: 36px; height: 36px; background: rgba(205,62,0,.08); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .doc-info { flex: 1; min-width: 0; }
+    .doc-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-meta { font-size: 11px; color: rgba(26,26,26,.4); }
+    .doc-by-client { border-left: 3px solid #3b82f6; }
+
+    /* Upload area */
+    .upload-area { border: 2px dashed rgba(26,26,26,.15); border-radius: 10px; padding: 28px; text-align: center; transition: border-color .2s, background .2s; cursor: pointer; }
+    .upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: rgba(205,62,0,.03); }
+    .upload-area p { font-size: 13px; color: rgba(26,26,26,.45); margin-top: 8px; }
+
+    /* Progress */
+    .progress-bar { height: 4px; background: var(--mid); border-radius: 100px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 100px; transition: width .4s var(--ease); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--dark); color: var(--bg); padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; z-index: 9999; transform: translateY(80px); opacity: 0; transition: transform .3s var(--ease), opacity .3s; pointer-events: none; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.ok { border-left: 3px solid #22c55e; }
+    .toast.err { border-left: 3px solid #ef4444; }
+
+    /* Empty */
+    .empty { text-align: center; padding: 40px 24px; color: rgba(26,26,26,.3); font-size: 13px; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: rgba(26,26,26,.3); font-size: 13px; }
+
+    /* Client card in list */
+    .client-row td:first-child { font-weight: 600; }
+    .unread-dot { display: inline-block; width: 7px; height: 7px; background: var(--accent); border-radius: 50%; margin-left: 8px; vertical-align: middle; }
+
+    /* Back link */
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 20px; cursor: pointer; border: none; background: none; padding: 0; transition: color .2s; }
+    .back-link:hover { color: var(--accent); }
+
+    @media (max-width: 900px) {
+      .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; padding: 14px; }
+      .main { margin-left: 0; padding: 20px 16px; }
+      .sidebar-footer { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     AUTH
+═══════════════════════════════════════════ -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <svg viewBox="0 0 140 48" fill="none">
+        <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+        <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+        <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+        <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
+        <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <p class="auth-eyebrow">Administration</p>
+    <h2 class="auth-title">Espace admin</h2>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="form-group">
+      <label class="form-label" for="a-email">Email</label>
+      <input class="form-input" type="email" id="a-email" placeholder="admin@kobo-design.fr" autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="a-pw">Mot de passe</label>
+      <input class="form-input" type="password" id="a-pw" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') adminLogin()"/>
+    </div>
+    <button class="form-btn" onclick="adminLogin()">Accéder →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     APP
+═══════════════════════════════════════════ -->
+<div class="app" id="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 140 48" fill="none">
+        <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+        <line x1="36" y1="10" x2="48" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+        <path d="M62 6v36" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+        <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
+        <line x1="101" y1="10" x2="113" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <div class="sidebar-badge">Admin</div>
+    </div>
+
+    <div class="nav-label">Navigation</div>
+    <button class="nav-item active" onclick="showView('dashboard', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Tableau de bord
+    </button>
+    <button class="nav-item" onclick="showView('clients', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Clients
+    </button>
+    <button class="nav-item" onclick="showView('projets', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Projets
+    </button>
+    <button class="nav-item" onclick="showView('messages-view', this)" id="nav-msgs">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Messages
+      <span class="nav-badge" id="nav-unread" style="display:none"></span>
+    </button>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-admin" id="admin-email-label"></div>
+      <button class="btn-logout" onclick="adminLogout()">Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="view active" id="view-dashboard">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Vue globale</p>
+          <h1 class="view-title">Tableau de bord</h1>
+        </div>
+        <button class="btn btn-primary" onclick="openModalNewProjet()">+ Nouveau projet</button>
+      </div>
+      <div class="stats-row" id="dash-stats">
+        <div class="stat"><div class="stat__label">Clients</div><div class="stat__val" id="ds-clients">—</div></div>
+        <div class="stat"><div class="stat__label">Projets actifs</div><div class="stat__val" id="ds-projets">—</div></div>
+        <div class="stat"><div class="stat__label">Messages non lus</div><div class="stat__val" id="ds-msgs">—</div></div>
+        <div class="stat"><div class="stat__label">Documents envoyés</div><div class="stat__val" id="ds-docs">—</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Projet récent</th><th>Statut</th><th>Dernier message</th><th></th></tr></thead>
+          <tbody id="dash-table"><tr><td colspan="5" class="loading">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CLIENTS ── -->
+    <div class="view" id="view-clients">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Gestion</p>
+          <h1 class="view-title">Clients</h1>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <input type="search" id="client-search" placeholder="Rechercher…" style="padding:9px 13px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;width:200px;" oninput="filterClients()"/>
+          <button class="btn btn-primary" onclick="openModalNewClient()">+ Nouveau client</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Projets</th><th>Inscrit le</th><th></th></tr></thead>
+          <tbody id="clients-table"><tr><td colspan="6" class="loading">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CLIENT DETAIL ── -->
+    <div class="view" id="view-client-detail">
+      <button class="back-link" onclick="showView('clients', document.querySelector('.nav-item:nth-child(3)'))">
+        ← Tous les clients
+      </button>
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Fiche client</p>
+          <h1 class="view-title" id="cd-name">—</h1>
+        </div>
+        <button class="btn btn-primary" onclick="openModalNewProjetForClient()">+ Nouveau projet</button>
+      </div>
+      <div id="cd-projets"></div>
+    </div>
+
+    <!-- ── PROJETS ── -->
+    <div class="view" id="view-projets">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Suivi</p>
+          <h1 class="view-title">Tous les projets</h1>
+        </div>
+        <button class="btn btn-primary" onclick="openModalNewProjet()">+ Nouveau projet</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Projet</th><th>Client</th><th>Statut</th><th>Créé le</th><th></th></tr></thead>
+          <tbody id="projets-table"><tr><td colspan="5" class="loading">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── MESSAGES ── -->
+    <div class="view" id="view-messages-view">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Communication</p>
+          <h1 class="view-title">Messages</h1>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;">
+        <!-- Liste projets -->
+        <div class="table-wrap" style="overflow:hidden;">
+          <div id="msg-projet-list" style="max-height:600px;overflow-y:auto;"></div>
+        </div>
+        <!-- Thread -->
+        <div class="detail-panel" id="msg-thread-panel" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="margin:0;" id="msg-thread-title">—</h3>
+          </div>
+          <div class="msg-thread" id="msg-thread"></div>
+          <div class="msg-compose">
+            <textarea id="msg-reply" placeholder="Répondre…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="sendReply()">Envoyer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════ -->
+
+<!-- Nouveau projet -->
+<div class="modal-overlay" id="modal-projet">
+  <div class="modal">
+    <h2 class="modal-title">Nouveau projet</h2>
+    <div class="field">
+      <label>Client</label>
+      <select id="np-client"></select>
+    </div>
+    <div class="field">
+      <label>Nom du projet</label>
+      <input type="text" id="np-nom" placeholder="Bibliothèque salon"/>
+    </div>
+    <div class="field">
+      <label>Description (optionnel)</label>
+      <textarea id="np-desc" placeholder="Détails du projet…"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Type</label>
+        <select id="np-type">
+          <option value="mobilier">Mobilier</option>
+          <option value="biblio">Bibliothèque</option>
+          <option value="dressing">Dressing</option>
+          <option value="tv">Meuble TV</option>
+          <option value="sdb">Salle de bain</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Statut</label>
+        <select id="np-statut">
+          <option value="En étude">En étude</option>
+          <option value="Fabrication">Fabrication</option>
+          <option value="Livraison">Livraison</option>
+          <option value="Terminé">Terminé</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-projet')">Annuler</button>
+      <button class="btn btn-primary" onclick="createProjet()">Créer le projet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nouveau client -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <h2 class="modal-title">Nouveau client</h2>
+    <div class="field-row">
+      <div class="field"><label>Prénom</label><input type="text" id="nc-prenom" placeholder="Jean"/></div>
+      <div class="field"><label>Nom</label><input type="text" id="nc-nom" placeholder="Dupont"/></div>
+    </div>
+    <div class="field"><label>Email</label><input type="email" id="nc-email" placeholder="jean@exemple.fr"/></div>
+    <div class="field"><label>Téléphone (optionnel)</label><input type="tel" id="nc-tel" placeholder="+33 6 12 34 56 78"/></div>
+    <div class="field"><label>Mot de passe temporaire</label><input type="text" id="nc-pw" placeholder="Minimum 8 caractères"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-client')">Annuler</button>
+      <button class="btn btn-primary" onclick="createClient()">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- Projet détail / documents / messages -->
+<div class="modal-overlay" id="modal-projet-detail">
+  <div class="modal" style="max-width:640px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <h2 class="modal-title" id="pd-title" style="margin:0;">—</h2>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-projet-detail')" style="padding:6px 10px;">✕</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:24px;flex-wrap:wrap;">
+      <select id="pd-statut" onchange="updateProjetStatut()" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
+        <option value="En étude">En étude</option>
+        <option value="Fabrication">Fabrication</option>
+        <option value="Livraison">Livraison</option>
+        <option value="Terminé">Terminé</option>
+      </select>
+      <button class="btn btn-danger btn-sm" onclick="deleteProjet()">Supprimer</button>
+    </div>
+
+    <!-- Documents -->
+    <h3 style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:14px;">Documents</h3>
+    <div id="pd-docs"></div>
+
+    <!-- Upload -->
+    <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="this.classList.remove('dragover')">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <p>Glissez un fichier ici ou cliquez pour sélectionner<br><span style="font-size:11px;opacity:.6;">PDF, images, DWG…</span></p>
+    </div>
+    <input type="file" id="file-input" style="display:none;" onchange="handleFileSelect(this)"/>
+
+    <div class="field" style="margin-top:12px;">
+      <label>Type de document</label>
+      <select id="doc-type-select">
+        <option value="Devis">Devis</option>
+        <option value="Plan">Plan</option>
+        <option value="Facture">Facture</option>
+        <option value="Bon de commande">Bon de commande</option>
+        <option value="Document">Autre document</option>
+      </select>
+    </div>
+
+    <div style="display:none;margin-top:8px;" id="upload-progress-wrap">
+      <div style="font-size:11px;color:rgba(26,26,26,.45);margin-bottom:4px;" id="upload-progress-label">Upload…</div>
+      <div class="progress-bar"><div class="progress-fill" id="upload-progress-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="modal-sep"></div>
+
+    <!-- Messages -->
+    <h3 style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:14px;">Messages avec le client</h3>
+    <div class="msg-thread" id="pd-msgs"></div>
+    <div class="msg-compose" style="margin-top:12px;">
+      <textarea id="pd-reply" placeholder="Répondre au client…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromDetail();}"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="sendReplyFromDetail()">Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── CONFIG ────────────────────────────────────────────────────────
+  const SUPABASE_URL = 'https://odbkmtuoflpfzgcrzsrl.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_2krwuNXKJCHMSJvnnp9tOQ_mkz6Bxaj';
+  const ADMIN_EMAILS = ['quentin.joubert@icloud.com'];
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let adminUser = null;
+  let allClients = [];
+  let allProjets = [];
+  let currentProjetId = null;
+  let currentClientId = null;
+  let selectedFile = null;
+  let activeProjetIdForMsg = null;
+
+  // ── INIT ──────────────────────────────────────────────────────────
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && ADMIN_EMAILS.includes(session.user.email)) {
+      adminUser = session.user;
+      showApp();
+    }
+    sb.auth.onAuthStateChange((_, session) => {
+      if (session && ADMIN_EMAILS.includes(session.user.email)) {
+        adminUser = session.user;
+        showApp();
+      } else if (!session) {
+        showLogin();
+      }
+    });
+  })();
+
+  // ── AUTH ──────────────────────────────────────────────────────────
+  async function adminLogin() {
+    const email = document.getElementById('a-email').value.trim();
+    const pw = document.getElementById('a-pw').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.classList.remove('show');
+    if (!email || !pw) { errEl.textContent = 'Remplissez tous les champs.'; errEl.classList.add('show'); return; }
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error || !ADMIN_EMAILS.includes(email)) {
+      await sb.auth.signOut();
+      errEl.textContent = 'Accès non autorisé.';
+      errEl.classList.add('show');
+    }
+  }
+
+  async function adminLogout() {
+    await sb.auth.signOut();
+    showLogin();
+  }
+
+  function showLogin() {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+
+  function showApp() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('admin-email-label').textContent = adminUser.email;
+    loadDashboard();
+    loadClients();
+    loadProjets();
+    loadUnreadCount();
+  }
+
+  // ── NAVIGATION ────────────────────────────────────────────────────
+  function showView(id, btn) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('view-'+id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (id === 'messages-view') loadMessagesView();
+  }
+
+  // ── DASHBOARD ─────────────────────────────────────────────────────
+  async function loadDashboard() {
+    const [
+      { count: cc },
+      { count: pc },
+      { count: mc },
+      { count: dc }
+    ] = await Promise.all([
+      sb.from('clients').select('*', {count:'exact',head:true}),
+      sb.from('projets').select('*', {count:'exact',head:true}).neq('statut','Terminé'),
+      sb.from('messages').select('*', {count:'exact',head:true}).eq('lu',false).eq('expediteur','client'),
+      sb.from('documents').select('*', {count:'exact',head:true}).eq('uploade_par','kobo')
+    ]);
+    document.getElementById('ds-clients').textContent = cc || 0;
+    document.getElementById('ds-projets').textContent = pc || 0;
+    document.getElementById('ds-msgs').textContent = mc || 0;
+    document.getElementById('ds-docs').textContent = dc || 0;
+
+    // Tableau récent
+    const { data: projets } = await sb.from('projets')
+      .select('*, clients(prenom, nom)')
+      .order('updated_at', {ascending:false})
+      .limit(10);
+    const tbody = document.getElementById('dash-table');
+    if (!projets || projets.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun projet.</td></tr>'; return; }
+    tbody.innerHTML = projets.map(p => `
+      <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')" style="cursor:pointer;">
+        <td>${p.clients ? p.clients.prenom + ' ' + p.clients.nom : '—'}</td>
+        <td style="font-weight:600;">${escHtml(p.nom)}</td>
+        <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span></td>
+        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(p.updated_at||p.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openProjetDetail('${p.id}','${escHtml(p.nom)}')">Ouvrir</button></td>
+      </tr>`).join('');
+  }
+
+  // ── CLIENTS ───────────────────────────────────────────────────────
+  async function loadClients() {
+    const { data } = await sb.from('clients').select('*, projets(id)').order('created_at', {ascending:false});
+    allClients = data || [];
+    renderClientsTable(allClients);
+  }
+
+  function renderClientsTable(list) {
+    const tbody = document.getElementById('clients-table');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun client.</td></tr>'; return; }
+    tbody.innerHTML = list.map(c => `
+      <tr class="client-row" onclick="openClientDetail('${c.id}')">
+        <td>${escHtml(c.prenom)} ${escHtml(c.nom)}</td>
+        <td style="color:rgba(26,26,26,.55);">${escHtml(c.email||'')}</td>
+        <td style="color:rgba(26,26,26,.55);">${escHtml(c.telephone||'—')}</td>
+        <td>${(c.projets||[]).length}</td>
+        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openClientDetail('${c.id}')">Voir</button></td>
+      </tr>`).join('');
+  }
+
+  function filterClients() {
+    const q = document.getElementById('client-search').value.toLowerCase();
+    renderClientsTable(allClients.filter(c =>
+      (c.prenom+' '+c.nom+' '+c.email).toLowerCase().includes(q)
+    ));
+  }
+
+  async function openClientDetail(clientId) {
+    currentClientId = clientId;
+    const client = allClients.find(c => c.id === clientId) || {};
+    document.getElementById('cd-name').textContent = client.prenom + ' ' + client.nom;
+    showView('client-detail', null);
+
+    const { data: projets } = await sb.from('projets').select('*').eq('client_id', clientId).order('created_at',{ascending:false});
+    const container = document.getElementById('cd-projets');
+    if (!projets || projets.length === 0) {
+      container.innerHTML = '<div class="empty">Aucun projet pour ce client. Créez-en un !</div>';
+      return;
+    }
+    container.innerHTML = projets.map(p => `
+      <div class="detail-panel" style="cursor:pointer;" onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-weight:800;font-size:16px;margin-bottom:6px;">${escHtml(p.nom)}</div>
+            ${p.description ? `<div style="font-size:13px;color:rgba(26,26,26,.5);margin-bottom:10px;">${escHtml(p.description)}</div>` : ''}
+          </div>
+          <span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span>
+        </div>
+        <div style="font-size:11px;color:rgba(26,26,26,.35);">Créé le ${new Date(p.created_at).toLocaleDateString('fr-FR')}</div>
+      </div>`).join('');
+  }
+
+  // ── PROJETS ───────────────────────────────────────────────────────
+  async function loadProjets() {
+    const { data } = await sb.from('projets').select('*, clients(prenom, nom)').order('created_at',{ascending:false});
+    allProjets = data || [];
+    const tbody = document.getElementById('projets-table');
+    if (!allProjets.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun projet.</td></tr>'; return; }
+    tbody.innerHTML = allProjets.map(p => `
+      <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')" style="cursor:pointer;">
+        <td style="font-weight:600;">${escHtml(p.nom)}</td>
+        <td>${p.clients ? p.clients.prenom + ' ' + p.clients.nom : '—'}</td>
+        <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span></td>
+        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openProjetDetail('${p.id}','${escHtml(p.nom)}')">Ouvrir</button></td>
+      </tr>`).join('');
+  }
+
+  // ── PROJET DETAIL MODAL ───────────────────────────────────────────
+  async function openProjetDetail(projetId, nom) {
+    currentProjetId = projetId;
+    document.getElementById('pd-title').textContent = nom;
+    document.getElementById('modal-projet-detail').classList.add('open');
+
+    const projet = allProjets.find(p => p.id === projetId);
+    if (projet) document.getElementById('pd-statut').value = projet.statut;
+
+    await Promise.all([loadProjetDocs(), loadProjetMsgs()]);
+  }
+
+  async function loadProjetDocs() {
+    const { data: docs } = await sb.from('documents').select('*').eq('projet_id', currentProjetId).order('created_at',{ascending:false});
+    const container = document.getElementById('pd-docs');
+    if (!docs || docs.length === 0) { container.innerHTML = '<div class="empty" style="padding:16px 0;">Aucun document.</div>'; return; }
+    container.innerHTML = docs.map(d => `
+      <div class="doc-item ${d.uploade_par==='client'?'doc-by-client':''}">
+        <div class="doc-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#CD3E00" stroke-width="1.6"/><polyline points="14 2 14 8 20 8" stroke="#CD3E00" stroke-width="1.6"/></svg>
+        </div>
+        <div class="doc-info">
+          <div class="doc-name">${escHtml(d.nom)}</div>
+          <div class="doc-meta">${d.type} · ${d.uploade_par==='client'?'Envoyé par le client':'Kobo Design'} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}${d.taille_kb?' · '+formatSize(d.taille_kb):''}</div>
+        </div>
+        <a href="${d.url}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
+      </div>`).join('');
+  }
+
+  async function loadProjetMsgs() {
+    await sb.from('messages').update({lu:true}).eq('projet_id', currentProjetId).eq('expediteur','client');
+    const { data: msgs } = await sb.from('messages').select('*').eq('projet_id', currentProjetId).order('created_at',{ascending:true});
+    renderMsgThread('pd-msgs', msgs || []);
+    loadUnreadCount();
+  }
+
+  function renderMsgThread(containerId, msgs) {
+    const el = document.getElementById(containerId);
+    if (!msgs.length) { el.innerHTML = '<div class="empty" style="padding:16px 0;">Aucun message.</div>'; return; }
+    el.innerHTML = msgs.map(m => `
+      <div class="msg msg--${m.expediteur}">
+        <div class="msg__bubble">${escHtml(m.contenu)}</div>
+        <div class="msg__meta">${m.expediteur==='client'?'Client':'Kobo Design'} · ${new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  async function sendReplyFromDetail() {
+    const input = document.getElementById('pd-reply');
+    const contenu = input.value.trim();
+    if (!contenu || !currentProjetId) return;
+    input.value = '';
+    const { error } = await sb.from('messages').insert([{projet_id: currentProjetId, expediteur:'kobo', contenu, lu:true}]);
+    if (!error) await loadProjetMsgs();
+    else showToast('Erreur envoi message', 'err');
+  }
+
+  async function updateProjetStatut() {
+    const statut = document.getElementById('pd-statut').value;
+    const { error } = await sb.from('projets').update({statut, updated_at: new Date().toISOString()}).eq('id', currentProjetId);
+    if (!error) { showToast('Statut mis à jour'); await loadProjets(); await loadDashboard(); }
+    else showToast('Erreur mise à jour', 'err');
+  }
+
+  async function deleteProjet() {
+    if (!confirm('Supprimer ce projet ? Cette action est irréversible.')) return;
+    await sb.from('projets').delete().eq('id', currentProjetId);
+    closeModal('modal-projet-detail');
+    showToast('Projet supprimé');
+    await Promise.all([loadProjets(), loadDashboard()]);
+  }
+
+  // ── UPLOAD DOCUMENTS ─────────────────────────────────────────────
+  function dragOver(e) { e.preventDefault(); document.getElementById('upload-area').classList.add('dragover'); }
+  function dropFile(e) {
+    e.preventDefault();
+    document.getElementById('upload-area').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) uploadFile(file);
+  }
+  function handleFileSelect(input) {
+    if (input.files[0]) uploadFile(input.files[0]);
+    input.value = '';
+  }
+
+  async function uploadFile(file) {
+    if (!currentProjetId) return showToast('Aucun projet sélectionné', 'err');
+    const type = document.getElementById('doc-type-select').value;
+    const ext = file.name.split('.').pop();
+    const path = `${currentProjetId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+
+    const pw = document.getElementById('upload-progress-wrap');
+    const pb = document.getElementById('upload-progress-bar');
+    const pl = document.getElementById('upload-progress-label');
+    pw.style.display = 'block';
+    pl.textContent = `Upload de ${file.name}…`;
+    pb.style.width = '20%';
+
+    const { data: upData, error: upErr } = await sb.storage.from('documents-client').upload(path, file, {upsert:true});
+    pb.style.width = '70%';
+    if (upErr) { pw.style.display='none'; showToast('Erreur upload: '+upErr.message,'err'); return; }
+
+    const { data: urlData } = sb.storage.from('documents-client').getPublicUrl(path);
+    pb.style.width = '90%';
+
+    const { error: dbErr } = await sb.from('documents').insert([{
+      projet_id: currentProjetId,
+      nom: file.name,
+      type,
+      url: urlData.publicUrl,
+      taille_kb: Math.round(file.size / 1024),
+      uploade_par: 'kobo'
+    }]);
+
+    pb.style.width = '100%';
+    setTimeout(() => { pw.style.display = 'none'; pb.style.width = '0%'; }, 800);
+
+    if (dbErr) { showToast('Erreur enregistrement', 'err'); return; }
+    showToast('Document uploadé !');
+    await loadProjetDocs();
+    await loadDashboard();
+  }
+
+  // ── MESSAGES VIEW ─────────────────────────────────────────────────
+  async function loadMessagesView() {
+    const { data: projets } = await sb.from('projets').select('*, clients(prenom, nom), messages(id, lu, expediteur)').order('updated_at',{ascending:false});
+    const container = document.getElementById('msg-projet-list');
+    if (!projets || !projets.length) { container.innerHTML = '<div class="empty">Aucun projet.</div>'; return; }
+    container.innerHTML = projets.map(p => {
+      const unread = (p.messages||[]).filter(m => !m.lu && m.expediteur==='client').length;
+      return `<div onclick="openMsgThread('${p.id}','${escHtml(p.nom)}')" style="padding:14px 16px;border-bottom:1px solid rgba(26,26,26,.06);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(205,62,0,.03)'" onmouseout="this.style.background=''">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:13px;font-weight:${unread?700:400};">${escHtml(p.nom)}</div>
+          ${unread?`<span class="nav-badge">${unread}</span>`:''}
+        </div>
+        <div style="font-size:11px;color:rgba(26,26,26,.4);margin-top:3px;">${p.clients?p.clients.prenom+' '+p.clients.nom:'—'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function openMsgThread(projetId, nom) {
+    activeProjetIdForMsg = projetId;
+    document.getElementById('msg-thread-title').textContent = nom;
+    document.getElementById('msg-thread-panel').style.display = 'block';
+    await sb.from('messages').update({lu:true}).eq('projet_id', projetId).eq('expediteur','client');
+    const { data: msgs } = await sb.from('messages').select('*').eq('projet_id', projetId).order('created_at',{ascending:true});
+    renderMsgThread('msg-thread', msgs||[]);
+    loadUnreadCount();
+    loadMessagesView();
+  }
+
+  async function sendReply() {
+    if (!activeProjetIdForMsg) return;
+    const input = document.getElementById('msg-reply');
+    const contenu = input.value.trim();
+    if (!contenu) return;
+    input.value = '';
+    await sb.from('messages').insert([{projet_id: activeProjetIdForMsg, expediteur:'kobo', contenu, lu:true}]);
+    await openMsgThread(activeProjetIdForMsg, document.getElementById('msg-thread-title').textContent);
+  }
+
+  // ── MODALS ────────────────────────────────────────────────────────
+  function openModalNewProjet() {
+    populateClientSelect('np-client');
+    document.getElementById('np-nom').value = '';
+    document.getElementById('np-desc').value = '';
+    document.getElementById('modal-projet').classList.add('open');
+  }
+
+  function openModalNewProjetForClient() {
+    populateClientSelect('np-client', currentClientId);
+    document.getElementById('np-nom').value = '';
+    document.getElementById('np-desc').value = '';
+    document.getElementById('modal-projet').classList.add('open');
+  }
+
+  function openModalNewClient() {
+    ['nc-prenom','nc-nom','nc-email','nc-tel','nc-pw'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('modal-client').classList.add('open');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    currentProjetId = null;
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+  });
+
+  function populateClientSelect(selectId, preselectId) {
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = allClients.map(c => `<option value="${c.id}" ${c.id===preselectId?'selected':''}>${escHtml(c.prenom)} ${escHtml(c.nom)}</option>`).join('');
+  }
+
+  async function createProjet() {
+    const client_id = document.getElementById('np-client').value;
+    const nom = document.getElementById('np-nom').value.trim();
+    const description = document.getElementById('np-desc').value.trim();
+    const type = document.getElementById('np-type').value;
+    const statut = document.getElementById('np-statut').value;
+    if (!client_id || !nom) return showToast('Client et nom obligatoires', 'err');
+    const { error } = await sb.from('projets').insert([{client_id, nom, description: description||null, type, statut}]);
+    if (error) return showToast('Erreur création: '+error.message, 'err');
+    showToast('Projet créé !');
+    closeModal('modal-projet');
+    await Promise.all([loadProjets(), loadDashboard(), loadClients()]);
+    if (currentClientId) openClientDetail(currentClientId);
+  }
+
+  async function createClient() {
+    const prenom = document.getElementById('nc-prenom').value.trim();
+    const nom = document.getElementById('nc-nom').value.trim();
+    const email = document.getElementById('nc-email').value.trim();
+    const telephone = document.getElementById('nc-tel').value.trim();
+    const pw = document.getElementById('nc-pw').value;
+    if (!prenom || !nom || !email || !pw) return showToast('Tous les champs obligatoires', 'err');
+    if (pw.length < 8) return showToast('Mot de passe trop court', 'err');
+
+    const { data, error } = await sb.auth.admin?.createUser
+      ? await sb.auth.admin.createUser({ email, password: pw, email_confirm: true })
+      : await sb.auth.signUp({ email, password: pw });
+
+    if (error) return showToast('Erreur: '+error.message, 'err');
+
+    const userId = data?.user?.id;
+    if (userId) {
+      await sb.from('clients').upsert({ id: userId, prenom, nom, email, telephone: telephone||null });
+    }
+    showToast('Client créé !');
+    closeModal('modal-client');
+    await loadClients();
+    await loadDashboard();
+  }
+
+  // ── UNREAD COUNT ──────────────────────────────────────────────────
+  async function loadUnreadCount() {
+    const { count } = await sb.from('messages').select('*',{count:'exact',head:true}).eq('lu',false).eq('expediteur','client');
+    const badge = document.getElementById('nav-unread');
+    if (count && count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
+    else { badge.style.display = 'none'; }
+    document.getElementById('ds-msgs').textContent = count || 0;
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────────────
+  function statusKey(s) {
+    const m = {'En étude':'etude','Fabrication':'fabrication','Livraison':'livraison','Terminé':'termine'};
+    return m[s] || 'etude';
+  }
+
+  function escHtml(str) {
+    return String(str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function formatSize(kb) {
+    if (kb < 1000) return kb + ' Ko';
+    return (kb/1024).toFixed(1) + ' Mo';
+  }
+
+  function showToast(msg, type='ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 3000);
+  }
+</script>
+</body>
+</html>

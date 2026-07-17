@@ -379,6 +379,27 @@
         <option value="">Tous les projets</option>
       </select>
       <div id="documents-list"><div class="loading">Chargement...</div></div>
+
+      <!-- Upload client -->
+      <div style="margin-top:24px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:12px;">Envoyer un document à Kobo</div>
+        <select class="project-select" id="upload-project-select" style="margin-bottom:10px;">
+          <option value="">Choisir un projet…</option>
+        </select>
+        <div id="upload-area-client" onclick="document.getElementById('client-file-input').click()"
+          style="border:2px dashed rgba(26,26,26,.15);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;"
+          ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+          ondragleave="this.style.borderColor=''"
+          ondrop="handleClientDrop(event)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p style="font-size:13px;color:rgba(26,26,26,.45);margin-top:8px;">Glissez un fichier ou cliquez pour sélectionner</p>
+        </div>
+        <input type="file" id="client-file-input" style="display:none;" onchange="uploadClientFile(this.files[0])"/>
+        <div id="client-upload-progress" style="display:none;margin-top:8px;">
+          <div style="font-size:11px;color:rgba(26,26,26,.4);margin-bottom:4px;" id="client-upload-label">Upload…</div>
+          <div class="progress-bar"><div class="progress-fill" id="client-upload-bar" style="width:0%"></div></div>
+        </div>
+      </div>
     </div>
 
     <!-- Page Messages -->
@@ -548,7 +569,7 @@
     userProjets = projets || [];
 
     // Alimenter les selects
-    ['doc-project-select','msg-project-select'].forEach(id => {
+    ['doc-project-select','msg-project-select','upload-project-select'].forEach(id => {
       const sel = document.getElementById(id);
       const firstOpt = sel.options[0];
       sel.innerHTML = '';
@@ -675,6 +696,55 @@
     input.value = '';
     const { error } = await sb.from('messages').insert([{ projet_id: projetId, expediteur: 'client', contenu, lu: false }]);
     if (!error) await loadMessages();
+  }
+
+  // ── UPLOAD CLIENT ────────────────────────────────────────────────
+  function handleClientDrop(e) {
+    e.preventDefault();
+    document.getElementById('upload-area-client').style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file) uploadClientFile(file);
+    document.getElementById('client-file-input').value = '';
+  }
+
+  async function uploadClientFile(file) {
+    if (!file) return;
+    const projetId = document.getElementById('upload-project-select').value;
+    if (!projetId) return showToast('Choisissez un projet avant d\'envoyer.', 'error');
+
+    const pw = document.getElementById('client-upload-progress');
+    const pb = document.getElementById('client-upload-bar');
+    const pl = document.getElementById('client-upload-label');
+    pw.style.display = 'block';
+    pl.textContent = `Upload de ${file.name}…`;
+    pb.style.width = '20%';
+
+    const path = `${projetId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const { error: upErr } = await sb.storage.from('documents-client').upload(path, file, {upsert:true});
+    pb.style.width = '70%';
+    if (upErr) { pw.style.display='none'; showToast('Erreur upload: '+upErr.message, 'error'); return; }
+
+    const { data: urlData } = sb.storage.from('documents-client').getPublicUrl(path);
+    pb.style.width = '90%';
+
+    const { error: dbErr } = await sb.from('documents').insert([{
+      projet_id: projetId,
+      nom: file.name,
+      type: 'Document client',
+      url: urlData.publicUrl,
+      taille_kb: Math.round(file.size / 1024),
+      uploade_par: 'client'
+    }]);
+
+    pb.style.width = '100%';
+    setTimeout(() => { pw.style.display='none'; pb.style.width='0%'; }, 800);
+
+    if (dbErr) { showToast('Erreur enregistrement', 'error'); return; }
+    showToast('Document envoyé à Kobo !', 'success');
+    document.getElementById('client-file-input').value = '';
+    if (document.getElementById('doc-project-select').value === projetId || !document.getElementById('doc-project-select').value) {
+      await loadDocuments();
+    }
   }
 
   // ── TOAST ────────────────────────────────────────────────────────
