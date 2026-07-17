@@ -131,8 +131,8 @@
     .doc-dl:hover { background: var(--accent); color: var(--white); }
 
     /* Messagerie */
-    .messages-wrap { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; overflow: hidden; }
-    .messages-list { padding: 20px; max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .messages-wrap { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 220px); min-height: 500px; }
+    .messages-list { padding: 24px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
     .msg { max-width: 75%; }
     .msg--client { align-self: flex-end; }
     .msg--kobo { align-self: flex-start; }
