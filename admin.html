@@ -837,20 +837,24 @@
 
   let activeMsgClientId = null;
   let adminMsgChannel = null;
+  let adminMsgPolling = null;
+
+  async function fetchAdminThread() {
+    if (!activeMsgClientId) return;
+    await sb.from('messages_general').update({ lu: true })
+      .eq('client_id', activeMsgClientId).eq('expediteur', 'client');
+    const { data: msgs } = await sb.from('messages_general')
+      .select('*').eq('client_id', activeMsgClientId).order('created_at', { ascending: true });
+    renderMsgThread('msg-thread', msgs || []);
+    loadUnreadCount();
+    loadMessagesView();
+  }
 
   async function openMsgThread(clientId, nom) {
     activeMsgClientId = clientId;
     document.getElementById('msg-thread-title').textContent = nom;
     document.getElementById('msg-thread-panel').style.display = 'block';
-
-    await sb.from('messages_general').update({ lu: true })
-      .eq('client_id', clientId).eq('expediteur', 'client');
-
-    const { data: msgs } = await sb.from('messages_general')
-      .select('*').eq('client_id', clientId).order('created_at', { ascending: true });
-    renderMsgThread('msg-thread', msgs || []);
-    loadUnreadCount();
-    loadMessagesView();
+    await fetchAdminThread();
 
     // Temps réel
     if (adminMsgChannel) sb.removeChannel(adminMsgChannel);
@@ -858,19 +862,18 @@
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'messages_general',
         filter: `client_id=eq.${clientId}`
-      }, async payload => {
-        if (payload.new.expediteur === 'client') {
-          await sb.from('messages_general').update({ lu: true }).eq('id', payload.new.id);
+      }, () => fetchAdminThread())
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          if (!adminMsgPolling) adminMsgPolling = setInterval(fetchAdminThread, 5000);
+        } else if (status === 'SUBSCRIBED') {
+          if (adminMsgPolling) { clearInterval(adminMsgPolling); adminMsgPolling = null; }
         }
-        const thread = document.getElementById('msg-thread');
-        const div = document.createElement('div');
-        div.className = `msg msg--${payload.new.expediteur}`;
-        div.innerHTML = `<div class="msg__bubble">${payload.new.contenu}</div>
-          <div class="msg__meta">${payload.new.expediteur === 'client' ? nom.split(' ')[0] : 'Vous'} · ${new Date(payload.new.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
-        thread.appendChild(div);
-        thread.scrollTop = thread.scrollHeight;
-        loadMessagesView();
-      }).subscribe();
+      });
+
+    // Polling de sécurité
+    if (adminMsgPolling) clearInterval(adminMsgPolling);
+    adminMsgPolling = setInterval(fetchAdminThread, 5000);
   }
 
   async function sendReply() {
@@ -879,12 +882,17 @@
     const contenu = input.value.trim();
     if (!contenu) return;
     input.value = '';
-    await sb.from('messages_general').insert([{
+    const btn = document.querySelector('#msg-thread-panel .btn-primary');
+    if (btn) btn.disabled = true;
+    const { error } = await sb.from('messages_general').insert([{
       client_id: activeMsgClientId,
       expediteur: 'admin',
       contenu,
       lu: true
     }]);
+    if (btn) btn.disabled = false;
+    if (!error) await fetchAdminThread();
+    else { input.value = contenu; showToast('Erreur envoi', 'err'); }
   }
 
   // ── MODALS ────────────────────────────────────────────────────────

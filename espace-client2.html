@@ -658,44 +658,44 @@
   }
 
   let msgChannel = null;
+  let msgPolling = null;
 
-  async function loadMessages() {
+  async function fetchAndRender() {
     if (!currentUser) return;
-
-    // Marquer les messages admin comme lus
     await sb.from('messages_general')
       .update({ lu: true })
       .eq('client_id', currentUser.id)
       .eq('expediteur', 'admin');
-
     const { data: msgs } = await sb.from('messages_general')
       .select('*')
       .eq('client_id', currentUser.id)
       .order('created_at', { ascending: true });
-
     renderMessages(msgs || []);
+  }
 
-    // Temps réel — évite les doublons de channel
+  async function loadMessages() {
+    if (!currentUser) return;
+    await fetchAndRender();
+
+    // Temps réel
     if (msgChannel) sb.removeChannel(msgChannel);
     msgChannel = sb.channel('msg-general-' + currentUser.id)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'messages_general',
         filter: `client_id=eq.${currentUser.id}`
-      }, async payload => {
-        // Marquer lu si c'est un message admin
-        if (payload.new.expediteur === 'admin') {
-          await sb.from('messages_general').update({ lu: true }).eq('id', payload.new.id);
+      }, () => fetchAndRender())
+      .subscribe((status) => {
+        // Fallback polling si realtime indisponible
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          if (!msgPolling) msgPolling = setInterval(fetchAndRender, 5000);
+        } else if (status === 'SUBSCRIBED') {
+          if (msgPolling) { clearInterval(msgPolling); msgPolling = null; }
         }
-        const list = document.getElementById('messages-list');
-        const div = document.createElement('div');
-        div.className = `msg msg--${payload.new.expediteur === 'client' ? 'client' : 'kobo'}`;
-        div.dataset.msgId = payload.new.id;
-        div.innerHTML = `<div class="msg__bubble">${payload.new.contenu}</div>
-          <div class="msg__meta">${payload.new.expediteur === 'client' ? 'Vous' : 'Équipe Kobo'} · ${new Date(payload.new.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
-        list.appendChild(div);
-        list.scrollTop = list.scrollHeight;
-      })
-      .subscribe();
+      });
+
+    // Polling de sécurité toutes les 5s
+    if (msgPolling) clearInterval(msgPolling);
+    msgPolling = setInterval(fetchAndRender, 5000);
   }
 
   function renderMessages(msgs) {
@@ -704,12 +704,13 @@
       list.innerHTML = '<div class="empty" style="padding:32px;text-align:center;"><p>Aucun message pour l\'instant.<br>Envoyez-nous votre première question !</p></div>';
       return;
     }
+    const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 60;
     list.innerHTML = msgs.map(m => `
       <div class="msg msg--${m.expediteur === 'client' ? 'client' : 'kobo'}" data-msg-id="${m.id}">
         <div class="msg__bubble">${m.contenu}</div>
         <div class="msg__meta">${m.expediteur === 'client' ? 'Vous' : 'Équipe Kobo'} · ${new Date(m.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</div>
       </div>`).join('');
-    list.scrollTop = list.scrollHeight;
+    if (atBottom) list.scrollTop = list.scrollHeight;
   }
 
   async function sendMessage() {
@@ -717,12 +718,17 @@
     const contenu = input.value.trim();
     if (!contenu || !currentUser) return;
     input.value = '';
-    await sb.from('messages_general').insert([{
+    const btn = document.querySelector('.msg-send');
+    btn.disabled = true;
+    const { error } = await sb.from('messages_general').insert([{
       client_id: currentUser.id,
       expediteur: 'client',
       contenu,
       lu: false
     }]);
+    btn.disabled = false;
+    if (!error) await fetchAndRender();
+    else { input.value = contenu; showToast('Erreur envoi', 'error'); }
   }
 
   // ── UPLOAD CLIENT ────────────────────────────────────────────────
