@@ -54,6 +54,15 @@
       ]
     },
     {
+      "source": "/(espace-client|admin|configurateur|mes-configs|gamme|projets|mobilier|architecture|contact|index)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/sitemap.xml",
       "headers": [
         {
