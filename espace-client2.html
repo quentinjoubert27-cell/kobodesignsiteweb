@@ -227,15 +227,7 @@
 <div class="auth-screen" id="authScreen">
   <div class="auth-box">
     <div class="auth-logo">
-      <svg viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-        <line x1="36" y1="10" x2="48" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
-        <path d="M62 6v36" stroke="#CD3E00" stroke-width="4.5" stroke-linecap="round"/>
-        <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-        <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#CD3E00" stroke-width="4.5" fill="none"/>
-        <line x1="101" y1="10" x2="113" y2="10" stroke="#CD3E00" stroke-width="3" stroke-linecap="round"/>
-      </svg>
+      <img src="img/logo-kobo.png" alt="Kōbō Design" style="height:36px;width:auto;display:block;">
     </div>
     <p class="auth-eyebrow">Espace client</p>
     <h2 class="auth-title">Bienvenue<br>chez Kobo</h2>
@@ -293,15 +285,7 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <svg viewBox="0 0 140 48" fill="none">
-        <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <ellipse cx="42" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
-        <line x1="36" y1="10" x2="48" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
-        <path d="M62 6v36" stroke="#FFFAF0" stroke-width="4.5" stroke-linecap="round"/>
-        <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
-        <ellipse cx="107" cy="27" rx="13" ry="14" stroke="#FFFAF0" stroke-width="4.5" fill="none"/>
-        <line x1="101" y1="10" x2="113" y2="10" stroke="#FFFAF0" stroke-width="3" stroke-linecap="round"/>
-      </svg>
+      <img src="img/logo-koboblanc.png" alt="Kōbō Design" style="height:28px;width:auto;display:block;">
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">
@@ -408,11 +392,10 @@
         <p class="page-eyebrow">Communication</p>
         <h1 class="page-title">Messages</h1>
       </div>
-      <select class="project-select" id="msg-project-select" onchange="loadMessages()">
-        <option value="">Choisir un projet…</option>
-      </select>
-      <div class="messages-wrap" id="messages-wrap" style="display:none;">
-        <div class="messages-list" id="messages-list"></div>
+      <div class="messages-wrap" id="messages-wrap">
+        <div class="messages-list" id="messages-list">
+          <div class="empty" style="padding:32px;text-align:center;"><p>Chargement…</p></div>
+        </div>
         <div class="msg-input-wrap">
           <textarea class="msg-input" id="msg-input" placeholder="Écrivez votre message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
           <button class="msg-send" onclick="sendMessage()">Envoyer</button>
@@ -537,6 +520,11 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-'+page).classList.add('active');
     navItem.classList.add('active');
+    if (page === 'messages') {
+      loadMessages();
+      const badge = document.getElementById('unread-badge');
+      badge.style.display = 'none';
+    }
   }
 
   // ── DATA ─────────────────────────────────────────────────────────
@@ -545,17 +533,21 @@
     const ids = (projets || []).map(p => p.id);
     userProjets = projets || [];
 
-    let docCount = 0, msgCount = 0;
+    let docCount = 0;
     if (ids.length > 0) {
       const { count: dc } = await sb.from('documents').select('*', {count:'exact',head:true}).in('projet_id', ids);
-      const { count: mc } = await sb.from('messages').select('*', {count:'exact',head:true}).in('projet_id', ids).eq('lu', false).neq('expediteur', 'client');
       docCount = dc || 0;
-      msgCount = mc || 0;
     }
+
+    const { count: msgCount } = await sb.from('messages_general')
+      .select('*', { count: 'exact', head: true })
+      .eq('client_id', currentUser.id)
+      .eq('expediteur', 'admin')
+      .eq('lu', false);
 
     document.getElementById('stat-projets').textContent = projets?.length || 0;
     document.getElementById('stat-docs').textContent = docCount;
-    document.getElementById('stat-msgs').textContent = msgCount;
+    document.getElementById('stat-msgs').textContent = msgCount || 0;
 
     if (msgCount > 0) {
       const badge = document.getElementById('unread-badge');
@@ -665,29 +657,51 @@
       </div>`).join('');
   }
 
+  let msgChannel = null;
+
   async function loadMessages() {
-    const projetId = document.getElementById('msg-project-select').value;
-    const wrap = document.getElementById('messages-wrap');
-    if (!projetId) { wrap.style.display = 'none'; return; }
-    wrap.style.display = 'block';
+    if (!currentUser) return;
 
-    // Marquer comme lus
-    await sb.from('messages').update({lu: true}).eq('projet_id', projetId).neq('expediteur', 'client');
+    // Marquer les messages admin comme lus
+    await sb.from('messages_general')
+      .update({ lu: true })
+      .eq('client_id', currentUser.id)
+      .eq('expediteur', 'admin');
 
-    const { data: msgs } = await sb.from('messages').select('*').eq('projet_id', projetId).order('created_at', {ascending: true});
+    const { data: msgs } = await sb.from('messages_general')
+      .select('*')
+      .eq('client_id', currentUser.id)
+      .order('created_at', { ascending: true });
+
     renderMessages(msgs || []);
 
-    // Temps réel
-    sb.channel('messages-'+projetId)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `projet_id=eq.${projetId}` },
-        payload => { renderMessages([...document.querySelectorAll('[data-msg-id]')].map(el => ({id: el.dataset.msgId})).concat([payload.new])); }
-      ).subscribe();
+    // Temps réel — évite les doublons de channel
+    if (msgChannel) sb.removeChannel(msgChannel);
+    msgChannel = sb.channel('msg-general-' + currentUser.id)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages_general',
+        filter: `client_id=eq.${currentUser.id}`
+      }, async payload => {
+        // Marquer lu si c'est un message admin
+        if (payload.new.expediteur === 'admin') {
+          await sb.from('messages_general').update({ lu: true }).eq('id', payload.new.id);
+        }
+        const list = document.getElementById('messages-list');
+        const div = document.createElement('div');
+        div.className = `msg msg--${payload.new.expediteur === 'client' ? 'client' : 'kobo'}`;
+        div.dataset.msgId = payload.new.id;
+        div.innerHTML = `<div class="msg__bubble">${payload.new.contenu}</div>
+          <div class="msg__meta">${payload.new.expediteur === 'client' ? 'Vous' : 'Équipe Kobo'} · ${new Date(payload.new.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+        list.appendChild(div);
+        list.scrollTop = list.scrollHeight;
+      })
+      .subscribe();
   }
 
   function renderMessages(msgs) {
     const list = document.getElementById('messages-list');
     if (!msgs || msgs.length === 0) {
-      list.innerHTML = '<div class="empty" style="padding:24px;"><p>Aucun message. Démarrez la conversation !</p></div>';
+      list.innerHTML = '<div class="empty" style="padding:32px;text-align:center;"><p>Aucun message pour l\'instant.<br>Envoyez-nous votre première question !</p></div>';
       return;
     }
     list.innerHTML = msgs.map(m => `
@@ -699,13 +713,16 @@
   }
 
   async function sendMessage() {
-    const projetId = document.getElementById('msg-project-select').value;
     const input = document.getElementById('msg-input');
     const contenu = input.value.trim();
-    if (!contenu || !projetId) return;
+    if (!contenu || !currentUser) return;
     input.value = '';
-    const { error } = await sb.from('messages').insert([{ projet_id: projetId, expediteur: 'client', contenu, lu: false }]);
-    if (!error) await loadMessages();
+    await sb.from('messages_general').insert([{
+      client_id: currentUser.id,
+      expediteur: 'client',
+      contenu,
+      lu: false
+    }]);
   }
 
   // ── UPLOAD CLIENT ────────────────────────────────────────────────
