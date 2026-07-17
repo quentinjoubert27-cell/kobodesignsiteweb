@@ -116,6 +116,11 @@
       "source": "/configurateur-test",
       "destination": "/configurateur",
       "permanent": true
+    },
+    {
+      "source": "/espace-client",
+      "destination": "/espace-client2",
+      "permanent": false
     }
   ],
   "installCommand": "npm install",
