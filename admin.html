@@ -581,7 +581,7 @@
     ] = await Promise.all([
       sb.from('clients').select('*', {count:'exact',head:true}),
       sb.from('projets').select('*', {count:'exact',head:true}).neq('statut','Terminé'),
-      sb.from('messages').select('*', {count:'exact',head:true}).eq('lu',false).eq('expediteur','client'),
+      sb.from('messages_general').select('*', {count:'exact',head:true}).eq('lu',false).eq('expediteur','client'),
       sb.from('documents').select('*', {count:'exact',head:true}).eq('uploade_par','kobo')
     ]);
     document.getElementById('ds-clients').textContent = cc || 0;
@@ -811,40 +811,80 @@
 
   // ── MESSAGES VIEW ─────────────────────────────────────────────────
   async function loadMessagesView() {
-    const { data: projets } = await sb.from('projets').select('*, clients(prenom, nom), messages(id, lu, expediteur)').order('updated_at',{ascending:false});
+    const { data: clients } = await sb.from('clients').select('id, prenom, nom, email').order('nom');
     const container = document.getElementById('msg-projet-list');
-    if (!projets || !projets.length) { container.innerHTML = '<div class="empty">Aucun projet.</div>'; return; }
-    container.innerHTML = projets.map(p => {
-      const unread = (p.messages||[]).filter(m => !m.lu && m.expediteur==='client').length;
-      return `<div onclick="openMsgThread('${p.id}','${escHtml(p.nom)}')" style="padding:14px 16px;border-bottom:1px solid rgba(26,26,26,.06);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(205,62,0,.03)'" onmouseout="this.style.background=''">
+    if (!clients || !clients.length) { container.innerHTML = '<div class="empty" style="padding:16px;">Aucun client.</div>'; return; }
+
+    // Récupérer les non-lus par client
+    const { data: unreads } = await sb.from('messages_general')
+      .select('client_id')
+      .eq('expediteur', 'client')
+      .eq('lu', false);
+    const unreadMap = {};
+    (unreads || []).forEach(m => { unreadMap[m.client_id] = (unreadMap[m.client_id] || 0) + 1; });
+
+    container.innerHTML = clients.map(c => {
+      const unread = unreadMap[c.id] || 0;
+      return `<div onclick="openMsgThread('${c.id}','${escHtml(c.prenom+' '+c.nom)}')" style="padding:14px 16px;border-bottom:1px solid rgba(26,26,26,.06);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(205,62,0,.03)'" onmouseout="this.style.background=''">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:13px;font-weight:${unread?700:400};">${escHtml(p.nom)}</div>
-          ${unread?`<span class="nav-badge">${unread}</span>`:''}
+          <div style="font-size:13px;font-weight:${unread?700:400};">${escHtml(c.prenom+' '+c.nom)}</div>
+          ${unread ? `<span class="nav-badge">${unread}</span>` : ''}
         </div>
-        <div style="font-size:11px;color:rgba(26,26,26,.4);margin-top:3px;">${p.clients?p.clients.prenom+' '+p.clients.nom:'—'}</div>
+        <div style="font-size:11px;color:rgba(26,26,26,.4);margin-top:3px;">${escHtml(c.email)}</div>
       </div>`;
     }).join('');
   }
 
-  async function openMsgThread(projetId, nom) {
-    activeProjetIdForMsg = projetId;
+  let activeMsgClientId = null;
+  let adminMsgChannel = null;
+
+  async function openMsgThread(clientId, nom) {
+    activeMsgClientId = clientId;
     document.getElementById('msg-thread-title').textContent = nom;
     document.getElementById('msg-thread-panel').style.display = 'block';
-    await sb.from('messages').update({lu:true}).eq('projet_id', projetId).eq('expediteur','client');
-    const { data: msgs } = await sb.from('messages').select('*').eq('projet_id', projetId).order('created_at',{ascending:true});
-    renderMsgThread('msg-thread', msgs||[]);
+
+    await sb.from('messages_general').update({ lu: true })
+      .eq('client_id', clientId).eq('expediteur', 'client');
+
+    const { data: msgs } = await sb.from('messages_general')
+      .select('*').eq('client_id', clientId).order('created_at', { ascending: true });
+    renderMsgThread('msg-thread', msgs || []);
     loadUnreadCount();
     loadMessagesView();
+
+    // Temps réel
+    if (adminMsgChannel) sb.removeChannel(adminMsgChannel);
+    adminMsgChannel = sb.channel('admin-msg-' + clientId)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages_general',
+        filter: `client_id=eq.${clientId}`
+      }, async payload => {
+        if (payload.new.expediteur === 'client') {
+          await sb.from('messages_general').update({ lu: true }).eq('id', payload.new.id);
+        }
+        const thread = document.getElementById('msg-thread');
+        const div = document.createElement('div');
+        div.className = `msg msg--${payload.new.expediteur}`;
+        div.innerHTML = `<div class="msg__bubble">${payload.new.contenu}</div>
+          <div class="msg__meta">${payload.new.expediteur === 'client' ? nom.split(' ')[0] : 'Vous'} · ${new Date(payload.new.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+        thread.appendChild(div);
+        thread.scrollTop = thread.scrollHeight;
+        loadMessagesView();
+      }).subscribe();
   }
 
   async function sendReply() {
-    if (!activeProjetIdForMsg) return;
+    if (!activeMsgClientId) return;
     const input = document.getElementById('msg-reply');
     const contenu = input.value.trim();
     if (!contenu) return;
     input.value = '';
-    await sb.from('messages').insert([{projet_id: activeProjetIdForMsg, expediteur:'kobo', contenu, lu:true}]);
-    await openMsgThread(activeProjetIdForMsg, document.getElementById('msg-thread-title').textContent);
+    await sb.from('messages_general').insert([{
+      client_id: activeMsgClientId,
+      expediteur: 'admin',
+      contenu,
+      lu: true
+    }]);
   }
 
   // ── MODALS ────────────────────────────────────────────────────────
@@ -925,7 +965,7 @@
 
   // ── UNREAD COUNT ──────────────────────────────────────────────────
   async function loadUnreadCount() {
-    const { count } = await sb.from('messages').select('*',{count:'exact',head:true}).eq('lu',false).eq('expediteur','client');
+    const { count } = await sb.from('messages_general').select('*',{count:'exact',head:true}).eq('lu',false).eq('expediteur','client');
     const badge = document.getElementById('nav-unread');
     if (count && count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
     else { badge.style.display = 'none'; }
