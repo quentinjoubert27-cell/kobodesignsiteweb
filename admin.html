@@ -691,7 +691,18 @@
     const { data: docs } = await sb.from('documents').select('*').eq('projet_id', currentProjetId).order('created_at',{ascending:false});
     const container = document.getElementById('pd-docs');
     if (!docs || docs.length === 0) { container.innerHTML = '<div class="empty" style="padding:16px 0;">Aucun document.</div>'; return; }
-    container.innerHTML = docs.map(d => `
+
+    // Générer des URLs signées (1h) pour chaque doc stocké en privé
+    const docsWithUrls = await Promise.all(docs.map(async d => {
+      let signedUrl = d.url;
+      if (d.url && !d.url.startsWith('http')) {
+        const { data } = await sb.storage.from('documents-client').createSignedUrl(d.url, 3600);
+        signedUrl = data?.signedUrl || '';
+      }
+      return { ...d, signedUrl };
+    }));
+
+    container.innerHTML = docsWithUrls.map(d => `
       <div class="doc-item ${d.uploade_par==='client'?'doc-by-client':''}">
         <div class="doc-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#CD3E00" stroke-width="1.6"/><polyline points="14 2 14 8 20 8" stroke="#CD3E00" stroke-width="1.6"/></svg>
@@ -700,7 +711,7 @@
           <div class="doc-name">${escHtml(d.nom)}</div>
           <div class="doc-meta">${d.type} · ${d.uploade_par==='client'?'Envoyé par le client':'Kobo Design'} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}${d.taille_kb?' · '+formatSize(d.taille_kb):''}</div>
         </div>
-        <a href="${d.url}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
+        <a href="${d.signedUrl}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
       </div>`).join('');
   }
 
@@ -773,18 +784,18 @@
     pl.textContent = `Upload de ${file.name}…`;
     pb.style.width = '20%';
 
-    const { data: upData, error: upErr } = await sb.storage.from('documents-client').upload(path, file, {upsert:true});
+    const { error: upErr } = await sb.storage.from('documents-client').upload(path, file, {upsert:true});
     pb.style.width = '70%';
     if (upErr) { pw.style.display='none'; showToast('Erreur upload: '+upErr.message,'err'); return; }
 
-    const { data: urlData } = sb.storage.from('documents-client').getPublicUrl(path);
     pb.style.width = '90%';
 
+    // On stocke le path (pas l'URL publique) pour bucket privé
     const { error: dbErr } = await sb.from('documents').insert([{
       projet_id: currentProjetId,
       nom: file.name,
       type,
-      url: urlData.publicUrl,
+      url: path,
       taille_kb: Math.round(file.size / 1024),
       uploade_par: 'kobo'
     }]);
@@ -894,16 +905,18 @@
     if (!prenom || !nom || !email || !pw) return showToast('Tous les champs obligatoires', 'err');
     if (pw.length < 8) return showToast('Mot de passe trop court', 'err');
 
-    const { data, error } = await sb.auth.admin?.createUser
-      ? await sb.auth.admin.createUser({ email, password: pw, email_confirm: true })
-      : await sb.auth.signUp({ email, password: pw });
+    // Récupérer le token de session admin pour authentifier l'API
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token;
 
-    if (error) return showToast('Erreur: '+error.message, 'err');
+    const resp = await fetch('/api/create-client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ prenom, nom, email, telephone, password: pw }),
+    });
+    const result = await resp.json();
+    if (!resp.ok) return showToast('Erreur: ' + (result.error || 'Inconnue'), 'err');
 
-    const userId = data?.user?.id;
-    if (userId) {
-      await sb.from('clients').upsert({ id: userId, prenom, nom, email, telephone: telephone||null });
-    }
     showToast('Client créé !');
     closeModal('modal-client');
     await loadClients();

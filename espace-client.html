@@ -642,7 +642,17 @@
       return;
     }
 
-    list.innerHTML = docs.map(doc => `
+    // Générer des URLs signées (1h) pour les fichiers du bucket privé
+    const docsWithUrls = await Promise.all(docs.map(async doc => {
+      let signedUrl = doc.url;
+      if (doc.url && !doc.url.startsWith('http')) {
+        const { data } = await sb.storage.from('documents-client').createSignedUrl(doc.url, 3600);
+        signedUrl = data?.signedUrl || '';
+      }
+      return { ...doc, signedUrl };
+    }));
+
+    list.innerHTML = docsWithUrls.map(doc => `
       <div class="doc-item">
         <div class="doc-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#CD3E00" stroke-width="1.6"/><polyline points="14 2 14 8 20 8" stroke="#CD3E00" stroke-width="1.6"/></svg>
@@ -651,7 +661,7 @@
           <div class="doc-name">${doc.nom}</div>
           <div class="doc-meta">${doc.projets?.nom || ''} · ${doc.type || 'Document'} · ${new Date(doc.created_at).toLocaleDateString('fr-FR')}</div>
         </div>
-        <a href="${doc.url}" target="_blank" class="doc-dl">Télécharger</a>
+        <a href="${doc.signedUrl}" target="_blank" class="doc-dl">Télécharger</a>
       </div>`).join('');
   }
 
@@ -724,14 +734,14 @@
     pb.style.width = '70%';
     if (upErr) { pw.style.display='none'; showToast('Erreur upload: '+upErr.message, 'error'); return; }
 
-    const { data: urlData } = sb.storage.from('documents-client').getPublicUrl(path);
     pb.style.width = '90%';
 
+    // Stocker le path (pas l'URL publique) pour bucket privé
     const { error: dbErr } = await sb.from('documents').insert([{
       projet_id: projetId,
       nom: file.name,
       type: 'Document client',
-      url: urlData.publicUrl,
+      url: path,
       taille_kb: Math.round(file.size / 1024),
       uploade_par: 'client'
     }]);
