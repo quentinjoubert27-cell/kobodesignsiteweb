@@ -81,7 +81,7 @@ module.exports = async function handler(req, res) {
     const { data: linkData } = await sb.auth.admin.generateLink({
       type: isNew ? 'invite' : 'magiclink',
       email,
-      options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' }
+      options: { redirectTo: isNew ? 'https://www.kobo-design.fr/espace-client2?invite=1' : 'https://www.kobo-design.fr/espace-client2' }
     });
     const magicLink = linkData?.properties?.action_link || 'https://www.kobo-design.fr/espace-client?v=2';
 

@@ -566,8 +566,8 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Capturer le hash AVANT que Supabase le consomme et l'efface
-  const _initialHash = Object.fromEntries(new URLSearchParams(window.location.hash.slice(1)));
+  // Détecter un invite link via le paramètre ?invite=1 (persistant même avec PKCE)
+  const _isInvite = new URLSearchParams(window.location.search).get('invite') === '1';
 
   let currentUser = null;
   let userProjets = [];
@@ -578,7 +578,7 @@
     if (session) {
       currentUser = session.user;
       // Si le lien email était un invite, montrer l'écran de création de mot de passe
-      if (_initialHash.type === 'invite') {
+      if (_isInvite) {
         showSetPassword();
       } else {
         showDashboard();
@@ -587,7 +587,7 @@
     sb.auth.onAuthStateChange((event, session) => {
       if (session) {
         currentUser = session.user;
-        if ((event === 'USER_UPDATED' || event === 'SIGNED_IN') && _initialHash.type === 'invite') {
+        if ((event === 'USER_UPDATED' || event === 'SIGNED_IN') && _isInvite) {
           showSetPassword();
           return;
         }
