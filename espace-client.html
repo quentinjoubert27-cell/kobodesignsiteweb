@@ -165,8 +165,48 @@
     .toast.success { border-left: 3px solid #22c55e; }
     .toast.error { border-left: 3px solid #ef4444; }
 
+    /* Accueil — hero banner */
+    .home-hero { background: var(--dark); border-radius: 16px; padding: 36px 40px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .home-hero__text {}
+    .home-hero__eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .home-hero__title { font-size: clamp(26px,3.5vw,40px); font-weight: 900; letter-spacing: -.03em; color: var(--white); line-height: 1.1; }
+    .home-hero__sub { font-size: 13px; font-weight: 300; color: rgba(255,250,240,.45); margin-top: 8px; }
+    .home-hero__logo { opacity: .07; }
+
+    /* Accueil — quick actions */
+    .quick-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+    .quick-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--white); border: 1.5px solid rgba(26,26,26,.09); border-radius: 100px; font-size: 12px; font-weight: 600; cursor: pointer; transition: border-color .2s, box-shadow .2s; }
+    .quick-btn:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(205,62,0,.1); }
+    .quick-btn svg { flex-shrink: 0; color: var(--accent); }
+
+    /* Accueil — projet en cours */
+    .home-section-title { font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(26,26,26,.35); margin-bottom: 14px; }
+    .current-project-card { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+    .current-project-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+
+    /* Commandes */
+    .commande-card { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; padding: 24px; margin-bottom: 12px; }
+    .commande-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .commande-card__name { font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+    .commande-meta { display: flex; gap: 24px; flex-wrap: wrap; }
+    .commande-meta-item { }
+    .commande-meta-item__label { font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(26,26,26,.35); margin-bottom: 3px; }
+    .commande-meta-item__val { font-size: 15px; font-weight: 700; }
+    .status--commande { background: #ede9fe; color: #5b21b6; }
+    .status--commande::before { background: #7c3aed; }
+
+    /* Infos personnelles */
+    .info-section { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+    .info-section__title { font-size: 13px; font-weight: 700; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid rgba(26,26,26,.07); }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .info-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 6px; }
+    .info-field input { width: 100%; padding: 11px 13px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--bg); }
+    .info-field input:focus { outline: none; border-color: var(--accent); }
+    .info-field { }
+    .btn-save { padding: 11px 22px; background: var(--accent); color: var(--white); border: none; border-radius: 8px; font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: background .2s; }
+    .btn-save:hover { background: #a83200; }
+
     @media (max-width: 768px) {
-      /* Sidebar → bottom nav bar */
       .sidebar {
         position: fixed; bottom: 0; left: 0; right: 0; top: auto;
         width: 100%; height: auto;
@@ -178,31 +218,27 @@
       .nav-section { display: contents; }
       .nav-section-label { display: none; }
       .nav-item {
-        flex: 1; flex-direction: column; gap: 4px;
-        padding: 10px 4px 12px; border-radius: 0;
-        font-size: 10px; font-weight: 500; min-height: 56px;
+        flex: 1; flex-direction: column; gap: 3px;
+        padding: 8px 2px 10px; border-radius: 0;
+        font-size: 9px; font-weight: 500; min-height: 52px;
         justify-content: center; align-items: center; text-align: center;
         margin-bottom: 0;
       }
-      .nav-item svg { opacity: .6; }
+      .nav-item svg { opacity: .6; width: 18px; height: 18px; }
       .nav-item.active svg { opacity: 1; }
       .sidebar-user { display: none; }
-
-      /* Main content — pleine largeur, padding bottom pour la nav */
       .main { margin-left: 0; padding: 20px 16px 80px; }
-
-      /* Messagerie pleine hauteur mobile */
       .messages-wrap { height: calc(100vh - 200px); min-height: 300px; }
-
-      /* Grille cards */
       .cards-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .stat-card { padding: 16px; }
       .stat-card__value { font-size: 22px; }
-
-      /* Projets / docs */
       .project-card { padding: 16px; }
       .doc-item { padding: 12px; gap: 10px; }
       .doc-dl { font-size: 10px; padding: 5px 8px; white-space: nowrap; }
+      .home-hero { padding: 24px 20px; }
+      .home-hero__title { font-size: 24px; }
+      .home-hero__logo { display: none; }
+      .info-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 480px) {
@@ -216,7 +252,6 @@
       .msg-input-wrap { padding: 10px 12px; gap: 8px; }
       .empty { padding: 32px 16px; }
       .form-btn { min-height: 48px; }
-      /* Prevent iOS zoom on inputs */
       .form-input, .msg-input, .project-select { font-size: 16px; }
     }
   </style>
@@ -299,6 +334,14 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           Mes projets
         </div>
+        <div class="nav-item" onclick="showPage('commandes', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.6"/><path d="M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Commandes
+        </div>
+        <div class="nav-item" onclick="showPage('notices', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Notices
+        </div>
         <div class="nav-item" onclick="showPage('documents', this)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.6"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.6"/></svg>
           Documents
@@ -307,6 +350,10 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           Messages
           <span id="unread-badge" style="display:none;margin-left:auto;background:var(--accent);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:100px;"></span>
+        </div>
+        <div class="nav-item" onclick="showPage('infos', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
+          Mon compte
         </div>
       </div>
     </nav>
@@ -322,28 +369,61 @@
 
     <!-- Page Accueil -->
     <div class="page active" id="page-accueil">
-      <div class="page-header">
-        <p class="page-eyebrow">Tableau de bord</p>
-        <h1 class="page-title" id="welcome-title">Bonjour —</h1>
+      <!-- Hero banner -->
+      <div class="home-hero">
+        <div class="home-hero__text">
+          <p class="home-hero__eyebrow">Espace client</p>
+          <h1 class="home-hero__title" id="welcome-title">Bonjour —</h1>
+          <p class="home-hero__sub" id="welcome-date"></p>
+        </div>
+        <div class="home-hero__logo">
+          <img src="img/logo-koboblanc.png" alt="" style="height:60px;width:auto;display:block;">
+        </div>
       </div>
-      <div class="cards-grid" id="stats-cards">
-        <div class="stat-card">
+
+      <!-- Stats -->
+      <div class="cards-grid" style="margin-bottom:28px;">
+        <div class="stat-card" style="cursor:pointer;" onclick="showPage('projets', document.querySelector('.nav-item:nth-child(2)'))">
           <div class="stat-card__label">Projets en cours</div>
           <div class="stat-card__value" id="stat-projets">—</div>
-          <div class="stat-card__sub">sur votre compte</div>
+          <div class="stat-card__sub">sur votre compte →</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-card__label">Documents disponibles</div>
-          <div class="stat-card__value" id="stat-docs">—</div>
-          <div class="stat-card__sub">à télécharger</div>
+        <div class="stat-card" style="cursor:pointer;" onclick="showPage('commandes', document.querySelector('.nav-item:nth-child(3)'))">
+          <div class="stat-card__label">Commandes</div>
+          <div class="stat-card__value" id="stat-commandes">—</div>
+          <div class="stat-card__sub">en cours de livraison →</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" style="cursor:pointer;" onclick="showPage('messages', document.querySelector('.nav-item:nth-child(6)'))">
           <div class="stat-card__label">Messages non lus</div>
           <div class="stat-card__value" id="stat-msgs">—</div>
-          <div class="stat-card__sub">de l'équipe Kobo</div>
+          <div class="stat-card__sub">de l'équipe Kobo →</div>
         </div>
       </div>
-      <div id="recent-projects"></div>
+
+      <!-- Projet actif -->
+      <p class="home-section-title">Projet en cours</p>
+      <div id="home-current-project"><div class="loading">Chargement…</div></div>
+
+      <!-- Actions rapides -->
+      <p class="home-section-title" style="margin-top:28px;">Accès rapide</p>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="showPage('notices', document.querySelector('.nav-item:nth-child(4)'))">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Notices de montage
+        </button>
+        <button class="quick-btn" onclick="showPage('documents', document.querySelector('.nav-item:nth-child(5)'))">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.6"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.6"/></svg>
+          Mes documents
+        </button>
+        <button class="quick-btn" onclick="showPage('messages', document.querySelector('.nav-item:nth-child(6)'))">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Contacter Kobo
+        </button>
+        <button class="quick-btn" onclick="showPage('infos', document.querySelector('.nav-item:nth-child(7)'))">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
+          Mon compte
+        </button>
+      </div>
     </div>
 
     <!-- Page Projets -->
@@ -385,6 +465,76 @@
           <div style="font-size:11px;color:rgba(26,26,26,.4);margin-bottom:4px;" id="client-upload-label">Upload…</div>
           <div class="progress-bar"><div class="progress-fill" id="client-upload-bar" style="width:0%"></div></div>
         </div>
+      </div>
+    </div>
+
+    <!-- Page Commandes -->
+    <div class="page" id="page-commandes">
+      <div class="page-header">
+        <p class="page-eyebrow">Suivi</p>
+        <h1 class="page-title">Mes commandes</h1>
+      </div>
+      <div id="commandes-list"><div class="loading">Chargement…</div></div>
+    </div>
+
+    <!-- Page Notices -->
+    <div class="page" id="page-notices">
+      <div class="page-header">
+        <p class="page-eyebrow">Documentation</p>
+        <h1 class="page-title">Notices de montage</h1>
+      </div>
+      <div id="notices-list"><div class="loading">Chargement…</div></div>
+    </div>
+
+    <!-- Page Infos personnelles -->
+    <div class="page" id="page-infos">
+      <div class="page-header">
+        <p class="page-eyebrow">Paramètres</p>
+        <h1 class="page-title">Mon compte</h1>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__title">Informations personnelles</div>
+        <div class="info-grid">
+          <div class="info-field">
+            <label>Prénom</label>
+            <input type="text" id="info-prenom" placeholder="Prénom" autocomplete="given-name"/>
+          </div>
+          <div class="info-field">
+            <label>Nom</label>
+            <input type="text" id="info-nom" placeholder="Nom" autocomplete="family-name"/>
+          </div>
+          <div class="info-field">
+            <label>Email</label>
+            <input type="email" id="info-email" placeholder="Email" disabled style="opacity:.5;cursor:not-allowed;"/>
+          </div>
+          <div class="info-field">
+            <label>Téléphone</label>
+            <input type="tel" id="info-telephone" placeholder="+33 6 …" autocomplete="tel"/>
+          </div>
+        </div>
+        <button class="btn-save" onclick="saveInfos()">Enregistrer</button>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section__title">Changer le mot de passe</div>
+        <div class="info-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="info-field">
+            <label>Nouveau mot de passe</label>
+            <input type="password" id="new-pwd" placeholder="8 caractères min"/>
+          </div>
+          <div class="info-field">
+            <label>Confirmer</label>
+            <input type="password" id="new-pwd2" placeholder="Répéter"/>
+          </div>
+        </div>
+        <button class="btn-save" onclick="changePassword()">Changer le mot de passe</button>
+      </div>
+
+      <div class="info-section" style="border-color:#fecaca;">
+        <div class="info-section__title" style="color:#dc2626;">Zone danger</div>
+        <p style="font-size:13px;color:rgba(26,26,26,.5);margin-bottom:16px;">Vous pouvez contacter Kobo Design pour supprimer votre compte.</p>
+        <button class="btn-save" onclick="logout()" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;">Se déconnecter</button>
       </div>
     </div>
 
@@ -510,18 +660,22 @@
     document.getElementById('dashboard').style.display = 'none';
   }
 
+  let currentProfil = null;
+
   async function showDashboard() {
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'flex';
 
-    // Infos utilisateur
     document.getElementById('user-email').textContent = currentUser.email;
 
-    // Profil
     const { data: profil } = await sb.from('clients').select('*').eq('id', currentUser.id).single();
+    currentProfil = profil;
     const prenom = profil?.prenom || currentUser.email.split('@')[0];
     document.getElementById('user-name').textContent = (profil?.prenom || '') + ' ' + (profil?.nom || '');
-    document.getElementById('welcome-title').textContent = `Bonjour, ${prenom} —`;
+    document.getElementById('welcome-title').textContent = `Bonjour, ${prenom} 👋`;
+
+    const now = new Date();
+    document.getElementById('welcome-date').textContent = now.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 
     await loadStats();
     await loadProjets();
@@ -532,34 +686,30 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-'+page).classList.add('active');
-    navItem.classList.add('active');
+    if (navItem) navItem.classList.add('active');
     if (page === 'messages') {
       loadMessages();
-      const badge = document.getElementById('unread-badge');
-      badge.style.display = 'none';
+      document.getElementById('unread-badge').style.display = 'none';
     }
+    if (page === 'commandes') loadCommandes();
+    if (page === 'notices')   loadNotices();
+    if (page === 'infos')     loadInfos();
+    if (page === 'documents') loadDocuments();
   }
 
   // ── DATA ─────────────────────────────────────────────────────────
   async function loadStats() {
-    const { data: projets } = await sb.from('projets').select('id').eq('client_id', currentUser.id);
-    const ids = (projets || []).map(p => p.id);
+    const { data: projets } = await sb.from('projets').select('*').eq('client_id', currentUser.id);
     userProjets = projets || [];
 
-    let docCount = 0;
-    if (ids.length > 0) {
-      const { count: dc } = await sb.from('documents').select('*', {count:'exact',head:true}).in('projet_id', ids);
-      docCount = dc || 0;
-    }
+    const commandesCount = (projets || []).filter(p => p.statut === 'Commandé' || p.statut === 'Livraison').length;
 
     const { count: msgCount } = await sb.from('messages_general')
       .select('*', { count: 'exact', head: true })
-      .eq('client_id', currentUser.id)
-      .eq('expediteur', 'admin')
-      .eq('lu', false);
+      .eq('client_id', currentUser.id).eq('expediteur', 'admin').eq('lu', false);
 
-    document.getElementById('stat-projets').textContent = projets?.length || 0;
-    document.getElementById('stat-docs').textContent = docCount;
+    document.getElementById('stat-projets').textContent = (projets || []).filter(p => p.statut !== 'Terminé').length;
+    document.getElementById('stat-commandes').textContent = commandesCount;
     document.getElementById('stat-msgs').textContent = msgCount || 0;
 
     if (msgCount > 0) {
@@ -574,8 +724,9 @@
     userProjets = projets || [];
 
     // Alimenter les selects
-    ['doc-project-select','msg-project-select','upload-project-select'].forEach(id => {
+    ['doc-project-select','upload-project-select'].forEach(id => {
       const sel = document.getElementById(id);
+      if (!sel) return;
       const firstOpt = sel.options[0];
       sel.innerHTML = '';
       sel.appendChild(firstOpt.cloneNode(true));
@@ -591,24 +742,47 @@
     const list = document.getElementById('projets-list');
     if (!projets || projets.length === 0) {
       list.innerHTML = '<div class="empty"><p>Aucun projet en cours.<br>Contactez-nous pour démarrer.</p></div>';
-      return;
+    } else {
+      list.innerHTML = projets.map(p => projectCard(p)).join('');
     }
-    list.innerHTML = projets.map(p => projectCard(p)).join('');
 
-    // Accueil — projets récents
-    const recent = document.getElementById('recent-projects');
-    recent.innerHTML = '<h3 style="font-size:14px;font-weight:700;margin-bottom:14px;opacity:.5;letter-spacing:.1em;text-transform:uppercase;">Projets récents</h3>' +
-      projets.slice(0,2).map(p => projectCard(p)).join('');
+    // Accueil — projet actif
+    const homeCard = document.getElementById('home-current-project');
+    const actif = (projets || []).find(p => p.statut !== 'Terminé') || projets?.[0];
+    if (!actif) {
+      homeCard.innerHTML = '<div class="empty"><p>Aucun projet en cours. <a href="#" onclick="showPage(\'messages\', document.querySelector(\'.nav-item:nth-child(6)\'));return false;" style="color:var(--accent)">Contactez-nous →</a></p></div>';
+    } else {
+      const progress = statusProgress(actif.statut);
+      const date = new Date(actif.created_at).toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+      homeCard.innerHTML = `
+        <div class="current-project-card">
+          <div class="current-project-card__top">
+            <div>
+              <div style="font-size:18px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px;">${actif.nom}</div>
+              ${actif.description ? `<p style="font-size:13px;color:rgba(26,26,26,.5);font-weight:300;line-height:1.6;">${actif.description}</p>` : ''}
+            </div>
+            <span class="status-badge status--${statusClass(actif.statut)}">${actif.statut || 'En étude'}</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Avancement</span><span>${progress}%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
+            <span style="font-size:11px;color:rgba(26,26,26,.35);">Créé le ${date}</span>
+            ${actif.date_livraison ? `<span style="font-size:11px;color:rgba(26,26,26,.35);">· Livraison prévue : <strong>${new Date(actif.date_livraison).toLocaleDateString('fr-FR')}</strong></span>` : ''}
+          </div>
+        </div>`;
+    }
   }
 
   function statusClass(s) {
-    const map = { 'En étude': 'etude', 'Fabrication': 'fabrication', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const map = { 'En étude': 'etude', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return map[s] || 'etude';
   }
 
   function statusProgress(s) {
-    const map = { 'En étude': 25, 'Fabrication': 60, 'Livraison': 85, 'Terminé': 100 };
-    return map[s] || 25;
+    const map = { 'En étude': 20, 'Fabrication': 50, 'Commandé': 70, 'Livraison': 88, 'Terminé': 100 };
+    return map[s] || 20;
   }
 
   function projectCard(p) {
@@ -627,6 +801,100 @@
         </div>
         <div class="project-card__date" style="margin-top:12px;">Créé le ${date}</div>
       </div>`;
+  }
+
+  async function loadCommandes() {
+    const list = document.getElementById('commandes-list');
+    list.innerHTML = '<div class="loading">Chargement…</div>';
+    const { data: projets } = await sb.from('projets').select('*').eq('client_id', currentUser.id)
+      .in('statut', ['Commandé','Livraison']).order('created_at', {ascending:false});
+    if (!projets || projets.length === 0) {
+      list.innerHTML = '<div class="empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.6"/><path d="M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><p>Aucune commande en cours.</p></div>';
+      return;
+    }
+    list.innerHTML = projets.map(p => {
+      const date = p.date_livraison ? new Date(p.date_livraison).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'}) : null;
+      const montant = p.montant ? Number(p.montant).toLocaleString('fr-FR', {style:'currency',currency:'EUR'}) : null;
+      return `<div class="commande-card">
+        <div class="commande-card__header">
+          <div class="commande-card__name">${p.nom}</div>
+          <span class="status-badge status--${statusClass(p.statut)}">${p.statut}</span>
+        </div>
+        <div class="commande-meta">
+          ${montant ? `<div class="commande-meta-item"><div class="commande-meta-item__label">Montant</div><div class="commande-meta-item__val">${montant}</div></div>` : ''}
+          ${date ? `<div class="commande-meta-item"><div class="commande-meta-item__label">Livraison prévue</div><div class="commande-meta-item__val">${date}</div></div>` : ''}
+        </div>
+        ${p.description ? `<p style="font-size:13px;color:rgba(26,26,26,.45);margin-top:14px;font-weight:300;line-height:1.6;">${p.description}</p>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  async function loadNotices() {
+    const list = document.getElementById('notices-list');
+    list.innerHTML = '<div class="loading">Chargement…</div>';
+    const ids = userProjets.map(p => p.id);
+    if (!ids.length) {
+      list.innerHTML = '<div class="empty"><p>Aucune notice disponible.</p></div>';
+      return;
+    }
+    const { data: docs } = await sb.from('documents').select('*, projets(nom)')
+      .in('projet_id', ids).eq('categorie', 'notice').order('created_at', {ascending:false});
+    if (!docs || docs.length === 0) {
+      list.innerHTML = '<div class="empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><p>Aucune notice disponible pour l\'instant.<br>Kobo Design vous en enverra une à la livraison.</p></div>';
+      return;
+    }
+    const docsWithUrls = await Promise.all(docs.map(async doc => {
+      let signedUrl = doc.url;
+      if (doc.url && !doc.url.startsWith('http')) {
+        const { data } = await sb.storage.from('documents-client').createSignedUrl(doc.url, 3600);
+        signedUrl = data?.signedUrl || '';
+      }
+      return { ...doc, signedUrl };
+    }));
+    list.innerHTML = docsWithUrls.map(doc => `
+      <div class="doc-item">
+        <div class="doc-icon" style="background:rgba(91,33,182,.08);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="doc-info">
+          <div class="doc-name">${doc.nom}</div>
+          <div class="doc-meta">${doc.projets?.nom || ''} · ${new Date(doc.created_at).toLocaleDateString('fr-FR')}</div>
+        </div>
+        <a href="${doc.signedUrl}" target="_blank" class="doc-dl">Télécharger</a>
+      </div>`).join('');
+  }
+
+  async function loadInfos() {
+    const p = currentProfil || {};
+    document.getElementById('info-prenom').value = p.prenom || '';
+    document.getElementById('info-nom').value = p.nom || '';
+    document.getElementById('info-email').value = currentUser.email || '';
+    document.getElementById('info-telephone').value = p.telephone || '';
+  }
+
+  async function saveInfos() {
+    const prenom    = document.getElementById('info-prenom').value.trim();
+    const nom       = document.getElementById('info-nom').value.trim();
+    const telephone = document.getElementById('info-telephone').value.trim();
+    if (!prenom || !nom) return showToast('Prénom et nom obligatoires.', 'error');
+    const { error } = await sb.from('clients').upsert({ id: currentUser.id, prenom, nom, telephone: telephone || null, email: currentUser.email }, { onConflict: 'id' });
+    if (error) return showToast('Erreur : ' + error.message, 'error');
+    currentProfil = { ...currentProfil, prenom, nom, telephone };
+    document.getElementById('user-name').textContent = prenom + ' ' + nom;
+    document.getElementById('welcome-title').textContent = `Bonjour, ${prenom} 👋`;
+    showToast('Informations mises à jour !');
+  }
+
+  async function changePassword() {
+    const pwd  = document.getElementById('new-pwd').value;
+    const pwd2 = document.getElementById('new-pwd2').value;
+    if (pwd.length < 8) return showToast('8 caractères minimum.', 'error');
+    if (pwd !== pwd2)   return showToast('Les mots de passe ne correspondent pas.', 'error');
+    const { error } = await sb.auth.updateUser({ password: pwd });
+    if (error) return showToast(error.message, 'error');
+    document.getElementById('new-pwd').value = '';
+    document.getElementById('new-pwd2').value = '';
+    showToast('Mot de passe mis à jour !');
   }
 
   async function loadDocuments() {
