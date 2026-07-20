@@ -490,9 +490,11 @@
         <!-- Formulaire (état initial) -->
         <div id="cfgFormWrap">
           <div class="cfg-field-row" style="margin-bottom:8px">
-            <input  type="text"  id="cfgPrenom"  class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
-            <input  type="email" id="cfgEmail"   class="cfg-field" placeholder="Votre email *"  maxlength="200" autocomplete="email"/>
-            <textarea             id="cfgMessage" class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
+            <input  type="text"  id="cfgPrenom"    class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
+            <input  type="text"  id="cfgNom"       class="cfg-field" placeholder="Votre nom *" maxlength="80" autocomplete="family-name"/>
+            <input  type="email" id="cfgEmail"     class="cfg-field" placeholder="Votre email *" maxlength="200" autocomplete="email"/>
+            <input  type="tel"   id="cfgTelephone" class="cfg-field" placeholder="Votre téléphone (optionnel)" maxlength="30" autocomplete="tel"/>
+            <textarea             id="cfgMessage"  class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
           </div>
           <!-- Récap config -->
           <div class="cfg-summary" id="cfgSummary" style="margin-bottom:12px">—</div>
@@ -1773,17 +1775,18 @@ function updateCTA(){
 }
 
 async function submitConfig(){
-  var prenom  = (document.getElementById('cfgPrenom').value||'').trim();
-  var email   = (document.getElementById('cfgEmail').value||'').trim();
-  var message = (document.getElementById('cfgMessage').value||'').trim();
-  var bot     = document.getElementById('cfgBot').value;
-  var errEl   = document.getElementById('cfgErr');
-  var btn     = document.getElementById('cfgSubmitBtn');
+  var prenom     = (document.getElementById('cfgPrenom').value||'').trim();
+  var nom        = (document.getElementById('cfgNom').value||'').trim();
+  var email      = (document.getElementById('cfgEmail').value||'').trim();
+  var telephone  = (document.getElementById('cfgTelephone').value||'').trim();
+  var message    = (document.getElementById('cfgMessage').value||'').trim();
+  var bot        = document.getElementById('cfgBot').value;
+  var errEl      = document.getElementById('cfgErr');
+  var btn        = document.getElementById('cfgSubmitBtn');
 
-  // Validation basique
   errEl.style.display='none';
-  if(!prenom||!email){
-    errEl.textContent='Prénom et email obligatoires.';
+  if(!prenom||!nom||!email){
+    errEl.textContent='Prénom, nom et email obligatoires.';
     errEl.style.display='block';
     return;
   }
@@ -1796,6 +1799,8 @@ async function submitConfig(){
   btn.disabled=true; btn.textContent='Envoi en cours…';
 
   var def=MATS.find(function(m){return m.id===state.matId;})||MATS[0];
+  var projetDesc='Bibliothèque sur-mesure — '+state.W+'cm × '+state.H+'cm × '+state.D+'cm, matériau : '+def.label+', '+elements.length+' élément(s).';
+  if(message) projetDesc+='\nMessage : '+message;
 
   try {
     var resp=await fetch('/api/biblio-config',{
@@ -1816,7 +1821,19 @@ async function submitConfig(){
     var data=await resp.json();
     if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
 
-    // Succès
+    // Créer le compte client automatiquement
+    try {
+      await fetch('/api/auto-register',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Register-Secret':'kobo-configurateur-2024'},
+        body:JSON.stringify({
+          prenom, nom, email, telephone,
+          projetNom: 'Bibliothèque '+prenom+' '+nom,
+          projetDesc: projetDesc
+        })
+      });
+    } catch(e){ console.warn('auto-register failed',e); }
+
     document.getElementById('cfgFormWrap').style.display='none';
     document.getElementById('cfgSuccess').style.display='block';
 

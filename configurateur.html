@@ -672,9 +672,11 @@ textarea.cfg-field{resize:vertical;min-height:72px}
         <div class="recap-box" id="recap4"></div>
         <div class="sec">Vos coordonnées</div>
         <div id="cfgFormWrap">
-          <input type="text"  id="cfgPrenom"  class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
-          <input type="email" id="cfgEmail"   class="cfg-field" placeholder="Votre email *"  maxlength="200" autocomplete="email"/>
-          <textarea           id="cfgMessage" class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
+          <input type="text"  id="cfgPrenom"    class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
+          <input type="text"  id="cfgNom"       class="cfg-field" placeholder="Votre nom *" maxlength="80" autocomplete="family-name"/>
+          <input type="email" id="cfgEmail"     class="cfg-field" placeholder="Votre email *" maxlength="200" autocomplete="email"/>
+          <input type="tel"   id="cfgTelephone" class="cfg-field" placeholder="Votre téléphone (optionnel)" maxlength="30" autocomplete="tel"/>
+          <textarea           id="cfgMessage"   class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
           <input type="text" id="cfgBot" style="display:none" tabindex="-1" autocomplete="off"/>
           <div class="cfg-err" id="cfgErr" style="display:none;margin-bottom:10px"></div>
           <button class="cta-btn" id="cfgSubmitBtn" onclick="submitConfig()">Envoyer ma configuration →</button>
@@ -3291,15 +3293,17 @@ function buildRecap4(){
 }
 
 async function submitConfig(){
-  var prenom  = (document.getElementById('cfgPrenom').value||'').trim();
-  var email   = (document.getElementById('cfgEmail').value||'').trim();
-  var message = (document.getElementById('cfgMessage').value||'').trim();
-  var bot     = document.getElementById('cfgBot').value;
-  var errEl   = document.getElementById('cfgErr');
-  var btn     = document.getElementById('cfgSubmitBtn');
+  var prenom     = (document.getElementById('cfgPrenom').value||'').trim();
+  var nom        = (document.getElementById('cfgNom').value||'').trim();
+  var email      = (document.getElementById('cfgEmail').value||'').trim();
+  var telephone  = (document.getElementById('cfgTelephone').value||'').trim();
+  var message    = (document.getElementById('cfgMessage').value||'').trim();
+  var bot        = document.getElementById('cfgBot').value;
+  var errEl      = document.getElementById('cfgErr');
+  var btn        = document.getElementById('cfgSubmitBtn');
 
   errEl.style.display='none';
-  if(!prenom||!email){ errEl.textContent='Prénom et email obligatoires.'; errEl.style.display='block'; return; }
+  if(!prenom||!nom||!email){ errEl.textContent='Prénom, nom et email obligatoires.'; errEl.style.display='block'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
 
   btn.disabled=true; btn.textContent='Envoi en cours…';
@@ -3307,7 +3311,19 @@ async function submitConfig(){
   var counts={shelf:0,separator:0,porte:0,tiroir:0};
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
 
+  // Résumé lisible de la configuration
+  var ftLabels={biblio:'Bibliothèque',tv:'Meuble TV',dressing:'Dressing',sdb:'Meuble salle de bain'};
+  var ftLabel = ftLabels[currentFT] || currentFT;
+  var projetNom = ftLabel + ' sur mesure — ' + Math.round(S.CL*100) + 'x' + Math.round(S.CH*100) + ' cm';
+  var projetDesc = [
+    'Type : ' + ftLabel,
+    'Dimensions : ' + Math.round(S.CL*100) + ' × ' + Math.round(S.CH*100) + ' × ' + Math.round(S.CairsonP*100) + ' cm',
+    'Matière caisson : ' + (MATS_CAIS[S.matCais]?.n || S.matCais),
+    message ? 'Message : ' + message : ''
+  ].filter(Boolean).join('\n');
+
   try {
+    // 1. Envoyer la configuration (email interne Kobo)
     var resp=await fetch('/api/sdb-config',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -3331,7 +3347,18 @@ async function submitConfig(){
     });
     var data=await resp.json();
     if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
+
+    // 2. Créer le compte client + projet automatiquement
+    await fetch('/api/auto-register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Register-Secret':'kobo-configurateur-2024'},
+      body:JSON.stringify({ prenom, nom, email, telephone, projetNom, projetDesc })
+    });
+
     document.getElementById('cfgFormWrap').style.display='none';
+    document.getElementById('cfgSuccess').innerHTML=
+      '<span class="cfg-ok-icon">✓</span>Configuration reçue !<br>' +
+      '<span style="font-weight:400;color:var(--text2)">Votre espace client a été créé — consultez vos emails pour y accéder.</span>';
     document.getElementById('cfgSuccess').style.display='block';
   } catch(err){
     btn.disabled=false; btn.textContent='Envoyer ma configuration →';
