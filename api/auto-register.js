@@ -74,7 +74,7 @@ module.exports = async function handler(req, res) {
     const { data: linkData } = await sb.auth.admin.generateLink({
       type: 'magiclink',
       email,
-      options: { redirectTo: 'https://www.kobo-design.fr/espace-client?v=2' }
+      options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' }
     });
     const magicLink = linkData?.properties?.action_link || 'https://www.kobo-design.fr/espace-client?v=2';
 
