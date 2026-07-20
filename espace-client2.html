@@ -564,10 +564,13 @@
   // ── CONFIG SUPABASE ──────────────────────────────────────────────
   const SUPABASE_URL = 'https://auzcbtipzqxmllkzdxls.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { flowType: 'implicit' }
+  });
 
-  // Détecter un invite link via le paramètre ?invite=1 (persistant même avec PKCE)
-  const _isInvite = new URLSearchParams(window.location.search).get('invite') === '1';
+  // Avec implicit flow, Supabase met #type=invite dans le hash — on le capture immédiatement
+  const _initialHash = Object.fromEntries(new URLSearchParams(window.location.hash.slice(1)));
+  const _isInvite = _initialHash.type === 'invite';
 
   let currentUser = null;
   let userProjets = [];
