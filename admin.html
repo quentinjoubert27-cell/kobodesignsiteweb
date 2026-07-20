@@ -628,6 +628,9 @@
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-projet-detail')" style="padding:6px 10px;">✕</button>
     </div>
 
+    <!-- Client -->
+    <div id="pd-client-info" style="display:none;margin-bottom:14px;"></div>
+
     <!-- Statut + actions -->
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
       <select id="pd-statut" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
@@ -1207,6 +1210,22 @@
       document.getElementById('pd-statut').value = projet.statut || 'En étude';
       document.getElementById('pd-montant').value = projet.montant || '';
       document.getElementById('pd-date-livraison').value = projet.date_livraison ? projet.date_livraison.split('T')[0] : '';
+
+      // Afficher les infos client
+      const client = allClients.find(c => c.id === projet.client_id);
+      const pdClient = document.getElementById('pd-client-info');
+      if (client && pdClient) {
+        const initials = ((client.prenom||'')[0]||'') + ((client.nom||'')[0]||'');
+        pdClient.innerHTML = `<div style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:10px;padding:12px 16px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#FFFAF0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${escHtml(initials.toUpperCase())}</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;">${escHtml((client.prenom||'') + ' ' + (client.nom||''))}</div>
+            <div style="font-size:12px;color:rgba(26,26,26,.5);">${escHtml(client.email||'')}${client.telephone ? ' · ' + escHtml(client.telephone) : ''}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="closeModal('modal-projet-detail');openClientDetail('${projet.client_id}')">Voir client →</button>
+        </div>`;
+        pdClient.style.display = 'block';
+      } else if (pdClient) pdClient.style.display = 'none';
     }
 
     await Promise.all([loadProjetDocs(), loadProjetMsgs(), loadProjetConfig()]);
