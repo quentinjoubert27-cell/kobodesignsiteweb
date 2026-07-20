@@ -35,14 +35,14 @@ module.exports = async function handler(req, res) {
     const { data: existing } = await sb.auth.admin.listUsers();
     const found = (existing?.users || []).find(u => u.email === email);
 
+    let isNew = false;
     if (found) {
       userId = found.id;
-      // Mettre à jour les métadonnées si besoin
       await sb.auth.admin.updateUserById(userId, {
         user_metadata: { prenom, nom: nom || found.user_metadata?.nom || '' }
       });
     } else {
-      // Créer le compte
+      isNew = true;
       const { data: newUser, error: createErr } = await sb.auth.admin.createUser({
         email,
         email_confirm: true,
@@ -70,9 +70,9 @@ module.exports = async function handler(req, res) {
     }).select().single();
     if (projetErr) throw new Error('Création projet: ' + projetErr.message);
 
-    // 4. Générer un lien magique pour connexion directe
+    // 4. Générer un lien d'accès (invite pour nouveau compte, magiclink pour existant)
     const { data: linkData } = await sb.auth.admin.generateLink({
-      type: 'magiclink',
+      type: isNew ? 'invite' : 'magiclink',
       email,
       options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' }
     });

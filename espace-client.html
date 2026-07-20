@@ -427,7 +427,18 @@
       showDashboard();
     }
     sb.auth.onAuthStateChange((event, session) => {
-      if (session) { currentUser = session.user; showDashboard(); }
+      if (session) {
+        currentUser = session.user;
+        if (event === 'USER_UPDATED' || event === 'SIGNED_IN') {
+          // Vérifier si c'est une invite (premier accès sans mot de passe)
+          const hash = Object.fromEntries(new URLSearchParams(window.location.hash.slice(1)));
+          if (hash.type === 'invite') {
+            showSetPassword();
+            return;
+          }
+        }
+        showDashboard();
+      }
       else { showAuth(); }
     });
   })();
@@ -782,6 +793,30 @@
     }
   }
 
+  // ── SET PASSWORD (premier accès via invite) ──────────────────────
+  function showSetPassword() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('set-password-screen').style.display = 'flex';
+  }
+
+  async function submitSetPassword() {
+    const pwd  = document.getElementById('sp-pwd').value;
+    const pwd2 = document.getElementById('sp-pwd2').value;
+    const err  = document.getElementById('sp-err');
+    err.style.display = 'none';
+    if (pwd.length < 8) { err.textContent = 'Mot de passe trop court (8 caractères min).'; err.style.display = 'block'; return; }
+    if (pwd !== pwd2)   { err.textContent = 'Les mots de passe ne correspondent pas.'; err.style.display = 'block'; return; }
+    const btn = document.getElementById('sp-btn');
+    btn.disabled = true; btn.textContent = 'Enregistrement…';
+    const { error } = await sb.auth.updateUser({ password: pwd });
+    if (error) { err.textContent = error.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Créer mon mot de passe →'; return; }
+    document.getElementById('set-password-screen').style.display = 'none';
+    window.history.replaceState(null, '', window.location.pathname);
+    showDashboard();
+    showToast('Mot de passe créé !');
+  }
+
   // ── TOAST ────────────────────────────────────────────────────────
   function showToast(msg, type='success') {
     const t = document.getElementById('toast');
@@ -790,5 +825,18 @@
     setTimeout(() => t.className = 'toast', 3000);
   }
 </script>
+
+<!-- Écran création mot de passe (premier accès) -->
+<div id="set-password-screen" style="display:none;position:fixed;inset:0;background:#F2EDE3;z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:40px;max-width:400px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.12);">
+    <img src="img/logo-kobo.png" alt="Kobo Design" style="height:36px;margin-bottom:28px;display:block;">
+    <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;color:#1A1A1A;">Créez votre mot de passe</h2>
+    <p style="font-size:13px;color:#666;margin:0 0 24px;line-height:1.6;">Pour accéder à votre espace client, choisissez un mot de passe sécurisé.</p>
+    <div id="sp-err" style="display:none;background:#fef2f2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;"></div>
+    <input id="sp-pwd"  type="password" placeholder="Mot de passe (8 caractères min)" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid rgba(26,26,26,.15);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;">
+    <input id="sp-pwd2" type="password" placeholder="Confirmer le mot de passe" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid rgba(26,26,26,.15);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:20px;">
+    <button id="sp-btn" onclick="submitSetPassword()" style="width:100%;background:#CD3E00;color:#fff;border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.04em;">Créer mon mot de passe →</button>
+  </div>
+</div>
 </body>
 </html>
