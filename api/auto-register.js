@@ -89,13 +89,13 @@ module.exports = async function handler(req, res) {
       ? `https://www.kobo-design.fr/espace-client2?token_hash=${tokenHash}&type=magiclink${isNew ? '&new=1' : ''}`
       : 'https://www.kobo-design.fr/espace-client2';
 
-    // 5. Envoyer l'email de bienvenue au client
-    await resend.emails.send({
-      from: 'Kobo Design <contact@kobo-design.fr>',
-      to: email,
-      subject: `Votre espace client Kobo Design est prêt, ${prenom} !`,
-      html: `
-        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
+    // 5. Envoyer l'email au client (contenu différent selon nouveau ou existant)
+    const emailSubject = isNew
+      ? `Votre espace client Kobo Design est prêt, ${prenom} !`
+      : `Nouvelle configuration reçue, ${prenom} !`;
+
+    const emailBody = isNew
+      ? `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
           <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
             <p style="color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">Kobo Design</p>
             <h1 style="color:#FFFAF0;font-size:22px;margin:0">Votre espace client est prêt !</h1>
@@ -111,11 +111,38 @@ module.exports = async function handler(req, res) {
               <p style="font-size:13px;color:#666;margin:0">Statut : En étude</p>
             </div>
             <a href="${magicLink}" style="display:inline-block;background:#CD3E00;color:#fff;padding:14px 28px;border-radius:8px;font-weight:700;font-size:13px;letter-spacing:.08em;text-decoration:none;text-transform:uppercase;">
+              Créer mon mot de passe →
+            </a>
+            <p style="font-size:11px;color:#999;margin:24px 0 0;">Ce lien est valable 24h. Après expiration, rendez-vous sur <a href="https://www.kobo-design.fr/espace-client2" style="color:#CD3E00">kobo-design.fr/espace-client</a>.</p>
+          </div>
+        </div>`
+      : `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
+          <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
+            <p style="color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">Kobo Design</p>
+            <h1 style="color:#FFFAF0;font-size:22px;margin:0">Nouvelle configuration reçue</h1>
+          </div>
+          <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
+            <p style="font-size:15px;line-height:1.7;margin:0 0 24px">
+              Bonjour <strong>${prenom}</strong>,<br><br>
+              Nous avons bien reçu votre nouvelle configuration et créé un nouveau projet dans votre espace client.
+            </p>
+            <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+              <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 8px">Nouveau projet</p>
+              <p style="font-size:15px;font-weight:700;margin:0 0 4px">${projetNom}</p>
+              <p style="font-size:13px;color:#666;margin:0">Statut : En étude</p>
+            </div>
+            <a href="${magicLink}" style="display:inline-block;background:#CD3E00;color:#fff;padding:14px 28px;border-radius:8px;font-weight:700;font-size:13px;letter-spacing:.08em;text-decoration:none;text-transform:uppercase;">
               Accéder à mon espace →
             </a>
-            <p style="font-size:11px;color:#999;margin:24px 0 0;">Ce lien est valable 24h. Après expiration, rendez-vous sur <a href="https://www.kobo-design.fr/espace-client?v=2" style="color:#CD3E00">kobo-design.fr/espace-client</a> et utilisez "Mot de passe oublié".</p>
+            <p style="font-size:11px;color:#999;margin:24px 0 0;">Ce lien est valable 24h.</p>
           </div>
-        </div>`,
+        </div>`;
+
+    await resend.emails.send({
+      from: 'Kobo Design <contact@kobo-design.fr>',
+      to: email,
+      subject: emailSubject,
+      html: emailBody,
     });
 
     // 6. Notifier l'admin
@@ -123,7 +150,7 @@ module.exports = async function handler(req, res) {
       await resend.emails.send({
         from: 'Kobo Design <contact@kobo-design.fr>',
         to: process.env.CONTACT_EMAIL,
-        subject: `Nouveau client via configurateur — ${prenom} ${nom}`,
+        subject: isNew ? `Nouveau client via configurateur — ${prenom} ${nom}` : `Nouvelle config — client existant — ${prenom} ${nom}`,
         html: `<p style="font-family:sans-serif">Nouveau compte créé automatiquement via le configurateur :<br><br>
           <strong>${prenom} ${nom}</strong><br>
           ${email}<br>
