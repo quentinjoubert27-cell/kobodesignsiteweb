@@ -363,7 +363,10 @@
           <p class="view-eyebrow">Fiche client</p>
           <h1 class="view-title" id="cd-name">—</h1>
         </div>
-        <button class="btn btn-primary" onclick="openModalNewProjetForClient()">+ Nouveau projet</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="openModalNewProjetForClient()">+ Nouveau projet</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteClient()">Supprimer le client</button>
+        </div>
       </div>
       <div id="cd-projets"></div>
     </div>
@@ -793,6 +796,23 @@
     const { error } = await sb.from('projets').update({statut, updated_at: new Date().toISOString()}).eq('id', currentProjetId);
     if (!error) { showToast('Statut mis à jour'); await loadProjets(); await loadDashboard(); }
     else showToast('Erreur mise à jour', 'err');
+  }
+
+  async function deleteClient() {
+    const client = allClients.find(c => c.id === currentClientId) || {};
+    const nom = (client.prenom || '') + ' ' + (client.nom || '');
+    if (!confirm(`Supprimer le client "${nom.trim()}" ? Tous ses projets, documents et messages seront supprimés. Cette action est irréversible.`)) return;
+    const { data: { session } } = await sb.auth.getSession();
+    const resp = await fetch('/api/delete-client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ clientId: currentClientId })
+    });
+    const result = await resp.json();
+    if (!resp.ok) { showToast(result.error || 'Erreur suppression', 'error'); return; }
+    showToast('Client supprimé');
+    showView('clients', document.querySelector('.nav-item:nth-child(3)'));
+    await Promise.all([loadClients(), loadDashboard()]);
   }
 
   async function deleteProjet() {
