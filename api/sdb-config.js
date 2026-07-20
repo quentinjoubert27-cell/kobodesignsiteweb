@@ -51,12 +51,13 @@ module.exports = async function handler(req, res) {
     const elements = Array.isArray(cfg.elements) ? cfg.elements : [];
     const counts   = cfg.counts || {};
 
-    const { error: dbError } = await supabase
+    const { data: inserted, error: dbError } = await supabase
       .from('configs_sdb')
       .insert([{
         prenom,
         email,
         message: message || null,
+        type: furniture_type,
         // meuble
         meuble_l: meuble.L || 0,
         meuble_h: meuble.H || 0,
@@ -68,19 +69,19 @@ module.exports = async function handler(req, res) {
         plan_ep: plan.Ep || 0,
         plan_mat: plan.matLabel || '',
         // vasques
-        nb_vasques: vasques.nb || 1,
+        nb_vasques: vasques.nb || (furniture_type === 'sdb' ? 1 : 0),
         vasque_w: vasques.W || 0,
         vasque_d: vasques.D || 0,
-        vasque_label: furniture_type !== 'sdb'
-          ? ('__ft:' + furniture_type)
-          : (vasques.label || vasques.id || '').toString().slice(0, 40),
+        vasque_label: (vasques.label || vasques.id || '').toString().slice(0, 40),
         // intérieur
         nb_tablettes: counts.shelf || 0,
         nb_separateurs: counts.separator || 0,
         nb_portes: counts.porte || 0,
         nb_tiroirs: counts.tiroir || 0,
         elements,
-      }]);
+      }])
+      .select('id')
+      .single();
 
     if (dbError) {
       console.error('Supabase error:', dbError);
@@ -150,7 +151,7 @@ module.exports = async function handler(req, res) {
       </div>`,
     });
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, configId: inserted?.id || null });
 
   } catch (err) {
     console.error('sdb-config error:', err);

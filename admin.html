@@ -1092,14 +1092,25 @@
     filterConfigs();
   }
 
+  const TYPE_LABELS = { biblio:'Bibliothèque', sdb:'Salle de bain', tv:'Meuble TV', dressing:'Dressing', meuble:'Mobilier' };
+  const TYPE_COLORS = {
+    biblio:   { bg:'#fef3c7', color:'#92400e' },
+    sdb:      { bg:'#dbeafe', color:'#1e40af' },
+    tv:       { bg:'#f3e8ff', color:'#6b21a8' },
+    dressing: { bg:'#dcfce7', color:'#166534' },
+    meuble:   { bg:'#fce7f3', color:'#9d174d' },
+  };
+
   function renderConfigsTable(list) {
     const tbody = document.getElementById('configs-table');
     if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Aucune configuration.</td></tr>'; return; }
     tbody.innerHTML = list.map((c, i) => {
       const isBiblio = c._type === 'biblio';
-      const typeBadge = isBiblio
-        ? `<span class="sbadge" style="background:#fef3c7;color:#92400e;">Bibliothèque</span>`
-        : `<span class="sbadge" style="background:#dbeafe;color:#1e40af;">Salle de bain</span>`;
+      // Pour configs_sdb, le type réel est dans la colonne `type`
+      const realType = isBiblio ? 'biblio' : (c.type || 'sdb');
+      const typeLabel = TYPE_LABELS[realType] || realType;
+      const typeColor = TYPE_COLORS[realType] || TYPE_COLORS.sdb;
+      const typeBadge = `<span class="sbadge" style="background:${typeColor.bg};color:${typeColor.color};">${typeLabel}</span>`;
       const dims = isBiblio
         ? `${c.largeur||'?'} × ${c.hauteur||'?'} × ${c.profondeur||'?'} cm`
         : `${c.meuble_l||'?'} × ${c.meuble_h||'?'} × ${c.meuble_p||'?'} cm`;
@@ -1153,8 +1164,9 @@
         </div>
       </div>`;
     } else {
+      const realTypeLbl = TYPE_LABELS[c.type || 'sdb'] || 'Meuble';
       html += `<div style="background:var(--bg);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Meuble salle de bain</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">${realTypeLbl}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
           ${field('Largeur', c.meuble_l ? c.meuble_l + ' cm' : null)}
           ${field('Hauteur', c.meuble_h ? c.meuble_h + ' cm' : null)}
@@ -1200,16 +1212,30 @@
       </div>`;
     }
 
-    // Lien visualisation biblio
-    if (isBiblio && c.largeur) {
-      try {
-        const cfg = { W: c.largeur, H: c.hauteur, D: c.profondeur, matId: 'chene', elements: c.elements || [] };
-        const vizUrl = '/configurateur-biblio?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
-        html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;">🔗 Visualiser en 3D →</a>`;
-      } catch(e) {}
+    // Lien projet si lié
+    if (c.projet_id) {
+      html += `<div style="background:#f0fdf4;border-left:3px solid #22c55e;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;font-weight:600;color:#166534;">Lié à un projet</span>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-config-detail');openProjetDetail('${c.projet_id}','Projet lié')">Voir le projet →</button>
+      </div>`;
     }
 
-    document.getElementById('modal-config-title').textContent = (isBiblio ? 'Bibliothèque' : 'Salle de bain') + ' — ' + (c.prenom || '') + ' · ' + new Date(c.created_at).toLocaleDateString('fr-FR');
+    // Lien visualisation 3D
+    try {
+      let vizUrl = null;
+      if (isBiblio && c.largeur) {
+        const cfg = { W: c.largeur, H: c.hauteur, D: c.profondeur, matId: 'chene', elements: c.elements || [] };
+        vizUrl = '/configurateur-biblio?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+      } else if (!isBiblio && c.meuble_l) {
+        const ft = c.type || 'sdb';
+        vizUrl = '/configurateur?ft=' + encodeURIComponent(ft);
+      }
+      if (vizUrl) html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;">🔗 Ouvrir dans le configurateur →</a>`;
+    } catch(e) {}
+
+    const realType = isBiblio ? 'biblio' : (c.type || 'sdb');
+    const typeLabel = TYPE_LABELS[realType] || realType;
+    document.getElementById('modal-config-title').textContent = typeLabel + ' — ' + (c.prenom || '') + ' · ' + new Date(c.created_at).toLocaleDateString('fr-FR');
     document.getElementById('config-detail-content').innerHTML = html;
     document.getElementById('modal-config-detail').classList.add('open');
   }

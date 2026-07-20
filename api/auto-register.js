@@ -20,12 +20,14 @@ module.exports = async function handler(req, res) {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   const body = req.body || {};
-  const prenom    = (body.prenom    || '').toString().trim().slice(0, 80);
-  const nom       = (body.nom       || '').toString().trim().slice(0, 80);
-  const email     = (body.email     || '').toString().trim().toLowerCase().slice(0, 200);
-  const telephone = (body.telephone || '').toString().trim().slice(0, 30);
-  const projetNom = (body.projetNom || 'Configuration').toString().trim().slice(0, 200);
-  const projetDesc= (body.projetDesc|| '').toString().trim().slice(0, 2000);
+  const prenom     = (body.prenom     || '').toString().trim().slice(0, 80);
+  const nom        = (body.nom        || '').toString().trim().slice(0, 80);
+  const email      = (body.email      || '').toString().trim().toLowerCase().slice(0, 200);
+  const telephone  = (body.telephone  || '').toString().trim().slice(0, 30);
+  const projetNom  = (body.projetNom  || 'Configuration').toString().trim().slice(0, 200);
+  const projetDesc = (body.projetDesc || '').toString().trim().slice(0, 2000);
+  const configId   = body.configId   || null;
+  const configTable= body.configTable || null;
 
   if (!prenom || !email) return res.status(400).json({ error: 'Prénom et email obligatoires' });
 
@@ -69,6 +71,11 @@ module.exports = async function handler(req, res) {
       statut: 'En étude',
     }).select().single();
     if (projetErr) throw new Error('Création projet: ' + projetErr.message);
+
+    // 3b. Lier la config au projet si fourni
+    if (configId && configTable && ['configs_biblio', 'configs_sdb'].includes(configTable)) {
+      await sb.from(configTable).update({ projet_id: projet.id }).eq('id', configId);
+    }
 
     // 4. Générer un lien d'accès (invite pour nouveau compte, magiclink pour existant)
     const { data: linkData } = await sb.auth.admin.generateLink({

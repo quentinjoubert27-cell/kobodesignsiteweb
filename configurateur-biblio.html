@@ -1829,7 +1829,8 @@ async function submitConfig(){
         body:JSON.stringify({
           prenom, nom, email, telephone,
           projetNom: 'Bibliothèque '+prenom+' '+nom,
-          projetDesc: projetDesc
+          projetDesc: projetDesc,
+          configId: data.configId || null, configTable: 'configs_biblio'
         })
       });
     } catch(e){ console.warn('auto-register failed',e); }

@@ -3352,7 +3352,8 @@ async function submitConfig(){
     await fetch('/api/auto-register',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Register-Secret':'kobo-configurateur-2024'},
-      body:JSON.stringify({ prenom, nom, email, telephone, projetNom, projetDesc })
+      body:JSON.stringify({ prenom, nom, email, telephone, projetNom, projetDesc,
+        configId: data.configId || null, configTable: 'configs_sdb' })
     });
 
     document.getElementById('cfgFormWrap').style.display='none';

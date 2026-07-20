@@ -68,7 +68,7 @@ module.exports = async function handler(req, res) {
     const vizUrl = `https://www.kobo-design.fr/configurateur-biblio-test?c=${configB64}`;
 
     // ── Supabase ─────────────────────────────────────
-    const { error: dbError } = await supabase
+    const { data: inserted, error: dbError } = await supabase
       .from('configs_biblio')
       .insert([{
         prenom,
@@ -78,12 +78,14 @@ module.exports = async function handler(req, res) {
         hauteur: H,
         profondeur: D,
         essence: matLabel,
-        elements,           // JSONB — stockage brut de tout le tableau
+        elements,
         nb_etageres,
         nb_traverses,
         nb_intercalaires,
         nb_portes,
-      }]);
+      }])
+      .select('id')
+      .single();
 
     if (dbError) {
       console.error('Supabase error:', dbError);
@@ -149,7 +151,7 @@ module.exports = async function handler(req, res) {
       </div>`,
     });
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, configId: inserted?.id || null });
 
   } catch (err) {
     console.error('biblio-config error:', err);
