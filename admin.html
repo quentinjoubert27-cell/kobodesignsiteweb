@@ -679,8 +679,8 @@
       <div class="field">
         <label>Catégorie</label>
         <select id="doc-categorie-select">
-          <option value="Document">Document</option>
-          <option value="Notice de montage">Notice de montage</option>
+          <option value="document">Document</option>
+          <option value="notice">Notice de montage</option>
         </select>
       </div>
       <div class="field">
@@ -1246,8 +1246,8 @@
     }));
 
     container.innerHTML = docsWithUrls.map(d => {
-      const catClass = d.categorie === 'Notice de montage' ? 'cat-notice' : 'cat-document';
-      const catLabel = d.categorie || 'Document';
+      const catClass = d.categorie === 'notice' ? 'cat-notice' : 'cat-document';
+      const catLabel = d.categorie === 'notice' ? 'Notice de montage' : 'Document';
       return `
         <div class="doc-item ${d.uploade_par === 'client' ? 'doc-by-client' : ''}">
           <div class="doc-icon">
