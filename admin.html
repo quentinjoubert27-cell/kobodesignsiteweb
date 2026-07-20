@@ -338,10 +338,6 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Commandes
     </button>
-    <button class="nav-item" onclick="showView('configs', this)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Configurations
-    </button>
     <button class="nav-item" onclick="showView('messages-view', this)" id="nav-msgs">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Messages
@@ -478,7 +474,6 @@
       <div class="tab-nav">
         <button class="tab-btn active" onclick="switchClientTab('projets', this)">Projets</button>
         <button class="tab-btn" onclick="switchClientTab('messages', this)">Messages</button>
-        <button class="tab-btn" onclick="switchClientTab('configurations', this)">Configurations</button>
       </div>
 
       <div class="tab-pane active" id="cd-tab-projets">
@@ -493,9 +488,6 @@
             <button class="btn btn-primary btn-sm" onclick="sendReplyFromClientDetail()">Envoyer</button>
           </div>
         </div>
-      </div>
-      <div class="tab-pane" id="cd-tab-configurations">
-        <div id="cd-configs"></div>
       </div>
     </div>
 
@@ -533,42 +525,6 @@
     </div>
 
     <!-- ── CONFIGURATIONS ── -->
-    <div class="view" id="view-configs">
-      <div class="view-header">
-        <div class="view-title-wrap">
-          <p class="view-eyebrow">Leads entrants</p>
-          <h1 class="view-title">Configurations reçues</h1>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <span id="configs-count" style="font-size:12px;color:rgba(26,26,26,.4);"></span>
-          <input type="search" id="configs-search" placeholder="Rechercher…" style="padding:8px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:12px;width:180px;" oninput="filterConfigs()"/>
-        </div>
-      </div>
-      <!-- Filtres type -->
-      <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
-        <button class="tab-btn active" onclick="filterConfigsType('all',this)" id="cfg-tab-all">Tous</button>
-        <button class="tab-btn" onclick="filterConfigsType('biblio',this)" id="cfg-tab-biblio">Bibliothèque</button>
-        <button class="tab-btn" onclick="filterConfigsType('sdb',this)" id="cfg-tab-sdb">Salle de bain</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Contact</th>
-              <th>Dimensions</th>
-              <th>Matériau</th>
-              <th>Détails</th>
-              <th>Message</th>
-              <th>Date</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="configs-table"><tr><td colspan="8" class="loading">Chargement…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
     <!-- ── MESSAGES ── -->
     <div class="view" id="view-messages-view">
       <div class="view-header">
@@ -697,6 +653,12 @@
       </div>
     </div>
 
+    <!-- Configuration d'origine -->
+    <div id="pd-config" style="display:none;margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:10px;">Configuration d'origine</div>
+      <div id="pd-config-content"></div>
+    </div>
+
     <div class="modal-sep"></div>
 
     <!-- Documents -->
@@ -744,17 +706,6 @@
       <textarea id="pd-reply" placeholder="Répondre au client…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromDetail();}"></textarea>
       <button class="btn btn-primary btn-sm" onclick="sendReplyFromDetail()">Envoyer</button>
     </div>
-  </div>
-</div>
-
-<!-- Config detail modal -->
-<div class="modal-overlay" id="modal-config-detail">
-  <div class="modal" style="max-width:560px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <h2 class="modal-title" style="margin:0;" id="modal-config-title">Détail de la configuration</h2>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-config-detail')" style="padding:6px 10px;">✕</button>
-    </div>
-    <div id="config-detail-content"></div>
   </div>
 </div>
 
@@ -1258,7 +1209,7 @@
       document.getElementById('pd-date-livraison').value = projet.date_livraison ? projet.date_livraison.split('T')[0] : '';
     }
 
-    await Promise.all([loadProjetDocs(), loadProjetMsgs()]);
+    await Promise.all([loadProjetDocs(), loadProjetMsgs(), loadProjetConfig()]);
   }
 
   async function loadProjetDocs() {
@@ -1308,6 +1259,110 @@
         <div class="msg__meta">${m.expediteur === 'client' ? 'Client' : 'Kobo Design'} · ${new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
       </div>`).join('');
     el.scrollTop = el.scrollHeight;
+  }
+
+  async function loadProjetConfig() {
+    const wrap = document.getElementById('pd-config');
+    const content = document.getElementById('pd-config-content');
+    wrap.style.display = 'none';
+    content.innerHTML = '';
+
+    // 1. Cherche par projet_id (liens récents)
+    let [{ data: biblio }, { data: sdb }] = await Promise.all([
+      sb.from('configs_biblio').select('*').eq('projet_id', currentProjetId).limit(1).maybeSingle(),
+      sb.from('configs_sdb').select('*').eq('projet_id', currentProjetId).limit(1).maybeSingle(),
+    ]);
+
+    // 2. Fallback par email du client (anciens projets sans projet_id)
+    if (!biblio && !sdb) {
+      const projet = allProjets.find(p => p.id === currentProjetId);
+      const client = projet ? allClients.find(c => c.id === projet.client_id) : null;
+      if (client?.email) {
+        const [{ data: b2 }, { data: s2 }] = await Promise.all([
+          sb.from('configs_biblio').select('*').eq('email', client.email).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+          sb.from('configs_sdb').select('*').eq('email', client.email).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        ]);
+        biblio = b2; sdb = s2;
+      }
+    }
+
+    const c = biblio || sdb;
+    if (!c) return;
+
+    const isBiblio = !!biblio;
+    c._type = isBiblio ? 'biblio' : (c.type || 'sdb');
+    const typeLabel = TYPE_LABELS[c._type] || c._type;
+    const date = c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—';
+
+    const field = (label, val) => val != null && val !== '' && val !== 0
+      ? `<div><div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,26,26,.38);margin-bottom:3px;">${label}</div><div style="font-size:13px;font-weight:600;">${escHtml(String(val))}</div></div>`
+      : '';
+
+    let html = `<div style="background:var(--bg);border-radius:10px;padding:16px 20px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);">${typeLabel}</span>
+        <span style="font-size:11px;color:rgba(26,26,26,.4);">Soumis le ${date}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;">`;
+
+    if (isBiblio) {
+      html += field('Largeur', c.largeur ? c.largeur + ' cm' : null);
+      html += field('Hauteur', c.hauteur ? c.hauteur + ' cm' : null);
+      html += field('Profondeur', c.profondeur ? c.profondeur + ' cm' : null);
+      html += field('Essence', c.essence);
+      html += field('Étagères', c.nb_etageres || null);
+      html += field('Traverses', c.nb_traverses || null);
+      html += field('Intercalaires', c.nb_intercalaires || null);
+      html += field('Portes', c.nb_portes || null);
+    } else {
+      html += field('Largeur', c.meuble_l ? c.meuble_l + ' cm' : null);
+      html += field('Hauteur', c.meuble_h ? c.meuble_h + ' cm' : null);
+      html += field('Profondeur', c.meuble_p ? c.meuble_p + ' cm' : null);
+      html += field('Matériau', c.meuble_mat);
+      html += field('Tablettes', c.nb_tablettes || null);
+      html += field('Séparateurs', c.nb_separateurs || null);
+      html += field('Portes', c.nb_portes || null);
+      html += field('Tiroirs', c.nb_tiroirs || null);
+      if (c.nb_vasques) {
+        html += field('Vasques', c.nb_vasques);
+        html += field('Modèle vasque', c.vasque_label);
+      }
+      if (c.plan_mat) {
+        html += field('Plan de travail', c.plan_mat);
+        html += field('Plan L', c.plan_l ? c.plan_l + ' cm' : null);
+        html += field('Plan P', c.plan_p ? c.plan_p + ' cm' : null);
+      }
+    }
+
+    html += `</div></div>`;
+
+    if (c.message) {
+      html += `<div style="background:#fff8f0;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:12px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Message du client</div>
+        <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;">${escHtml(c.message)}</div>
+      </div>`;
+    }
+
+    if (Array.isArray(c.elements) && c.elements.length > 0) {
+      html += `<div style="margin-bottom:12px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:6px;">Éléments (${c.elements.length})</div>
+        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:12px;overflow-x:auto;max-height:180px;overflow-y:auto;line-height:1.5;">${escHtml(JSON.stringify(c.elements, null, 2))}</pre>
+      </div>`;
+    }
+
+    try {
+      let vizUrl = null;
+      if (isBiblio && c.largeur) {
+        const cfg = { W: c.largeur, H: c.hauteur, D: c.profondeur, matId: 'chene', elements: c.elements || [] };
+        vizUrl = '/configurateur-biblio?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+      } else if (!isBiblio && c.meuble_l) {
+        vizUrl = '/configurateur?ft=' + encodeURIComponent(c.type || 'sdb');
+      }
+      if (vizUrl) html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;">🔗 Ouvrir dans le configurateur →</a>`;
+    } catch(e) {}
+
+    content.innerHTML = html;
+    wrap.style.display = 'block';
   }
 
   async function sendReplyFromDetail() {
