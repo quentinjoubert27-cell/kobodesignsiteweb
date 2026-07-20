@@ -536,14 +536,35 @@
     <div class="view" id="view-configs">
       <div class="view-header">
         <div class="view-title-wrap">
-          <p class="view-eyebrow">Bibliothèque</p>
-          <h1 class="view-title">Configurations</h1>
+          <p class="view-eyebrow">Leads entrants</p>
+          <h1 class="view-title">Configurations reçues</h1>
         </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span id="configs-count" style="font-size:12px;color:rgba(26,26,26,.4);"></span>
+          <input type="search" id="configs-search" placeholder="Rechercher…" style="padding:8px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:12px;width:180px;" oninput="filterConfigs()"/>
+        </div>
+      </div>
+      <!-- Filtres type -->
+      <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="tab-btn active" onclick="filterConfigsType('all',this)" id="cfg-tab-all">Tous</button>
+        <button class="tab-btn" onclick="filterConfigsType('biblio',this)" id="cfg-tab-biblio">Bibliothèque</button>
+        <button class="tab-btn" onclick="filterConfigsType('sdb',this)" id="cfg-tab-sdb">Salle de bain</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Prénom</th><th>Email</th><th>L × H × P</th><th>Essence</th><th>Étagères</th><th>Date</th><th></th></tr></thead>
-          <tbody id="configs-table"><tr><td colspan="7" class="loading">Chargement…</td></tr></tbody>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Contact</th>
+              <th>Dimensions</th>
+              <th>Matériau</th>
+              <th>Détails</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="configs-table"><tr><td colspan="8" class="loading">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -730,7 +751,7 @@
 <div class="modal-overlay" id="modal-config-detail">
   <div class="modal" style="max-width:560px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <h2 class="modal-title" style="margin:0;">Détail de la configuration</h2>
+      <h2 class="modal-title" style="margin:0;" id="modal-config-title">Détail de la configuration</h2>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-config-detail')" style="padding:6px 10px;">✕</button>
     </div>
     <div id="config-detail-content"></div>
@@ -1037,44 +1058,159 @@
   }
 
   // ── CONFIGURATIONS ────────────────────────────────────────────────
+  let allConfigs = [];
+  let configsTypeFilter = 'all';
+
   async function loadConfigs() {
-    const { data } = await sb.from('configs_biblio').select('*').order('created_at', { ascending: false });
     const tbody = document.getElementById('configs-table');
-    if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Aucune configuration.</td></tr>'; return; }
-    tbody.innerHTML = data.map(c => `
-      <tr onclick="openConfigDetail(${JSON.stringify(JSON.stringify(c))})">
-        <td style="font-weight:600;">${escHtml(c.prenom || '—')}</td>
-        <td style="color:rgba(26,26,26,.55);font-size:12px;">${escHtml(c.email || '—')}</td>
-        <td>${c.largeur || '?'} × ${c.hauteur || '?'} × ${c.profondeur || '?'} cm</td>
-        <td>${escHtml(c.essence || '—')}</td>
-        <td>${c.nb_etageres || '—'}</td>
-        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openConfigDetail(${JSON.stringify(JSON.stringify(c))})">Voir</button></td>
-      </tr>`).join('');
+    tbody.innerHTML = '<tr><td colspan="8" class="loading">Chargement…</td></tr>';
+
+    const [{ data: biblio }, { data: sdb }] = await Promise.all([
+      sb.from('configs_biblio').select('*').order('created_at', { ascending: false }),
+      sb.from('configs_sdb').select('*').order('created_at', { ascending: false }),
+    ]);
+
+    const biblioTagged = (biblio || []).map(c => ({ ...c, _type: 'biblio' }));
+    const sdbTagged   = (sdb   || []).map(c => ({ ...c, _type: 'sdb'   }));
+    allConfigs = [...biblioTagged, ...sdbTagged].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    document.getElementById('configs-count').textContent = allConfigs.length + ' configuration' + (allConfigs.length > 1 ? 's' : '');
+    renderConfigsTable(allConfigs);
   }
 
-  function openConfigDetail(jsonStr) {
-    const c = JSON.parse(jsonStr);
-    const fields = [
-      ['Prénom', c.prenom],
-      ['Email', c.email],
-      ['Largeur', c.largeur ? c.largeur + ' cm' : null],
-      ['Hauteur', c.hauteur ? c.hauteur + ' cm' : null],
-      ['Profondeur', c.profondeur ? c.profondeur + ' cm' : null],
-      ['Essence', c.essence],
-      ['Nb étagères', c.nb_etageres],
-      ['Date', c.created_at ? new Date(c.created_at).toLocaleString('fr-FR') : null],
-    ];
-    const infoHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:20px;">
-      ${fields.filter(f => f[1] != null).map(f => `
-        <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:3px;">${f[0]}</div>
-          <div style="font-size:13px;font-weight:600;">${escHtml(String(f[1]))}</div>
-        </div>`).join('')}
-    </div>`;
-    const { prenom, email, largeur, hauteur, profondeur, essence, nb_etageres, created_at, ...rest } = c;
-    const jsonDisplay = Object.keys(rest).length ? `<p class="section-title" style="margin-bottom:8px;">Données complètes</p><pre class="config-json">${escHtml(JSON.stringify(c, null, 2))}</pre>` : `<pre class="config-json">${escHtml(JSON.stringify(c, null, 2))}</pre>`;
-    document.getElementById('config-detail-content').innerHTML = infoHtml + jsonDisplay;
+  function filterConfigs() {
+    const q = (document.getElementById('configs-search').value || '').toLowerCase();
+    let list = configsTypeFilter === 'all' ? allConfigs : allConfigs.filter(c => c._type === configsTypeFilter);
+    if (q) list = list.filter(c => (c.prenom + ' ' + c.email + ' ' + (c.message || '')).toLowerCase().includes(q));
+    renderConfigsTable(list);
+  }
+
+  function filterConfigsType(type, btn) {
+    configsTypeFilter = type;
+    document.querySelectorAll('#view-configs .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterConfigs();
+  }
+
+  function renderConfigsTable(list) {
+    const tbody = document.getElementById('configs-table');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Aucune configuration.</td></tr>'; return; }
+    tbody.innerHTML = list.map((c, i) => {
+      const isBiblio = c._type === 'biblio';
+      const typeBadge = isBiblio
+        ? `<span class="sbadge" style="background:#fef3c7;color:#92400e;">Bibliothèque</span>`
+        : `<span class="sbadge" style="background:#dbeafe;color:#1e40af;">Salle de bain</span>`;
+      const dims = isBiblio
+        ? `${c.largeur||'?'} × ${c.hauteur||'?'} × ${c.profondeur||'?'} cm`
+        : `${c.meuble_l||'?'} × ${c.meuble_h||'?'} × ${c.meuble_p||'?'} cm`;
+      const mat = isBiblio ? (c.essence || '—') : (c.meuble_mat || '—');
+      const details = isBiblio
+        ? [c.nb_etageres && c.nb_etageres + ' ét.', c.nb_portes && c.nb_portes + ' porte' + (c.nb_portes > 1 ? 's' : ''), c.nb_traverses && c.nb_traverses + ' trav.', c.nb_intercalaires && c.nb_intercalaires + ' int.'].filter(Boolean).join(' · ') || '—'
+        : [c.nb_vasques && c.nb_vasques + ' vasque' + (c.nb_vasques > 1 ? 's' : ''), c.nb_tablettes && c.nb_tablettes + ' tab.', c.nb_portes && c.nb_portes + ' porte' + (c.nb_portes > 1 ? 's' : ''), c.nb_tiroirs && c.nb_tiroirs + ' tir.'].filter(Boolean).join(' · ') || '—';
+      const msg = c.message ? `<span title="${escHtml(c.message)}" style="cursor:help;color:rgba(26,26,26,.55);">${escHtml(c.message.length > 40 ? c.message.slice(0, 40) + '…' : c.message)}</span>` : '<span style="color:rgba(26,26,26,.25);">—</span>';
+      const safeJson = encodeURIComponent(JSON.stringify(c));
+      return `<tr onclick="openConfigDetail('${safeJson}')" style="cursor:pointer;">
+        <td>${typeBadge}</td>
+        <td>
+          <div style="font-weight:600;font-size:13px;">${escHtml(c.prenom || '—')}</div>
+          <div style="font-size:11px;color:rgba(26,26,26,.45);">${escHtml(c.email || '')}</div>
+        </td>
+        <td style="font-size:12px;">${dims}</td>
+        <td style="font-size:12px;">${escHtml(mat)}</td>
+        <td style="font-size:11px;color:rgba(26,26,26,.55);">${details}</td>
+        <td style="font-size:12px;max-width:180px;">${msg}</td>
+        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openConfigDetail('${safeJson}')">Voir</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openConfigDetail(encoded) {
+    const c = JSON.parse(decodeURIComponent(encoded));
+    const isBiblio = c._type === 'biblio';
+    const date = c.created_at ? new Date(c.created_at).toLocaleString('fr-FR') : '—';
+
+    let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:24px;">`;
+    const field = (label, val) => val != null && val !== '' ? `<div><div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.38);margin-bottom:3px;">${label}</div><div style="font-size:13px;font-weight:600;">${escHtml(String(val))}</div></div>` : '';
+
+    html += field('Prénom', c.prenom);
+    html += field('Email', c.email);
+    html += field('Date', date);
+    html += '</div>';
+
+    if (isBiblio) {
+      html += `<div style="background:var(--bg);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Bibliothèque</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          ${field('Largeur', c.largeur ? c.largeur + ' cm' : null)}
+          ${field('Hauteur', c.hauteur ? c.hauteur + ' cm' : null)}
+          ${field('Profondeur', c.profondeur ? c.profondeur + ' cm' : null)}
+          ${field('Essence', c.essence)}
+          ${field('Étagères', c.nb_etageres || null)}
+          ${field('Traverses', c.nb_traverses || null)}
+          ${field('Intercalaires', c.nb_intercalaires || null)}
+          ${field('Portes', c.nb_portes || null)}
+        </div>
+      </div>`;
+    } else {
+      html += `<div style="background:var(--bg);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Meuble salle de bain</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          ${field('Largeur', c.meuble_l ? c.meuble_l + ' cm' : null)}
+          ${field('Hauteur', c.meuble_h ? c.meuble_h + ' cm' : null)}
+          ${field('Profondeur', c.meuble_p ? c.meuble_p + ' cm' : null)}
+          ${field('Matériau meuble', c.meuble_mat)}
+          ${field('Tablettes', c.nb_tablettes || null)}
+          ${field('Séparateurs', c.nb_separateurs || null)}
+          ${field('Portes', c.nb_portes || null)}
+          ${field('Tiroirs', c.nb_tiroirs || null)}
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Plan de travail</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          ${field('Largeur', c.plan_l ? c.plan_l + ' cm' : null)}
+          ${field('Profondeur', c.plan_p ? c.plan_p + ' cm' : null)}
+          ${field('Épaisseur', c.plan_ep ? c.plan_ep + ' mm' : null)}
+          ${field('Matériau', c.plan_mat)}
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Vasque${c.nb_vasques > 1 ? 's' : ''}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          ${field('Nombre', c.nb_vasques)}
+          ${field('Modèle', c.vasque_label)}
+          ${field('Largeur', c.vasque_w ? c.vasque_w + ' cm' : null)}
+          ${field('Profondeur', c.vasque_d ? c.vasque_d + ' cm' : null)}
+        </div>
+      </div>`;
+    }
+
+    if (c.message) {
+      html += `<div style="background:#fff8f0;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">Message du client</div>
+        <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;">${escHtml(c.message)}</div>
+      </div>`;
+    }
+
+    if (Array.isArray(c.elements) && c.elements.length > 0) {
+      html += `<div style="margin-bottom:16px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:8px;">Éléments (${c.elements.length})</div>
+        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:14px;overflow-x:auto;max-height:200px;overflow-y:auto;line-height:1.5;">${escHtml(JSON.stringify(c.elements, null, 2))}</pre>
+      </div>`;
+    }
+
+    // Lien visualisation biblio
+    if (isBiblio && c.largeur) {
+      try {
+        const cfg = { W: c.largeur, H: c.hauteur, D: c.profondeur, matId: 'chene', elements: c.elements || [] };
+        const vizUrl = '/configurateur-biblio?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+        html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;">🔗 Visualiser en 3D →</a>`;
+      } catch(e) {}
+    }
+
+    document.getElementById('modal-config-title').textContent = (isBiblio ? 'Bibliothèque' : 'Salle de bain') + ' — ' + (c.prenom || '') + ' · ' + new Date(c.created_at).toLocaleDateString('fr-FR');
+    document.getElementById('config-detail-content').innerHTML = html;
     document.getElementById('modal-config-detail').classList.add('open');
   }
 
