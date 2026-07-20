@@ -564,39 +564,24 @@
   // ── CONFIG SUPABASE ──────────────────────────────────────────────
   const SUPABASE_URL = 'https://auzcbtipzqxmllkzdxls.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { flowType: 'implicit' }
-  });
-
-  // Avec implicit flow, Supabase met #type=invite dans le hash — on le capture immédiatement
-  const _initialHash = Object.fromEntries(new URLSearchParams(window.location.hash.slice(1)));
-  const _isInvite = _initialHash.type === 'invite';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let currentUser = null;
   let userProjets = [];
 
   // ── INIT ─────────────────────────────────────────────────────────
   (async () => {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session) {
-      currentUser = session.user;
-      // Si le lien email était un invite, montrer l'écran de création de mot de passe
-      if (_isInvite) {
-        showSetPassword();
-      } else {
-        showDashboard();
-      }
-    }
     sb.auth.onAuthStateChange((event, session) => {
       if (session) {
         currentUser = session.user;
-        if ((event === 'USER_UPDATED' || event === 'SIGNED_IN') && _isInvite) {
+        if (session.user.user_metadata?.needs_password === true) {
           showSetPassword();
-          return;
+        } else {
+          showDashboard();
         }
-        showDashboard();
+      } else {
+        showAuth();
       }
-      else { showAuth(); }
     });
   })();
 
@@ -1084,7 +1069,7 @@
     if (pwd !== pwd2)   { err.textContent = 'Les mots de passe ne correspondent pas.'; err.style.display = 'block'; return; }
     const btn = document.getElementById('sp-btn');
     btn.disabled = true; btn.textContent = 'Enregistrement…';
-    const { error } = await sb.auth.updateUser({ password: pwd });
+    const { error } = await sb.auth.updateUser({ password: pwd, data: { needs_password: false } });
     if (error) { err.textContent = error.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Créer mon mot de passe →'; return; }
     document.getElementById('set-password-screen').style.display = 'none';
     window.history.replaceState(null, '', window.location.pathname);

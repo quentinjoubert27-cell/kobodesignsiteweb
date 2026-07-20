@@ -48,7 +48,7 @@ module.exports = async function handler(req, res) {
       const { data: newUser, error: createErr } = await sb.auth.admin.createUser({
         email,
         email_confirm: true,
-        user_metadata: { prenom, nom },
+        user_metadata: { prenom, nom, needs_password: true },
       });
       if (createErr) throw new Error('Création compte: ' + createErr.message);
       userId = newUser.user.id;
