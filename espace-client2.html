@@ -566,6 +566,9 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // Capturer le hash AVANT que Supabase le consomme et l'efface
+  const _initialHash = Object.fromEntries(new URLSearchParams(window.location.hash.slice(1)));
+
   let currentUser = null;
   let userProjets = [];
 
@@ -581,8 +584,7 @@
         currentUser = session.user;
         if (event === 'USER_UPDATED' || event === 'SIGNED_IN') {
           // Vérifier si c'est une invite (premier accès sans mot de passe)
-          const hash = Object.fromEntries(new URLSearchParams(window.location.hash.slice(1)));
-          if (hash.type === 'invite') {
+          if (_initialHash.type === 'invite') {
             showSetPassword();
             return;
           }
