@@ -64,7 +64,7 @@ module.exports = async function handler(req, res) {
       : '';
 
     await resend.emails.send({
-      from: 'Kobo Design <onboarding@resend.dev>',
+      from: 'Kobo Design <contact@kobo-design.fr>',
       to: process.env.CONTACT_EMAIL,
       replyTo: email,
       subject: `Nouveau projet — ${prenom} ${nom} · ${type_projet || 'Non précisé'}`,

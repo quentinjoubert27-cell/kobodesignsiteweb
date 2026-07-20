@@ -80,7 +80,7 @@ module.exports = async function handler(req, res) {
 
     // 5. Envoyer l'email de bienvenue au client
     await resend.emails.send({
-      from: 'Kobo Design <onboarding@resend.dev>',
+      from: 'Kobo Design <contact@kobo-design.fr>',
       to: email,
       subject: `Votre espace client Kobo Design est prêt, ${prenom} !`,
       html: `
@@ -110,7 +110,7 @@ module.exports = async function handler(req, res) {
     // 6. Notifier l'admin
     if (process.env.CONTACT_EMAIL) {
       await resend.emails.send({
-        from: 'Kobo Design <onboarding@resend.dev>',
+        from: 'Kobo Design <contact@kobo-design.fr>',
         to: process.env.CONTACT_EMAIL,
         subject: `Nouveau client via configurateur — ${prenom} ${nom}`,
         html: `<p style="font-family:sans-serif">Nouveau compte créé automatiquement via le configurateur :<br><br>
