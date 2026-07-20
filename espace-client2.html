@@ -214,13 +214,14 @@
         z-index: 200; border-top: 1px solid rgba(255,250,240,.1);
       }
       .sidebar-logo { display: none; }
-      .sidebar-nav { display: flex; flex-direction: row; }
+      .sidebar-nav { display: flex; flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+      .sidebar-nav::-webkit-scrollbar { display: none; }
       .nav-section { display: contents; }
       .nav-section-label { display: none; }
       .nav-item {
-        flex: 1; flex-direction: column; gap: 3px;
-        padding: 8px 2px 10px; border-radius: 0;
-        font-size: 9px; font-weight: 500; min-height: 52px;
+        flex: 0 0 auto; flex-direction: column; gap: 2px;
+        padding: 7px 10px 10px; border-radius: 0;
+        font-size: 9px; font-weight: 500; min-height: 52px; min-width: 56px;
         justify-content: center; align-items: center; text-align: center;
         margin-bottom: 0;
       }
@@ -233,12 +234,19 @@
       .stat-card { padding: 16px; }
       .stat-card__value { font-size: 22px; }
       .project-card { padding: 16px; }
-      .doc-item { padding: 12px; gap: 10px; }
-      .doc-dl { font-size: 10px; padding: 5px 8px; white-space: nowrap; }
+      .doc-item { padding: 12px; gap: 10px; flex-wrap: wrap; }
+      .doc-item > div:first-child { flex: 1; min-width: 0; }
+      .doc-dl { font-size: 10px; padding: 5px 10px; white-space: nowrap; }
       .home-hero { padding: 24px 20px; }
       .home-hero__title { font-size: 24px; }
       .home-hero__logo { display: none; }
       .info-grid { grid-template-columns: 1fr; }
+      /* Upload area sur mobile */
+      #upload-area-client { padding: 20px 16px; }
+      .project-select, select { font-size: 16px; }
+      /* Page header */
+      .page-header { margin-bottom: 20px; }
+      .page-title { font-size: 26px; }
     }
 
     @media (max-width: 480px) {
@@ -253,6 +261,8 @@
       .empty { padding: 32px 16px; }
       .form-btn { min-height: 48px; }
       .form-input, .msg-input, .project-select { font-size: 16px; }
+      /* Bottom nav scrollable sur petits écrans */
+      .nav-item { min-width: 52px; padding: 7px 8px 10px; font-size: 8px; }
     }
   </style>
 </head>

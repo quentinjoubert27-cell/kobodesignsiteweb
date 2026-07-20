@@ -261,9 +261,26 @@
 
     @media (max-width: 480px) {
       .main { padding: 16px 12px 76px; }
-      .stats-row { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
       .pipeline { grid-template-columns: 1fr; }
       .field input, .field select, .field textarea { font-size: 16px; }
+      .view-header { flex-direction: column; gap: 10px; }
+      .view-header .btn { width: 100%; }
+      .client-info-banner { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .client-info-banner > div:last-child { align-self: stretch; }
+      /* Modals en bottom sheet sur mobile */
+      .modal-overlay { align-items: flex-end; padding: 0; }
+      .modal { border-radius: 20px 20px 0 0; max-height: 92vh; padding: 24px 16px 32px; }
+      .modal-actions { flex-direction: column; }
+      .modal-actions .btn { width: 100%; justify-content: center; }
+      /* Tables scrollables */
+      .table-wrap table { min-width: 480px; }
+      th, td { padding: 10px 8px; font-size: 12px; }
+      /* Boutons d'action dans les tables */
+      .btn-sm { padding: 5px 8px; font-size: 11px; }
+      /* Pipeline chips */
+      .pipeline-col { padding: 12px; }
+      .pipeline-chip { font-size: 11px; padding: 4px 8px; }
     }
   </style>
 </head>
