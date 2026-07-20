@@ -572,9 +572,7 @@
   let userProjets = [];
 
   // ── INIT ─────────────────────────────────────────────────────────
-  (async () => {
-    // Avec implicit flow, Supabase lit automatiquement le #access_token dans le hash
-    const { data: { session } } = await sb.auth.getSession();
+  function handleSession(session) {
     if (session) {
       currentUser = session.user;
       if (session.user.user_metadata?.needs_password === true) {
@@ -582,23 +580,15 @@
       } else {
         showDashboard();
       }
-      return;
+    } else {
+      showAuth();
     }
+  }
 
-    showAuth();
-    sb.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        currentUser = session.user;
-        if (session.user.user_metadata?.needs_password === true) {
-          showSetPassword();
-        } else {
-          showDashboard();
-        }
-      } else {
-        showAuth();
-      }
-    });
-  })();
+  // onAuthStateChange gère tout : session existante (INITIAL_SESSION), magic link (SIGNED_IN), déconnexion
+  sb.auth.onAuthStateChange((event, session) => {
+    handleSession(session);
+  });
 
   // ── AUTH ─────────────────────────────────────────────────────────
   function switchAuthTab(tab, btn) {
