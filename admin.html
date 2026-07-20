@@ -19,7 +19,7 @@
       --white: #fff;
       --font: 'Poppins', sans-serif;
       --ease: cubic-bezier(0.16,1,0.3,1);
-      --sidebar-w: 260px;
+      --sidebar-w: 240px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: var(--font); background: var(--bg); color: var(--dark); min-height: 100vh; }
@@ -46,31 +46,36 @@
     .app { display: none; min-height: 100vh; }
 
     /* Sidebar */
-    .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--dark); padding: 28px 20px; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
-    .sidebar-logo { margin-bottom: 32px; }
-    .sidebar-logo svg { height: 28px; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh;
+      background: var(--dark); padding: 28px 16px; display: flex; flex-direction: column;
+      z-index: 100; overflow-y: auto;
+    }
+    .sidebar-logo { margin-bottom: 36px; padding: 0 4px; }
+    .sidebar-logo svg { height: 26px; }
     .sidebar-badge { display: inline-block; margin-top: 6px; font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); background: rgba(205,62,0,.15); padding: 3px 8px; border-radius: 100px; }
-    .nav-label { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,250,240,.2); padding: 0 10px; margin: 20px 0 6px; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; font-size: 13px; color: rgba(255,250,240,.5); transition: background .2s, color .2s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+    .nav-label { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,250,240,.2); padding: 0 10px; margin: 16px 0 4px; }
+    .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 7px; font-size: 13px; color: rgba(255,250,240,.5); transition: background .2s, color .2s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
     .nav-item:hover { background: rgba(255,250,240,.06); color: rgba(255,250,240,.85); }
     .nav-item.active { background: var(--accent); color: #fff; font-weight: 600; }
     .nav-badge { margin-left: auto; background: #ef4444; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 100px; min-width: 18px; text-align: center; }
     .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,250,240,.07); }
-    .sidebar-admin { font-size: 11px; color: rgba(255,250,240,.3); margin-bottom: 12px; }
+    .sidebar-admin-name { font-size: 12px; font-weight: 600; color: rgba(255,250,240,.7); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-admin-role { font-size: 10px; color: rgba(255,250,240,.3); margin-bottom: 12px; }
     .btn-logout { width: 100%; padding: 9px; border: 1.5px solid rgba(255,250,240,.1); border-radius: 6px; background: none; color: rgba(255,250,240,.35); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; transition: border-color .2s, color .2s; }
     .btn-logout:hover { border-color: var(--accent); color: var(--accent); }
 
     /* Main */
-    .main { margin-left: var(--sidebar-w); padding: 40px 48px; min-height: 100vh; }
+    .main { margin-left: var(--sidebar-w); padding: 40px 44px; min-height: 100vh; }
     .view { display: none; }
     .view.active { display: block; }
     .view-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
     .view-title-wrap {}
     .view-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-    .view-title { font-size: clamp(22px,3vw,34px); font-weight: 900; letter-spacing: -.03em; }
+    .view-title { font-size: clamp(22px,3vw,32px); font-weight: 900; letter-spacing: -.03em; }
 
     /* Buttons */
-    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; border: none; transition: background .2s, transform .1s; }
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; border: none; transition: background .2s, transform .1s; cursor: pointer; }
     .btn:hover { transform: translateY(-1px); }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { background: #a83200; }
@@ -80,39 +85,74 @@
     .btn-danger { background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; }
     .btn-danger:hover { background: #dc2626; color: #fff; }
 
-    /* Stats */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 32px; }
-    .stat { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; padding: 20px; }
-    .stat__label { font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 6px; }
-    .stat__val { font-size: 30px; font-weight: 900; letter-spacing: -.03em; }
+    /* KPI Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+    .stat { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 20px 18px; position: relative; overflow: hidden; }
+    .stat::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); opacity: 0; transition: opacity .2s; }
+    .stat:hover::after { opacity: 1; }
+    .stat__label { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 10px; }
+    .stat__val { font-size: 28px; font-weight: 900; letter-spacing: -.03em; }
+    .stat__trend { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; margin-top: 6px; }
+    .stat__trend.up { color: #16a34a; }
+    .stat__trend.neutral { color: rgba(26,26,26,.3); }
+
+    /* Kanban pipeline */
+    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 32px; }
+    .pipeline-col { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 16px; }
+    .pipeline-col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .pipeline-col-title { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); }
+    .pipeline-count { font-size: 18px; font-weight: 900; }
+    .pipeline-chips { display: flex; flex-direction: column; gap: 6px; }
+    .pipeline-chip { font-size: 11px; font-weight: 500; padding: 6px 9px; background: var(--bg); border: 1px solid rgba(26,26,26,.07); border-radius: 6px; cursor: pointer; transition: border-color .15s, background .15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pipeline-chip:hover { border-color: var(--accent); background: rgba(205,62,0,.04); }
+
+    /* Section title */
+    .section-title { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 14px; }
 
     /* Table */
-    .table-wrap { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; overflow: hidden; }
+    .table-wrap { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; }
-    thead th { font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(26,26,26,.4); padding: 14px 20px; text-align: left; border-bottom: 1px solid rgba(26,26,26,.06); }
-    tbody tr { border-bottom: 1px solid rgba(26,26,26,.04); transition: background .15s; cursor: pointer; }
+    thead th { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); padding: 12px 18px; text-align: left; border-bottom: 1px solid rgba(26,26,26,.06); background: rgba(26,26,26,.015); }
+    tbody tr { border-bottom: 1px solid rgba(26,26,26,.04); transition: background .15s; }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: rgba(205,62,0,.03); }
-    td { padding: 14px 20px; font-size: 13px; vertical-align: middle; }
+    tbody tr:hover { background: rgba(205,62,0,.025); }
+    tbody tr[onclick] { cursor: pointer; }
+    td { padding: 13px 18px; font-size: 13px; vertical-align: middle; }
     td.td-actions { display: flex; gap: 8px; align-items: center; }
 
     /* Status badge */
-    .sbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; padding: 4px 9px; border-radius: 100px; white-space: nowrap; }
-    .sbadge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+    .sbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 4px 9px; border-radius: 100px; white-space: nowrap; }
+    .sbadge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
     .sb-etude { background: #fef3c7; color: #92400e; } .sb-etude::before { background: #f59e0b; }
     .sb-fabrication { background: #dbeafe; color: #1e40af; } .sb-fabrication::before { background: #3b82f6; }
+    .sb-commande { background: #ede9fe; color: #5b21b6; } .sb-commande::before { background: #7c3aed; }
     .sb-livraison { background: #dcfce7; color: #166534; } .sb-livraison::before { background: #22c55e; }
     .sb-termine { background: var(--mid); color: rgba(26,26,26,.45); } .sb-termine::before { background: rgba(26,26,26,.25); }
+
+    /* Client info banner */
+    .client-info-banner { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .client-avatar { width: 48px; height: 48px; background: rgba(205,62,0,.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+    .client-info-main { flex: 1; }
+    .client-info-name { font-size: 18px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 4px; }
+    .client-info-details { display: flex; gap: 16px; flex-wrap: wrap; }
+    .client-info-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: rgba(26,26,26,.5); }
+
+    /* Tab nav */
+    .tab-nav { display: flex; gap: 0; border-bottom: 1.5px solid rgba(26,26,26,.08); margin-bottom: 20px; }
+    .tab-btn { font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 10px 16px; border: none; background: none; cursor: pointer; color: rgba(26,26,26,.4); border-bottom: 2px solid transparent; margin-bottom: -1.5px; transition: color .2s, border-color .2s; }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
 
     /* Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(26,26,26,.55); backdrop-filter: blur(4px); z-index: 500; display: none; align-items: center; justify-content: center; padding: 24px; }
     .modal-overlay.open { display: flex; }
-    .modal { background: var(--bg); border-radius: 16px; padding: 36px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,.25); }
+    .modal { background: var(--bg); border-radius: 16px; padding: 36px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,.2); }
     .modal-title { font-size: 20px; font-weight: 900; letter-spacing: -.02em; margin-bottom: 24px; }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
     .modal-sep { height: 1px; background: rgba(26,26,26,.07); margin: 20px 0; }
 
-    /* Form elements inside modal */
+    /* Form elements */
     .field { margin-bottom: 16px; }
     .field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.45); margin-bottom: 6px; }
     .field input, .field select, .field textarea { width: 100%; padding: 11px 13px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--white); transition: border-color .2s; }
@@ -120,20 +160,20 @@
     .field textarea { resize: vertical; min-height: 80px; }
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    /* Client detail panel */
-    .detail-panel { background: var(--white); border: 1px solid rgba(26,26,26,.07); border-radius: 12px; padding: 28px; margin-bottom: 16px; }
-    .detail-panel h3 { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 16px; }
+    /* Detail panel */
+    .detail-panel { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 24px; margin-bottom: 14px; }
+    .detail-panel h3 { font-size: 11px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 14px; }
 
     /* Messages */
     .msg-thread { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 4px 0 16px; }
     .msg { max-width: 78%; }
     .msg--client { align-self: flex-start; }
-    .msg--kobo { align-self: flex-end; }
+    .msg--kobo, .msg--admin { align-self: flex-end; }
     .msg__bubble { padding: 11px 15px; border-radius: 12px; font-size: 13px; font-weight: 300; line-height: 1.6; }
     .msg--client .msg__bubble { background: var(--mid); border-radius: 12px 12px 12px 2px; }
-    .msg--kobo .msg__bubble { background: var(--accent); color: #fff; border-radius: 12px 12px 2px 12px; }
+    .msg--kobo .msg__bubble, .msg--admin .msg__bubble { background: var(--accent); color: #fff; border-radius: 12px 12px 2px 12px; }
     .msg__meta { font-size: 10px; color: rgba(26,26,26,.35); margin-top: 4px; }
-    .msg--kobo .msg__meta { text-align: right; }
+    .msg--kobo .msg__meta, .msg--admin .msg__meta { text-align: right; }
     .msg-compose { display: flex; gap: 10px; margin-top: 12px; }
     .msg-compose textarea { flex: 1; padding: 10px 13px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--bg); resize: none; height: 42px; }
     .msg-compose textarea:focus { outline: none; border-color: var(--accent); }
@@ -146,9 +186,12 @@
     .doc-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .doc-meta { font-size: 11px; color: rgba(26,26,26,.4); }
     .doc-by-client { border-left: 3px solid #3b82f6; }
+    .cat-badge { display: inline-flex; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border-radius: 100px; margin-left: 6px; }
+    .cat-notice { background: #fce7f3; color: #9d174d; }
+    .cat-document { background: #e0f2fe; color: #075985; }
 
     /* Upload area */
-    .upload-area { border: 2px dashed rgba(26,26,26,.15); border-radius: 10px; padding: 28px; text-align: center; transition: border-color .2s, background .2s; cursor: pointer; }
+    .upload-area { border: 2px dashed rgba(26,26,26,.15); border-radius: 10px; padding: 24px; text-align: center; transition: border-color .2s, background .2s; cursor: pointer; }
     .upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: rgba(205,62,0,.03); }
     .upload-area p { font-size: 13px; color: rgba(26,26,26,.45); margin-top: 8px; }
 
@@ -162,68 +205,64 @@
     .toast.ok { border-left: 3px solid #22c55e; }
     .toast.err { border-left: 3px solid #ef4444; }
 
-    /* Empty */
+    /* Empty / loading */
     .empty { text-align: center; padding: 40px 24px; color: rgba(26,26,26,.3); font-size: 13px; }
-
-    /* Loading */
     .loading { text-align: center; padding: 40px; color: rgba(26,26,26,.3); font-size: 13px; }
 
-    /* Client card in list */
+    /* Misc */
     .client-row td:first-child { font-weight: 600; }
     .unread-dot { display: inline-block; width: 7px; height: 7px; background: var(--accent); border-radius: 50%; margin-left: 8px; vertical-align: middle; }
-
-    /* Back link */
     .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(26,26,26,.4); margin-bottom: 20px; cursor: pointer; border: none; background: none; padding: 0; transition: color .2s; }
     .back-link:hover { color: var(--accent); }
 
+    /* Config modal */
+    .config-json { background: var(--dark); color: #e2e8f0; padding: 16px; border-radius: 8px; font-size: 12px; font-family: monospace; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 360px; overflow-y: auto; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1200px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .pipeline { grid-template-columns: repeat(3, 1fr); }
+    }
+
     @media (max-width: 900px) {
-      /* Sidebar → bottom nav */
       .sidebar {
         position: fixed; bottom: 0; left: 0; right: 0; top: auto;
         width: 100%; height: auto;
-        flex-direction: column; padding: 0;
+        flex-direction: row; padding: 0;
         overflow-y: visible; border-top: 1px solid rgba(255,250,240,.1);
+        overflow-x: auto;
       }
       .sidebar-logo { display: none; }
       .sidebar-footer { display: none; }
       .nav-label { display: none; }
-      .sidebar > .nav-item,
-      .sidebar > nav { display: none; }
-      /* On crée une rangée de nav items */
-      .sidebar { flex-direction: row; }
       .nav-item {
         flex: 1; flex-direction: column; gap: 3px;
         padding: 8px 4px 12px; border-radius: 0;
         font-size: 10px; font-weight: 500; min-height: 54px;
         justify-content: center; align-items: center; text-align: center;
-        margin-bottom: 0; width: auto;
+        margin-bottom: 0; width: auto; min-width: 60px;
       }
       .nav-item .nav-badge { position: absolute; top: 6px; right: calc(50% - 18px); margin-left: 0; }
       .nav-item { position: relative; }
       .main { margin-left: 0; padding: 24px 16px 80px; min-height: auto; }
-
-      /* Tables scrollables */
       .table-wrap { overflow-x: auto; }
       table { min-width: 500px; }
-
-      /* Stats */
       .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .stat { padding: 16px; }
-      .stat__val { font-size: 24px; }
-
-      /* Vue messages — stack vertical */
+      .stat { padding: 14px; }
+      .stat__val { font-size: 22px; }
+      .pipeline { grid-template-columns: repeat(2, 1fr); }
       #view-messages-view > div { grid-template-columns: 1fr !important; }
       .detail-panel { padding: 16px; }
       .msg-thread { max-height: 280px; }
-
-      /* Modal */
       .modal { padding: 24px 20px; }
       .field-row { grid-template-columns: 1fr; }
+      .client-info-banner { padding: 16px; }
     }
 
     @media (max-width: 480px) {
       .main { padding: 16px 12px 76px; }
       .stats-row { grid-template-columns: 1fr; }
+      .pipeline { grid-template-columns: 1fr; }
       .field input, .field select, .field textarea { font-size: 16px; }
     }
   </style>
@@ -295,6 +334,14 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Projets
     </button>
+    <button class="nav-item" onclick="showView('commandes', this)" id="nav-commandes">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Commandes
+    </button>
+    <button class="nav-item" onclick="showView('configs', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Configurations
+    </button>
     <button class="nav-item" onclick="showView('messages-view', this)" id="nav-msgs">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Messages
@@ -302,7 +349,8 @@
     </button>
 
     <div class="sidebar-footer">
-      <div class="sidebar-admin" id="admin-email-label"></div>
+      <div class="sidebar-admin-name" id="admin-email-label"></div>
+      <div class="sidebar-admin-role">Administrateur</div>
       <button class="btn-logout" onclick="adminLogout()">Déconnexion</button>
     </div>
   </aside>
@@ -317,17 +365,56 @@
           <p class="view-eyebrow">Vue globale</p>
           <h1 class="view-title">Tableau de bord</h1>
         </div>
-        <button class="btn btn-primary" onclick="openModalNewProjet()">+ Nouveau projet</button>
+        <button class="btn btn-primary" onclick="openModalNewProjet()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Nouveau projet
+        </button>
       </div>
+
+      <!-- KPI Cards -->
       <div class="stats-row" id="dash-stats">
-        <div class="stat"><div class="stat__label">Clients</div><div class="stat__val" id="ds-clients">—</div></div>
-        <div class="stat"><div class="stat__label">Projets actifs</div><div class="stat__val" id="ds-projets">—</div></div>
-        <div class="stat"><div class="stat__label">Messages non lus</div><div class="stat__val" id="ds-msgs">—</div></div>
-        <div class="stat"><div class="stat__label">Documents envoyés</div><div class="stat__val" id="ds-docs">—</div></div>
+        <div class="stat">
+          <div class="stat__label">Clients</div>
+          <div class="stat__val" id="ds-clients">—</div>
+          <div class="stat__trend neutral">Total</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Projets actifs</div>
+          <div class="stat__val" id="ds-projets">—</div>
+          <div class="stat__trend up">En cours</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Commandes en cours</div>
+          <div class="stat__val" id="ds-commandes">—</div>
+          <div class="stat__trend neutral">Commandé + Livraison</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">CA total</div>
+          <div class="stat__val" id="ds-ca">—</div>
+          <div class="stat__trend up">Toutes commandes</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Messages non lus</div>
+          <div class="stat__val" id="ds-msgs">—</div>
+          <div class="stat__trend neutral">À traiter</div>
+        </div>
       </div>
+
+      <!-- Pipeline Kanban -->
+      <p class="section-title">Pipeline projets</p>
+      <div class="pipeline" id="dash-pipeline">
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">En étude</span><span class="pipeline-count" id="pip-etude">0</span></div><div class="pipeline-chips" id="pip-chips-etude"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Fabrication</span><span class="pipeline-count" id="pip-fabrication">0</span></div><div class="pipeline-chips" id="pip-chips-fabrication"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Commandé</span><span class="pipeline-count" id="pip-commande">0</span></div><div class="pipeline-chips" id="pip-chips-commande"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Livraison</span><span class="pipeline-count" id="pip-livraison">0</span></div><div class="pipeline-chips" id="pip-chips-livraison"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Terminé</span><span class="pipeline-count" id="pip-termine">0</span></div><div class="pipeline-chips" id="pip-chips-termine"></div></div>
+      </div>
+
+      <!-- Recent activity -->
+      <p class="section-title" style="margin-top:8px;">Activité récente</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Client</th><th>Projet récent</th><th>Statut</th><th>Dernier message</th><th></th></tr></thead>
+          <thead><tr><th>Client</th><th>Projet</th><th>Statut</th><th>Mis à jour</th><th></th></tr></thead>
           <tbody id="dash-table"><tr><td colspan="5" class="loading">Chargement…</td></tr></tbody>
         </table>
       </div>
@@ -340,7 +427,7 @@
           <p class="view-eyebrow">Gestion</p>
           <h1 class="view-title">Clients</h1>
         </div>
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <input type="search" id="client-search" placeholder="Rechercher…" style="padding:9px 13px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;width:200px;" oninput="filterClients()"/>
           <button class="btn btn-primary" onclick="openModalNewClient()">+ Nouveau client</button>
         </div>
@@ -355,7 +442,7 @@
 
     <!-- ── CLIENT DETAIL ── -->
     <div class="view" id="view-client-detail">
-      <button class="back-link" onclick="showView('clients', document.querySelector('.nav-item:nth-child(3)'))">
+      <button class="back-link" onclick="showView('clients', document.querySelectorAll('.nav-item')[1])">
         ← Tous les clients
       </button>
       <div class="view-header">
@@ -363,12 +450,53 @@
           <p class="view-eyebrow">Fiche client</p>
           <h1 class="view-title" id="cd-name">—</h1>
         </div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="openModalNewProjetForClient()">+ Nouveau projet</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteClient()">Supprimer le client</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteClient()">Supprimer</button>
         </div>
       </div>
-      <div id="cd-projets"></div>
+
+      <!-- Client info banner -->
+      <div class="client-info-banner" id="cd-banner">
+        <div class="client-avatar" id="cd-avatar">?</div>
+        <div class="client-info-main">
+          <div class="client-info-name" id="cd-fullname">—</div>
+          <div class="client-info-details">
+            <span class="client-info-item" id="cd-email-wrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="1.6"/><polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span id="cd-email-val">—</span>
+            </span>
+            <span class="client-info-item" id="cd-tel-wrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span id="cd-tel-val">—</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchClientTab('projets', this)">Projets</button>
+        <button class="tab-btn" onclick="switchClientTab('messages', this)">Messages</button>
+        <button class="tab-btn" onclick="switchClientTab('configurations', this)">Configurations</button>
+      </div>
+
+      <div class="tab-pane active" id="cd-tab-projets">
+        <div id="cd-projets"></div>
+      </div>
+      <div class="tab-pane" id="cd-tab-messages">
+        <div class="detail-panel">
+          <h3>Messagerie</h3>
+          <div class="msg-thread" id="cd-msg-thread"></div>
+          <div class="msg-compose" style="margin-top:12px;">
+            <textarea id="cd-msg-reply" placeholder="Répondre au client…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromClientDetail();}"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="sendReplyFromClientDetail()">Envoyer</button>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane" id="cd-tab-configurations">
+        <div id="cd-configs"></div>
+      </div>
     </div>
 
     <!-- ── PROJETS ── -->
@@ -382,8 +510,40 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Projet</th><th>Client</th><th>Statut</th><th>Créé le</th><th></th></tr></thead>
-          <tbody id="projets-table"><tr><td colspan="5" class="loading">Chargement…</td></tr></tbody>
+          <thead><tr><th>Projet</th><th>Client</th><th>Statut</th><th>Montant</th><th>Créé le</th><th></th></tr></thead>
+          <tbody id="projets-table"><tr><td colspan="6" class="loading">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── COMMANDES ── -->
+    <div class="view" id="view-commandes">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Suivi</p>
+          <h1 class="view-title">Commandes</h1>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Projet</th><th>Montant</th><th>Date de livraison</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="commandes-table"><tr><td colspan="6" class="loading">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CONFIGURATIONS ── -->
+    <div class="view" id="view-configs">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Bibliothèque</p>
+          <h1 class="view-title">Configurations</h1>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Prénom</th><th>Email</th><th>L × H × P</th><th>Essence</th><th>Étagères</th><th>Date</th><th></th></tr></thead>
+          <tbody id="configs-table"><tr><td colspan="7" class="loading">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -397,11 +557,9 @@
         </div>
       </div>
       <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;">
-        <!-- Liste projets -->
         <div class="table-wrap" style="overflow:hidden;">
           <div id="msg-projet-list" style="max-height:600px;overflow-y:auto;"></div>
         </div>
-        <!-- Thread -->
         <div class="detail-panel" id="msg-thread-panel" style="display:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <h3 style="margin:0;" id="msg-thread-title">—</h3>
@@ -454,6 +612,7 @@
         <select id="np-statut">
           <option value="En étude">En étude</option>
           <option value="Fabrication">Fabrication</option>
+          <option value="Commandé">Commandé</option>
           <option value="Livraison">Livraison</option>
           <option value="Terminé">Terminé</option>
         </select>
@@ -486,20 +645,38 @@
 
 <!-- Projet détail / documents / messages -->
 <div class="modal-overlay" id="modal-projet-detail">
-  <div class="modal" style="max-width:640px;">
+  <div class="modal" style="max-width:660px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <h2 class="modal-title" id="pd-title" style="margin:0;">—</h2>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-projet-detail')" style="padding:6px 10px;">✕</button>
     </div>
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:24px;flex-wrap:wrap;">
-      <select id="pd-statut" onchange="updateProjetStatut()" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
+
+    <!-- Statut + actions -->
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <select id="pd-statut" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
         <option value="En étude">En étude</option>
         <option value="Fabrication">Fabrication</option>
+        <option value="Commandé">Commandé</option>
         <option value="Livraison">Livraison</option>
         <option value="Terminé">Terminé</option>
       </select>
+      <button class="btn btn-primary btn-sm" onclick="updateProjetStatut()">Mettre à jour</button>
       <button class="btn btn-danger btn-sm" onclick="deleteProjet()">Supprimer</button>
     </div>
+
+    <!-- Montant + Date livraison -->
+    <div class="field-row" style="margin-bottom:16px;">
+      <div class="field">
+        <label>Montant (€)</label>
+        <input type="number" id="pd-montant" placeholder="0" min="0" step="100"/>
+      </div>
+      <div class="field">
+        <label>Date de livraison</label>
+        <input type="date" id="pd-date-livraison"/>
+      </div>
+    </div>
+
+    <div class="modal-sep"></div>
 
     <!-- Documents -->
     <h3 style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:14px;">Documents</h3>
@@ -512,15 +689,24 @@
     </div>
     <input type="file" id="file-input" style="display:none;" onchange="handleFileSelect(this)"/>
 
-    <div class="field" style="margin-top:12px;">
-      <label>Type de document</label>
-      <select id="doc-type-select">
-        <option value="Devis">Devis</option>
-        <option value="Plan">Plan</option>
-        <option value="Facture">Facture</option>
-        <option value="Bon de commande">Bon de commande</option>
-        <option value="Document">Autre document</option>
-      </select>
+    <div class="field-row" style="margin-top:12px;">
+      <div class="field">
+        <label>Catégorie</label>
+        <select id="doc-categorie-select">
+          <option value="Document">Document</option>
+          <option value="Notice de montage">Notice de montage</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Type de document</label>
+        <select id="doc-type-select">
+          <option value="Devis">Devis</option>
+          <option value="Plan">Plan</option>
+          <option value="Facture">Facture</option>
+          <option value="Bon de commande">Bon de commande</option>
+          <option value="Document">Autre document</option>
+        </select>
+      </div>
     </div>
 
     <div style="display:none;margin-top:8px;" id="upload-progress-wrap">
@@ -537,6 +723,17 @@
       <textarea id="pd-reply" placeholder="Répondre au client…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromDetail();}"></textarea>
       <button class="btn btn-primary btn-sm" onclick="sendReplyFromDetail()">Envoyer</button>
     </div>
+  </div>
+</div>
+
+<!-- Config detail modal -->
+<div class="modal-overlay" id="modal-config-detail">
+  <div class="modal" style="max-width:560px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h2 class="modal-title" style="margin:0;">Détail de la configuration</h2>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-config-detail')" style="padding:6px 10px;">✕</button>
+    </div>
+    <div id="config-detail-content"></div>
   </div>
 </div>
 
@@ -557,6 +754,9 @@
   let currentClientId = null;
   let selectedFile = null;
   let activeProjetIdForMsg = null;
+  let activeMsgClientId = null;
+  let adminMsgChannel = null;
+  let adminMsgPolling = null;
 
   // ── INIT ──────────────────────────────────────────────────────────
   (async () => {
@@ -614,9 +814,11 @@
   function showView(id, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('view-'+id).classList.add('active');
+    document.getElementById('view-' + id).classList.add('active');
     if (btn) btn.classList.add('active');
     if (id === 'messages-view') loadMessagesView();
+    if (id === 'commandes') loadCommandes();
+    if (id === 'configs') loadConfigs();
   }
 
   // ── DASHBOARD ─────────────────────────────────────────────────────
@@ -625,38 +827,61 @@
       { count: cc },
       { count: pc },
       { count: mc },
-      { count: dc }
+      { data: projetsCA }
     ] = await Promise.all([
-      sb.from('clients').select('*', {count:'exact',head:true}),
-      sb.from('projets').select('*', {count:'exact',head:true}).neq('statut','Terminé'),
-      sb.from('messages_general').select('*', {count:'exact',head:true}).eq('lu',false).eq('expediteur','client'),
-      sb.from('documents').select('*', {count:'exact',head:true}).eq('uploade_par','kobo')
+      sb.from('clients').select('*', { count: 'exact', head: true }),
+      sb.from('projets').select('*', { count: 'exact', head: true }).neq('statut', 'Terminé'),
+      sb.from('messages_general').select('*', { count: 'exact', head: true }).eq('lu', false).eq('expediteur', 'client'),
+      sb.from('projets').select('montant, statut')
     ]);
+
+    // Commandes en cours
+    const commandesProjets = (projetsCA || []).filter(p => p.statut === 'Commandé' || p.statut === 'Livraison');
+    const caTotal = (projetsCA || []).reduce((sum, p) => sum + (parseFloat(p.montant) || 0), 0);
+
     document.getElementById('ds-clients').textContent = cc || 0;
     document.getElementById('ds-projets').textContent = pc || 0;
+    document.getElementById('ds-commandes').textContent = commandesProjets.length;
+    document.getElementById('ds-ca').textContent = caTotal > 0 ? formatCurrency(caTotal) : '—';
     document.getElementById('ds-msgs').textContent = mc || 0;
-    document.getElementById('ds-docs').textContent = dc || 0;
 
     // Tableau récent
     const { data: projets } = await sb.from('projets')
       .select('*, clients(prenom, nom)')
-      .order('updated_at', {ascending:false})
-      .limit(10);
+      .order('updated_at', { ascending: false })
+      .limit(8);
+
+    // Pipeline
+    buildPipeline(projets || []);
+
     const tbody = document.getElementById('dash-table');
     if (!projets || projets.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun projet.</td></tr>'; return; }
     tbody.innerHTML = projets.map(p => `
-      <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')" style="cursor:pointer;">
-        <td>${p.clients ? p.clients.prenom + ' ' + p.clients.nom : '—'}</td>
+      <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
+        <td>${p.clients ? escHtml(p.clients.prenom + ' ' + p.clients.nom) : '—'}</td>
         <td style="font-weight:600;">${escHtml(p.nom)}</td>
         <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span></td>
-        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(p.updated_at||p.created_at).toLocaleDateString('fr-FR')}</td>
+        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(p.updated_at || p.created_at).toLocaleDateString('fr-FR')}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openProjetDetail('${p.id}','${escHtml(p.nom)}')">Ouvrir</button></td>
       </tr>`).join('');
   }
 
+  function buildPipeline(projets) {
+    const statuts = ['En étude', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+    const keys = ['etude', 'fabrication', 'commande', 'livraison', 'termine'];
+    statuts.forEach((s, i) => {
+      const list = projets.filter(p => p.statut === s);
+      document.getElementById('pip-' + keys[i]).textContent = list.length;
+      const chipsEl = document.getElementById('pip-chips-' + keys[i]);
+      chipsEl.innerHTML = list.slice(0, 5).map(p =>
+        `<div class="pipeline-chip" onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')" title="${escHtml(p.nom)}">${escHtml(p.nom)}</div>`
+      ).join('') + (list.length > 5 ? `<div class="pipeline-chip" style="color:rgba(26,26,26,.4);cursor:default;">+${list.length - 5} autres</div>` : '');
+    });
+  }
+
   // ── CLIENTS ───────────────────────────────────────────────────────
   async function loadClients() {
-    const { data } = await sb.from('clients').select('*, projets(id)').order('created_at', {ascending:false});
+    const { data } = await sb.from('clients').select('*, projets(id)').order('created_at', { ascending: false });
     allClients = data || [];
     renderClientsTable(allClients);
   }
@@ -667,9 +892,9 @@
     tbody.innerHTML = list.map(c => `
       <tr class="client-row" onclick="openClientDetail('${c.id}')">
         <td>${escHtml(c.prenom)} ${escHtml(c.nom)}</td>
-        <td style="color:rgba(26,26,26,.55);">${escHtml(c.email||'')}</td>
-        <td style="color:rgba(26,26,26,.55);">${escHtml(c.telephone||'—')}</td>
-        <td>${(c.projets||[]).length}</td>
+        <td style="color:rgba(26,26,26,.55);">${escHtml(c.email || '')}</td>
+        <td style="color:rgba(26,26,26,.55);">${escHtml(c.telephone || '—')}</td>
+        <td>${(c.projets || []).length}</td>
         <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openClientDetail('${c.id}')">Voir</button></td>
       </tr>`).join('');
@@ -678,17 +903,36 @@
   function filterClients() {
     const q = document.getElementById('client-search').value.toLowerCase();
     renderClientsTable(allClients.filter(c =>
-      (c.prenom+' '+c.nom+' '+c.email).toLowerCase().includes(q)
+      (c.prenom + ' ' + c.nom + ' ' + c.email).toLowerCase().includes(q)
     ));
   }
 
   async function openClientDetail(clientId) {
     currentClientId = clientId;
     const client = allClients.find(c => c.id === clientId) || {};
-    document.getElementById('cd-name').textContent = client.prenom + ' ' + client.nom;
+    const fullName = (client.prenom || '') + ' ' + (client.nom || '');
+    document.getElementById('cd-name').textContent = fullName.trim() || '—';
+    document.getElementById('cd-fullname').textContent = fullName.trim() || '—';
+    document.getElementById('cd-email-val').textContent = client.email || '—';
+    document.getElementById('cd-tel-val').textContent = client.telephone || '—';
+
+    // Avatar initials
+    const initials = ((client.prenom || '').charAt(0) + (client.nom || '').charAt(0)).toUpperCase();
+    document.getElementById('cd-avatar').textContent = initials || '?';
+
     showView('client-detail', null);
 
-    const { data: projets } = await sb.from('projets').select('*').eq('client_id', clientId).order('created_at',{ascending:false});
+    // Reset tabs
+    document.querySelectorAll('#view-client-detail .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#view-client-detail .tab-btn').classList.add('active');
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById('cd-tab-projets').classList.add('active');
+
+    await loadClientProjets(clientId);
+  }
+
+  async function loadClientProjets(clientId) {
+    const { data: projets } = await sb.from('projets').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
     const container = document.getElementById('cd-projets');
     if (!projets || projets.length === 0) {
       container.innerHTML = '<div class="empty">Aucun projet pour ce client. Créez-en un !</div>';
@@ -698,29 +942,140 @@
       <div class="detail-panel" style="cursor:pointer;" onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div>
-            <div style="font-weight:800;font-size:16px;margin-bottom:6px;">${escHtml(p.nom)}</div>
-            ${p.description ? `<div style="font-size:13px;color:rgba(26,26,26,.5);margin-bottom:10px;">${escHtml(p.description)}</div>` : ''}
+            <div style="font-weight:800;font-size:16px;margin-bottom:4px;">${escHtml(p.nom)}</div>
+            ${p.description ? `<div style="font-size:13px;color:rgba(26,26,26,.5);margin-bottom:8px;">${escHtml(p.description)}</div>` : ''}
+            ${p.montant ? `<div style="font-size:12px;font-weight:600;color:var(--accent);">${formatCurrency(p.montant)}</div>` : ''}
           </div>
           <span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span>
         </div>
-        <div style="font-size:11px;color:rgba(26,26,26,.35);">Créé le ${new Date(p.created_at).toLocaleDateString('fr-FR')}</div>
+        <div style="font-size:11px;color:rgba(26,26,26,.35);margin-top:8px;">Créé le ${new Date(p.created_at).toLocaleDateString('fr-FR')}</div>
       </div>`).join('');
+  }
+
+  async function loadClientMessages(clientId) {
+    await sb.from('messages_general').update({ lu: true }).eq('client_id', clientId).eq('expediteur', 'client');
+    const { data: msgs } = await sb.from('messages_general')
+      .select('*').eq('client_id', clientId).order('created_at', { ascending: true });
+    renderMsgThread('cd-msg-thread', msgs || []);
+    loadUnreadCount();
+  }
+
+  async function loadClientConfigs(clientId) {
+    const client = allClients.find(c => c.id === clientId) || {};
+    if (!client.email) { document.getElementById('cd-configs').innerHTML = '<div class="empty">Email client introuvable.</div>'; return; }
+    const { data: configs } = await sb.from('configs_biblio').select('*').eq('email', client.email).order('created_at', { ascending: false });
+    const container = document.getElementById('cd-configs');
+    if (!configs || configs.length === 0) { container.innerHTML = '<div class="empty">Aucune configuration enregistrée.</div>'; return; }
+    container.innerHTML = configs.map(c => `
+      <div class="detail-panel" style="cursor:pointer;" onclick="openConfigDetail(${JSON.stringify(JSON.stringify(c))})">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${c.largeur || '?'}×${c.hauteur || '?'}×${c.profondeur || '?'} cm — ${escHtml(c.essence || '—')}</div>
+            <div style="font-size:12px;color:rgba(26,26,26,.5);">${c.nb_etageres || '?'} étagère(s)</div>
+          </div>
+          <div style="font-size:11px;color:rgba(26,26,26,.35);">${new Date(c.created_at).toLocaleDateString('fr-FR')}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  function switchClientTab(tab, btn) {
+    document.querySelectorAll('#view-client-detail .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById('cd-tab-' + tab).classList.add('active');
+
+    if (tab === 'messages') loadClientMessages(currentClientId);
+    if (tab === 'configurations') loadClientConfigs(currentClientId);
+  }
+
+  async function sendReplyFromClientDetail() {
+    const input = document.getElementById('cd-msg-reply');
+    const contenu = input.value.trim();
+    if (!contenu || !currentClientId) return;
+    input.value = '';
+    const { error } = await sb.from('messages_general').insert([{
+      client_id: currentClientId, expediteur: 'admin', contenu, lu: true
+    }]);
+    if (!error) await loadClientMessages(currentClientId);
+    else showToast('Erreur envoi message', 'err');
   }
 
   // ── PROJETS ───────────────────────────────────────────────────────
   async function loadProjets() {
-    const { data } = await sb.from('projets').select('*, clients(prenom, nom)').order('created_at',{ascending:false});
+    const { data } = await sb.from('projets').select('*, clients(prenom, nom)').order('created_at', { ascending: false });
     allProjets = data || [];
     const tbody = document.getElementById('projets-table');
-    if (!allProjets.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun projet.</td></tr>'; return; }
+    if (!allProjets.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun projet.</td></tr>'; return; }
     tbody.innerHTML = allProjets.map(p => `
-      <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')" style="cursor:pointer;">
+      <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
         <td style="font-weight:600;">${escHtml(p.nom)}</td>
-        <td>${p.clients ? p.clients.prenom + ' ' + p.clients.nom : '—'}</td>
+        <td>${p.clients ? escHtml(p.clients.prenom + ' ' + p.clients.nom) : '—'}</td>
         <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span></td>
+        <td style="font-weight:600;">${p.montant ? formatCurrency(p.montant) : '—'}</td>
         <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openProjetDetail('${p.id}','${escHtml(p.nom)}')">Ouvrir</button></td>
       </tr>`).join('');
+  }
+
+  // ── COMMANDES ─────────────────────────────────────────────────────
+  async function loadCommandes() {
+    const { data } = await sb.from('projets')
+      .select('*, clients(prenom, nom)')
+      .in('statut', ['Commandé', 'Livraison'])
+      .order('date_livraison', { ascending: true, nullsFirst: false });
+    const tbody = document.getElementById('commandes-table');
+    if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucune commande en cours.</td></tr>'; return; }
+    tbody.innerHTML = data.map(p => `
+      <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
+        <td>${p.clients ? escHtml(p.clients.prenom + ' ' + p.clients.nom) : '—'}</td>
+        <td style="font-weight:600;">${escHtml(p.nom)}</td>
+        <td style="font-weight:700;color:var(--accent);">${p.montant ? formatCurrency(p.montant) : '—'}</td>
+        <td style="font-size:12px;">${p.date_livraison ? new Date(p.date_livraison).toLocaleDateString('fr-FR') : '—'}</td>
+        <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openProjetDetail('${p.id}','${escHtml(p.nom)}')">Ouvrir</button></td>
+      </tr>`).join('');
+  }
+
+  // ── CONFIGURATIONS ────────────────────────────────────────────────
+  async function loadConfigs() {
+    const { data } = await sb.from('configs_biblio').select('*').order('created_at', { ascending: false });
+    const tbody = document.getElementById('configs-table');
+    if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Aucune configuration.</td></tr>'; return; }
+    tbody.innerHTML = data.map(c => `
+      <tr onclick="openConfigDetail(${JSON.stringify(JSON.stringify(c))})">
+        <td style="font-weight:600;">${escHtml(c.prenom || '—')}</td>
+        <td style="color:rgba(26,26,26,.55);font-size:12px;">${escHtml(c.email || '—')}</td>
+        <td>${c.largeur || '?'} × ${c.hauteur || '?'} × ${c.profondeur || '?'} cm</td>
+        <td>${escHtml(c.essence || '—')}</td>
+        <td>${c.nb_etageres || '—'}</td>
+        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openConfigDetail(${JSON.stringify(JSON.stringify(c))})">Voir</button></td>
+      </tr>`).join('');
+  }
+
+  function openConfigDetail(jsonStr) {
+    const c = JSON.parse(jsonStr);
+    const fields = [
+      ['Prénom', c.prenom],
+      ['Email', c.email],
+      ['Largeur', c.largeur ? c.largeur + ' cm' : null],
+      ['Hauteur', c.hauteur ? c.hauteur + ' cm' : null],
+      ['Profondeur', c.profondeur ? c.profondeur + ' cm' : null],
+      ['Essence', c.essence],
+      ['Nb étagères', c.nb_etageres],
+      ['Date', c.created_at ? new Date(c.created_at).toLocaleString('fr-FR') : null],
+    ];
+    const infoHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:20px;">
+      ${fields.filter(f => f[1] != null).map(f => `
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:3px;">${f[0]}</div>
+          <div style="font-size:13px;font-weight:600;">${escHtml(String(f[1]))}</div>
+        </div>`).join('')}
+    </div>`;
+    const { prenom, email, largeur, hauteur, profondeur, essence, nb_etageres, created_at, ...rest } = c;
+    const jsonDisplay = Object.keys(rest).length ? `<p class="section-title" style="margin-bottom:8px;">Données complètes</p><pre class="config-json">${escHtml(JSON.stringify(c, null, 2))}</pre>` : `<pre class="config-json">${escHtml(JSON.stringify(c, null, 2))}</pre>`;
+    document.getElementById('config-detail-content').innerHTML = infoHtml + jsonDisplay;
+    document.getElementById('modal-config-detail').classList.add('open');
   }
 
   // ── PROJET DETAIL MODAL ───────────────────────────────────────────
@@ -729,18 +1084,26 @@
     document.getElementById('pd-title').textContent = nom;
     document.getElementById('modal-projet-detail').classList.add('open');
 
-    const projet = allProjets.find(p => p.id === projetId);
-    if (projet) document.getElementById('pd-statut').value = projet.statut;
+    // Find projet in allProjets or fetch
+    let projet = allProjets.find(p => p.id === projetId);
+    if (!projet) {
+      const { data } = await sb.from('projets').select('*').eq('id', projetId).single();
+      projet = data;
+    }
+    if (projet) {
+      document.getElementById('pd-statut').value = projet.statut || 'En étude';
+      document.getElementById('pd-montant').value = projet.montant || '';
+      document.getElementById('pd-date-livraison').value = projet.date_livraison ? projet.date_livraison.split('T')[0] : '';
+    }
 
     await Promise.all([loadProjetDocs(), loadProjetMsgs()]);
   }
 
   async function loadProjetDocs() {
-    const { data: docs } = await sb.from('documents').select('*').eq('projet_id', currentProjetId).order('created_at',{ascending:false});
+    const { data: docs } = await sb.from('documents').select('*').eq('projet_id', currentProjetId).order('created_at', { ascending: false });
     const container = document.getElementById('pd-docs');
     if (!docs || docs.length === 0) { container.innerHTML = '<div class="empty" style="padding:16px 0;">Aucun document.</div>'; return; }
 
-    // Générer des URLs signées (1h) pour chaque doc stocké en privé
     const docsWithUrls = await Promise.all(docs.map(async d => {
       let signedUrl = d.url;
       if (d.url && !d.url.startsWith('http')) {
@@ -750,22 +1113,26 @@
       return { ...d, signedUrl };
     }));
 
-    container.innerHTML = docsWithUrls.map(d => `
-      <div class="doc-item ${d.uploade_par==='client'?'doc-by-client':''}">
-        <div class="doc-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#CD3E00" stroke-width="1.6"/><polyline points="14 2 14 8 20 8" stroke="#CD3E00" stroke-width="1.6"/></svg>
-        </div>
-        <div class="doc-info">
-          <div class="doc-name">${escHtml(d.nom)}</div>
-          <div class="doc-meta">${d.type} · ${d.uploade_par==='client'?'Envoyé par le client':'Kobo Design'} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}${d.taille_kb?' · '+formatSize(d.taille_kb):''}</div>
-        </div>
-        <a href="${d.signedUrl}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
-      </div>`).join('');
+    container.innerHTML = docsWithUrls.map(d => {
+      const catClass = d.categorie === 'Notice de montage' ? 'cat-notice' : 'cat-document';
+      const catLabel = d.categorie || 'Document';
+      return `
+        <div class="doc-item ${d.uploade_par === 'client' ? 'doc-by-client' : ''}">
+          <div class="doc-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#CD3E00" stroke-width="1.6"/><polyline points="14 2 14 8 20 8" stroke="#CD3E00" stroke-width="1.6"/></svg>
+          </div>
+          <div class="doc-info">
+            <div class="doc-name">${escHtml(d.nom)}<span class="cat-badge ${catClass}">${escHtml(catLabel)}</span></div>
+            <div class="doc-meta">${d.type} · ${d.uploade_par === 'client' ? 'Envoyé par le client' : 'Kobo Design'} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}${d.taille_kb ? ' · ' + formatSize(d.taille_kb) : ''}</div>
+          </div>
+          <a href="${d.signedUrl}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
+        </div>`;
+    }).join('');
   }
 
   async function loadProjetMsgs() {
-    await sb.from('messages').update({lu:true}).eq('projet_id', currentProjetId).eq('expediteur','client');
-    const { data: msgs } = await sb.from('messages').select('*').eq('projet_id', currentProjetId).order('created_at',{ascending:true});
+    await sb.from('messages').update({ lu: true }).eq('projet_id', currentProjetId).eq('expediteur', 'client');
+    const { data: msgs } = await sb.from('messages').select('*').eq('projet_id', currentProjetId).order('created_at', { ascending: true });
     renderMsgThread('pd-msgs', msgs || []);
     loadUnreadCount();
   }
@@ -776,7 +1143,7 @@
     el.innerHTML = msgs.map(m => `
       <div class="msg msg--${m.expediteur}">
         <div class="msg__bubble">${escHtml(m.contenu)}</div>
-        <div class="msg__meta">${m.expediteur==='client'?'Client':'Kobo Design'} · ${new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="msg__meta">${m.expediteur === 'client' ? 'Client' : 'Kobo Design'} · ${new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
       </div>`).join('');
     el.scrollTop = el.scrollHeight;
   }
@@ -786,16 +1153,28 @@
     const contenu = input.value.trim();
     if (!contenu || !currentProjetId) return;
     input.value = '';
-    const { error } = await sb.from('messages').insert([{projet_id: currentProjetId, expediteur:'kobo', contenu, lu:true}]);
+    const { error } = await sb.from('messages').insert([{ projet_id: currentProjetId, expediteur: 'kobo', contenu, lu: true }]);
     if (!error) await loadProjetMsgs();
     else showToast('Erreur envoi message', 'err');
   }
 
   async function updateProjetStatut() {
     const statut = document.getElementById('pd-statut').value;
-    const { error } = await sb.from('projets').update({statut, updated_at: new Date().toISOString()}).eq('id', currentProjetId);
-    if (!error) { showToast('Statut mis à jour'); await loadProjets(); await loadDashboard(); }
-    else showToast('Erreur mise à jour', 'err');
+    const montantRaw = document.getElementById('pd-montant').value;
+    const date_livraison = document.getElementById('pd-date-livraison').value || null;
+    const montant = montantRaw !== '' ? parseFloat(montantRaw) : null;
+
+    const updateObj = { statut, updated_at: new Date().toISOString() };
+    if (montant !== null) updateObj.montant = montant;
+    if (date_livraison !== undefined) updateObj.date_livraison = date_livraison;
+
+    const { error } = await sb.from('projets').update(updateObj).eq('id', currentProjetId);
+    if (!error) {
+      showToast('Projet mis à jour');
+      await Promise.all([loadProjets(), loadDashboard()]);
+    } else {
+      showToast('Erreur mise à jour', 'err');
+    }
   }
 
   async function deleteClient() {
@@ -809,9 +1188,9 @@
       body: JSON.stringify({ clientId: currentClientId })
     });
     const result = await resp.json();
-    if (!resp.ok) { showToast(result.error || 'Erreur suppression', 'error'); return; }
+    if (!resp.ok) { showToast(result.error || 'Erreur suppression', 'err'); return; }
     showToast('Client supprimé');
-    showView('clients', document.querySelector('.nav-item:nth-child(3)'));
+    showView('clients', document.querySelectorAll('.nav-item')[1]);
     await Promise.all([loadClients(), loadDashboard()]);
   }
 
@@ -839,8 +1218,8 @@
   async function uploadFile(file) {
     if (!currentProjetId) return showToast('Aucun projet sélectionné', 'err');
     const type = document.getElementById('doc-type-select').value;
-    const ext = file.name.split('.').pop();
-    const path = `${currentProjetId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const categorie = document.getElementById('doc-categorie-select').value;
+    const path = `${currentProjetId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 
     const pw = document.getElementById('upload-progress-wrap');
     const pb = document.getElementById('upload-progress-bar');
@@ -849,17 +1228,17 @@
     pl.textContent = `Upload de ${file.name}…`;
     pb.style.width = '20%';
 
-    const { error: upErr } = await sb.storage.from('documents-client').upload(path, file, {upsert:true});
+    const { error: upErr } = await sb.storage.from('documents-client').upload(path, file, { upsert: true });
     pb.style.width = '70%';
-    if (upErr) { pw.style.display='none'; showToast('Erreur upload: '+upErr.message,'err'); return; }
+    if (upErr) { pw.style.display = 'none'; showToast('Erreur upload: ' + upErr.message, 'err'); return; }
 
     pb.style.width = '90%';
 
-    // On stocke le path (pas l'URL publique) pour bucket privé
     const { error: dbErr } = await sb.from('documents').insert([{
       projet_id: currentProjetId,
       nom: file.name,
       type,
+      categorie,
       url: path,
       taille_kb: Math.round(file.size / 1024),
       uploade_par: 'kobo'
@@ -880,7 +1259,6 @@
     const container = document.getElementById('msg-projet-list');
     if (!clients || !clients.length) { container.innerHTML = '<div class="empty" style="padding:16px;">Aucun client.</div>'; return; }
 
-    // Récupérer les non-lus par client
     const { data: unreads } = await sb.from('messages_general')
       .select('client_id')
       .eq('expediteur', 'client')
@@ -890,19 +1268,15 @@
 
     container.innerHTML = clients.map(c => {
       const unread = unreadMap[c.id] || 0;
-      return `<div onclick="openMsgThread('${c.id}','${escHtml(c.prenom+' '+c.nom)}')" style="padding:14px 16px;border-bottom:1px solid rgba(26,26,26,.06);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(205,62,0,.03)'" onmouseout="this.style.background=''">
+      return `<div onclick="openMsgThread('${c.id}','${escHtml(c.prenom + ' ' + c.nom)}')" style="padding:14px 16px;border-bottom:1px solid rgba(26,26,26,.06);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(205,62,0,.03)'" onmouseout="this.style.background=''">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:13px;font-weight:${unread?700:400};">${escHtml(c.prenom+' '+c.nom)}</div>
+          <div style="font-size:13px;font-weight:${unread ? 700 : 400};">${escHtml(c.prenom + ' ' + c.nom)}</div>
           ${unread ? `<span class="nav-badge">${unread}</span>` : ''}
         </div>
         <div style="font-size:11px;color:rgba(26,26,26,.4);margin-top:3px;">${escHtml(c.email)}</div>
       </div>`;
     }).join('');
   }
-
-  let activeMsgClientId = null;
-  let adminMsgChannel = null;
-  let adminMsgPolling = null;
 
   async function fetchAdminThread() {
     if (!activeMsgClientId) return;
@@ -921,7 +1295,6 @@
     document.getElementById('msg-thread-panel').style.display = 'block';
     await fetchAdminThread();
 
-    // Temps réel
     if (adminMsgChannel) sb.removeChannel(adminMsgChannel);
     adminMsgChannel = sb.channel('admin-msg-' + clientId)
       .on('postgres_changes', {
@@ -936,7 +1309,6 @@
         }
       });
 
-    // Polling de sécurité
     if (adminMsgPolling) clearInterval(adminMsgPolling);
     adminMsgPolling = setInterval(fetchAdminThread, 5000);
   }
@@ -965,6 +1337,7 @@
     populateClientSelect('np-client');
     document.getElementById('np-nom').value = '';
     document.getElementById('np-desc').value = '';
+    document.getElementById('np-statut').value = 'En étude';
     document.getElementById('modal-projet').classList.add('open');
   }
 
@@ -972,17 +1345,18 @@
     populateClientSelect('np-client', currentClientId);
     document.getElementById('np-nom').value = '';
     document.getElementById('np-desc').value = '';
+    document.getElementById('np-statut').value = 'En étude';
     document.getElementById('modal-projet').classList.add('open');
   }
 
   function openModalNewClient() {
-    ['nc-prenom','nc-nom','nc-email','nc-tel','nc-pw'].forEach(id => document.getElementById(id).value = '');
+    ['nc-prenom', 'nc-nom', 'nc-email', 'nc-tel', 'nc-pw'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('modal-client').classList.add('open');
   }
 
   function closeModal(id) {
     document.getElementById(id).classList.remove('open');
-    currentProjetId = null;
+    if (id === 'modal-projet-detail') currentProjetId = null;
   }
 
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -991,7 +1365,9 @@
 
   function populateClientSelect(selectId, preselectId) {
     const sel = document.getElementById(selectId);
-    sel.innerHTML = allClients.map(c => `<option value="${c.id}" ${c.id===preselectId?'selected':''}>${escHtml(c.prenom)} ${escHtml(c.nom)}</option>`).join('');
+    sel.innerHTML = allClients.map(c =>
+      `<option value="${c.id}" ${c.id === preselectId ? 'selected' : ''}>${escHtml(c.prenom)} ${escHtml(c.nom)}</option>`
+    ).join('');
   }
 
   async function createProjet() {
@@ -1001,12 +1377,12 @@
     const type = document.getElementById('np-type').value;
     const statut = document.getElementById('np-statut').value;
     if (!client_id || !nom) return showToast('Client et nom obligatoires', 'err');
-    const { error } = await sb.from('projets').insert([{client_id, nom, description: description||null, type, statut}]);
-    if (error) return showToast('Erreur création: '+error.message, 'err');
+    const { error } = await sb.from('projets').insert([{ client_id, nom, description: description || null, type, statut }]);
+    if (error) return showToast('Erreur création: ' + error.message, 'err');
     showToast('Projet créé !');
     closeModal('modal-projet');
     await Promise.all([loadProjets(), loadDashboard(), loadClients()]);
-    if (currentClientId) openClientDetail(currentClientId);
+    if (currentClientId) loadClientProjets(currentClientId);
   }
 
   async function createClient() {
@@ -1018,7 +1394,6 @@
     if (!prenom || !nom || !email || !pw) return showToast('Tous les champs obligatoires', 'err');
     if (pw.length < 8) return showToast('Mot de passe trop court', 'err');
 
-    // Récupérer le token de session admin pour authentifier l'API
     const { data: { session } } = await sb.auth.getSession();
     const token = session?.access_token;
 
@@ -1038,7 +1413,7 @@
 
   // ── UNREAD COUNT ──────────────────────────────────────────────────
   async function loadUnreadCount() {
-    const { count } = await sb.from('messages_general').select('*',{count:'exact',head:true}).eq('lu',false).eq('expediteur','client');
+    const { count } = await sb.from('messages_general').select('*', { count: 'exact', head: true }).eq('lu', false).eq('expediteur', 'client');
     const badge = document.getElementById('nav-unread');
     if (count && count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
     else { badge.style.display = 'none'; }
@@ -1047,20 +1422,24 @@
 
   // ── HELPERS ───────────────────────────────────────────────────────
   function statusKey(s) {
-    const m = {'En étude':'etude','Fabrication':'fabrication','Livraison':'livraison','Terminé':'termine'};
+    const m = { 'En étude': 'etude', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return m[s] || 'etude';
   }
 
   function escHtml(str) {
-    return String(str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    return String(str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   function formatSize(kb) {
     if (kb < 1000) return kb + ' Ko';
-    return (kb/1024).toFixed(1) + ' Mo';
+    return (kb / 1024).toFixed(1) + ' Mo';
   }
 
-  function showToast(msg, type='ok') {
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount);
+  }
+
+  function showToast(msg, type = 'ok') {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'toast show ' + type;
