@@ -571,16 +571,35 @@
 
   // ── INIT ─────────────────────────────────────────────────────────
   (async () => {
-    sb.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        // Lien "recovery" cliqué depuis l'email → écran création mot de passe
-        currentUser = session?.user || null;
+    // Gérer l'échange de code PKCE si présent (après clic sur magic link)
+    const code = new URLSearchParams(window.location.search).get('code');
+    if (code) {
+      try { await sb.auth.exchangeCodeForSession(code); } catch(e) {}
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    // Vérifier session existante
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      if (session.user.user_metadata?.needs_password === true) {
         showSetPassword();
-        return;
+      } else {
+        showDashboard();
       }
+      return;
+    }
+
+    // Pas de session → page de connexion, écouter les changements
+    showAuth();
+    sb.auth.onAuthStateChange((event, session) => {
       if (session) {
         currentUser = session.user;
-        showDashboard();
+        if (session.user.user_metadata?.needs_password === true) {
+          showSetPassword();
+        } else {
+          showDashboard();
+        }
       } else {
         showAuth();
       }
