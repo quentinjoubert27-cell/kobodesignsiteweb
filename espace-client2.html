@@ -572,13 +572,15 @@
   // ── INIT ─────────────────────────────────────────────────────────
   (async () => {
     sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Lien "recovery" cliqué depuis l'email → écran création mot de passe
+        currentUser = session?.user || null;
+        showSetPassword();
+        return;
+      }
       if (session) {
         currentUser = session.user;
-        if (session.user.user_metadata?.needs_password === true) {
-          showSetPassword();
-        } else {
-          showDashboard();
-        }
+        showDashboard();
       } else {
         showAuth();
       }

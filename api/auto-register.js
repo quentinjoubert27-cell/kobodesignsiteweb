@@ -77,13 +77,15 @@ module.exports = async function handler(req, res) {
       await sb.from(configTable).update({ projet_id: projet.id }).eq('id', configId);
     }
 
-    // 4. Générer un lien d'accès (invite pour nouveau compte, magiclink pour existant)
+    // 4. Générer un lien d'accès
+    // Nouveau compte → recovery (déclenche PASSWORD_RECOVERY dans le client Supabase = écran "créer mot de passe")
+    // Compte existant → magiclink (connexion directe)
     const { data: linkData } = await sb.auth.admin.generateLink({
-      type: isNew ? 'invite' : 'magiclink',
+      type: isNew ? 'recovery' : 'magiclink',
       email,
       options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' }
     });
-    const magicLink = linkData?.properties?.action_link || 'https://www.kobo-design.fr/espace-client?v=2';
+    const magicLink = linkData?.properties?.action_link || 'https://www.kobo-design.fr/espace-client2';
 
     // 5. Envoyer l'email de bienvenue au client
     await resend.emails.send({
