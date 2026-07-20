@@ -572,23 +572,40 @@
   let userProjets = [];
 
   // ── INIT ─────────────────────────────────────────────────────────
-  function handleSession(session) {
-    if (session) {
-      currentUser = session.user;
-      if (session.user.user_metadata?.needs_password === true) {
+  (async () => {
+    const params = new URLSearchParams(window.location.search);
+    const tokenHash = params.get('token_hash');
+    const type      = params.get('type');
+    const isNew     = params.get('new') === '1';
+
+    if (tokenHash && type) {
+      // Vérifier le token directement (bypass PKCE)
+      const { data, error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type });
+      window.history.replaceState({}, '', window.location.pathname);
+      if (error) { showAuth(); return; }
+      currentUser = data.user;
+      if (isNew || data.user?.user_metadata?.needs_password === true) {
         showSetPassword();
       } else {
         showDashboard();
       }
-    } else {
-      showAuth();
+      return;
     }
-  }
 
-  // onAuthStateChange gère tout : session existante (INITIAL_SESSION), magic link (SIGNED_IN), déconnexion
-  sb.auth.onAuthStateChange((event, session) => {
-    handleSession(session);
-  });
+    // Session existante ?
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      showDashboard();
+      return;
+    }
+
+    showAuth();
+    sb.auth.onAuthStateChange((event, session) => {
+      if (session) { currentUser = session.user; showDashboard(); }
+      else { showAuth(); }
+    });
+  })();
 
   // ── AUTH ─────────────────────────────────────────────────────────
   function switchAuthTab(tab, btn) {

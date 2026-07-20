@@ -77,13 +77,17 @@ module.exports = async function handler(req, res) {
       await sb.from(configTable).update({ projet_id: projet.id }).eq('id', configId);
     }
 
-    // 4. Générer un magic link (fonctionne pour nouveaux et anciens comptes)
+    // 4. Générer un token OTP et construire une URL custom qui bypass PKCE
     const { data: linkData } = await sb.auth.admin.generateLink({
       type: 'magiclink',
       email,
       options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' }
     });
-    const magicLink = linkData?.properties?.action_link || 'https://www.kobo-design.fr/espace-client2';
+    const tokenHash = linkData?.properties?.hashed_token;
+    // URL custom : notre page vérifie le token directement avec verifyOtp (pas de PKCE nécessaire)
+    const magicLink = tokenHash
+      ? `https://www.kobo-design.fr/espace-client2?token_hash=${tokenHash}&type=magiclink${isNew ? '&new=1' : ''}`
+      : 'https://www.kobo-design.fr/espace-client2';
 
     // 5. Envoyer l'email de bienvenue au client
     await resend.emails.send({
