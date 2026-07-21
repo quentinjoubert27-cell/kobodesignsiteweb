@@ -1393,13 +1393,23 @@
 
     try {
       let vizUrl = null;
+      const ft = c._type || c.type || 'sdb';
       if (isBiblio && c.largeur) {
-        const cfg = { W: c.largeur, H: c.hauteur, D: c.profondeur, matId: 'chene', elements: c.elements || [] };
-        vizUrl = '/configurateur-biblio?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+        const cfg = { ft: 'biblio', L: c.largeur, H: c.hauteur, P: c.profondeur, matLabel: c.essence || '', elements: c.elements || [] };
+        vizUrl = '/configurateur?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
       } else if (!isBiblio && c.meuble_l) {
-        vizUrl = '/configurateur?ft=' + encodeURIComponent(c.type || 'sdb');
+        const rc = c.raw_config || {};
+        const cfg = {
+          ft,
+          L: c.meuble_l, H: c.meuble_h, P: c.meuble_p,
+          matLabel: c.meuble_mat || '',
+          elements: c.elements || [],
+          plan: { L: c.plan_l, P: c.plan_p, matLabel: c.plan_mat || '' },
+          vasques: rc.vasques || { nb: c.nb_vasques || 1 },
+        };
+        vizUrl = '/configurateur?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
       }
-      if (vizUrl) html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;">🔗 Ouvrir dans le configurateur →</a>`;
+      if (vizUrl) html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 9l-9-7-9 7v11a2 2 0 002 2h14a2 2 0 002-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Voir le meuble →</a>`;
     } catch(e) {}
 
     content.innerHTML = html;

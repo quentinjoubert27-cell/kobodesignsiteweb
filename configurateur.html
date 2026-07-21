@@ -3632,7 +3632,13 @@ goStep(1);
           if(pi>=0) setMatPlan(pi);
         }
       }
-      if(cfg.vasques&&cfg.vasques.nb>1) setNbVasques(2);
+      if(cfg.vasques){
+        if(cfg.vasques.nb>1) setNbVasques(2);
+        if(cfg.vasques.id) selectVasque(cfg.vasques.id);
+        if(cfg.vasques.vx!=null){ S.vx=cfg.vasques.vx; S.vz=cfg.vasques.vz||0; }
+        if(cfg.vasques.vx2!=null){ S.vx2=cfg.vasques.vx2; S.vz2=cfg.vasques.vz2||0; }
+        positionVasque();
+      }
       goStep(3);
     }
     var badge=document.createElement('div');

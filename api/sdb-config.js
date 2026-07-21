@@ -81,6 +81,7 @@ module.exports = async function handler(req, res) {
         nb_tiroirs: counts.tiroir || 0,
         elements,
         thumbnail: thumbnail || null,
+        raw_config: { furniture_type, meuble, plan, vasques, elements },
       }])
       .select('id')
       .single();
