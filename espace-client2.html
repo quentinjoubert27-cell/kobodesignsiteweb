@@ -206,63 +206,129 @@
     .btn-save { padding: 11px 22px; background: var(--accent); color: var(--white); border: none; border-radius: 8px; font-family: var(--font); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: background .2s; }
     .btn-save:hover { background: #a83200; }
 
+    /* ── TABLETTE / MOBILE : bottom nav ── */
     @media (max-width: 768px) {
       .sidebar {
         position: fixed; bottom: 0; left: 0; right: 0; top: auto;
-        width: 100%; height: auto;
-        flex-direction: column; padding: 0;
-        z-index: 200; border-top: 1px solid rgba(255,250,240,.1);
+        width: 100%; height: auto; flex-direction: column;
+        padding: 0; z-index: 200;
+        border-top: 1px solid rgba(255,250,240,.1);
+        box-shadow: 0 -4px 24px rgba(0,0,0,.28);
       }
-      .sidebar-logo { display: none; }
-      .sidebar-nav { display: flex; flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+      .sidebar-logo, .sidebar-user { display: none; }
+      .sidebar-nav {
+        display: flex; flex-direction: row;
+        overflow-x: auto; scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
       .sidebar-nav::-webkit-scrollbar { display: none; }
       .nav-section { display: contents; }
       .nav-section-label { display: none; }
       .nav-item {
-        flex: 0 0 auto; flex-direction: column; gap: 2px;
-        padding: 7px 10px 10px; border-radius: 0;
-        font-size: 9px; font-weight: 500; min-height: 52px; min-width: 56px;
+        flex: 0 0 auto; flex-direction: column; gap: 3px;
+        padding: 8px 10px 11px; border-radius: 0;
+        font-size: 10px; font-weight: 500; min-height: 58px; min-width: 62px;
         justify-content: center; align-items: center; text-align: center;
         margin-bottom: 0;
       }
-      .nav-item svg { opacity: .6; width: 18px; height: 18px; }
-      .nav-item.active svg { opacity: 1; }
-      .sidebar-user { display: none; }
-      .main { margin-left: 0; padding: 20px 16px 80px; }
-      .messages-wrap { height: calc(100vh - 200px); min-height: 300px; }
+      .nav-item svg { opacity: .55; width: 20px; height: 20px; }
+      .nav-item.active { background: none; color: var(--accent); }
+      .nav-item.active svg { opacity: 1; color: var(--accent); }
+
+      /* Main */
+      .main { margin-left: 0; padding: 20px 16px 84px; }
+
+      /* Messages — hauteur correcte avec dvh */
+      .messages-wrap { height: calc(100dvh - 200px); min-height: 280px; }
+
+      /* Stats */
       .cards-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .stat-card { padding: 16px; }
       .stat-card__value { font-size: 22px; }
+
+      /* Projets */
       .project-card { padding: 16px; }
-      .doc-item { padding: 12px; gap: 10px; flex-wrap: wrap; }
-      .doc-item > div:first-child { flex: 1; min-width: 0; }
-      .doc-dl { font-size: 10px; padding: 5px 10px; white-space: nowrap; }
-      .home-hero { padding: 24px 20px; }
-      .home-hero__title { font-size: 24px; }
+      .project-card__header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .project-card__desc { font-size: 12px; margin-bottom: 12px; }
+
+      /* Documents */
+      .doc-item { padding: 12px 14px; gap: 12px; }
+      .doc-icon { width: 36px; height: 36px; flex-shrink: 0; }
+      .doc-dl { font-size: 10px; padding: 5px 10px; }
+
+      /* Home hero */
+      .home-hero { padding: 24px 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
+      .home-hero__title { font-size: 26px; }
       .home-hero__logo { display: none; }
+
+      /* Quick actions */
+      .quick-actions { gap: 8px; }
+      .quick-btn { padding: 8px 14px; font-size: 11px; }
+
+      /* Commandes */
+      .commande-card { padding: 18px; }
+      .commande-card__header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .commande-meta { gap: 16px; }
+
+      /* Infos */
       .info-grid { grid-template-columns: 1fr; }
-      /* Upload area sur mobile */
+      .info-section { padding: 20px; }
+
+      /* Upload */
       #upload-area-client { padding: 20px 16px; }
+
+      /* Forms */
       .project-select, select { font-size: 16px; }
-      /* Page header */
       .page-header { margin-bottom: 20px; }
       .page-title { font-size: 26px; }
+
+      /* Toast au-dessus de la nav */
+      .toast { bottom: 76px; right: 16px; }
     }
 
     @media (max-width: 480px) {
-      .main { padding: 16px 12px 76px; }
+      .main { padding: 16px 12px 80px; }
+
+      /* Auth */
       .auth-screen { padding: 16px; }
-      .auth-box { padding: 28px 20px; }
-      .auth-title { font-size: 26px; }
+      .auth-box { padding: 28px 18px; border-radius: 16px; }
+      .auth-title { font-size: 24px; }
+
+      /* Stats — une colonne */
       .cards-grid { grid-template-columns: 1fr; gap: 10px; }
-      .messages-wrap { height: calc(100vh - 180px); }
-      .messages-list { padding: 12px; }
+      .stat-card__value { font-size: 26px; }
+
+      /* Messages */
+      .messages-wrap { height: calc(100dvh - 170px); }
+      .messages-list { padding: 12px; gap: 12px; }
       .msg-input-wrap { padding: 10px 12px; gap: 8px; }
+
+      /* Home hero */
+      .home-hero { padding: 20px 16px; }
+      .home-hero__title { font-size: 22px; }
+
+      /* Current project card */
+      .current-project-card { padding: 18px; }
+      .current-project-card__top { flex-direction: column; gap: 10px; align-items: flex-start; }
+
+      /* Project cards */
+      .project-card { padding: 14px; }
+      .project-card__name { font-size: 15px; }
+
+      /* Documents */
+      .doc-item { gap: 10px; }
+      .doc-name { font-size: 12px; }
+
+      /* Nav */
+      .nav-item { min-width: 56px; font-size: 9px; padding: 7px 8px 10px; gap: 3px; }
+      .nav-item svg { width: 18px; height: 18px; }
+
+      /* Empty */
       .empty { padding: 32px 16px; }
+
+      /* Forms */
       .form-btn { min-height: 48px; }
       .form-input, .msg-input, .project-select { font-size: 16px; }
-      /* Bottom nav scrollable sur petits écrans */
-      .nav-item { min-width: 52px; padding: 7px 8px 10px; font-size: 8px; }
     }
   </style>
 </head>

@@ -224,63 +224,113 @@
       .pipeline { grid-template-columns: repeat(3, 1fr); }
     }
 
+    @media (max-width: 1024px) {
+      .main { padding: 32px 28px; }
+    }
+
+    /* ── TABLETTE / MOBILE : bottom nav ── */
     @media (max-width: 900px) {
       .sidebar {
         position: fixed; bottom: 0; left: 0; right: 0; top: auto;
-        width: 100%; height: auto;
-        flex-direction: row; padding: 0;
-        overflow-y: visible; border-top: 1px solid rgba(255,250,240,.1);
-        overflow-x: auto;
+        width: 100%; height: auto; flex-direction: row;
+        padding: 0; overflow-y: visible; overflow-x: auto;
+        scrollbar-width: none; border-top: 1px solid rgba(255,250,240,.1);
+        box-shadow: 0 -4px 24px rgba(0,0,0,.35);
       }
-      .sidebar-logo { display: none; }
-      .sidebar-footer { display: none; }
-      .nav-label { display: none; }
+      .sidebar::-webkit-scrollbar { display: none; }
+      .sidebar-logo, .sidebar-footer, .nav-label { display: none; }
       .nav-item {
-        flex: 1; flex-direction: column; gap: 3px;
-        padding: 8px 4px 12px; border-radius: 0;
-        font-size: 10px; font-weight: 500; min-height: 54px;
+        flex: 1; flex-direction: column; gap: 4px;
+        padding: 8px 6px 11px; border-radius: 0;
+        font-size: 10px; font-weight: 500; min-height: 60px;
         justify-content: center; align-items: center; text-align: center;
-        margin-bottom: 0; width: auto; min-width: 60px;
+        margin-bottom: 0; width: auto; min-width: 64px; position: relative;
       }
-      .nav-item .nav-badge { position: absolute; top: 6px; right: calc(50% - 18px); margin-left: 0; }
-      .nav-item { position: relative; }
-      .main { margin-left: 0; padding: 24px 16px 80px; min-height: auto; }
-      .table-wrap { overflow-x: auto; }
-      table { min-width: 500px; }
-      .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .stat { padding: 14px; }
+      .nav-item svg { width: 20px; height: 20px; }
+      .nav-item.active { background: none; color: var(--accent); }
+      .nav-item.active svg { color: var(--accent); }
+      .nav-badge { position: absolute; top: 7px; right: calc(50% - 22px); margin-left: 0; }
+
+      /* Main */
+      .main { margin-left: 0; padding: 24px 20px 84px; min-height: auto; }
+
+      /* Tables */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 520px; }
+
+      /* Stats — 3 colonnes */
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .stat { padding: 14px 12px; }
       .stat__val { font-size: 22px; }
-      .pipeline { grid-template-columns: repeat(2, 1fr); }
+
+      /* Pipeline — scroll horizontal */
+      .pipeline { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch;
+        gap: 10px; padding-bottom: 6px; scrollbar-width: none; }
+      .pipeline::-webkit-scrollbar { display: none; }
+      .pipeline-col { flex: 0 0 190px; min-width: 0; }
+
+      /* Layout */
       #view-messages-view > div { grid-template-columns: 1fr !important; }
       .detail-panel { padding: 16px; }
-      .msg-thread { max-height: 280px; }
-      .modal { padding: 24px 20px; }
+      .msg-thread { max-height: 260px; }
       .field-row { grid-template-columns: 1fr; }
-      .client-info-banner { padding: 16px; }
+      .client-info-banner { padding: 16px; gap: 12px; }
+      .modal { padding: 24px 20px; }
+      .tab-btn { font-size: 11px; padding: 8px 12px; }
+
+      /* Toast au-dessus de la nav */
+      .toast { bottom: 80px; right: 16px; }
+    }
+
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat__val { font-size: 20px; }
+      .pipeline-col { flex: 0 0 170px; }
+      .view-title { font-size: 22px; }
     }
 
     @media (max-width: 480px) {
-      .main { padding: 16px 12px 76px; }
-      .stats-row { grid-template-columns: 1fr 1fr; }
-      .pipeline { grid-template-columns: 1fr; }
+      .main { padding: 14px 12px 80px; }
+
+      /* Stats 2 colonnes serrées */
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stat { padding: 12px 10px; }
+      .stat__label { font-size: 9px; letter-spacing: .1em; }
+      .stat__val { font-size: 18px; }
+
+      /* Pipeline toujours scroll */
+      .pipeline-col { flex: 0 0 155px; }
+      .pipeline-col { padding: 12px; }
+      .pipeline-chip { font-size: 10px; padding: 4px 8px; }
+
+      /* Forms */
       .field input, .field select, .field textarea { font-size: 16px; }
+
+      /* View header */
       .view-header { flex-direction: column; gap: 10px; }
-      .view-header .btn { width: 100%; }
-      .client-info-banner { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .client-info-banner > div:last-child { align-self: stretch; }
-      /* Modals en bottom sheet sur mobile */
+      .view-header .btn { width: 100%; justify-content: center; }
+
+      /* Client banner */
+      .client-info-banner { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+      /* Modals bottom sheet */
       .modal-overlay { align-items: flex-end; padding: 0; }
-      .modal { border-radius: 20px 20px 0 0; max-height: 92vh; padding: 24px 16px 32px; }
+      .modal { border-radius: 20px 20px 0 0; max-height: 92dvh;
+        padding: 20px 16px 32px; max-width: 100%; }
+      .modal-title { font-size: 17px; }
       .modal-actions { flex-direction: column; }
       .modal-actions .btn { width: 100%; justify-content: center; }
-      /* Tables scrollables */
-      .table-wrap table { min-width: 480px; }
-      th, td { padding: 10px 8px; font-size: 12px; }
-      /* Boutons d'action dans les tables */
-      .btn-sm { padding: 5px 8px; font-size: 11px; }
-      /* Pipeline chips */
-      .pipeline-col { padding: 12px; }
-      .pipeline-chip { font-size: 11px; padding: 4px 8px; }
+
+      /* Tables */
+      th, td { padding: 10px 10px; font-size: 12px; }
+      .btn-sm { padding: 5px 8px; font-size: 10px; }
+
+      /* Nav */
+      .nav-item { min-width: 58px; font-size: 9px; gap: 3px; padding: 7px 5px 10px; }
+      .nav-item svg { width: 18px; height: 18px; }
+
+      /* Section */
+      .section-title { font-size: 10px; }
     }
   </style>
 </head>
