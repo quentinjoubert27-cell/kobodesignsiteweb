@@ -356,8 +356,8 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   #edit-cta-icon{width:28px;height:28px}
   #edit-cta-sub{display:none}
   #edit-cta-title{font-size:11px}
-  /* Safety : jamais de CTA en mode-edit */
-  #cv-wrap.mode-edit #edit-cta{display:none!important}
+  /* CTA "Personnaliser" masqué sur mobile — le step 2 gère l'édition */
+  #edit-cta{display:none!important}
   /* Liste éléments */
   .el-list-item{padding:8px 10px}
   .el-list-del{min-width:36px;min-height:36px}
@@ -2144,6 +2144,7 @@ function toggleCaissonEdit(){
   var fnContent=document.getElementById('fn-edit-content');
   if(fnContent) fnContent.style.display=caissonEditMode?'':'none';
   if(BIBLIO_MODE && caissonEditMode){ switchSbTab('fonction'); if(currentFT==='biblio') buildPresetGrid(); }
+  if(BIBLIO_MODE && !caissonEditMode){ switchSbTab('formulaire'); } // retour aux dimensions quand on quitte l'édition
   if(caissonEditMode){ showCotes=true; } else { showCotes=false; }
   updateCotes();
   updateElementsList();
@@ -3005,16 +3006,17 @@ function clampDim(inp,fn){
   var v=Math.min(+inp.max,Math.max(+inp.min,Math.round(+inp.value)||+inp.min));
   inp.value=v; fn(v);
 }
+function _clearCaissonEls(){ caissonElements=[]; caissonElements2=[]; updateElementsList(); }
 function setCL(v){
   v=Math.round(v); S.CL=v/100;
   var inp=document.getElementById('inp-CL'); if(inp) inp.value=v;
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
   var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
   if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
-  buildCaisson(); checkAlerts();
+  _clearCaissonEls(); buildCaisson(); checkAlerts();
 }
-function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; buildCaisson(); if(planMesh) buildPlan(); }
-function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; buildCaisson(); }
+function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
+function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
 function setL(v){
   S.L=v/100; document.getElementById('v-L').textContent=v+' cm';
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
