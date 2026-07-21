@@ -80,6 +80,7 @@ module.exports = async function handler(req, res) {
         nb_portes: counts.porte || 0,
         nb_tiroirs: counts.tiroir || 0,
         elements,
+        thumbnail: thumbnail || null,
       }])
       .select('id')
       .single();

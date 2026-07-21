@@ -1372,6 +1372,11 @@
 
     html += `</div></div>`;
 
+    if (c.thumbnail) {
+      html += `<img src="${c.thumbnail}" alt="Aperçu 3D" onclick="openThumbLightbox(this.src)"
+        style="width:100%;border-radius:10px;margin-bottom:12px;cursor:zoom-in;display:block;object-fit:cover;max-height:220px;"/>`;
+    }
+
     if (c.message) {
       html += `<div style="background:#fff8f0;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:12px;">
         <div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Message du client</div>
@@ -1698,6 +1703,18 @@
     t.className = 'toast show ' + type;
     setTimeout(() => t.className = 'toast', 3000);
   }
+</script>
+<!-- Lightbox thumbnail 3D -->
+<div id="thumb-lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;cursor:zoom-out;">
+  <img id="thumb-lightbox-img" src="" style="max-width:92vw;max-height:88vh;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.6);"/>
+</div>
+<script>
+function openThumbLightbox(src){
+  var lb=document.getElementById('thumb-lightbox');
+  document.getElementById('thumb-lightbox-img').src=src;
+  lb.style.display='flex';
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') document.getElementById('thumb-lightbox').style.display='none'; });
 </script>
 </body>
 </html>
