@@ -286,31 +286,57 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   #btn-cotes{bottom:10px;right:10px;padding:6px 12px;font-size:10.5px}
 }
 @media(max-width:480px){
+  /* Répartition canvas / sidebar */
   #sidebar{height:58vh}
   #cv-wrap{height:42vh}
-  #sb-body{padding:10px 10px}
-  #stepper{padding:6px 10px}
-  /* Labels courts visibles sur téléphone */
-  .step-lbl{font-size:8px;margin:0 2px;letter-spacing:.03em}
-  .step-dot{width:32px;height:32px;min-width:32px;min-height:32px;font-size:11px}
+  #sb-body{padding:8px 12px}
+
+  /* ── Header ultra-compact ── */
+  #sb-header{padding:7px 12px 6px}
+  #logo-sub{display:none}         /* "Bibliothèque sur mesure" masqué */
+  .logo-txt{font-size:12px}
+
+  /* ── Stepper : points uniquement, pas de labels ── */
+  #stepper{padding:4px 12px}
+  .step-lbl{display:none}
+  .step-dot{width:28px;height:28px;min-width:28px;min-height:28px;font-size:10px}
+
+  /* ── Onglets FORMULAIRE/FONCTION masqués : le CTA sur le canvas suffit ── */
+  .sb-tabs{display:none!important}
+  /* Les deux panels restent visibles — pas de marge-top parasite */
+  .sb-tab-panel{padding-top:0}
+  .sb-tab-panel.on{display:block}
+
+  /* ── Headings de section masqués (redondants sur petit écran) ── */
+  .sec{display:none}
+
+  /* ── Rows dimensions plus compactes ── */
+  .dim-row{margin-bottom:6px}
+  .sl-row{margin-bottom:8px}
+  .sl-top{margin-bottom:3px}
+
+  /* ── Grilles ── */
   .mat-grid{grid-template-columns:1fr 1fr;gap:5px}
   .mat-lbl{font-size:10px}
   .vasque-grid{grid-template-columns:repeat(3,1fr)}
-  .cfg-field{padding:10px 10px;font-size:16px}
+
+  /* ── Champs formulaire ── */
+  .cfg-field{padding:10px;font-size:16px}
   .cta-btn{padding:14px;font-size:12px;min-height:48px}
-  #sb-foot{padding:8px 10px}
+
+  /* ── Footer ── */
+  #sb-foot{padding:8px 12px}
   .btn-next,.btn-back{min-height:48px;padding:12px 10px}
-  .sec{margin:12px 0 6px}
-  .sl-row{margin-bottom:10px}
-  /* sl-top compact */
-  .sl-top{margin-bottom:4px}
-  /* boutons TV plus petits mais toujours tactiles */
+
+  /* ── Boutons TV ── */
   .facade-btn{min-height:44px;padding:8px 4px;font-size:11px}
-  /* Boutons type : 2 colonnes lisibles sur téléphone (override du repeat(3) du 760px) */
+
+  /* ── Mode édition : type buttons 2 colonnes ── */
   .c-type-btns{grid-template-columns:repeat(2,1fr)}
   .c-type-btn{padding:10px 6px 9px;font-size:9.5px}
   .c-type-btn-desc{display:none}
-  /* CTA edit plus compact sur téléphone */
+
+  /* ── CTA "Personnaliser" compact ── */
   #edit-cta{padding:10px 14px 10px 12px;gap:10px;border-radius:12px}
   #edit-cta-icon{width:28px;height:28px}
   #edit-cta-sub{display:none}
