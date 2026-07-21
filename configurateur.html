@@ -331,10 +331,20 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   /* ── Boutons TV ── */
   .facade-btn{min-height:44px;padding:8px 4px;font-size:11px}
 
-  /* ── Mode édition : type buttons 2 colonnes ── */
+  /* ── Mode édition : type buttons 2 colonnes, ultra-compacts sans icône ── */
   .c-type-btns{grid-template-columns:repeat(2,1fr)}
-  .c-type-btn{padding:10px 6px 9px;font-size:9.5px}
+  .c-type-btn{padding:9px 6px;font-size:9.5px;gap:0}
+  .c-type-btn svg{display:none}         /* icônes masquées → boutons ~36px au lieu de ~65px */
   .c-type-btn-desc{display:none}
+
+  /* Texte d'aide "Cliquez sur le meuble..." masqué sur mobile (inutile) */
+  #p-amgt > p{display:none}
+
+  /* Bouton "Vider" masqué sur mobile (on utilise les × de la liste) */
+  #p-amgt .reset-btn{display:none}
+
+  /* Sécurité : CTA ne doit jamais apparaître en mode édition */
+  #cv-wrap.mode-edit #edit-cta{display:none!important}
 
   /* ── CTA "Personnaliser" compact ── */
   #edit-cta{padding:10px 14px 10px 12px;gap:10px;border-radius:12px}
