@@ -178,6 +178,19 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 .c-undo-btn{height:28px;padding:0 10px;border-radius:100px;background:none;border:1px solid var(--border);cursor:pointer;color:var(--text2);font-size:12px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px;transition:background .15s,opacity .15s}
 .c-undo-btn:hover{background:rgba(26,26,26,.06)}
 .c-undo-btn:disabled{opacity:.3;pointer-events:none}
+/* Liste des éléments placés (sidebar édition) */
+.elements-placed-list{margin-top:12px}
+.el-list-header{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:8px;padding-top:4px}
+.el-list-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(26,26,26,.04);border-radius:9px;margin-bottom:5px;touch-action:manipulation}
+.el-list-name{font-size:12px;font-weight:500;color:var(--text);line-height:1.3}
+.el-list-type{font-size:10px;font-weight:400;color:var(--text2);margin-top:1px}
+.el-list-del{min-width:36px;min-height:36px;border-radius:50%;border:none;background:rgba(205,62,0,.08);color:var(--accent);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;font-family:inherit}
+.el-list-del:hover,.el-list-del:active{background:rgba(205,62,0,.22)}
+.no-els-hint{font-size:12px;color:var(--text2);text-align:center;padding:16px 0;line-height:1.7}
+/* Toast suppression élément */
+#del-toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--dark);color:#FFFAF0;font-size:12px;font-weight:600;padding:10px 16px;border-radius:100px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .22s,transform .22s;pointer-events:none;z-index:3000;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.35)}
+#del-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+#del-toast-undo{background:none;border:1px solid rgba(255,250,240,.3);color:rgba(255,250,240,.85);font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;cursor:pointer;font-family:inherit;touch-action:manipulation}
 
 /* Présets */
 .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
@@ -201,6 +214,35 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 #cv-wrap.mode-edit #c-action-hint{opacity:1}
 #drag-height-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:5px;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px;pointer-events:none;z-index:20;letter-spacing:.01em;box-shadow:0 2px 8px rgba(205,62,0,.3)}
 
+/* ─── TABLETTE (761–1024px) : layout desktop mais interactions tactiles ─── */
+@media(min-width:761px) and (max-width:1024px){
+  :root{--w:300px}
+  /* Sidebar scrollable au touch */
+  #sb-body{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  /* Targets tactiles minimum 44px */
+  .dim-step{width:40px;height:44px;font-size:22px}
+  .facade-btn{min-height:44px;font-size:12px;padding:10px 6px}
+  .edit-mode-btn{min-height:44px;padding:10px 14px}
+  .mat-btn{min-height:40px}
+  .sb-tab{min-height:44px}
+  .btn-back,.btn-next{min-height:48px}
+  .c-type-btn{padding:10px 4px 8px}
+  .c-caisson-btn{min-height:36px;min-width:48px}
+  /* Liste éléments : bouton delete plus accessible */
+  .el-list-item{padding:10px 12px}
+  .el-list-del{min-width:40px;min-height:40px}
+  /* form fields — empêcher le zoom iOS/Android */
+  .cfg-field{font-size:16px}
+  input[type=text],input[type=email],textarea{font-size:16px}
+  /* Toast repositionné (pas de bottom-nav sur tablette) */
+  #del-toast{bottom:24px}
+  /* Hint — texte court, multilignes autorisé */
+  #c-action-hint{white-space:normal;text-align:center;max-width:220px;line-height:1.5;font-size:9.5px;padding:6px 14px}
+  /* Boutons type : grid 2 colonnes pour plus de lisibilité */
+  .c-type-btns{grid-template-columns:repeat(2,1fr)}
+  .c-type-btn{padding:12px 6px 10px;gap:6px}
+  .c-type-btn-desc{font-size:9px}
+}
 @media(max-width:760px){
   body{overscroll-behavior:none}
   #app{flex-direction:column-reverse}
@@ -244,12 +286,13 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   #btn-cotes{bottom:10px;right:10px;padding:6px 12px;font-size:10.5px}
 }
 @media(max-width:480px){
-  #sidebar{height:54vh}
-  #cv-wrap{height:46vh}
+  #sidebar{height:58vh}
+  #cv-wrap{height:42vh}
   #sb-body{padding:10px 10px}
-  #stepper{padding:8px 10px}
-  .step-lbl{display:none}
-  .step-dot{width:36px;height:36px;min-width:36px;min-height:36px}
+  #stepper{padding:6px 10px}
+  /* Labels courts visibles sur téléphone */
+  .step-lbl{font-size:8px;margin:0 2px;letter-spacing:.03em}
+  .step-dot{width:32px;height:32px;min-width:32px;min-height:32px;font-size:11px}
   .mat-grid{grid-template-columns:1fr 1fr;gap:5px}
   .mat-lbl{font-size:10px}
   .vasque-grid{grid-template-columns:repeat(3,1fr)}
@@ -263,6 +306,15 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   .sl-top{margin-bottom:4px}
   /* boutons TV plus petits mais toujours tactiles */
   .facade-btn{min-height:44px;padding:8px 4px;font-size:11px}
+  /* Boutons type : 2 colonnes lisibles sur téléphone (override du repeat(3) du 760px) */
+  .c-type-btns{grid-template-columns:repeat(2,1fr)}
+  .c-type-btn{padding:10px 6px 9px;font-size:9.5px}
+  .c-type-btn-desc{display:none}
+  /* CTA edit plus compact sur téléphone */
+  #edit-cta{padding:10px 14px 10px 12px;gap:10px;border-radius:12px}
+  #edit-cta-icon{width:28px;height:28px}
+  #edit-cta-sub{display:none}
+  #edit-cta-title{font-size:11.5px}
 }
 
 /* ─── TYPE SELECTION OVERLAY ─── */
@@ -738,7 +790,11 @@ textarea.cfg-field{resize:vertical;min-height:72px}
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7.5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 3 L5.8 1.5 H8.2 L9 3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
       Télécharger
     </button>
-    <div id="c-action-hint">Clic = poser · Clic sur élément = supprimer</div>
+    <div id="c-action-hint">Toucher = poser · Utiliser la liste ci-dessous pour supprimer</div>
+    <div id="del-toast">
+      <span id="del-toast-msg">Élément supprimé</span>
+      <button id="del-toast-undo" onclick="undoLast();hideDelToast()">Annuler</button>
+    </div>
   </div>
 </div>
 
@@ -1319,6 +1375,7 @@ function buildCaisson(){
 
   }
   updateAmgtCount();
+  updateElementsList();
 }
 
 function buildCaisson2(){
@@ -2012,6 +2069,13 @@ function _rebuildEditBar(){
       cBtn('porte',     false, svgPorte,  'Porte',      'Remplit la zone définie par les tablettes + séparateurs')+
       cBtn('tiroir',    false, svgTiroir, 'Tiroir',     'Remplit la zone définie par les tablettes + séparateurs');
   }
+  // Injecter le conteneur de liste après les boutons (si pas déjà présent)
+  var listContainer=btns.parentNode&&btns.parentNode.querySelector('.elements-placed-list');
+  if(!listContainer){
+    listContainer=document.createElement('div');
+    listContainer.className='elements-placed-list';
+    btns.parentNode.appendChild(listContainer);
+  }
 }
 
 function toggleCaissonEdit(){
@@ -2028,6 +2092,7 @@ function toggleCaissonEdit(){
   if(BIBLIO_MODE && caissonEditMode){ switchSbTab('fonction'); if(currentFT==='biblio') buildPresetGrid(); }
   if(caissonEditMode){ showCotes=true; } else { showCotes=false; }
   updateCotes();
+  updateElementsList();
   var btnC=document.getElementById('btn-cotes');
   if(btnC) btnC.classList.toggle('active', showCotes);
   _syncEditCta();
@@ -2514,6 +2579,58 @@ function updateAmgtCount(){
 }
 
 // ═══════════════════════════════════════════════════════
+// LISTE DES ÉLÉMENTS PLACÉS (sidebar touch-friendly)
+// ═══════════════════════════════════════════════════════
+var _delToastTimer=null;
+function showDelToast(){
+  var t=document.getElementById('del-toast');
+  if(!t) return;
+  clearTimeout(_delToastTimer);
+  t.classList.add('show');
+  _delToastTimer=setTimeout(hideDelToast,3500);
+}
+function hideDelToast(){
+  var t=document.getElementById('del-toast');
+  if(t) t.classList.remove('show');
+}
+function deleteElementAt(i){
+  pushUndo();
+  var els=getActiveEls();
+  if(i<0||i>=els.length) return;
+  els.splice(i,1);
+  setActiveEls(els);
+  buildCaisson();
+  showDelToast();
+}
+function updateElementsList(){
+  var containers=document.querySelectorAll('.elements-placed-list');
+  if(!containers.length) return;
+  var els=caissonEditMode ? getActiveEls() : [];
+  var html='';
+  if(!els.length){
+    html='<p class="no-els-hint">Touchez le meuble pour<br>ajouter des éléments</p>';
+  } else {
+    html+='<div class="el-list-header">Éléments placés</div>';
+    els.forEach(function(el,i){
+      var name='',sub='';
+      if(el.type==='shelf'){ name='Étagère'; sub='à '+Math.round(el.y_cm)+' cm de hauteur'; }
+      else if(el.type==='shelf_simple'){ name='Étagère 2nd'; sub='à '+Math.round(el.y_cm)+' cm'; }
+      else if(el.type==='barre'){ name='Tringle'; sub='à '+Math.round(el.y_cm)+' cm'; }
+      else if(el.type==='separator'){ name='Séparateur'; sub='à '+Math.round(el.x_cm)+' cm du bord'; }
+      else if(el.type==='separator_simple'){ name='Sépar. 2nd'; sub='à '+Math.round(el.x_cm)+' cm'; }
+      else if(el.type==='porte'){ name='Porte'; sub=el.key?el.key.replace(/_/g,' '):''; }
+      else if(el.type==='tiroir'){ name='Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
+      else { name=el.type; }
+      html+='<div class="el-list-item">'
+        +'<div><div class="el-list-name">'+name+'</div><div class="el-list-type">'+sub+'</div></div>'
+        +'<button class="el-list-del" onclick="deleteElementAt('+i+')" aria-label="Supprimer cet élément">×</button>'
+        +'</div>';
+    });
+  }
+  containers.forEach(function(c){ c.innerHTML=html; });
+}
+
+// ═══════════════════════════════════════════════════════
 // DRAG VASQUE
 // ═══════════════════════════════════════════════════════
 var isDragging=false,dragOffset=new THREE.Vector3();
@@ -2557,7 +2674,9 @@ var _pointerDownX=0, _pointerDownY=0; // position du pointerdown pour détecter 
 cvs.addEventListener('pointerdown',function(e){
   if(e.button!==0) return;
   if(S.step===1&&caissonEditMode){
-    if(!isTouchEditDrag){
+    // Sur touch : pointerdown se déclenche AVANT touchstart (iOS), donc isTouchEditDrag
+    // n'est pas encore vrai — on utilise pointerType pour différencier souris et touch
+    if(e.pointerType!=='touch'){
       editPickedEl=null; editPickedIdx=-1;
       var _editHit=getCaissonHit(e);
       _updateHoverEl(_editHit);
@@ -2793,11 +2912,14 @@ cvs.addEventListener('touchmove',function(e){
 cvs.addEventListener('touchend',function(e){
   // Mode édition meuble : placement à la position finale du doigt
   if(S.step===1&&caissonEditMode&&isTouchEditDrag){
-    isTouchEditDrag=false; controls.enabled=true;
+    controls.enabled=true;
     if(e.changedTouches.length){
       var t=e.changedTouches[0];
       placeOrRemoveCaisson({clientX:t.clientX,clientY:t.clientY});
     }
+    // Délai pour bloquer les pointerdown/pointerup synthétiques du navigateur
+    // qui tireraient placeOrRemoveCaisson une seconde fois (double-placement)
+    setTimeout(function(){ isTouchEditDrag=false; }, 350);
     return;
   }
   if(isDragging){isDragging=false;activeVasqueDrag=-1;controls.enabled=true;}
@@ -3600,6 +3722,15 @@ S.vx=0; S.vz=planCZ();
 buildVasque();
 buildCaisson();
 goStep(1);
+
+// Adapter le texte du hint au type d'écran
+(function(){
+  var isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+  var hint=document.getElementById('c-action-hint');
+  if(hint) hint.textContent=isTouch
+    ? 'Toucher le meuble = poser · Voir la liste ci-dessous pour supprimer'
+    : 'Clic = poser · Clic sur un élément = supprimer · Glisser = déplacer';
+})();
 
 // ── Auto-sélection via ?ft= ───────────────────────────
 (function(){
