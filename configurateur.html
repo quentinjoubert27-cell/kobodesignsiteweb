@@ -243,114 +243,132 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   .c-type-btn{padding:12px 6px 10px;gap:6px}
   .c-type-btn-desc{font-size:9px}
 }
+/* ═══════════ TABLETTE 761-1024px ═══════════ */
+@media(min-width:761px) and (max-width:1024px){
+  :root{--w:300px}
+  #sb-body{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .dim-step{width:40px;height:44px;font-size:22px}
+  .facade-btn{min-height:44px;font-size:12px;padding:10px 6px}
+  .edit-mode-btn{min-height:44px;padding:10px 14px}
+  .mat-btn{min-height:40px}
+  .sb-tab{min-height:44px}
+  .btn-back,.btn-next{min-height:48px}
+  .c-type-btn{padding:10px 4px 8px}
+  .c-caisson-btn{min-height:36px;min-width:48px}
+  .el-list-item{padding:10px 12px}
+  .el-list-del{min-width:40px;min-height:40px}
+  .cfg-field{font-size:16px}
+  input[type=text],input[type=email],textarea{font-size:16px}
+  #del-toast{bottom:24px}
+  #c-action-hint{white-space:normal;text-align:center;max-width:220px;line-height:1.5;font-size:9.5px;padding:6px 14px}
+  .c-type-btns{grid-template-columns:repeat(2,1fr)}
+  .c-type-btn{padding:12px 6px 10px;gap:6px}
+  .c-type-btn-desc{font-size:9px}
+}
+
+/* ═══════════ MOBILE ≤760px — BASE ═══════════ */
 @media(max-width:760px){
   body{overscroll-behavior:none}
-  #app{flex-direction:column-reverse}
-  #sidebar{width:100%;min-width:0;height:52vh;border-right:none;border-top:1px solid var(--border)}
-  #cv-wrap{height:48vh}
-  /* canvas : désactive le scroll natif pour que le touch serve à la 3D */
+  /* Bottom sheet layout : canvas en haut, feuille en bas */
+  #app{flex-direction:column-reverse;height:100dvh;overflow:hidden}
+  #cv-wrap{flex:1;min-height:0;height:auto}
+  #sidebar{
+    width:100%;min-width:0;flex-shrink:0;
+    height:290px;
+    border-right:none;border-top:none;
+    border-radius:20px 20px 0 0;
+    box-shadow:0 -6px 32px rgba(0,0,0,.12);
+  }
+  /* Pill indicateur de feuille */
+  #sidebar::before{
+    content:'';display:block;
+    width:36px;height:4px;background:rgba(26,26,26,.14);border-radius:2px;
+    margin:10px auto 0;flex-shrink:0;
+  }
+  /* canvas : désactive le scroll natif */
   #c{touch-action:none}
-  /* sidebar scrollable */
-  #sb-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px}
-  /* stepper compact */
-  #stepper{padding:10px 14px}
-  .step-lbl{font-size:9px;margin:0 4px}
-  /* step-dots — 44px touch targets */
-  .step-dot{width:44px;height:44px;min-width:44px;min-height:44px;font-size:12px}
-  /* range touch */
-  input[type=range]{min-height:40px;height:40px;padding:10px 0}
-  /* mat-grid tiles smaller */
-  .mat-grid{gap:6px}
-  .mat-sw{width:18px;height:18px}
-  /* form fields — prevent iOS zoom (min 16px) */
-  .cfg-field{font-size:16px}
-  input[type=text],input[type=email],textarea,select{font-size:16px}
-  /* footer buttons */
-  #sb-footer,#sb-foot{padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
-  .btn-back,.btn-next{min-height:48px}
-  /* header */
-  #sb-header{padding:12px 14px 10px}
-  /* onglets formulaire/fonction */
-  .sb-tab{min-height:44px;padding:0 14px}
-  /* boutons TV (+Gauche, +Droite, +Dessus) */
-  .facade-btn{min-height:44px;font-size:12px}
-  /* boutons sélecteur de caisson dans la barre d'édition */
-  .c-caisson-btn{min-height:36px;min-width:48px;padding:5px 12px}
-  /* barre d'édition : masque le libellé, réduit les boutons, autorise le retour à la ligne */
-  #c-edit-bar{flex-wrap:wrap;justify-content:center;border-radius:14px;padding:8px;gap:5px;max-width:calc(100vw - 24px);white-space:normal}
-  .c-edit-lbl,.c-edit-sep{display:none}
-  .c-type-btns{grid-template-columns:repeat(3,1fr)}
-  .c-type-btn{padding:8px 4px 7px;font-size:9px}
-  .c-edit-close{min-width:40px;min-height:40px;width:40px;height:40px}
-  /* bouton mesures */
-  #btn-cotes{bottom:10px;right:10px;padding:6px 12px;font-size:10.5px}
-}
-@media(max-width:480px){
-  /* Répartition canvas / sidebar */
-  #sidebar{height:58vh}
-  #cv-wrap{height:42vh}
-  #sb-body{padding:8px 12px}
-
-  /* ── Header ultra-compact ── */
-  #sb-header{padding:7px 12px 6px}
-  #logo-sub{display:none}         /* "Bibliothèque sur mesure" masqué */
+  /* Header compact dans la feuille */
+  #sb-header{padding:6px 16px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #logo-sub{display:none}
   .logo-txt{font-size:12px}
-
-  /* ── Stepper : points uniquement, pas de labels ── */
-  #stepper{padding:4px 12px}
+  /* Stepper : dots seuls, compacts */
+  #stepper{padding:6px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
   .step-lbl{display:none}
-  .step-dot{width:28px;height:28px;min-width:28px;min-height:28px;font-size:10px}
-
-  /* ── Onglets FORMULAIRE/FONCTION masqués : le CTA sur le canvas suffit ── */
+  .step-dot{width:30px;height:30px;min-width:30px;min-height:30px;font-size:10px}
+  /* Corps scrollable */
+  #sb-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 16px}
+  /* Onglets masqués — CTA canvas suffit */
   .sb-tabs{display:none!important}
-  /* Les deux panels restent visibles — pas de marge-top parasite */
   .sb-tab-panel{padding-top:0}
   .sb-tab-panel.on{display:block}
-
-  /* ── Headings de section masqués (redondants sur petit écran) ── */
+  /* Headings de section masqués */
   .sec{display:none}
-
-  /* ── Rows dimensions plus compactes ── */
-  .dim-row{margin-bottom:6px}
-  .sl-row{margin-bottom:8px}
-  .sl-top{margin-bottom:3px}
-
-  /* ── Grilles ── */
+  /* Texte aide masqué */
+  #p-amgt > p{display:none}
+  /* Bouton Vider masqué */
+  #p-amgt .reset-btn{display:none}
+  /* Dimensions compactes */
+  .dim-row{padding:7px 0}
+  .dim-lbl{font-size:12px}
+  .dim-step{width:36px;height:40px;font-size:20px}
+  /* Boutons type — strip horizontale scrollable */
+  .c-type-btns{
+    display:flex;flex-direction:row;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    gap:8px;padding:2px 0 6px;
+    scrollbar-width:none;
+  }
+  .c-type-btns::-webkit-scrollbar{display:none}
+  .c-type-btn{
+    flex-shrink:0;flex-direction:row;align-items:center;
+    width:auto;min-width:0;height:40px;
+    padding:0 14px;border-radius:20px;gap:0;
+    font-size:10.5px;font-weight:700;letter-spacing:.04em;white-space:nowrap;
+  }
+  .c-type-btn svg{display:none}
+  .c-type-btn-desc{display:none}
+  .c-type-btn-label{font-size:10.5px}
+  /* range touch */
+  input[type=range]{min-height:40px;height:40px;padding:10px 0}
+  /* mat-grid */
+  .mat-grid{gap:6px}
+  .mat-sw{width:18px;height:18px}
+  /* form fields 16px — anti-zoom iOS */
+  .cfg-field{font-size:16px}
+  input[type=text],input[type=email],textarea,select{font-size:16px}
+  /* Footer */
+  #sb-footer,#sb-foot{padding:8px 16px;padding-bottom:max(8px,env(safe-area-inset-bottom));flex-shrink:0}
+  .btn-back,.btn-next{min-height:48px}
+  /* Edit bar canvas */
+  #c-edit-bar{flex-wrap:wrap;justify-content:center;border-radius:14px;padding:8px;gap:5px;max-width:calc(100vw - 24px);white-space:normal}
+  .c-edit-lbl,.c-edit-sep{display:none}
+  .c-edit-close{min-width:40px;min-height:40px;width:40px;height:40px}
+  /* Hint canvas */
+  #c-action-hint{white-space:normal;text-align:center;max-width:200px;line-height:1.5;font-size:9px}
+  /* Boutons TV */
+  .facade-btn{min-height:44px;font-size:12px}
+  /* Bouton caisson */
+  .c-caisson-btn{min-height:36px;min-width:48px;padding:5px 12px}
+  /* Bouton mesures */
+  #btn-cotes{bottom:10px;right:10px;padding:6px 12px;font-size:10.5px}
+  /* CTA Personnaliser compact */
+  #edit-cta{padding:10px 16px 10px 12px;gap:10px;border-radius:12px}
+  #edit-cta-icon{width:28px;height:28px}
+  #edit-cta-sub{display:none}
+  #edit-cta-title{font-size:11px}
+  /* Safety : jamais de CTA en mode-edit */
+  #cv-wrap.mode-edit #edit-cta{display:none!important}
+  /* Liste éléments */
+  .el-list-item{padding:8px 10px}
+  .el-list-del{min-width:36px;min-height:36px}
+  /* Grille mat */
   .mat-grid{grid-template-columns:1fr 1fr;gap:5px}
   .mat-lbl{font-size:10px}
   .vasque-grid{grid-template-columns:repeat(3,1fr)}
-
-  /* ── Champs formulaire ── */
-  .cfg-field{padding:10px;font-size:16px}
+  /* Formulaire envoi */
   .cta-btn{padding:14px;font-size:12px;min-height:48px}
-
-  /* ── Footer ── */
-  #sb-foot{padding:8px 12px}
-  .btn-next,.btn-back{min-height:48px;padding:12px 10px}
-
-  /* ── Boutons TV ── */
-  .facade-btn{min-height:44px;padding:8px 4px;font-size:11px}
-
-  /* ── Mode édition : type buttons 2 colonnes, ultra-compacts sans icône ── */
-  .c-type-btns{grid-template-columns:repeat(2,1fr)}
-  .c-type-btn{padding:9px 6px;font-size:9.5px;gap:0}
-  .c-type-btn svg{display:none}         /* icônes masquées → boutons ~36px au lieu de ~65px */
-  .c-type-btn-desc{display:none}
-
-  /* Texte d'aide "Cliquez sur le meuble..." masqué sur mobile (inutile) */
-  #p-amgt > p{display:none}
-
-  /* Bouton "Vider" masqué sur mobile (on utilise les × de la liste) */
-  #p-amgt .reset-btn{display:none}
-
-  /* Sécurité : CTA ne doit jamais apparaître en mode édition */
-  #cv-wrap.mode-edit #edit-cta{display:none!important}
-
-  /* ── CTA "Personnaliser" compact ── */
-  #edit-cta{padding:10px 14px 10px 12px;gap:10px;border-radius:12px}
-  #edit-cta-icon{width:28px;height:28px}
-  #edit-cta-sub{display:none}
-  #edit-cta-title{font-size:11.5px}
+  .sl-row{margin-bottom:8px}
+  .sl-top{margin-bottom:3px}
 }
 
 /* ─── TYPE SELECTION OVERLAY ─── */
