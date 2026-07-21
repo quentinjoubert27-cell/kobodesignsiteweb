@@ -3143,8 +3143,8 @@ function goStep(n){
   controls.enabled=true;
 
   if(planMesh)   planMesh.visible=(currentFT==='sdb'&&n>=2);
-  if(vasqueGrp)  vasqueGrp.visible=(currentFT==='sdb'&&n===3);
-  if(vasqueGrp2) vasqueGrp2.visible=(currentFT==='sdb'&&n===3);
+  if(vasqueGrp)  vasqueGrp.visible=(currentFT==='sdb'&&n>=3);
+  if(vasqueGrp2) vasqueGrp2.visible=(currentFT==='sdb'&&n>=3);
 
   if(n===1) buildCaisson();
   if(currentFT==='sdb'){
@@ -3157,8 +3157,8 @@ function goStep(n){
     }
     if(n===3){ buildRecap(); updatePosInfo(); positionVasque(); }
   }
+  animCamera(currentFT==='sdb'?Math.min(n,3):1);
   if(isLast){ buildRecap4(); }
-  if(n<=3) animCamera(currentFT==='sdb'?Math.min(n,3):1);
 }
 
 function setTringle(t){
