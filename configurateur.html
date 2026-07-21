@@ -2263,9 +2263,12 @@ function getCaissonHit(e){
   return {x_cm:Math.min(Math.max(x_cm,0),iW_cm), y_cm:Math.min(Math.max(y_cm,0),iH_cm)};
 }
 
+var _lastCaissonHit=null; // dernier hit calculé par le ghost (pour placement précis sur touch)
+
 function updateCaissonGhost(e){
   if(!caissonEditMode||S.step!==1) return;
   var hit=getCaissonHit(e);
+  _lastCaissonHit=hit; // mémorise pour placeOrRemoveCaisson (évite décalage touchmove→touchend)
   if(!hit){clearCaissonGhost();_hideDragLabel();return;}
   var CP=caissonCP(), ep=EP;
   var iW=getActiveCL()-2*ep;
@@ -2417,7 +2420,9 @@ function placeOrRemoveCaisson(e, skipUndo){
   // La suppression est gérée uniquement via le mécanisme clic-court (_hoverElIdx)
   // pour éviter toute suppression cross-type par raycaster
 
-  var hit=getCaissonHit(e);
+  // Utilise le dernier hit mémorisé par updateCaissonGhost (cohérence ghost↔placement)
+  // sinon recalcule (cas souris sans ghost préalable)
+  var hit=_lastCaissonHit||getCaissonHit(e);
   if(!hit) return false;
 
   if(caissonType==='shelf'||caissonType==='shelf_simple'||caissonType==='barre'){
