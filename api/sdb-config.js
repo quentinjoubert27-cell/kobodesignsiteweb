@@ -106,11 +106,21 @@ module.exports = async function handler(req, res) {
       ? `<tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px;vertical-align:top">Message</td><td style="padding:8px 0;font-size:14px;white-space:pre-wrap">${message}</td></tr>`
       : '';
 
+    // Screenshot en pièce jointe (les data: URL sont bloqués par Gmail/Outlook)
+    const attachments = [];
+    if (thumbnail && thumbnail.startsWith('data:image/')) {
+      attachments.push({
+        filename: 'apercu-3d.jpg',
+        content: thumbnail.replace(/^data:image\/\w+;base64,/, ''),
+      });
+    }
+
     await resend.emails.send({
       from: 'Kobo Design <contact@kobo-design.fr>',
       to: process.env.CONTACT_EMAIL,
       replyTo: email,
       subject: `SDB configurée — ${prenom} · Meuble ${meuble.L}×${meuble.H}×${meuble.P} cm · ${meuble.matLabel}`,
+      attachments,
       html: `
       <div style="font-family:sans-serif;max-width:640px;margin:0 auto;color:#1A1A1A;">
         <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
@@ -118,7 +128,6 @@ module.exports = async function handler(req, res) {
           <h1 style="color:#FFFAF0;font-size:22px;margin:0">Nouvelle salle de bain configurée</h1>
         </div>
         <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
-          ${thumbnail ? `<img src="${thumbnail}" alt="Aperçu 3D" style="width:100%;border-radius:8px;margin-bottom:24px;display:block"/>` : ''}
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
             <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px">Prénom</td><td style="padding:8px 0;font-size:14px">${prenom}</td></tr>
             <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700">Email</td><td style="padding:8px 0;font-size:14px"><a href="mailto:${email}" style="color:#CD3E00">${email}</a></td></tr>

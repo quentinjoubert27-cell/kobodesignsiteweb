@@ -3318,8 +3318,7 @@ async function submitConfig(){
   ].filter(Boolean).join('\n');
 
   try {
-    // Capture screenshot avant envoi
-    renderer.render(scene,camera);
+    // Capture screenshot (preserveDrawingBuffer:true, la boucle de rendu maintient le buffer)
     var thumbSrc=renderer.domElement.toDataURL('image/jpeg',0.75);
 
     // 1. Envoyer la configuration (email interne Kobo)
