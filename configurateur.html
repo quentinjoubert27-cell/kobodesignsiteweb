@@ -3251,10 +3251,6 @@ function buildRecap4(){
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
   var cfg=currentFT&&FT_CONFIGS[currentFT];
 
-  // Capture screenshot
-  renderer.render(scene,camera);
-  var thumbSrc=renderer.domElement.toDataURL('image/jpeg',0.85);
-
   var rows=[
     ['Type de meuble', cfg?cfg.label:'—'],
     ['Dimensions', Math.round(S.CL*100)+' × '+Math.round(S.CH*100)+' × '+Math.round(S.CairsonP*100)+' cm'],
@@ -3270,12 +3266,25 @@ function buildRecap4(){
   var totalEls=Object.values(counts).reduce(function(a,b){return a+b;},0);
   var elSummary=totalEls?totalEls+' élément'+(totalEls>1?'s':''):'Structure vide';
 
+  var rowsHtml=rows.map(function(r){
+    return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
+  }).join('');
+
+  // Injecter d'abord le texte, puis capturer le screenshot après 2 frames
+  // pour que la scène soit rendue avec tous les objets visibles (vasques, plan…)
   document.getElementById('recap4').innerHTML=
-    '<img src="'+thumbSrc+'" class="recap-thumb" alt="Aperçu du meuble"/>'+
+    '<div id="recap4-thumb-wrap"><div style="width:100%;aspect-ratio:16/9;background:var(--bg2);border-radius:8px;margin-bottom:12px"></div></div>'+
     '<div style="font-size:11px;color:var(--text2);margin-bottom:10px">'+elSummary+'</div>'+
-    rows.map(function(r){
-      return '<div class="recap-row"><span class="recap-k">'+r[0]+'</span><span class="recap-v">'+r[1]+'</span></div>';
-    }).join('');
+    rowsHtml;
+
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      renderer.render(scene,camera);
+      var thumbSrc=renderer.domElement.toDataURL('image/jpeg',0.85);
+      var wrap=document.getElementById('recap4-thumb-wrap');
+      if(wrap) wrap.innerHTML='<img src="'+thumbSrc+'" class="recap-thumb" alt="Aperçu du meuble"/>';
+    });
+  });
 }
 
 async function submitConfig(){
@@ -3309,12 +3318,17 @@ async function submitConfig(){
   ].filter(Boolean).join('\n');
 
   try {
+    // Capture screenshot avant envoi
+    renderer.render(scene,camera);
+    var thumbSrc=renderer.domElement.toDataURL('image/jpeg',0.75);
+
     // 1. Envoyer la configuration (email interne Kobo)
     var resp=await fetch('/api/sdb-config',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         prenom:prenom, email:email, message:message, botcheck:bot,
+        thumbnail: thumbSrc,
         config:{
           furniture_type: currentFT,
           meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),

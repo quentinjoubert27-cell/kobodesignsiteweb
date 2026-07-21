@@ -33,10 +33,11 @@ module.exports = async function handler(req, res) {
 
     const body = req.body || {};
 
-    const prenom  = (body.prenom  || '').toString().trim().slice(0, 100);
-    const email   = (body.email   || '').toString().trim().slice(0, 200);
-    const message = (body.message || '').toString().trim().slice(0, 2000);
-    const cfg     = body.config   || {};
+    const prenom    = (body.prenom  || '').toString().trim().slice(0, 100);
+    const email     = (body.email   || '').toString().trim().slice(0, 200);
+    const message   = (body.message || '').toString().trim().slice(0, 2000);
+    const thumbnail = (body.thumbnail || '').toString().slice(0, 500000); // data URL base64
+    const cfg       = body.config   || {};
 
     if (!prenom || !email)
       return res.status(400).json({ error: 'Prénom et email obligatoires.' });
@@ -117,6 +118,7 @@ module.exports = async function handler(req, res) {
           <h1 style="color:#FFFAF0;font-size:22px;margin:0">Nouvelle salle de bain configurée</h1>
         </div>
         <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
+          ${thumbnail ? `<img src="${thumbnail}" alt="Aperçu 3D" style="width:100%;border-radius:8px;margin-bottom:24px;display:block"/>` : ''}
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
             <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px">Prénom</td><td style="padding:8px 0;font-size:14px">${prenom}</td></tr>
             <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700">Email</td><td style="padding:8px 0;font-size:14px"><a href="mailto:${email}" style="color:#CD3E00">${email}</a></td></tr>
