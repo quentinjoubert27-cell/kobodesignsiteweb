@@ -2,16 +2,16 @@
 // Crée automatiquement un compte client + projet depuis le configurateur
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.kobo-design.fr');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Register-Secret');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
-  // Vérification du secret partagé
+  // Vérification du secret partagé (pas de fallback — refus si env var absente)
   const secret = req.headers['x-register-secret'] || '';
-  const expected = process.env.REGISTER_SECRET || 'kobo-configurateur-2024';
-  if (secret !== expected) return res.status(403).json({ error: 'Non autorisé' });
+  const expected = process.env.REGISTER_SECRET || '';
+  if (!expected || secret !== expected) return res.status(403).json({ error: 'Non autorisé' });
 
   const { createClient } = require('@supabase/supabase-js');
   const { Resend } = require('resend');
