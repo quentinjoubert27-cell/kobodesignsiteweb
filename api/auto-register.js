@@ -119,15 +119,15 @@ module.exports = async function handler(req, res) {
       : `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
           <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
             <p style="color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">Kobo Design</p>
-            <h1 style="color:#FFFAF0;font-size:22px;margin:0">Nouvelle configuration reçue</h1>
+            <h1 style="color:#FFFAF0;font-size:22px;margin:0">Votre nouveau projet est disponible</h1>
           </div>
           <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
             <p style="font-size:15px;line-height:1.7;margin:0 0 24px">
               Bonjour <strong>${prenom}</strong>,<br><br>
-              Nous avons bien reçu votre nouvelle configuration et créé un nouveau projet dans votre espace client.
+              Nous avons bien reçu votre configuration. Un nouveau projet a été ajouté à votre espace client — vous pouvez le consulter dès maintenant.
             </p>
             <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
-              <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 8px">Nouveau projet</p>
+              <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 8px">Projet ajouté</p>
               <p style="font-size:15px;font-weight:700;margin:0 0 4px">${projetNom}</p>
               <p style="font-size:13px;color:#666;margin:0">Statut : En étude</p>
             </div>
@@ -160,7 +160,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({ success: true, projetId: projet?.id });
+    return res.status(200).json({ success: true, projetId: projet?.id, isNew });
 
   } catch (err) {
     console.error('auto-register error:', err);

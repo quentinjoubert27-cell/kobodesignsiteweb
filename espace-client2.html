@@ -711,14 +711,16 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-'+page).classList.add('active');
     if (navItem) navItem.classList.add('active');
-    if (page === 'messages') {
-      loadMessages();
-      document.getElementById('unread-badge').style.display = 'none';
-    }
+    if (page === 'accueil')   { loadStats(); loadProjets(); }
+    if (page === 'projets')   loadProjets();
     if (page === 'commandes') loadCommandes();
     if (page === 'notices')   loadNotices();
     if (page === 'infos')     loadInfos();
     if (page === 'documents') loadDocuments();
+    if (page === 'messages') {
+      loadMessages();
+      document.getElementById('unread-badge').style.display = 'none';
+    }
   }
 
   // ── DATA ─────────────────────────────────────────────────────────

@@ -3056,6 +3056,8 @@ function selectFurnitureType(ft){
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
 
   document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=(BIBLIO_MODE&&cfg.hasAngleOpt)?'':'none'; });
+  // Reset éléments caisson principal (étagères, séparateurs, portes, tiroirs…)
+  caissonElements=[]; caissonElements2=[];
   // Caissons latéraux TV — reset + show/hide
   S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120,topActive:false,topW:80,topH:100,topX:0,topY:0};
   tvTopDragging=false; hideTVSnapGuides();
@@ -3333,17 +3335,23 @@ async function submitConfig(){
     if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
 
     // 2. Créer le compte client + projet automatiquement
-    await fetch('/api/auto-register',{
+    var regResp = await fetch('/api/auto-register',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Register-Secret':'kobo-configurateur-2024'},
       body:JSON.stringify({ prenom, nom, email, telephone, projetNom, projetDesc,
         configId: data.configId || null, configTable: 'configs_sdb' })
     });
+    var regData = await regResp.json();
+    var isNew = regData.isNew !== false;
 
     document.getElementById('cfgFormWrap').style.display='none';
     document.getElementById('cfgSuccess').innerHTML=
       '<span class="cfg-ok-icon">✓</span>Configuration reçue !<br>' +
-      '<span style="font-weight:400;color:var(--text2)">Votre espace client a été créé — consultez vos emails pour y accéder.</span>';
+      '<span style="font-weight:400;color:var(--text2)">' +
+      (isNew
+        ? 'Votre espace client a été créé — consultez vos emails pour y accéder.'
+        : 'Votre projet a été ajouté à votre espace client — consultez vos emails pour y accéder.') +
+      '</span>';
     document.getElementById('cfgSuccess').style.display='block';
   } catch(err){
     btn.disabled=false; btn.textContent='Envoyer ma configuration →';
