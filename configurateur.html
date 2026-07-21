@@ -1067,26 +1067,16 @@ function buildCaisson(){
     return new THREE.MeshStandardMaterial({color:base.multiplyScalar(darken),roughness:md.r,metalness:0.02});
   }
 
-  // Essences bois → intérieur blanc, laques/peintures → tout de la même couleur
-  var isWood=(S.matCais<=3);
-  var matWhite=new THREE.MeshStandardMaterial({color:0xF2EDE8,roughness:0.90,metalness:0.0});
-
   var matCais  =makePanelMat(1.00, EP, 0.5);
   var matFacade=makePanelMat(0.80, 0.3, 0.4);
-  var matFond  =isWood ? matWhite : makePanelMat(0.68, 0.5, 0.4);
-  var matElem  =isWood ? matWhite : makePanelMat(0.88, 0.3, 0.3);
-  var matTirInt=new THREE.MeshStandardMaterial({color:0xF5F0EB,roughness:0.85,metalness:0.0});
+  var matFond  =makePanelMat(0.68, 0.5, 0.4);
+  var matElem  =makePanelMat(0.88, 0.3, 0.3);
+  var matTirInt=makePanelMat(0.88, 0.3, 0.3);
   var matBarre =new THREE.MeshStandardMaterial({color:0xC8C8C8,roughness:0.10,metalness:0.90});
 
   function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
-  // Boîte avec matériaux différents par face pour l'effet bois/blanc
-  // BoxGeometry faces : [+x, -x, +y, -y, +z, -z]
-  function boxBimat(w,h,d,intFaceIdx){
-    var mats=[matCais,matCais,matCais,matCais,matCais,matCais];
-    if(isWood){ mats[intFaceIdx]=matWhite; mats[4]=matWhite; } // face int + face avant
-    var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats);
-    m.castShadow=true; m.receiveShadow=true; return m;
-  }
+  // Texture uniforme sur toutes les faces
+  function boxBimat(w,h,d,intFaceIdx){return box(w,h,d,matCais);}
 
   // Structure — joue gauche : face int = +x (idx 0), joue droite : face int = -x (idx 1)
   // tablette haute : face int = -y (idx 3), tablette basse : face int = +y (idx 2)
@@ -1343,24 +1333,18 @@ function buildCaisson2(){
   var CL2=S.CL2, CH=S.CH, CP=caissonCP(), ep=EP;
   var iW2=CL2-2*ep, iH2=CH-2*ep;
   var md=MATS_CAIS[S.matCais];
-  var isWood=(S.matCais<=3);
-  var matW=new THREE.MeshStandardMaterial({color:0xF2EDE8,roughness:0.90,metalness:0.0});
   function pm2(dk,w,h){
     var tex=_caisTexCache[S.matCais];
     if(tex){var t=tex.clone();t.needsUpdate=true;t.repeat.set(Math.max(w,0.01)/0.40,Math.max(h,0.01)/0.40);return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});}
     var c=new THREE.Color(md.color||'#D4A96A');return new THREE.MeshStandardMaterial({color:c.multiplyScalar(dk),roughness:md.r,metalness:0.02});
   }
-  var matC=pm2(1.00,ep,0.5), matF=isWood?matW:pm2(0.68,0.5,0.4);
-  var matEl=isWood?matW:pm2(0.88,0.3,0.3);
+  var matC=pm2(1.00,ep,0.5), matF=pm2(0.68,0.5,0.4);
+  var matEl=pm2(0.88,0.3,0.3);
   var matFac=pm2(0.80,0.3,0.4);
-  var matTirInt=new THREE.MeshStandardMaterial({color:0xF5F0EB,roughness:0.85,metalness:0.0});
+  var matTirInt=pm2(0.88,0.3,0.3);
   var matBarre2=new THREE.MeshStandardMaterial({color:0xC8C8C8,roughness:0.10,metalness:0.90});
   function bx2(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
-  function bm2(w,h,d,fi){
-    var ms=[matC,matC,matC,matC,matC,matC];
-    if(isWood){ms[fi]=matW;ms[4]=matW;}
-    var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),ms);m.castShadow=true;m.receiveShadow=true;return m;
-  }
+  function bm2(w,h,d,fi){return bx2(w,h,d,matC);}
 
   // Structure
   var cg2=bm2(ep,CH,CP,0); cg2.position.set(-CL2/2+ep/2,CH/2,0); caissonGrp2.add(cg2);
