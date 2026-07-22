@@ -703,12 +703,21 @@
     el.textContent = '';
   }
 
+  function auditLog(event, email, meta) {
+    fetch('/api/audit-log', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, email, meta }) }).catch(() => {});
+  }
+
   async function login() {
     const email = document.getElementById('l-email').value.trim();
     const pw = document.getElementById('l-pw').value;
     if (!email || !pw) return showMsg('Veuillez remplir tous les champs.');
     const { error } = await sb.auth.signInWithPassword({ email, password: pw });
-    if (error) return showMsg('Email ou mot de passe incorrect.');
+    if (error) {
+      auditLog('login_failed', email);
+      return showMsg('Email ou mot de passe incorrect.');
+    }
+    auditLog('login_success', email);
   }
 
   async function register() {
