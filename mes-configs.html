@@ -985,7 +985,7 @@ function buildPDFHtml(cfg){
     +'<div class="footer"><span>Kobo Design — document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
     // Bouton impression
     +'<button class="print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>'
-    +'<script>!function(){var k="kb_tracked_"+location.pathname;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:location.pathname,referrer:document.referrer||null})}).catch(function(){});}();</script>
+    +'<script>!function(){var k="kb_tracked_"+location.pathname;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:location.pathname,referrer:document.referrer||null,language:navigator.language||null,screen:screen.width+"x"+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||null})}).catch(function(){});}();</script>
 </body></html>';
 }
 
