@@ -499,7 +499,8 @@ function buildPDFHtml(cfg){
     // Footer
     +'<div class="footer"><span>Kobo Design — document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
     +'<button class="print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>'
-    +'</body></html>';
+    +'<script>!function(){var k="kb_tracked_"+location.pathname;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:location.pathname,referrer:document.referrer||null})}).catch(function(){});}();</script>
+</body></html>';
 }
 
 var urlToken = new URLSearchParams(location.search).get('t');

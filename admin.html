@@ -410,6 +410,10 @@
       Messages
       <span class="nav-badge" id="nav-unread" style="display:none"></span>
     </button>
+    <button class="nav-item" onclick="showView('analytics', this)" id="nav-analytics">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Analytics
+    </button>
     <button class="nav-item" onclick="showView('audit', this)" id="nav-audit">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Sécurité
@@ -618,6 +622,60 @@
             <textarea id="msg-reply" placeholder="Répondre…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}"></textarea>
             <button class="btn btn-primary btn-sm" onclick="sendReply()">Envoyer</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VUE ANALYTICS ── -->
+    <div class="view" id="view-analytics">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Trafic</p>
+          <h1 class="view-title">Analytics</h1>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="tab-btn active" id="an-btn-7"  onclick="loadAnalytics(7,this)">7 jours</button>
+          <button class="tab-btn"        id="an-btn-30" onclick="loadAnalytics(30,this)">30 jours</button>
+          <button class="tab-btn"        id="an-btn-90" onclick="loadAnalytics(90,this)">90 jours</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        <div class="stat-card"><div class="stat-value" id="an-total">—</div><div class="stat-label">Pages vues</div></div>
+        <div class="stat-card"><div class="stat-value" id="an-today">—</div><div class="stat-label">Aujourd'hui</div></div>
+        <div class="stat-card"><div class="stat-value" id="an-mobile">—</div><div class="stat-label">Mobile</div></div>
+        <div class="stat-card"><div class="stat-value" id="an-desktop">—</div><div class="stat-label">Desktop</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+
+        <!-- Graphique barres -->
+        <div class="detail-panel" style="padding:20px 24px">
+          <p class="section-title" style="margin-bottom:16px">Visites par jour</p>
+          <div id="an-chart" style="display:flex;align-items:flex-end;gap:4px;height:120px;overflow-x:auto"></div>
+          <div id="an-chart-labels" style="display:flex;gap:4px;margin-top:6px;overflow-x:auto"></div>
+        </div>
+
+        <!-- Sources -->
+        <div class="detail-panel" style="padding:20px 24px">
+          <p class="section-title" style="margin-bottom:16px">Sources de trafic</p>
+          <div id="an-sources"></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+        <!-- Top pages -->
+        <div class="detail-panel" style="padding:20px 24px">
+          <p class="section-title" style="margin-bottom:16px">Pages les plus visitées</p>
+          <div id="an-pages"></div>
+        </div>
+
+        <!-- Pays -->
+        <div class="detail-panel" style="padding:20px 24px">
+          <p class="section-title" style="margin-bottom:16px">Pays</p>
+          <div id="an-countries"></div>
         </div>
       </div>
     </div>
@@ -919,6 +977,110 @@
     if (id === 'commandes') loadCommandes();
     if (id === 'configs') loadConfigs();
     if (id === 'audit') loadAuditLogs();
+    if (id === 'analytics') loadAnalytics(30, document.getElementById('an-btn-30'));
+  }
+
+  // ── ANALYTICS ─────────────────────────────────────────────────────
+  async function loadAnalytics(days, btn) {
+    // Boutons actifs
+    ['an-btn-7','an-btn-30','an-btn-90'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+    const { data, error } = await sb.from('page_views')
+      .select('created_at, page, source, device, country')
+      .gte('created_at', since)
+      .order('created_at', { ascending: true });
+
+    if (error || !data) return;
+
+    const today = new Date().toISOString().slice(0,10);
+
+    // KPIs
+    document.getElementById('an-total').textContent   = data.length.toLocaleString('fr-FR');
+    document.getElementById('an-today').textContent   = data.filter(r => r.created_at.slice(0,10) === today).length.toLocaleString('fr-FR');
+    document.getElementById('an-mobile').textContent  = data.filter(r => r.device === 'mobile').length.toLocaleString('fr-FR');
+    document.getElementById('an-desktop').textContent = data.filter(r => r.device === 'desktop').length.toLocaleString('fr-FR');
+
+    // ── Graphique par jour ──
+    const byDay = {};
+    data.forEach(r => {
+      const d = r.created_at.slice(0,10);
+      byDay[d] = (byDay[d] || 0) + 1;
+    });
+    const allDays = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000).toISOString().slice(0,10);
+      allDays.push(d);
+    }
+    const maxVal = Math.max(1, ...allDays.map(d => byDay[d] || 0));
+    const chartEl = document.getElementById('an-chart');
+    const labelsEl = document.getElementById('an-chart-labels');
+    const barW = days <= 7 ? 32 : days <= 30 ? 18 : 10;
+    chartEl.innerHTML = allDays.map(d => {
+      const v = byDay[d] || 0;
+      const h = Math.max(4, Math.round((v / maxVal) * 110));
+      const isToday = d === today;
+      return `<div title="${d}: ${v} vue${v>1?'s':''}" style="flex-shrink:0;width:${barW}px;height:${h}px;background:${isToday?'#CD3E00':'#e8e0d5'};border-radius:3px 3px 0 0;cursor:default;transition:background .2s" onmouseenter="this.style.background='#CD3E00'" onmouseleave="this.style.background='${isToday?'#CD3E00':'#e8e0d5'}'"></div>`;
+    }).join('');
+    labelsEl.innerHTML = allDays.map((d, i) => {
+      const show = days <= 7 || (days <= 30 && i % 5 === 0) || i % 15 === 0 || i === allDays.length-1;
+      const label = show ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) : '';
+      return `<div style="flex-shrink:0;width:${barW}px;font-size:9px;color:#999;text-align:center;white-space:nowrap">${label}</div>`;
+    }).join('');
+
+    // ── Sources ──
+    const sources = {};
+    data.forEach(r => { const s = r.source || 'Direct'; sources[s] = (sources[s]||0)+1; });
+    const srcColors = { 'Direct':'#1A1A1A', 'Recherche':'#CD3E00', 'Réseaux sociaux':'#7c3aed', 'Autre':'#d97706' };
+    const srcSorted = Object.entries(sources).sort((a,b) => b[1]-a[1]);
+    const srcTotal = data.length || 1;
+    document.getElementById('an-sources').innerHTML = srcSorted.map(([s, n]) => {
+      const pct = Math.round(n/srcTotal*100);
+      const col = srcColors[s] || '#999';
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span style="font-weight:600">${s}</span>
+          <span style="color:#999">${n} <span style="font-size:11px">(${pct}%)</span></span>
+        </div>
+        <div style="background:#f0ebe0;border-radius:100px;height:6px">
+          <div style="background:${col};width:${pct}%;height:6px;border-radius:100px;transition:width .4s"></div>
+        </div>
+      </div>`;
+    }).join('') || '<p style="color:#999;font-size:13px">Aucune donnée</p>';
+
+    // ── Top pages ──
+    const pages = {};
+    data.forEach(r => { const p = r.page || '/'; pages[p] = (pages[p]||0)+1; });
+    const pagesSorted = Object.entries(pages).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const PAGE_NAMES = {
+      '/':'/index.html — Accueil', '/index.html':'Accueil', '/configurateur.html':'Configurateur',
+      '/configurateur-sdb.html':'Config. SDB', '/contact.html':'Contact',
+      '/architecture.html':'Architecture', '/gamme.html':'Gamme', '/mobilier.html':'Mobilier',
+      '/projets.html':'Projets', '/configurateurs.html':'Configurateurs',
+    };
+    document.getElementById('an-pages').innerHTML = pagesSorted.map(([p, n]) => {
+      const name = PAGE_NAMES[p] || p;
+      const pct = Math.round(n/srcTotal*100);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.06);font-size:13px">
+        <span style="color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${name}</span>
+        <span style="font-weight:700;white-space:nowrap">${n} <span style="font-size:11px;color:#999;font-weight:400">(${pct}%)</span></span>
+      </div>`;
+    }).join('') || '<p style="color:#999;font-size:13px">Aucune donnée</p>';
+
+    // ── Pays ──
+    const FLAG = c => c ? String.fromCodePoint(...[...c].map(ch=>0x1F1E6+ch.charCodeAt(0)-65)) : '🌍';
+    const countries = {};
+    data.forEach(r => { const c = r.country || 'Inconnu'; countries[c] = (countries[c]||0)+1; });
+    const ctrSorted = Object.entries(countries).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    document.getElementById('an-countries').innerHTML = ctrSorted.map(([c, n]) => {
+      const flag = c.length === 2 ? FLAG(c) : '🌍';
+      const pct = Math.round(n/srcTotal*100);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.06);font-size:13px">
+        <span>${flag} <span style="margin-left:6px;color:#555">${c}</span></span>
+        <span style="font-weight:700">${n} <span style="font-size:11px;color:#999;font-weight:400">(${pct}%)</span></span>
+      </div>`;
+    }).join('') || '<p style="color:#999;font-size:13px">Aucune donnée</p>';
   }
 
   // ── AUDIT LOGS ────────────────────────────────────────────────────
