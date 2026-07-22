@@ -1,4 +1,4 @@
-// api/track.js — Enregistre une page vue, fingerprint anonyme sans cookie
+// api/track.js — Enregistre une page vue avec visitor_id cookie
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://www.kobo-design.fr');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -8,19 +8,16 @@ module.exports = async function handler(req, res) {
 
   try {
     const { createClient } = require('@supabase/supabase-js');
-    const { createHash } = require('crypto');
     const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    const { page, referrer, language, screen, timezone } = req.body || {};
+    const { page, referrer, language, screen, timezone, visitor_id } = req.body || {};
 
     const country = req.headers['x-vercel-ip-country'] || null;
-    const ip      = req.headers['x-forwarded-for']?.split(',')[0].trim() || '';
     const ua      = req.headers['user-agent'] || '';
     const device  = /mobile|android|iphone|ipad|tablet/i.test(ua) ? 'mobile' : 'desktop';
 
-    // Fingerprint anonyme — aucune donnée brute stockée, juste le hash
-    const fingerprint = `${ip}|${ua}|${country||''}|${language||''}|${screen||''}|${timezone||''}`;
-    const visitor_id  = createHash('sha256').update(fingerprint).digest('hex').slice(0, 16);
+    // Valider le visitor_id : 16 chars alphanumériques seulement
+    const vid = /^[a-z0-9]{16}$/.test(visitor_id || '') ? visitor_id : null;
 
     let source = 'Direct';
     if (referrer) {
@@ -35,7 +32,7 @@ module.exports = async function handler(req, res) {
       source,
       device,
       country,
-      visitor_id,
+      visitor_id: vid,
       language:   language ? String(language).slice(0, 10) : null,
       screen:     screen   ? String(screen).slice(0, 20)   : null,
       timezone:   timezone ? String(timezone).slice(0, 60) : null,
