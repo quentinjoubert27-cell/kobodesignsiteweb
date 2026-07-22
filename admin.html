@@ -989,7 +989,7 @@
 
     const since = new Date(Date.now() - days * 86400000).toISOString();
     const { data, error } = await sb.from('page_views')
-      .select('created_at, page, source, device, country')
+      .select('created_at, page, source, device, country, visitor_id')
       .gte('created_at', since)
       .order('created_at', { ascending: true });
 
