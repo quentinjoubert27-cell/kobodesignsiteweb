@@ -3,25 +3,11 @@
 // la stocke dans Supabase et envoie un email à Kobo Design.
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.kobo-design.fr');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-
-  if (req.method === 'GET') {
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    const { error } = await supabase.from('configs_sdb').select('id').limit(1);
-    return res.status(200).json({
-      supabase_url: process.env.SUPABASE_URL ? 'OK' : 'MANQUANT',
-      supabase_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MANQUANT',
-      resend_key: process.env.RESEND_API_KEY ? 'OK' : 'MANQUANT',
-      contact_email: process.env.CONTACT_EMAIL ? 'OK' : 'MANQUANT',
-      table_configs_sdb: error ? ('ERREUR: ' + error.message) : 'OK',
-    });
-  }
-
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
@@ -31,6 +17,7 @@ module.exports = async function handler(req, res) {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     const resend = new Resend(process.env.RESEND_API_KEY);
 
+    const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const body = req.body || {};
 
     const prenom    = (body.prenom  || '').toString().trim().slice(0, 100);
@@ -43,7 +30,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Prénom et email obligatoires.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return res.status(400).json({ error: 'Email invalide.' });
-    if (body.botcheck) return res.status(200).json({ success: true });
+    if (body.website) return res.status(200).json({ success: true }); // honeypot
 
     const furniture_type = (cfg.furniture_type || 'sdb').toString().slice(0, 20);
     const meuble  = cfg.meuble  || {};
@@ -105,7 +92,7 @@ module.exports = async function handler(req, res) {
     }).join('');
 
     const msgHtml = message
-      ? `<tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px;vertical-align:top">Message</td><td style="padding:8px 0;font-size:14px;white-space:pre-wrap">${message}</td></tr>`
+      ? `<tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px;vertical-align:top">Message</td><td style="padding:8px 0;font-size:14px;white-space:pre-wrap">${esc(message)}</td></tr>`
       : '';
 
     // Screenshot en pièce jointe (les data: URL sont bloqués par Gmail/Outlook)
@@ -121,7 +108,7 @@ module.exports = async function handler(req, res) {
       from: 'Kobo Design <contact@kobo-design.fr>',
       to: process.env.CONTACT_EMAIL,
       replyTo: email,
-      subject: `SDB configurée — ${prenom} · Meuble ${meuble.L}×${meuble.H}×${meuble.P} cm · ${meuble.matLabel}`,
+      subject: `SDB configurée — ${esc(prenom)} · Meuble ${meuble.L}×${meuble.H}×${meuble.P} cm · ${esc(meuble.matLabel)}`,
       attachments,
       html: `
       <div style="font-family:sans-serif;max-width:640px;margin:0 auto;color:#1A1A1A;">
@@ -131,19 +118,19 @@ module.exports = async function handler(req, res) {
         </div>
         <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px">Prénom</td><td style="padding:8px 0;font-size:14px">${prenom}</td></tr>
-            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700">Email</td><td style="padding:8px 0;font-size:14px"><a href="mailto:${email}" style="color:#CD3E00">${email}</a></td></tr>
+            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px">Prénom</td><td style="padding:8px 0;font-size:14px">${esc(prenom)}</td></tr>
+            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700">Email</td><td style="padding:8px 0;font-size:14px"><a href="mailto:${esc(email)}" style="color:#CD3E00">${esc(email)}</a></td></tr>
             ${msgHtml}
           </table>
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:16px">
             <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 12px">Meuble</p>
             <p style="font-size:18px;font-weight:700;margin:0 0 4px">${meuble.L} × ${meuble.H} × ${meuble.P} cm</p>
-            <p style="font-size:13px;color:#666;margin:0">Finition : ${meuble.matLabel}</p>
+            <p style="font-size:13px;color:#666;margin:0">Finition : ${esc(meuble.matLabel)}</p>
           </div>
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:16px">
             <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 12px">Plan de travail</p>
             <p style="font-size:18px;font-weight:700;margin:0 0 4px">${plan.L} × ${plan.P} × ${plan.Ep} cm</p>
-            <p style="font-size:13px;color:#666;margin:0">Matériau : ${plan.matLabel}</p>
+            <p style="font-size:13px;color:#666;margin:0">Matériau : ${esc(plan.matLabel)}</p>
           </div>
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:16px">
             <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 12px">Vasque${vasques.nb > 1 ? 's' : ''}</p>

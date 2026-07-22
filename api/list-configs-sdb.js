@@ -2,10 +2,11 @@
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://www.kobo-design.fr');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const token = req.query.token || '';
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace('Bearer ', '') || req.query.token || '';
   const expected = process.env.ADMIN_TOKEN || '';
   if (!expected || token !== expected)
     return res.status(401).json({ error: 'Non autorisé.' });

@@ -1422,8 +1422,9 @@
 
     html += `</div></div>`;
 
-    if (c.thumbnail) {
-      html += `<img src="${c.thumbnail}" alt="Aperçu 3D" onclick="openThumbLightbox(this.src)"
+    if (c.thumbnail && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(c.thumbnail)) {
+      const safeThumb = escHtml(c.thumbnail);
+      html += `<img src="${safeThumb}" alt="Aperçu 3D" onclick="openThumbLightbox(this.src)"
         style="width:100%;border-radius:10px;margin-bottom:12px;cursor:zoom-in;display:block;object-fit:cover;max-height:220px;"/>`;
     }
 

@@ -979,6 +979,8 @@
     msgPolling = setInterval(fetchAndRender, 5000);
   }
 
+  function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
   function renderMessages(msgs) {
     const list = document.getElementById('messages-list');
     if (!msgs || msgs.length === 0) {
@@ -987,8 +989,8 @@
     }
     const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 60;
     list.innerHTML = msgs.map(m => `
-      <div class="msg msg--${m.expediteur === 'client' ? 'client' : 'kobo'}" data-msg-id="${m.id}">
-        <div class="msg__bubble">${m.contenu}</div>
+      <div class="msg msg--${m.expediteur === 'client' ? 'client' : 'kobo'}" data-msg-id="${escHtml(String(m.id))}">
+        <div class="msg__bubble">${escHtml(m.contenu)}</div>
         <div class="msg__meta">${m.expediteur === 'client' ? 'Vous' : 'Équipe Kobo'} · ${new Date(m.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</div>
       </div>`).join('');
     if (atBottom) list.scrollTop = list.scrollHeight;

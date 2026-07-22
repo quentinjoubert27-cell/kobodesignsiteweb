@@ -32,16 +32,16 @@ module.exports = async function handler(req, res) {
   if (!prenom || !email) return res.status(400).json({ error: 'Prénom et email obligatoires' });
 
   try {
-    // 1. Créer ou récupérer l'utilisateur
+    // 1. Créer ou récupérer l'utilisateur (lookup par email via table clients, pas listUsers)
     let userId;
-    const { data: existing } = await sb.auth.admin.listUsers();
-    const found = (existing?.users || []).find(u => u.email === email);
+    const { data: clientRow } = await sb.from('clients').select('id').eq('email', email).maybeSingle();
+    const found = clientRow ? { id: clientRow.id } : null;
 
     let isNew = false;
     if (found) {
       userId = found.id;
       await sb.auth.admin.updateUserById(userId, {
-        user_metadata: { prenom, nom: nom || found.user_metadata?.nom || '' }
+        user_metadata: { prenom, nom: nom || '' }
       });
     } else {
       isNew = true;
@@ -164,6 +164,7 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     console.error('auto-register error:', err);
-    return res.status(500).json({ error: err.message || 'Erreur serveur' });
+    const isDev = process.env.VERCEL_ENV !== 'production';
+    return res.status(500).json({ error: isDev ? err.message : 'Erreur serveur.' });
   }
 };

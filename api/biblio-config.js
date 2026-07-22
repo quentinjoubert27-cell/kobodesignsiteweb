@@ -3,25 +3,11 @@
 // la stocke dans Supabase et envoie un email à Kobo Design.
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.kobo-design.fr');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-
-  // Endpoint de diagnostic (GET)
-  if (req.method === 'GET') {
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    const { error } = await supabase.from('configs_biblio').select('id').limit(1);
-    return res.status(200).json({
-      supabase_url: process.env.SUPABASE_URL ? 'OK' : 'MANQUANT',
-      supabase_key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MANQUANT',
-      resend_key: process.env.RESEND_API_KEY ? 'OK' : 'MANQUANT',
-      contact_email: process.env.CONTACT_EMAIL ? 'OK' : 'MANQUANT',
-      table_configs_biblio: error ? ('ERREUR: ' + error.message) : 'OK',
-    });
-  }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
@@ -35,6 +21,7 @@ module.exports = async function handler(req, res) {
     );
     const resend = new Resend(process.env.RESEND_API_KEY);
 
+    const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const body = req.body || {};
 
     // ── Validation ──────────────────────────────────
@@ -47,7 +34,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Prénom et email obligatoires.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return res.status(400).json({ error: 'Email invalide.' });
-    if (body.botcheck) return res.status(200).json({ success: true });
+    if (body.website) return res.status(200).json({ success: true }); // honeypot
 
     // ── Extraction config ────────────────────────────
     const W          = Number(cfg.W)   || 0;
@@ -106,14 +93,14 @@ module.exports = async function handler(req, res) {
     }).join('');
 
     const msgHtml = message
-      ? `<tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px;vertical-align:top">Message</td><td style="padding:8px 0;font-size:14px;white-space:pre-wrap">${message}</td></tr>`
+      ? `<tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px;vertical-align:top">Message</td><td style="padding:8px 0;font-size:14px;white-space:pre-wrap">${esc(message)}</td></tr>`
       : '';
 
     await resend.emails.send({
       from: 'Kobo Design <contact@kobo-design.fr>',
       to: process.env.CONTACT_EMAIL,
       replyTo: email,
-      subject: `Biblio configurée — ${prenom} · ${W}×${H}×${D} cm · ${matLabel}`,
+      subject: `Biblio configurée — ${esc(prenom)} · ${W}×${H}×${D} cm · ${esc(matLabel)}`,
       html: `
       <div style="font-family:sans-serif;max-width:640px;margin:0 auto;color:#1A1A1A;">
         <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
@@ -121,20 +108,20 @@ module.exports = async function handler(req, res) {
           <h1 style="color:#FFFAF0;font-size:22px;margin:0">Nouvelle bibliothèque configurée</h1>
         </div>
         <div style="background:#CD3E00;padding:16px 32px;text-align:center;">
-          <a href="${vizUrl}" style="display:inline-block;background:#fff;color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;padding:10px 28px;border-radius:100px;text-decoration:none;">
+          <a href="${esc(vizUrl)}" style="display:inline-block;background:#fff;color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;padding:10px 28px;border-radius:100px;text-decoration:none;">
             ▶ Visualiser en 3D
           </a>
         </div>
         <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px">Prénom</td><td style="padding:8px 0;font-size:14px">${prenom}</td></tr>
-            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700">Email</td><td style="padding:8px 0;font-size:14px"><a href="mailto:${email}" style="color:#CD3E00">${email}</a></td></tr>
+            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px">Prénom</td><td style="padding:8px 0;font-size:14px">${esc(prenom)}</td></tr>
+            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700">Email</td><td style="padding:8px 0;font-size:14px"><a href="mailto:${esc(email)}" style="color:#CD3E00">${esc(email)}</a></td></tr>
             ${msgHtml}
           </table>
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:24px">
             <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 12px">Dimensions &amp; finition</p>
             <p style="font-size:20px;font-weight:700;margin:0 0 4px">${W} × ${H} × ${D} cm</p>
-            <p style="font-size:13px;color:#666;margin:0">Essence : ${matLabel}</p>
+            <p style="font-size:13px;color:#666;margin:0">Essence : ${esc(matLabel)}</p>
           </div>
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:24px">
             <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 12px">Aménagement intérieur</p>
@@ -145,7 +132,7 @@ module.exports = async function handler(req, res) {
           </div>
           <div style="background:#fff;border-radius:8px;padding:16px 24px">
             <p style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#999;margin:0 0 8px">JSON brut (pour import)</p>
-            <pre style="font-size:10px;color:#555;margin:0;overflow-x:auto;white-space:pre-wrap;word-break:break-all">${JSON.stringify({W,H,D,matLabel,elements},null,2)}</pre>
+            <pre style="font-size:10px;color:#555;margin:0;overflow-x:auto;white-space:pre-wrap;word-break:break-all">${esc(JSON.stringify({W,H,D,matLabel,elements},null,2))}</pre>
           </div>
         </div>
       </div>`,
