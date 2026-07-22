@@ -993,7 +993,11 @@
       .gte('created_at', since)
       .order('created_at', { ascending: true });
 
-    if (error || !data) return;
+    if (error || !data) {
+      console.error('Analytics error:', error);
+      document.getElementById('an-total').textContent = 'Erreur';
+      return;
+    }
 
     const today = new Date().toISOString().slice(0,10);
 
