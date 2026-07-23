@@ -1346,8 +1346,10 @@
     const { error } = await sb.from('messages_general').insert([{
       client_id: currentClientId, expediteur: 'admin', contenu, lu: true
     }]);
-    if (!error) await loadClientMessages(currentClientId);
-    else showToast('Erreur envoi message', 'err');
+    if (!error) {
+      await loadClientMessages(currentClientId);
+      notifyClient(currentClientId, contenu);
+    } else showToast('Erreur envoi message', 'err');
   }
 
   // ── PROJETS ───────────────────────────────────────────────────────
@@ -1781,8 +1783,24 @@
     if (!contenu || !currentProjetId) return;
     input.value = '';
     const { error } = await sb.from('messages').insert([{ projet_id: currentProjetId, expediteur: 'kobo', contenu, lu: true }]);
-    if (!error) await loadProjetMsgs();
-    else showToast('Erreur envoi message', 'err');
+    if (!error) {
+      await loadProjetMsgs();
+      // Récupérer le client_id depuis le projet
+      const { data: p } = await sb.from('projets').select('client_id').eq('id', currentProjetId).single();
+      if (p?.client_id) notifyClient(p.client_id, contenu);
+    } else showToast('Erreur envoi message', 'err');
+  }
+
+  async function notifyClient(client_id, contenu) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session?.access_token) return;
+      await fetch('/api/notify-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ client_id, contenu })
+      });
+    } catch(e) { console.warn('notify error', e); }
   }
 
   async function updateProjetStatut() {
@@ -1955,8 +1973,10 @@
       lu: true
     }]);
     if (btn) btn.disabled = false;
-    if (!error) await fetchAdminThread();
-    else { input.value = contenu; showToast('Erreur envoi', 'err'); }
+    if (!error) {
+      await fetchAdminThread();
+      notifyClient(activeMsgClientId, contenu);
+    } else { input.value = contenu; showToast('Erreur envoi', 'err'); }
   }
 
   // ── MODALS ────────────────────────────────────────────────────────
