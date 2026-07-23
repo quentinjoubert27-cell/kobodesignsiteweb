@@ -45,17 +45,60 @@ module.exports = async function handler(req, res) {
     }
     if (body.website) return res.status(200).json({ success: true }); // honeypot
 
-    // 1. Enregistrer dans Supabase
-    const { error: dbError } = await supabase
+    // 1. Enregistrer dans Supabase (demandes)
+    await supabase
       .from('demandes')
       .insert([{ prenom, nom, email, telephone, type_projet, budget, message, fichiers }]);
 
-    if (dbError) {
-      console.error('Supabase error:', dbError);
-      throw new Error(dbError.message);
+    // 2. Créer client + projet + message dans l'admin
+    try {
+      // Client : upsert par email (ne pas dupliquer si déjà existant)
+      let clientId = null;
+      const { data: existingClient } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (existingClient) {
+        clientId = existingClient.id;
+      } else {
+        const { data: newClient } = await supabase
+          .from('clients')
+          .insert([{ prenom, nom, email, telephone: telephone || null }])
+          .select('id')
+          .single();
+        clientId = newClient?.id;
+      }
+
+      if (clientId) {
+        // Projet
+        const nomProjet = `Demande ${type_projet ? '— ' + type_projet : ''} · ${prenom} ${nom}`.slice(0, 200);
+        const { data: newProjet } = await supabase
+          .from('projets')
+          .insert([{
+            client_id: clientId,
+            nom: nomProjet,
+            description: budget ? `Budget : ${budget}${fichiers ? '\nFichiers : ' + fichiers : ''}` : (fichiers || null),
+            type: type_projet || 'Autre',
+            statut: 'En cours'
+          }])
+          .select('id')
+          .single();
+
+        // Message (apparaît dans le chat admin)
+        if (newProjet?.id) {
+          await supabase
+            .from('messages')
+            .insert([{ projet_id: newProjet.id, expediteur: 'client', contenu: message, lu: false }]);
+        }
+      }
+    } catch (adminErr) {
+      console.error('Erreur création client/projet admin:', adminErr);
+      // Non bloquant — l'email a déjà été envoyé
     }
 
-    // 2. Email via Resend
+    // 3. Email via Resend
     const fichiersHtml = fichiers
       ? `<tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:130px;">Fichiers</td><td style="padding:8px 0;font-size:14px;">${fichiers}</td></tr>`
       : '';
