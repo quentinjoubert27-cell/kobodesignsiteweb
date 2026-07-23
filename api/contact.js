@@ -86,11 +86,29 @@ module.exports = async function handler(req, res) {
           .select('id')
           .single();
 
-        // Message (apparaît dans le chat admin)
         if (newProjet?.id) {
-          await supabase
-            .from('messages')
-            .insert([{ projet_id: newProjet.id, expediteur: 'client', contenu: message, lu: false }]);
+          // Message (apparaît dans le chat admin)
+          await supabase.from('messages').insert([{
+            projet_id: newProjet.id, expediteur: 'client', contenu: message, lu: false
+          }]);
+
+          // Documents
+          if (fichiers) {
+            const entries = fichiers.split('|').map(s => s.trim()).filter(Boolean);
+            for (const entry of entries) {
+              const parts = entry.split('→').map(s => s.trim());
+              const nom = parts[0] || 'Fichier';
+              const url = parts[1];
+              if (!url) continue;
+              const ext = nom.split('.').pop().toLowerCase();
+              const type = ['jpg','jpeg','png','gif','webp'].includes(ext) ? 'image/' + ext
+                         : ext === 'pdf' ? 'application/pdf'
+                         : 'application/octet-stream';
+              await supabase.from('documents').insert([{
+                projet_id: newProjet.id, nom, type, categorie: 'document', url, uploade_par: 'client'
+              }]);
+            }
+          }
         }
       }
     } catch (adminErr) {
