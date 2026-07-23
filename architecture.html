@@ -375,7 +375,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-RDNV0PGVLX');
+  if(!window._kbNoTrack) gtag('config', 'G-RDNV0PGVLX');
 </script>
 </head>
 <body>
@@ -752,6 +752,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if(!isOpen) item.classList.add('open');
   }
 </script>
-<script>!function(){var k="kb_tracked_"+location.pathname;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");var vid=document.cookie.match(/kb_vid=([^;]+)/);if(!vid){var u=(Math.random().toString(36)+Math.random().toString(36)).replace(/[^a-z0-9]/g,"").slice(0,16);document.cookie="kb_vid="+u+";max-age=31536000;path=/;SameSite=Lax";vid=[null,u];}fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:location.pathname,referrer:document.referrer||null,language:navigator.language||null,screen:screen.width+"x"+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||null,visitor_id:vid[1]})}).catch(function(){});}();</script>
+<script>!function(){if(window._kbNoTrack)return;var k="kb_tracked_"+location.pathname;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");var vid=document.cookie.match(/kb_vid=([^;]+)/);if(!vid){var u=(Math.random().toString(36)+Math.random().toString(36)).replace(/[^a-z0-9]/g,"").slice(0,16);document.cookie="kb_vid="+u+";max-age=31536000;path=/;SameSite=Lax";vid=[null,u];}fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:location.pathname,referrer:document.referrer||null,language:navigator.language||null,screen:screen.width+"x"+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||null,visitor_id:vid[1]})}).catch(function(){});}();</script>
+<!-- Cookie Banner -->
+<div id="kb-cookie-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1A1A1A;color:#FFFAF0;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 -4px 24px rgba(0,0,0,.3)">
+  <p style="margin:0;font-size:13px;line-height:1.5;flex:1;min-width:200px">🍪 Ce site utilise des cookies pour mesurer son audience et améliorer votre expérience. <a href="/politique-confidentialite.html" style="color:#CD3E00;text-decoration:underline">En savoir plus</a></p>
+  <div style="display:flex;gap:10px;flex-shrink:0">
+    <button onclick="kbConsent(0)" style="padding:9px 18px;border:1.5px solid rgba(255,250,240,.2);border-radius:6px;background:none;color:rgba(255,250,240,.6);font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.05em">Refuser</button>
+    <button onclick="kbConsent(1)" style="padding:9px 20px;border:none;border-radius:6px;background:#CD3E00;color:#fff;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.05em">Accepter</button>
+  </div>
+</div>
+<script>
+(function(){
+  var c = document.cookie.match(/kb_consent=([^;]+)/);
+  if(c) { if(c[1]==='0') window._kbNoTrack=true; return; }
+  document.getElementById('kb-cookie-banner').style.display='flex';
+  window._kbNoTrack=true; // pas de tracking tant que pas de réponse
+})();
+function kbConsent(v){
+  document.cookie='kb_consent='+v+';max-age=31536000;path=/;SameSite=Lax';
+  document.getElementById('kb-cookie-banner').style.display='none';
+  if(v===1){ window._kbNoTrack=false; location.reload(); }
+  else { window._kbNoTrack=true; }
+}
+</script>
+<!-- End Cookie Banner -->
 </body>
 </html>
