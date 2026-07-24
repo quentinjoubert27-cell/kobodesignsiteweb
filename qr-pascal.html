@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code — Pascal Olivares</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --accent: #CD3E00; --dark: #1A1A1A; --bg: #FFFAF0; --font: 'Poppins', sans-serif; }
+
+    body {
+      font-family: var(--font);
+      background: #f0ece4;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 32px 16px;
+    }
+
+    .qr-card {
+      background: var(--dark);
+      border-radius: 28px;
+      padding: 40px 44px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      width: 320px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .qr-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    #qrcode canvas, #qrcode img { display: block; }
+
+    .person {
+      text-align: center;
+    }
+
+    .person-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .person-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .scan-hint {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+    }
+
+    .btn-dl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--dark);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 13px 24px;
+      cursor: pointer;
+      transition: opacity .18s;
+    }
+    .btn-dl:hover { opacity: 0.75; }
+    .btn-dl svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+</head>
+<body>
+
+<div class="qr-card" id="card">
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <span class="brand-name">Kobo Design</span>
+  </div>
+
+  <div class="qr-box">
+    <div id="qrcode"></div>
+  </div>
+
+  <div class="person">
+    <div class="person-name">Pascal Olivares</div>
+    <div class="person-title">Dirigeant</div>
+  </div>
+
+  <div class="scan-hint">Scanner pour me contacter</div>
+</div>
+
+<button class="btn-dl" id="dl-btn">
+  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  Télécharger l'image
+</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  new QRCode(document.getElementById('qrcode'), {
+    text: 'https://www.kobo-design.fr/vcard-pascal',
+    width: 200,
+    height: 200,
+    colorDark: '#1A1A1A',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  document.getElementById('dl-btn').addEventListener('click', () => {
+    html2canvas(document.getElementById('card'), {
+      scale: 3,
+      backgroundColor: null,
+      useCORS: true
+    }).then(canvas => {
+      const a = document.createElement('a');
+      a.download = 'qr-pascal-olivares.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+  });
+</script>
+
+</body>
+</html>

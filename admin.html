@@ -1810,10 +1810,10 @@
     try {
       const { data: { session } } = await sb.auth.getSession();
       if (!session?.access_token) return;
-      await fetch('/api/notify-message', {
+      await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ client_id, contenu })
+        body: JSON.stringify({ action: 'message', client_id, contenu })
       });
     } catch(e) { console.warn('notify error', e); }
   }
@@ -1835,10 +1835,10 @@
       // Notifier le client du changement de statut
       try {
         const { data: { session } } = await sb.auth.getSession();
-        await fetch('/api/notify-statut', {
+        await fetch('/api/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-          body: JSON.stringify({ projet_id: currentProjetId, statut })
+          body: JSON.stringify({ action: 'statut', projet_id: currentProjetId, statut })
         });
       } catch(e) { console.warn('notify-statut error', e); }
     } else {
@@ -1864,10 +1864,10 @@
     const btn = document.getElementById('ec-btn');
     btn.disabled = true; btn.textContent = 'Envoi…';
     const { data: { session } } = await sb.auth.getSession();
-    const resp = await fetch('/api/send-email-client', {
+    const resp = await fetch('/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ to_email: client.email, to_prenom: client.prenom, sujet, contenu }),
+      body: JSON.stringify({ action: 'email-libre', to_email: client.email, to_prenom: client.prenom, sujet, contenu }),
     });
     btn.disabled = false; btn.textContent = 'Envoyer';
     if (resp.ok) { closeModal('modal-email-client'); showToast('Email envoyé !'); }
@@ -1951,10 +1951,10 @@
     // Notifier le client du nouveau document
     try {
       const { data: { session } } = await sb.auth.getSession();
-      await fetch('/api/notify-document', {
+      await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ projet_id: currentProjetId, nom_fichier: file.name })
+        body: JSON.stringify({ action: 'document', projet_id: currentProjetId, nom_fichier: file.name })
       });
     } catch(e) { console.warn('notify-document error', e); }
   }

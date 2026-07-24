@@ -11,8 +11,31 @@
     {
       "name": "skarp-landing",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "3456", "--directory", "/Users/quentinjoubert/Desktop/kobo-design/skarp"],
+      "runtimeArgs": ["-m", "http.server", "3456", "--directory", "/Users/quentinjoubert/Desktop/skarp"],
       "port": 3456
+    }
+  ,
+    {
+      "name": "halston",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "3457", "/Users/quentinjoubert/Desktop/halston-architecture"],
+      "port": 3457
+    }
+  ,
+    {
+      "name": "skarp-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "cwd": "../skarp-app"
+    }
+  ,
+    {
+      "name": "skarp-mobile-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8090"],
+      "port": 8090,
+      "cwd": "../skarp-mobile"
     }
   ]
 }
