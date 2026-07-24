@@ -523,6 +523,7 @@
           <h1 class="view-title" id="cd-name">—</h1>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="openEmailClientModal()">✉ Envoyer un email</button>
           <button class="btn btn-primary" onclick="openModalNewProjetForClient()">+ Nouveau projet</button>
           <button class="btn btn-danger btn-sm" onclick="deleteClient()">Supprimer</button>
         </div>
@@ -773,6 +774,20 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-projet')">Annuler</button>
       <button class="btn btn-primary" onclick="createProjet()">Créer le projet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Email client direct -->
+<div class="modal-overlay" id="modal-email-client">
+  <div class="modal">
+    <h2 class="modal-title">Envoyer un email</h2>
+    <div class="field"><label>Destinataire</label><input type="text" id="ec-to" readonly style="opacity:.6;"/></div>
+    <div class="field"><label>Objet</label><input type="text" id="ec-sujet" placeholder="Votre projet est à l'étude…"/></div>
+    <div class="field"><label>Message</label><textarea id="ec-contenu" rows="6" placeholder="Votre message…" style="width:100%;font-family:var(--font);font-size:14px;border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:12px 14px;resize:vertical;outline:none;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-email-client')">Annuler</button>
+      <button class="btn btn-primary" id="ec-btn" onclick="sendEmailClient()">Envoyer</button>
     </div>
   </div>
 </div>
@@ -1820,6 +1835,34 @@
     } else {
       showToast('Erreur mise à jour', 'err');
     }
+  }
+
+  function openEmailClientModal() {
+    const client = allClients.find(c => c.id === currentClientId);
+    if (!client) return;
+    document.getElementById('ec-to').value = `${client.prenom || ''} ${client.nom || ''} <${client.email}>`.trim();
+    document.getElementById('ec-sujet').value = 'Votre projet est à l\'étude';
+    document.getElementById('ec-contenu').value = `Bonjour ${client.prenom || ''},\n\nNous avons bien reçu votre demande et votre projet est désormais à l'étude.\n\nNous revenons vers vous très prochainement.\n\nÀ bientôt,\nL'équipe Kobo Design`;
+    document.getElementById('modal-email-client').classList.add('open');
+  }
+
+  async function sendEmailClient() {
+    const client = allClients.find(c => c.id === currentClientId);
+    if (!client) return;
+    const sujet = document.getElementById('ec-sujet').value.trim();
+    const contenu = document.getElementById('ec-contenu').value.trim();
+    if (!sujet || !contenu) return showToast('Objet et message requis', 'err');
+    const btn = document.getElementById('ec-btn');
+    btn.disabled = true; btn.textContent = 'Envoi…';
+    const { data: { session } } = await sb.auth.getSession();
+    const resp = await fetch('/api/send-email-client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ to_email: client.email, to_prenom: client.prenom, sujet, contenu }),
+    });
+    btn.disabled = false; btn.textContent = 'Envoyer';
+    if (resp.ok) { closeModal('modal-email-client'); showToast('Email envoyé !'); }
+    else showToast('Erreur envoi email', 'err');
   }
 
   async function deleteClient() {
