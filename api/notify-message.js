@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
     const token = authHeader.replace('Bearer ', '');
     const sbAnon = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
     const { data: { user }, error: authErr } = await sbAnon.auth.getUser(token);
-    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'quentin.joubert@icloud.com').split(',').map(e => e.trim());
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr').split(',').map(e => e.trim());
     if (authErr || !user || !ADMIN_EMAILS.includes(user.email)) return res.status(401).json({ error: 'Non autorisé' });
 
     const { client_id, contenu } = req.body || {};
