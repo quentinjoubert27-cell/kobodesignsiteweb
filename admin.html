@@ -315,42 +315,124 @@
         grid-template-columns: repeat(2, 1fr) !important;
       }
 
-      /* Clients table — masquer Email et Inscrit le */
-      #view-clients table th:nth-child(2),
-      #view-clients table td:nth-child(2),
-      #view-clients table th:nth-child(5),
-      #view-clients table td:nth-child(5) { display: none; }
-
-      /* Projets table — masquer Montant et Créé le */
-      #view-projets table th:nth-child(4),
-      #view-projets table td:nth-child(4),
-      #view-projets table th:nth-child(5),
-      #view-projets table td:nth-child(5) { display: none; }
-
-      /* Commandes table — masquer Montant et Date livraison */
-      #view-commandes table th:nth-child(3),
-      #view-commandes table td:nth-child(3),
-      #view-commandes table th:nth-child(4),
-      #view-commandes table td:nth-child(4) { display: none; }
-
-      /* Dashboard activité — masquer Projet et Mis à jour */
-      #view-dashboard .table-wrap table th:nth-child(2),
-      #view-dashboard .table-wrap table td:nth-child(2),
-      #view-dashboard .table-wrap table th:nth-child(4),
-      #view-dashboard .table-wrap table td:nth-child(4) { display: none; }
-
-      /* Audit table — masquer Navigateur */
-      #view-audit table th:nth-child(5),
-      #view-audit table td:nth-child(5) { display: none; }
-
       /* Search client — pleine largeur */
       #client-search { width: 100% !important; }
 
-      /* Enlever le min-width des tables avec colonnes cachées */
-      #view-clients table,
-      #view-projets table,
-      #view-commandes table,
-      #view-dashboard .table-wrap table,
+      /* ── TABLES → CARTES MOBILE ── */
+      /* Supprimer scroll horizontal */
+      .table-wrap { overflow-x: visible; }
+      table { min-width: 0 !important; }
+
+      /* Tables principales : transformer en cartes */
+      #view-clients .table-wrap table,
+      #view-projets .table-wrap table,
+      #view-commandes .table-wrap table,
+      #view-dashboard .table-wrap table { display: block; }
+
+      #view-clients .table-wrap thead,
+      #view-projets .table-wrap thead,
+      #view-commandes .table-wrap thead,
+      #view-dashboard .table-wrap thead { display: none; }
+
+      #view-clients .table-wrap tbody,
+      #view-projets .table-wrap tbody,
+      #view-commandes .table-wrap tbody,
+      #view-dashboard .table-wrap tbody { display: block; }
+
+      /* Chaque ligne = carte */
+      #view-clients .table-wrap tbody tr,
+      #view-projets .table-wrap tbody tr,
+      #view-commandes .table-wrap tbody tr,
+      #view-dashboard .table-wrap tbody tr {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        padding: 14px 16px;
+        gap: 3px 12px;
+        border-bottom: 1px solid rgba(26,26,26,.06);
+        cursor: pointer;
+        transition: background .15s;
+      }
+      #view-clients .table-wrap tbody tr:hover,
+      #view-projets .table-wrap tbody tr:hover,
+      #view-commandes .table-wrap tbody tr:hover,
+      #view-dashboard .table-wrap tbody tr:hover { background: rgba(205,62,0,.03); }
+
+      /* Masquer toutes les cellules par défaut */
+      #view-clients .table-wrap tbody tr td,
+      #view-projets .table-wrap tbody tr td,
+      #view-commandes .table-wrap tbody tr td,
+      #view-dashboard .table-wrap tbody tr td {
+        display: none; padding: 0; border: none;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
+      /* ── CLIENTS : Nom | Email | (nb projets à droite) ── */
+      /* td1=Nom, td2=Email, td3=Tel, td4=Projets, td5=Inscrit, td6=Action */
+      #view-clients .table-wrap tbody tr td:nth-child(1) {
+        display: block; font-weight: 700; font-size: 14px;
+        grid-column: 1; grid-row: 1; align-self: end;
+      }
+      #view-clients .table-wrap tbody tr td:nth-child(2) {
+        display: block; font-size: 12px; color: rgba(26,26,26,.5);
+        grid-column: 1; grid-row: 2;
+      }
+      #view-clients .table-wrap tbody tr td:nth-child(4) {
+        display: flex; align-items: center; justify-content: flex-end;
+        font-size: 11px; font-weight: 700; color: rgba(26,26,26,.35);
+        grid-column: 2; grid-row: 1 / 3;
+      }
+
+      /* ── PROJETS (vue projets) : Nom | Client | Statut à droite ── */
+      /* td1=Nom, td2=Client, td3=Statut, td4=Montant, td5=Date, td6=Action */
+      #view-projets .table-wrap tbody tr td:nth-child(1) {
+        display: block; font-weight: 700; font-size: 14px;
+        grid-column: 1; grid-row: 1;
+      }
+      #view-projets .table-wrap tbody tr td:nth-child(2) {
+        display: block; font-size: 12px; color: rgba(26,26,26,.5);
+        grid-column: 1; grid-row: 2;
+      }
+      #view-projets .table-wrap tbody tr td:nth-child(3) {
+        display: flex; align-items: center; justify-content: flex-end;
+        grid-column: 2; grid-row: 1 / 3;
+      }
+
+      /* ── COMMANDES : Client | Projet | Statut à droite ── */
+      /* td1=Client, td2=Projet, td3=Montant, td4=Date, td5=Statut, td6=Action */
+      #view-commandes .table-wrap tbody tr td:nth-child(1) {
+        display: block; font-weight: 700; font-size: 14px;
+        grid-column: 1; grid-row: 1;
+      }
+      #view-commandes .table-wrap tbody tr td:nth-child(2) {
+        display: block; font-size: 12px; color: rgba(26,26,26,.5);
+        grid-column: 1; grid-row: 2;
+      }
+      #view-commandes .table-wrap tbody tr td:nth-child(5) {
+        display: flex; align-items: center; justify-content: flex-end;
+        grid-column: 2; grid-row: 1 / 3;
+      }
+
+      /* ── DASHBOARD activité : Client | (Projet en sous-titre) | Statut ── */
+      /* td1=Client, td2=Projet, td3=Statut, td4=Date, td5=Action */
+      #view-dashboard .table-wrap tbody tr td:nth-child(1) {
+        display: block; font-weight: 700; font-size: 14px;
+        grid-column: 1; grid-row: 1;
+      }
+      #view-dashboard .table-wrap tbody tr td:nth-child(2) {
+        display: block; font-size: 12px; color: rgba(26,26,26,.5);
+        grid-column: 1; grid-row: 2;
+      }
+      #view-dashboard .table-wrap tbody tr td:nth-child(3) {
+        display: flex; align-items: center; justify-content: flex-end;
+        grid-column: 2; grid-row: 1 / 3;
+      }
+
+      /* Audit — garder table standard mais masquer colonnes longues */
+      #view-audit table th:nth-child(4),
+      #view-audit table td:nth-child(4),
+      #view-audit table th:nth-child(5),
+      #view-audit table td:nth-child(5) { display: none; }
       #view-audit table { min-width: 0 !important; }
     }
 
