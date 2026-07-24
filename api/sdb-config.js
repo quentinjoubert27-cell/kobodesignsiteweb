@@ -40,7 +40,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Email invalide.' });
     if (body.website) return res.status(200).json({ success: true }); // honeypot
 
-    const furniture_type = (cfg.furniture_type || 'sdb').toString().slice(0, 20);
+    const furniture_type = (body.furniture_type || cfg.furniture_type || 'sdb').toString().slice(0, 20);
     const meuble  = cfg.meuble  || {};
     const plan    = cfg.plan    || {};
     const vasques = cfg.vasques || {};
@@ -118,13 +118,13 @@ module.exports = async function handler(req, res) {
       from: 'Kobo Design <contact@kobo-design.fr>',
       to: process.env.CONTACT_EMAIL,
       replyTo: email,
-      subject: `SDB configurée — ${esc(prenom)} · Meuble ${meuble.L}×${meuble.H}×${meuble.P} cm · ${esc(meuble.matLabel)}`,
+      subject: `${({biblio:'Bibliothèque',tv:'Meuble TV',dressing:'Dressing',sdb:'SDB'}[furniture_type]||furniture_type)} configurée — ${esc(prenom)} · Meuble ${meuble.L}×${meuble.H}×${meuble.P} cm · ${esc(meuble.matLabel)}`,
       attachments,
       html: `
       <div style="font-family:sans-serif;max-width:640px;margin:0 auto;color:#1A1A1A;">
         <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
           <p style="color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">Kobo Design · Configurateur</p>
-          <h1 style="color:#FFFAF0;font-size:22px;margin:0">Nouvelle salle de bain configurée</h1>
+          <h1 style="color:#FFFAF0;font-size:22px;margin:0">Nouvelle configuration — ${ {biblio:'Bibliothèque',tv:'Meuble TV',dressing:'Dressing',sdb:'Salle de bain'}[furniture_type]||furniture_type }</h1>
         </div>
         <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">

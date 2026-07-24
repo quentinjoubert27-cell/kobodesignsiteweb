@@ -3555,7 +3555,8 @@ async function submitConfig(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        prenom:prenom, email:email, message:message, botcheck:bot,
+        prenom:prenom, email:email, telephone:telephone, decouverte:decouverte, message:message, botcheck:bot,
+        furniture_type: currentFT || 'sdb',
         thumbnail: thumbSrc,
         config:{
           furniture_type: currentFT,
