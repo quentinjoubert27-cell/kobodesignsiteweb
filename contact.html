@@ -593,8 +593,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <p class="form__error" id="err-email">Veuillez entrer une adresse e-mail valide.</p>
         </div>
         <div class="form__group">
-          <label class="form__label" for="tel">Téléphone</label>
-          <input class="form__input" type="tel" id="tel" name="telephone" placeholder="+33 6 00 00 00 00" autocomplete="tel"/>
+          <label class="form__label" for="tel">Téléphone *</label>
+          <input class="form__input" type="tel" id="tel" name="telephone" placeholder="+33 6 00 00 00 00" autocomplete="tel" required/>
+          <p class="form__error" id="err-tel">Veuillez entrer votre numéro de téléphone.</p>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="decouverte">Comment nous avez-vous trouvés ? *</label>
+          <select class="form__input" id="decouverte" name="decouverte" required style="cursor:pointer;">
+            <option value="">— Sélectionnez —</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Bouche à oreille">Bouche à oreille</option>
+            <option value="Google">Google</option>
+            <option value="Salon / Exposition">Salon / Exposition</option>
+            <option value="Autre">Autre</option>
+          </select>
+          <p class="form__error" id="err-decouverte">Veuillez sélectionner une option.</p>
         </div>
         <div class="form-nav">
           <button type="button" class="btn-next" onclick="goStep2()">Continuer <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -818,6 +831,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if(!emailRe.test(email.value.trim())){
       email.classList.add('error'); document.getElementById('err-email').classList.add('show'); valid=false;
     } else { email.classList.remove('error'); document.getElementById('err-email').classList.remove('show'); }
+
+    const tel=document.getElementById('tel');
+    if(!tel.value.trim()){
+      tel.classList.add('error'); document.getElementById('err-tel').classList.add('show'); valid=false;
+    } else { tel.classList.remove('error'); document.getElementById('err-tel').classList.remove('show'); }
+
+    const decouverte=document.getElementById('decouverte');
+    if(!decouverte.value){
+      decouverte.classList.add('error'); document.getElementById('err-decouverte').classList.add('show'); valid=false;
+    } else { decouverte.classList.remove('error'); document.getElementById('err-decouverte').classList.remove('show'); }
 
     if(!valid) return;
 

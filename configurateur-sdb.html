@@ -286,6 +286,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div id="cfgFormWrap">
           <input type="text"  id="cfgPrenom"  class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
           <input type="email" id="cfgEmail"   class="cfg-field" placeholder="Votre email *"  maxlength="200" autocomplete="email"/>
+          <input type="tel"  id="cfgTelephone" class="cfg-field" placeholder="Votre téléphone *" maxlength="30" autocomplete="tel"/>
+          <select id="cfgDecouverte" class="cfg-field" style="cursor:pointer;">
+            <option value="">Comment nous avez-vous trouvés ? *</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Bouche à oreille">Bouche à oreille</option>
+            <option value="Google">Google</option>
+            <option value="Salon / Exposition">Salon / Exposition</option>
+            <option value="Autre">Autre</option>
+          </select>
           <textarea           id="cfgMessage" class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
           <input type="text" id="cfgBot" style="display:none" tabindex="-1" autocomplete="off"/>
           <div class="cfg-err" id="cfgErr" style="display:none;margin-bottom:10px"></div>
@@ -1528,9 +1537,13 @@ async function submitConfig(){
   var errEl   = document.getElementById('cfgErr');
   var btn     = document.getElementById('cfgSubmitBtn');
 
+  var telephone  = (document.getElementById('cfgTelephone').value||'').trim();
+  var decouverte = (document.getElementById('cfgDecouverte').value||'').trim();
   errEl.style.display='none';
   if(!prenom||!email){ errEl.textContent='Prénom et email obligatoires.'; errEl.style.display='block'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
+  if(!telephone){ errEl.textContent='Numéro de téléphone obligatoire.'; errEl.style.display='block'; return; }
+  if(!decouverte){ errEl.textContent='Merci d\'indiquer comment vous nous avez trouvés.'; errEl.style.display='block'; return; }
 
   btn.disabled=true; btn.textContent='Envoi en cours…';
 
@@ -1542,7 +1555,7 @@ async function submitConfig(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        prenom:prenom, email:email, message:message, botcheck:bot,
+        prenom:prenom, email:email, telephone:telephone, decouverte:decouverte, message:message, botcheck:bot,
         config:{
           meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },

@@ -35,6 +35,7 @@ module.exports = async function handler(req, res) {
     const budget      = (body.budget || '').toString().slice(0, 50);
     const message     = (body.message || '').toString().slice(0, 5000);
     const fichiers    = (body.fichiers || '').toString().slice(0, 2000);
+    const decouverte  = (body.decouverte || '').toString().slice(0, 100);
 
     // Validation
     if (!prenom || !email || !message) {
@@ -79,7 +80,7 @@ module.exports = async function handler(req, res) {
           .insert([{
             client_id: clientId,
             nom: nomProjet,
-            description: budget ? `Budget : ${budget}${fichiers ? '\nFichiers : ' + fichiers : ''}` : (fichiers || null),
+            description: [decouverte ? `Découverte : ${decouverte}` : null, budget ? `Budget : ${budget}` : null, fichiers ? `Fichiers : ${fichiers}` : null].filter(Boolean).join('\n') || null,
             type: type_projet || 'Autre',
             statut: 'En cours'
           }])

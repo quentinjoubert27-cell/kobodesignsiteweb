@@ -26,9 +26,11 @@ module.exports = async function handler(req, res) {
     const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const body = req.body || {};
 
-    const prenom    = (body.prenom  || '').toString().trim().slice(0, 100);
-    const email     = (body.email   || '').toString().trim().slice(0, 200);
-    const message   = (body.message || '').toString().trim().slice(0, 2000);
+    const prenom     = (body.prenom     || '').toString().trim().slice(0, 100);
+    const email      = (body.email      || '').toString().trim().slice(0, 200);
+    const telephone  = (body.telephone  || '').toString().trim().slice(0, 30);
+    const decouverte = (body.decouverte || '').toString().trim().slice(0, 100);
+    const message    = (body.message    || '').toString().trim().slice(0, 2000);
     const thumbnail = (body.thumbnail || '').toString().slice(0, 500000); // data URL base64
     const cfg       = body.config   || {};
 
@@ -50,6 +52,8 @@ module.exports = async function handler(req, res) {
       .insert([{
         prenom,
         email,
+        telephone: telephone || null,
+        decouverte: decouverte || null,
         message: message || null,
         type: furniture_type,
         // meuble

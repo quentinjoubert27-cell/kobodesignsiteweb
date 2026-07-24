@@ -25,7 +25,9 @@ module.exports = async function handler(req, res) {
   const email      = (body.email      || '').toString().trim().toLowerCase().slice(0, 200);
   const telephone  = (body.telephone  || '').toString().trim().slice(0, 30);
   const projetNom  = (body.projetNom  || 'Configuration').toString().trim().slice(0, 200);
-  const projetDesc = (body.projetDesc || '').toString().trim().slice(0, 2000);
+  const decouverte = (body.decouverte || '').toString().trim().slice(0, 100);
+  const projetDescRaw = (body.projetDesc || '').toString().trim();
+  const projetDesc = [decouverte ? `Découverte : ${decouverte}` : null, projetDescRaw || null].filter(Boolean).join('\n').slice(0, 2000);
   const configId   = body.configId   || null;
   const configTable= body.configTable || null;
 

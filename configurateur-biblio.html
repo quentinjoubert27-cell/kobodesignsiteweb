@@ -512,7 +512,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <input  type="text"  id="cfgPrenom"    class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
             <input  type="text"  id="cfgNom"       class="cfg-field" placeholder="Votre nom *" maxlength="80" autocomplete="family-name"/>
             <input  type="email" id="cfgEmail"     class="cfg-field" placeholder="Votre email *" maxlength="200" autocomplete="email"/>
-            <input  type="tel"   id="cfgTelephone" class="cfg-field" placeholder="Votre téléphone (optionnel)" maxlength="30" autocomplete="tel"/>
+            <input  type="tel"   id="cfgTelephone" class="cfg-field" placeholder="Votre téléphone *" maxlength="30" autocomplete="tel"/>
+            <select id="cfgDecouverte" class="cfg-field" style="cursor:pointer;">
+              <option value="">Comment nous avez-vous trouvés ? *</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Bouche à oreille">Bouche à oreille</option>
+              <option value="Google">Google</option>
+              <option value="Salon / Exposition">Salon / Exposition</option>
+              <option value="Autre">Autre</option>
+            </select>
             <textarea             id="cfgMessage"  class="cfg-field" placeholder="Une question, une précision… (optionnel)" maxlength="2000"></textarea>
           </div>
           <!-- Récap config -->
@@ -1803,6 +1811,7 @@ async function submitConfig(){
   var errEl      = document.getElementById('cfgErr');
   var btn        = document.getElementById('cfgSubmitBtn');
 
+  var decouverte = (document.getElementById('cfgDecouverte').value||'').trim();
   errEl.style.display='none';
   if(!prenom||!nom||!email){
     errEl.textContent='Prénom, nom et email obligatoires.';
@@ -1813,6 +1822,9 @@ async function submitConfig(){
     errEl.textContent='Email invalide.';
     errEl.style.display='block';
     return;
+  }
+  if(!telephone){ errEl.textContent='Numéro de téléphone obligatoire.'; errEl.style.display='block'; return; }
+  if(!decouverte){ errEl.textContent='Merci d\'indiquer comment vous nous avez trouvés.'; errEl.style.display='block'; return;
   }
 
   btn.disabled=true; btn.textContent='Envoi en cours…';
@@ -1846,7 +1858,7 @@ async function submitConfig(){
         method:'POST',
         headers:{'Content-Type':'application/json','X-Register-Secret':'kobo-configurateur-2024'},
         body:JSON.stringify({
-          prenom, nom, email, telephone,
+          prenom, nom, email, telephone, decouverte,
           projetNom: 'Bibliothèque '+prenom+' '+nom,
           projetDesc: projetDesc,
           configId: data.configId || null, configTable: 'configs_biblio'
