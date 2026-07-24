@@ -647,50 +647,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
-  <!-- Overlay menu mobile -->
-  
-  <!-- ── Modale d'orientation Prestations ── -->
-  <div class="orient-overlay" id="orientOverlay" onclick="handleOrientClick(event)">
-    <div class="orient-modal" id="orientModal">
-      <button class="orient-close" onclick="closeOrient()" aria-label="Fermer">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
-      <p class="orient-eyebrow">Nos Prestations</p>
-      <h2 class="orient-title">Vous avez un projet<br><em>en tête ?</em></h2>
-      <div class="orient-cards">
-        <a href="mobilier.html" class="orient-card">
-          <div class="orient-card__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          </div>
-          <h3>J'ai une idée<br>ou un dessin</h3>
-          <p>Vous savez ce que vous voulez — même vaguement. On conçoit, on usine sur-mesure et on vous livre le kit prêt à assembler.</p>
-          <span class="orient-card__cta">Mobilier sur mesure prêt à monter →</span>
-        </a>
-        <a href="gamme.html" class="orient-card">
-          <div class="orient-card__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          </div>
-          <h3>Je cherche<br>l'inspiration</h3>
-          <p>Pas encore d'idée précise ? Parcourez notre gamme de meubles déjà pensés, à personnaliser et à vous approprier.</p>
-          <span class="orient-card__cta">Découvrir notre gamme →</span>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
-
-  <!-- Menu slide-down compact -->
+  <!-- Menu plein écran mobile -->
   <nav class="mobile-nav" id="mobileNav" aria-label="Navigation mobile">
-    <div class="mobile-nav__inner">
+    <div class="mobile-nav__head">
+      <a href="index.html" aria-label="Kōbō Design">
+        <svg viewBox="0 0 140 48" fill="none" style="height:28px;width:auto;">
+          <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="rgba(255,250,240,.75)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="42" cy="27" rx="13" ry="14" stroke="rgba(255,250,240,.75)" stroke-width="4.5" fill="none"/>
+          <line x1="36" y1="10" x2="48" y2="10" stroke="rgba(255,250,240,.75)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M62 6v36" stroke="rgba(255,250,240,.75)" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="rgba(255,250,240,.75)" stroke-width="4.5" fill="none"/>
+          <ellipse cx="107" cy="27" rx="13" ry="14" stroke="rgba(255,250,240,.75)" stroke-width="4.5" fill="none"/>
+          <line x1="101" y1="10" x2="113" y2="10" stroke="rgba(255,250,240,.75)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </a>
+      <button class="mobile-nav__close" onclick="toggleMenu()" aria-label="Fermer le menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="mobile-nav__links">
       <a href="index.html" onclick="toggleMenu()">Accueil</a>
-      <a href="mobilier.html" onclick="toggleMenu()">Mobilier sur mesure</a>
+      <a href="mobilier.html" onclick="toggleMenu()">Mobilier</a>
       <a href="gamme.html" onclick="toggleMenu()">Notre gamme</a>
-      <a href="#" onclick="toggleMenu()">Projets</a>
+      <a href="projets.html" onclick="toggleMenu()">Projets</a>
       <a href="contact.html" onclick="toggleMenu()">Contact</a>
     </div>
     <div class="mobile-nav__cta-wrap">
-      <a href="contact.html" class="mobile-nav__cta" onclick="toggleMenu()">Demander un devis</a>
+      <a href="contact.html" class="mobile-nav__cta" onclick="toggleMenu()">Demander un devis →</a>
     </div>
   </nav>
 

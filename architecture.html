@@ -118,17 +118,29 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
     .burger.open span:nth-child(2){opacity:0;width:0}
     .burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
-    .mobile-nav-overlay{position:fixed;inset:0;top:72px;z-index:470;background:rgba(26,26,26,.22);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .3s}
+    .mobile-nav-overlay{position:fixed;inset:0;z-index:470;background:rgba(26,26,26,.45);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .4s ease}
     .mobile-nav-overlay.open{opacity:1;pointer-events:all}
-    .mobile-nav{position:fixed;top:72px;left:0;right:0;z-index:480;background:var(--bg);border-bottom:1px solid rgba(26,26,26,.08);transform:translateY(-10px);opacity:0;pointer-events:none;transition:transform .32s var(--ease),opacity .25s ease}
-    .mobile-nav.open{transform:translateY(0);opacity:1;pointer-events:all}
-    .mobile-nav__inner{padding:6px 0 12px}
-    .mobile-nav a{display:flex;align-items:center;justify-content:space-between;padding:13px clamp(20px,5vw,32px);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dark);border-bottom:1px solid rgba(26,26,26,.05);transition:color .18s,background .18s}
-    .mobile-nav a:last-of-type{border-bottom:none}
-    .mobile-nav a:hover{color:var(--accent);background:rgba(205,62,0,.03)}
-    .mobile-nav a::after{content:'\2192';font-size:11px;opacity:.25}
-    .mobile-nav__cta-wrap{padding:12px clamp(20px,5vw,32px) 6px}
-    .mobile-nav__cta{display:block;width:100%;text-align:center;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--white);background:var(--accent);padding:13px 20px;border-radius:4px}
+    .mobile-nav{position:fixed;inset:0;z-index:600;background:#1A1A1A;display:flex;flex-direction:column;padding:0 clamp(28px,7vw,48px);transform:translateX(100%);transition:transform .48s cubic-bezier(0.16,1,0.3,1);pointer-events:none}
+    .mobile-nav.open{transform:translateX(0);pointer-events:all}
+    .mobile-nav__head{display:flex;align-items:center;justify-content:space-between;height:72px;flex-shrink:0;border-bottom:1px solid rgba(255,250,240,.07)}
+    .mobile-nav__close{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,250,240,.15);border-radius:50%;background:none;color:rgba(255,250,240,.55);cursor:pointer;transition:border-color .2s,color .2s;flex-shrink:0}
+    .mobile-nav__close:hover{border-color:#CD3E00;color:#CD3E00}
+    .mobile-nav__links{flex:1;display:flex;flex-direction:column;justify-content:center;gap:0;padding:16px 0}
+    .mobile-nav__links a{display:flex;align-items:baseline;justify-content:space-between;font-size:clamp(28px,8vw,42px);font-weight:900;letter-spacing:-.03em;line-height:1;color:rgba(255,250,240,.22);padding:14px 0;border-bottom:1px solid rgba(255,250,240,.06);transform:translateX(-20px);opacity:0;transition:color .25s ease}
+    .mobile-nav__links a:last-child{border-bottom:none}
+    .mobile-nav__links a:hover{color:rgba(255,250,240,.92)}
+    .mobile-nav__links a::after{content:'→';font-size:.42em;font-weight:400;letter-spacing:0;color:#CD3E00;opacity:0;flex-shrink:0;transition:opacity .2s,transform .22s}
+    .mobile-nav__links a:hover::after{opacity:1;transform:translateX(5px)}
+    .mobile-nav.open .mobile-nav__links a{transform:translateX(0);opacity:1}
+    .mobile-nav.open .mobile-nav__links a:nth-child(1){transition:transform .42s .07s cubic-bezier(0.16,1,0.3,1),opacity .32s .07s,color .25s}
+    .mobile-nav.open .mobile-nav__links a:nth-child(2){transition:transform .42s .12s cubic-bezier(0.16,1,0.3,1),opacity .32s .12s,color .25s}
+    .mobile-nav.open .mobile-nav__links a:nth-child(3){transition:transform .42s .17s cubic-bezier(0.16,1,0.3,1),opacity .32s .17s,color .25s}
+    .mobile-nav.open .mobile-nav__links a:nth-child(4){transition:transform .42s .22s cubic-bezier(0.16,1,0.3,1),opacity .32s .22s,color .25s}
+    .mobile-nav.open .mobile-nav__links a:nth-child(5){transition:transform .42s .27s cubic-bezier(0.16,1,0.3,1),opacity .32s .27s,color .25s}
+    .mobile-nav__cta-wrap{padding-bottom:clamp(36px,8vw,52px);flex-shrink:0;opacity:0;transform:translateY(14px);transition:opacity .35s .28s ease,transform .38s .28s cubic-bezier(0.16,1,0.3,1)}
+    .mobile-nav.open .mobile-nav__cta-wrap{opacity:1;transform:translateY(0)}
+    .mobile-nav__cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#fff;background:#CD3E00;padding:17px 24px;border-radius:8px;transition:background .2s,transform .15s}
+    .mobile-nav__cta:hover{background:#a83200;transform:translateY(-1px)}
     .mobile-nav__cta::after{display:none!important}
     .modal-overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(26,26,26,.55);backdrop-filter:blur(6px);align-items:center;justify-content:center}
     .modal-overlay.open{display:flex}
@@ -413,18 +425,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 
 <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
-<nav class="mobile-nav" id="mobileNav">
-  <div class="mobile-nav__inner">
-    <a href="index.html" onclick="toggleMenu()">Accueil</a>
-    <a href="projets.html" onclick="toggleMenu()">Projets</a>
-    <a href="gamme.html" onclick="toggleMenu()">Gamme</a>
-    <a href="architecture.html" onclick="toggleMenu()">Architecture</a>
-    <a href="contact.html" onclick="toggleMenu()">Contact</a>
-  </div>
-  <div class="mobile-nav__cta-wrap">
-    <a href="contact.html" class="mobile-nav__cta" onclick="toggleMenu()">Demander un devis</a>
-  </div>
-</nav>
+  <nav class="mobile-nav" id="mobileNav" aria-label="Navigation mobile">
+    <div class="mobile-nav__head">
+      <a href="index.html" aria-label="Kōbō Design">
+        <svg viewBox="0 0 140 48" fill="none" style="height:28px;width:auto;">
+          <path d="M8 6v36M8 24l14-18M8 24l14 18" stroke="rgba(255,250,240,.75)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="42" cy="27" rx="13" ry="14" stroke="rgba(255,250,240,.75)" stroke-width="4.5" fill="none"/>
+          <line x1="36" y1="10" x2="48" y2="10" stroke="rgba(255,250,240,.75)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M62 6v36" stroke="rgba(255,250,240,.75)" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M62 24c0-7.732 5.82-14 13-14s13 6.268 13 14-5.82 14-13 14-13-6.268-13-14z" stroke="rgba(255,250,240,.75)" stroke-width="4.5" fill="none"/>
+          <ellipse cx="107" cy="27" rx="13" ry="14" stroke="rgba(255,250,240,.75)" stroke-width="4.5" fill="none"/>
+          <line x1="101" y1="10" x2="113" y2="10" stroke="rgba(255,250,240,.75)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </a>
+      <button class="mobile-nav__close" onclick="toggleMenu()" aria-label="Fermer le menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="mobile-nav__links">
+      <a href="index.html" onclick="toggleMenu()">Accueil</a>
+      <a href="mobilier.html" onclick="toggleMenu()">Mobilier</a>
+      <a href="gamme.html" onclick="toggleMenu()">Notre gamme</a>
+      <a href="projets.html" onclick="toggleMenu()">Projets</a>
+      <a href="contact.html" onclick="toggleMenu()">Contact</a>
+    </div>
+    <div class="mobile-nav__cta-wrap">
+      <a href="contact.html" class="mobile-nav__cta" onclick="toggleMenu()">Demander un devis →</a>
+    </div>
+  </nav>
 
 <!-- HEADER -->
 <header id="site-header">
