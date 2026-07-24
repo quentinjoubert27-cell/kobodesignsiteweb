@@ -258,12 +258,15 @@
       .nav-badge { position: absolute; top: 8px; right: calc(50% - 24px); margin-left: 0;
         font-size: 9px; min-width: 16px; padding: 2px 5px; }
 
-      /* Main */
-      .main { margin-left: 0; padding: 20px 16px 90px; min-height: auto; }
+      /* Bloquer tout scroll horizontal */
+      html, body { overflow-x: hidden; max-width: 100%; }
 
-      /* Tables */
-      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      table { min-width: 460px; }
+      /* Main */
+      .main { margin-left: 0; padding: 20px 16px 90px; min-height: auto; max-width: 100%; overflow-x: hidden; }
+
+      /* Tables — pas de scroll horizontal */
+      .table-wrap { overflow-x: hidden; }
+      table { min-width: 0; width: 100%; }
 
       /* Stats — 3 colonnes */
       .stats-row { grid-template-columns: repeat(3, 1fr); gap: 10px; }
