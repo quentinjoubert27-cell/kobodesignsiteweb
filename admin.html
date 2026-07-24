@@ -302,9 +302,22 @@
     @media (max-width: 768px) {
       .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .stat__val { font-size: 20px; }
-      .pipeline-col { flex: 0 0 165px; }
       .view-title { font-size: 20px; }
       .view-header { margin-bottom: 20px; }
+
+      /* Pipeline → grille compacte 5 colonnes sans scroll */
+      .pipeline {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        overflow-x: visible !important;
+        gap: 6px !important;
+        padding-bottom: 0 !important;
+      }
+      .pipeline-col { flex: none !important; min-width: 0 !important; padding: 10px 6px !important; }
+      .pipeline-col-head { flex-direction: column; align-items: center; justify-content: center; gap: 3px; margin-bottom: 0; }
+      .pipeline-col-title { font-size: 8px; text-align: center; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+      .pipeline-count { font-size: 20px; line-height: 1; }
+      .pipeline-chips { display: none; }
 
       /* Analytics 5-col → 2-col */
       #view-analytics > div[style*="grid-template-columns:repeat(5"] {
