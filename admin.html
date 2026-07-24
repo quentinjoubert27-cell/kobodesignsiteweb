@@ -1832,6 +1832,15 @@
     if (!error) {
       showToast('Projet mis à jour');
       await Promise.all([loadProjets(), loadDashboard()]);
+      // Notifier le client du changement de statut
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        await fetch('/api/notify-statut', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ projet_id: currentProjetId, statut })
+        });
+      } catch(e) { console.warn('notify-statut error', e); }
     } else {
       showToast('Erreur mise à jour', 'err');
     }
@@ -1939,6 +1948,15 @@
     showToast('Document uploadé !');
     await loadProjetDocs();
     await loadDashboard();
+    // Notifier le client du nouveau document
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await fetch('/api/notify-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ projet_id: currentProjetId, nom_fichier: file.name })
+      });
+    } catch(e) { console.warn('notify-document error', e); }
   }
 
   // ── MESSAGES VIEW ─────────────────────────────────────────────────
