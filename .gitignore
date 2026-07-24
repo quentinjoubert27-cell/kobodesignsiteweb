@@ -1,1 +1,4 @@
 .vercel
+node_modules/
+migrate-demandes.js
+*.icloud
