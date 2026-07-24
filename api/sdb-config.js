@@ -137,6 +137,7 @@ module.exports = async function handler(req, res) {
             <p style="font-size:18px;font-weight:700;margin:0 0 4px">${meuble.L} × ${meuble.H} × ${meuble.P} cm</p>
             <p style="font-size:13px;color:#666;margin:0">Finition : ${esc(meuble.matLabel)}</p>
           </div>
+          ${furniture_type === 'sdb' ? `
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:16px">
             <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 12px">Plan de travail</p>
             <p style="font-size:18px;font-weight:700;margin:0 0 4px">${plan.L} × ${plan.P} × ${plan.Ep} cm</p>
@@ -145,7 +146,7 @@ module.exports = async function handler(req, res) {
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:16px">
             <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 12px">Vasque${vasques.nb > 1 ? 's' : ''}</p>
             <p style="font-size:18px;font-weight:700;margin:0 0 4px">${vasques.nb}× — ${vasques.W} × ${vasques.D} cm</p>
-          </div>
+          </div>` : ''}
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:16px">
             <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 12px">Aménagement intérieur</p>
             <p style="font-size:13px;color:#666;margin:0 0 10px">
