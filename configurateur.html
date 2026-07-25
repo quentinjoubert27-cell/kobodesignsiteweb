@@ -1451,7 +1451,7 @@ function buildCaisson(){
   caissonGrp.add(caissonGuidesGrp);
 
   // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
-  if(currentFT==='tv') buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, matWhite, isWood, CL, CH, CP, ep);
+  if(currentFT==='tv') buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
 
   if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,0,caissCZ());
   scene.add(caissonGrp);
@@ -1611,7 +1611,7 @@ function getC2DefaultPos(){
 // ═══════════════════════════════════════════════════════
 // BUILD CAISSONS TV EXTRA (gauche=3, droite=4, dessus=5)
 // ═══════════════════════════════════════════════════════
-function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,matWhite,isWood,mainCL,mainCH,CP,ep){
+function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,mainCL,mainCH,CP,ep){
   tvGrp=[null,null,null]; tvHP=[null,null,null]; tvGuides=[null,null,null]; tvGhost=[null,null,null];
   tvMeshes=[[],[],[]];
 
