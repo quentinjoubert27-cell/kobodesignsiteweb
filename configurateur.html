@@ -1463,6 +1463,8 @@ function buildCaisson(){
       var geo=new THREE.CircleGeometry(h.r/100,32);
       var disc=new THREE.Mesh(geo,matHole);
       disc.position.set(-CL/2+ep+h.x/100, ep+h.y/100, -CP/2+0.009);
+      disc.raycast=function(){}; // invisible au raycaster — n'interfère pas avec l'aménagement
+      disc.userData.isCableHole=true;
       caissonGrp.add(disc);
     });
   }
