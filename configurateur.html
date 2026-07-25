@@ -684,6 +684,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 Glissez le caisson dans la vue 3D pour le repositionner — des repères s'affichent automatiquement.
               </div>
             </div>
+
+            <!-- Passages câbles -->
+            <div class="sec" style="margin-top:18px">Passages câbles <span style="font-size:10px;color:var(--text2);font-weight:400">(fond du meuble)</span></div>
+            <div id="tv-cable-list"></div>
+            <button class="facade-btn" onclick="addCableHole()" style="margin-top:4px">+ Ajouter un passage</button>
           </div>
         </div>
 
@@ -957,6 +962,7 @@ var currentNS = 1;
 var tvTopDragging = false, tvTopDragPlane = null, tvTopDragOffsetX = 0, tvTopDragOffsetY = 0;
 var showCotes = false;
 // TV extra caissons — groupes + données édition (activeCaisson 3/4/5)
+var tvCableHoles=[]; // [{x:cm_depuis_gauche_intérieur, y:cm_depuis_bas_intérieur, r:rayon_cm}]
 var tvGrp=[null,null,null]; // [left,right,top]
 var tvElems=[[],[],[]];
 var tvOpenState=[{},{},{}];
@@ -1450,6 +1456,16 @@ function buildCaisson(){
   caissonGuidesGrp.renderOrder = 4;
   caissonGrp.add(caissonGuidesGrp);
 
+  // ── Passages câbles TV ──
+  if(currentFT==='tv' && tvCableHoles.length>0){
+    var matHole=new THREE.MeshBasicMaterial({color:0x111111,side:THREE.DoubleSide,depthWrite:false});
+    tvCableHoles.forEach(function(h){
+      var geo=new THREE.CircleGeometry(h.r/100,32);
+      var disc=new THREE.Mesh(geo,matHole);
+      disc.position.set(-CL/2+ep+h.x/100, ep+h.y/100, -CP/2+0.009);
+      caissonGrp.add(disc);
+    });
+  }
   // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
   if(currentFT==='tv') buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
 
@@ -1724,6 +1740,56 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
 
     caissonGrp.add(g);
   });
+}
+
+// ── Passages câbles TV ──
+function addCableHole(){
+  var maxX=Math.max(1,Math.round(S.CL*100)-4);
+  var midY=Math.max(1,Math.round(S.CH*50));
+  tvCableHoles.push({x:Math.round(maxX/2), y:midY, r:3});
+  renderCableHolesUI();
+  buildCaisson();
+}
+function removeCableHole(i){
+  tvCableHoles.splice(i,1);
+  renderCableHolesUI();
+  buildCaisson();
+}
+function setCableHole(i,key,v){
+  tvCableHoles[i][key]=+v;
+  buildCaisson();
+}
+function renderCableHolesUI(){
+  var el=document.getElementById('tv-cable-list');
+  if(!el) return;
+  if(tvCableHoles.length===0){el.innerHTML='';return;}
+  var maxX=Math.max(1,Math.round(S.CL*100)-4);
+  var maxY=Math.max(1,Math.round(S.CH*100)-4);
+  el.innerHTML=tvCableHoles.map(function(h,i){
+    var dBtns=[4,6,8].map(function(d){
+      var sel=h.r===d/2;
+      return '<button onclick="setCableHole('+i+',\'r\','+(d/2)+')" style="padding:3px 9px;border-radius:5px;border:1.5px solid '+(sel?'var(--orange)':'rgba(0,0,0,.15)')+';background:'+(sel?'var(--orange)':'transparent')+';color:'+(sel?'#fff':'var(--text1)')+';font-size:11px;font-weight:600;cursor:pointer">'+d+' cm</button>';
+    }).join('');
+    return '<div style="background:rgba(0,0,0,.04);border-radius:7px;padding:8px 10px;margin-bottom:6px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      +'<span style="font-size:10.5px;font-weight:600;color:var(--text1)">Passage '+(i+1)+'</span>'
+      +'<button onclick="removeCableHole('+i+')" style="border:none;background:none;cursor:pointer;font-size:14px;color:var(--text2);padding:0 2px;line-height:1">✕</button>'
+      +'</div>'
+      +'<div class="dim-row" style="margin-bottom:4px"><span class="dim-lbl">Depuis gauche</span><div class="dim-ctrl">'
+      +'<button class="dim-step" onclick="tvCableHoles['+i+'].x=Math.max(0,tvCableHoles['+i+'].x-1);setCableHole('+i+',\'x\',tvCableHoles['+i+'].x);renderCableHolesUI()">−</button>'
+      +'<input class="dim-inp" type="number" value="'+h.x+'" min="0" max="'+maxX+'" oninput="setCableHole('+i+',\'x\',+this.value)">'
+      +'<span class="dim-unit">cm</span>'
+      +'<button class="dim-step" onclick="tvCableHoles['+i+'].x=Math.min('+maxX+',tvCableHoles['+i+'].x+1);setCableHole('+i+',\'x\',tvCableHoles['+i+'].x);renderCableHolesUI()">+</button>'
+      +'</div></div>'
+      +'<div class="dim-row" style="margin-bottom:6px"><span class="dim-lbl">Hauteur</span><div class="dim-ctrl">'
+      +'<button class="dim-step" onclick="tvCableHoles['+i+'].y=Math.max(0,tvCableHoles['+i+'].y-1);setCableHole('+i+',\'y\',tvCableHoles['+i+'].y);renderCableHolesUI()">−</button>'
+      +'<input class="dim-inp" type="number" value="'+h.y+'" min="0" max="'+maxY+'" oninput="setCableHole('+i+',\'y\',+this.value)">'
+      +'<span class="dim-unit">cm</span>'
+      +'<button class="dim-step" onclick="tvCableHoles['+i+'].y=Math.min('+maxY+',tvCableHoles['+i+'].y+1);setCableHole('+i+',\'y\',tvCableHoles['+i+'].y);renderCableHolesUI()">+</button>'
+      +'</div></div>'
+      +'<div style="display:flex;gap:5px;flex-wrap:wrap">'+dBtns+'</div>'
+      +'</div>';
+  }).join('');
 }
 
 function toggleAngle(){
@@ -3287,6 +3353,7 @@ function selectFurnitureType(ft){
   S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120,topActive:false,topW:80,topH:100,topX:0,topY:0};
   tvTopDragging=false; hideTVSnapGuides();
   tvElems=[[],[],[]]; tvOpenState=[{},{},{}]; activeCaisson=1;
+  tvCableHoles=[]; renderCableHolesUI();
   document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=(ft==='tv')?'':'none'; });
   ['tvl-btn','tvr-btn','tvt-btn'].forEach(function(id,i){ var b=document.getElementById(id); if(b) b.textContent=['+Gauche','+Droite','+Dessus'][i].replace('+',' + ').trim(); });
   ['tvl-opts','tvr-opts','tvt-opts'].forEach(function(id){ var o=document.getElementById(id); if(o) o.style.display='none'; });
@@ -3543,6 +3610,7 @@ async function submitConfig(){
     'Type : ' + ftLabel,
     'Dimensions : ' + Math.round(S.CL*100) + ' × ' + Math.round(S.CH*100) + ' × ' + Math.round(S.CairsonP*100) + ' cm',
     'Matière caisson : ' + (MATS_CAIS[S.matCais]?.n || S.matCais),
+    (currentFT==='tv' && tvCableHoles.length>0) ? 'Passages câbles : ' + tvCableHoles.map(function(h,i){ return 'n°'+(i+1)+' — '+h.x+'cm depuis gauche, hauteur '+h.y+'cm, Ø'+(h.r*2)+'cm'; }).join(' / ') : '',
     message ? 'Message : ' + message : ''
   ].filter(Boolean).join('\n');
 
