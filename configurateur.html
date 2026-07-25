@@ -685,10 +685,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               </div>
             </div>
 
-            <!-- Passages câbles -->
-            <div class="sec" style="margin-top:18px">Passages câbles <span style="font-size:10px;color:var(--text2);font-weight:400">(fond du meuble)</span></div>
-            <div id="tv-cable-list"></div>
-            <button class="facade-btn" onclick="addCableHole()" style="margin-top:4px">+ Ajouter un passage</button>
           </div>
         </div>
 
@@ -799,6 +795,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button class="reset-btn" onclick="resetCaissonElements()" style="margin-top:12px">Vider</button>
         </div>
         <p id="p-amgt-hint" style="font-size:12px;color:var(--text2);line-height:1.6;margin-top:8px">Appuyez sur Modifier pour personnaliser l'intérieur.</p>
+
+        <!-- Passages câbles — TV uniquement -->
+        <div class="tv-only" style="display:none;margin-top:18px">
+          <div class="sec">Passages câbles <span style="font-size:10px;color:var(--text2);font-weight:400">(fond du meuble)</span></div>
+          <div id="tv-cable-list"></div>
+          <button class="facade-btn" onclick="addCableHole()" style="margin-top:4px">+ Ajouter un passage</button>
+        </div>
       </div>
 
       <!-- STEP 4 — Envoyer -->
