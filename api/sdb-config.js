@@ -52,9 +52,9 @@ module.exports = async function handler(req, res) {
       .insert([{
         prenom,
         email,
-        telephone: telephone || null,
-        decouverte: decouverte || null,
-        message: message || null,
+        ...(telephone  ? { telephone }  : {}),
+        ...(decouverte ? { decouverte } : {}),
+        ...(message    ? { message }    : {}),
         type: furniture_type,
         // meuble
         meuble_l: meuble.L || 0,
