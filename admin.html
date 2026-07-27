@@ -1726,6 +1726,7 @@
           ${field('Tiroirs', c.nb_tiroirs || null)}
         </div>
       </div>
+      ${c.type === 'sdb' ? `
       <div style="background:var(--bg);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Plan de travail</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
@@ -1743,7 +1744,7 @@
           ${field('Largeur', c.vasque_w ? c.vasque_w + ' cm' : null)}
           ${field('Profondeur', c.vasque_d ? c.vasque_d + ' cm' : null)}
         </div>
-      </div>`;
+      </div>` : ''}`;
     }
 
     if (c.message) {
