@@ -114,7 +114,11 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    await resend.emails.send({
+    // Répondre au client avant d'envoyer l'email — une erreur Resend ne doit pas faire échouer la requête
+    const configId = inserted?.id || null;
+
+    // Envoi email (erreur non-bloquante)
+    resend.emails.send({
       from: 'Kobo Design <contact@kobo-design.fr>',
       to: process.env.CONTACT_EMAIL,
       replyTo: email,
@@ -160,9 +164,16 @@ module.exports = async function handler(req, res) {
           </div>
         </div>
       </div>`,
+    }).catch(emailErr => {
+      console.error('Resend error (non-bloquant):', emailErr);
+      // Logger dans Supabase pour ne pas perdre l'info
+      supabase.from('audit_logs').insert([{
+        event: 'email_failed',
+        meta: { configId, error: emailErr?.message || String(emailErr), furniture_type }
+      }]).catch(() => {});
     });
 
-    return res.status(200).json({ success: true, configId: inserted?.id || null });
+    return res.status(200).json({ success: true, configId });
 
   } catch (err) {
     console.error('sdb-config error:', err);
