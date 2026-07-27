@@ -31,6 +31,7 @@ module.exports = async function handler(req, res) {
     const nom         = (body.nom || '').toString().slice(0, 100);
     const email       = (body.email || '').toString().slice(0, 200);
     const telephone   = (body.telephone || '').toString().slice(0, 30);
+    const code_postal = (body.code_postal || '').toString().trim().slice(0, 10);
     const type_projet = (body.type_projet || '').toString().slice(0, 100);
     const budget      = (body.budget || '').toString().slice(0, 50);
     const message     = (body.message || '').toString().slice(0, 5000);
@@ -49,7 +50,11 @@ module.exports = async function handler(req, res) {
     // 1. Enregistrer dans Supabase (demandes)
     await supabase
       .from('demandes')
-      .insert([{ prenom, nom, email, telephone, type_projet, budget, message, fichiers }]);
+      .insert([{
+        prenom, nom, email, telephone, type_projet, budget, message, fichiers,
+        ...(code_postal ? { code_postal } : {}),
+        ...(decouverte  ? { decouverte }  : {}),
+      }]);
 
     // 2. Créer client + projet + message dans l'admin
     try {
@@ -138,6 +143,7 @@ module.exports = async function handler(req, res) {
               <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:130px;">Nom</td><td style="padding:8px 0;font-size:14px;">${esc(prenom)} ${esc(nom)}</td></tr>
               <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Email</td><td style="padding:8px 0;font-size:14px;"><a href="mailto:${esc(email)}" style="color:#CD3E00;">${esc(email)}</a></td></tr>
               <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Téléphone</td><td style="padding:8px 0;font-size:14px;">${esc(telephone) || '—'}</td></tr>
+              ${code_postal ? `<tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Code postal</td><td style="padding:8px 0;font-size:14px;">${esc(code_postal)}</td></tr>` : ''}
               <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Type de projet</td><td style="padding:8px 0;font-size:14px;">${esc(type_projet) || '—'}</td></tr>
               <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;">Budget</td><td style="padding:8px 0;font-size:14px;">${esc(budget) || '—'}</td></tr>
               ${fichiersHtml}

@@ -624,6 +624,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <p class="form__error" id="err-tel">Veuillez entrer votre numéro de téléphone.</p>
         </div>
         <div class="form__group">
+          <label class="form__label" for="code_postal">Code postal *</label>
+          <input class="form__input" type="text" id="code_postal" name="code_postal" placeholder="33000" maxlength="10" autocomplete="postal-code" inputmode="numeric" required/>
+          <p class="form__error" id="err-code-postal">Veuillez entrer votre code postal.</p>
+        </div>
+        <div class="form__group">
           <label class="form__label" for="decouverte">Comment nous avez-vous trouvés ? *</label>
           <select class="form__input" id="decouverte" name="decouverte" required style="cursor:pointer;">
             <option value="">— Sélectionnez —</option>
@@ -862,6 +867,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if(!tel.value.trim()){
       tel.classList.add('error'); document.getElementById('err-tel').classList.add('show'); valid=false;
     } else { tel.classList.remove('error'); document.getElementById('err-tel').classList.remove('show'); }
+
+    const codePostal=document.getElementById('code_postal');
+    if(!codePostal.value.trim()){
+      codePostal.classList.add('error'); document.getElementById('err-code-postal').classList.add('show'); valid=false;
+    } else { codePostal.classList.remove('error'); document.getElementById('err-code-postal').classList.remove('show'); }
 
     const decouverte=document.getElementById('decouverte');
     if(!decouverte.value){
