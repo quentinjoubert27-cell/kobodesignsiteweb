@@ -813,7 +813,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <input type="text"  id="cfgPrenom"    class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
           <input type="text"  id="cfgNom"       class="cfg-field" placeholder="Votre nom *" maxlength="80" autocomplete="family-name"/>
           <input type="email" id="cfgEmail"     class="cfg-field" placeholder="Votre email *" maxlength="200" autocomplete="email"/>
-          <input type="tel"   id="cfgTelephone" class="cfg-field" placeholder="Votre téléphone *" maxlength="30" autocomplete="tel"/>
+          <input type="tel"   id="cfgTelephone"  class="cfg-field" placeholder="Votre téléphone *" maxlength="30" autocomplete="tel"/>
+          <input type="text" id="cfgCodePostal" class="cfg-field" placeholder="Votre code postal *" maxlength="10" autocomplete="postal-code" inputmode="numeric"/>
           <select id="cfgDecouverte" class="cfg-field" style="cursor:pointer;">
             <option value="">Comment nous avez-vous trouvés ? *</option>
             <option value="Instagram">Instagram</option>
@@ -3595,11 +3596,13 @@ async function submitConfig(){
   var btn        = document.getElementById('cfgSubmitBtn');
 
   errEl.style.display='none';
-  var telephone  = (document.getElementById('cfgTelephone').value||'').trim();
-  var decouverte = (document.getElementById('cfgDecouverte').value||'').trim();
+  var telephone   = (document.getElementById('cfgTelephone').value||'').trim();
+  var codePostal  = (document.getElementById('cfgCodePostal').value||'').trim();
+  var decouverte  = (document.getElementById('cfgDecouverte').value||'').trim();
   if(!prenom||!nom||!email){ errEl.textContent='Prénom, nom et email obligatoires.'; errEl.style.display='block'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
   if(!telephone){ errEl.textContent='Numéro de téléphone obligatoire.'; errEl.style.display='block'; return; }
+  if(!codePostal){ errEl.textContent='Code postal obligatoire.'; errEl.style.display='block'; return; }
   if(!decouverte){ errEl.textContent='Merci d\'indiquer comment vous nous avez trouvés.'; errEl.style.display='block'; return; }
 
   btn.disabled=true; btn.textContent='Envoi en cours…';
@@ -3628,7 +3631,7 @@ async function submitConfig(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        prenom:prenom, email:email, telephone:telephone, decouverte:decouverte, message:message, botcheck:bot,
+        prenom:prenom, email:email, telephone:telephone, code_postal:codePostal, decouverte:decouverte, message:message, botcheck:bot,
         furniture_type: currentFT || 'sdb',
         thumbnail: thumbSrc,
         config:{

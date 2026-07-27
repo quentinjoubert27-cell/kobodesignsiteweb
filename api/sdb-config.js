@@ -26,11 +26,17 @@ module.exports = async function handler(req, res) {
     const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const body = req.body || {};
 
-    const prenom     = (body.prenom     || '').toString().trim().slice(0, 100);
-    const email      = (body.email      || '').toString().trim().slice(0, 200);
-    const telephone  = (body.telephone  || '').toString().trim().slice(0, 30);
-    const decouverte = (body.decouverte || '').toString().trim().slice(0, 100);
-    const message    = (body.message    || '').toString().trim().slice(0, 2000);
+    const prenom      = (body.prenom      || '').toString().trim().slice(0, 100);
+    const email       = (body.email       || '').toString().trim().slice(0, 200);
+    const telephone   = (body.telephone   || '').toString().trim().slice(0, 30);
+    const code_postal = (body.code_postal || '').toString().trim().slice(0, 10);
+    const decouverte  = (body.decouverte  || '').toString().trim().slice(0, 100);
+    const message     = (body.message     || '').toString().trim().slice(0, 2000);
+
+    // Géolocalisation IP via headers Vercel (gratuit, sans API externe)
+    const ville_ip = (req.headers['x-vercel-ip-city']           || '').toString().slice(0, 100);
+    const region_ip= (req.headers['x-vercel-ip-country-region'] || '').toString().slice(0, 100);
+    const pays_ip  = (req.headers['x-vercel-ip-country']        || '').toString().slice(0, 10);
     const thumbnail = (body.thumbnail || '').toString().slice(0, 500000); // data URL base64
     const cfg       = body.config   || {};
 
@@ -52,9 +58,13 @@ module.exports = async function handler(req, res) {
       .insert([{
         prenom,
         email,
-        ...(telephone  ? { telephone }  : {}),
-        ...(decouverte ? { decouverte } : {}),
-        ...(message    ? { message }    : {}),
+        ...(telephone   ? { telephone }   : {}),
+        ...(code_postal ? { code_postal } : {}),
+        ...(decouverte  ? { decouverte }  : {}),
+        ...(message     ? { message }     : {}),
+        ...(ville_ip    ? { ville_ip }    : {}),
+        ...(region_ip   ? { region_ip }   : {}),
+        ...(pays_ip     ? { pays_ip }     : {}),
         type: furniture_type,
         // meuble
         meuble_l: meuble.L || 0,
@@ -134,6 +144,7 @@ module.exports = async function handler(req, res) {
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
             <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700;width:140px">Prénom</td><td style="padding:8px 0;font-size:14px">${esc(prenom)}</td></tr>
             <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700">Email</td><td style="padding:8px 0;font-size:14px"><a href="mailto:${esc(email)}" style="color:#CD3E00">${esc(email)}</a></td></tr>
+            <tr><td style="padding:8px 0;font-size:12px;color:#666;font-weight:700">Localisation</td><td style="padding:8px 0;font-size:14px">${code_postal ? `<strong>${esc(code_postal)}</strong> · ` : ''}${ville_ip ? esc(ville_ip) + (region_ip ? `, ${esc(region_ip)}` : '') : ''}${pays_ip ? ` (${esc(pays_ip)})` : ''}</td></tr>
             ${msgHtml}
           </table>
           <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:16px">
