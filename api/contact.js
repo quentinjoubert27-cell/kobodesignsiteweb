@@ -56,70 +56,117 @@ module.exports = async function handler(req, res) {
         ...(decouverte  ? { decouverte }  : {}),
       }]);
 
-    // 2. Créer client + projet + message dans l'admin
+    // 2. Créer compte Auth + client + projet dans l'admin
     try {
-      // Client : upsert par email (ne pas dupliquer si déjà existant)
-      let clientId = null;
-      const { data: existingClient } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
+      // Récupérer ou créer l'utilisateur Supabase Auth
+      let userId = null;
+      let isNew = false;
+      const { data: existingClient } = await supabase.from('clients').select('id').eq('email', email).maybeSingle();
 
       if (existingClient) {
-        clientId = existingClient.id;
+        userId = existingClient.id;
+        await supabase.auth.admin.updateUserById(userId, { user_metadata: { prenom, nom: nom || '' } });
       } else {
-        const { data: newClient } = await supabase
-          .from('clients')
-          .insert([{ prenom, nom, email, telephone: telephone || null }])
-          .select('id')
-          .single();
-        clientId = newClient?.id;
+        isNew = true;
+        const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
+          email,
+          email_confirm: true,
+          user_metadata: { prenom, nom, needs_password: true },
+        });
+        if (createErr) throw new Error('Création compte: ' + createErr.message);
+        userId = newUser.user.id;
       }
 
-      if (clientId) {
-        // Projet
-        const nomProjet = `Demande ${type_projet ? '— ' + type_projet : ''} · ${prenom} ${nom}`.slice(0, 200);
-        const { data: newProjet } = await supabase
-          .from('projets')
-          .insert([{
-            client_id: clientId,
-            nom: nomProjet,
-            description: [decouverte ? `Découverte : ${decouverte}` : null, budget ? `Budget : ${budget}` : null, fichiers ? `Fichiers : ${fichiers}` : null].filter(Boolean).join('\n') || null,
-            type: type_projet || 'Autre',
-            statut: 'En cours'
-          }])
-          .select('id')
-          .single();
+      // Upsert dans la table clients (avec l'UUID auth comme id)
+      await supabase.from('clients').upsert({
+        id: userId,
+        prenom,
+        nom: nom || '',
+        email,
+        telephone: telephone || null,
+      }, { onConflict: 'id' });
 
-        if (newProjet?.id) {
-          // Message (apparaît dans le chat admin)
-          await supabase.from('messages').insert([{
-            projet_id: newProjet.id, expediteur: 'client', contenu: message, lu: false
-          }]);
+      // Créer le projet
+      const nomProjet = `Demande ${type_projet ? '— ' + type_projet : ''} · ${prenom} ${nom}`.slice(0, 200);
+      const { data: newProjet, error: projetErr } = await supabase.from('projets').insert({
+        client_id: userId,
+        nom: nomProjet,
+        description: [
+          decouverte  ? `Découverte : ${decouverte}`  : null,
+          code_postal ? `Code postal : ${code_postal}` : null,
+          budget      ? `Budget : ${budget}`           : null,
+          fichiers    ? `Fichiers : ${fichiers}`        : null,
+        ].filter(Boolean).join('\n') || null,
+        statut: 'En étude',
+      }).select('id').single();
+      if (projetErr) throw new Error('Création projet: ' + projetErr.message);
 
-          // Documents
-          if (fichiers) {
-            const entries = fichiers.split('|').map(s => s.trim()).filter(Boolean);
-            for (const entry of entries) {
-              const parts = entry.split('→').map(s => s.trim());
-              const nom = parts[0] || 'Fichier';
-              const url = parts[1];
-              if (!url) continue;
-              const ext = nom.split('.').pop().toLowerCase();
-              const type = ['jpg','jpeg','png','gif','webp'].includes(ext) ? 'image/' + ext
-                         : ext === 'pdf' ? 'application/pdf'
-                         : 'application/octet-stream';
-              await supabase.from('documents').insert([{
-                projet_id: newProjet.id, nom, type, categorie: 'document', url, uploade_par: 'client'
-              }]);
-            }
+      if (newProjet?.id) {
+        // Message initial dans le chat admin
+        await supabase.from('messages').insert([{
+          projet_id: newProjet.id, expediteur: 'client', contenu: message, lu: false
+        }]);
+
+        // Documents uploadés
+        if (fichiers) {
+          const entries = fichiers.split('|').map(s => s.trim()).filter(Boolean);
+          for (const entry of entries) {
+            const parts = entry.split('→').map(s => s.trim());
+            const docNom = parts[0] || 'Fichier';
+            const url = parts[1];
+            if (!url) continue;
+            const ext = docNom.split('.').pop().toLowerCase();
+            const docType = ['jpg','jpeg','png','gif','webp'].includes(ext) ? 'image/' + ext
+                          : ext === 'pdf' ? 'application/pdf'
+                          : 'application/octet-stream';
+            await supabase.from('documents').insert([{
+              projet_id: newProjet.id, nom: docNom, type: docType, categorie: 'document', url, uploade_par: 'client'
+            }]);
           }
         }
+
+        // Magic link pour l'espace client
+        const { data: linkData } = await supabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email,
+          options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' }
+        });
+        const tokenHash = linkData?.properties?.hashed_token;
+        const magicLink = tokenHash
+          ? `https://www.kobo-design.fr/espace-client2?token_hash=${tokenHash}&type=magiclink${isNew ? '&new=1' : ''}`
+          : 'https://www.kobo-design.fr/espace-client2';
+
+        // Email au client
+        resend.emails.send({
+          from: 'Kobo Design <contact@kobo-design.fr>',
+          to: email,
+          subject: isNew ? `Votre espace client Kobo Design est prêt, ${prenom} !` : `Votre demande a bien été reçue, ${prenom} !`,
+          html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
+            <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
+              <p style="color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">Kobo Design</p>
+              <h1 style="color:#FFFAF0;font-size:22px;margin:0">${isNew ? 'Votre espace client est prêt !' : 'Demande bien reçue'}</h1>
+            </div>
+            <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
+              <p style="font-size:15px;line-height:1.7;margin:0 0 24px">
+                Bonjour <strong>${prenom}</strong>,<br><br>
+                Nous avons bien reçu votre demande. ${isNew ? 'Votre espace client a été créé — vous pouvez y suivre l\'avancement de votre projet et nous contacter directement.' : 'Retrouvez votre projet dans votre espace client.'}
+              </p>
+              <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+                <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 8px">Votre projet</p>
+                <p style="font-size:15px;font-weight:700;margin:0 0 4px">${nomProjet}</p>
+                <p style="font-size:13px;color:#666;margin:0">Statut : En étude</p>
+              </div>
+              <a href="${magicLink}" style="display:inline-block;background:#CD3E00;color:#fff;padding:14px 28px;border-radius:8px;font-weight:700;font-size:13px;letter-spacing:.08em;text-decoration:none;text-transform:uppercase;">
+                ${isNew ? 'Créer mon mot de passe →' : 'Accéder à mon espace →'}
+              </a>
+              <p style="font-size:11px;color:#999;margin:24px 0 0;">Ce lien est valable 24h.</p>
+            </div>
+          </div>`,
+        }).catch(e => console.error('Email client non-bloquant:', e));
       }
     } catch (adminErr) {
       console.error('Erreur création client/projet admin:', adminErr);
-      // Non bloquant — l'email a déjà été envoyé
+      // Non bloquant — l'email interne a déjà été envoyé
     }
 
     // 3. Email via Resend
