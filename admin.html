@@ -1937,11 +1937,11 @@
       html += field('Séparateurs', c.nb_separateurs || null);
       html += field('Portes', c.nb_portes || null);
       html += field('Tiroirs', c.nb_tiroirs || null);
-      if (c.nb_vasques) {
+      if (c._type === 'sdb' && c.nb_vasques) {
         html += field('Vasques', c.nb_vasques);
         html += field('Modèle vasque', c.vasque_label);
       }
-      if (c.plan_mat) {
+      if (c._type === 'sdb' && c.plan_mat) {
         html += field('Plan de travail', c.plan_mat);
         html += field('Plan L', c.plan_l ? c.plan_l + ' cm' : null);
         html += field('Plan P', c.plan_p ? c.plan_p + ' cm' : null);
