@@ -1070,12 +1070,12 @@
     <div class="field-row" style="margin-top:12px;">
       <div class="field">
         <label>Catégorie</label>
-        <select id="doc-categorie-select">
+        <select id="doc-categorie-select" onchange="onCategorieChange(this.value)">
           <option value="document">Document</option>
           <option value="notice">Notice de montage</option>
         </select>
       </div>
-      <div class="field">
+      <div class="field" id="doc-type-wrap">
         <label>Type de document</label>
         <select id="doc-type-select">
           <option value="Devis">Devis</option>
@@ -1086,6 +1086,10 @@
         </select>
       </div>
     </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;cursor:pointer;">
+      <input type="checkbox" id="doc-notify-check" checked style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)"/>
+      Notifier le client par email
+    </label>
 
     <div style="display:none;margin-top:8px;" id="upload-progress-wrap">
       <div style="font-size:11px;color:rgba(26,26,26,.45);margin-bottom:4px;" id="upload-progress-label">Upload…</div>
@@ -1853,6 +1857,7 @@
             <div class="doc-meta">${d.type} · ${d.uploade_par === 'client' ? 'Envoyé par le client' : 'Kobo Design'} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}${d.taille_kb ? ' · ' + formatSize(d.taille_kb) : ''}</div>
           </div>
           <a href="${d.signedUrl}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
+          ${d.uploade_par !== 'client' ? `<button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}','${d.url}')">Supprimer</button>` : ''}
         </div>`;
     }).join('');
   }
@@ -2169,15 +2174,31 @@
     showToast('Document uploadé !');
     await loadProjetDocs();
     await loadDashboard();
-    // Notifier le client du nouveau document
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      await fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ action: 'document', projet_id: currentProjetId, nom_fichier: file.name })
-      });
-    } catch(e) { console.warn('notify-document error', e); }
+    // Notifier le client uniquement si la case est cochée
+    if (document.getElementById('doc-notify-check')?.checked) {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        await fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ action: 'document', projet_id: currentProjetId, nom_fichier: file.name })
+        });
+      } catch(e) { console.warn('notify-document error', e); }
+    }
+  }
+
+  function onCategorieChange(val) {
+    document.getElementById('doc-type-wrap').style.display = val === 'notice' ? 'none' : '';
+  }
+
+  async function deleteDoc(docId, storagePath) {
+    if (!confirm('Supprimer ce document ?')) return;
+    if (storagePath && !storagePath.startsWith('http')) {
+      await sb.storage.from('documents-client').remove([storagePath]);
+    }
+    await sb.from('documents').delete().eq('id', docId);
+    showToast('Document supprimé');
+    await loadProjetDocs();
   }
 
   // ── MESSAGES VIEW ─────────────────────────────────────────────────
