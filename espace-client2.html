@@ -1063,15 +1063,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   async function fetchAndRender() {
     if (!currentUser) return;
+
+    // Marquer les messages admin comme lus
     await sb.from('messages_general')
       .update({ lu: true })
       .eq('client_id', currentUser.id)
       .in('expediteur', ['admin', 'kobo']);
-    const { data: msgs } = await sb.from('messages_general')
+
+    // Messages généraux (messagerie tab admin + client)
+    const { data: msgsGeneral } = await sb.from('messages_general')
       .select('*')
       .eq('client_id', currentUser.id)
       .order('created_at', { ascending: true });
-    renderMessages(msgs || []);
+
+    // Messages projet (modal admin) — lire directement depuis messages via projets
+    let msgsProjet = [];
+    const { data: projets } = await sb.from('projets').select('id').eq('client_id', currentUser.id);
+    if (projets?.length) {
+      const ids = projets.map(p => p.id);
+      const { data: pMsgs } = await sb.from('messages').select('*').in('projet_id', ids).order('created_at', { ascending: true });
+      if (pMsgs) msgsProjet = pMsgs.map(m => ({ ...m, expediteur: m.expediteur === 'client' ? 'client' : 'kobo' }));
+    }
+
+    // Fusionner et dédupliquer (même contenu dans la même minute = même message)
+    const seen = new Set();
+    const merged = [...(msgsGeneral || []), ...msgsProjet]
+      .filter(m => {
+        const key = m.contenu + '|' + (m.created_at || '').slice(0, 16);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    renderMessages(merged);
   }
 
   async function loadMessages() {
