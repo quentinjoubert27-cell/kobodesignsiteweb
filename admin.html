@@ -1780,9 +1780,15 @@
           elements: c.elements || [],
         };
       }
+      const jsonStr = JSON.stringify(fullCfg, null, 2);
+      const jsonB64 = btoa(unescape(encodeURIComponent(jsonStr)));
+      const filename = `config-${fullCfg.type || 'meuble'}-${(c.prenom || 'client').toLowerCase()}.json`;
       html += `<div style="margin-bottom:16px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:8px;">Configuration complète (JSON)</div>
-        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:14px;overflow-x:auto;max-height:260px;overflow-y:auto;line-height:1.5;">${escHtml(JSON.stringify(fullCfg, null, 2))}</pre>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.35);">Configuration complète (JSON)</div>
+          <a href="data:application/json;base64,${jsonB64}" download="${escHtml(filename)}" class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px;">⬇ Télécharger</a>
+        </div>
+        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:14px;overflow-x:auto;max-height:260px;overflow-y:auto;line-height:1.5;">${escHtml(jsonStr)}</pre>
       </div>`;
     }
 
@@ -2002,9 +2008,15 @@
           elements: c.elements || [],
         };
       }
+      const jsonStr2 = JSON.stringify(fullCfg, null, 2);
+      const jsonB642 = btoa(unescape(encodeURIComponent(jsonStr2)));
+      const filename2 = `config-${fullCfg.type || fullCfg.furniture_type || 'meuble'}-${(c.prenom || 'client').toLowerCase()}.json`;
       html += `<div style="margin-bottom:12px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:6px;">Configuration complète (JSON)</div>
-        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:12px;overflow-x:auto;max-height:260px;overflow-y:auto;line-height:1.5;">${escHtml(JSON.stringify(fullCfg, null, 2))}</pre>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,26,26,.35);">Configuration complète (JSON)</div>
+          <a href="data:application/json;base64,${jsonB642}" download="${escHtml(filename2)}" class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px;">⬇ Télécharger</a>
+        </div>
+        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:12px;overflow-x:auto;max-height:260px;overflow-y:auto;line-height:1.5;">${escHtml(jsonStr2)}</pre>
       </div>`;
     }
 
