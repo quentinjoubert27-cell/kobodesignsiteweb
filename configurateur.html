@@ -3646,6 +3646,13 @@ async function submitConfig(){
                     vx:Math.round(S.vx*100)/100, vz:Math.round(S.vz*100)/100,
                     vx2:Math.round(S.vx2*100)/100, vz2:Math.round(S.vz2*100)/100 },
           elements:caissonElements,
+          caisson2: hasAngle ? { L_cm: Math.round(S.CL2*100), elements: caissonElements2 } : undefined,
+          tvSide: (currentFT==='tv') ? {
+            left:  S_tvSide.leftActive  ? { W_cm:S_tvSide.leftW,  H_cm:S_tvSide.leftH,  elements:tvElems[0] } : null,
+            right: S_tvSide.rightActive ? { W_cm:S_tvSide.rightW, H_cm:S_tvSide.rightH, elements:tvElems[1] } : null,
+            top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:tvElems[2] } : null,
+          } : undefined,
+          cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
           counts:counts
         }
       })

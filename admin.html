@@ -1768,10 +1768,16 @@
       </div>`;
     }
 
-    if (Array.isArray(c.elements) && c.elements.length > 0) {
+    {
+      const fullCfg = {
+        type: 'biblio',
+        L_cm: c.largeur, H_cm: c.hauteur, P_cm: c.profondeur,
+        mat: c.essence,
+        elements: c.elements || [],
+      };
       html += `<div style="margin-bottom:16px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:8px;">Éléments (${c.elements.length})</div>
-        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:14px;overflow-x:auto;max-height:200px;overflow-y:auto;line-height:1.5;">${escHtml(JSON.stringify(c.elements, null, 2))}</pre>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:8px;">Configuration complète (JSON)</div>
+        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:14px;overflow-x:auto;max-height:260px;overflow-y:auto;line-height:1.5;">${escHtml(JSON.stringify(fullCfg, null, 2))}</pre>
       </div>`;
     }
 
@@ -1978,10 +1984,16 @@
       </div>`;
     }
 
-    if (Array.isArray(c.elements) && c.elements.length > 0) {
+    {
+      const rc = c.raw_config || {};
+      const fullCfg = Object.keys(rc).length > 0 ? rc : {
+        type: c._type || c.type || 'sdb',
+        meuble: { L_cm: c.meuble_l, H_cm: c.meuble_h, P_cm: c.meuble_p, mat: c.meuble_mat },
+        elements: c.elements || [],
+      };
       html += `<div style="margin-bottom:12px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:6px;">Éléments (${c.elements.length})</div>
-        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:12px;overflow-x:auto;max-height:180px;overflow-y:auto;line-height:1.5;">${escHtml(JSON.stringify(c.elements, null, 2))}</pre>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(26,26,26,.35);margin-bottom:6px;">Configuration complète (JSON)</div>
+        <pre style="font-size:11px;background:var(--dark);color:#FFFAF0;border-radius:8px;padding:12px;overflow-x:auto;max-height:260px;overflow-y:auto;line-height:1.5;">${escHtml(JSON.stringify(fullCfg, null, 2))}</pre>
       </div>`;
     }
 

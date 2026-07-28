@@ -46,8 +46,11 @@ module.exports = async function handler(req, res) {
     const meuble  = cfg.meuble  || {};
     const plan    = cfg.plan    || {};
     const vasques = cfg.vasques || {};
-    const elements = Array.isArray(cfg.elements) ? cfg.elements : [];
-    const counts   = cfg.counts || {};
+    const elements  = Array.isArray(cfg.elements) ? cfg.elements : [];
+    const caisson2  = cfg.caisson2  || null;
+    const tvSide    = cfg.tvSide    || null;
+    const cableHoles= Array.isArray(cfg.cableHoles) ? cfg.cableHoles : [];
+    const counts    = cfg.counts || {};
 
     const { data: inserted, error: dbError } = await supabase
       .from('configs_sdb')
@@ -81,7 +84,11 @@ module.exports = async function handler(req, res) {
         nb_tiroirs: counts.tiroir || 0,
         elements,
         thumbnail: thumbnail || null,
-        raw_config: { furniture_type, meuble, plan, vasques, elements },
+        raw_config: { furniture_type, meuble, plan, vasques, elements,
+          ...(caisson2   ? { caisson2 }   : {}),
+          ...(tvSide     ? { tvSide }     : {}),
+          ...(cableHoles.length ? { cableHoles } : {}),
+        },
       }])
       .select('id')
       .single();
