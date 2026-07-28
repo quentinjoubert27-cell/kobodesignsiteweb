@@ -2311,6 +2311,13 @@
     }]);
     if (btn) btn.disabled = false;
     if (!error) {
+      // Écrire aussi dans messages (projet) pour que le modal projet soit à jour
+      const { data: projets } = await sb.from('projets')
+        .select('id').eq('client_id', activeMsgClientId)
+        .order('created_at', { ascending: false }).limit(1);
+      if (projets?.[0]?.id) {
+        await sb.from('messages').insert([{ projet_id: projets[0].id, expediteur: 'kobo', contenu, lu: true }]);
+      }
       await fetchAdminThread();
       notifyClient(activeMsgClientId, contenu);
     } else { input.value = contenu; showToast('Erreur envoi', 'err'); }
