@@ -206,6 +206,20 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── ACTION : message-save ──────────────────────────────────────
+    if (action === 'message-save') {
+      const { client_id, contenu } = body;
+      if (!client_id || !contenu) return res.status(400).json({ error: 'Paramètres manquants' });
+      const { error: insertErr } = await sb.from('messages_general').insert([{
+        client_id, expediteur: 'admin', contenu, lu: true
+      }]);
+      if (insertErr) {
+        console.error('message-save error:', insertErr);
+        return res.status(500).json({ error: insertErr.message });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
     return res.status(400).json({ error: 'Action inconnue' });
 
   } catch (err) {

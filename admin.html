@@ -2020,8 +2020,15 @@
       // Récupérer le client_id depuis le projet
       const { data: p } = await sb.from('projets').select('client_id').eq('id', currentProjetId).single();
       if (p?.client_id) {
-        const { error: genErr } = await sb.from('messages_general').insert([{ client_id: p.client_id, expediteur: 'admin', contenu, lu: true }]);
-        if (genErr) console.error('messages_general insert error:', genErr);
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.access_token) {
+          const r = await fetch('/api/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+            body: JSON.stringify({ action: 'message-save', client_id: p.client_id, contenu })
+          });
+          if (!r.ok) console.error('message-save error:', await r.text());
+        }
         notifyClient(p.client_id, contenu);
       }
       await loadProjetMsgs();
