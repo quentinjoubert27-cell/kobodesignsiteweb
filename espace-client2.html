@@ -1067,11 +1067,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       .update({ lu: true })
       .eq('client_id', currentUser.id)
       .eq('expediteur', 'admin');
-    const { data: msgs } = await sb.from('messages_general')
-      .select('*')
-      .eq('client_id', currentUser.id)
-      .order('created_at', { ascending: true });
-    renderMessages(msgs || []);
+
+    // Messages généraux (messages_general)
+    const { data: msgsGeneral } = await sb.from('messages_general')
+      .select('*').eq('client_id', currentUser.id);
+
+    // Messages liés aux projets du client (table messages)
+    const { data: projets } = await sb.from('projets').select('id').eq('client_id', currentUser.id);
+    let msgsProjet = [];
+    if (projets?.length) {
+      const projetIds = projets.map(p => p.id);
+      const { data: pm } = await sb.from('messages').select('*').in('projet_id', projetIds);
+      msgsProjet = pm || [];
+    }
+
+    // Fusionner, dédupliquer et trier par date
+    const all = [...(msgsGeneral || []), ...msgsProjet];
+    const seen = new Set();
+    const merged = all.filter(m => {
+      const key = `${m.expediteur}|${m.contenu}|${new Date(m.created_at).toISOString().slice(0, 16)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    renderMessages(merged);
   }
 
   async function loadMessages() {
