@@ -2264,9 +2264,31 @@
     if (!activeMsgClientId) return;
     await sb.from('messages_general').update({ lu: true })
       .eq('client_id', activeMsgClientId).eq('expediteur', 'client');
-    const { data: msgs } = await sb.from('messages_general')
-      .select('*').eq('client_id', activeMsgClientId).order('created_at', { ascending: true });
-    renderMsgThread('msg-thread', msgs || []);
+
+    // Récupérer les messages généraux (messages_general)
+    const { data: msgsGeneral } = await sb.from('messages_general')
+      .select('*').eq('client_id', activeMsgClientId);
+
+    // Récupérer aussi les messages liés aux projets du client (table messages)
+    const { data: projets } = await sb.from('projets').select('id').eq('client_id', activeMsgClientId);
+    let msgsProjet = [];
+    if (projets?.length) {
+      const projetIds = projets.map(p => p.id);
+      const { data: pm } = await sb.from('messages').select('*').in('projet_id', projetIds);
+      msgsProjet = pm || [];
+    }
+
+    // Fusionner et dédupliquer (par contenu + expediteur + date proche), trier par date
+    const all = [...(msgsGeneral || []), ...msgsProjet];
+    const seen = new Set();
+    const merged = all.filter(m => {
+      const key = `${m.expediteur}|${m.contenu}|${new Date(m.created_at).toISOString().slice(0,16)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    renderMsgThread('msg-thread', merged);
     loadUnreadCount();
     loadMessagesView();
   }
