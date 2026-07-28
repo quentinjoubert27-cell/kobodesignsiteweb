@@ -2020,8 +2020,8 @@
       // Récupérer le client_id depuis le projet
       const { data: p } = await sb.from('projets').select('client_id').eq('id', currentProjetId).single();
       if (p?.client_id) {
-        // Écrire aussi dans messages_general pour que ça apparaisse dans l'onglet Messagerie
-        await sb.from('messages_general').insert([{ client_id: p.client_id, expediteur: 'kobo', contenu, lu: true }]);
+        const { error: genErr } = await sb.from('messages_general').insert([{ client_id: p.client_id, expediteur: 'admin', contenu, lu: true }]);
+        if (genErr) console.error('messages_general insert error:', genErr);
         notifyClient(p.client_id, contenu);
       }
       await loadProjetMsgs();
