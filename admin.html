@@ -1067,29 +1067,39 @@
     </div>
     <input type="file" id="file-input" style="display:none;" onchange="handleFileSelect(this)"/>
 
-    <div class="field-row" style="margin-top:12px;">
-      <div class="field">
-        <label>Catégorie</label>
-        <select id="doc-categorie-select" onchange="onCategorieChange(this.value)">
-          <option value="document">Document</option>
-          <option value="notice">Notice de montage</option>
-        </select>
-      </div>
-      <div class="field" id="doc-type-wrap">
-        <label>Type de document</label>
-        <select id="doc-type-select">
-          <option value="Devis">Devis</option>
-          <option value="Plan">Plan</option>
-          <option value="Facture">Facture</option>
-          <option value="Bon de commande">Bon de commande</option>
-          <option value="Document">Autre document</option>
-        </select>
-      </div>
+    <!-- Aperçu fichier sélectionné (caché jusqu'à sélection) -->
+    <div id="upload-preview" style="display:none;margin-top:12px;background:var(--bg);border-radius:8px;padding:12px 16px;display:none;align-items:center;gap:12px;flex-wrap:wrap;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#CD3E00" stroke-width="1.6"/><polyline points="14 2 14 8 20 8" stroke="#CD3E00" stroke-width="1.6"/></svg>
+      <span id="upload-preview-name" style="font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button class="btn btn-ghost btn-sm" onclick="cancelUpload()">Annuler</button>
     </div>
-    <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;cursor:pointer;">
-      <input type="checkbox" id="doc-notify-check" checked style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)"/>
-      Notifier le client par email
-    </label>
+
+    <div id="upload-options" style="display:none;margin-top:12px;">
+      <div class="field-row">
+        <div class="field">
+          <label>Catégorie</label>
+          <select id="doc-categorie-select" onchange="onCategorieChange(this.value)">
+            <option value="document">Document</option>
+            <option value="notice">Notice de montage</option>
+          </select>
+        </div>
+        <div class="field" id="doc-type-wrap">
+          <label>Type de document</label>
+          <select id="doc-type-select">
+            <option value="Devis">Devis</option>
+            <option value="Plan">Plan</option>
+            <option value="Facture">Facture</option>
+            <option value="Bon de commande">Bon de commande</option>
+            <option value="Document">Autre document</option>
+          </select>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="doc-notify-check" checked style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)"/>
+        Notifier le client par email
+      </label>
+      <button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="uploadFile()">Envoyer le document</button>
+    </div>
 
     <div style="display:none;margin-top:8px;" id="upload-progress-wrap">
       <div style="font-size:11px;color:rgba(26,26,26,.45);margin-bottom:4px;" id="upload-progress-label">Upload…</div>
@@ -2131,14 +2141,33 @@
     e.preventDefault();
     document.getElementById('upload-area').classList.remove('dragover');
     const file = e.dataTransfer.files[0];
-    if (file) uploadFile(file);
+    if (file) previewFile(file);
   }
+  let pendingFile = null;
+
   function handleFileSelect(input) {
-    if (input.files[0]) uploadFile(input.files[0]);
+    if (input.files[0]) previewFile(input.files[0]);
     input.value = '';
   }
 
-  async function uploadFile(file) {
+  function previewFile(file) {
+    pendingFile = file;
+    document.getElementById('upload-preview-name').textContent = file.name;
+    document.getElementById('upload-preview').style.display = 'flex';
+    document.getElementById('upload-options').style.display = 'block';
+    document.getElementById('upload-area').style.display = 'none';
+  }
+
+  function cancelUpload() {
+    pendingFile = null;
+    document.getElementById('upload-preview').style.display = 'none';
+    document.getElementById('upload-options').style.display = 'none';
+    document.getElementById('upload-area').style.display = '';
+  }
+
+  async function uploadFile() {
+    const file = pendingFile;
+    if (!file) return;
     if (!currentProjetId) return showToast('Aucun projet sélectionné', 'err');
     const type = document.getElementById('doc-type-select').value;
     const categorie = document.getElementById('doc-categorie-select').value;
@@ -2171,7 +2200,8 @@
     setTimeout(() => { pw.style.display = 'none'; pb.style.width = '0%'; }, 800);
 
     if (dbErr) { showToast('Erreur enregistrement', 'err'); return; }
-    showToast('Document uploadé !');
+    cancelUpload();
+    showToast('Document envoyé !');
     await loadProjetDocs();
     await loadDashboard();
     // Notifier le client uniquement si la case est cochée
