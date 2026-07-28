@@ -11,13 +11,11 @@ module.exports = async function handler(req, res) {
     const { createClient } = require('@supabase/supabase-js');
     const { Resend } = require('resend');
 
-    const sbAnon = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     const token = (req.headers['authorization'] || '').replace('Bearer ', '');
-    const { data: { user }, error: authErr } = await sbAnon.auth.getUser(token);
+    const { data: { user }, error: authErr } = await sb.auth.getUser(token);
     const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr').split(',').map(e => e.trim());
     if (authErr || !user || !ADMIN_EMAILS.includes(user.email)) return res.status(401).json({ error: 'Non autorisé' });
-
-    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     const resend = new Resend(process.env.RESEND_API_KEY);
     const body = req.body || {};
     const action = body.action;
