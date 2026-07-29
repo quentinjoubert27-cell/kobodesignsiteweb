@@ -191,66 +191,92 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .dilemme__col--center .dilemme__pill{border-color:rgba(255,255,255,.35);color:var(--white)}
 
     /* ============================================================
-       PROCESSUS — 4 étapes timeline interactive
+       PROCESSUS — cinématique
     ============================================================ */
-    .process{padding:clamp(72px,10vw,120px) clamp(24px,7vw,100px);background:var(--bg)}
-    .process__header{text-align:center;margin-bottom:clamp(48px,7vw,80px)}
-    .process__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
-    .process__title{font-size:clamp(30px,4.5vw,58px);font-weight:900;letter-spacing:-.04em;line-height:1.0}
-    .process__title em{font-style:italic;font-weight:300;color:rgba(26,26,26,.3)}
+    .process{background:var(--dark);position:relative;overflow:hidden}
+    .process__eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent)}
+    .process__title{font-size:clamp(30px,4.5vw,58px);font-weight:900;letter-spacing:-.04em;line-height:1.0;color:var(--bg)}
+    .process__title em{font-style:italic;font-weight:300;color:rgba(255,250,240,.25)}
 
-    /* Timeline */
-    .timeline{position:relative}
-    .timeline__track{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative;z-index:1;border-radius:12px;overflow:hidden;background:rgba(26,26,26,.04);border:1px solid rgba(26,26,26,.07)}
+    /* Layout principal */
+    .prc{display:grid;grid-template-columns:260px 1fr;min-height:580px}
 
-    .tstep{display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;padding:28px 12px 24px;border-right:1px solid rgba(26,26,26,.07);position:relative;transition:background .35s}
-    .tstep:last-child{border-right:none}
-    .tstep:hover{background:rgba(26,26,26,.03)}
-    .tstep.active{background:#fff;box-shadow:inset 0 3px 0 var(--accent)}
-    /* Timer fill sous chaque step actif */
-    .tstep.active::before{content:'';position:absolute;bottom:0;left:0;height:2px;background:rgba(205,62,0,.18);width:100%}
-    .tstep.active::after{content:'';position:absolute;bottom:0;left:0;height:2px;background:var(--accent);width:0%;animation:stepTimer var(--step-dur,6s) linear forwards}
-    @keyframes stepTimer{to{width:100%}}
+    /* Sidebar gauche */
+    .prc__sidebar{padding:clamp(48px,6vw,80px) 40px clamp(48px,6vw,80px) clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;border-right:1px solid rgba(255,250,240,.07);position:relative}
+    .prc__sidebar-top{display:flex;flex-direction:column;gap:6px;margin-bottom:40px}
+    /* Ligne de progression verticale */
+    .prc__vline{position:absolute;left:clamp(24px,5vw,72px);top:0;bottom:0;width:1px;background:rgba(255,250,240,.06)}
+    .prc__vline-fill{position:absolute;left:0;top:0;width:100%;background:var(--accent);height:0%;transition:height .55s cubic-bezier(.4,0,.2,1)}
 
-    .tstep__num-wrap{width:52px;height:52px;border-radius:50%;background:rgba(26,26,26,.07);display:flex;align-items:center;justify-content:center;margin-bottom:16px;transition:background .35s,transform .35s;position:relative}
-    .tstep:hover .tstep__num-wrap{transform:scale(1.06)}
-    .tstep.active .tstep__num-wrap{background:var(--accent);transform:scale(1.12);box-shadow:0 4px 20px rgba(205,62,0,.35)}
-    .tstep__num{font-size:17px;font-weight:900;color:rgba(26,26,26,.3);letter-spacing:-.02em;transition:color .35s}
-    .tstep.active .tstep__num{color:var(--white)}
-    .tstep__icon{display:none}
-    .tstep.active .tstep__icon{display:block}
-    .tstep.active .tstep__num-default{display:none}
+    /* Steps dans la sidebar */
+    .prc__step{display:flex;align-items:center;gap:16px;padding:14px 0;cursor:pointer;position:relative;border:none;background:none;text-align:left;width:100%}
+    .prc__step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,250,240,.15);flex-shrink:0;transition:background .3s,transform .3s,box-shadow .3s}
+    .prc__step.active .prc__step-dot{background:var(--accent);transform:scale(1.5);box-shadow:0 0 0 4px rgba(205,62,0,.2)}
+    .prc__step-label{font-size:13px;font-weight:300;color:rgba(255,250,240,.3);transition:color .3s,font-weight .3s;line-height:1.3}
+    .prc__step.active .prc__step-label{color:var(--bg);font-weight:600}
+    .prc__step:hover .prc__step-label{color:rgba(255,250,240,.65)}
+    .prc__step-num{font-size:10px;font-weight:700;letter-spacing:.1em;color:rgba(255,250,240,.2);transition:color .3s;flex-shrink:0;min-width:22px}
+    .prc__step.active .prc__step-num{color:var(--accent)}
 
-    .tstep__title{font-size:clamp(11px,1.2vw,14px);font-weight:800;letter-spacing:-.01em;margin-bottom:6px;color:rgba(26,26,26,.3);transition:color .35s}
-    .tstep.active .tstep__title{color:var(--dark)}
-    .tstep__sub{font-size:11px;font-weight:300;line-height:1.55;color:rgba(26,26,26,.3);max-width:160px;transition:color .35s;display:none}
-    .tstep.active .tstep__sub{display:block;color:rgba(26,26,26,.55);animation:fadeSlideUp .4s ease forwards}
-    @keyframes fadeSlideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    /* Timer bar sous la sidebar */
+    .prc__timer{height:2px;background:rgba(255,250,240,.06);margin-top:auto;overflow:hidden;border-radius:1px}
+    .prc__timer-fill{height:100%;width:0%;background:var(--accent);border-radius:1px}
+    .prc__timer-fill.running{animation:timerRun var(--dur,7s) linear forwards}
+    @keyframes timerRun{from{width:0%}to{width:100%}}
 
-    /* Panel de détail */
-    .process__detail{margin-top:24px;background:var(--dark);border-radius:16px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;min-height:380px;position:relative}
-    /* Wrapper for panel animation */
-    .detail__panels-wrap{position:relative;overflow:hidden}
-    .detail__panel{position:absolute;inset:0;padding:clamp(36px,5vw,64px);opacity:0;transform:translateX(32px);transition:opacity .45s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1);pointer-events:none}
-    .detail__panel.active{position:relative;opacity:1;transform:translateX(0);pointer-events:auto}
-    .detail__panel.exit{opacity:0;transform:translateX(-32px)}
-    .detail__tag{font-size:9px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
-    .detail__title{font-size:clamp(22px,3vw,34px);font-weight:800;color:var(--bg);letter-spacing:-.03em;line-height:1.1;margin-bottom:20px}
-    .detail__body{font-size:14px;font-weight:300;line-height:1.85;color:rgba(255,250,240,.6);margin-bottom:28px}
-    .detail__list{display:flex;flex-direction:column;gap:14px}
-    .detail__item{display:flex;align-items:flex-start;gap:14px;opacity:0;transform:translateY(10px);animation:none}
-    .detail__panel.active .detail__item:nth-child(1){animation:fadeSlideUp .4s .1s ease forwards}
-    .detail__panel.active .detail__item:nth-child(2){animation:fadeSlideUp .4s .2s ease forwards}
-    .detail__panel.active .detail__item:nth-child(3){animation:fadeSlideUp .4s .3s ease forwards}
-    .detail__dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
-    .detail__item-text{font-size:13px;font-weight:300;line-height:1.65;color:rgba(255,250,240,.55)}
-    .detail__item-text strong{font-weight:600;color:rgba(255,250,240,.85)}
-    /* Image side */
-    .detail__img-wrap{position:relative;overflow:hidden}
-    .detail__img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .6s ease,transform .6s ease;transform:scale(1.04)}
-    .detail__img.active{opacity:1;transform:scale(1)}
-    /* Overlay gradient on image */
-    .detail__img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,26,26,.35) 0%,transparent 60%)}
+    /* Zone de contenu principale */
+    .prc__content{position:relative;overflow:hidden}
+
+    /* Grand numéro fantôme en arrière-plan */
+    .prc__bg-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:clamp(200px,28vw,380px);font-weight:900;letter-spacing:-.08em;color:rgba(255,250,240,.025);line-height:1;pointer-events:none;user-select:none;transition:opacity .4s}
+
+    /* Photo à droite */
+    .prc__photo{position:absolute;right:0;top:0;bottom:0;width:42%;overflow:hidden}
+    .prc__photo-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transform:scale(1.08);transition:opacity .7s ease,transform .7s ease}
+    .prc__photo-img.active{opacity:1;transform:scale(1)}
+    .prc__photo::before{content:'';position:absolute;inset:0;background:linear-gradient(to right,var(--dark) 0%,transparent 35%);z-index:1}
+
+    /* Slot de contenu textuel */
+    .prc__slot{position:absolute;inset:0;right:42%;display:flex;flex-direction:column;justify-content:center;padding:clamp(36px,5vw,72px) clamp(32px,4vw,60px)}
+
+    /* Panneau individuel */
+    .prc__panel{position:absolute;inset:0;right:42%;display:flex;flex-direction:column;justify-content:center;padding:clamp(36px,5vw,72px) clamp(32px,4vw,60px);opacity:0;pointer-events:none;transform:translateY(24px);transition:opacity .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1)}
+    .prc__panel.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+    .prc__panel.exit{opacity:0;transform:translateY(-20px)}
+
+    .prc__tag{font-size:9px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+    .prc__tag::before{content:'';display:block;width:24px;height:1px;background:var(--accent)}
+    .prc__h2{font-size:clamp(26px,3.5vw,46px);font-weight:900;letter-spacing:-.04em;line-height:1.05;color:var(--bg);margin-bottom:20px}
+    .prc__h2 em{font-style:italic;font-weight:300;color:rgba(255,250,240,.35)}
+    .prc__body{font-size:14px;font-weight:300;line-height:1.9;color:rgba(255,250,240,.55);max-width:380px;margin-bottom:32px}
+    .prc__list{display:flex;flex-direction:column;gap:12px}
+    .prc__item{display:flex;align-items:flex-start;gap:12px;font-size:13px;font-weight:300;color:rgba(255,250,240,.45);line-height:1.6;opacity:0;transform:translateX(-12px)}
+    .prc__panel.active .prc__item:nth-child(1){animation:itemIn .45s .15s cubic-bezier(.4,0,.2,1) forwards}
+    .prc__panel.active .prc__item:nth-child(2){animation:itemIn .45s .25s cubic-bezier(.4,0,.2,1) forwards}
+    .prc__panel.active .prc__item:nth-child(3){animation:itemIn .45s .35s cubic-bezier(.4,0,.2,1) forwards}
+    @keyframes itemIn{to{opacity:1;transform:translateX(0)}}
+    .prc__item::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+    .prc__item strong{color:rgba(255,250,240,.8);font-weight:600}
+
+    /* Nav flèches */
+    .prc__nav{position:absolute;bottom:clamp(24px,4vw,48px);left:clamp(32px,4vw,60px);display:flex;gap:10px;z-index:2}
+    .prc__nav-btn{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,250,240,.15);background:transparent;color:rgba(255,250,240,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,background .2s,color .2s}
+    .prc__nav-btn:hover{border-color:var(--accent);background:rgba(205,62,0,.1);color:var(--accent)}
+
+    /* Header (au-dessus du layout) */
+    .process__header{padding:clamp(48px,7vw,88px) clamp(24px,5vw,72px) 40px;border-bottom:1px solid rgba(255,250,240,.06);display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+
+    /* Responsive */
+    @media(max-width:900px){
+      .prc{grid-template-columns:1fr}
+      .prc__sidebar{display:none}
+      .prc__photo{width:100%;position:relative;height:280px}
+      .prc__panel{position:relative;inset:auto;right:auto;transform:none;padding:32px 24px}
+      .prc__panel.active{transform:none}
+      .prc__bg-num{display:none}
+      .prc__content{display:flex;flex-direction:column}
+    }
+    @keyframes fadeSlideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
     /* ============================================================
        LE KIT — section qualité
@@ -645,142 +671,120 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <!-- ============================================================
-     PROCESSUS — 5 étapes animées
+     PROCESSUS — cinématique
 ============================================================ -->
 <section class="process" id="process">
-  <div class="process__header reveal">
-    <p class="process__eyebrow">Comment ça marche</p>
-    <h2 class="process__title">5 étapes vers<br><em>votre meuble unique</em></h2>
+  <!-- Header -->
+  <div class="process__header">
+    <div>
+      <p class="process__eyebrow">Comment ça marche</p>
+      <h2 class="process__title">5 étapes vers<br><em>votre meuble unique</em></h2>
+    </div>
+    <div class="prc__nav">
+      <button class="prc__nav-btn" onclick="showStep((currentStep+4)%5,true)" aria-label="Précédent">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="prc__nav-btn" onclick="showStep((currentStep+1)%5,true)" aria-label="Suivant">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
   </div>
 
-  <div class="timeline reveal" id="timeline">
-    <!-- Barre de progression animée -->
-    <div class="timeline__progress-wrap">
-      <div class="timeline__progress-bar" id="progressBar"></div>
+  <!-- Layout principal -->
+  <div class="prc" id="prc">
+    <!-- Sidebar gauche -->
+    <div class="prc__sidebar">
+      <div style="position:relative;padding-left:20px">
+        <div class="prc__vline"><div class="prc__vline-fill" id="vlineFill"></div></div>
+        <button class="prc__step active" onclick="showStep(0,true)">
+          <span class="prc__step-num">01</span>
+          <span class="prc__step-label">Votre idée</span>
+        </button>
+        <button class="prc__step" onclick="showStep(1,true)">
+          <span class="prc__step-num">02</span>
+          <span class="prc__step-label">Étude technique</span>
+        </button>
+        <button class="prc__step" onclick="showStep(2,true)">
+          <span class="prc__step-num">03</span>
+          <span class="prc__step-label">Validation</span>
+        </button>
+        <button class="prc__step" onclick="showStep(3,true)">
+          <span class="prc__step-num">04</span>
+          <span class="prc__step-label">Réception du kit</span>
+        </button>
+        <button class="prc__step" onclick="showStep(4,true)">
+          <span class="prc__step-num">05</span>
+          <span class="prc__step-label">Montage</span>
+        </button>
+      </div>
+      <div class="prc__timer"><div class="prc__timer-fill" id="timerFill"></div></div>
     </div>
 
-    <!-- Indicateurs -->
-    <div class="timeline__track">
-      <div class="tstep active" onclick="showStep(0,true)">
-        <div class="tstep__num-wrap">
-          <span class="tstep__num tstep__num-default">01</span>
-          <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <h3 class="tstep__title">Votre idée</h3>
-        <p class="tstep__sub">Croquis, plan 3D, inspiration — vous nous envoyez tout</p>
-      </div>
-      <div class="tstep" onclick="showStep(1,true)">
-        <div class="tstep__num-wrap">
-          <span class="tstep__num tstep__num-default">02</span>
-          <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="white" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="white" stroke-width="1.8"/></svg>
-        </div>
-        <h3 class="tstep__title">Étude technique</h3>
-        <p class="tstep__sub">Notre BET optimise votre projet et chiffre précisément</p>
-      </div>
-      <div class="tstep" onclick="showStep(2,true)">
-        <div class="tstep__num-wrap">
-          <span class="tstep__num tstep__num-default">03</span>
-          <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <h3 class="tstep__title">Validation</h3>
-        <p class="tstep__sub">Vous approuvez le devis et les plans avant lancement</p>
-      </div>
-      <div class="tstep" onclick="showStep(3,true)">
-        <div class="tstep__num-wrap">
-          <span class="tstep__num tstep__num-default">04</span>
-          <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="white" stroke-width="1.8"/></svg>
-        </div>
-        <h3 class="tstep__title">Réception du kit</h3>
-        <p class="tstep__sub">Le colis arrive chez vous, tout usiné au millimètre</p>
-      </div>
-      <div class="tstep" onclick="showStep(4,true)">
-        <div class="tstep__num-wrap">
-          <span class="tstep__num tstep__num-default">05</span>
-          <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
-        </div>
-        <h3 class="tstep__title">Montage</h3>
-        <p class="tstep__sub">Livret personnalisé inclus — tournevis suffit</p>
-      </div>
-    </div>
+    <!-- Zone de contenu -->
+    <div class="prc__content">
+      <!-- Grand numéro fantôme -->
+      <div class="prc__bg-num" id="bgNum">01</div>
 
-    <!-- Panneaux de détail -->
-    <div class="process__detail">
-      <div class="detail__panels-wrap">
-        <div class="detail__panel active" id="dp0">
-          <p class="detail__tag">Étape 01 — La conception</p>
-          <h3 class="detail__title">Votre idée,<br>notre point de départ.</h3>
-          <p class="detail__body">Même une esquisse à la main suffit. Notre bureau d'études transforme votre idée en meuble usiné au millimètre.</p>
-          <div class="detail__list">
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Croquis ou plan 3D :</strong> On part de ce que vous avez — photo, esquisse, mesures.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Architecture incluse :</strong> Nos architectes analysent volumes et besoins de rangement.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro engagement :</strong> Premier échange gratuit, devis offert, aucune obligation.</p></div>
-          </div>
-        </div>
-        <div class="detail__panel" id="dp1">
-          <p class="detail__tag">Étape 02 — Étude technique &amp; chiffrage</p>
-          <h3 class="detail__title">Votre dessin<br>devient réalité.</h3>
-          <p class="detail__body">Notre BET analyse chaque jonction, chaque portée de tablette. Résultat : un devis précis, fabrication + livraison inclus.</p>
-          <div class="detail__list">
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vérification des cotes :</strong> Contrôle de cohérence par rapport aux standards.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Optimisation matière :</strong> Moins de chutes = moins cher pour vous.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Quincaillerie pro :</strong> Charnières, coulisses et fixations adaptés à l'usage exact.</p></div>
-          </div>
-        </div>
-        <div class="detail__panel" id="dp2">
-          <p class="detail__tag">Étape 03 — Validation</p>
-          <h3 class="detail__title">Votre accord<br>avant tout lancement.</h3>
-          <p class="detail__body">Rien ne part en fabrication sans votre feu vert. Vous validez le devis et les plans, puis on lance.</p>
-          <div class="detail__list">
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Prix ferme :</strong> Devis définitif, aucune surprise à la livraison.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Plans finaux :</strong> Vous voyez exactement ce qui sera fabriqué.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Sans engagement avant :</strong> Jusqu'ici tout est gratuit et sans obligation.</p></div>
-          </div>
-        </div>
-        <div class="detail__panel" id="dp3">
-          <p class="detail__tag">Étape 04 — Réception du kit</p>
-          <h3 class="detail__title">L'industrie<br>s'invite chez vous.</h3>
-          <p class="detail__body">Pas un kit bricolage — un produit de menuiserie fini. Chaque panneau usiné, chants plaqués, perçages faits.</p>
-          <div class="detail__list">
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Panneaux étiquetés :</strong> "Montant Gauche — Pièce A4" — tout est identifié.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Visserie triée :</strong> Sachets séparés par étape de montage.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Accessoires premium :</strong> Charnières amorties, coulisses à sortie totale.</p></div>
-          </div>
-        </div>
-        <div class="detail__panel" id="dp4">
-          <p class="detail__tag">Étape 05 — Montage</p>
-          <h3 class="detail__title">Une notice<br>unique par meuble.</h3>
-          <p class="detail__body">Livret d'Assemblage Personnalisé généré automatiquement. Pas de notice générique — vos pièces, vos étapes.</p>
-          <div class="detail__list">
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vues 3D isométriques :</strong> Emplacement exact de chaque pièce, dessin épuré.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Ordre logique :</strong> Progression qui évite de manipuler des charges lourdes.</p></div>
-            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Un seul outil :</strong> Tournevis ou visseuse. C'est tout.</p></div>
-          </div>
-        </div>
+      <!-- Photos empilées -->
+      <div class="prc__photo">
+        <div class="prc__photo-img active" style="background-image:url('img/bureau-bibliotheque-2.png')"></div>
+        <div class="prc__photo-img" style="background-image:url('img/meuble-tv-reel.jpg')"></div>
+        <div class="prc__photo-img" style="background-image:url('img/meuble-escalier.png')"></div>
+        <div class="prc__photo-img" style="background-image:url('img/armoires-enfant-1.jpg')"></div>
+        <div class="prc__photo-img" style="background-image:url('img/bibliotheques.png')"></div>
       </div>
-      <div class="detail__img-wrap">
-        <div class="detail__img active" id="di0" style="background-image:url('img/bureau-bibliotheque-2.png')"></div>
-        <div class="detail__img" id="di1" style="background-image:url('img/meuble-tv-reel.jpg')"></div>
-        <div class="detail__img" id="di2" style="background-image:url('img/meuble-escalier.png')"></div>
-        <div class="detail__img" id="di3" style="background-image:url('img/armoires-enfant-1.jpg')"></div>
-        <div class="detail__img" id="di4" style="background-image:url('img/bibliotheques.png')"></div>
-      </div>
-    </div>
 
-    <!-- Timer bar + navigation manuelle -->
-    <div class="timeline__nav">
-      <button class="tl-nav-btn" id="tl-prev" onclick="showStep((currentStep+4)%5,true)" aria-label="Précédent">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="tl-dots">
-        <button class="tl-dot active" onclick="showStep(0,true)"></button>
-        <button class="tl-dot" onclick="showStep(1,true)"></button>
-        <button class="tl-dot" onclick="showStep(2,true)"></button>
-        <button class="tl-dot" onclick="showStep(3,true)"></button>
-        <button class="tl-dot" onclick="showStep(4,true)"></button>
+      <!-- Panneaux texte -->
+      <div class="prc__panel active" id="pp0">
+        <p class="prc__tag">Étape 01</p>
+        <h3 class="prc__h2">Votre idée,<br><em>notre point de départ.</em></h3>
+        <p class="prc__body">Même une esquisse à la main suffit. Notre bureau d'études transforme votre idée en meuble usiné au millimètre, livré chez vous en kit prêt à assembler.</p>
+        <ul class="prc__list">
+          <li class="prc__item"><strong>Croquis ou plan 3D :</strong> on part de ce que vous avez.</li>
+          <li class="prc__item"><strong>Architecture incluse :</strong> nos experts analysent volumes et besoins.</li>
+          <li class="prc__item"><strong>Zéro engagement :</strong> premier échange gratuit, sans obligation.</li>
+        </ul>
       </div>
-      <button class="tl-nav-btn" id="tl-next" onclick="showStep((currentStep+1)%5,true)" aria-label="Suivant">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+      <div class="prc__panel" id="pp1">
+        <p class="prc__tag">Étape 02</p>
+        <h3 class="prc__h2">Votre dessin<br><em>devient réalité.</em></h3>
+        <p class="prc__body">Notre BET analyse chaque jonction, chaque portée de tablette. Résultat : un devis précis, fabrication + livraison inclus, sans surprise.</p>
+        <ul class="prc__list">
+          <li class="prc__item"><strong>Vérification des cotes :</strong> contrôle de cohérence complet.</li>
+          <li class="prc__item"><strong>Optimisation matière :</strong> moins de chutes = moins cher.</li>
+          <li class="prc__item"><strong>Quincaillerie pro :</strong> charnières, coulisses adaptés à l'usage.</li>
+        </ul>
+      </div>
+      <div class="prc__panel" id="pp2">
+        <p class="prc__tag">Étape 03</p>
+        <h3 class="prc__h2">Votre accord<br><em>avant tout lancement.</em></h3>
+        <p class="prc__body">Rien ne part en fabrication sans votre feu vert. Devis définitif, plans techniques finaux. Vous validez, on lance.</p>
+        <ul class="prc__list">
+          <li class="prc__item"><strong>Prix ferme :</strong> aucune surprise à la livraison.</li>
+          <li class="prc__item"><strong>Plans finaux :</strong> vous voyez exactement ce qui sera fabriqué.</li>
+          <li class="prc__item"><strong>Sans engagement avant :</strong> tout est gratuit jusqu'ici.</li>
+        </ul>
+      </div>
+      <div class="prc__panel" id="pp3">
+        <p class="prc__tag">Étape 04</p>
+        <h3 class="prc__h2">L'industrie<br><em>s'invite chez vous.</em></h3>
+        <p class="prc__body">Pas un kit bricolage — un produit de menuiserie fini. Chaque panneau usiné, chants plaqués, perçages déjà faits.</p>
+        <ul class="prc__list">
+          <li class="prc__item"><strong>Panneaux étiquetés :</strong> chaque pièce identifiée précisément.</li>
+          <li class="prc__item"><strong>Visserie triée :</strong> sachets séparés par étape de montage.</li>
+          <li class="prc__item"><strong>Accessoires premium :</strong> charnières amorties, coulisses totales.</li>
+        </ul>
+      </div>
+      <div class="prc__panel" id="pp4">
+        <p class="prc__tag">Étape 05</p>
+        <h3 class="prc__h2">Une notice<br><em>unique par meuble.</em></h3>
+        <p class="prc__body">Livret d'Assemblage Personnalisé généré automatiquement. Vos pièces, vos étapes, dans l'ordre exact. Tournevis et c'est tout.</p>
+        <ul class="prc__list">
+          <li class="prc__item"><strong>Vues 3D isométriques :</strong> emplacement exact de chaque pièce.</li>
+          <li class="prc__item"><strong>Ordre logique :</strong> progression sans charge lourde inutile.</li>
+          <li class="prc__item"><strong>Un seul outil :</strong> tournevis ou visseuse. C'est tout.</li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
@@ -912,76 +916,79 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   var currentStep = 0;
   var autoTimer = null;
   var AUTO_DELAY = 6000;
+  var STEPS = 5;
+  var BG_NUMS = ['01','02','03','04','05'];
 
   function showStep(n, userTriggered) {
     var prev = currentStep;
     currentStep = n;
 
-    // — Step tabs
-    var steps = document.querySelectorAll('.tstep');
-    steps.forEach(function(s, i) {
-      var wasActive = s.classList.contains('active');
-      s.classList.toggle('active', i === n);
-      // Re-trigger CSS timer animation by cloning the element
-      if(i === n && !wasActive) {
-        s.style.setProperty('--step-dur', AUTO_DELAY + 'ms');
-        // Force reflow to restart animation
-        void s.offsetWidth;
-      }
-    });
+    // Sidebar steps
+    document.querySelectorAll('.prc__step').forEach(function(s,i){ s.classList.toggle('active', i===n); });
 
-    // — Panels: fade out prev, fade in next
-    var panels = document.querySelectorAll('.detail__panel');
-    panels.forEach(function(p, i) {
-      if(i === prev && prev !== n) {
-        p.classList.add('exit');
-        p.classList.remove('active');
-        setTimeout(function(){ p.classList.remove('exit'); }, 450);
-      } else if(i === n) {
+    // Vertical line fill
+    var vf = document.getElementById('vlineFill');
+    if(vf) vf.style.height = (n / (STEPS-1) * 100) + '%';
+
+    // Panels
+    document.querySelectorAll('.prc__panel').forEach(function(p,i){
+      if(i===n){
         p.classList.remove('exit');
         p.classList.add('active');
+      } else if(i===prev && prev!==n){
+        p.classList.add('exit');
+        p.classList.remove('active');
+        setTimeout(function(){ p.classList.remove('exit'); }, 500);
       } else {
-        p.classList.remove('active', 'exit');
+        p.classList.remove('active','exit');
       }
     });
 
-    // — Images: crossfade
-    document.querySelectorAll('.detail__img').forEach(function(img, i) {
-      img.classList.toggle('active', i === n);
-    });
+    // Photos
+    document.querySelectorAll('.prc__photo-img').forEach(function(img,i){ img.classList.toggle('active', i===n); });
 
-    // — Progress bar
-    var bar = document.getElementById('progressBar');
-    if(bar) bar.style.width = ((n + 1) / 5 * 100) + '%';
+    // Big ghost number
+    var bgn = document.getElementById('bgNum');
+    if(bgn){
+      bgn.style.opacity='0';
+      setTimeout(function(){ bgn.textContent=BG_NUMS[n]; bgn.style.opacity='1'; }, 200);
+    }
 
-    // — Dots
-    document.querySelectorAll('.tl-dot').forEach(function(d, i) {
-      d.classList.toggle('active', i === n);
-    });
+    // Timer bar — restart animation
+    var tf = document.getElementById('timerFill');
+    if(tf){
+      tf.classList.remove('running');
+      void tf.offsetWidth; // reflow
+      tf.style.setProperty('--dur', AUTO_DELAY+'ms');
+      tf.classList.add('running');
+    }
 
-    // — Auto-play reset on user click
-    if(userTriggered) {
+    // Auto-play
+    if(userTriggered){
       clearInterval(autoTimer);
-      autoTimer = setInterval(function(){ showStep((currentStep + 1) % 5, false); }, AUTO_DELAY);
+      autoTimer = setInterval(function(){ showStep((currentStep+1)%STEPS, false); }, AUTO_DELAY);
     }
   }
 
-  // Init — set CSS var on active step
-  var firstStep = document.querySelector('.tstep.active');
-  if(firstStep) firstStep.style.setProperty('--step-dur', AUTO_DELAY + 'ms');
+  // Transition de bgNum
+  var bgn = document.getElementById('bgNum');
+  if(bgn) bgn.style.transition = 'opacity .25s ease';
 
-  // Auto-play starts when timeline enters viewport
-  var tlEl = document.getElementById('timeline');
-  if(tlEl) {
-    var tlObs = new IntersectionObserver(function(entries) {
-      entries.forEach(function(e) {
-        if(e.isIntersecting && !autoTimer) {
-          autoTimer = setInterval(function(){ showStep((currentStep + 1) % 5, false); }, AUTO_DELAY);
-          tlObs.unobserve(tlEl);
+  // Auto-play quand la section entre dans le viewport
+  var prcEl = document.getElementById('prc');
+  if(prcEl){
+    var prcObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting && !autoTimer){
+          // Lance le timer immédiatement
+          var tf = document.getElementById('timerFill');
+          if(tf){ tf.style.setProperty('--dur', AUTO_DELAY+'ms'); tf.classList.add('running'); }
+          autoTimer = setInterval(function(){ showStep((currentStep+1)%STEPS, false); }, AUTO_DELAY);
+          prcObs.unobserve(prcEl);
         }
       });
-    }, {threshold: 0.25});
-    tlObs.observe(tlEl);
+    }, {threshold: 0.3});
+    prcObs.observe(prcEl);
   }
 
   /* Reveal */
