@@ -11,11 +11,6 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
-  // Rate limiting : 3 requêtes / 10 min par IP
-  const { rateLimit } = require('./_ratelimit');
-  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
-  const rl = await rateLimit(ip, 'biblio', { max: 3, windowSec: 600 });
-  if (!rl.ok) return res.status(429).json({ error: 'Trop de demandes. Réessayez dans quelques minutes.' });
 
   try {
     const { createClient } = require('@supabase/supabase-js');
