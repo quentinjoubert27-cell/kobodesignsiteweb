@@ -2576,7 +2576,22 @@ function placeOrRemoveCaisson(e, skipUndo){
     if(comp3.height_cm<1||bay3.width_cm<1) return true;
     var k=mkKey(comp3,bay3);
     var existing=els.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&el.key===k; });
-    if(existing>=0){ els.splice(existing,1); } else { els.push({type:caissonType,key:k}); }
+    if(existing>=0){
+      // Supprimer — si double battant, supprimer les deux moitiés
+      var mid=Math.round((bay3.left_cm+bay3.right_cm)/2);
+      var k1=Math.round(comp3.bottom_cm)+'_'+Math.round(bay3.left_cm)+'_'+Math.round(comp3.top_cm)+'_'+mid;
+      var k2=Math.round(comp3.bottom_cm)+'_'+mid+'_'+Math.round(comp3.top_cm)+'_'+Math.round(bay3.right_cm);
+      els=els.filter(function(el){ return el.key!==k&&el.key!==k1&&el.key!==k2; });
+    } else if(caissonType==='porte'&&bay3.width_cm>60){
+      // Double battant : couper en deux portes de max 60cm
+      var mid=Math.round((bay3.left_cm+bay3.right_cm)/2);
+      var k1=Math.round(comp3.bottom_cm)+'_'+Math.round(bay3.left_cm)+'_'+Math.round(comp3.top_cm)+'_'+mid;
+      var k2=Math.round(comp3.bottom_cm)+'_'+mid+'_'+Math.round(comp3.top_cm)+'_'+Math.round(bay3.right_cm);
+      els.push({type:'porte',key:k1});
+      els.push({type:'porte',key:k2});
+    } else {
+      els.push({type:caissonType,key:k});
+    }
     setActiveEls(els);
   }
   clearCaissonGhost(); buildCaisson(); return true;
