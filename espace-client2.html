@@ -416,8 +416,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-logo">
+    <div class="sidebar-logo" style="display:flex;align-items:center;justify-content:space-between;">
       <img src="img/logo-koboblanc.png" alt="Kōbō Design" style="height:28px;width:auto;display:block;">
+      <a href="https://www.kobo-design.fr" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--accent);padding:7px 12px;border-radius:6px;text-decoration:none;white-space:nowrap;transition:opacity .2s;" onmouseover="this.style.opacity='.82'" onmouseout="this.style.opacity='1'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Site
+      </a>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">
@@ -455,8 +459,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="sidebar-user">
       <div class="sidebar-user-name" id="user-name">—</div>
       <div class="sidebar-user-email" id="user-email">—</div>
-      <a href="https://www.kobo-design.fr" class="btn-logout" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px">← Retour au site</a>
-      <button class="btn-logout" onclick="logout()">Se déconnecter</button>
+<button class="btn-logout" onclick="logout()">Se déconnecter</button>
     </div>
   </aside>
 
