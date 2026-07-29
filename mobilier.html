@@ -201,38 +201,56 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
     /* Timeline */
     .timeline{position:relative}
-    .timeline::before{content:'';position:absolute;top:36px;left:clamp(32px,4vw,56px);right:clamp(32px,4vw,56px);height:2px;background:rgba(26,26,26,.08);z-index:0}
-    .timeline__track{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;position:relative;z-index:1}
+    .timeline__track{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative;z-index:1;border-radius:12px;overflow:hidden;background:rgba(26,26,26,.04);border:1px solid rgba(26,26,26,.07)}
 
-    .tstep{display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer}
-    .tstep__num-wrap{width:72px;height:72px;border-radius:50%;background:var(--bg);border:2px solid rgba(26,26,26,.12);display:flex;align-items:center;justify-content:center;margin-bottom:28px;transition:background .3s,border-color .3s;position:relative}
-    .tstep__num-wrap::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid transparent;transition:border-color .3s}
-    .tstep.active .tstep__num-wrap{background:var(--accent);border-color:var(--accent)}
-    .tstep.active .tstep__num-wrap::after{border-color:rgba(205,62,0,.25)}
-    .tstep__num{font-size:22px;font-weight:900;color:rgba(26,26,26,.25);letter-spacing:-.03em;transition:color .3s}
+    .tstep{display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;padding:28px 12px 24px;border-right:1px solid rgba(26,26,26,.07);position:relative;transition:background .35s}
+    .tstep:last-child{border-right:none}
+    .tstep:hover{background:rgba(26,26,26,.03)}
+    .tstep.active{background:#fff;box-shadow:inset 0 3px 0 var(--accent)}
+    /* Timer fill sous chaque step actif */
+    .tstep.active::before{content:'';position:absolute;bottom:0;left:0;height:2px;background:rgba(205,62,0,.18);width:100%}
+    .tstep.active::after{content:'';position:absolute;bottom:0;left:0;height:2px;background:var(--accent);width:0%;animation:stepTimer var(--step-dur,6s) linear forwards}
+    @keyframes stepTimer{to{width:100%}}
+
+    .tstep__num-wrap{width:52px;height:52px;border-radius:50%;background:rgba(26,26,26,.07);display:flex;align-items:center;justify-content:center;margin-bottom:16px;transition:background .35s,transform .35s;position:relative}
+    .tstep:hover .tstep__num-wrap{transform:scale(1.06)}
+    .tstep.active .tstep__num-wrap{background:var(--accent);transform:scale(1.12);box-shadow:0 4px 20px rgba(205,62,0,.35)}
+    .tstep__num{font-size:17px;font-weight:900;color:rgba(26,26,26,.3);letter-spacing:-.02em;transition:color .35s}
     .tstep.active .tstep__num{color:var(--white)}
     .tstep__icon{display:none}
     .tstep.active .tstep__icon{display:block}
     .tstep.active .tstep__num-default{display:none}
 
-    .tstep__title{font-size:clamp(13px,1.4vw,16px);font-weight:800;letter-spacing:-.01em;margin-bottom:8px;color:rgba(26,26,26,.35);transition:color .3s}
+    .tstep__title{font-size:clamp(11px,1.2vw,14px);font-weight:800;letter-spacing:-.01em;margin-bottom:6px;color:rgba(26,26,26,.3);transition:color .35s}
     .tstep.active .tstep__title{color:var(--dark)}
-    .tstep__sub{font-size:12px;font-weight:300;line-height:1.6;color:rgba(26,26,26,.4);max-width:180px;transition:color .3s}
-    .tstep.active .tstep__sub{color:rgba(26,26,26,.6)}
+    .tstep__sub{font-size:11px;font-weight:300;line-height:1.55;color:rgba(26,26,26,.3);max-width:160px;transition:color .35s;display:none}
+    .tstep.active .tstep__sub{display:block;color:rgba(26,26,26,.55);animation:fadeSlideUp .4s ease forwards}
+    @keyframes fadeSlideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
     /* Panel de détail */
-    .process__detail{margin-top:clamp(40px,6vw,64px);background:var(--dark);border-radius:16px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
-    .detail__panel{display:none;padding:clamp(36px,5vw,64px)}
-    .detail__panel.active{display:block}
+    .process__detail{margin-top:24px;background:var(--dark);border-radius:16px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;min-height:380px;position:relative}
+    /* Wrapper for panel animation */
+    .detail__panels-wrap{position:relative;overflow:hidden}
+    .detail__panel{position:absolute;inset:0;padding:clamp(36px,5vw,64px);opacity:0;transform:translateX(32px);transition:opacity .45s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1);pointer-events:none}
+    .detail__panel.active{position:relative;opacity:1;transform:translateX(0);pointer-events:auto}
+    .detail__panel.exit{opacity:0;transform:translateX(-32px)}
     .detail__tag{font-size:9px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
     .detail__title{font-size:clamp(22px,3vw,34px);font-weight:800;color:var(--bg);letter-spacing:-.03em;line-height:1.1;margin-bottom:20px}
     .detail__body{font-size:14px;font-weight:300;line-height:1.85;color:rgba(255,250,240,.6);margin-bottom:28px}
     .detail__list{display:flex;flex-direction:column;gap:14px}
-    .detail__item{display:flex;align-items:flex-start;gap:14px}
+    .detail__item{display:flex;align-items:flex-start;gap:14px;opacity:0;transform:translateY(10px);animation:none}
+    .detail__panel.active .detail__item:nth-child(1){animation:fadeSlideUp .4s .1s ease forwards}
+    .detail__panel.active .detail__item:nth-child(2){animation:fadeSlideUp .4s .2s ease forwards}
+    .detail__panel.active .detail__item:nth-child(3){animation:fadeSlideUp .4s .3s ease forwards}
     .detail__dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
     .detail__item-text{font-size:13px;font-weight:300;line-height:1.65;color:rgba(255,250,240,.55)}
     .detail__item-text strong{font-weight:600;color:rgba(255,250,240,.85)}
-    .detail__img{background-size:cover;background-position:center;min-height:300px;transition:background .4s}
+    /* Image side */
+    .detail__img-wrap{position:relative;overflow:hidden}
+    .detail__img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .6s ease,transform .6s ease;transform:scale(1.04)}
+    .detail__img.active{opacity:1;transform:scale(1)}
+    /* Overlay gradient on image */
+    .detail__img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,26,26,.35) 0%,transparent 60%)}
 
     /* ============================================================
        LE KIT — section qualité
@@ -687,61 +705,65 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Panneaux de détail -->
     <div class="process__detail">
-      <div class="detail__panel active" id="dp0">
-        <p class="detail__tag">Étape 01 — La conception</p>
-        <h3 class="detail__title">Votre idée,<br>notre point de départ.</h3>
-        <p class="detail__body">Vous avez la liberté totale. Envoyez-nous vos croquis, plans 3D avec cotes, ou simplement une inspiration. Si vous partez d'une page blanche, notre Bureau de Création peut aussi dessiner l'espace idéal pour vous.</p>
-        <div class="detail__list">
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Croquis ou plan 3D :</strong> Envoyez ce que vous avez — même une photo ou une esquisse à la main.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Service Architecture inclus :</strong> Nos architectes d'intérieur analysent volumes, flux et besoins de rangement.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro engagement :</strong> Le premier échange est gratuit, le devis offert et sans obligation.</p></div>
+      <div class="detail__panels-wrap">
+        <div class="detail__panel active" id="dp0">
+          <p class="detail__tag">Étape 01 — La conception</p>
+          <h3 class="detail__title">Votre idée,<br>notre point de départ.</h3>
+          <p class="detail__body">Même une esquisse à la main suffit. Notre bureau d'études transforme votre idée en meuble usiné au millimètre.</p>
+          <div class="detail__list">
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Croquis ou plan 3D :</strong> On part de ce que vous avez — photo, esquisse, mesures.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Architecture incluse :</strong> Nos architectes analysent volumes et besoins de rangement.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro engagement :</strong> Premier échange gratuit, devis offert, aucune obligation.</p></div>
+          </div>
+        </div>
+        <div class="detail__panel" id="dp1">
+          <p class="detail__tag">Étape 02 — Étude technique &amp; chiffrage</p>
+          <h3 class="detail__title">Votre dessin<br>devient réalité.</h3>
+          <p class="detail__body">Notre BET analyse chaque jonction, chaque portée de tablette. Résultat : un devis précis, fabrication + livraison inclus.</p>
+          <div class="detail__list">
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vérification des cotes :</strong> Contrôle de cohérence par rapport aux standards.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Optimisation matière :</strong> Moins de chutes = moins cher pour vous.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Quincaillerie pro :</strong> Charnières, coulisses et fixations adaptés à l'usage exact.</p></div>
+          </div>
+        </div>
+        <div class="detail__panel" id="dp2">
+          <p class="detail__tag">Étape 03 — Validation</p>
+          <h3 class="detail__title">Votre accord<br>avant tout lancement.</h3>
+          <p class="detail__body">Rien ne part en fabrication sans votre feu vert. Vous validez le devis et les plans, puis on lance.</p>
+          <div class="detail__list">
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Prix ferme :</strong> Devis définitif, aucune surprise à la livraison.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Plans finaux :</strong> Vous voyez exactement ce qui sera fabriqué.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Sans engagement avant :</strong> Jusqu'ici tout est gratuit et sans obligation.</p></div>
+          </div>
+        </div>
+        <div class="detail__panel" id="dp3">
+          <p class="detail__tag">Étape 04 — Réception du kit</p>
+          <h3 class="detail__title">L'industrie<br>s'invite chez vous.</h3>
+          <p class="detail__body">Pas un kit bricolage — un produit de menuiserie fini. Chaque panneau usiné, chants plaqués, perçages faits.</p>
+          <div class="detail__list">
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Panneaux étiquetés :</strong> "Montant Gauche — Pièce A4" — tout est identifié.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Visserie triée :</strong> Sachets séparés par étape de montage.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Accessoires premium :</strong> Charnières amorties, coulisses à sortie totale.</p></div>
+          </div>
+        </div>
+        <div class="detail__panel" id="dp4">
+          <p class="detail__tag">Étape 05 — Montage</p>
+          <h3 class="detail__title">Une notice<br>unique par meuble.</h3>
+          <p class="detail__body">Livret d'Assemblage Personnalisé généré automatiquement. Pas de notice générique — vos pièces, vos étapes.</p>
+          <div class="detail__list">
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vues 3D isométriques :</strong> Emplacement exact de chaque pièce, dessin épuré.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Ordre logique :</strong> Progression qui évite de manipuler des charges lourdes.</p></div>
+            <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Un seul outil :</strong> Tournevis ou visseuse. C'est tout.</p></div>
+          </div>
         </div>
       </div>
-      <div class="detail__img active" id="di0" style="background-image:url('img/bureau-bibliotheque-2.png')"></div>
-      <div class="detail__panel" id="dp1">
-        <p class="detail__tag">Étape 02 — Étude technique &amp; chiffrage</p>
-        <h3 class="detail__title">Votre dessin<br>devient réalité.</h3>
-        <p class="detail__body">Notre Bureau d'Études Technique (BET) prend le relais. Nous analysons chaque jonction, chaque portée de tablette, chaque contrainte de poids. Résultat : un devis détaillé incluant fabrication et livraison.</p>
-        <div class="detail__list">
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vérification des cotes :</strong> Contrôle de cohérence par rapport aux standards.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Optimisation matière :</strong> Nos algorithmes minimisent les chutes pour réduire votre facture.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Choix quincaillerie :</strong> Charnières, coulisses et fixations professionnels adaptés à l'usage exact.</p></div>
-        </div>
+      <div class="detail__img-wrap">
+        <div class="detail__img active" id="di0" style="background-image:url('img/bureau-bibliotheque-2.png')"></div>
+        <div class="detail__img" id="di1" style="background-image:url('img/meuble-tv-reel.jpg')"></div>
+        <div class="detail__img" id="di2" style="background-image:url('img/meuble-escalier.png')"></div>
+        <div class="detail__img" id="di3" style="background-image:url('img/armoires-enfant-1.jpg')"></div>
+        <div class="detail__img" id="di4" style="background-image:url('img/bibliotheques.png')"></div>
       </div>
-      <div class="detail__img" id="di1" style="background-image:url('img/meuble-tv-reel.jpg')"></div>
-      <div class="detail__panel" id="dp2">
-        <p class="detail__tag">Étape 03 — Validation de la commande</p>
-        <h3 class="detail__title">Votre accord<br>avant tout lancement.</h3>
-        <p class="detail__body">Rien ne part en fabrication sans votre validation explicite. Vous recevez un devis détaillé incluant fabrication et livraison, accompagné des plans techniques finaux. Vous approuvez, on lance.</p>
-        <div class="detail__list">
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Devis détaillé :</strong> Prix ferme et définitif. Aucune surprise.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Plans techniques finaux :</strong> Vous visualisez exactement ce qui va être fabriqué.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro engagement avant :</strong> Jusqu'à cette étape, tout est gratuit et sans obligation.</p></div>
-        </div>
-      </div>
-      <div class="detail__img" id="di2" style="background-image:url('img/meuble-escalier.png')"></div>
-      <div class="detail__panel" id="dp3">
-        <p class="detail__tag">Étape 04 — Réception du kit</p>
-        <h3 class="detail__title">L'industrie<br>s'invite chez vous.</h3>
-        <p class="detail__body">Oubliez l'image du kit bricolage. Recevoir un projet Kobo Design, c'est recevoir un produit fini de menuiserie. Chaque panneau a été usiné, les chants sont plaqués, tous les perçages sont déjà faits.</p>
-        <div class="detail__list">
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Panneaux structurels :</strong> Chacun identifié par une étiquette (ex: "Montant Gauche — Pièce A4").</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Visserie triée :</strong> Conditionnée en sachets séparés par étape.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Accessoire premium :</strong> Charnières avec amortisseurs, coulisses à sortie totale.</p></div>
-        </div>
-      </div>
-      <div class="detail__img" id="di3" style="background-image:url('img/armoires-enfant-1.jpg')"></div>
-      <div class="detail__panel" id="dp4">
-        <p class="detail__tag">Étape 05 — Le montage</p>
-        <h3 class="detail__title">Une notice<br>unique par meuble.</h3>
-        <p class="detail__body">Nous ne fournissons pas une notice générique. Le Livret d'Assemblage Personnalisé est généré automatiquement par notre bureau d'études en même temps que les fichiers de fabrication.</p>
-        <div class="detail__list">
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vues isométriques 3D :</strong> Dessins épurés montrant l'emplacement exact de chaque pièce.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Step-by-step logique :</strong> Progression qui évite de manipuler des charges lourdes inutilement.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro outil complexe :</strong> Tournevis (ou visseuse) et maillet. C'est tout.</p></div>
-        </div>
-      </div>
-      <div class="detail__img" id="di4" style="background-image:url('img/bibliotheques.png')"></div>
     </div>
 
     <!-- Timer bar + navigation manuelle -->
@@ -889,46 +911,76 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   /* Timeline interactive */
   var currentStep = 0;
   var autoTimer = null;
-  var AUTO_DELAY = 5000;
+  var AUTO_DELAY = 6000;
 
   function showStep(n, userTriggered) {
+    var prev = currentStep;
     currentStep = n;
-    // Steps
-    document.querySelectorAll('.tstep').forEach(function(s,i){ s.classList.toggle('active', i===n); });
-    // Panels
-    document.querySelectorAll('.detail__panel').forEach(function(p,i){ p.classList.toggle('active', i===n); });
-    // Images
-    document.querySelectorAll('.detail__img').forEach(function(img,i){
-      img.style.display = (i===n) ? 'block' : 'none';
+
+    // — Step tabs
+    var steps = document.querySelectorAll('.tstep');
+    steps.forEach(function(s, i) {
+      var wasActive = s.classList.contains('active');
+      s.classList.toggle('active', i === n);
+      // Re-trigger CSS timer animation by cloning the element
+      if(i === n && !wasActive) {
+        s.style.setProperty('--step-dur', AUTO_DELAY + 'ms');
+        // Force reflow to restart animation
+        void s.offsetWidth;
+      }
     });
-    // Progress bar
+
+    // — Panels: fade out prev, fade in next
+    var panels = document.querySelectorAll('.detail__panel');
+    panels.forEach(function(p, i) {
+      if(i === prev && prev !== n) {
+        p.classList.add('exit');
+        p.classList.remove('active');
+        setTimeout(function(){ p.classList.remove('exit'); }, 450);
+      } else if(i === n) {
+        p.classList.remove('exit');
+        p.classList.add('active');
+      } else {
+        p.classList.remove('active', 'exit');
+      }
+    });
+
+    // — Images: crossfade
+    document.querySelectorAll('.detail__img').forEach(function(img, i) {
+      img.classList.toggle('active', i === n);
+    });
+
+    // — Progress bar
     var bar = document.getElementById('progressBar');
-    if(bar) bar.style.width = ((n+1)/5*100) + '%';
-    // Dots
-    document.querySelectorAll('.tl-dot').forEach(function(d,i){ d.classList.toggle('active', i===n); });
-    // Reset auto-play if user clicked
+    if(bar) bar.style.width = ((n + 1) / 5 * 100) + '%';
+
+    // — Dots
+    document.querySelectorAll('.tl-dot').forEach(function(d, i) {
+      d.classList.toggle('active', i === n);
+    });
+
+    // — Auto-play reset on user click
     if(userTriggered) {
       clearInterval(autoTimer);
-      autoTimer = setInterval(function(){ showStep((currentStep+1)%5, false); }, AUTO_DELAY);
+      autoTimer = setInterval(function(){ showStep((currentStep + 1) % 5, false); }, AUTO_DELAY);
     }
   }
 
-  // Init images
-  document.querySelectorAll('.detail__img').forEach(function(img,i){ img.style.display = i===0 ? 'block' : 'none'; });
-  // Init progress bar
-  var initBar = document.getElementById('progressBar');
-  if(initBar) initBar.style.width = '20%';
-  // Auto-play start when timeline enters viewport
+  // Init — set CSS var on active step
+  var firstStep = document.querySelector('.tstep.active');
+  if(firstStep) firstStep.style.setProperty('--step-dur', AUTO_DELAY + 'ms');
+
+  // Auto-play starts when timeline enters viewport
   var tlEl = document.getElementById('timeline');
   if(tlEl) {
-    var tlObs = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if(e.isIntersecting && !autoTimer){
-          autoTimer = setInterval(function(){ showStep((currentStep+1)%5, false); }, AUTO_DELAY);
+    var tlObs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if(e.isIntersecting && !autoTimer) {
+          autoTimer = setInterval(function(){ showStep((currentStep + 1) % 5, false); }, AUTO_DELAY);
           tlObs.unobserve(tlEl);
         }
       });
-    }, {threshold: 0.3});
+    }, {threshold: 0.25});
     tlObs.observe(tlEl);
   }
 
