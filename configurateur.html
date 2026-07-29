@@ -2221,10 +2221,12 @@ function _rebuildEditBar(){
     }
   } else {
     btns.innerHTML=
-      cBtn('shelf',     true,  svgShelf,  'Tablette',   'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
-      cBtn('separator', false, svgSep,    'Séparateur', 'Crée une zone latérale — délimite l\'espace pour une porte')+
-      cBtn('porte',     false, svgPorte,  'Porte',      'Remplit la zone définie par les tablettes + séparateurs')+
-      cBtn('tiroir',    false, svgTiroir, 'Tiroir',     'Remplit la zone définie par les tablettes + séparateurs');
+      cBtn('shelf',            true,  svgShelf,      'Tablette',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
+      cBtn('shelf_simple',     false, svgShelfSimple,'Tablette 2nd',  'Tablette secondaire — non prise en compte par les portes')+
+      cBtn('separator',        false, svgSep,        'Séparateur',    'Crée une zone latérale — délimite l\'espace pour une porte')+
+      cBtn('separator_simple', false, svgSepSimple,  'Sépar. 2nd',    'Séparateur secondaire — non pris en compte par les portes')+
+      cBtn('porte',            false, svgPorte,      'Porte',         'Remplit la zone définie par les tablettes + séparateurs')+
+      cBtn('tiroir',           false, svgTiroir,     'Tiroir',        'Remplit la zone définie par les tablettes + séparateurs');
   }
   // Injecter le conteneur de liste après les boutons (si pas déjà présent)
   var listContainer=btns.parentNode&&btns.parentNode.querySelector('.elements-placed-list');
