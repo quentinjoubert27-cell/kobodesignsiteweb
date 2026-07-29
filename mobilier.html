@@ -385,6 +385,60 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       .timeline__track { grid-template-columns: 1fr; }
       .timeline::before { display: none; }
     }
+
+    /* ============================================================
+       SKETCH HERO
+    ============================================================ */
+    .sketch-hero{padding:clamp(80px,12vw,140px) clamp(24px,7vw,100px) clamp(56px,8vw,96px);background:var(--bg);border-bottom:1px solid rgba(26,26,26,.06)}
+    .sketch-hero__inner{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,80px);align-items:center;max-width:1280px;margin:0 auto}
+    .sketch-eyebrow{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+    .sketch-hero__h1{font-size:clamp(36px,5.5vw,72px);font-weight:900;letter-spacing:-.05em;line-height:.97;margin-bottom:22px;color:var(--dark)}
+    .sketch-hero__h1 em{font-style:italic;font-weight:300;color:rgba(26,26,26,.35)}
+    .sketch-hero__sub{font-size:15px;font-weight:300;line-height:1.8;color:rgba(26,26,26,.6);max-width:440px;margin-bottom:36px}
+    .sketch-hero__ctas{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:36px}
+    .sketch-cta-primary{display:inline-flex;align-items:center;gap:10px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--accent);padding:15px 26px;border-radius:6px;text-decoration:none;transition:background .2s,transform .18s}
+    .sketch-cta-primary:hover{background:#a83200;transform:translateY(-2px)}
+    .sketch-cta-secondary{display:inline-flex;align-items:center;gap:10px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dark);background:transparent;border:1.5px solid rgba(26,26,26,.2);padding:14px 24px;border-radius:6px;text-decoration:none;transition:border-color .2s,background .2s}
+    .sketch-cta-secondary:hover{border-color:rgba(26,26,26,.5);background:rgba(26,26,26,.04)}
+    .sketch-hero__trust{display:flex;flex-wrap:wrap;gap:12px 24px}
+    .sketch-trust-item{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:300;color:rgba(26,26,26,.55)}
+
+    /* Sketch animation */
+    .sketch-anim{display:flex;align-items:center;gap:20px;justify-content:center}
+    .sketch-paper{background:#fff;border-radius:12px;padding:20px;box-shadow:0 8px 48px rgba(26,26,26,.1),0 2px 8px rgba(26,26,26,.06);position:relative;overflow:hidden;flex:1;max-width:280px}
+    .sketch-paper::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#CD3E00,#ff6930)}
+    .sketch-svg{width:100%;height:auto}
+    /* Draw animation for SVG paths */
+    @keyframes drawPath{to{stroke-dashoffset:0}}
+    .sk{animation:drawPath 1s cubic-bezier(.4,0,.2,1) forwards}
+    .sk-txt{animation:fadeIn .4s ease forwards}
+    @keyframes fadeIn{to{opacity:1}}
+    #cote-v,#cote-h{animation:fadeIn .5s ease forwards}
+    .sketch-pencil{position:absolute;top:8px;right:12px;font-size:18px;animation:pencilBounce 3s ease-in-out infinite 2.5s}
+    @keyframes pencilBounce{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(5deg) translateY(-3px)}}
+    .sketch-arrow-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0}
+    .sketch-arrow-wrap span{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.35);white-space:nowrap}
+    .sketch-result-box{background:var(--dark);border-radius:12px;padding:16px;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(26,26,26,.18)}
+    .sketch-result-box svg{width:100%;max-width:120px;height:auto}
+    .sketch-result-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,250,240,.5);text-align:center;line-height:1.5}
+
+    @media(max-width:900px){
+      .sketch-hero__inner{grid-template-columns:1fr}
+      .sketch-hero__right{display:none}
+    }
+
+    /* ============================================================
+       TIMELINE — progress bar & nav
+    ============================================================ */
+    .timeline__progress-wrap{height:2px;background:rgba(26,26,26,.07);margin-bottom:40px;border-radius:2px;overflow:hidden}
+    .timeline__progress-bar{height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+
+    .timeline__nav{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:32px}
+    .tl-nav-btn{width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(26,26,26,.15);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(26,26,26,.5);transition:border-color .2s,background .2s,color .2s}
+    .tl-nav-btn:hover{border-color:var(--accent);background:rgba(205,62,0,.06);color:var(--accent)}
+    .tl-dots{display:flex;align-items:center;gap:8px}
+    .tl-dot{width:8px;height:8px;border-radius:50%;background:rgba(26,26,26,.15);border:none;cursor:pointer;padding:0;transition:background .25s,transform .25s}
+    .tl-dot.active{background:var(--accent);transform:scale(1.3)}
   </style>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RDNV0PGVLX"></script>
@@ -510,79 +564,86 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </header>
 
 <!-- ============================================================
-     HERO
+     HERO SKETCH
 ============================================================ -->
-<section class="hero" id="hero">
-  <div class="hero__bg"></div>
-  <div class="hero__inner">
-    <nav class="hero__breadcrumb">
-      <a href="index.html">Accueil</a><span class="hero__breadcrumb-sep">/</span><a href="index.html#expertise">Notre expertise</a><span class="hero__breadcrumb-sep">/</span>Mobilier Sur-Mesure
-    </nav>
-    <p class="hero__tag">01 — La Manufacture</p>
-    <h1 class="hero__h1">Mobilier Sur-Mesure<em>Prêt-à-Monter</em></h1>
-    <p class="hero__sub">La qualité du menuisier, l'accessibilité de l'industrie. Envoyez-nous vos plans — nous usinons, vous assemblez.</p>
-  </div>
-  <div class="hero__badge" aria-hidden="true">
-    <p class="hero__badge-big">PAM</p>
-    <p class="hero__badge-label">Prêt-à-Monter</p>
+<section class="sketch-hero">
+  <div class="sketch-hero__inner">
+    <div class="sketch-hero__left">
+      <p class="sketch-eyebrow reveal">Mobilier sur-mesure prêt-à-monter</p>
+      <h1 class="sketch-hero__h1 reveal">Envoyez-nous<br>votre croquis.<br><em>On fait le reste.</em></h1>
+      <p class="sketch-hero__sub reveal">Même une esquisse à la main, une photo ou un simple message suffit. Notre bureau d'études transforme votre idée en meuble usiné au millimètre, livré chez vous en kit prêt à assembler.</p>
+      <div class="sketch-hero__ctas reveal">
+        <a href="contact.html" class="sketch-cta-primary">Envoyer mon projet <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a href="configurateur.html" class="sketch-cta-secondary">Configurer en 3D</a>
+      </div>
+      <div class="sketch-hero__trust reveal">
+        <div class="sketch-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="#CD3E00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Devis gratuit sous 24h</div>
+        <div class="sketch-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="#CD3E00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Fabrication française</div>
+        <div class="sketch-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="#CD3E00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Zéro engagement avant validation</div>
+      </div>
+    </div>
+    <div class="sketch-hero__right reveal">
+      <div class="sketch-anim">
+        <div class="sketch-paper">
+          <svg class="sketch-svg" viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="12" y="22" font-size="9" font-weight="700" fill="#1A1A1A" font-family="Poppins,sans-serif" opacity="0.6">Bibliothèque salon</text>
+            <rect class="sk" x="12" y="32" width="140" height="100" rx="2" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-dasharray="500" stroke-dashoffset="500"/>
+            <line class="sk" x1="12" y1="65" x2="152" y2="65" stroke="#1A1A1A" stroke-width="1.5" stroke-dasharray="150" stroke-dashoffset="150" style="animation-delay:.5s"/>
+            <line class="sk" x1="12" y1="98" x2="152" y2="98" stroke="#1A1A1A" stroke-width="1.5" stroke-dasharray="150" stroke-dashoffset="150" style="animation-delay:.9s"/>
+            <line class="sk" x1="80" y1="32" x2="80" y2="132" stroke="#1A1A1A" stroke-width="1.5" stroke-dasharray="110" stroke-dashoffset="110" style="animation-delay:1.2s"/>
+            <line class="sk" x1="160" y1="32" x2="160" y2="132" stroke="#CD3E00" stroke-width="1" stroke-dasharray="4 3" style="animation-delay:1.5s;stroke-dashoffset:0;opacity:0" id="cote-v"/>
+            <text class="sk-txt" x="167" y="85" font-size="8" fill="#CD3E00" font-family="monospace" opacity="0" style="animation-delay:1.6s">220 cm</text>
+            <line class="sk" x1="12" y1="142" x2="152" y2="142" stroke="#CD3E00" stroke-width="1" stroke-dasharray="4 3" style="animation-delay:1.7s;stroke-dashoffset:0;opacity:0" id="cote-h"/>
+            <text class="sk-txt" x="65" y="157" font-size="8" fill="#CD3E00" font-family="monospace" opacity="0" style="animation-delay:1.8s">150 cm</text>
+            <text class="sk-txt" x="12" y="180" font-size="8" fill="rgba(26,26,26,.4)" font-family="monospace" opacity="0" style="animation-delay:2s">Chêne naturel — étagères réglables</text>
+          </svg>
+          <div class="sketch-pencil">✏️</div>
+        </div>
+        <div class="sketch-arrow-wrap">
+          <svg width="52" height="20" viewBox="0 0 52 20" fill="none"><path d="M2 10h44M38 3l8 7-8 7" stroke="#CD3E00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>3–6 semaines</span>
+        </div>
+        <div class="sketch-result-box">
+          <svg viewBox="0 0 120 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="5" width="110" height="140" rx="3" fill="#F0EBE0" stroke="#D4C9B8" stroke-width="1.5"/>
+            <rect x="5" y="5" width="110" height="3" fill="#CD3E00" rx="1.5"/>
+            <rect x="5" y="44" width="110" height="2" fill="#C8BBA8"/>
+            <rect x="5" y="83" width="110" height="2" fill="#C8BBA8"/>
+            <rect x="5" y="122" width="110" height="2" fill="#C8BBA8"/>
+            <rect x="61" y="5" width="2" height="140" fill="#C8BBA8"/>
+            <rect x="16" y="16" width="7" height="25" rx="1" fill="#CD3E00" opacity=".7"/>
+            <rect x="25" y="20" width="5" height="21" rx="1" fill="#1A1A1A" opacity=".25"/>
+            <rect x="32" y="18" width="8" height="23" rx="1" fill="#CD3E00" opacity=".4"/>
+            <rect x="72" y="22" width="5" height="18" rx="1" fill="#1A1A1A" opacity=".2"/>
+            <rect x="79" y="14" width="9" height="26" rx="1" fill="#CD3E00" opacity=".5"/>
+            <circle cx="100" cy="138" r="11" fill="#CD3E00"/>
+            <path d="M96 138l3 3 6-6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="sketch-result-label">Votre meuble,<br>usiné au mm</p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- ============================================================
-     ÉTAT DU MARCHÉ — 3 colonnes de positionnement
+     PROCESSUS — 5 étapes animées
 ============================================================ -->
-<div class="dilemme__header reveal">
-  <p class="dilemme__eyebrow">État du marché</p>
-  <h2 class="dilemme__heading">Pourquoi choisir<br><em>une troisième voie ?</em></h2>
-</div>
-<div class="dilemme reveal">
-  <!-- Colonne 1 : Grande distribution -->
-  <div class="dilemme__col">
-    <div class="dilemme__icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="rgba(26,26,26,.4)" stroke-width="1.6" stroke-linecap="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="rgba(26,26,26,.4)" stroke-width="1.6" stroke-linecap="round"/></svg>
-    </div>
-    <p class="dilemme__label">Option A</p>
-    <h3 class="dilemme__title">La grande distribution</h3>
-    <p class="dilemme__desc">Des solutions économiques mais standardisées. C'est à votre intérieur de s'adapter au meuble, et non l'inverse.</p>
-    <span class="dilemme__pill">Économique · Générique</span>
-  </div>
-  <div class="dilemme__sep"></div>
-  <!-- Colonne 2 : Kobo — centre -->
-  <div class="dilemme__col dilemme__col--center">
-    <div class="dilemme__icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <p class="dilemme__label">Kobo Design</p>
-    <h3 class="dilemme__title">La troisième voie</h3>
-    <p class="dilemme__desc">Le design d'architecte et l'efficacité industrielle. Du mobilier unique, usiné en usine, livré en kit prêt à monter.</p>
-    <span class="dilemme__pill">Sur-Mesure · Accessible</span>
-  </div>
-  <div class="dilemme__sep"></div>
-  <!-- Colonne 3 : Menuiserie artisanale -->
-  <div class="dilemme__col">
-    <div class="dilemme__icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="rgba(26,26,26,.4)" stroke-width="1.6" stroke-linecap="round"/></svg>
-    </div>
-    <p class="dilemme__label">Option B</p>
-    <h3 class="dilemme__title">La menuiserie artisanale</h3>
-    <p class="dilemme__desc">Le sublime et le sur-mesure absolus, mais à un coût et des délais souvent dissuasifs pour la majorité.</p>
-    <span class="dilemme__pill">Luxueux · Onéreux</span>
-  </div>
-</div>
-
-<!-- ============================================================
-     PROCESSUS — 4 étapes interactives
-============================================================ -->
-<section class="process">
+<section class="process" id="process">
   <div class="process__header reveal">
     <p class="process__eyebrow">Comment ça marche</p>
     <h2 class="process__title">5 étapes vers<br><em>votre meuble unique</em></h2>
   </div>
 
-  <div class="timeline reveal">
+  <div class="timeline reveal" id="timeline">
+    <!-- Barre de progression animée -->
+    <div class="timeline__progress-wrap">
+      <div class="timeline__progress-bar" id="progressBar"></div>
+    </div>
+
     <!-- Indicateurs -->
     <div class="timeline__track">
-      <div class="tstep active" onclick="showStep(0)">
+      <div class="tstep active" onclick="showStep(0,true)">
         <div class="tstep__num-wrap">
           <span class="tstep__num tstep__num-default">01</span>
           <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -590,7 +651,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <h3 class="tstep__title">Votre idée</h3>
         <p class="tstep__sub">Croquis, plan 3D, inspiration — vous nous envoyez tout</p>
       </div>
-      <div class="tstep" onclick="showStep(1)">
+      <div class="tstep" onclick="showStep(1,true)">
         <div class="tstep__num-wrap">
           <span class="tstep__num tstep__num-default">02</span>
           <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="white" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="white" stroke-width="1.8"/></svg>
@@ -598,7 +659,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <h3 class="tstep__title">Étude technique</h3>
         <p class="tstep__sub">Notre BET optimise votre projet et chiffre précisément</p>
       </div>
-      <div class="tstep" onclick="showStep(2)">
+      <div class="tstep" onclick="showStep(2,true)">
         <div class="tstep__num-wrap">
           <span class="tstep__num tstep__num-default">03</span>
           <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -606,7 +667,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <h3 class="tstep__title">Validation</h3>
         <p class="tstep__sub">Vous approuvez le devis et les plans avant lancement</p>
       </div>
-      <div class="tstep" onclick="showStep(3)">
+      <div class="tstep" onclick="showStep(3,true)">
         <div class="tstep__num-wrap">
           <span class="tstep__num tstep__num-default">04</span>
           <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="white" stroke-width="1.8"/></svg>
@@ -614,7 +675,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <h3 class="tstep__title">Réception du kit</h3>
         <p class="tstep__sub">Le colis arrive chez vous, tout usiné au millimètre</p>
       </div>
-      <div class="tstep" onclick="showStep(4)">
+      <div class="tstep" onclick="showStep(4,true)">
         <div class="tstep__num-wrap">
           <span class="tstep__num tstep__num-default">05</span>
           <svg class="tstep__icon" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -626,7 +687,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Panneaux de détail -->
     <div class="process__detail">
-      <!-- Étape 1 -->
       <div class="detail__panel active" id="dp0">
         <p class="detail__tag">Étape 01 — La conception</p>
         <h3 class="detail__title">Votre idée,<br>notre point de départ.</h3>
@@ -637,175 +697,73 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro engagement :</strong> Le premier échange est gratuit, le devis offert et sans obligation.</p></div>
         </div>
       </div>
-      <div class="detail__img" style="background-image:url('img/bureau-bibliotheque-2.png')"></div>
-
-      <!-- Étape 2 -->
+      <div class="detail__img active" id="di0" style="background-image:url('img/bureau-bibliotheque-2.png')"></div>
       <div class="detail__panel" id="dp1">
         <p class="detail__tag">Étape 02 — Étude technique &amp; chiffrage</p>
         <h3 class="detail__title">Votre dessin<br>devient réalité.</h3>
         <p class="detail__body">Notre Bureau d'Études Technique (BET) prend le relais. Nous analysons chaque jonction, chaque portée de tablette, chaque contrainte de poids. Résultat : un devis détaillé incluant fabrication et livraison.</p>
         <div class="detail__list">
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vérification des cotes :</strong> Contrôle de cohérence par rapport aux standards (profondeurs caissons, jeux de fonctionnement).</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vérification des cotes :</strong> Contrôle de cohérence par rapport aux standards.</p></div>
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Optimisation matière :</strong> Nos algorithmes minimisent les chutes pour réduire votre facture.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Choix quincaillerie :</strong> Charnières, coulisses et fixations professionnels adaptés à l'usage exact du meuble.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Choix quincaillerie :</strong> Charnières, coulisses et fixations professionnels adaptés à l'usage exact.</p></div>
         </div>
       </div>
       <div class="detail__img" id="di1" style="background-image:url('img/meuble-tv-reel.jpg')"></div>
-
-      <!-- Étape 3 : Validation -->
       <div class="detail__panel" id="dp2">
         <p class="detail__tag">Étape 03 — Validation de la commande</p>
         <h3 class="detail__title">Votre accord<br>avant tout lancement.</h3>
         <p class="detail__body">Rien ne part en fabrication sans votre validation explicite. Vous recevez un devis détaillé incluant fabrication et livraison, accompagné des plans techniques finaux. Vous approuvez, on lance.</p>
         <div class="detail__list">
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Devis détaillé :</strong> Prix ferme et définitif incluant fabrication, matériaux et livraison. Aucune surprise.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Plans techniques finaux :</strong> Vous visualisez exactement ce qui va être fabriqué avant de donner votre feu vert.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Devis détaillé :</strong> Prix ferme et définitif. Aucune surprise.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Plans techniques finaux :</strong> Vous visualisez exactement ce qui va être fabriqué.</p></div>
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro engagement avant :</strong> Jusqu'à cette étape, tout est gratuit et sans obligation.</p></div>
         </div>
       </div>
       <div class="detail__img" id="di2" style="background-image:url('img/meuble-escalier.png')"></div>
-
-      <!-- Étape 4 : Réception du kit -->
       <div class="detail__panel" id="dp3">
         <p class="detail__tag">Étape 04 — Réception du kit</p>
         <h3 class="detail__title">L'industrie<br>s'invite chez vous.</h3>
         <p class="detail__body">Oubliez l'image du kit bricolage. Recevoir un projet Kobo Design, c'est recevoir un produit fini de menuiserie. Chaque panneau a été usiné, les chants sont plaqués, tous les perçages sont déjà faits.</p>
         <div class="detail__list">
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Panneaux structurels :</strong> Chacun identifié par une étiquette (ex: "Montant Gauche — Pièce A4").</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Visserie triée :</strong> Conditionnée en sachets séparés par étape. Aucune confusion possible.</p></div>
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Accessoire premium :</strong> Charnières avec amortisseurs, coulisses à sortie totale, taquets bloquants.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Visserie triée :</strong> Conditionnée en sachets séparés par étape.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Accessoire premium :</strong> Charnières avec amortisseurs, coulisses à sortie totale.</p></div>
         </div>
       </div>
-      <div class="detail__img" id="di2" style="background-image:url('img/armoires-enfant-1.jpg')"></div>
-
-      <!-- Étape 5 -->
+      <div class="detail__img" id="di3" style="background-image:url('img/armoires-enfant-1.jpg')"></div>
       <div class="detail__panel" id="dp4">
         <p class="detail__tag">Étape 05 — Le montage</p>
         <h3 class="detail__title">Une notice<br>unique par meuble.</h3>
         <p class="detail__body">Nous ne fournissons pas une notice générique. Le Livret d'Assemblage Personnalisé est généré automatiquement par notre bureau d'études en même temps que les fichiers de fabrication.</p>
         <div class="detail__list">
-          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vues isométriques 3D :</strong> Dessins épurés montrant l'emplacement exact de chaque pièce et chaque vis.</p></div>
+          <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Vues isométriques 3D :</strong> Dessins épurés montrant l'emplacement exact de chaque pièce.</p></div>
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Step-by-step logique :</strong> Progression qui évite de manipuler des charges lourdes inutilement.</p></div>
           <div class="detail__item"><div class="detail__dot"></div><p class="detail__item-text"><strong>Zéro outil complexe :</strong> Tournevis (ou visseuse) et maillet. C'est tout.</p></div>
         </div>
       </div>
       <div class="detail__img" id="di4" style="background-image:url('img/bibliotheques.png')"></div>
     </div>
-  </div>
-</section>
 
-<!-- ============================================================
-     SERVICE DE POSE — remonté avant le kit
-============================================================ -->
-<section class="pose">
-  <div class="reveal">
-    <p class="pose__tag">Option incluse dans votre commande</p>
-    <h2 class="pose__title">Vous montez,<br>ou on s'en charge.</h2>
-    <p class="pose__body">Chaque meuble Kobo Design est livré avec un livret d'assemblage personnalisé — la plupart de nos clients montent seuls en quelques heures. Mais si vous préférez déléguer, notre réseau de poseurs partenaires qualifiés intervient chez vous, partout en France.</p>
-  </div>
-  <div class="pose__options reveal reveal-d1">
-    <div class="pose__opt">
-      <div class="pose__opt-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="rgba(255,250,240,.5)" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="rgba(255,250,240,.5)" stroke-width="1.6"/></svg></div>
-      <div>
-        <p class="pose__opt-title">Montage autonome<span class="pose__opt-recommended">Inclus &amp; recommandé</span></p>
-        <p class="pose__opt-desc">Livret personnalisé généré pour votre meuble exact — vues 3D, étapes logiques, zéro outil complexe. Tournevis (ou visseuse) et maillet suffisent.</p>
+    <!-- Timer bar + navigation manuelle -->
+    <div class="timeline__nav">
+      <button class="tl-nav-btn" id="tl-prev" onclick="showStep((currentStep+4)%5,true)" aria-label="Précédent">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="tl-dots">
+        <button class="tl-dot active" onclick="showStep(0,true)"></button>
+        <button class="tl-dot" onclick="showStep(1,true)"></button>
+        <button class="tl-dot" onclick="showStep(2,true)"></button>
+        <button class="tl-dot" onclick="showStep(3,true)"></button>
+        <button class="tl-dot" onclick="showStep(4,true)"></button>
       </div>
-    </div>
-    <div class="pose__opt">
-      <div class="pose__opt-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="rgba(255,250,240,.5)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="rgba(255,250,240,.5)" stroke-width="1.6"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="rgba(255,250,240,.5)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div>
-        <p class="pose__opt-title">Service de Pose Kobo</p>
-        <p class="pose__opt-desc">Nos poseurs partenaires certifiés interviennent chez vous — partout en France. Installation clé en main, montage et ajustements finaux inclus. À préciser lors de votre devis, nous coordonnons tout.</p>
-      </div>
+      <button class="tl-nav-btn" id="tl-next" onclick="showStep((currentStep+1)%5,true)" aria-label="Suivant">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
   </div>
 </section>
 
-<!-- ============================================================
-     LE KIT — 3 garanties
-============================================================ -->
-<section class="kit">
-  <div class="kit__header">
-    <div class="reveal">
-      <p class="kit__eyebrow">La qualité Kobo</p>
-      <h2 class="kit__title">Usiné à la<br><em>perfection.</em></h2>
-      <p class="kit__body">Chaque panneau sort de notre usine avec ses chants plaqués, ses perçages faits au dixième de millimètre. Vous ne faites que visser — nous avons tout préparé.</p>
-    </div>
-    <div class="kit__visual reveal reveal-d1">
-      <p class="kit__visual-title">Contenu du colis</p>
-      <div class="kit__item">
-        <div class="kit__item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#CD3E00" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-        <div><p class="kit__item-title">Panneaux structurels étiquetés</p><p class="kit__item-desc">Chaque pièce numérotée correspond exactement à votre plan. Montant Gauche A4, Fond B2…</p></div>
-      </div>
-      <div class="kit__item">
-        <div class="kit__item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#CD3E00" stroke-width="1.6"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-        <div><p class="kit__item-title">Visserie triée par sachets</p><p class="kit__item-desc">Chaque sachet est numéroté par étape. Aucun mélange, aucune confusion en cours d'assemblage.</p></div>
-      </div>
-      <div class="kit__item">
-        <div class="kit__item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div><p class="kit__item-title">Accessoire premium</p><p class="kit__item-desc">Charnières avec amortisseurs intégrés, coulisses à sortie totale, taquets d'étagères bloquants.</p></div>
-      </div>
-    </div>
-  </div>
-  <!-- 3 cartes garanties -->
-  <div class="kit__cards">
-    <div class="kit__card reveal">
-      <p class="kit__card-num">01</p>
-      <h3 class="kit__card-title">Tout est pré-percé</h3>
-      <p class="kit__card-desc">Fini le stress de la mesure et du perçage. Tous les usinages — charnières, taquets, assemblages — sont réalisés en usine au dixième de millimètre. Vous n'avez qu'à visser.</p>
-    </div>
-    <div class="kit__card reveal reveal-d1">
-      <p class="kit__card-num">02</p>
-      <h3 class="kit__card-title">Repérage infaillible</h3>
-      <p class="kit__card-desc">Chaque panneau reçu porte une étiquette numérotée qui correspond exactement à votre plan personnalisé. Impossible de confondre une étagère avec une autre.</p>
-    </div>
-    <div class="kit__card reveal reveal-d2">
-      <p class="kit__card-num">03</p>
-      <h3 class="kit__card-title">Structure rigide garantie</h3>
-      <p class="kit__card-desc">Nous utilisons des connecteurs professionnels qui garantissent un serrage puissant et une structure rigide, identique à celle d'un meuble installé par un menuisier.</p>
-    </div>
-  </div>
-</section>
-
-
-<!-- ============================================================
-     CTA FINAL
-============================================================ -->
-
-<!-- FAQ MOBILIER -->
-<section class="faq-section">
-  <div class="reveal">
-    <p class="faq-eyebrow">Vos questions sur le mobilier sur-mesure</p>
-    <h2 class="faq-title">On répond à tout.</h2>
-  </div>
-  <div class="faq-grid">
-    <div class="faq-item reveal" onclick="toggleFaq(this)">
-      <div class="faq-q">C'est quoi exactement le "prêt-à-monter" chez Kobo Design ?<span class="faq-icon">+</span></div>
-      <div class="faq-a">On usine votre meuble en usine — découpes au millimètre, chants plaqués, perçages faits. Vous recevez un colis avec tous les panneaux numérotés, la visserie triée par sachet, et une notice personnalisée générée pour votre meuble. Tournevis suffit.</div>
-    </div>
-    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
-      <div class="faq-q">Quels types de meubles pouvez-vous fabriquer ?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Bibliothèques encastrées, meubles TV, dressings, cuisines, rangements sous escalier, portes coulissantes, bureaux intégrés, têtes de lit… Si ça peut être dessiné avec des cotes, on peut le faire.</div>
-    </div>
-    <div class="faq-item reveal" onclick="toggleFaq(this)">
-      <div class="faq-q">Ai-je besoin de fournir des plans précis ?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Non. Un croquis à la main, une photo de l'espace ou une description suffisent. Notre bureau d'études reprend tout en 3D et vous soumet des propositions d'aménagement avant de lancer la fabrication.</div>
-    </div>
-    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
-      <div class="faq-q">Quel est le délai entre la commande et la réception ?<span class="faq-icon">+</span></div>
-      <div class="faq-a">En général entre 3 et 6 semaines à partir de la validation du devis. Le délai exact dépend de la complexité du projet et des matériaux choisis. Vous recevez un planning détaillé dès la commande.</div>
-    </div>
-    <div class="faq-item reveal" onclick="toggleFaq(this)">
-      <div class="faq-q">Et si je ne veux pas monter le meuble moi-même ?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Pas de problème. On propose un service de pose via nos partenaires monteurs. Ils interviennent chez vous pour l'installation complète, clé en main. À préciser lors de votre devis.</div>
-    </div>
-    <div class="faq-item reveal reveal-d1" onclick="toggleFaq(this)">
-      <div class="faq-q">Quelles matières et finitions proposez-vous ?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Mélaminés, placages bois (chêne, noyer, frêne…), laques mates, semi-mats ou brillantes, béton ciré, stratifié HPL. Plus de 200 décors disponibles. On peut aussi travailler avec vos matériaux si vous en avez déjà.</div>
-    </div>
-  </div>
-</section>
-
+<!-- CTA FINAL -->
 <section class="cta-section">
   <div class="reveal">
     <p class="cta__eyebrow">Lancez votre projet</p>
@@ -815,7 +773,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="cta__item">Premier échange gratuit, aucune obligation</div>
       <div class="cta__item">Devis détaillé fabrication + livraison</div>
       <div class="cta__item">Livraison nationale depuis Bordeaux</div>
-      <div class="cta__item">Garantie 2 ans pièces et main-d'œuvre</div>
+      <div class="cta__item">Garantie 2 ans pièces et main-d'oeuvre</div>
     </div>
   </div>
   <div class="cta__box reveal reveal-d1">
@@ -833,6 +791,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <p class="cta__secondary">Ou directement : contact@kobo-design.fr</p>
   </div>
 </section>
+
 
 <!-- FOOTER -->
   <footer>
@@ -928,25 +887,50 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   /* Timeline interactive */
-  const stepImgs = [
-    'img/bureau-bibliotheque-2.png',
-    'img/meuble-tv-reel.jpg',
-    'img/armoires-enfant-1.jpg',
-    'img/bibliotheques.png'
-  ];
-  function showStep(n){
-    document.querySelectorAll('.tstep').forEach((s,i)=>s.classList.toggle('active',i===n));
-    document.querySelectorAll('.detail__panel').forEach((p,i)=>{
-      p.classList.toggle('active',i===n);
+  var currentStep = 0;
+  var autoTimer = null;
+  var AUTO_DELAY = 5000;
+
+  function showStep(n, userTriggered) {
+    currentStep = n;
+    // Steps
+    document.querySelectorAll('.tstep').forEach(function(s,i){ s.classList.toggle('active', i===n); });
+    // Panels
+    document.querySelectorAll('.detail__panel').forEach(function(p,i){ p.classList.toggle('active', i===n); });
+    // Images
+    document.querySelectorAll('.detail__img').forEach(function(img,i){
+      img.style.display = (i===n) ? 'block' : 'none';
     });
-    // Update image
-    const imgs=document.querySelectorAll('.detail__img');
-    imgs.forEach(img=>img.style.display='none');
-    imgs[n].style.display='block';
-    imgs[n].style.backgroundImage=`url('${stepImgs[n]}')`;
+    // Progress bar
+    var bar = document.getElementById('progressBar');
+    if(bar) bar.style.width = ((n+1)/5*100) + '%';
+    // Dots
+    document.querySelectorAll('.tl-dot').forEach(function(d,i){ d.classList.toggle('active', i===n); });
+    // Reset auto-play if user clicked
+    if(userTriggered) {
+      clearInterval(autoTimer);
+      autoTimer = setInterval(function(){ showStep((currentStep+1)%5, false); }, AUTO_DELAY);
+    }
   }
-  // Init — afficher seulement la première image
-  document.querySelectorAll('.detail__img').forEach((img,i)=>{img.style.display=i===0?'block':'none'});
+
+  // Init images
+  document.querySelectorAll('.detail__img').forEach(function(img,i){ img.style.display = i===0 ? 'block' : 'none'; });
+  // Init progress bar
+  var initBar = document.getElementById('progressBar');
+  if(initBar) initBar.style.width = '20%';
+  // Auto-play start when timeline enters viewport
+  var tlEl = document.getElementById('timeline');
+  if(tlEl) {
+    var tlObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting && !autoTimer){
+          autoTimer = setInterval(function(){ showStep((currentStep+1)%5, false); }, AUTO_DELAY);
+          tlObs.unobserve(tlEl);
+        }
+      });
+    }, {threshold: 0.3});
+    tlObs.observe(tlEl);
+  }
 
   /* Reveal */
   const io=new IntersectionObserver(entries=>{
