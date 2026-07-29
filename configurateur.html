@@ -2239,6 +2239,9 @@ function toggleCaissonEdit(){
   var btn=document.getElementById('btn-edit-cais');
   if(btn) btn.classList.toggle('active',caissonEditMode);
   wrap.classList.toggle('mode-edit',caissonEditMode);
+  // En mode biblio le panneau gauche contient déjà tous les boutons — masquer la barre canvas
+  var editBar=document.getElementById('c-edit-bar');
+  if(editBar && BIBLIO_MODE) editBar.style.display='none';
   if(!caissonEditMode) controls.enabled=true;
   cvs.style.cursor=caissonEditMode?'crosshair':'';
   if(!caissonEditMode) clearCaissonGhost();
