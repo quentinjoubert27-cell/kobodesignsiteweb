@@ -58,33 +58,45 @@ module.exports = async function handler(req, res) {
 
     // 2. Créer compte Auth + client + projet dans l'admin
     try {
-      // Récupérer ou créer l'utilisateur Supabase Auth
       let userId = null;
-      let isNew = false;
-      const { data: existingClient } = await supabase.from('clients').select('id').eq('email', email).maybeSingle();
+
+      // Chercher d'abord dans la table clients par email
+      const { data: existingClient } = await supabase
+        .from('clients').select('id').eq('email', email).maybeSingle();
 
       if (existingClient) {
         userId = existingClient.id;
-        await supabase.auth.admin.updateUserById(userId, { user_metadata: { prenom, nom: nom || '' } });
+        // Mise à jour Auth (non-bloquante si ça échoue)
+        await supabase.auth.admin.updateUserById(userId, {
+          user_metadata: { prenom, nom: nom || '' }
+        }).catch(() => {});
       } else {
-        isNew = true;
-        const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
-          email,
-          email_confirm: true,
-          user_metadata: { prenom, nom, needs_password: true },
-        });
-        if (createErr) throw new Error('Création compte: ' + createErr.message);
-        userId = newUser.user.id;
+        // Chercher dans Supabase Auth au cas où le compte existe mais pas dans clients
+        const { data: authList } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const existingAuth = (authList?.users || []).find(u => u.email === email);
+
+        if (existingAuth) {
+          userId = existingAuth.id;
+        } else {
+          const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
+            email,
+            email_confirm: true,
+            user_metadata: { prenom, nom, needs_password: true },
+          });
+          if (createErr) throw new Error('createUser: ' + createErr.message);
+          userId = newUser.user.id;
+        }
       }
 
-      // Upsert dans la table clients (avec l'UUID auth comme id)
-      await supabase.from('clients').upsert({
+      // Upsert client (conflit sur email ET id)
+      const { error: upsertErr } = await supabase.from('clients').upsert({
         id: userId,
         prenom,
         nom: nom || '',
         email,
         telephone: telephone || null,
-      }, { onConflict: 'id' });
+      }, { onConflict: 'email' });
+      if (upsertErr) throw new Error('upsert client: ' + upsertErr.message);
 
       // Créer le projet
       const nomProjet = `Demande ${type_projet ? '— ' + type_projet : ''} · ${prenom} ${nom}`.slice(0, 200);
@@ -99,15 +111,13 @@ module.exports = async function handler(req, res) {
         ].filter(Boolean).join('\n') || null,
         statut: 'En étude',
       }).select('id').single();
-      if (projetErr) throw new Error('Création projet: ' + projetErr.message);
+      if (projetErr) throw new Error('insert projet: ' + projetErr.message);
 
       if (newProjet?.id) {
-        // Message initial dans le chat admin
         await supabase.from('messages').insert([{
           projet_id: newProjet.id, expediteur: 'client', contenu: message, lu: false
         }]);
 
-        // Documents uploadés
         if (fichiers) {
           const entries = fichiers.split('|').map(s => s.trim()).filter(Boolean);
           for (const entry of entries) {
@@ -120,15 +130,19 @@ module.exports = async function handler(req, res) {
                           : ext === 'pdf' ? 'application/pdf'
                           : 'application/octet-stream';
             await supabase.from('documents').insert([{
-              projet_id: newProjet.id, nom: docNom, type: docType, categorie: 'document', url, uploade_par: 'client'
+              projet_id: newProjet.id, nom: docNom, type: docType,
+              categorie: 'document', url, uploade_par: 'client'
             }]);
           }
         }
-
       }
     } catch (adminErr) {
-      console.error('Erreur création client/projet admin:', adminErr);
-      // Non bloquant — l'email interne a déjà été envoyé
+      console.error('[contact] Erreur création client/projet:', adminErr.message);
+      // Log dans audit_logs pour visibilité admin
+      await supabase.from('audit_logs').insert([{
+        event: 'contact_admin_creation_failed',
+        meta: { email, prenom, nom, error: adminErr.message }
+      }]).catch(() => {});
     }
 
     // 3. Email via Resend
