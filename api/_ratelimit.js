@@ -29,7 +29,7 @@ async function rateLimit(ip, key, { max, windowSec }) {
   if (!ok) {
     const { createClient } = require('@supabase/supabase-js');
     const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    sb.from('audit_logs').insert([{ event: 'rate_limited', ip, meta: { endpoint: key, count } }]).catch(() => {});
+    sb.from('audit_logs').insert([{ event: 'rate_limited', ip, meta: { endpoint: key, count } }]).then(() => {}).catch(() => {});
   }
 
   return { ok, count, max };
