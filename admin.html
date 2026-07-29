@@ -602,6 +602,11 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Projets
     </button>
+    <button class="nav-item" onclick="showView('configs', this)" id="nav-configs">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Configurations
+      <span class="nav-badge" id="nav-configs-badge" style="display:none"></span>
+    </button>
     <button class="nav-item" onclick="showView('commandes', this)" id="nav-commandes">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Commandes
@@ -1408,13 +1413,21 @@
       { count: cc },
       { count: pc },
       { count: mc },
-      { data: projetsCA }
+      { data: projetsCA },
+      { count: configsBiblioCount },
+      { count: configsSdbCount }
     ] = await Promise.all([
       sb.from('clients').select('*', { count: 'exact', head: true }),
       sb.from('projets').select('*', { count: 'exact', head: true }).neq('statut', 'Terminé'),
       sb.from('messages_general').select('*', { count: 'exact', head: true }).eq('lu', false).eq('expediteur', 'client'),
-      sb.from('projets').select('montant, statut')
+      sb.from('projets').select('montant, statut'),
+      sb.from('configs_biblio').select('*', { count: 'exact', head: true }),
+      sb.from('configs_sdb').select('*', { count: 'exact', head: true }),
     ]);
+    const totalConfigs = (configsBiblioCount || 0) + (configsSdbCount || 0);
+    const badge = document.getElementById('nav-configs-badge');
+    if (badge && totalConfigs > 0) { badge.textContent = totalConfigs; badge.style.display = ''; }
+    else if (badge) badge.style.display = 'none';
 
     // Commandes en cours
     const commandesProjets = (projetsCA || []).filter(p => p.statut === 'Commandé' || p.statut === 'Livraison');
