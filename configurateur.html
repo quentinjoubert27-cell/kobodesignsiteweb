@@ -2410,11 +2410,12 @@ function updateCaissonGhost(e){
     });
     gW=bW0; gH=ep; gX=bCx0; gY=ycmToLocal(hit.y_cm);
   } else if(caissonType==='separator'||caissonType==='separator_simple'){
-    var comp=getCompartment(hit.y_cm,hit.x_cm);
+    var _incSG=caissonType==='separator_simple';
+    var comp=getCompartment(hit.y_cm,hit.x_cm,_incSG);
     if(comp.height_cm<1){clearCaissonGhost();return;}
     occupied=els.some(function(el){
       if(el.type!==caissonType) return false;
-      var ec=getCompartment(el.y_cm,el.x_cm);
+      var ec=getCompartment(el.y_cm,el.x_cm,_incSG);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     });
     gW=ep; gH=comp.height_cm/100; gX=xcmToLocal(hit.x_cm); gY=comp.centerY;
