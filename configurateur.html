@@ -3640,7 +3640,7 @@ async function submitConfig(){
   var decouverte  = (document.getElementById('cfgDecouverte').value||'').trim();
   if(!prenom||!nom||!email){ errEl.textContent='Prénom, nom et email obligatoires.'; errEl.style.display='block'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
-  if(!telephone){ errEl.textContent='Numéro de téléphone obligatoire.'; errEl.style.display='block'; return; }
+  if(!telephone && !_cfgSession){ errEl.textContent='Numéro de téléphone obligatoire.'; errEl.style.display='block'; return; }
   if(!codePostal){ errEl.textContent='Code postal obligatoire.'; errEl.style.display='block'; return; }
   if(!decouverte){ errEl.textContent='Merci d\'indiquer comment vous nous avez trouvés.'; errEl.style.display='block'; return; }
 
