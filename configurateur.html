@@ -1105,28 +1105,26 @@ function setActiveGhost(v){ if(_isTVExtra()) tvGhost[_tvIdx()]=v; else if(active
 function getActiveGuidesGrp(){ return _isTVExtra()?tvGuides[_tvIdx()]:(activeCaisson===1?caissonGuidesGrp:caissonGuidesGrp2); }
 function getActiveOpenState(){ return _isTVExtra()?tvOpenState[_tvIdx()]:(activeCaisson===1?caissonOpenState:caissonOpenState2); }
 
-function getCompartment(y_cm, x_cm){
+function getCompartment(y_cm, x_cm, includeSimple){
   var iH_cm=(getActiveCH()-2*EP)*100;
   var iW_cm=(getActiveCL()-2*EP)*100;
   var shelves;
   if(x_cm!==undefined){
-    // Fusionner les étagères par y_cm : deux demi-étagères qui se rejoignent en x_cm
-    // (ex: [0→60] + [60→120]) comptent ensemble comme une frontière complète
     var byY={};
     getActiveEls().forEach(function(e){
-      if(e.type!=='shelf'&&e.type!=='shelf_simple') return;
+      if(e.type!=='shelf'&&!(includeSimple&&e.type==='shelf_simple')) return;
       var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
       var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
-      if(sl>x_cm||sr<x_cm) return; // ne touche pas x_cm du tout
+      if(sl>x_cm||sr<x_cm) return;
       if(!byY[e.y_cm]) byY[e.y_cm]={l:sl,r:sr};
       else { byY[e.y_cm].l=Math.min(byY[e.y_cm].l,sl); byY[e.y_cm].r=Math.max(byY[e.y_cm].r,sr); }
     });
     shelves=Object.keys(byY).filter(function(y){
-      return byY[y].l<x_cm&&byY[y].r>x_cm; // la couverture fusionnée traverse strictement x_cm
+      return byY[y].l<x_cm&&byY[y].r>x_cm;
     }).map(Number).sort(function(a,b){return a-b;});
   } else {
     shelves=getActiveEls().filter(function(e){
-      if(e.type!=='shelf'&&e.type!=='shelf_simple') return false;
+      if(e.type!=='shelf'&&!(includeSimple&&e.type==='shelf_simple')) return false;
       var sl=e.x_left_cm!==undefined?e.x_left_cm:0;
       var sr=e.x_right_cm!==undefined?e.x_right_cm:iW_cm;
       return sl<=1&&sr>=iW_cm-1;
@@ -1349,7 +1347,7 @@ function buildCaisson(){
         m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
         m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
       } else if(el.type==='separator'||el.type==='separator_simple'){
-        var comp=getCompartment(el.y_cm,el.x_cm);
+        var comp=getCompartment(el.y_cm,el.x_cm,el.type==='separator_simple');
         var h=comp.height_cm/100; if(h<0.01) return;
         var tw=ep;
         var m=box(tw,h,CP-ep,matElem);
@@ -1533,7 +1531,7 @@ function buildCaisson2(){
       m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
       m.userData.elemIdx=idx; caissonElemMeshes2.push(m); caissonGrp2.add(m);
     } else if(el.type==='separator'||el.type==='separator_simple'){
-      var comp=getCompartment(el.y_cm,el.x_cm);
+      var comp=getCompartment(el.y_cm,el.x_cm,el.type==='separator_simple');
       var h=comp.height_cm/100; if(h<0.01) return;
       var tw=ep;
       var m=bx2(tw,h,CP-ep,matEl);
@@ -2494,11 +2492,12 @@ function _dropPickedEl(e){
     els.push({type:el.type,y_cm:hit.y_cm,x_left_cm:bay.left_cm,x_right_cm:bay.right_cm});
     setActiveEls(els); clearCaissonGhost(); buildCaisson(); return true;
   } else if(el.type==='separator'||el.type==='separator_simple'){
-    var comp=getCompartment(hit.y_cm,hit.x_cm);
+    var _incS=el.type==='separator_simple';
+    var comp=getCompartment(hit.y_cm,hit.x_cm,_incS);
     if(comp.height_cm<1) return false;
     var occ2=els.some(function(e2){
       if(e2.type!==el.type) return false;
-      var ec=getCompartment(e2.y_cm,e2.x_cm);
+      var ec=getCompartment(e2.y_cm,e2.x_cm,_incS);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(e2.x_cm-hit.x_cm)<MIN_GAP_V;
     });
     if(occ2) return false;
@@ -2535,11 +2534,12 @@ function placeOrRemoveCaisson(e, skipUndo){
     els.push({type:caissonType,y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
     setActiveEls(els);
   } else if(caissonType==='separator'||caissonType==='separator_simple'){
-    var comp=getCompartment(hit.y_cm,hit.x_cm);
+    var _incS2=caissonType==='separator_simple';
+    var comp=getCompartment(hit.y_cm,hit.x_cm,_incS2);
     if(comp.height_cm<1) return true;
     if(els.some(function(el){
       if(el.type!==caissonType) return false;
-      var ec=getCompartment(el.y_cm,el.x_cm);
+      var ec=getCompartment(el.y_cm,el.x_cm,_incS2);
       return ec.bottom_cm===comp.bottom_cm&&ec.top_cm===comp.top_cm&&Math.abs(el.x_cm-hit.x_cm)<MIN_GAP_V;
     })) return true;
     var sepX=hit.x_cm;
@@ -2944,8 +2944,9 @@ function _updateHoverEl(hitPos){
     if(pel.type==='separator'||pel.type==='separator_simple'){
       d=Math.abs(hitPos.x_cm-pel.x_cm);
       // Vérifier même compartiment vertical (ne pas détecter intercalaire dans un autre compartiment)
-      var compCursor=getCompartment(hitPos.y_cm, hitPos.x_cm);
-      var compEl=getCompartment(pel.y_cm, pel.x_cm);
+      var _incSH=pel.type==='separator_simple';
+      var compCursor=getCompartment(hitPos.y_cm, hitPos.x_cm, _incSH);
+      var compEl=getCompartment(pel.y_cm, pel.x_cm, _incSH);
       if(compCursor.bottom_cm!==compEl.bottom_cm||compCursor.top_cm!==compEl.top_cm) return;
     } else {
       d=Math.abs(hitPos.y_cm-pel.y_cm);
