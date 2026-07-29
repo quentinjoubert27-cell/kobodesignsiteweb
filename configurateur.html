@@ -812,12 +812,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="panel" id="p4">
         <div class="sec">Votre configuration</div>
         <div class="recap-box" id="recap4"></div>
-        <div class="sec">Vos coordonnées</div>
+        <div class="sec" id="cfgCoordSec">Vos coordonnées</div>
+
+        <!-- Bandeau client connecté (caché par défaut) -->
+        <div id="cfgLoggedIn" style="display:none;background:rgba(205,62,0,.07);border:1px solid rgba(205,62,0,.18);border-radius:10px;padding:14px 18px;margin-bottom:16px">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700" id="cfgLoggedInName"></p>
+          <p style="margin:0;font-size:12px;color:var(--text2)" id="cfgLoggedInEmail"></p>
+        </div>
+
         <div id="cfgFormWrap">
-          <input type="text"  id="cfgPrenom"    class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
-          <input type="text"  id="cfgNom"       class="cfg-field" placeholder="Votre nom *" maxlength="80" autocomplete="family-name"/>
-          <input type="email" id="cfgEmail"     class="cfg-field" placeholder="Votre email *" maxlength="200" autocomplete="email"/>
-          <input type="tel"   id="cfgTelephone"  class="cfg-field" placeholder="Votre téléphone *" maxlength="30" autocomplete="tel"/>
+          <!-- Champs cachés utilisés quand connecté -->
+          <input type="hidden" id="cfgPrenom"/>
+          <input type="hidden" id="cfgNom"/>
+          <input type="hidden" id="cfgEmail"/>
+          <input type="hidden" id="cfgTelephone"/>
+
+          <!-- Champs visibles (non connecté) -->
+          <div id="cfgFieldsVisible">
+            <input type="text"  id="cfgPrenomVis"    class="cfg-field" placeholder="Votre prénom *" maxlength="80" autocomplete="given-name"/>
+            <input type="text"  id="cfgNomVis"       class="cfg-field" placeholder="Votre nom *" maxlength="80" autocomplete="family-name"/>
+            <input type="email" id="cfgEmailVis"     class="cfg-field" placeholder="Votre email *" maxlength="200" autocomplete="email"/>
+            <input type="tel"   id="cfgTelephoneVis" class="cfg-field" placeholder="Votre téléphone *" maxlength="30" autocomplete="tel"/>
+          </div>
+
           <input type="text" id="cfgCodePostal" class="cfg-field" placeholder="Votre code postal *" maxlength="10" autocomplete="postal-code" inputmode="numeric"/>
           <select id="cfgDecouverte" class="cfg-field" style="cursor:pointer;">
             <option value="">Comment nous avez-vous trouvés ? *</option>
@@ -3600,17 +3617,25 @@ function buildRecap4(){
 }
 
 async function submitConfig(){
-  var prenom     = (document.getElementById('cfgPrenom').value||'').trim();
-  var nom        = (document.getElementById('cfgNom').value||'').trim();
-  var email      = (document.getElementById('cfgEmail').value||'').trim();
-  var telephone  = (document.getElementById('cfgTelephone').value||'').trim();
+  var prenom, nom, email, telephone;
+  if (_cfgSession) {
+    prenom    = _cfgSession.prenom;
+    nom       = _cfgSession.nom;
+    email     = _cfgSession.email;
+    telephone = _cfgSession.telephone;
+  } else {
+    prenom    = (document.getElementById('cfgPrenomVis').value||'').trim();
+    nom       = (document.getElementById('cfgNomVis').value||'').trim();
+    email     = (document.getElementById('cfgEmailVis').value||'').trim();
+    telephone = (document.getElementById('cfgTelephoneVis').value||'').trim();
+  }
   var message    = (document.getElementById('cfgMessage').value||'').trim();
   var bot        = document.getElementById('cfgBot').value;
   var errEl      = document.getElementById('cfgErr');
   var btn        = document.getElementById('cfgSubmitBtn');
 
   errEl.style.display='none';
-  var telephone   = (document.getElementById('cfgTelephone').value||'').trim();
+  if (!_cfgSession) telephone = (document.getElementById('cfgTelephoneVis').value||'').trim();
   var codePostal  = (document.getElementById('cfgCodePostal').value||'').trim();
   var decouverte  = (document.getElementById('cfgDecouverte').value||'').trim();
   if(!prenom||!nom||!email){ errEl.textContent='Prénom, nom et email obligatoires.'; errEl.style.display='block'; return; }
@@ -3703,38 +3728,42 @@ async function submitConfig(){
 }
 window.submitConfig=submitConfig;
 
-// Pré-remplir le formulaire si l'utilisateur est déjà connecté
+// Détection session — mode connecté ou non
+var _cfgSession = null;
 (function(){
   try {
-    var sb = supabase.createClient(
+    var sbCfg = supabase.createClient(
       'https://auzcbtipzqxmllkzdxls.supabase.co',
       'sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U'
     );
-    sb.auth.getSession().then(function(res){
+    sbCfg.auth.getSession().then(function(res){
       var session = res.data && res.data.session;
       if (!session) return;
       var user = session.user;
       var meta = user.user_metadata || {};
-      var prenom = meta.prenom || '';
-      var nom    = meta.nom    || '';
-      var email  = user.email  || '';
-
-      // Récupérer le téléphone depuis la table clients
-      sb.from('clients').select('prenom,nom,telephone').eq('id', user.id).maybeSingle().then(function(r){
+      sbCfg.from('clients').select('prenom,nom,telephone').eq('id', user.id).maybeSingle().then(function(r){
         var row = r.data || {};
-        var f = document.getElementById('cfgPrenom');    if(f && (prenom||row.prenom)) f.value = row.prenom || prenom;
-        var g = document.getElementById('cfgNom');       if(g && (nom||row.nom))       g.value = row.nom    || nom;
-        var h = document.getElementById('cfgEmail');     if(h && email)                h.value = email;
-        var t = document.getElementById('cfgTelephone'); if(t && row.telephone)        t.value = row.telephone;
+        var prenom = row.prenom || meta.prenom || '';
+        var nom    = row.nom    || meta.nom    || '';
+        var email  = user.email || '';
+        var tel    = row.telephone || '';
 
-        // Afficher un bandeau "connecté en tant que"
-        var wrap = document.getElementById('cfgFormWrap');
-        if(wrap && email){
-          var banner = document.createElement('div');
-          banner.style.cssText = 'background:rgba(205,62,0,.08);border:1px solid rgba(205,62,0,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text1,#1A1A1A);margin-bottom:14px';
-          banner.innerHTML = '✓ Connecté en tant que <strong>' + (row.prenom||prenom||email) + '</strong> — vos informations ont été pré-remplies.';
-          wrap.insertBefore(banner, wrap.firstChild);
-        }
+        // Stocker pour submitConfig
+        _cfgSession = { prenom, nom, email, telephone: tel };
+
+        // Remplir les champs cachés
+        document.getElementById('cfgPrenom').value    = prenom;
+        document.getElementById('cfgNom').value       = nom;
+        document.getElementById('cfgEmail').value     = email;
+        document.getElementById('cfgTelephone').value = tel;
+
+        // Cacher les champs visibles, afficher le bandeau
+        document.getElementById('cfgFieldsVisible').style.display = 'none';
+        document.getElementById('cfgCoordSec').style.display = 'none';
+        var banner = document.getElementById('cfgLoggedIn');
+        document.getElementById('cfgLoggedInName').textContent = '✓ Connecté en tant que ' + (prenom || email);
+        document.getElementById('cfgLoggedInEmail').textContent = email;
+        banner.style.display = 'block';
       }).catch(function(){});
     }).catch(function(){});
   } catch(e){}
