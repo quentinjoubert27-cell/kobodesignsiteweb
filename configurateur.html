@@ -2115,14 +2115,15 @@ function _rebuildEditBar(){
   var btns;
   if(BIBLIO_MODE){
     btns=document.querySelector('.panel.on .c-type-btns')||document.querySelector('#fn-edit-content .c-type-btns');
-  } else {
-    // SDB : injecte dans c-edit-bar si pas encore présent
+    // Nettoyer les boutons de type éventuellement injectés dans #c-edit-bar (restes d'un passage par le mode SDB)
     var bar=document.getElementById('c-edit-bar');
-    btns=bar&&bar.querySelector('.c-type-btns');
-    if(bar&&!btns){
-      btns=document.createElement('div'); btns.className='c-type-btns';
-      bar.insertBefore(btns, bar.querySelector('.c-edit-sep')||bar.firstChild);
-    }
+    if(bar){ var stale=bar.querySelector('.c-type-btns'); if(stale) stale.remove(); }
+  } else {
+    // SDB : utilise le container déjà présent dans le panneau gauche
+    btns=document.querySelector('#p-amgt-edit-content .c-type-btns');
+    // Nettoyer les éventuels boutons injectés dans #c-edit-bar (ancienne méthode)
+    var bar=document.getElementById('c-edit-bar');
+    if(bar){ var staleB=bar.querySelector('.c-type-btns'); if(staleB) staleB.remove(); }
   }
   if(!btns) return;
   var selectorHTML='';
@@ -2239,9 +2240,6 @@ function toggleCaissonEdit(){
   var btn=document.getElementById('btn-edit-cais');
   if(btn) btn.classList.toggle('active',caissonEditMode);
   wrap.classList.toggle('mode-edit',caissonEditMode);
-  // En mode biblio le panneau gauche contient déjà tous les boutons — masquer la barre canvas
-  var editBar=document.getElementById('c-edit-bar');
-  if(editBar && BIBLIO_MODE) editBar.style.display='none';
   if(!caissonEditMode) controls.enabled=true;
   cvs.style.cursor=caissonEditMode?'crosshair':'';
   if(!caissonEditMode) clearCaissonGhost();
