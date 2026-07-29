@@ -1768,6 +1768,7 @@ function removeCableHole(i){
 function setCableHole(i,key,v){
   tvCableHoles[i][key]=+v;
   buildCaisson();
+  renderCableHolesUI();
 }
 function renderCableHolesUI(){
   var el=document.getElementById('tv-cable-list');
@@ -1797,6 +1798,7 @@ function renderCableHolesUI(){
       +'<span class="dim-unit">cm</span>'
       +'<button class="dim-step" onclick="tvCableHoles['+i+'].y=Math.min('+maxY+',tvCableHoles['+i+'].y+1);setCableHole('+i+',\'y\',tvCableHoles['+i+'].y);renderCableHolesUI()">+</button>'
       +'</div></div>'
+      +'<div style="margin-bottom:4px;font-size:10px;font-weight:600;color:var(--text2);letter-spacing:.05em;text-transform:uppercase">Diamètre</div>'
       +'<div style="display:flex;gap:5px;flex-wrap:wrap">'+dBtns+'</div>'
       +'</div>';
   }).join('');
