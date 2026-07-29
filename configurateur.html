@@ -3489,7 +3489,20 @@ var camTargets=[
 ];
 var camAnim=null;
 function animCamera(n){
-  if(BIBLIO_MODE) return;
+  var cfg=currentFT&&FT_CONFIGS[currentFT];
+  if(BIBLIO_MODE){
+    // En mode biblio, on recentre toujours sur la position par défaut du meuble
+    if(!cfg) return;
+    var p0=camera.position.clone(),t0=controls.target.clone();
+    var p1=new THREE.Vector3().fromArray(cfg.cam.pos),t1=new THREE.Vector3().fromArray(cfg.cam.tgt);
+    var f=0,N=50; if(camAnim) clearInterval(camAnim);
+    camAnim=setInterval(function(){
+      f++; var a=f/N; a=a<.5?2*a*a:-1+(4-2*a)*a;
+      camera.position.lerpVectors(p0,p1,a); controls.target.lerpVectors(t0,t1,a); controls.update();
+      if(f>=N){clearInterval(camAnim);camAnim=null;}
+    },16);
+    return;
+  }
   var tgt=camTargets[n-1];
   var p0=camera.position.clone(),t0=controls.target.clone();
   var p1=new THREE.Vector3().fromArray(tgt.pos),t1=new THREE.Vector3().fromArray(tgt.tgt);
