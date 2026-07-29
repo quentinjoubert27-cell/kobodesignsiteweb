@@ -1248,7 +1248,6 @@ function buildCaisson(){
         var sw=(sr-sl)/100;
         var scx=xcmToLocal((sl+sr)/2);
         var m=box(sw,ep,CP-ep,matElem);
-        if(el.type==='shelf_simple') m.material=m.material.clone(), m.material.opacity=0.45, m.material.transparent=true;
         m.position.set(scx,ycmToLocal(el.y_cm),-ep/2);
         m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
       } else if(el.type==='separator'||el.type==='separator_simple'){
@@ -1256,7 +1255,6 @@ function buildCaisson(){
         var comp=getCompartment(el.y_cm,el.x_cm,_incSDB);
         var h=comp.height_cm/100; if(h<0.01) return;
         var m=box(ep,h,CP-ep,matElem);
-        if(el.type==='separator_simple') m.material=m.material.clone(), m.material.opacity=0.45, m.material.transparent=true;
         m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
         m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
       }
