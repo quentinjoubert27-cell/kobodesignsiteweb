@@ -95,7 +95,7 @@ module.exports = async function handler(req, res) {
         nom: nom || '',
         email,
         telephone: telephone || null,
-      }, { onConflict: 'email' });
+      }, { onConflict: 'id' });
       if (upsertErr) throw new Error('upsert client: ' + upsertErr.message);
 
       // Créer le projet

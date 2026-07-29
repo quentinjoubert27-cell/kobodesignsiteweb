@@ -44,16 +44,27 @@ module.exports = async function handler(req, res) {
       userId = found.id;
       await sb.auth.admin.updateUserById(userId, {
         user_metadata: { prenom, nom: nom || '' }
-      });
+      }).catch(() => {});
     } else {
-      isNew = true;
-      const { data: newUser, error: createErr } = await sb.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: { prenom, nom, needs_password: true },
-      });
-      if (createErr) throw new Error('Création compte: ' + createErr.message);
-      userId = newUser.user.id;
+      // Chercher dans Auth (email peut exister sans être dans clients)
+      const { data: authList } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const existingAuth = (authList?.users || []).find(u => u.email === email);
+
+      if (existingAuth) {
+        userId = existingAuth.id;
+        await sb.auth.admin.updateUserById(userId, {
+          user_metadata: { prenom, nom: nom || '' }
+        }).catch(() => {});
+      } else {
+        isNew = true;
+        const { data: newUser, error: createErr } = await sb.auth.admin.createUser({
+          email,
+          email_confirm: true,
+          user_metadata: { prenom, nom, needs_password: true },
+        });
+        if (createErr) throw new Error('Création compte: ' + createErr.message);
+        userId = newUser.user.id;
+      }
     }
 
     // 2. Upsert dans la table clients
