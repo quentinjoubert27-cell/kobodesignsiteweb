@@ -840,7 +840,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   /* Header */
   const hdr=document.getElementById('site-header');
   window.addEventListener('scroll',()=>hdr.classList.toggle('shadow',scrollY>10),{passive:true});
-  document.getElementById('hero').classList.add('loaded');
+  var _hero=document.getElementById('hero'); if(_hero) _hero.classList.add('loaded');
 
   /* Curseur */
   const cur=document.getElementById('cursor');
