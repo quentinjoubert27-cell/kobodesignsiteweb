@@ -2553,7 +2553,12 @@ function _showDragLabel(hit){
   var y=Math.round(hit.y_cm);
   var dim;
   if(caissonType==='separator'||caissonType==='separator_simple'){
-    dim='↔ '+Math.round(hit.x_cm)+' cm';
+    // Largeur des deux cases créées par l'intercalaire
+    var iW_cm=Math.round((getActiveCL()-2*EP)*100);
+    var sepXs=getActiveEls().filter(function(e){return e.type==='separator'||e.type==='separator_simple';}).map(function(e){return e.x_cm;}).sort(function(a,b){return a-b;});
+    var leftB=0, rightB=iW_cm;
+    sepXs.forEach(function(sx){ if(sx<hit.x_cm&&sx>leftB) leftB=sx; if(sx>hit.x_cm&&sx<rightB) rightB=sx; });
+    dim='← '+Math.round(hit.x_cm-leftB)+' cm  ·  '+Math.round(rightB-hit.x_cm)+' cm →';
   } else {
     // Trouver l'étagère la plus proche en dessous et au-dessus
     var comp=getCompartment(hit.y_cm, hit.x_cm);
