@@ -4029,14 +4029,12 @@ function updateCotes(){
     var xs=[0].concat(seps.map(function(e){return Math.round(e.x_cm);})).concat([iW_cm]);
     xs.sort(function(a,b){return a-b;});
     xs=xs.filter(function(v,i){return i===0||v!==xs[i-1];});
-    var yLbl=EP+0.04; // 4 cm au-dessus du fond intérieur
+    // hDim au-dessus du caisson (même niveau que la largeur totale mais légèrement en dessous)
     for(var j=0;j<xs.length-1;j++){
       var x0=xs[j],x1=xs[j+1],wcm=x1-x0;
-      var xMid=-CL_m/2+EP+(x0+x1)/200;
-      var pt2=projectPt(grp.localToWorld(new THREE.Vector3(xMid,yLbl,0)));
-      var ptL=projectPt(grp.localToWorld(new THREE.Vector3(-CL_m/2+EP+x0/100,yLbl,0)));
-      var ptR=projectPt(grp.localToWorld(new THREE.Vector3(-CL_m/2+EP+x1/100,yLbl,0)));
-      if(Math.abs(ptR.x-ptL.x)>24) html+='<div class="cote-inner" style="left:'+Math.round(pt2.x)+'px;top:'+Math.round(pt2.y)+'px">'+wcm+' cm</div>';
+      var pL=projectPt(grp.localToWorld(new THREE.Vector3(-CL_m/2+EP+x0/100, CH_m, 0)));
+      var pR=projectPt(grp.localToWorld(new THREE.Vector3(-CL_m/2+EP+x1/100, CH_m, 0)));
+      hDim(pL, pR, wcm+' cm', -4);
     }
   }
   showSepWidths(caissonElements, CL, CH, caissonGrp);
