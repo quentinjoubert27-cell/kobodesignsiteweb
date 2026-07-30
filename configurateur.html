@@ -4029,12 +4029,19 @@ function updateCotes(){
     var xs=[0].concat(seps.map(function(e){return Math.round(e.x_cm);})).concat([iW_cm]);
     xs.sort(function(a,b){return a-b;});
     xs=xs.filter(function(v,i){return i===0||v!==xs[i-1];});
-    // hDim au-dessus du caisson (même niveau que la largeur totale mais légèrement en dessous)
+    var yTop=CH_m-EP; // haut de l'intérieur
     for(var j=0;j<xs.length-1;j++){
       var x0=xs[j],x1=xs[j+1],wcm=x1-x0;
-      var pL=projectPt(grp.localToWorld(new THREE.Vector3(-CL_m/2+EP+x0/100, CH_m, 0)));
-      var pR=projectPt(grp.localToWorld(new THREE.Vector3(-CL_m/2+EP+x1/100, CH_m, 0)));
-      hDim(pL, pR, wcm+' cm', -4);
+      var pL=projectPt(grp.localToWorld(new THREE.Vector3(-CL_m/2+EP+x0/100, yTop, 0)));
+      var pR=projectPt(grp.localToWorld(new THREE.Vector3(-CL_m/2+EP+x1/100, yTop, 0)));
+      var cx=Math.round((pL.x+pR.x)/2), cy=Math.round((pL.y+pR.y)/2);
+      var pw=Math.abs(pR.x-pL.x);
+      if(pw<32) continue;
+      // Ligne horizontale entre les deux bords de la baie
+      svgLines+='<line x1="'+Math.round(pL.x)+'" y1="'+cy+'" x2="'+Math.round(pR.x)+'" y2="'+cy+'" stroke="rgba(20,20,20,.3)" stroke-width="1" stroke-dasharray="3,3"/>';
+      svgLines+='<line x1="'+Math.round(pL.x)+'" y1="'+(cy-4)+'" x2="'+Math.round(pL.x)+'" y2="'+(cy+4)+'" stroke="rgba(20,20,20,.55)" stroke-width="1.5"/>';
+      svgLines+='<line x1="'+Math.round(pR.x)+'" y1="'+(cy-4)+'" x2="'+Math.round(pR.x)+'" y2="'+(cy+4)+'" stroke="rgba(20,20,20,.55)" stroke-width="1.5"/>';
+      html+='<div class="cote-inner" style="left:'+cx+'px;top:'+cy+'px">↔ '+wcm+' cm</div>';
     }
   }
   showSepWidths(caissonElements, CL, CH, caissonGrp);
