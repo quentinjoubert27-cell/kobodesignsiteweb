@@ -997,20 +997,20 @@ var MATS_CAIS = [
   {n:'Noyer',          src:'img/NOYER.jpg',                     r:.62},
   {n:'Chêne Foncé',    src:'img/CHENEFONCE.jpg',                r:.62},
   {n:'Sapelli',        src:'img/SAPELLI.jpg',                   r:.60},
-  {n:'Frêne Blanchi',  src:'textures/caisson/freneblanchi.jpg', r:.65},
-  {n:'Bois Blanc',     src:'textures/caisson/boisblanc.jpg',    r:.68},
-  {n:'Marron',         src:'textures/caisson/boismarron.png',   r:.62},
-  {n:'Taupe',          src:'textures/caisson/boistaupe.jpg',    r:.65},
-  {n:'Noir Charbon',   src:'textures/caisson/noircharbon.jpg',  r:.55},
-  {n:'Noir Mat',       src:'textures/caisson/noirmat.jpg',      r:.50},
-  {n:'Vert Forêt',     src:'textures/caisson/vertforet.jpg',    r:.62},
+  {n:'Frêne Blanchi',  src:'textures/caisson/freneblanchi.jpg', r:.65, panel:true},
+  {n:'Bois Blanc',     src:'textures/caisson/boisblanc.jpg',    r:.68, panel:true},
+  {n:'Marron',         src:'textures/caisson/boismarron.png',   r:.62, panel:true},
+  {n:'Taupe',          src:'textures/caisson/boistaupe.jpg',    r:.65, panel:true},
+  {n:'Noir Charbon',   src:'textures/caisson/noircharbon.jpg',  r:.55, panel:true},
+  {n:'Noir Mat',       src:'textures/caisson/noirmat.jpg',      r:.50, panel:true},
+  {n:'Vert Forêt',     src:'textures/caisson/vertforet.jpg',    r:.62, panel:true},
   {n:'Vert Sauge',     src:'img/VERTSAUGE.jpg',                 r:.65},
-  {n:'Bleu Nuit',      src:'textures/caisson/boisbleunuit.jpg', r:.58},
-  {n:'Bordeaux',       src:'textures/caisson/boisbordeaux.jpg', r:.60},
-  {n:'Terracotta',     src:'textures/caisson/terracotta.jpg',   r:.62},
-  {n:'Jaune Pâle',     src:'textures/caisson/jaunepal.jpg',     r:.68},
-  {n:'Crème',          src:'textures/caisson/creme.png',        r:.70},
-  {n:'Gris Perle',     src:'textures/caisson/boisgrisperle.jpg',r:.65},
+  {n:'Bleu Nuit',      src:'textures/caisson/boisbleunuit.jpg', r:.58, panel:true},
+  {n:'Bordeaux',       src:'textures/caisson/boisbordeaux.jpg', r:.60, panel:true},
+  {n:'Terracotta',     src:'textures/caisson/terracotta.jpg',   r:.62, panel:true},
+  {n:'Jaune Pâle',     src:'textures/caisson/jaunepal.jpg',     r:.68, panel:true},
+  {n:'Crème',          src:'textures/caisson/creme.png',        r:.70, panel:true},
+  {n:'Gris Perle',     src:'textures/caisson/boisgrisperle.jpg',r:.65, panel:true},
   {n:'Gris Ardoise',   src:'img/GRISARDOISE.jpg',               r:.65},
   {n:'Brun Rosé',      src:'img/BRUNROSE.jpg',                  r:.65},
   {n:'Blanc',          src:null, color:'#F0EDEA',               r:.70},
@@ -1287,7 +1287,12 @@ function buildCaisson(){
     var tex=_caisTexCache[S.matCais];
     if(tex){
       var t=tex.clone(); t.needsUpdate=true;
-      t.repeat.set(Math.max(w,0.01)/0.40, Math.max(h,0.01)/0.40);
+      if(md.panel){
+        t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
+        t.repeat.set(1,1);
+      } else {
+        t.repeat.set(Math.max(w,0.01)/0.40, Math.max(h,0.01)/0.40);
+      }
       return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});
     }
     var base=new THREE.Color(md.color||'#D4A96A');
@@ -1577,7 +1582,7 @@ function buildCaisson2(){
   var md=MATS_CAIS[S.matCais];
   function pm2(dk,w,h){
     var tex=_caisTexCache[S.matCais];
-    if(tex){var t=tex.clone();t.needsUpdate=true;t.repeat.set(Math.max(w,0.01)/0.40,Math.max(h,0.01)/0.40);return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});}
+    if(tex){var t=tex.clone();t.needsUpdate=true;if(md.panel){t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;t.repeat.set(1,1);}else{t.repeat.set(Math.max(w,0.01)/0.40,Math.max(h,0.01)/0.40);}return new THREE.MeshStandardMaterial({map:t,roughness:md.r,metalness:0.02});}
     var c=new THREE.Color(md.color||'#D4A96A');return new THREE.MeshStandardMaterial({color:c.multiplyScalar(dk),roughness:md.r,metalness:0.02});
   }
   var matC=pm2(1.00,ep,0.5), matF=pm2(0.68,0.5,0.4);
