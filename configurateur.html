@@ -4021,6 +4021,27 @@ function updateCotes(){
     if(Math.abs(ptT.y-ptB.y)>20) html+='<div class="cote-inner" style="left:'+pt.x+'px;top:'+pt.y+'px">'+hcm+' cm</div>';
   }
 
+  // ── Largeurs des baies entre intercalaires ──────────────────────
+  function showSepWidths(els, CL_m, grp){
+    var seps=els.filter(function(e){return e.type==='separator'||e.type==='separator_simple';});
+    if(!seps.length) return;
+    var iW_cm=Math.round((CL_m-2*EP)*100);
+    var xs=[0].concat(seps.map(function(e){return Math.round(e.x_cm);})).concat([iW_cm]);
+    xs.sort(function(a,b){return a-b;});
+    xs=xs.filter(function(v,i){return i===0||v!==xs[i-1];});
+    function pgr(x,y){ return projectPt(grp.localToWorld(new THREE.Vector3(x,y,0))); }
+    for(var j=0;j<xs.length-1;j++){
+      var x0=xs[j],x1=xs[j+1],wcm=x1-x0;
+      hDim(pgr(-CL_m/2+EP+x0/100, 0), pgr(-CL_m/2+EP+x1/100, 0), wcm+' cm', 18);
+    }
+  }
+  showSepWidths(caissonElements, CL, caissonGrp);
+  if(isTVMode){
+    if(hasLeft  && tvGrp[0]) showSepWidths(tvElems[0], lW, tvGrp[0]);
+    if(hasRight && tvGrp[1]) showSepWidths(tvElems[1], rW, tvGrp[1]);
+    if(hasTop   && tvGrp[2]) showSepWidths(tvElems[2], tW, tvGrp[2]);
+  }
+
   var svgW=cvs.clientWidth, svgH=cvs.clientHeight;
   ov.innerHTML='<svg width="'+svgW+'" height="'+svgH+'" style="position:absolute;inset:0;pointer-events:none">'+svgLines+'</svg>'+html;
 }
