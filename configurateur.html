@@ -3499,7 +3499,7 @@ function selectFurnitureType(ft){
     controls.minDistance = 0.8; controls.maxDistance = 6.0;
     controls.update();
     scene.background = new THREE.Color(0xF2EAD8);
-    scene.fog = new THREE.Fog(0xF2EAD8, 4, 12);
+    scene.fog = new THREE.Fog(0xF2EAD8, 6, 14);
     solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
     wallBiblio.position.set(0, 0, WALL_BIBLIO_Z);
     floorBiblio.position.set(0, FLOOR_BIBLIO_Y, 0);
@@ -3511,7 +3511,7 @@ function selectFurnitureType(ft){
     controls.target.set(cfg.cam.tgt[0],cfg.cam.tgt[1],cfg.cam.tgt[2]);
     controls.update();
     scene.background = new THREE.Color(0xF2EAD8);
-    scene.fog = new THREE.Fog(0xF2EAD8, 4, 12);
+    scene.fog = new THREE.Fog(0xF2EAD8, 6, 14);
     solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
     wallBiblio.position.set(0, 0, WALL_Z);
     floorBiblio.position.set(0, 0, 0);
