@@ -3491,11 +3491,8 @@ function selectFurnitureType(ft){
   var inpCP=document.getElementById('inp-CP');
   if(inpCP){ inpCP.min=cfg.dimP[0]; inpCP.max=cfg.dimP[1]; setCP(cfg.dimP[2]); }
 
-  // SDB : sélecteur type de pose
-  var ptDiv=document.getElementById('sdb-posetype'), hiDiv=document.getElementById('sdb-height-info');
+  // SDB : curseur bas du meuble
   if(ft==='sdb'){
-    if(ptDiv) ptDiv.style.display='';
-    if(hiDiv) hiDiv.style.display='';
     // Init suspendu par défaut
     S.sdbBaseH=10; S.caissonYOff=0.10;
     var sl=document.getElementById('sl-sdb-bas'); if(sl) sl.value=10;
