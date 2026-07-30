@@ -46,23 +46,32 @@ module.exports = async function handler(req, res) {
         user_metadata: { prenom, nom: nom || '' }
       }).catch(() => {});
     } else {
-      // Chercher dans Auth (email peut exister sans être dans clients)
-      const { data: authList } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      const existingAuth = (authList?.users || []).find(u => u.email === email);
+      // Tenter de créer directement — si l'email existe déjà en Auth, récupérer l'ID sans listUsers()
+      isNew = true;
+      const { data: newUser, error: createErr } = await sb.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        user_metadata: { prenom, nom, needs_password: true },
+      });
 
-      if (existingAuth) {
+      if (createErr) {
+        const alreadyExists = createErr.message && (
+          createErr.message.toLowerCase().includes('already been registered') ||
+          createErr.message.toLowerCase().includes('already exists') ||
+          createErr.code === 'email_exists'
+        );
+        if (!alreadyExists) throw new Error('Création compte: ' + createErr.message);
+
+        // Email existe en Auth mais pas dans clients — lookup ciblé (cas rare)
+        isNew = false;
+        const { data: authList } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const existingAuth = (authList?.users || []).find(u => u.email === email);
+        if (!existingAuth) throw new Error('Utilisateur introuvable après conflit email');
         userId = existingAuth.id;
         await sb.auth.admin.updateUserById(userId, {
           user_metadata: { prenom, nom: nom || '' }
         }).catch(() => {});
       } else {
-        isNew = true;
-        const { data: newUser, error: createErr } = await sb.auth.admin.createUser({
-          email,
-          email_confirm: true,
-          user_metadata: { prenom, nom, needs_password: true },
-        });
-        if (createErr) throw new Error('Création compte: ' + createErr.message);
         userId = newUser.user.id;
       }
     }
