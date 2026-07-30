@@ -58,6 +58,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .dim-step{width:32px;height:36px;border:none;background:none;color:var(--text2);font-size:20px;font-weight:300;cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1;transition:background .12s,color .12s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .dim-step:hover{background:rgba(26,26,26,.07);color:var(--text)}
 .dim-step:active{background:rgba(26,26,26,.13)}
+.pose-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.pose-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 10px;cursor:pointer;text-align:center;transition:border-color .18s,background .18s;font-family:inherit}
+.pose-btn.active{border-color:var(--accent);background:rgba(205,62,0,.07)}
+.pose-btn-svg{margin-bottom:6px}
+.pose-btn-name{font-size:12px;font-weight:700;color:var(--text1);display:block;margin-bottom:2px}
+.pose-btn-sub{font-size:10px;color:var(--text2);display:block}
+.height-info{margin:8px 0 14px;padding:10px 12px;background:rgba(46,125,50,.08);border-radius:8px;border-left:3px solid #2E7D32;display:none}
+.height-info-val{font-size:12px;color:#2E7D32;font-weight:700;display:block;margin-bottom:2px}
+.height-info-sub{font-size:11px;color:#666;display:block}
 .dim-inp{width:46px;height:36px;border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);text-align:center;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:none;outline:none;-moz-appearance:textfield}
 .dim-inp::-webkit-outer-spin-button,.dim-inp::-webkit-inner-spin-button{-webkit-appearance:none}
 .dim-unit{font-size:10.5px;color:var(--text2);padding:0 8px;font-weight:500;pointer-events:none}
@@ -569,6 +578,42 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <!-- ── ONGLET FORMULAIRE ── -->
         <div class="sb-tab-panel on" id="sbt-formulaire">
           <div class="sec" style="margin-top:0">Dimensions</div>
+
+          <!-- Type de pose — SDB uniquement -->
+          <div id="sdb-posetype" style="display:none;margin-bottom:4px">
+            <div class="sec" style="margin-top:0;margin-bottom:8px">Type de pose</div>
+            <div class="pose-grid">
+              <button id="pose-btn-suspendu" class="pose-btn active" onclick="setPoseType('suspendu')">
+                <div class="pose-btn-svg">
+                  <svg width="44" height="36" viewBox="0 0 44 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                    <line x1="2" y1="0" x2="42" y2="0" stroke-width="1" stroke-dasharray="3,2" opacity=".4"/>
+                    <line x1="10" y1="0" x2="10" y2="12" stroke-width="1" opacity=".5"/>
+                    <line x1="34" y1="0" x2="34" y2="12" stroke-width="1" opacity=".5"/>
+                    <rect x="4" y="12" width="36" height="18" rx="1.5"/>
+                    <line x1="4" y1="21" x2="40" y2="21" opacity=".4"/>
+                    <line x1="4" y1="30" x2="42" y2="30" stroke-width="1" stroke-dasharray="3,2" opacity=".4"/>
+                    <text x="22" y="36" text-anchor="middle" font-size="6" fill="currentColor" stroke="none" font-family="sans-serif" opacity=".5">sol</text>
+                  </svg>
+                </div>
+                <span class="pose-btn-name">Suspendu</span>
+                <span class="pose-btn-sub">Bas à 35 cm du sol</span>
+              </button>
+              <button id="pose-btn-sol" class="pose-btn" onclick="setPoseType('sol')">
+                <div class="pose-btn-svg">
+                  <svg width="44" height="36" viewBox="0 0 44 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                    <rect x="4" y="4" width="36" height="22" rx="1.5"/>
+                    <line x1="4" y1="13" x2="40" y2="13" opacity=".4"/>
+                    <rect x="8" y="26" width="28" height="5" rx="1" opacity=".6"/>
+                    <line x1="2" y1="31" x2="42" y2="31" stroke-width="1" stroke-dasharray="3,2" opacity=".4"/>
+                    <text x="22" y="36" text-anchor="middle" font-size="6" fill="currentColor" stroke="none" font-family="sans-serif" opacity=".5">sol</text>
+                  </svg>
+                </div>
+                <span class="pose-btn-name">Au sol</span>
+                <span class="pose-btn-sub">Socle 10 cm</span>
+              </button>
+            </div>
+          </div>
+
           <div class="dim-row">
             <span class="dim-lbl">Largeur</span>
             <div class="dim-ctrl">
@@ -586,6 +631,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <span class="dim-unit">cm</span>
               <button class="dim-step" onclick="stepDim('inp-CH',setCH,+1)">+</button>
             </div>
+          </div>
+          <div id="sdb-height-info" class="height-info">
+            <span class="height-info-val">Hauteur d'utilisation estimée : <span id="v-height-util">—</span></span>
+            <span id="sdb-pose-sub" class="height-info-sub"></span>
           </div>
           <div class="dim-row">
             <span class="dim-lbl">Profondeur</span>
@@ -932,8 +981,9 @@ var S = {
   step:1,
   // Meuble
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
-  CL2:1.20,          // largeur du caisson d'angle
-  caissonOffset:0,  // décalage X du caisson sous le plan (m)
+  CL2:1.20,
+  caissonOffset:0,
+  posetype:'suspendu', caissonYOff:0.35,
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
   depassG:0.10, depassD:0.10, // dépassement gauche/droite (m)
@@ -1507,7 +1557,7 @@ function buildCaisson(){
   // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
   if(currentFT==='tv') buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
 
-  if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,0,caissCZ());
+  if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
   scene.add(caissonGrp);
   if(BIBLIO_MODE){
     if(hasAngle) buildCaisson2();
@@ -1951,7 +2001,7 @@ function bibl_animateTo(tx,ty,ms){
 // BUILD PLAN DE TRAVAIL
 // ═══════════════════════════════════════════════════════
 var WALL_Z = -0.75;
-function planTopY(){ return S.CH+0.04+S.Ep; }
+function planTopY(){ return S.caissonYOff+S.CH+0.04+S.Ep; }
 function planCZ()  { return WALL_Z + S.P/2; }
 function caissCZ() { return WALL_Z + caissonCP()/2; }
 
@@ -1993,7 +2043,7 @@ function buildPlan(){
   }
   planMesh=new THREE.Mesh(geo,planMat);
   planMesh.castShadow=true; planMesh.receiveShadow=true;
-  planMesh.position.set((S.depassD-S.depassG)/2,0,planCZ()); planMesh.visible=(S.step>=2); scene.add(planMesh);
+  planMesh.position.set((S.depassD-S.depassG)/2,S.caissonYOff,planCZ()); planMesh.visible=(S.step>=2); scene.add(planMesh);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3214,7 +3264,7 @@ function setCL(v){
   if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
   _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
-function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
+function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); _updateHeightInfo(); }
 function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
 function _updatePlanL(){
   S.L = S.CL + S.depassG + S.depassD;
@@ -3237,7 +3287,30 @@ function setL(v){ // compatibilité — ignoré maintenant, on passe par setDepa
   var v2=Math.round(v); var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=v2;
 }
 function setPro(v){ v=Math.round(v); S.P=v/100; var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=v; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
-function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); }
+function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); _updateHeightInfo(); }
+function _updateHeightInfo(){
+  if(currentFT!=='sdb') return;
+  var baseH = S.posetype==='suspendu' ? 35 : 10;
+  var util = baseH + Math.round(S.CH*100) + Math.round(S.Ep*100);
+  var el=document.getElementById('v-height-util'); if(el) el.textContent=util+' cm';
+  var sub=document.getElementById('sdb-pose-sub');
+  if(sub) sub.textContent = S.posetype==='suspendu'
+    ? 'Bas du meuble à 35 cm du sol · Caisson '+Math.round(S.CH*100)+' cm · Plan '+Math.round(S.Ep*100)+' cm'
+    : 'Socle 10 cm · Caisson '+Math.round(S.CH*100)+' cm · Plan '+Math.round(S.Ep*100)+' cm';
+}
+function setPoseType(v){
+  S.posetype=v; S.caissonYOff=(v==='suspendu')?0.35:0.10;
+  var bs=document.getElementById('pose-btn-suspendu'), bp=document.getElementById('pose-btn-sol');
+  if(bs) bs.classList.toggle('active',v==='suspendu');
+  if(bp) bp.classList.toggle('active',v==='sol');
+  var inp=document.getElementById('inp-CH');
+  if(inp){
+    if(v==='suspendu'){ inp.min=35; inp.max=60; } else { inp.min=65; inp.max=80; }
+  }
+  var def=(v==='suspendu')?47:72;
+  setCH(def);
+  _updateHeightInfo();
+}
 function setCaissonOffset(v){
   S.caissonOffset=v/100; document.getElementById('v-OFF').textContent=(v>=0?'+':'')+v+' cm';
   if(caissonGrp) caissonGrp.position.x=S.caissonOffset;
@@ -3439,6 +3512,23 @@ function selectFurnitureType(ft){
   if(inpCH){ inpCH.min=cfg.dimH[0]; inpCH.max=cfg.dimH[1]; setCH(cfg.dimH[2]); }
   var inpCP=document.getElementById('inp-CP');
   if(inpCP){ inpCP.min=cfg.dimP[0]; inpCP.max=cfg.dimP[1]; setCP(cfg.dimP[2]); }
+
+  // SDB : sélecteur type de pose
+  var ptDiv=document.getElementById('sdb-posetype'), hiDiv=document.getElementById('sdb-height-info');
+  if(ft==='sdb'){
+    if(ptDiv) ptDiv.style.display='';
+    if(hiDiv) hiDiv.style.display='';
+    // Init suspendu par défaut
+    S.posetype='suspendu'; S.caissonYOff=0.35;
+    if(inpCH){ inpCH.min=35; inpCH.max=60; setCH(47); }
+    var bs=document.getElementById('pose-btn-suspendu'), bp=document.getElementById('pose-btn-sol');
+    if(bs) bs.classList.add('active'); if(bp) bp.classList.remove('active');
+    _updateHeightInfo();
+  } else {
+    if(ptDiv) ptDiv.style.display='none';
+    if(hiDiv) hiDiv.style.display='none';
+    S.posetype=''; S.caissonYOff=0;
+  }
 
   // Populate dressing mat grid
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
