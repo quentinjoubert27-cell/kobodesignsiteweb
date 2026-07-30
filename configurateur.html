@@ -3643,6 +3643,11 @@ function buildRecap4(){
     rows.push(['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n]);
     rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
   }
+  if(currentFT==='tv'){
+    if(S_tvSide.leftActive)  rows.push(['Caisson gauche', S_tvSide.leftW+' × '+S_tvSide.leftH+' cm — '+tvElems[0].length+' élément'+(tvElems[0].length!==1?'s':'')]);
+    if(S_tvSide.rightActive) rows.push(['Caisson droit',  S_tvSide.rightW+' × '+S_tvSide.rightH+' cm — '+tvElems[1].length+' élément'+(tvElems[1].length!==1?'s':'')]);
+    if(S_tvSide.topActive)   rows.push(['Caisson haut',   S_tvSide.topW+' × '+S_tvSide.topH+' cm — '+tvElems[2].length+' élément'+(tvElems[2].length!==1?'s':'')]);
+  }
   var elemLabels={shelf:'Étagère',shelf_simple:'Liseré horiz.',separator:'Intercalaire',separator_simple:'Liseré vert.',porte:'Porte',tiroir:'Tiroir',barre:'Tringle'};
   Object.keys(counts).forEach(function(k){ if(counts[k]) rows.push([elemLabels[k]||k, counts[k]]); });
 
@@ -3702,14 +3707,22 @@ async function submitConfig(){
 
   var counts={shelf:0,separator:0,porte:0,tiroir:0};
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
+  if(currentFT==='tv') tvElems.forEach(function(els){ els.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;}); });
 
   // Résumé lisible de la configuration
   var ftLabels={biblio:'Bibliothèque',tv:'Meuble TV',dressing:'Dressing',sdb:'Meuble salle de bain'};
   var ftLabel = ftLabels[currentFT] || currentFT;
   var projetNom = ftLabel + ' sur mesure — ' + Math.round(S.CL*100) + 'x' + Math.round(S.CH*100) + ' cm';
+  var tvSideDesc = [];
+  if(currentFT==='tv'){
+    if(S_tvSide.leftActive)  tvSideDesc.push('Caisson gauche : '+S_tvSide.leftW+'×'+S_tvSide.leftH+' cm ('+tvElems[0].length+' él.)');
+    if(S_tvSide.rightActive) tvSideDesc.push('Caisson droit : '+S_tvSide.rightW+'×'+S_tvSide.rightH+' cm ('+tvElems[1].length+' él.)');
+    if(S_tvSide.topActive)   tvSideDesc.push('Caisson haut : '+S_tvSide.topW+'×'+S_tvSide.topH+' cm ('+tvElems[2].length+' él.)');
+  }
   var projetDesc = [
     'Type : ' + ftLabel,
-    'Dimensions : ' + Math.round(S.CL*100) + ' × ' + Math.round(S.CH*100) + ' × ' + Math.round(S.CairsonP*100) + ' cm',
+    'Dimensions caisson central : ' + Math.round(S.CL*100) + ' × ' + Math.round(S.CH*100) + ' × ' + Math.round(S.CairsonP*100) + ' cm',
+    tvSideDesc.length ? tvSideDesc.join('\n') : '',
     'Matière caisson : ' + (MATS_CAIS[S.matCais]?.n || S.matCais),
     (currentFT==='tv' && tvCableHoles.length>0) ? 'Passages câbles : ' + tvCableHoles.map(function(h,i){ return 'n°'+(i+1)+' — '+h.x+'cm depuis gauche, hauteur '+h.y+'cm, Ø'+(h.r*2)+'cm'; }).join(' / ') : '',
     message ? 'Message : ' + message : ''
