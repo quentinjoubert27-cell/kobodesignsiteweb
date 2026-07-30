@@ -579,38 +579,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="sb-tab-panel on" id="sbt-formulaire">
           <div class="sec" style="margin-top:0">Dimensions</div>
 
-          <!-- Type de pose — SDB uniquement -->
-          <div id="sdb-posetype" style="display:none;margin-bottom:4px">
-            <div class="sec" style="margin-top:0;margin-bottom:8px">Type de pose</div>
-            <div class="pose-grid">
-              <button id="pose-btn-suspendu" class="pose-btn active" onclick="setPoseType('suspendu')">
-                <div class="pose-btn-svg">
-                  <svg width="44" height="36" viewBox="0 0 44 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-                    <line x1="2" y1="0" x2="42" y2="0" stroke-width="1" stroke-dasharray="3,2" opacity=".4"/>
-                    <line x1="10" y1="0" x2="10" y2="12" stroke-width="1" opacity=".5"/>
-                    <line x1="34" y1="0" x2="34" y2="12" stroke-width="1" opacity=".5"/>
-                    <rect x="4" y="12" width="36" height="18" rx="1.5"/>
-                    <line x1="4" y1="21" x2="40" y2="21" opacity=".4"/>
-                    <line x1="4" y1="30" x2="42" y2="30" stroke-width="1" stroke-dasharray="3,2" opacity=".4"/>
-                    <text x="22" y="36" text-anchor="middle" font-size="6" fill="currentColor" stroke="none" font-family="sans-serif" opacity=".5">sol</text>
-                  </svg>
-                </div>
-                <span class="pose-btn-name">Suspendu</span>
-                <span class="pose-btn-sub">Bas à 35 cm du sol</span>
-              </button>
-              <button id="pose-btn-sol" class="pose-btn" onclick="setPoseType('sol')">
-                <div class="pose-btn-svg">
-                  <svg width="44" height="36" viewBox="0 0 44 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-                    <rect x="4" y="4" width="36" height="22" rx="1.5"/>
-                    <line x1="4" y1="13" x2="40" y2="13" opacity=".4"/>
-                    <rect x="8" y="26" width="28" height="5" rx="1" opacity=".6"/>
-                    <line x1="2" y1="31" x2="42" y2="31" stroke-width="1" stroke-dasharray="3,2" opacity=".4"/>
-                    <text x="22" y="36" text-anchor="middle" font-size="6" fill="currentColor" stroke="none" font-family="sans-serif" opacity=".5">sol</text>
-                  </svg>
-                </div>
-                <span class="pose-btn-name">Au sol</span>
-                <span class="pose-btn-sub">Socle 10 cm</span>
-              </button>
+          <!-- Hauteur du bas — SDB uniquement -->
+          <div id="sdb-bas-row" style="display:none">
+            <div class="sl-row" style="margin-bottom:6px">
+              <div class="sl-top">
+                <span class="sl-lbl">Hauteur du bas du meuble</span>
+                <span class="sl-val"><span id="v-sdb-bas">0</span> cm</span>
+              </div>
+              <input type="range" id="sl-sdb-bas" min="0" max="40" step="1" value="0"
+                oninput="setSdbBaseH(+this.value)">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:2px">
+                <span>Au sol</span><span>Suspendu</span>
+              </div>
+            </div>
+            <div id="sdb-height-info" class="height-info" style="display:block;margin-bottom:14px">
+              <span class="height-info-val">Hauteur d'utilisation : 85 cm · Caisson <span id="v-sdb-ch">—</span> cm</span>
+              <span id="sdb-pose-sub" class="height-info-sub"></span>
             </div>
           </div>
 
@@ -623,7 +607,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <button class="dim-step" onclick="stepDim('inp-CL',setCL,+1)">+</button>
             </div>
           </div>
-          <div class="dim-row">
+          <!-- Hauteur caisson : visible hors SDB, caché en SDB (auto-calculée) -->
+          <div class="dim-row" id="row-CH">
             <span class="dim-lbl">Hauteur</span>
             <div class="dim-ctrl">
               <button class="dim-step" onclick="stepDim('inp-CH',setCH,-1)">−</button>
@@ -631,10 +616,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <span class="dim-unit">cm</span>
               <button class="dim-step" onclick="stepDim('inp-CH',setCH,+1)">+</button>
             </div>
-          </div>
-          <div id="sdb-height-info" class="height-info">
-            <span class="height-info-val">Hauteur d'utilisation estimée : <span id="v-height-util">—</span></span>
-            <span id="sdb-pose-sub" class="height-info-sub"></span>
           </div>
           <div class="dim-row">
             <span class="dim-lbl">Profondeur</span>
@@ -983,7 +964,7 @@ var S = {
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
   CL2:1.20,
   caissonOffset:0,
-  posetype:'suspendu', caissonYOff:0.35,
+  sdbBaseH:0, caissonYOff:0,
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
   depassG:0.10, depassD:0.10, // dépassement gauche/droite (m)
@@ -3264,7 +3245,7 @@ function setCL(v){
   if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
   _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
-function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); _updateHeightInfo(); }
+function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
 function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
 function _updatePlanL(){
   S.L = S.CL + S.depassG + S.depassD;
@@ -3287,40 +3268,26 @@ function setL(v){ // compatibilité — ignoré maintenant, on passe par setDepa
   var v2=Math.round(v); var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=v2;
 }
 function setPro(v){ v=Math.round(v); S.P=v/100; var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=v; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
-function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); _updateCHLimits(); _updateHeightInfo(); }
-function _sdbBaseH(){ return S.posetype==='suspendu' ? 35 : 10; }
-function _sdbCHLimits(){
-  var ep=Math.round(S.Ep*100);
-  return { min: 85-_sdbBaseH()-ep, max: 90-_sdbBaseH()-ep };
+function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); if(currentFT==='sdb'){ setCH(_sdbComputeCH()); _updateSdbInfo(); } }
+function _sdbComputeCH(){
+  // CH auto = 85cm - bas - épaisseur plan (toujours 85cm au plan de travail)
+  return Math.max(1, 85 - S.sdbBaseH - Math.round(S.Ep*100));
 }
-function _updateCHLimits(){
+function _updateSdbInfo(){
   if(currentFT!=='sdb') return;
-  var lim=_sdbCHLimits();
-  var inp=document.getElementById('inp-CH');
-  if(inp){ inp.min=lim.min; inp.max=lim.max; }
   var ch=Math.round(S.CH*100);
-  if(ch<lim.min) setCH(lim.min);
-  else if(ch>lim.max) setCH(lim.max);
-}
-function _updateHeightInfo(){
-  if(currentFT!=='sdb') return;
-  var util = _sdbBaseH() + Math.round(S.CH*100) + Math.round(S.Ep*100);
-  var el=document.getElementById('v-height-util'); if(el) el.textContent=util+' cm';
+  var el=document.getElementById('v-sdb-ch'); if(el) el.textContent=ch;
   var sub=document.getElementById('sdb-pose-sub');
-  if(sub) sub.textContent = S.posetype==='suspendu'
-    ? 'Bas du meuble à 35 cm du sol · Caisson '+Math.round(S.CH*100)+' cm · Plan '+Math.round(S.Ep*100)+' cm'
-    : 'Socle 10 cm · Caisson '+Math.round(S.CH*100)+' cm · Plan '+Math.round(S.Ep*100)+' cm';
+  if(sub) sub.textContent = S.sdbBaseH===0
+    ? 'Meuble posé au sol · Caisson '+ch+' cm'
+    : 'Bas du meuble à '+S.sdbBaseH+' cm du sol · Caisson '+ch+' cm';
 }
-function setPoseType(v){
-  S.posetype=v; S.caissonYOff=(v==='suspendu')?0.35:0.10;
-  var bs=document.getElementById('pose-btn-suspendu'), bp=document.getElementById('pose-btn-sol');
-  if(bs) bs.classList.toggle('active',v==='suspendu');
-  if(bp) bp.classList.toggle('active',v==='sol');
-  var lim=_sdbCHLimits();
-  var def=(v==='suspendu')? Math.round((lim.min+lim.max)/2) : Math.round((lim.min+lim.max)/2);
-  _updateCHLimits();
-  setCH(def);
-  _updateHeightInfo();
+function setSdbBaseH(v){
+  v=Math.round(v); S.sdbBaseH=v; S.caissonYOff=v/100;
+  var sl=document.getElementById('sl-sdb-bas'); if(sl) sl.value=v;
+  var lbl=document.getElementById('v-sdb-bas'); if(lbl) lbl.textContent=v;
+  setCH(_sdbComputeCH());
+  _updateSdbInfo();
 }
 function setCaissonOffset(v){
   S.caissonOffset=v/100; document.getElementById('v-OFF').textContent=(v>=0?'+':'')+v+' cm';
@@ -3530,21 +3497,23 @@ function selectFurnitureType(ft){
     if(ptDiv) ptDiv.style.display='';
     if(hiDiv) hiDiv.style.display='';
     // Init suspendu par défaut
-    S.posetype='suspendu'; S.caissonYOff=0.35;
-    _updateCHLimits(); setCH(_sdbCHLimits().min + 3);
-    var bs=document.getElementById('pose-btn-suspendu'), bp=document.getElementById('pose-btn-sol');
-    if(bs) bs.classList.add('active'); if(bp) bp.classList.remove('active');
-    _updateHeightInfo();
+    S.sdbBaseH=0; S.caissonYOff=0;
+    var sl=document.getElementById('sl-sdb-bas'); if(sl) sl.value=0;
+    var lbl=document.getElementById('v-sdb-bas'); if(lbl) lbl.textContent='0';
+    setCH(_sdbComputeCH());
+    _updateSdbInfo();
   } else {
-    if(ptDiv) ptDiv.style.display='none';
-    if(hiDiv) hiDiv.style.display='none';
-    S.posetype=''; S.caissonYOff=0;
+    S.sdbBaseH=0; S.caissonYOff=0;
   }
 
   // Populate dressing mat grid
   if(ft==='dressing'){ buildMatGrid('mg-dressing',MATS_CAIS,setMatCais); }
 
   document.querySelectorAll('.angle-only').forEach(function(el){ el.style.display=(BIBLIO_MODE&&cfg.hasAngleOpt)?'':'none'; });
+  // SDB : curseur bas du meuble + cacher la hauteur manuelle
+  var sdbBasRow=document.getElementById('sdb-bas-row'), rowCH=document.getElementById('row-CH');
+  if(sdbBasRow) sdbBasRow.style.display=(ft==='sdb')?'':'none';
+  if(rowCH) rowCH.style.display=(ft==='sdb')?'none':'';
   // Reset éléments caisson principal (étagères, séparateurs, portes, tiroirs…)
   caissonElements=[]; caissonElements2=[];
   // Caissons latéraux TV — reset + show/hide
