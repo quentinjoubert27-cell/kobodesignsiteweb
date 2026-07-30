@@ -1686,11 +1686,6 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
     function ycm(v){ return ep2+v/100; }
 
     elems.forEach(function(el,eidx){
-      var compShelves=elems.filter(function(e){
-        if(e.type!=='shelf') return false;
-        var sl=e.x_left_cm!==undefined?e.x_left_cm:0, sr=e.x_right_cm!==undefined?e.x_right_cm:iWcm;
-        return sl<=1&&sr>=iWcm-1;
-      }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
 
       if(el.type==='shelf'||el.type==='shelf_simple'){
         var sl=el.x_left_cm!==undefined?el.x_left_cm:0, sr=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
@@ -1699,8 +1694,13 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
 
       } else if(el.type==='separator'||el.type==='separator_simple'){
+        var sepShelves=elems.filter(function(e){
+          if(e.type!=='shelf') return false;
+          var sl=e.x_left_cm!==undefined?e.x_left_cm:0, sr=e.x_right_cm!==undefined?e.x_right_cm:iWcm;
+          return sl<=el.x_cm&&sr>=el.x_cm;
+        }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
         var bot=0,top=iHcm;
-        compShelves.forEach(function(s){if(s<el.y_cm&&s>bot)bot=s;if(s>el.y_cm&&s<top)top=s;});
+        sepShelves.forEach(function(s){if(s<el.y_cm&&s>bot)bot=s;if(s>el.y_cm&&s<top)top=s;});
         var h=(top-bot)/100; if(h<0.01) return;
         var tw=ep2;
         var m=box(tw,h,CP-ep2,matElem); m.position.set(xcm(el.x_cm),ep2+(bot+top)/200,-ep2/2);
