@@ -723,13 +723,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="panel" id="p2">
         <div class="warn-alert" id="warn-plan"></div>
         <div class="sec">Dimensions du plan</div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Longueur totale</span><span class="sl-val" id="v-L">140 cm</span></div>
-          <input type="range" min="40" max="300" step="1" value="140" oninput="setL(+this.value)">
+        <div class="dim-row">
+          <span class="dim-lbl">Longueur totale</span>
+          <div class="dim-ctrl">
+            <button class="dim-step" onclick="stepDim('inp-L',setL,-1)">−</button>
+            <input class="dim-inp" type="number" id="inp-L" min="40" max="300" value="140" oninput="setL(+this.value)" onblur="clampDim(this,setL)">
+            <span class="dim-unit">cm</span>
+            <button class="dim-step" onclick="stepDim('inp-L',setL,+1)">+</button>
+          </div>
         </div>
-        <div class="sl-row">
-          <div class="sl-top"><span class="sl-lbl">Profondeur totale</span><span class="sl-val" id="v-P">55 cm</span></div>
-          <input type="range" min="36" max="80" step="1" value="55" oninput="setPro(+this.value)">
+        <div class="dim-row">
+          <span class="dim-lbl">Profondeur totale</span>
+          <div class="dim-ctrl">
+            <button class="dim-step" onclick="stepDim('inp-P',setPro,-1)">−</button>
+            <input class="dim-inp" type="number" id="inp-P" min="36" max="80" value="55" oninput="setPro(+this.value)" onblur="clampDim(this,setPro)">
+            <span class="dim-unit">cm</span>
+            <button class="dim-step" onclick="stepDim('inp-P',setPro,+1)">+</button>
+          </div>
         </div>
         <div class="sec">Matériau</div>
         <div class="mat-grid" id="mg-plan"></div>
@@ -3193,7 +3203,7 @@ function setCL(v){
 function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
 function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
 function setL(v){
-  S.L=v/100; document.getElementById('v-L').textContent=v+' cm';
+  v=Math.round(v); S.L=v/100; var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=v;
   var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
   var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
   S.caissonOffset=Math.max(-(S.L/2-S.CL/2-0.01),Math.min(S.L/2-S.CL/2-0.01,S.caissonOffset));
@@ -3201,7 +3211,7 @@ function setL(v){
   if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
   positionVasque(); buildPlan(); buildCaisson(); updatePosInfo(); checkAlerts();
 }
-function setPro(v){ S.P=v/100; document.getElementById('v-P').textContent=v+' cm'; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
+function setPro(v){ v=Math.round(v); S.P=v/100; var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=v; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
 function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); }
 function setCaissonOffset(v){
   S.caissonOffset=v/100; document.getElementById('v-OFF').textContent=(v>=0?'+':'')+v+' cm';
@@ -3511,9 +3521,8 @@ function goStep(n){
   if(currentFT==='sdb'){
     if(n===3){
       S.L=S.CL;
-      var slL=document.getElementById('sl-L')||document.querySelector('#p2 input[oninput*="setL"]');
-      if(slL){ slL.value=Math.round(S.L*100); }
-      document.getElementById('v-L').textContent=Math.round(S.L*100)+' cm';
+      var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=Math.round(S.L*100);
+      var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=Math.round(S.P*100);
       buildPlan();
     }
     if(n===4){ buildRecap(); updatePosInfo(); positionVasque(); }
