@@ -1823,6 +1823,7 @@ function setCL2(v){
 function toggleTVLeft(){
   S_tvSide.leftActive=!S_tvSide.leftActive;
   if(!S_tvSide.leftActive && activeCaisson===3) activeCaisson=1;
+  else if(S_tvSide.leftActive && caissonEditMode) activeCaisson=3;
   var btn=document.getElementById('tvl-btn'); if(btn) btn.textContent=S_tvSide.leftActive?'− Gauche':'+ Gauche';
   var opts=document.getElementById('tvl-opts'); if(opts) opts.style.display=S_tvSide.leftActive?'':'none';
   buildCaisson(); if(caissonEditMode) _rebuildEditBar();
@@ -1830,6 +1831,7 @@ function toggleTVLeft(){
 function toggleTVRight(){
   S_tvSide.rightActive=!S_tvSide.rightActive;
   if(!S_tvSide.rightActive && activeCaisson===4) activeCaisson=1;
+  else if(S_tvSide.rightActive && caissonEditMode) activeCaisson=4;
   var btn=document.getElementById('tvr-btn'); if(btn) btn.textContent=S_tvSide.rightActive?'− Droite':'+ Droite';
   var opts=document.getElementById('tvr-opts'); if(opts) opts.style.display=S_tvSide.rightActive?'':'none';
   buildCaisson(); if(caissonEditMode) _rebuildEditBar();
@@ -1837,6 +1839,7 @@ function toggleTVRight(){
 function toggleTVTop(){
   S_tvSide.topActive=!S_tvSide.topActive;
   if(!S_tvSide.topActive){ if(activeCaisson===5) activeCaisson=1; S_tvSide.topX=0; S_tvSide.topY=0; }
+  else if(caissonEditMode) activeCaisson=5;
   var btn=document.getElementById('tvt-btn'); if(btn) btn.textContent=S_tvSide.topActive?'− Dessus':'+ Dessus';
   var opts=document.getElementById('tvt-opts'); if(opts) opts.style.display=S_tvSide.topActive?'':'none';
   buildCaisson(); if(caissonEditMode) _rebuildEditBar();
