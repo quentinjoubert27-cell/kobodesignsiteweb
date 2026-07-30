@@ -3287,11 +3287,24 @@ function setL(v){ // compatibilité — ignoré maintenant, on passe par setDepa
   var v2=Math.round(v); var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=v2;
 }
 function setPro(v){ v=Math.round(v); S.P=v/100; var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=v; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
-function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); _updateHeightInfo(); }
+function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); _updateCHLimits(); _updateHeightInfo(); }
+function _sdbBaseH(){ return S.posetype==='suspendu' ? 35 : 10; }
+function _sdbCHLimits(){
+  var ep=Math.round(S.Ep*100);
+  return { min: 85-_sdbBaseH()-ep, max: 90-_sdbBaseH()-ep };
+}
+function _updateCHLimits(){
+  if(currentFT!=='sdb') return;
+  var lim=_sdbCHLimits();
+  var inp=document.getElementById('inp-CH');
+  if(inp){ inp.min=lim.min; inp.max=lim.max; }
+  var ch=Math.round(S.CH*100);
+  if(ch<lim.min) setCH(lim.min);
+  else if(ch>lim.max) setCH(lim.max);
+}
 function _updateHeightInfo(){
   if(currentFT!=='sdb') return;
-  var baseH = S.posetype==='suspendu' ? 35 : 10;
-  var util = baseH + Math.round(S.CH*100) + Math.round(S.Ep*100);
+  var util = _sdbBaseH() + Math.round(S.CH*100) + Math.round(S.Ep*100);
   var el=document.getElementById('v-height-util'); if(el) el.textContent=util+' cm';
   var sub=document.getElementById('sdb-pose-sub');
   if(sub) sub.textContent = S.posetype==='suspendu'
@@ -3303,11 +3316,9 @@ function setPoseType(v){
   var bs=document.getElementById('pose-btn-suspendu'), bp=document.getElementById('pose-btn-sol');
   if(bs) bs.classList.toggle('active',v==='suspendu');
   if(bp) bp.classList.toggle('active',v==='sol');
-  var inp=document.getElementById('inp-CH');
-  if(inp){
-    if(v==='suspendu'){ inp.min=35; inp.max=60; } else { inp.min=65; inp.max=80; }
-  }
-  var def=(v==='suspendu')?47:72;
+  var lim=_sdbCHLimits();
+  var def=(v==='suspendu')? Math.round((lim.min+lim.max)/2) : Math.round((lim.min+lim.max)/2);
+  _updateCHLimits();
   setCH(def);
   _updateHeightInfo();
 }
@@ -3520,7 +3531,7 @@ function selectFurnitureType(ft){
     if(hiDiv) hiDiv.style.display='';
     // Init suspendu par défaut
     S.posetype='suspendu'; S.caissonYOff=0.35;
-    if(inpCH){ inpCH.min=35; inpCH.max=60; setCH(47); }
+    _updateCHLimits(); setCH(_sdbCHLimits().min + 3);
     var bs=document.getElementById('pose-btn-suspendu'), bp=document.getElementById('pose-btn-sol');
     if(bs) bs.classList.add('active'); if(bp) bp.classList.remove('active');
     _updateHeightInfo();
