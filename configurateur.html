@@ -2362,9 +2362,29 @@ function updateCaissonGuides(hit){
 }
 
 function getCaissonHit(e){
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  // En mode TV avec plusieurs caissons actifs : détecte automatiquement
+  // sur quel caisson le curseur pointe, sans sélection manuelle
+  if(currentFT==='tv' && BIBLIO_MODE){
+    var candidates=[{id:1, hp:caissonHitPlane, grp:caissonGrp}];
+    if(S_tvSide.leftActive  && tvHP[0] && tvGrp[0]) candidates.push({id:3, hp:tvHP[0], grp:tvGrp[0]});
+    if(S_tvSide.rightActive && tvHP[1] && tvGrp[1]) candidates.push({id:4, hp:tvHP[1], grp:tvGrp[1]});
+    if(S_tvSide.topActive   && tvHP[2] && tvGrp[2]) candidates.push({id:5, hp:tvHP[2], grp:tvGrp[2]});
+    for(var ci=0;ci<candidates.length;ci++){
+      var c=candidates[ci];
+      var hits=raycaster.intersectObject(c.hp,false);
+      if(!hits.length) continue;
+      var prevAC=activeCaisson; activeCaisson=c.id;
+      var ptGrp=c.grp.worldToLocal(hits[0].point.clone());
+      var iW_cm=(getActiveCL()-2*EP)*100, iH_cm=(getActiveCH()-2*EP)*100;
+      var x_cm=Math.round(localToXcm(ptGrp.x)), y_cm=Math.round(localToYcm(ptGrp.y));
+      if(prevAC!==activeCaisson) _rebuildEditBar();
+      return {x_cm:Math.min(Math.max(x_cm,0),iW_cm), y_cm:Math.min(Math.max(y_cm,0),iH_cm)};
+    }
+    return null;
+  }
   var hp=getActiveHP(), grp=getActiveGrp();
   if(!hp||!grp) return null;
-  toNDC(e); raycaster.setFromCamera(mouse,camera);
   var hits=raycaster.intersectObject(hp,false);
   if(!hits.length) return null;
   var ptGrp=grp.worldToLocal(hits[0].point.clone());
