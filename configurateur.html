@@ -584,12 +584,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="sl-row" style="margin-bottom:6px">
               <div class="sl-top">
                 <span class="sl-lbl">Hauteur du bas du meuble</span>
-                <span class="sl-val"><span id="v-sdb-bas">0</span> cm</span>
+                <span class="sl-val"><span id="v-sdb-bas">10</span> cm</span>
               </div>
-              <input type="range" id="sl-sdb-bas" min="0" max="40" step="1" value="0"
+              <input type="range" id="sl-sdb-bas" min="10" max="40" step="1" value="10"
                 oninput="setSdbBaseH(+this.value)">
               <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:2px">
-                <span>Au sol</span><span>Suspendu</span>
+                <span>Au sol (socle 10 cm)</span><span>Suspendu</span>
               </div>
             </div>
             <div id="sdb-height-info" class="height-info" style="display:block;margin-bottom:14px">
@@ -964,7 +964,7 @@ var S = {
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
   CL2:1.20,
   caissonOffset:0,
-  sdbBaseH:0, caissonYOff:0,
+  sdbBaseH:10, caissonYOff:0.10,
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
   depassG:0.10, depassD:0.10, // dépassement gauche/droite (m)
@@ -3278,8 +3278,8 @@ function _updateSdbInfo(){
   var ch=Math.round(S.CH*100);
   var el=document.getElementById('v-sdb-ch'); if(el) el.textContent=ch;
   var sub=document.getElementById('sdb-pose-sub');
-  if(sub) sub.textContent = S.sdbBaseH===0
-    ? 'Meuble posé au sol · Caisson '+ch+' cm'
+  if(sub) sub.textContent = S.sdbBaseH<=10
+    ? 'Socle 10 cm · Caisson '+ch+' cm'
     : 'Bas du meuble à '+S.sdbBaseH+' cm du sol · Caisson '+ch+' cm';
 }
 function setSdbBaseH(v){
@@ -3497,9 +3497,9 @@ function selectFurnitureType(ft){
     if(ptDiv) ptDiv.style.display='';
     if(hiDiv) hiDiv.style.display='';
     // Init suspendu par défaut
-    S.sdbBaseH=0; S.caissonYOff=0;
-    var sl=document.getElementById('sl-sdb-bas'); if(sl) sl.value=0;
-    var lbl=document.getElementById('v-sdb-bas'); if(lbl) lbl.textContent='0';
+    S.sdbBaseH=10; S.caissonYOff=0.10;
+    var sl=document.getElementById('sl-sdb-bas'); if(sl) sl.value=10;
+    var lbl=document.getElementById('v-sdb-bas'); if(lbl) lbl.textContent='10';
     setCH(_sdbComputeCH());
     _updateSdbInfo();
   } else {
