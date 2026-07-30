@@ -1200,6 +1200,10 @@ function addDoorHinges(pm,porW,porH,hingeLeft){
 }
 
 function buildCaisson(){
+  // Force activeCaisson=1 pendant le rendu du caisson central :
+  // xcmToLocal/getActiveCL/getActiveEls utilisent activeCaisson comme contexte,
+  // si le curseur est sur un caisson latéral (3/4/5) les positions seraient faussées.
+  var _prevAC=activeCaisson; activeCaisson=1;
   disposeGroup(caissonGrp);
   caissonGrp=new THREE.Group();
   caissonHitPlane=null;
@@ -1486,6 +1490,7 @@ function buildCaisson(){
     normalizeCaisson();
 
   }
+  activeCaisson=_prevAC; // Restaure avant updateAmgtCount/updateElementsList
   updateAmgtCount();
   updateElementsList();
 }
