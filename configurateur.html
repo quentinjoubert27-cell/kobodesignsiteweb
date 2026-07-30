@@ -724,13 +724,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="warn-alert" id="warn-plan"></div>
         <div class="sec">Dimensions du plan</div>
         <div class="dim-row">
-          <span class="dim-lbl">Longueur totale</span>
+          <span class="dim-lbl">Dépassement gauche</span>
           <div class="dim-ctrl">
-            <button class="dim-step" onclick="stepDim('inp-L',setL,-1)">−</button>
-            <input class="dim-inp" type="number" id="inp-L" min="40" max="300" value="140" oninput="setL(+this.value)" onblur="clampDim(this,setL)">
+            <button class="dim-step" onclick="stepDim('inp-DG',setDepassG,-1)">−</button>
+            <input class="dim-inp" type="number" id="inp-DG" min="0" max="100" value="10" oninput="setDepassG(+this.value)" onblur="clampDim(this,setDepassG)">
             <span class="dim-unit">cm</span>
-            <button class="dim-step" onclick="stepDim('inp-L',setL,+1)">+</button>
+            <button class="dim-step" onclick="stepDim('inp-DG',setDepassG,+1)">+</button>
           </div>
+        </div>
+        <div class="dim-row">
+          <span class="dim-lbl">Dépassement droite</span>
+          <div class="dim-ctrl">
+            <button class="dim-step" onclick="stepDim('inp-DD',setDepassD,-1)">−</button>
+            <input class="dim-inp" type="number" id="inp-DD" min="0" max="100" value="10" oninput="setDepassD(+this.value)" onblur="clampDim(this,setDepassD)">
+            <span class="dim-unit">cm</span>
+            <button class="dim-step" onclick="stepDim('inp-DD',setDepassD,+1)">+</button>
+          </div>
+        </div>
+        <div class="dim-row" style="opacity:.6">
+          <span class="dim-lbl">Longueur totale</span>
+          <span class="dim-val" id="v-L-total" style="font-weight:600;font-size:13px">140 cm</span>
         </div>
         <div class="dim-row">
           <span class="dim-lbl">Profondeur totale</span>
@@ -923,6 +936,7 @@ var S = {
   caissonOffset:0,  // décalage X du caisson sous le plan (m)
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
+  depassG:0.10, depassD:0.10, // dépassement gauche/droite (m)
   // Vasque
   vx:0, vz:0, vx2:0, vz2:0, nbVasques:1,
   vasqueW:0.50, vasqueD:0.35, vasqueRx:0.256, vasqueRz:0.181,
@@ -1979,7 +1993,7 @@ function buildPlan(){
   }
   planMesh=new THREE.Mesh(geo,planMat);
   planMesh.castShadow=true; planMesh.receiveShadow=true;
-  planMesh.position.set(S.caissonOffset,0,planCZ()); planMesh.visible=(S.step>=2); scene.add(planMesh);
+  planMesh.position.set((S.depassD-S.depassG)/2,0,planCZ()); planMesh.visible=(S.step>=2); scene.add(planMesh);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3195,21 +3209,32 @@ function _clearCaissonEls(){ caissonElements=[]; caissonElements2=[]; updateElem
 function setCL(v){
   v=Math.round(v); S.CL=v/100;
   var inp=document.getElementById('inp-CL'); if(inp) inp.value=v;
-  var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
-  var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
+  S.L=S.CL+S.depassG+S.depassD;
+  var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
   if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
-  _clearCaissonEls(); buildCaisson(); checkAlerts();
+  _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
 function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
 function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
-function setL(v){
-  v=Math.round(v); S.L=v/100; var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=v;
-  var maxOff=Math.max(0,Math.round((S.L-S.CL)/2*100));
-  var sl=document.getElementById('sl-off'); if(sl){sl.min=-maxOff;sl.max=maxOff;}
-  S.caissonOffset=Math.max(-(S.L/2-S.CL/2-0.01),Math.min(S.L/2-S.CL/2-0.01,S.caissonOffset));
+function _updatePlanL(){
+  S.L = S.CL + S.depassG + S.depassD;
+  var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
   S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
   if(S.nbVasques===2 && S.CL<1.20 && S.L<1.20) setNbVasques(1);
-  positionVasque(); buildPlan(); buildCaisson(); updatePosInfo(); checkAlerts();
+  positionVasque(); buildPlan(); updatePosInfo(); checkAlerts();
+}
+function setDepassG(v){
+  v=Math.max(0,Math.min(100,Math.round(v))); S.depassG=v/100;
+  var inp=document.getElementById('inp-DG'); if(inp) inp.value=v;
+  _updatePlanL();
+}
+function setDepassD(v){
+  v=Math.max(0,Math.min(100,Math.round(v))); S.depassD=v/100;
+  var inp=document.getElementById('inp-DD'); if(inp) inp.value=v;
+  _updatePlanL();
+}
+function setL(v){ // compatibilité — ignoré maintenant, on passe par setDepassG/D
+  var v2=Math.round(v); var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=v2;
 }
 function setPro(v){ v=Math.round(v); S.P=v/100; var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=v; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
 function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); }
@@ -3520,9 +3545,11 @@ function goStep(n){
   if(n===1) buildCaisson();
   if(currentFT==='sdb'){
     if(n===3){
-      S.L=S.CL;
-      var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=Math.round(S.L*100);
+      S.depassG=0.10; S.depassD=0.10; S.L=S.CL+S.depassG+S.depassD;
+      var inpDG=document.getElementById('inp-DG'); if(inpDG) inpDG.value=10;
+      var inpDD=document.getElementById('inp-DD'); if(inpDD) inpDD.value=10;
       var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=Math.round(S.P*100);
+      var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
       buildPlan();
     }
     if(n===4){ buildRecap(); updatePosInfo(); positionVasque(); }
