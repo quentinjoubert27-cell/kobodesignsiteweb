@@ -3804,6 +3804,122 @@ function buildRecap4(){
   });
 }
 
+function buildTechSpec(els, CL, CH, CP){
+  var ep=EP, ep_mm=Math.round(ep*1000);
+  var CL_mm=Math.round(CL*1000), CH_mm=Math.round(CH*1000), CP_mm=Math.round(CP*1000);
+  var iW_mm=CL_mm-2*ep_mm, iH_mm=CH_mm-2*ep_mm;
+  var matCais=MATS_CAIS[S.matCais]||{};
+
+  // ── Séparateurs triés par x ──────────────────────────────
+  var seps=(els||[]).filter(function(e){return e.type==='separator'||e.type==='separator_simple';})
+    .map(function(e){return e.x_cm;}).sort(function(a,b){return a-b;});
+
+  // ── Zones (baies délimitées par séparateurs) ──────────────
+  var baysX=[0].concat(seps.map(function(x){return x*10;})).concat([iW_mm]);
+  var zones=[];
+  for(var i=0;i<baysX.length-1;i++){
+    zones.push({
+      zone_id:'bay_'+(i+1),
+      zone_bounds_mm:{
+        x_min:ep_mm+baysX[i], x_max:ep_mm+baysX[i+1],
+        y_min:ep_mm,           y_max:CH_mm-ep_mm
+      }
+    });
+  }
+
+  // ── Éléments structurels ─────────────────────────────────
+  var structural=[
+    {type:'joue_gauche',   x_left_mm:0,           x_right_mm:ep_mm,        y_bottom_mm:0,        y_top_mm:CH_mm,       thickness_mm:ep_mm, depth_mm:CP_mm},
+    {type:'joue_droite',   x_left_mm:CL_mm-ep_mm, x_right_mm:CL_mm,       y_bottom_mm:0,        y_top_mm:CH_mm,       thickness_mm:ep_mm, depth_mm:CP_mm},
+    {type:'traverse_haute',x_left_mm:ep_mm,        x_right_mm:CL_mm-ep_mm, y_bottom_mm:CH_mm-ep_mm, y_top_mm:CH_mm,   thickness_mm:ep_mm, depth_mm:CP_mm},
+    {type:'traverse_basse',x_left_mm:ep_mm,        x_right_mm:CL_mm-ep_mm, y_bottom_mm:0,        y_top_mm:ep_mm,       thickness_mm:ep_mm, depth_mm:CP_mm},
+    {type:'fond',          x_left_mm:0,            x_right_mm:CL_mm,       y_bottom_mm:0,        y_top_mm:CH_mm,       thickness_mm:8,     depth_mm:8}
+  ];
+
+  // ── Séparateurs verticaux ────────────────────────────────
+  var separators=(els||[]).filter(function(e){return e.type==='separator'||e.type==='separator_simple';}).map(function(e){
+    var cx=ep_mm+Math.round(e.x_cm*10);
+    return {
+      type:e.type, x_left_mm:cx-ep_mm/2, x_right_mm:cx+ep_mm/2,
+      x_center_mm:cx, thickness_mm:ep_mm,
+      y_bottom_mm:ep_mm, y_top_mm:CH_mm-ep_mm
+    };
+  });
+
+  // ── Étagères ─────────────────────────────────────────────
+  var shelves=(els||[]).filter(function(e){return e.type==='shelf'||e.type==='shelf_simple';}).map(function(e){
+    var ym=ep_mm+Math.round(e.y_cm*10);
+    return {
+      type:e.type, x_left_mm:ep_mm, x_right_mm:CL_mm-ep_mm,
+      y_bottom_mm:ym, y_top_mm:ym+ep_mm,
+      thickness_mm:ep_mm, depth_mm:CP_mm-ep_mm,
+      shelf_type:e.type==='shelf'?'fixe':'mobile'
+    };
+  });
+
+  // ── Tiroirs & Portes ─────────────────────────────────────
+  var drawers=[], doors=[];
+  (els||[]).forEach(function(e){
+    if(e.type!=='tiroir'&&e.type!=='porte') return;
+    var parts=e.key.split('_').map(Number);
+    var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
+    var y_bot=ep_mm+Math.round(bot*10), y_top=ep_mm+Math.round(top*10);
+    var x_l=ep_mm+Math.round(left*10), x_r=ep_mm+Math.round(right*10);
+    if(e.type==='tiroir'){
+      drawers.push({
+        x_left_mm:x_l, x_right_mm:x_r,
+        y_bottom_mm:y_bot, height_mm:y_top-y_bot,
+        drawer_face_thickness_mm:ep_mm,
+        drawer_gap_mm:null, drawer_system:null,
+        drawer_tech_type:null, drawer_handle_type:null, applique_mode:null
+      });
+    } else {
+      doors.push({
+        x_left_mm:x_l, x_right_mm:x_r,
+        y_bottom_mm:y_bot, height_mm:y_top-y_bot,
+        door_thickness_mm:ep_mm,
+        door_gap_mm:null, door_type:null, is_double_leaf:null,
+        door_opening:null, door_model:null, fileur_width_mm:null,
+        hinge_mode:null, custom_hinge_positions_mm:null
+      });
+    }
+  });
+
+  return {
+    reference:{
+      coordinates_frame:'interior',
+      unit:'mm',
+      origin:'bottom_left_front',
+      axes:{x:'left_to_right', y:'bottom_to_top', z:'back_to_front'}
+    },
+    panel_thickness_mm:ep_mm,
+    overall_mm:{width:CL_mm, height:CH_mm, depth:CP_mm},
+    interior_mm:{width:iW_mm, height:iH_mm},
+    structural_panels:structural,
+    panel_state:{
+      has_back_panel:true, has_left_upright:true, has_right_upright:true,
+      has_bottom_traverse:true, has_top_traverse:true
+    },
+    separators:separators,
+    shelves:shelves,
+    drawers:drawers,
+    doors:doors,
+    zones:zones,
+    materials:{
+      material_body:matCais.n||null,
+      material_door:matCais.n||null,
+      material_drawer:matCais.n||null,
+      material_divider:matCais.n||null,
+      material_shelf:matCais.n||null,
+      material_joue:matCais.n||null,
+      ...(currentFT==='sdb'?{
+        material_plan:(MATS_PLAN[S.matPlan]||{}).n||null,
+        material_vasque:(MATS_VASQUE[S_matVasque]||{}).n||null
+      }:{})
+    }
+  };
+}
+
 async function submitConfig(){
   var prenom, nom, email, telephone;
   if (_cfgSession) {
@@ -3883,7 +3999,8 @@ async function submitConfig(){
                       vx2:Math.round(S.vx2*100)/100, vz2:Math.round(S.vz2*100)/100 },
           } : {}),
           elements:caissonElements,
-          caisson2: hasAngle ? { L_cm: Math.round(S.CL2*100), elements: caissonElements2 } : undefined,
+          technical_spec: buildTechSpec(caissonElements, S.CL, S.CH, caissonCP()),
+          caisson2: hasAngle ? { L_cm: Math.round(S.CL2*100), elements: caissonElements2, technical_spec: buildTechSpec(caissonElements2, S.CL2, S.CH, caissonCP()) } : undefined,
           tvSide: (currentFT==='tv') ? {
             left:  S_tvSide.leftActive  ? { W_cm:S_tvSide.leftW,  H_cm:S_tvSide.leftH,  elements:tvElems[0] } : null,
             right: S_tvSide.rightActive ? { W_cm:S_tvSide.rightW, H_cm:S_tvSide.rightH, elements:tvElems[1] } : null,
