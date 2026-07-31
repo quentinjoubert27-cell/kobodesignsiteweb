@@ -3870,17 +3870,18 @@ function buildTechSpec(els, CL, CH, CP){
         x_left_mm:x_l, x_right_mm:x_r,
         y_bottom_mm:y_bot, height_mm:y_top-y_bot,
         drawer_face_thickness_mm:ep_mm,
-        drawer_gap_mm:null, drawer_system:null,
-        drawer_tech_type:null, drawer_handle_type:null, applique_mode:null
+        drawer_gap_mm:2, drawer_system:'blum',
+        drawer_tech_type:'softclose', drawer_handle_type:'sans', applique_mode:false
       });
     } else {
+      var w=x_r-x_l;
       doors.push({
         x_left_mm:x_l, x_right_mm:x_r,
         y_bottom_mm:y_bot, height_mm:y_top-y_bot,
         door_thickness_mm:ep_mm,
-        door_gap_mm:null, door_type:null, is_double_leaf:null,
-        door_opening:null, door_model:null, fileur_width_mm:null,
-        hinge_mode:null, custom_hinge_positions_mm:null
+        door_gap_mm:2, door_type:w>400?'double':'single', is_double_leaf:w>400,
+        door_opening:'left', door_model:'standard', fileur_width_mm:0,
+        hinge_mode:'default', custom_hinge_positions_mm:[]
       });
     }
   });
