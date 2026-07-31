@@ -1706,6 +1706,69 @@
     }).join('');
   }
 
+  function buildTechSpec(els, CL_cm, CH_cm, CP_cm) {
+    const ep_mm = 18;
+    const CL_mm = Math.round(CL_cm * 10), CH_mm = Math.round(CH_cm * 10), CP_mm = Math.round(CP_cm * 10);
+    const iW_mm = CL_mm - 2*ep_mm, iH_mm = CH_mm - 2*ep_mm;
+    const seps = (els||[]).filter(e => e.type==='separator'||e.type==='separator_simple').map(e => e.x_cm).sort((a,b) => a-b);
+    const baysX = [0, ...seps.map(x => x*10), iW_mm];
+    const zones = [];
+    for (let i = 0; i < baysX.length-1; i++) {
+      zones.push({ zone_id:'bay_'+(i+1), zone_bounds_mm:{ x_min:ep_mm+baysX[i], x_max:ep_mm+baysX[i+1], y_min:ep_mm, y_max:CH_mm-ep_mm } });
+    }
+    const structural = [
+      {type:'joue_gauche',    x_left_mm:0,           x_right_mm:ep_mm,        y_bottom_mm:0,          y_top_mm:CH_mm,       thickness_mm:ep_mm, depth_mm:CP_mm},
+      {type:'joue_droite',    x_left_mm:CL_mm-ep_mm, x_right_mm:CL_mm,        y_bottom_mm:0,          y_top_mm:CH_mm,       thickness_mm:ep_mm, depth_mm:CP_mm},
+      {type:'traverse_haute', x_left_mm:ep_mm,        x_right_mm:CL_mm-ep_mm, y_bottom_mm:CH_mm-ep_mm,y_top_mm:CH_mm,       thickness_mm:ep_mm, depth_mm:CP_mm},
+      {type:'traverse_basse', x_left_mm:ep_mm,        x_right_mm:CL_mm-ep_mm, y_bottom_mm:0,          y_top_mm:ep_mm,       thickness_mm:ep_mm, depth_mm:CP_mm},
+      {type:'fond',           x_left_mm:0,            x_right_mm:CL_mm,        y_bottom_mm:0,          y_top_mm:CH_mm,       thickness_mm:8,     depth_mm:8},
+    ];
+    const separators = (els||[]).filter(e => e.type==='separator'||e.type==='separator_simple').map(e => {
+      const cx = ep_mm + Math.round(e.x_cm*10);
+      return { type:e.type, x_left_mm:cx-ep_mm/2, x_right_mm:cx+ep_mm/2, x_center_mm:cx, thickness_mm:ep_mm, y_bottom_mm:ep_mm, y_top_mm:CH_mm-ep_mm };
+    });
+    const shelves = (els||[]).filter(e => e.type==='shelf'||e.type==='shelf_simple').map(e => {
+      const ym = ep_mm + Math.round(e.y_cm*10);
+      return { type:e.type, x_left_mm:ep_mm, x_right_mm:CL_mm-ep_mm, y_bottom_mm:ym, y_top_mm:ym+ep_mm, thickness_mm:ep_mm, depth_mm:CP_mm-ep_mm, shelf_type:e.type==='shelf'?'fixe':'mobile' };
+    });
+    const drawers = [], doors = [];
+    (els||[]).forEach(e => {
+      if (e.type!=='tiroir' && e.type!=='porte') return;
+      const [bot,left,top,right] = e.key.split('_').map(Number);
+      const y_bot=ep_mm+Math.round(bot*10), y_top2=ep_mm+Math.round(top*10);
+      const x_l=ep_mm+Math.round(left*10), x_r=ep_mm+Math.round(right*10);
+      if (e.type==='tiroir') {
+        drawers.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, drawer_face_thickness_mm:ep_mm, drawer_gap_mm:2, drawer_system:'blum', drawer_tech_type:'softclose', drawer_handle_type:'sans', applique_mode:false });
+      } else {
+        const w = x_r-x_l;
+        doors.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, door_thickness_mm:ep_mm, door_gap_mm:2, door_type:w>400?'double':'single', is_double_leaf:w>400, door_opening:'left', door_model:'standard', fileur_width_mm:0, hinge_mode:'default', custom_hinge_positions_mm:[] });
+      }
+    });
+    return {
+      reference:{ coordinates_frame:'interior', unit:'mm', origin:'bottom_left_front', axes:{x:'left_to_right',y:'bottom_to_top',z:'back_to_front'} },
+      panel_thickness_mm:ep_mm,
+      overall_mm:{width:CL_mm,height:CH_mm,depth:CP_mm},
+      interior_mm:{width:iW_mm,height:iH_mm},
+      structural_panels:structural,
+      panel_state:{has_back_panel:true,has_left_upright:true,has_right_upright:true,has_bottom_traverse:true,has_top_traverse:true},
+      separators, shelves, drawers, doors, zones,
+    };
+  }
+
+  function injectTechSpec(cfg) {
+    if (!cfg || cfg.technical_spec) return cfg;
+    const els = cfg.elements || [];
+    const m = cfg.meuble || {};
+    const CL = m.L || m.L_cm || 120, CH = m.H || m.H_cm || 45, CP = m.P || m.P_cm || 36;
+    cfg.technical_spec = buildTechSpec(els, CL, CH, CP);
+    if (cfg.caisson2 && !cfg.caisson2.technical_spec) {
+      const els2 = cfg.caisson2.elements || [];
+      const CL2 = cfg.caisson2.L_cm || CL;
+      cfg.caisson2.technical_spec = buildTechSpec(els2, CL2, CH, CP);
+    }
+    return cfg;
+  }
+
   function openConfigDetail(encoded) {
     const c = JSON.parse(decodeURIComponent(encoded));
     const isBiblio = c._type === 'biblio';
@@ -1787,6 +1850,7 @@
           meuble: { L_cm: c.meuble_l, H_cm: c.meuble_h, P_cm: c.meuble_p, mat: c.meuble_mat },
           elements: c.elements || [],
         };
+        injectTechSpec(fullCfg);
       }
       const jsonStr = JSON.stringify(fullCfg, null, 2);
       const jsonB64 = btoa(unescape(encodeURIComponent(jsonStr)));
@@ -2015,6 +2079,7 @@
           meuble: { L_cm: c.meuble_l, H_cm: c.meuble_h, P_cm: c.meuble_p, mat: c.meuble_mat },
           elements: c.elements || [],
         };
+        injectTechSpec(fullCfg);
       }
       const jsonStr2 = JSON.stringify(fullCfg, null, 2);
       const jsonB642 = btoa(unescape(encodeURIComponent(jsonStr2)));
