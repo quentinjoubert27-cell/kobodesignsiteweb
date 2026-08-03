@@ -984,9 +984,18 @@
 <div class="modal-overlay" id="modal-email-client">
   <div class="modal">
     <h2 class="modal-title">Envoyer un email</h2>
+    <div class="field">
+      <label>Modèle rapide</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="applyEmailPreset('prise_en_charge')">✅ Prise en charge</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyEmailPreset('rdv')">📅 Proposition RDV</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyEmailPreset('devis')">📄 Devis envoyé</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyEmailPreset('info')">💬 Demande d'infos</button>
+      </div>
+    </div>
     <div class="field"><label>Destinataire</label><input type="text" id="ec-to" readonly style="opacity:.6;"/></div>
     <div class="field"><label>Objet</label><input type="text" id="ec-sujet" placeholder="Votre projet est à l'étude…"/></div>
-    <div class="field"><label>Message</label><textarea id="ec-contenu" rows="6" placeholder="Votre message…" style="width:100%;font-family:var(--font);font-size:14px;border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:12px 14px;resize:vertical;outline:none;"></textarea></div>
+    <div class="field"><label>Message</label><textarea id="ec-contenu" rows="7" placeholder="Votre message…" style="width:100%;font-family:var(--font);font-size:14px;border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:12px 14px;resize:vertical;outline:none;"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-email-client')">Annuler</button>
       <button class="btn btn-primary" id="ec-btn" onclick="sendEmailClient()">Envoyer</button>
@@ -2183,12 +2192,40 @@
     }
   }
 
+  const EMAIL_PRESETS = {
+    prise_en_charge: {
+      sujet: 'Nous prenons en charge votre projet',
+      contenu: (p) => `Bonjour ${p},\n\nNous avons bien reçu votre demande et nous nous occupons de votre projet dès maintenant.\n\nNotre équipe va étudier votre demande et reviendra vers vous très prochainement avec une réponse personnalisée.\n\nÀ très bientôt,\nL'équipe Kobo Design`,
+    },
+    rdv: {
+      sujet: 'Proposition de rendez-vous — Kobo Design',
+      contenu: (p) => `Bonjour ${p},\n\nNous avons bien étudié votre projet et nous aimerions convenir d'un rendez-vous pour en discuter avec vous.\n\nPouvez-vous nous indiquer vos disponibilités cette semaine ou la semaine prochaine ?\n\nÀ bientôt,\nL'équipe Kobo Design`,
+    },
+    devis: {
+      sujet: 'Votre devis Kobo Design',
+      contenu: (p) => `Bonjour ${p},\n\nVeuillez trouver ci-joint votre devis correspondant à votre projet.\n\nN'hésitez pas à nous contacter si vous avez des questions ou souhaitez apporter des modifications.\n\nÀ bientôt,\nL'équipe Kobo Design`,
+    },
+    info: {
+      sujet: 'Informations complémentaires — votre projet',
+      contenu: (p) => `Bonjour ${p},\n\nAfin d'avancer sur votre projet, nous aurions besoin de quelques informations complémentaires :\n\n- \n- \n\nMerci de nous répondre à votre convenance.\n\nÀ bientôt,\nL'équipe Kobo Design`,
+    },
+  };
+
+  function applyEmailPreset(key) {
+    const client = allClients.find(c => c.id === currentClientId);
+    const prenom = client?.prenom || '';
+    const preset = EMAIL_PRESETS[key];
+    if (!preset) return;
+    document.getElementById('ec-sujet').value = preset.sujet;
+    document.getElementById('ec-contenu').value = preset.contenu(prenom);
+  }
+
   function openEmailClientModal() {
     const client = allClients.find(c => c.id === currentClientId);
     if (!client) return;
     document.getElementById('ec-to').value = `${client.prenom || ''} ${client.nom || ''} <${client.email}>`.trim();
-    document.getElementById('ec-sujet').value = 'Votre projet est à l\'étude';
-    document.getElementById('ec-contenu').value = `Bonjour ${client.prenom || ''},\n\nNous avons bien reçu votre demande et votre projet est désormais à l'étude.\n\nNous revenons vers vous très prochainement.\n\nÀ bientôt,\nL'équipe Kobo Design`;
+    document.getElementById('ec-sujet').value = '';
+    document.getElementById('ec-contenu').value = '';
     document.getElementById('modal-email-client').classList.add('open');
   }
 

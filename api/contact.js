@@ -179,6 +179,34 @@ module.exports = async function handler(req, res) {
       `,
     });
 
+    // 4. Email de confirmation au client
+    await resend.emails.send({
+      from: 'Kobo Design <contact@kobo-design.fr>',
+      to: email,
+      subject: `Nous avons bien reçu votre demande, ${esc(prenom)} !`,
+      html: `
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
+          <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
+            <p style="color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px;">Kobo Design</p>
+            <h1 style="color:#FFFAF0;font-size:22px;margin:0;">Votre demande est bien reçue</h1>
+          </div>
+          <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
+            <p style="font-size:15px;line-height:1.7;margin:0 0 20px;">
+              Bonjour <strong>${esc(prenom)}</strong>,<br><br>
+              Nous avons bien reçu votre demande${type_projet ? ' concernant votre projet <strong>' + esc(type_projet) + '</strong>' : ''} et nous nous en occupons dès maintenant.<br><br>
+              Notre équipe reviendra vers vous très prochainement pour échanger sur votre projet.
+            </p>
+            <div style="background:#fff;border-radius:8px;padding:20px 24px;margin-bottom:24px;border-left:3px solid #CD3E00;">
+              <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 6px;">Votre message</p>
+              <p style="font-size:13px;line-height:1.6;margin:0;color:#555;white-space:pre-wrap;">${esc(message)}</p>
+            </div>
+            <p style="font-size:13px;color:#888;margin:0;">Une question ? Répondez directement à cet email ou appelez-nous.<br>À très bientôt,<br><strong>L'équipe Kobo Design</strong></p>
+          </div>
+          <p style="text-align:center;font-size:11px;color:#999;margin-top:16px;">Kobo Design · 76 Rue Mandron · 33000 Bordeaux</p>
+        </div>
+      `,
+    }).catch(() => {}); // non bloquant
+
     return res.status(200).json({ success: true });
 
   } catch (err) {
