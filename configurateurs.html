@@ -249,8 +249,95 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .bottom-cta__btn:hover { opacity: .85; }
 
-    @media(max-width: 600px) {
-      .nav a:not(.cta) { display: none; }
+    /* ── FORMULAIRE CONTACT ── */
+    .contact-main{display:grid;grid-template-columns:1fr 1.5fr;align-items:stretch}
+    .contact-info{padding:clamp(48px,7vw,80px) clamp(24px,5vw,64px);border-right:1px solid rgba(26,26,26,.07);display:flex;flex-direction:column;gap:44px}
+    .contact-info__label{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(26,26,26,.3);margin-bottom:18px;display:block}
+    .info-item{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+    .info-item:last-child{margin-bottom:0}
+    .info-icon{width:36px;height:36px;flex-shrink:0;border:1.5px solid rgba(205,62,0,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+    .info-text{font-size:13px;font-weight:300;line-height:1.7;color:rgba(26,26,26,.7)}
+    .info-text strong{font-weight:600;color:var(--dark);display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+    .info-text a{color:var(--accent)}
+    .hours-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}
+    .hours-row{font-size:12px;font-weight:300;color:rgba(26,26,26,.6);line-height:1.6}
+    .hours-row span{font-weight:600;color:var(--dark);font-size:11px;display:block}
+    .socials{display:flex;flex-direction:column;gap:10px}
+    .social-link{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dark);transition:color .2s;text-decoration:none}
+    .social-link:hover{color:var(--accent)}
+    .social-icon{width:32px;height:32px;border:1.5px solid rgba(26,26,26,.12);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+    .social-link:hover .social-icon{border-color:var(--accent)}
+    .contact-form-wrap{padding:clamp(48px,7vw,80px) clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:center}
+    .steps-indicator{display:flex;align-items:center;gap:8px;margin-bottom:36px}
+    .step-dot{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(26,26,26,.18);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(26,26,26,.3);transition:background .3s,border-color .3s,color .3s;flex-shrink:0}
+    .step-dot.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .step-dot.done{background:rgba(205,62,0,.1);border-color:rgba(205,62,0,.3);color:var(--accent)}
+    .step-line{flex:1;height:1px;background:rgba(26,26,26,.1);max-width:48px}
+    .step-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.35)}
+    .form-title{font-size:clamp(20px,2.5vw,28px);font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+    .form-subtitle{font-size:13px;font-weight:300;color:rgba(26,26,26,.5);margin-bottom:32px;line-height:1.65}
+    .form-step{display:none}
+    .form-step.active{display:block}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .form__group{margin-bottom:18px}
+    .form__label{display:block;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.5);margin-bottom:8px}
+    .form__optional{font-size:10px;font-weight:400;color:rgba(26,26,26,.4);margin-left:6px}
+    .form__input{width:100%;font-family:var(--font);font-size:14px;font-weight:300;color:var(--dark);border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:13px 16px;background:#fff;transition:border-color .22s;outline:none}
+    .form__input:focus{border-color:var(--accent)}
+    .form__input.error{border-color:#e53935}
+    .form__error{font-size:11px;color:#e53935;margin-top:5px;display:none}
+    .form__error.show{display:block}
+    .form__textarea{width:100%;min-height:120px;resize:vertical;font-family:var(--font);font-size:14px;font-weight:300;color:var(--dark);border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:13px 16px;background:#fff;transition:border-color .22s;outline:none}
+    .form__textarea:focus{border-color:var(--accent)}
+    .form__textarea.error{border-color:#e53935}
+    .radio-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+    .radio-card{position:relative}
+    .radio-card input[type="radio"]{position:absolute;opacity:0;width:0;height:0}
+    .radio-card label{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;cursor:pointer;transition:border-color .2s,background .2s}
+    .radio-card input:checked+label{border-color:var(--accent);background:rgba(205,62,0,.04)}
+    .radio-card label:hover{border-color:rgba(26,26,26,.25)}
+    .radio-card__title{font-size:12px;font-weight:700;color:var(--dark)}
+    .radio-card__sub{font-size:11px;font-weight:300;color:rgba(26,26,26,.45)}
+    .budget-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .budget-label{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.5)}
+    .budget-value{font-size:14px;font-weight:700;color:var(--accent)}
+    .budget-slider{width:100%;-webkit-appearance:none;appearance:none;height:3px;background:rgba(26,26,26,.1);border-radius:2px;outline:none;margin-bottom:18px;cursor:pointer}
+    .budget-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--accent)}
+    .form-nav{display:flex;gap:12px;margin-top:8px}
+    .btn-next{flex:1;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fff;background:var(--accent);border:none;border-radius:6px;padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .22s,transform .18s}
+    .btn-next:hover{background:#a83200;transform:translateY(-1px)}
+    .btn-next:disabled{opacity:.5;pointer-events:none;transform:none}
+    .btn-prev{font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.5);background:none;border:1.5px solid rgba(26,26,26,.14);border-radius:6px;padding:16px 20px;cursor:pointer;transition:border-color .2s,color .2s}
+    .btn-prev:hover{border-color:var(--dark);color:var(--dark)}
+    .form-note{font-size:10px;color:rgba(26,26,26,.3);text-align:center;margin-top:14px;line-height:1.6}
+    .success-state{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px;gap:20px}
+    .success-state.show{display:flex}
+    .success-check{width:64px;height:64px;border-radius:50%;background:rgba(205,62,0,.1);display:flex;align-items:center;justify-content:center}
+    .success-title{font-size:24px;font-weight:800;letter-spacing:-.02em}
+    .success-desc{font-size:14px;font-weight:300;color:rgba(26,26,26,.55);line-height:1.7;max-width:360px}
+    .success-back{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid rgba(205,62,0,.3);padding-bottom:2px;margin-top:8px;text-decoration:none}
+    .file-drop{display:block;border:1.5px dashed rgba(26,26,26,.2);border-radius:10px;padding:28px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:var(--bg)}
+    .file-drop:hover,.file-drop.drag{border-color:var(--accent);background:rgba(205,62,0,.03)}
+    .file-drop__icon{margin-bottom:12px}
+    .file-drop__text{font-size:13px;color:rgba(26,26,26,.6);margin-bottom:4px}
+    .file-drop__link{color:var(--accent);font-weight:600;text-decoration:underline}
+    .file-drop__hint{font-size:11px;color:rgba(26,26,26,.35)}
+    .file-drop__list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;justify-content:center}
+    .file-chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;background:rgba(26,26,26,.06);color:var(--dark);padding:4px 10px;border-radius:100px}
+    .file-chip__remove{cursor:pointer;color:rgba(26,26,26,.4);font-size:14px;line-height:1}
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .75s ease,transform .75s ease}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    @media(max-width:900px){
+      .contact-main{grid-template-columns:1fr}
+      .contact-info{border-right:none;border-bottom:1px solid rgba(26,26,26,.07)}
+    }
+    @media(max-width:640px){
+      .form-row{grid-template-columns:1fr}
+      .form__input,.form__textarea,select{font-size:16px}
+      .btn-next,.btn-prev{min-height:48px}
+    }
+    @media(max-width:430px){
+      .radio-grid{grid-template-columns:1fr}
     }
   </style>
 <!-- Google tag (gtag.js) -->
@@ -394,16 +481,167 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 </div></div>
 
-<div style="background:#F2EDE3;padding:60px 24px 80px;">
-  <iframe src="/contact.html" style="width:100%;border:none;display:block;min-height:900px;" id="contact-iframe" scrolling="no"></iframe>
+<div class="contact-main" id="formulaire">
+
+  <!-- Infos gauche -->
+  <aside class="contact-info reveal">
+    <div>
+      <span class="contact-info__label">Nous trouver</span>
+      <div class="info-item">
+        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#CD3E00" stroke-width="1.6"/><circle cx="12" cy="9" r="2.5" stroke="#CD3E00" stroke-width="1.6"/></svg></div>
+        <div class="info-text"><strong>Atelier</strong>76 Rue Mandron<br>Bordeaux 33000</div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="#CD3E00" stroke-width="1.6"/><path d="M2 8l10 7 10-7" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+        <div class="info-text"><strong>E-mail</strong><a href="mailto:contact@kobo-design.fr">contact@kobo-design.fr</a></div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2C7.42 21 3 16.58 3 11 3 7.13 3.43 5.33 5 4z" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="info-text"><strong>Téléphone</strong><a href="tel:+33642899858">+33 6 42 89 98 58</a></div>
+      </div>
+    </div>
+    <div>
+      <span class="contact-info__label">Horaires d'atelier</span>
+      <div class="hours-grid">
+        <div class="hours-row"><span>Lun — Ven</span>9h – 18h</div>
+        <div class="hours-row"><span>Samedi</span>Sur RDV</div>
+        <div class="hours-row"><span>Dimanche</span>Fermé</div>
+        <div class="hours-row"><span>Jours fériés</span>Fermé</div>
+      </div>
+    </div>
+    <div>
+      <span class="contact-info__label">Nos réseaux</span>
+      <div class="socials">
+        <a href="https://www.instagram.com/kobodesign_bdx/" target="_blank" rel="noopener" class="social-link"><div class="social-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></div>Instagram</a>
+        <a href="https://www.linkedin.com/company/kobodesign" target="_blank" rel="noopener" class="social-link"><div class="social-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="9" width="4" height="12" stroke="currentColor" stroke-width="1.6"/><circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="1.6"/></svg></div>LinkedIn</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Formulaire droite -->
+  <div class="contact-form-wrap">
+    <div class="steps-indicator">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-line"></div>
+      <span class="step-label">Vous</span>
+      <div class="step-line"></div>
+      <div class="step-dot" id="dot2">2</div>
+      <div class="step-line"></div>
+      <span class="step-label">Votre projet</span>
+    </div>
+
+    <form id="contactForm" action="/api/contact" method="POST" novalidate enctype="multipart/form-data">
+
+      <!-- Succès -->
+      <div class="success-state" id="successState">
+        <div class="success-check">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#CD3E00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2 class="success-title">Message envoyé !</h2>
+        <p class="success-desc">Merci pour votre message. Un membre de l'équipe Kōbō vous répondra sous 24h ouvrées.</p>
+        <a href="index.html" class="success-back">Retour à l'accueil →</a>
+      </div>
+
+      <!-- Étape 1 -->
+      <div class="form-step active" id="step1">
+        <h2 class="form-title">Qui êtes-vous ?</h2>
+        <p class="form-subtitle">Commençons par faire connaissance.</p>
+        <div class="form-row">
+          <div class="form__group">
+            <label class="form__label" for="prenom">Prénom *</label>
+            <input class="form__input" type="text" id="prenom" name="prenom" placeholder="Jean" autocomplete="given-name" required/>
+            <p class="form__error" id="err-prenom">Veuillez renseigner votre prénom.</p>
+          </div>
+          <div class="form__group">
+            <label class="form__label" for="nom">Nom *</label>
+            <input class="form__input" type="text" id="nom" name="nom" placeholder="Dupont" autocomplete="family-name" required/>
+            <p class="form__error" id="err-nom">Veuillez renseigner votre nom.</p>
+          </div>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="email">E-mail *</label>
+          <input class="form__input" type="email" id="email" name="email" placeholder="vous@exemple.fr" autocomplete="email" required/>
+          <p class="form__error" id="err-email">Veuillez entrer une adresse e-mail valide.</p>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="tel">Téléphone *</label>
+          <input class="form__input" type="tel" id="tel" name="telephone" placeholder="+33 6 00 00 00 00" autocomplete="tel" required/>
+          <p class="form__error" id="err-tel">Veuillez entrer votre numéro de téléphone.</p>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="code_postal">Code postal *</label>
+          <input class="form__input" type="text" id="code_postal" name="code_postal" placeholder="33000" maxlength="10" autocomplete="postal-code" inputmode="numeric" required/>
+          <p class="form__error" id="err-code-postal">Veuillez entrer votre code postal.</p>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="decouverte">Comment nous avez-vous trouvés ? *</label>
+          <select class="form__input" id="decouverte" name="decouverte" required style="cursor:pointer;">
+            <option value="">— Sélectionnez —</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Bouche à oreille">Bouche à oreille</option>
+            <option value="Google">Google</option>
+            <option value="Salon / Exposition">Salon / Exposition</option>
+            <option value="Autre">Autre</option>
+          </select>
+          <p class="form__error" id="err-decouverte">Veuillez sélectionner une option.</p>
+        </div>
+        <div class="form-nav">
+          <button type="button" class="btn-next" onclick="goStep2()">Continuer <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Étape 2 -->
+      <div class="form-step" id="step2">
+        <h2 class="form-title">Votre projet</h2>
+        <p class="form-subtitle">Plus vous nous en dites, plus notre réponse sera précise.</p>
+        <div class="form__group">
+          <label class="form__label">Type de projet *</label>
+          <div class="radio-grid">
+            <div class="radio-card"><input type="radio" name="type_projet" id="r1" value="Mobilier sur-mesure" required/><label for="r1"><span class="radio-card__title">Mobilier</span><span class="radio-card__sub">Canapé, table, rangements…</span></label></div>
+            <div class="radio-card"><input type="radio" name="type_projet" id="r2" value="Architecture intérieur"/><label for="r2"><span class="radio-card__title">Architecture</span><span class="radio-card__sub">Rénovation, aménagement…</span></label></div>
+            <div class="radio-card"><input type="radio" name="type_projet" id="r3" value="Cuisine sur-mesure"/><label for="r3"><span class="radio-card__title">Cuisine</span><span class="radio-card__sub">Îlot, agencement complet…</span></label></div>
+            <div class="radio-card"><input type="radio" name="type_projet" id="r4" value="Autre"/><label for="r4"><span class="radio-card__title">Autre</span><span class="radio-card__sub">Bureau, chambre, dressing…</span></label></div>
+          </div>
+          <p class="form__error" id="err-type">Veuillez sélectionner un type de projet.</p>
+        </div>
+        <div class="form__group">
+          <div class="budget-row">
+            <label class="budget-label" for="budget">Budget estimé</label>
+            <span class="budget-value" id="budgetDisplay">15 000 €</span>
+          </div>
+          <input class="budget-slider" type="range" id="budget" name="budget_affiche" min="5000" max="100000" step="1000" value="15000" oninput="updateBudget(this.value)"/>
+          <input type="hidden" name="budget" id="budgetHidden" value="15 000 €"/>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="message">Décrivez votre projet *</label>
+          <textarea class="form__textarea" id="message" name="message" placeholder="Parlez-nous de votre espace, de vos envies, de vos contraintes…" required></textarea>
+          <p class="form__error" id="err-message">Veuillez décrire votre projet.</p>
+        </div>
+        <div class="form__group">
+          <label class="form__label">Vos fichiers <span class="form__optional">(facultatif)</span></label>
+          <label class="file-drop" for="fichiers" id="fileDrop">
+            <div class="file-drop__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 8 12 3 7 8" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="#CD3E00" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <p class="file-drop__text">Glissez vos fichiers ici ou <span class="file-drop__link">parcourir</span></p>
+            <p class="file-drop__hint">Photos, plans, croquis, PDF — max 20 Mo · 5 fichiers</p>
+            <div class="file-drop__list" id="fileList"></div>
+          </label>
+          <input type="file" id="fichiers" name="fichiers" multiple accept="image/*,.pdf,.dwg,.dxf" style="display:none" onchange="handleFiles(this.files)"/>
+        </div>
+        <input type="text" name="botcheck" style="display:none" tabindex="-1" autocomplete="off"/>
+        <div class="form-nav">
+          <button type="button" class="btn-prev" onclick="goStep1()">← Retour</button>
+          <button type="submit" class="btn-next" id="btnSubmit">Envoyer le message <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <p class="form-note">Vos données ne sont jamais revendues. Réponse garantie sous 24h ouvrées.</p>
+      </div>
+
+    </form>
+  </div>
 </div>
+
 <script>
-  // Ajuste la hauteur de l'iframe au contenu
-  const iframe = document.getElementById('contact-iframe');
-  function resizeIframe(){
-    try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px'; } catch(e){}
-  }
-  iframe.addEventListener('load', function(){ resizeIframe(); setInterval(resizeIframe, 500); });
 
   // Menu mobile
   function toggleMenu(){
@@ -424,6 +662,137 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   // Offset hero pour compenser le header fixed
   document.addEventListener('DOMContentLoaded', function(){
     document.querySelector('.hero').style.paddingTop = 'calc(72px + clamp(60px, 10vw, 120px))';
+  });
+
+  // Budget slider
+  function updateBudget(val){
+    const v = parseInt(val);
+    const label = v >= 100000 ? '100 000 €+' : v.toLocaleString('fr-FR') + ' €';
+    document.getElementById('budgetDisplay').textContent = label;
+    document.getElementById('budgetHidden').value = label;
+  }
+
+  // Étape 1 → 2
+  function goStep2(){
+    let valid = true;
+    const prenom = document.getElementById('prenom');
+    const nom = document.getElementById('nom');
+    const email = document.getElementById('email');
+    const tel = document.getElementById('tel');
+    const cp = document.getElementById('code_postal');
+    const dec = document.getElementById('decouverte');
+
+    if(!prenom.value.trim()){ prenom.classList.add('error'); document.getElementById('err-prenom').classList.add('show'); valid=false; }
+    else { prenom.classList.remove('error'); document.getElementById('err-prenom').classList.remove('show'); }
+    if(!nom.value.trim()){ nom.classList.add('error'); document.getElementById('err-nom').classList.add('show'); valid=false; }
+    else { nom.classList.remove('error'); document.getElementById('err-nom').classList.remove('show'); }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())){ email.classList.add('error'); document.getElementById('err-email').classList.add('show'); valid=false; }
+    else { email.classList.remove('error'); document.getElementById('err-email').classList.remove('show'); }
+    if(!tel.value.trim()){ tel.classList.add('error'); document.getElementById('err-tel').classList.add('show'); valid=false; }
+    else { tel.classList.remove('error'); document.getElementById('err-tel').classList.remove('show'); }
+    if(!cp.value.trim()){ cp.classList.add('error'); document.getElementById('err-code-postal').classList.add('show'); valid=false; }
+    else { cp.classList.remove('error'); document.getElementById('err-code-postal').classList.remove('show'); }
+    if(!dec.value){ dec.classList.add('error'); document.getElementById('err-decouverte').classList.add('show'); valid=false; }
+    else { dec.classList.remove('error'); document.getElementById('err-decouverte').classList.remove('show'); }
+
+    if(!valid) return;
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+    document.getElementById('dot1').classList.remove('active');
+    document.getElementById('dot1').classList.add('done');
+    document.getElementById('dot2').classList.add('active');
+    document.getElementById('formulaire').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function goStep1(){
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step1').classList.add('active');
+    document.getElementById('dot2').classList.remove('active');
+    document.getElementById('dot1').classList.remove('done');
+    document.getElementById('dot1').classList.add('active');
+  }
+
+  // Soumission formulaire
+  document.addEventListener('DOMContentLoaded', function(){
+    document.getElementById('contactForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      let valid = true;
+      const types = document.querySelectorAll('input[name="type_projet"]');
+      if(![...types].some(r=>r.checked)){ document.getElementById('err-type').classList.add('show'); valid=false; }
+      else { document.getElementById('err-type').classList.remove('show'); }
+      const msg = document.getElementById('message');
+      if(!msg.value.trim()){ msg.classList.add('error'); document.getElementById('err-message').classList.add('show'); valid=false; }
+      else { msg.classList.remove('error'); document.getElementById('err-message').classList.remove('show'); }
+      if(!valid) return;
+
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Envoi en cours…';
+
+      try {
+        const SUPABASE_URL = 'https://auzcbtipzqxmllkzdxls.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1emNidGlwenF4bWxsa3pkeGxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MTA1MDAsImV4cCI6MjA5MzA4NjUwMH0.SBApqHI7Fg2eN77ahmK7mtvwi56fvYOTfZecaBBc3I4';
+        const uploadedFiles = [];
+        if(selectedFiles && selectedFiles.length > 0){
+          const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          for(const file of selectedFiles){
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+            const path = id + '/' + safeName;
+            const up = await fetch(SUPABASE_URL+'/storage/v1/object/fichiers-formsdemandes/'+path,{
+              method:'POST', headers:{'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':file.type||'application/octet-stream','x-upsert':'false'}, body:file
+            });
+            if(up.ok) uploadedFiles.push(file.name+' → '+SUPABASE_URL+'/storage/v1/object/public/fichiers-formsdemandes/'+path);
+          }
+        }
+        const formData = new FormData(this);
+        const payload = Object.fromEntries(formData.entries());
+        payload.fichiers = uploadedFiles.join(' | ');
+        const res = await fetch(this.action,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'application/json'}});
+        const data = await res.json();
+        if(data.success){
+          document.getElementById('step2').style.display='none';
+          document.querySelector('.steps-indicator').style.display='none';
+          document.getElementById('successState').classList.add('show');
+        } else { throw new Error(); }
+      } catch {
+        btn.disabled=false; btn.innerHTML='Réessayer →';
+        alert('Une erreur est survenue. Merci de réessayer ou de nous écrire à contact@kobo-design.fr');
+      }
+    });
+
+    // Scroll reveal
+    const io = new IntersectionObserver(entries=>{
+      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); } });
+    },{threshold:0.1});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  });
+
+  // File upload
+  let selectedFiles = [];
+  function handleFiles(files){
+    Array.from(files).forEach(file=>{
+      if(file.size > 20*1024*1024){ alert(file.name+' dépasse 20 Mo.'); return; }
+      if(selectedFiles.length >= 5){ alert('Maximum 5 fichiers.'); return; }
+      if(!selectedFiles.find(f=>f.name===file.name&&f.size===file.size)) selectedFiles.push(file);
+    });
+    renderFileList();
+  }
+  function renderFileList(){
+    const list = document.getElementById('fileList'); if(!list) return;
+    list.innerHTML = '';
+    selectedFiles.forEach((f,i)=>{
+      const chip = document.createElement('span'); chip.className='file-chip';
+      chip.innerHTML = f.name+' <span class="file-chip__remove" onclick="removeFile('+i+')">×</span>';
+      list.appendChild(chip);
+    });
+  }
+  function removeFile(i){ selectedFiles.splice(i,1); renderFileList(); }
+  document.addEventListener('DOMContentLoaded', function(){
+    const dropEl = document.getElementById('fileDrop');
+    if(dropEl){
+      dropEl.addEventListener('dragover',e=>{e.preventDefault();dropEl.classList.add('drag');});
+      dropEl.addEventListener('dragleave',()=>dropEl.classList.remove('drag'));
+      dropEl.addEventListener('drop',e=>{e.preventDefault();dropEl.classList.remove('drag');handleFiles(e.dataTransfer.files);});
+    }
   });
 </script>
 
