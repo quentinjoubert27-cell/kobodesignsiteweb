@@ -253,72 +253,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <div class="bottom-cta">
   <div class="bottom-cta__title">Un projet en tête dès maintenant ?</div>
-  <p class="bottom-cta__sub">Nos configurateurs ne sont pas encore en ligne, mais notre équipe peut vous accompagner directement. Envoyez-nous votre projet — réponse sous 24h.</p>
-
-  <div id="cfg-form-wrap" style="max-width:520px;margin:40px auto 0;text-align:left;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-      <div>
-        <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,250,240,.5);margin-bottom:6px;">Prénom *</label>
-        <input id="cfg-prenom" type="text" placeholder="Jean" style="width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,250,240,.15);border-radius:8px;padding:12px 14px;color:#FFFAF0;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;" />
-      </div>
-      <div>
-        <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,250,240,.5);margin-bottom:6px;">Nom</label>
-        <input id="cfg-nom" type="text" placeholder="Dupont" style="width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,250,240,.15);border-radius:8px;padding:12px 14px;color:#FFFAF0;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;" />
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-      <div>
-        <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,250,240,.5);margin-bottom:6px;">Email *</label>
-        <input id="cfg-email" type="email" placeholder="jean@exemple.fr" style="width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,250,240,.15);border-radius:8px;padding:12px 14px;color:#FFFAF0;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;" />
-      </div>
-      <div>
-        <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,250,240,.5);margin-bottom:6px;">Téléphone</label>
-        <input id="cfg-tel" type="tel" placeholder="+33 6 12 34 56 78" style="width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,250,240,.15);border-radius:8px;padding:12px 14px;color:#FFFAF0;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;" />
-      </div>
-    </div>
-    <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,250,240,.5);margin-bottom:6px;">Votre projet *</label>
-      <textarea id="cfg-message" rows="4" placeholder="Décrivez votre projet (dimensions approximatives, type de meuble, style souhaité…)" style="width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,250,240,.15);border-radius:8px;padding:12px 14px;color:#FFFAF0;font-size:14px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
-    </div>
-    <div id="cfg-error" style="display:none;color:#ff6b4a;font-size:13px;margin-bottom:12px;"></div>
-    <button id="cfg-btn" onclick="submitCfgForm()" style="width:100%;background:#CD3E00;color:#fff;border:none;border-radius:8px;padding:14px 24px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:inherit;">
-      Envoyer mon projet →
-    </button>
-    <div id="cfg-success" style="display:none;text-align:center;padding:24px;color:#FFFAF0;">
-      <div style="font-size:28px;margin-bottom:12px;">✓</div>
-      <div style="font-size:16px;font-weight:700;margin-bottom:8px;">Message envoyé !</div>
-      <div style="font-size:13px;opacity:.6;">Notre équipe revient vers vous sous 24h.</div>
-    </div>
-  </div>
-  <input type="text" id="cfg-honeypot" style="display:none;" tabindex="-1" autocomplete="off"/>
+  <p class="bottom-cta__sub">Nos configurateurs ne sont pas encore en ligne, mais notre équipe peut vous accompagner directement. Devis gratuit sous 24h.</p>
+  <a href="contact.html" class="bottom-cta__btn">
+    Prendre contact
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
 </div>
-
-<script>
-async function submitCfgForm(){
-  const prenom = document.getElementById('cfg-prenom').value.trim();
-  const email  = document.getElementById('cfg-email').value.trim();
-  const message= document.getElementById('cfg-message').value.trim();
-  const errEl  = document.getElementById('cfg-error');
-  errEl.style.display='none';
-  if(!prenom||!email||!message){ errEl.textContent='Merci de remplir les champs obligatoires.'; errEl.style.display='block'; return; }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
-  const btn=document.getElementById('cfg-btn'); btn.disabled=true; btn.textContent='Envoi…';
-  try {
-    const res = await fetch('/api/contact',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        prenom, nom:document.getElementById('cfg-nom').value.trim(),
-        email, telephone:document.getElementById('cfg-tel').value.trim(),
-        message, type_projet:'Configurateur', website:document.getElementById('cfg-honeypot').value
-      })
-    });
-    if(res.ok){
-      document.getElementById('cfg-form-wrap').style.display='none';
-      document.getElementById('cfg-success').style.display='block';
-    } else { throw new Error(); }
-  } catch(e){ errEl.textContent='Une erreur est survenue, réessayez.'; errEl.style.display='block'; btn.disabled=false; btn.textContent='Envoyer mon projet →'; }
-}
-</script>
 
 <script>!function(){if(window._kbNoTrack)return;var k="kb_tracked_"+location.pathname;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");var vid=document.cookie.match(/kb_vid=([^;]+)/);if(!vid){var u=(Math.random().toString(36)+Math.random().toString(36)).replace(/[^a-z0-9]/g,"").slice(0,16);document.cookie="kb_vid="+u+";max-age=31536000;path=/;SameSite=Lax";vid=[null,u];}fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:location.pathname,referrer:document.referrer||null,language:navigator.language||null,screen:screen.width+"x"+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||null,visitor_id:vid[1]})}).catch(function(){});}();</script>
 <!-- Cookie Banner -->
