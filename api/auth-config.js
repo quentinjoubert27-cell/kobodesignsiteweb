@@ -13,7 +13,7 @@ export default function handler(req, res) {
 
   res.setHeader(
     'Set-Cookie',
-    'kb_auth=ok; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000'
+    'kb_auth=ok; Path=/; SameSite=Lax; Max-Age=31536000'
   );
   res.redirect(302, '/configurateur');
 }

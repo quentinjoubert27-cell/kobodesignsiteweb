@@ -452,6 +452,13 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 </script>
 </head>
 <body>
+<script>
+(function(){
+  if(!document.cookie.split(';').some(function(c){return c.trim()==='kb_auth=ok';})){
+    location.replace('/configurateurs');
+  }
+})();
+</script>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T76V743S"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
