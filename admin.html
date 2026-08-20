@@ -1302,7 +1302,7 @@
     const pagesSorted = Object.entries(pages).sort((a,b)=>b[1]-a[1]).slice(0,8);
     const PAGE_NAMES = {
       '/':'/index.html — Accueil', '/index.html':'Accueil', '/configurateur.html':'Configurateur',
-      '/configurateur-sdb.html':'Config. SDB', '/contact.html':'Contact',
+      '/configurateur':'Configurateur', '/contact.html':'Contact',
       '/architecture.html':'Architecture', '/gamme.html':'Gamme', '/mobilier.html':'Mobilier',
       '/projets.html':'Projets', '/configurateurs.html':'Configurateurs',
     };
@@ -1886,7 +1886,7 @@
       let vizUrl = null;
       if (isBiblio && c.largeur) {
         const cfg = { W: c.largeur, H: c.hauteur, D: c.profondeur, matId: 'chene', elements: c.elements || [] };
-        vizUrl = '/configurateur-biblio?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+        vizUrl = '/configurateur?ft=biblio&c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
       } else if (!isBiblio && c.meuble_l) {
         const ft = c.type || 'sdb';
         vizUrl = '/configurateur?ft=' + encodeURIComponent(ft);

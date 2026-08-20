@@ -279,7 +279,7 @@ function normalizeConfig(c, source){
     if(c.nb_intercalaires)p.push(c.nb_intercalaires+' intercalaire'+(c.nb_intercalaires>1?'s':''));
     if(c.nb_portes)       p.push(c.nb_portes+' porte'+(c.nb_portes>1?'s':''));
     summary=p.length?p.join(' · '):'Structure vide';
-    try{ vizUrl='/configurateur-biblio?c='+btoa(unescape(encodeURIComponent(JSON.stringify({W:c.largeur,H:c.hauteur,D:c.profondeur,matId:c.matId||'chene',elements:c.elements||[]})))); }catch(e){ vizUrl='/configurateur-biblio'; }
+    try{ vizUrl='/configurateur?ft=biblio&c='+btoa(unescape(encodeURIComponent(JSON.stringify({W:c.largeur,H:c.hauteur,D:c.profondeur,matId:c.matId||'chene',elements:c.elements||[]})))); }catch(e){ vizUrl='/configurateur?ft=biblio'; }
   } else {
     dims=c.meuble_l+'×'+c.meuble_h+'×'+c.meuble_p+' cm'; mat=c.meuble_mat||'—';
     var p=[];
