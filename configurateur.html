@@ -389,7 +389,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 }
 
 /* ─── TYPE SELECTION OVERLAY ─── */
-#type-overlay{position:fixed;inset:0;background:#FFFAF0;z-index:9999;display:flex;overflow:auto}
+#type-overlay{display:none!important}
 .to-left{width:36%;min-width:240px;background:#1A1A1A;display:flex;flex-direction:column;justify-content:center;padding:52px 44px}
 .to-left-logo{font-family:'Archivo',sans-serif;font-size:12px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#fff;margin-bottom:44px}
 .to-left-title{font-size:32px;font-weight:300;line-height:1.22;color:#fff;margin-bottom:18px}
@@ -589,9 +589,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="sb-header">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="logo-txt">Kōbō Design</div>
-        <div style="display:flex;gap:6px">
-          <button onclick="document.getElementById('type-overlay').style.display='flex'" style="font-size:10px;font-weight:600;color:var(--text2);background:none;border:1px solid var(--border);border-radius:100px;padding:4px 8px;cursor:pointer;font-family:inherit;transition:color .15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">← Menu</button>
-        </div>
+        <a href="https://www.kobo-design.fr" style="font-size:10px;font-weight:600;color:var(--text2);text-decoration:none;border:1px solid var(--border);border-radius:100px;padding:4px 8px;transition:color .15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">← Site</a>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">
+        <button id="ft-btn-biblio"  onclick="selectFurnitureType('biblio')"   style="flex:1;min-width:0;font-size:10px;font-weight:600;padding:5px 4px;border-radius:6px;border:1px solid var(--border);background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;transition:background .15s,color .15s">Bibliothèque</button>
+        <button id="ft-btn-dressing" onclick="selectFurnitureType('dressing')" style="flex:1;min-width:0;font-size:10px;font-weight:600;padding:5px 4px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:inherit;transition:background .15s,color .15s">Dressing</button>
+        <button id="ft-btn-tv"       onclick="selectFurnitureType('tv')"       style="flex:1;min-width:0;font-size:10px;font-weight:600;padding:5px 4px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:inherit;transition:background .15s,color .15s">Meuble TV</button>
+        <button id="ft-btn-sdb"      onclick="selectFurnitureType('sdb')"      style="flex:1;min-width:0;font-size:10px;font-weight:600;padding:5px 4px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:inherit;transition:background .15s,color .15s">Salle de bain</button>
       </div>
       <div class="logo-sub" id="logo-sub">Configurateur</div>
     </div>
@@ -3512,6 +3516,13 @@ function selectFurnitureType(ft){
   currentFT = ft;
   var cfg = FT_CONFIGS[ft];
   currentPanels = cfg.panels;
+  // Highlight active type button
+  ['biblio','dressing','tv','sdb'].forEach(function(t){
+    var b=document.getElementById('ft-btn-'+t);
+    if(!b) return;
+    if(t===ft){ b.style.background='var(--accent)'; b.style.color='#fff'; b.style.borderColor='var(--accent)'; }
+    else { b.style.background='none'; b.style.color='var(--text2)'; b.style.borderColor='var(--border)'; }
+  });
   BIBLIO_MODE = (ft !== 'sdb');
   history.pushState({ft:ft}, '');
 
@@ -4353,10 +4364,10 @@ goStep(1);
     : 'Clic = poser · Clic sur un élément = supprimer · Glisser = déplacer';
 })();
 
-// ── Auto-sélection via ?ft= ───────────────────────────
+// ── Auto-sélection via ?ft= (biblio par défaut) ───────
 (function(){
-  var ft=new URLSearchParams(location.search).get('ft');
-  if(ft) selectFurnitureType(ft);
+  var ft=new URLSearchParams(location.search).get('ft')||'biblio';
+  selectFurnitureType(ft);
 })();
 
 // ── Chargement depuis ?c= (aperçu admin) ──────────────
