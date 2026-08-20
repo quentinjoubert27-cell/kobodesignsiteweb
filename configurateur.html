@@ -3500,7 +3500,7 @@ var FT_CONFIGS = {
   biblio:  { label:'Bibliothèque',  sub:'Bibliothèque sur mesure',    panels:['p1','p-amgt','p4'],        steps:['Dimensions','Aménagement','Envoyer'],  dimL:[40,300,120], dimH:[80,240,200], dimP:[25,50,30],  cam:{pos:[0,0,3.6], tgt:[0,0,0]},    hasAngleOpt:false },
   tv:      { label:'Meuble TV',     sub:'Meuble TV sur mesure',        panels:['p1','p-amgt','p4'],        steps:['Dimensions','Aménagement','Envoyer'],  dimL:[80,300,150], dimH:[20,60,40],  dimP:[30,60,40],  cam:{pos:[0,-0.1,3.2], tgt:[0,-0.1,0]}, hasAngleOpt:false },
   dressing:{ label:'Dressing',      sub:'Dressing sur mesure',         panels:['p1','p-amgt','p4'],        steps:['Structure','Aménagement','Envoyer'],   dimL:[80,500,200], dimH:[180,280,230],dimP:[50,80,60],  cam:{pos:[0,0.3,4.2], tgt:[0,0.2,0]},hasAngleOpt:false },
-  sdb:     { label:'Salle de bain', sub:'Meuble salle de bain sur mesure',panels:['p1','p-amgt','p2','p3','p4'],   steps:['Meuble','Aménagement','Plan de travail','Vasque','Envoyer'], dimL:[40,220,120], dimH:[30,70,45],  dimP:[36,60,36],  cam:{pos:[-0.4,0.9,1.6],tgt:[0,0.25,0]},hasAngleOpt:false }
+  sdb:     { label:'Salle de bain', sub:'Meuble salle de bain sur mesure',panels:['p1','p-amgt','p2','p3','p4'],   steps:['Meuble','Aménagement','Plan de travail','Vasque','Envoyer'], dimL:[40,220,120], dimH:[30,70,45],  dimP:[36,60,36],  cam:{pos:[0,0,2.8], tgt:[0,0,0]},hasAngleOpt:false }
 };
 
 var currentFT = null;
@@ -3523,43 +3523,28 @@ function selectFurnitureType(ft){
     if(t===ft){ b.style.background='var(--accent)'; b.style.color='#fff'; b.style.borderColor='var(--accent)'; }
     else { b.style.background='none'; b.style.color='var(--text2)'; b.style.borderColor='var(--border)'; }
   });
-  BIBLIO_MODE = (ft !== 'sdb');
+  BIBLIO_MODE = true; // même scène pour tous les types
   history.pushState({ft:ft}, '');
 
   document.getElementById('logo-sub').textContent = cfg.sub;
-  document.getElementById('type-overlay').style.display = 'none';
   var pw=document.getElementById('preset-wrap');
   if(pw) pw.style.display = (ft==='biblio') ? '' : 'none';
 
-  if(BIBLIO_MODE){
-    // OrbitControls actifs — l'utilisateur orbite autour du meuble fixe
-    controls.enabled = true;
-    controls.target.set(0, -0.02, -0.9);
-    camera.position.set(1.4, 0.7, 1.6);
-    camera.lookAt(0, -0.02, -0.9);
-    controls.minPolarAngle = Math.PI*0.05; controls.maxPolarAngle = Math.PI*0.52;
-    controls.minAzimuthAngle = -Math.PI/2;  controls.maxAzimuthAngle = Math.PI/2;
-    controls.minDistance = 0.8; controls.maxDistance = 6.0;
-    controls.update();
-    scene.background = new THREE.Color(0xF2EAD8);
-    scene.fog = new THREE.Fog(0xF2EAD8, 6, 14);
-    solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
-    wallBiblio.position.set(0, 0, WALL_BIBLIO_Z);
-    floorBiblio.position.set(0, FLOOR_BIBLIO_Y, 0);
-    wallBiblio.visible=true; floorBiblio.visible=true;
-  } else {
-    controls.enabled = true;
-    camera.position.set(cfg.cam.pos[0],cfg.cam.pos[1],cfg.cam.pos[2]);
-    camera.lookAt(cfg.cam.tgt[0],cfg.cam.tgt[1],cfg.cam.tgt[2]);
-    controls.target.set(cfg.cam.tgt[0],cfg.cam.tgt[1],cfg.cam.tgt[2]);
-    controls.update();
-    scene.background = new THREE.Color(0xF2EAD8);
-    scene.fog = new THREE.Fog(0xF2EAD8, 6, 14);
-    solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
-    wallBiblio.position.set(0, 0, WALL_Z);
-    floorBiblio.position.set(0, 0, 0);
-    wallBiblio.visible=true; floorBiblio.visible=true;
-  }
+  // Même scène 3D pour tous — seule la caméra change selon le type
+  controls.enabled = true;
+  controls.target.set(0, -0.02, -0.9);
+  camera.position.set(cfg.cam.pos[0], cfg.cam.pos[1], cfg.cam.pos[2]);
+  camera.lookAt(cfg.cam.tgt[0], cfg.cam.tgt[1], cfg.cam.tgt[2]);
+  controls.minPolarAngle = Math.PI*0.05; controls.maxPolarAngle = Math.PI*0.52;
+  controls.minAzimuthAngle = -Math.PI/2;  controls.maxAzimuthAngle = Math.PI/2;
+  controls.minDistance = 0.8; controls.maxDistance = 6.0;
+  controls.update();
+  scene.background = new THREE.Color(0xF2EAD8);
+  scene.fog = new THREE.Fog(0xF2EAD8, 6, 14);
+  solMesh.visible=false; solSh.visible=false; murMesh.visible=false; mirGrp.visible=false;
+  wallBiblio.position.set(0, 0, WALL_BIBLIO_Z);
+  floorBiblio.position.set(0, FLOOR_BIBLIO_Y, 0);
+  wallBiblio.visible=true; floorBiblio.visible=true;
 
   // Adapt dimension inputs
   var inpCL=document.getElementById('inp-CL');
