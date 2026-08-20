@@ -3,7 +3,7 @@
 
 const SECRET = process.env.CONFIG_PASS || 'kobodesign2026';
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   const { pass } = req.query;
 
   if (pass !== SECRET) {
