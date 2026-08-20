@@ -118,6 +118,21 @@
       "permanent": true
     },
     {
+      "source": "/configurateur-sdb",
+      "destination": "/configurateur?ft=sdb",
+      "permanent": true
+    },
+    {
+      "source": "/configurateur-biblio",
+      "destination": "/configurateur?ft=biblio",
+      "permanent": true
+    },
+    {
+      "source": "/configurateur-compose",
+      "destination": "/configurateur",
+      "permanent": true
+    },
+    {
       "source": "/espace-client",
       "destination": "/espace-client2",
       "permanent": false
