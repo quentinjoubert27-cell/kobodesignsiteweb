@@ -454,9 +454,10 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 <body>
 <script>
 (function(){
-  if(!document.cookie.split(';').some(function(c){return c.trim()==='kb_auth=ok';})){
-    location.replace('/configurateurs');
-  }
+  if(localStorage.getItem('kb_auth')==='ok') return;
+  var p=prompt('Mot de passe requis');
+  if(p==='kobodesign2026'){ localStorage.setItem('kb_auth','ok'); }
+  else { location.replace('/configurateurs'); }
 })();
 </script>
 <!-- Google Tag Manager (noscript) -->
