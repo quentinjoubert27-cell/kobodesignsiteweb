@@ -452,13 +452,37 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 </script>
 </head>
 <body>
+<style>
+#kb-gate{position:fixed;inset:0;z-index:99999;background:#1A1A1A;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:'DM Sans',sans-serif}
+#kb-gate input{padding:12px 18px;font-size:16px;border:none;border-radius:8px;width:260px;outline:none}
+#kb-gate button{padding:12px 32px;background:#CD3E00;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;width:260px}
+#kb-gate p{color:#fff;font-size:14px;opacity:.7;margin:0}
+#kb-gate .err{color:#ff6b6b;font-size:13px;display:none}
+</style>
+<div id="kb-gate">
+  <p>Accès restreint</p>
+  <input type="password" id="kb-pw" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')kbCheck()"/>
+  <button onclick="kbCheck()">Accéder</button>
+  <span class="err" id="kb-err">Mot de passe incorrect</span>
+</div>
 <script>
 (function(){
-  if(localStorage.getItem('kb_auth')==='ok') return;
-  var p=prompt('Mot de passe requis');
-  if(p==='kobodesign2026'){ localStorage.setItem('kb_auth','ok'); }
-  else { location.replace('/configurateurs'); }
+  if(localStorage.getItem('kb_auth')==='ok'){
+    document.getElementById('kb-gate').style.display='none';
+    return;
+  }
 })();
+function kbCheck(){
+  var v=document.getElementById('kb-pw').value;
+  if(v==='kobodesign2026'){
+    localStorage.setItem('kb_auth','ok');
+    document.getElementById('kb-gate').style.display='none';
+  } else {
+    document.getElementById('kb-err').style.display='block';
+    document.getElementById('kb-pw').value='';
+    document.getElementById('kb-pw').focus();
+  }
+}
 </script>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T76V743S"
