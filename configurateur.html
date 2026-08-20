@@ -1363,8 +1363,8 @@ function buildCaisson(){
   var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db);
   var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
 
-  if(!BIBLIO_MODE){
-    // ── Bloc SDB (identique à configurateur-sdb.html) ──────────────────────
+  if(currentFT==='sdb'){
+    // ── Bloc SDB ────────────────────────────────────────────────────────────
     // Tablettes et séparateurs
     caissonElements.forEach(function(el,idx){
       if(el.type==='shelf'||el.type==='shelf_simple'){
@@ -1460,7 +1460,7 @@ function buildCaisson(){
       }
     });
   } else {
-    // ── Bloc BIBLIO_MODE (biblio, tv, dressing, chambre) ───────────────────
+    // ── Bloc biblio / dressing / TV ────────────────────────────────────────
     // Tablettes et séparateurs
     caissonElements.forEach(function(el,idx){
       if(el.type==='shelf'||el.type==='shelf_simple'){
@@ -1600,9 +1600,9 @@ function buildCaisson(){
   // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
   if(currentFT==='tv') buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
 
-  if(!BIBLIO_MODE) caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
+  if(currentFT==='sdb') caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
   scene.add(caissonGrp);
-  if(BIBLIO_MODE){
+  if(true){
     if(hasAngle) buildCaisson2();
     normalizeCaisson();
 
@@ -3584,19 +3584,12 @@ function selectFurnitureType(ft){
   document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=(ft==='tv')?'':'none'; });
   ['tvl-btn','tvr-btn','tvt-btn'].forEach(function(id,i){ var b=document.getElementById(id); if(b) b.textContent=['+Gauche','+Droite','+Dessus'][i].replace('+',' + ').trim(); });
   ['tvl-opts','tvr-opts','tvt-opts'].forEach(function(id){ var o=document.getElementById(id); if(o) o.style.display='none'; });
-  // Onglets Formulaire/Fonction — uniquement BIBLIO_MODE
+  // Onglets Formulaire/Fonction — cachés en SDB
   var tabs=document.getElementById('p1-tabs');
-  if(tabs) tabs.style.display=BIBLIO_MODE?'':'none';
+  if(tabs) tabs.style.display=(ft!=='sdb')?'':'none';
   var sdbAmgt=document.getElementById('p1-sdb-amgt');
-  if(sdbAmgt) sdbAmgt.style.display=BIBLIO_MODE?'none':'';
-  if(BIBLIO_MODE){ switchSbTab('formulaire'); }
-  else {
-    // SDB : les deux panels toujours visibles (pas d'onglets)
-    var f=document.getElementById('sbt-formulaire'),fn=document.getElementById('sbt-fonction');
-    if(f) f.classList.add('on'); if(fn) fn.classList.remove('on');
-  }
-  // Reset angle si on passe en SDB
-  if(!BIBLIO_MODE&&hasAngle){ hasAngle=false; if(caissonGrp2&&caissonGrp2.parent) caissonGrp2.parent.remove(caissonGrp2); caissonGrp2=null; var btn=document.getElementById('btn-angle'); if(btn) btn.textContent='+ Ajouter un angle'; var opts=document.getElementById('angle-opts'); if(opts) opts.style.display='none'; }
+  if(sdbAmgt) sdbAmgt.style.display=(ft==='sdb')?'':'none';
+  if(ft!=='sdb'){ switchSbTab('formulaire'); }
   _rebuildEditBar();
   setCaissonType('shelf');
   buildStepper(cfg.steps);
