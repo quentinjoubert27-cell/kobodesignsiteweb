@@ -4334,7 +4334,12 @@ function toggleSDBMode(on){
   if(on){
     currentPanels = ['p1','p-amgt','p2','p3','p4'];
     buildStepper(['Structure','Aménagement','Plan de travail','Vasque','Envoyer']);
+    // Caler les dimensions du plan sur le caisson central
+    S.depassG = 0; S.depassD = 0;
+    S.L = S.CL;
+    S.P = caissonCP();
     buildPlan();
+    _repositionPlanOnCaisson();
   } else {
     currentPanels = ['p1','p-amgt','p4'];
     buildStepper(['Structure','Aménagement','Envoyer']);
@@ -4343,6 +4348,18 @@ function toggleSDBMode(on){
     if(vasqueGrp2){ scene.remove(vasqueGrp2); vasqueGrp2=null; }
   }
   goStep(1);
+}
+
+function _repositionPlanOnCaisson(){
+  if(!planMesh || !caissonGrp) return;
+  caissonGrp.updateMatrixWorld(true);
+  var bbox = new THREE.Box3().setFromObject(caissonGrp);
+  // Y : plan bottom = caisson top (géométrie a S.CH+0.04 baked, donc on compense)
+  planMesh.position.y = bbox.max.y - S.CH - 0.04;
+  // Z : centrer sur le caisson
+  planMesh.position.z = (bbox.min.z + bbox.max.z) / 2;
+  // X : centré
+  planMesh.position.x = (bbox.min.x + bbox.max.x) / 2;
 }
 
 // ── Chargement depuis ?c= (aperçu admin) ──────────────
