@@ -2156,7 +2156,7 @@ function _applyVasqueGltf(gltf){
   vasqueGrp=r1.grp; vasqueRimOffset=r1.rimOffset;
   S.vasqueRx=r1.rx; S.vasqueRz=r1.rz;
   scene.add(vasqueGrp);
-  vasqueGrp.visible=(S.step===3);
+  vasqueGrp.visible=isSDBMode?(step>=4):(S.step===3);
   S.vx=clampVasque(S.vx,'x');
   S.vz=clampVasque(WALL_Z+S.vasqueRz,'z');
 
@@ -2164,7 +2164,7 @@ function _applyVasqueGltf(gltf){
     var r2=_buildOneVasqueGrp(gltf);
     vasqueGrp2=r2.grp; vasqueRimOffset2=r2.rimOffset;
     scene.add(vasqueGrp2);
-    vasqueGrp2.visible=(S.step===3);
+    vasqueGrp2.visible=isSDBMode?(step>=4):(S.step===3);
     // Positionner à droite si vx1 est à gauche, sinon symétrique
     S.vx2=clampVasque(S.L/4,'x');
     S.vx=clampVasque(-S.L/4,'x');
@@ -3647,7 +3647,7 @@ function goStep(n){
   if(n<1||n>total) return;
   step = n;
   // S.step used by Three.js: for SDB map panel index, else keep at 1
-  if(currentFT==='sdb'){
+  if(currentFT==='sdb' || isSDBMode){
     var _pid=currentPanels[n-1];
     S.step=(_pid==='p1'||_pid==='p-amgt')?1:(_pid==='p2'?2:3);
   } else { S.step=1; }
@@ -3693,6 +3693,10 @@ function goStep(n){
       var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
       buildPlan();
     }
+    if(n===4){ buildRecap(); updatePosInfo(); positionVasque(); }
+  }
+  if(isSDBMode){
+    if(n===3){ buildPlan(); }
     if(n===4){ buildRecap(); updatePosInfo(); positionVasque(); }
   }
   animCamera(currentFT==='sdb'?(n<=2?1:n===3?2:3):1);
