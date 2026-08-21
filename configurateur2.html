@@ -2178,14 +2178,36 @@ function clampVasque(val,axis){
   }
 }
 function positionVasque(){
+  // En mode SDB universel (BIBLIO_MODE + isSDBMode), le plan est scalé par currentNS.
+  // Il faut convertir les coords locales (SDB) en coords world.
+  var useBiblioScale = BIBLIO_MODE && isSDBMode && planMesh;
+  var ns = useBiblioScale ? (currentNS || 1) : 1;
+
+  function _toWorld(vx, vz, rimOffset){
+    if(useBiblioScale){
+      // planMesh.position = centre world du plan (déjà calculé par _repositionPlanOnCaisson)
+      var wx = planMesh.position.x + vx * ns;
+      // vz est absolu en SDB, planCZ() est le centre Z du plan en SDB → offset = vz - planCZ()
+      var wz = planMesh.position.z + (vz - planCZ()) * ns;
+      // Y = top du plan en world - rimOffset scalé
+      var wy = planMesh.position.y + (S.CH + 0.04) * ns - rimOffset * ns;
+      return {x:wx, y:wy, z:wz};
+    }
+    return {x:vx, y:planTopY()-rimOffset, z:vz};
+  }
+
   if(vasqueGrp){
     var vx=clampVasque(S.vx,'x'),vz=clampVasque(S.vz,'z');
-    vasqueGrp.position.set(vx,planTopY()-vasqueRimOffset,vz);
+    vasqueGrp.scale.setScalar(ns);
+    var wp=_toWorld(vx,vz,vasqueRimOffset);
+    vasqueGrp.position.set(wp.x,wp.y,wp.z);
     S.vx=vx; S.vz=vz;
   }
   if(vasqueGrp2){
     var vx2=clampVasque(S.vx2,'x'),vz2=clampVasque(S.vz2,'z');
-    vasqueGrp2.position.set(vx2,planTopY()-vasqueRimOffset2,vz2);
+    vasqueGrp2.scale.setScalar(ns);
+    var wp2=_toWorld(vx2,vz2,vasqueRimOffset2);
+    vasqueGrp2.position.set(wp2.x,wp2.y,wp2.z);
     S.vx2=vx2; S.vz2=vz2;
   }
 }
@@ -2962,25 +2984,39 @@ function toNDC(e){
 }
 
 function _startVasqueDrag(nx, nz){
-  dragPlane.constant=-planTopY();
+  var useBiblioScale = BIBLIO_MODE && isSDBMode && planMesh;
+  var planTopW = useBiblioScale ? planMesh.position.y+(S.CH+0.04)*(currentNS||1) : planTopY();
+  dragPlane.constant=-planTopW;
   raycaster.ray.intersectPlane(dragPlane,dragPt);
   if(vasqueGrp && raycaster.intersectObject(vasqueGrp,true).length>0){
-    activeVasqueDrag=0; dragOffset.set(dragPt.x-S.vx,0,dragPt.z-S.vz); return true;
+    activeVasqueDrag=0; dragOffset.set(dragPt.x-vasqueGrp.position.x,0,dragPt.z-vasqueGrp.position.z); return true;
   }
   if(vasqueGrp2 && raycaster.intersectObject(vasqueGrp2,true).length>0){
-    activeVasqueDrag=1; dragOffset.set(dragPt.x-S.vx2,0,dragPt.z-S.vz2); return true;
+    activeVasqueDrag=1; dragOffset.set(dragPt.x-vasqueGrp2.position.x,0,dragPt.z-vasqueGrp2.position.z); return true;
   }
   return false;
 }
 function _moveDrag(){
-  dragPlane.constant=-planTopY();
+  var useBiblioScale = BIBLIO_MODE && isSDBMode && planMesh;
+  var ns = useBiblioScale ? (currentNS||1) : 1;
+  var planTopW = useBiblioScale ? planMesh.position.y+(S.CH+0.04)*ns : planTopY();
+  dragPlane.constant=-planTopW;
   if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
+  var newWX=dragPt.x-dragOffset.x, newWZ=dragPt.z-dragOffset.z;
+  function toLocal(wx,wz){
+    if(useBiblioScale){
+      var lx=(wx-planMesh.position.x)/ns;
+      var lz=(wz-planMesh.position.z)/ns+planCZ();
+      return {x:lx,z:lz};
+    }
+    return {x:wx,z:wz};
+  }
   if(activeVasqueDrag===0){
-    S.vx=clampVasque(dragPt.x-dragOffset.x,'x');
-    S.vz=clampVasque(dragPt.z-dragOffset.z,'z');
+    var l=toLocal(newWX,newWZ);
+    S.vx=clampVasque(l.x,'x'); S.vz=clampVasque(l.z,'z');
   } else {
-    S.vx2=clampVasque(dragPt.x-dragOffset.x,'x');
-    S.vz2=clampVasque(dragPt.z-dragOffset.z,'z');
+    var l2=toLocal(newWX,newWZ);
+    S.vx2=clampVasque(l2.x,'x'); S.vz2=clampVasque(l2.z,'z');
   }
   positionVasque(); buildPlan(); updatePosInfo();
 }
