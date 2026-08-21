@@ -2178,19 +2178,19 @@ function clampVasque(val,axis){
   }
 }
 function positionVasque(){
-  // En mode SDB universel (BIBLIO_MODE + isSDBMode), le plan est scalé par currentNS.
-  // Il faut convertir les coords locales (SDB) en coords world.
   var useBiblioScale = BIBLIO_MODE && isSDBMode && planMesh;
   var ns = useBiblioScale ? (currentNS || 1) : 1;
 
+  // Top du plan en world : on lit directement la bbox du planMesh pour être indépendant de la hauteur des caissons latéraux
+  var planTopWorldY = useBiblioScale
+    ? new THREE.Box3().setFromObject(planMesh).max.y
+    : planTopY();
+
   function _toWorld(vx, vz, rimOffset){
     if(useBiblioScale){
-      // planMesh.position = centre world du plan (déjà calculé par _repositionPlanOnCaisson)
       var wx = planMesh.position.x + vx * ns;
-      // vz est absolu en SDB, planCZ() est le centre Z du plan en SDB → offset = vz - planCZ()
       var wz = planMesh.position.z + (vz - planCZ()) * ns;
-      // Y = top du plan en world - rimOffset scalé
-      var wy = planMesh.position.y + (S.CH + 0.04) * ns - rimOffset * ns;
+      var wy = planTopWorldY - rimOffset * ns;
       return {x:wx, y:wy, z:wz};
     }
     return {x:vx, y:planTopY()-rimOffset, z:vz};
@@ -2985,7 +2985,7 @@ function toNDC(e){
 
 function _startVasqueDrag(nx, nz){
   var useBiblioScale = BIBLIO_MODE && isSDBMode && planMesh;
-  var planTopW = useBiblioScale ? planMesh.position.y+(S.CH+0.04)*(currentNS||1) : planTopY();
+  var planTopW = useBiblioScale ? new THREE.Box3().setFromObject(planMesh).max.y : planTopY();
   dragPlane.constant=-planTopW;
   raycaster.ray.intersectPlane(dragPlane,dragPt);
   if(vasqueGrp && raycaster.intersectObject(vasqueGrp,true).length>0){
@@ -2999,7 +2999,7 @@ function _startVasqueDrag(nx, nz){
 function _moveDrag(){
   var useBiblioScale = BIBLIO_MODE && isSDBMode && planMesh;
   var ns = useBiblioScale ? (currentNS||1) : 1;
-  var planTopW = useBiblioScale ? planMesh.position.y+(S.CH+0.04)*ns : planTopY();
+  var planTopW = useBiblioScale ? new THREE.Box3().setFromObject(planMesh).max.y : planTopY();
   dragPlane.constant=-planTopW;
   if(!raycaster.ray.intersectPlane(dragPlane,dragPt)) return;
   var newWX=dragPt.x-dragOffset.x, newWZ=dragPt.z-dragOffset.z;
