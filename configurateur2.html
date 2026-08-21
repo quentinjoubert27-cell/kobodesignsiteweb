@@ -4339,18 +4339,17 @@ function toggleSDBMode(on){
 }
 
 function _repositionPlanOnCaisson(){
-  if(!planMesh || !caissonGrp) return;
-  caissonGrp.updateMatrixWorld(true);
-  var bbox = new THREE.Box3().setFromObject(caissonGrp);
+  if(!planMesh) return;
   var ns = currentNS || 1;
-  // Scaler le plan pour qu'il corresponde à l'échelle du caisson normalisé
+  // Le caisson après normalizeCaisson : bas=FLOOR_BIBLIO_Y, dos=WALL_BIBLIO_Z, centré X=0
+  // Avec scale ns sur le mesh, local S.CH → world S.CH*ns, etc.
   planMesh.scale.setScalar(ns);
-  // Y : plan bottom world = S.CH*ns + position.y → on veut = bbox.max.y → position.y = bbox.min.y
-  planMesh.position.y = bbox.min.y;
-  // Z : centrer le plan sur le caisson (avec scale ns, le plan a la bonne profondeur)
-  planMesh.position.z = (bbox.min.z + bbox.max.z) / 2;
-  // X : centré sur le caisson
-  planMesh.position.x = (bbox.min.x + bbox.max.x) / 2;
+  // Y : local bas plan = S.CH → world = position.y + S.CH*ns = FLOOR_BIBLIO_Y + S.CH*ns (= caisson top)
+  planMesh.position.y = FLOOR_BIBLIO_Y;
+  // Z : plan centré sur le caisson (local -CP/2..CP/2 → world WALL_BIBLIO_Z..WALL_BIBLIO_Z+CP*ns)
+  planMesh.position.z = WALL_BIBLIO_Z + S.CairsonP * ns / 2;
+  // X : centré
+  planMesh.position.x = 0;
 }
 
 // ── Chargement depuis ?c= (aperçu admin) ──────────────
