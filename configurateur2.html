@@ -4341,15 +4341,15 @@ function toggleSDBMode(on){
 function _repositionPlanOnCaisson(){
   if(!planMesh) return;
   var ns = currentNS || 1;
-  // Le caisson après normalizeCaisson : bas=FLOOR_BIBLIO_Y, dos=WALL_BIBLIO_Z, centré X=0
-  // Avec scale ns sur le mesh, local S.CH → world S.CH*ns, etc.
+  // Les caissons latéraux sont enfants de caissonGrp → ils décalent le centre X dans normalizeCaisson.
+  // Le caisson central (local X=0) est décalé en world par -center.x*ns où center.x=(rightW-leftW)/2
+  var leftW  = (S_tvSide && S_tvSide.leftActive)  ? S_tvSide.leftW/100  : 0;
+  var rightW = (S_tvSide && S_tvSide.rightActive) ? S_tvSide.rightW/100 : 0;
+  var centerX = (rightW - leftW) / 2;
   planMesh.scale.setScalar(ns);
-  // Y : local bas plan = S.CH → world = position.y + S.CH*ns = FLOOR_BIBLIO_Y + S.CH*ns (= caisson top)
+  planMesh.position.x = -centerX * ns;
   planMesh.position.y = FLOOR_BIBLIO_Y;
-  // Z : plan centré sur le caisson (local -CP/2..CP/2 → world WALL_BIBLIO_Z..WALL_BIBLIO_Z+CP*ns)
   planMesh.position.z = WALL_BIBLIO_Z + S.CairsonP * ns / 2;
-  // X : centré
-  planMesh.position.x = 0;
 }
 
 // ── Chargement depuis ?c= (aperçu admin) ──────────────
