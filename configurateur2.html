@@ -802,6 +802,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button class="facade-btn on" id="vt-poser" onclick="setVasqueType('poser')">À poser</button>
           <button class="facade-btn" id="vt-encastree" onclick="setVasqueType('encastree')">Encastrée</button>
         </div>
+        <div id="encastre-offset-row" style="display:none;margin-bottom:16px">
+          <div class="sl-row" style="margin-bottom:4px">
+            <span class="sl-label">Profondeur encastrement</span>
+            <span class="sl-val"><span id="v-encastre-offset">6</span> cm</span>
+          </div>
+          <input type="range" min="0" max="30" step="1" value="6" style="width:100%"
+            oninput="setEncastreOffset(this.value)">
+        </div>
         <div class="sec">Finition vasque</div>
         <div class="mat-grid" id="mg-vasque"></div>
         <div class="sec">Position</div>
@@ -3397,9 +3405,17 @@ function setVasqueType(t){
   vasqueEncastree=(t==='encastree');
   document.getElementById('vt-poser').classList.toggle('on',!vasqueEncastree);
   document.getElementById('vt-encastree').classList.toggle('on',vasqueEncastree);
+  var row=document.getElementById('encastre-offset-row');
+  if(row) row.style.display=vasqueEncastree?'':'none';
   _applyOffsetForCurrent();
   if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
   buildPlan();
+}
+function setEncastreOffset(v){
+  v=parseInt(v);
+  var el=document.getElementById('v-encastre-offset'); if(el) el.textContent=v;
+  _vasqueYOffset=v/100;
+  positionVasque();
 }
 function setVasqueYOffset(v){
   document.getElementById('v-VY').textContent=v+' cm';
