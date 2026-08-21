@@ -2056,7 +2056,9 @@ function buildPlan(){
   }
   planMesh=new THREE.Mesh(geo,planMat);
   planMesh.castShadow=true; planMesh.receiveShadow=true;
-  planMesh.position.set((S.depassD-S.depassG)/2,S.caissonYOff,planCZ()); planMesh.visible=(S.step>=2); scene.add(planMesh);
+  planMesh.position.set((S.depassD-S.depassG)/2,S.caissonYOff,planCZ());
+  planMesh.visible = isSDBMode ? (step>=3) : (S.step>=2);
+  scene.add(planMesh);
   if(BIBLIO_MODE && isSDBMode) _repositionPlanOnCaisson();
 }
 
