@@ -118,6 +118,11 @@
       "permanent": true
     },
     {
+      "source": "/configurateur-v2",
+      "destination": "/configurateur2",
+      "permanent": false
+    },
+    {
       "source": "/configurateur-sdb",
       "destination": "/configurateur?ft=sdb",
       "permanent": true
