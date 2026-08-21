@@ -766,28 +766,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="panel" id="p2">
         <div class="warn-alert" id="warn-plan"></div>
         <div class="sec">Dimensions du plan</div>
-        <div class="dim-row">
-          <span class="dim-lbl">Dépassement gauche</span>
-          <div class="dim-ctrl">
-            <button class="dim-step" onclick="stepDim('inp-DG',setDepassG,-1)">−</button>
-            <input class="dim-inp" type="number" id="inp-DG" min="0" max="100" value="10" oninput="setDepassG(+this.value)" onblur="clampDim(this,setDepassG)">
-            <span class="dim-unit">cm</span>
-            <button class="dim-step" onclick="stepDim('inp-DG',setDepassG,+1)">+</button>
-          </div>
-        </div>
-        <div class="dim-row">
-          <span class="dim-lbl">Dépassement droite</span>
-          <div class="dim-ctrl">
-            <button class="dim-step" onclick="stepDim('inp-DD',setDepassD,-1)">−</button>
-            <input class="dim-inp" type="number" id="inp-DD" min="0" max="100" value="10" oninput="setDepassD(+this.value)" onblur="clampDim(this,setDepassD)">
-            <span class="dim-unit">cm</span>
-            <button class="dim-step" onclick="stepDim('inp-DD',setDepassD,+1)">+</button>
-          </div>
-        </div>
         <div class="dim-row" style="opacity:.6">
           <span class="dim-lbl">Longueur totale</span>
           <span class="dim-val" id="v-L-total" style="font-weight:600;font-size:13px">140 cm</span>
         </div>
+        <!-- Dépassements cachés — plan suit le caisson dans ce configurateur -->
+        <input type="hidden" id="inp-DG" value="0">
+        <input type="hidden" id="inp-DD" value="0">
         <div class="dim-row">
           <span class="dim-lbl">Profondeur totale</span>
           <div class="dim-ctrl">
@@ -3475,7 +3460,7 @@ function updatePosInfo(){
 
 var FT_CONFIGS = {
   biblio:  { label:'Bibliothèque',  sub:'Bibliothèque sur mesure',    panels:['p1','p-amgt','p4'],        steps:['Dimensions','Aménagement','Envoyer'],  dimL:[40,300,120], dimH:[80,240,200], dimP:[25,50,30],  cam:{pos:[0,0,3.6], tgt:[0,0,0]},    hasAngleOpt:false },
-  tv:      { label:'Meuble TV',     sub:'Meuble TV sur mesure',        panels:['p1','p-amgt','p4'],        steps:['Dimensions','Aménagement','Envoyer'],  dimL:[80,300,150], dimH:[20,60,40],  dimP:[30,60,40],  cam:{pos:[0,-0.1,3.2], tgt:[0,-0.1,0]}, hasAngleOpt:false },
+  tv:      { label:'Universel',     sub:'Meuble sur mesure',           panels:['p1','p-amgt','p4'],        steps:['Dimensions','Aménagement','Envoyer'],  dimL:[40,500,120], dimH:[20,280,80], dimP:[25,80,40],  cam:{pos:[0,-0.1,3.2], tgt:[0,-0.1,0]}, hasAngleOpt:false },
   dressing:{ label:'Dressing',      sub:'Dressing sur mesure',         panels:['p1','p-amgt','p4'],        steps:['Structure','Aménagement','Envoyer'],   dimL:[80,500,200], dimH:[180,280,230],dimP:[50,80,60],  cam:{pos:[0,0.3,4.2], tgt:[0,0.2,0]},hasAngleOpt:false },
   sdb:     { label:'Salle de bain', sub:'Meuble salle de bain sur mesure',panels:['p1','p-amgt','p2','p3','p4'],   steps:['Meuble','Aménagement','Plan de travail','Vasque','Envoyer'], dimL:[40,220,120], dimH:[30,70,45],  dimP:[36,60,36],  cam:{pos:[0,0,2.8], tgt:[0,0,0]},hasAngleOpt:false }
 };
@@ -4338,6 +4323,8 @@ function toggleSDBMode(on){
     S.depassG = 0; S.depassD = 0;
     S.L = S.CL;
     S.P = caissonCP();
+    var ltot = document.getElementById('v-L-total');
+    if(ltot) ltot.textContent = Math.round(S.CL*100) + ' cm';
     buildPlan();
     _repositionPlanOnCaisson();
   } else {
