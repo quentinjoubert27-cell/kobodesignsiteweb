@@ -805,9 +805,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div id="encastre-offset-row" style="display:none;margin-bottom:16px">
           <div class="sl-row" style="margin-bottom:4px">
             <span class="sl-label">Profondeur encastrement</span>
-            <span class="sl-val"><span id="v-encastre-offset">6</span> cm</span>
+            <span class="sl-val"><span id="v-encastre-offset">9.5</span> cm</span>
           </div>
-          <input type="range" min="0" max="30" step="1" value="6" style="width:100%"
+          <input type="range" min="0" max="30" step="0.5" value="9.5" style="width:100%"
             oninput="setEncastreOffset(this.value)">
         </div>
         <div class="sec">Finition vasque</div>
@@ -2092,13 +2092,13 @@ var MATS_VASQUE=[
 var S_matVasque=6; // Blanc Elysée par défaut
 var _vasqueTexCache={};
 var _vasqueModels=[
-  {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.0570},
-  {id:'v2',label:'V2',file:'models/vasque-v2.glb', oPoser:0.09, oEncastree:0.0475},
-  {id:'v3',label:'V3',file:'models/vasque-v3.glb', oPoser:0.09, oEncastree:0.0475},
-  {id:'v4',label:'V4',file:'models/vasque-v4.glb', oPoser:0.09, oEncastree:0.0475},
-  {id:'v5',label:'V5',file:'models/vasque-v5.glb', oPoser:0.09, oEncastree:0.0475},
-  {id:'v6',label:'V6',file:'models/vasque-v6.glb', oPoser:0.09, oEncastree:0.0475},
-  {id:'v7',label:'V7',file:'models/vasque-v7.glb', oPoser:0.09, oEncastree:0.05},
+  {id:'v1',label:'V1',file:'models/vasque-v1.glb', oPoser:0.10, oEncastree:0.095},
+  {id:'v2',label:'V2',file:'models/vasque-v2.glb', oPoser:0.09, oEncastree:0.095},
+  {id:'v3',label:'V3',file:'models/vasque-v3.glb', oPoser:0.09, oEncastree:0.095},
+  {id:'v4',label:'V4',file:'models/vasque-v4.glb', oPoser:0.09, oEncastree:0.095},
+  {id:'v5',label:'V5',file:'models/vasque-v5.glb', oPoser:0.09, oEncastree:0.095},
+  {id:'v6',label:'V6',file:'models/vasque-v6.glb', oPoser:0.09, oEncastree:0.095},
+  {id:'v7',label:'V7',file:'models/vasque-v7.glb', oPoser:0.09, oEncastree:0.095},
 ];
 var _vasqueSelected='v1';
 var _vasqueCache={};  // {id: gltf}
