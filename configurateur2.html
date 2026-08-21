@@ -2191,7 +2191,8 @@ function positionVasque(){
     if(useBiblioScale){
       var wx = planMesh.position.x + vx * ns;
       var wz = planMesh.position.z + (vz - planCZ()) * ns;
-      var wy = planTopWorldY - rimOffset * ns;
+      // À poser : base de la vasque sur le plan. Encastrée : rim au ras du plan.
+      var wy = vasqueEncastree ? planTopWorldY - rimOffset * ns : planTopWorldY;
       return {x:wx, y:wy, z:wz};
     }
     return {x:vx, y:planTopY()-rimOffset, z:vz};
