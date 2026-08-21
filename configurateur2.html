@@ -4342,10 +4342,13 @@ function _repositionPlanOnCaisson(){
   if(!planMesh || !caissonGrp) return;
   caissonGrp.updateMatrixWorld(true);
   var bbox = new THREE.Box3().setFromObject(caissonGrp);
-  // Y : plan bottom (local = S.CH after rotateX+translate) doit = caisson top world
-  planMesh.position.y = bbox.max.y - S.CH;
-  // Z : aligner le dos du plan sur le dos du caisson (bbox.min.z)
-  planMesh.position.z = bbox.min.z + S.P / 2;
+  var ns = currentNS || 1;
+  // Scaler le plan pour qu'il corresponde à l'échelle du caisson normalisé
+  planMesh.scale.setScalar(ns);
+  // Y : plan bottom world = S.CH*ns + position.y → on veut = bbox.max.y → position.y = bbox.min.y
+  planMesh.position.y = bbox.min.y;
+  // Z : centrer le plan sur le caisson (avec scale ns, le plan a la bonne profondeur)
+  planMesh.position.z = (bbox.min.z + bbox.max.z) / 2;
   // X : centré sur le caisson
   planMesh.position.x = (bbox.min.x + bbox.max.x) / 2;
 }
