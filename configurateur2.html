@@ -1567,7 +1567,7 @@ function buildCaisson(){
   if(true){
     if(hasAngle) buildCaisson2();
     normalizeCaisson();
-    if(isSDBMode && planMesh) _repositionPlanOnCaisson();
+    if(isSDBMode && planMesh){ _repositionPlanOnCaisson(); positionVasque(); }
   }
   activeCaisson=_prevAC; // Restaure avant updateAmgtCount/updateElementsList
   updateAmgtCount();
@@ -2049,6 +2049,7 @@ function buildPlan(){
   planMesh=new THREE.Mesh(geo,planMat);
   planMesh.castShadow=true; planMesh.receiveShadow=true;
   planMesh.position.set((S.depassD-S.depassG)/2,S.caissonYOff,planCZ()); planMesh.visible=(S.step>=2); scene.add(planMesh);
+  if(BIBLIO_MODE && isSDBMode) _repositionPlanOnCaisson();
 }
 
 // ═══════════════════════════════════════════════════════
