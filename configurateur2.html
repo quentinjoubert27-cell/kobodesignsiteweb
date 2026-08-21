@@ -1567,7 +1567,7 @@ function buildCaisson(){
   if(true){
     if(hasAngle) buildCaisson2();
     normalizeCaisson();
-
+    if(isSDBMode && planMesh) _repositionPlanOnCaisson();
   }
   activeCaisson=_prevAC; // Restaure avant updateAmgtCount/updateElementsList
   updateAmgtCount();
@@ -4327,6 +4327,7 @@ function toggleSDBMode(on){
     if(ltot) ltot.textContent = Math.round(S.CL*100) + ' cm';
     buildPlan();
     _repositionPlanOnCaisson();
+    checkAlerts();
   } else {
     currentPanels = ['p1','p-amgt','p4'];
     buildStepper(['Structure','Aménagement','Envoyer']);
