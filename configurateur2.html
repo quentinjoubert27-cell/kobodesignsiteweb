@@ -3413,10 +3413,12 @@ function setVasqueType(t){
   var row=document.getElementById('encastre-offset-row');
   if(row) row.style.display=vasqueEncastree?'':'none';
   _applyOffsetForCurrent();
+  console.log('[setVasqueType] t='+t+' isSDBMode='+isSDBMode+' step='+step+' S.step='+S.step+' cache='+!!_vasqueCache[_vasqueSelected]+' vasqueGrp before=',vasqueGrp);
   if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
   buildPlan();
   // Force visibility after rebuild (isSDBMode: step variable may be inconsistent during build)
   var shouldShow = isSDBMode ? (step>=4) : (S.step===3);
+  console.log('[setVasqueType] shouldShow='+shouldShow+' vasqueGrp after=',vasqueGrp, 'visible=',vasqueGrp&&vasqueGrp.visible);
   if(vasqueGrp)  vasqueGrp.visible = shouldShow;
   if(vasqueGrp2) vasqueGrp2.visible = shouldShow;
 }
