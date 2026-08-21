@@ -4341,11 +4341,11 @@ function _repositionPlanOnCaisson(){
   if(!planMesh || !caissonGrp) return;
   caissonGrp.updateMatrixWorld(true);
   var bbox = new THREE.Box3().setFromObject(caissonGrp);
-  // Y : plan bottom = caisson top (géométrie a S.CH+0.04 baked, donc on compense)
-  planMesh.position.y = bbox.max.y - S.CH - 0.04;
-  // Z : centrer sur le caisson
-  planMesh.position.z = (bbox.min.z + bbox.max.z) / 2;
-  // X : centré
+  // Y : plan bottom (local = S.CH after rotateX+translate) doit = caisson top world
+  planMesh.position.y = bbox.max.y - S.CH;
+  // Z : aligner le dos du plan sur le dos du caisson (bbox.min.z)
+  planMesh.position.z = bbox.min.z + S.P / 2;
+  // X : centré sur le caisson
   planMesh.position.x = (bbox.min.x + bbox.max.x) / 2;
 }
 
