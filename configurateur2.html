@@ -3638,9 +3638,9 @@ function goStep(n){
   else { if(caissonEditMode) toggleCaissonEdit(); }
   controls.enabled=true;
 
-  if(planMesh)   planMesh.visible=(currentFT==='sdb'&&n>=3);
-  if(vasqueGrp)  vasqueGrp.visible=(currentFT==='sdb'&&n>=4);
-  if(vasqueGrp2) vasqueGrp2.visible=(currentFT==='sdb'&&n>=4);
+  if(planMesh)   planMesh.visible=(isSDBMode&&n>=3);
+  if(vasqueGrp)  vasqueGrp.visible=(isSDBMode&&n>=4);
+  if(vasqueGrp2) vasqueGrp2.visible=(isSDBMode&&n>=4);
 
   if(n===1) buildCaisson();
   if(currentFT==='sdb'){
@@ -4326,16 +4326,21 @@ goStep(1);
   document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=''; });
 })();
 
+var isSDBMode = false;
+
 // ── Toggle SDB ──────────────────────────────────────────
 function toggleSDBMode(on){
-  var cfg = FT_CONFIGS;
+  isSDBMode = on;
   if(on){
-    // Ajouter les panels SDB
     currentPanels = ['p1','p-amgt','p2','p3','p4'];
     buildStepper(['Structure','Aménagement','Plan de travail','Vasque','Envoyer']);
+    buildPlan();
   } else {
     currentPanels = ['p1','p-amgt','p4'];
     buildStepper(['Structure','Aménagement','Envoyer']);
+    if(planMesh){ scene.remove(planMesh); planMesh=null; }
+    if(vasqueGrp){ scene.remove(vasqueGrp); vasqueGrp=null; }
+    if(vasqueGrp2){ scene.remove(vasqueGrp2); vasqueGrp2=null; }
   }
   goStep(1);
 }
