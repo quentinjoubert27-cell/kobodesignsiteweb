@@ -3402,6 +3402,9 @@ function setNbVasques(n){
     S.vx=clampVasque(0,'x');
     positionVasque(); buildPlan();
   }
+  var shouldShow = isSDBMode ? (step>=4) : (S.step===3);
+  if(vasqueGrp)  vasqueGrp.visible = shouldShow;
+  if(vasqueGrp2) vasqueGrp2.visible = shouldShow;
 }
 function setVasqueType(t){
   vasqueEncastree=(t==='encastree');
@@ -3412,6 +3415,10 @@ function setVasqueType(t){
   _applyOffsetForCurrent();
   if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
   buildPlan();
+  // Force visibility after rebuild (isSDBMode: step variable may be inconsistent during build)
+  var shouldShow = isSDBMode ? (step>=4) : (S.step===3);
+  if(vasqueGrp)  vasqueGrp.visible = shouldShow;
+  if(vasqueGrp2) vasqueGrp2.visible = shouldShow;
 }
 function setEncastreOffset(v){
   v=parseInt(v);
