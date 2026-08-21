@@ -1340,7 +1340,7 @@ function buildCaisson(){
   var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db);
   var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd);
 
-  if(_isSdb()){
+  if(currentFT==='sdb'){
     // ── Bloc SDB ────────────────────────────────────────────────────────────
     // Tablettes et séparateurs
     caissonElements.forEach(function(el,idx){
@@ -1575,9 +1575,9 @@ function buildCaisson(){
     });
   }
   // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
-  buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
+  if(currentFT==='tv') buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
 
-  if(_isSdb()) caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
+  if(currentFT==='sdb') caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
   scene.add(caissonGrp);
   if(true){
     if(hasAngle) buildCaisson2();
@@ -3316,13 +3316,13 @@ function setL(v){ // compatibilité — ignoré maintenant, on passe par setDepa
   var v2=Math.round(v); var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=v2;
 }
 function setPro(v){ v=Math.round(v); S.P=v/100; var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=v; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
-function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); if(_isSdb()){ setCH(_sdbComputeCH()); _updateSdbInfo(); } }
+function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); if(currentFT==='sdb'){ setCH(_sdbComputeCH()); _updateSdbInfo(); } }
 function _sdbComputeCH(){
   // CH auto = 85cm - bas - épaisseur plan (toujours 85cm au plan de travail)
   return Math.max(1, 85 - S.sdbBaseH - Math.round(S.Ep*100));
 }
 function _updateSdbInfo(){
-  if(!_isSdb()) return;
+  if(currentFT!=='sdb') return;
   var ch=Math.round(S.CH*100);
   var el=document.getElementById('v-sdb-ch'); if(el) el.textContent=ch;
   var sub=document.getElementById('sdb-pose-sub');
@@ -3481,8 +3481,6 @@ var FT_CONFIGS = {
 };
 
 var currentFT = null;
-var isSDBMode = false;
-function _isSdb(){ return _isSdb()||isSDBMode; }
 var currentPanels = [];
 var step = 1;
 
@@ -3608,7 +3606,7 @@ function goStep(n){
   if(n<1||n>total) return;
   step = n;
   // S.step used by Three.js: for SDB map panel index, else keep at 1
-  if(_isSdb()){
+  if(currentFT==='sdb'){
     var _pid=currentPanels[n-1];
     S.step=(_pid==='p1'||_pid==='p-amgt')?1:(_pid==='p2'?2:3);
   } else { S.step=1; }
@@ -3632,7 +3630,7 @@ function goStep(n){
   var isLast=(n===total);
   document.getElementById('btn-next').textContent=isLast?'':'Suivant →';
   document.getElementById('btn-next').style.display=isLast?'none':'';
-  document.getElementById('hint').classList.toggle('show',_isSdb()&&n===4);
+  document.getElementById('hint').classList.toggle('show',currentFT==='sdb'&&n===4);
   _syncCotesBtn();
 
   var isAmgtStep = currentPanels[n-1]==='p-amgt';
@@ -3640,12 +3638,12 @@ function goStep(n){
   else { if(caissonEditMode) toggleCaissonEdit(); }
   controls.enabled=true;
 
-  if(planMesh)   planMesh.visible=(_isSdb()&&n>=3);
-  if(vasqueGrp)  vasqueGrp.visible=(_isSdb()&&n>=4);
-  if(vasqueGrp2) vasqueGrp2.visible=(_isSdb()&&n>=4);
+  if(planMesh)   planMesh.visible=(currentFT==='sdb'&&n>=3);
+  if(vasqueGrp)  vasqueGrp.visible=(currentFT==='sdb'&&n>=4);
+  if(vasqueGrp2) vasqueGrp2.visible=(currentFT==='sdb'&&n>=4);
 
   if(n===1) buildCaisson();
-  if(_isSdb()){
+  if(currentFT==='sdb'){
     if(n===3){
       S.depassG=0.10; S.depassD=0.10; S.L=S.CL+S.depassG+S.depassD;
       var inpDG=document.getElementById('inp-DG'); if(inpDG) inpDG.value=10;
@@ -3656,7 +3654,7 @@ function goStep(n){
     }
     if(n===4){ buildRecap(); updatePosInfo(); positionVasque(); }
   }
-  animCamera(_isSdb()?(n<=2?1:n===3?2:3):1);
+  animCamera(currentFT==='sdb'?(n<=2?1:n===3?2:3):1);
   if(isLast){ buildRecap4(); }
 }
 
@@ -3734,7 +3732,7 @@ function buildRecapStr(){
   var cfg=currentFT&&FT_CONFIGS[currentFT];
   var s='• Type : '+(cfg?cfg.label:'—')+'\n'
        +'• Meuble : '+Math.round(S.CL*100)+'L × '+Math.round(S.CH*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n';
-  if(_isSdb()){
+  if(currentFT==='sdb'){
     s+='• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n';
     s+='• Vasque : '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+' — '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n';
   }
@@ -3768,7 +3766,7 @@ function buildRecap4(){
     ['Dimensions', Math.round(S.CL*100)+' × '+Math.round(S.CH*100)+' × '+Math.round(S.CairsonP*100)+' cm'],
     ['Matière', MATS_CAIS[S.matCais].n],
   ];
-  if(_isSdb()){
+  if(currentFT==='sdb'){
     rows.push(['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm — '+MATS_PLAN[S.matPlan].n]);
     rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
   }
@@ -3913,7 +3911,7 @@ function buildTechSpec(els, CL, CH, CP){
       material_divider:matCais.n||null,
       material_shelf:matCais.n||null,
       material_joue:matCais.n||null,
-      ...(_isSdb()?{
+      ...(currentFT==='sdb'?{
         material_plan:(MATS_PLAN[S.matPlan]||{}).n||null,
         material_vasque:(MATS_VASQUE[S_matVasque]||{}).n||null
       }:{})
@@ -3990,7 +3988,7 @@ async function submitConfig(){
           furniture_type: currentFT,
           meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },
-          ...(_isSdb() ? {
+          ...(currentFT==='sdb' ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10,
                    matLabel:MATS_PLAN[S.matPlan].n, matId:S.matPlan },
             vasques:{ nb:S.nbVasques, W:Math.round(S.vasqueW*100), D:Math.round(S.vasqueD*100),
@@ -4330,22 +4328,15 @@ goStep(1);
 
 // ── Toggle SDB ──────────────────────────────────────────
 function toggleSDBMode(on){
-  isSDBMode = on;
+  var cfg = FT_CONFIGS;
   if(on){
+    // Ajouter les panels SDB
     currentPanels = ['p1','p-amgt','p2','p3','p4'];
     buildStepper(['Structure','Aménagement','Plan de travail','Vasque','Envoyer']);
-    // Init plan de travail sur le caisson central
-    S.sdbBaseH = 0; S.caissonYOff = 0;
-    setCH(45); // hauteur SDB par défaut
-    if(!planMesh) buildPlan();
   } else {
     currentPanels = ['p1','p-amgt','p4'];
     buildStepper(['Structure','Aménagement','Envoyer']);
-    if(planMesh){ scene.remove(planMesh); planMesh=null; }
-    if(vasqueGrp){ scene.remove(vasqueGrp); vasqueGrp=null; }
-    if(vasqueGrp2){ scene.remove(vasqueGrp2); vasqueGrp2=null; }
   }
-  buildCaisson();
   goStep(1);
 }
 
