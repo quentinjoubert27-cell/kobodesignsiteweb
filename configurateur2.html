@@ -3413,19 +3413,22 @@ function setVasqueType(t){
   var row=document.getElementById('encastre-offset-row');
   if(row) row.style.display=vasqueEncastree?'':'none';
   _applyOffsetForCurrent();
-  console.log('[setVasqueType] t='+t+' isSDBMode='+isSDBMode+' step='+step+' S.step='+S.step+' cache='+!!_vasqueCache[_vasqueSelected]+' vasqueGrp before=',vasqueGrp);
   if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
   buildPlan();
   // Force visibility after rebuild (isSDBMode: step variable may be inconsistent during build)
   var shouldShow = isSDBMode ? (step>=4) : (S.step===3);
-  console.log('[setVasqueType] shouldShow='+shouldShow+' vasqueGrp after=',vasqueGrp, 'visible=',vasqueGrp&&vasqueGrp.visible);
   if(vasqueGrp)  vasqueGrp.visible = shouldShow;
   if(vasqueGrp2) vasqueGrp2.visible = shouldShow;
 }
 function setEncastreOffset(v){
   v=parseInt(v);
   var el=document.getElementById('v-encastre-offset'); if(el) el.textContent=v;
-  _vasqueYOffset=v/100;
+  // vasqueRimOffset = sz1.y - _vasqueYOffset → recalculer avec la nouvelle valeur
+  var h1 = vasqueRimOffset + _vasqueYOffset;
+  var h2 = vasqueRimOffset2 + _vasqueYOffset;
+  _vasqueYOffset = v/100;
+  vasqueRimOffset = h1 - _vasqueYOffset;
+  if(vasqueGrp2) vasqueRimOffset2 = h2 - _vasqueYOffset;
   positionVasque();
 }
 function setVasqueYOffset(v){
