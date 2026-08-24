@@ -72,6 +72,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .dim-unit{font-size:10.5px;color:var(--text2);padding:0 8px;font-weight:500;pointer-events:none}
 
 .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.cosentino-brand-row{display:flex;align-items:center;gap:16px;margin-bottom:10px}
+.cosentino-brand-row img{height:14px;width:auto;object-fit:contain;opacity:.85}
+.cosentino-mention{font-size:10px;color:var(--text2);line-height:1.4;margin-top:8px}
 .mat-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
 .mat-btn:hover{border-color:rgba(26,26,26,.3)}.mat-btn.on{border-color:var(--accent);background:rgba(205,62,0,.06)}
 .mat-sw{width:22px;height:22px;border-radius:5px;flex-shrink:0;border:1px solid rgba(26,26,26,.1)}
@@ -752,7 +755,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </div>
         <div class="sec">Matériau</div>
+        <div class="cosentino-brand-row">
+          <img src="img/logos/silestone.png" alt="Silestone">
+          <img src="img/logos/dekton.png" alt="Dekton">
+        </div>
         <div class="mat-grid" id="mg-plan"></div>
+        <div class="cosentino-mention">Kōbō Design conçoit des meubles sur mesure intégrant des surfaces Silestone® et Dekton®, marques de Cosentino®.</div>
       </div>
 
       <!-- STEP 3 — Vasque -->
@@ -772,7 +780,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button class="facade-btn" id="vt-encastree" onclick="setVasqueType('encastree')">Encastrée</button>
         </div>
         <div class="sec">Finition vasque</div>
+        <div class="cosentino-brand-row">
+          <img src="img/logos/silestone.png" alt="Silestone">
+          <img src="img/logos/dekton.png" alt="Dekton">
+        </div>
         <div class="mat-grid" id="mg-vasque"></div>
+        <div class="cosentino-mention">Kōbō Design conçoit des meubles sur mesure intégrant des surfaces Silestone® et Dekton®, marques de Cosentino®.</div>
         <div class="sec">Position</div>
         <div class="pos-info">
           Distance bord gauche : <strong id="pos-x">—</strong><br>
