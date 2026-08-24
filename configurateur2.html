@@ -88,11 +88,9 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;backgroun
 .intro-body{max-width:1180px;margin:0 auto;padding:48px 32px 120px}
 .intro-body-bottom{padding-top:0}
 
-/* ─── HERO plein cadre (photo + overlay) ─── */
-.intro-hero-banner{position:relative;margin-top:72px;height:min(88vh,760px);min-height:480px;overflow:hidden;background:#1A1A1A}
-.intro-hero-banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72}
-.intro-hero-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(26,26,26,.15) 0%, rgba(26,26,26,.35) 55%, rgba(26,26,26,.88) 100%)}
-.intro-hero-inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:flex-end;max-width:1180px;margin:0 auto;padding:0 32px 56px}
+/* ─── HERO minimal (sans photo) ─── */
+.intro-hero-banner{position:relative;margin-top:72px;overflow:hidden;background:#1A1A1A}
+.intro-hero-inner{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;max-width:1180px;margin:0 auto;padding:120px 32px}
 .intro-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,250,240,.12);backdrop-filter:blur(6px);border:1px solid rgba(255,250,240,.25);border-radius:30px;padding:7px 16px 7px 12px;margin-bottom:24px;width:fit-content}
 .intro-eyebrow svg circle{stroke:#CD3E00}
 .intro-eyebrow svg circle:last-child{fill:#CD3E00}
@@ -714,17 +712,12 @@ window.addEventListener('scroll', function(){
 });
 </script>
 <div class="intro-hero-banner">
-  <img src="img/projets/kitchen-touch_01.jpg" alt="Meuble sur mesure Kōbō Design">
   <div class="intro-hero-inner">
     <div class="intro-eyebrow">
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#CD3E00"/><circle cx="5" cy="5" r="2" fill="#CD3E00"/></svg>
       <span>Fabrication française · Sur mesure</span>
     </div>
     <div class="intro-title">Créez votre <strong>meuble sur mesure</strong>.</div>
-  </div>
-  <div class="intro-hero-scroll">
-    <span>Scroll</span>
-    <div class="intro-hero-scroll-line"></div>
   </div>
 </div>
 
