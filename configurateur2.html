@@ -77,7 +77,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .cosentino-mention{font-size:10px;color:var(--text2);line-height:1.4;margin-top:8px}
 .mat-group-hdr{grid-column:1/-1;margin:12px 0 2px;display:flex;align-items:center}
 .mat-group-hdr:first-child{margin-top:0}
-.mat-group-hdr img.mat-group-logo{height:11px;width:auto;object-fit:contain;opacity:.85}
+.mat-group-hdr img.mat-group-logo{height:16px;width:60px;object-fit:contain;object-position:left center;opacity:.85}
 .mat-group-hdr.txt{font-size:10px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--text2)}
 .mat-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
 .mat-btn:hover{border-color:rgba(26,26,26,.3)}.mat-btn.on{border-color:var(--accent);background:rgba(205,62,0,.06)}
@@ -4144,9 +4144,9 @@ function buildMatGrid(id,arr,fn,otherLabel){
     btn.appendChild(lbl); el.appendChild(btn);
   });
 }
-buildMatGrid('mg-plan',MATS_PLAN,setMatPlan,'Minéral');
+buildMatGrid('mg-plan',MATS_PLAN,setMatPlan,'Matériaux recyclés');
 buildMatGrid('mg-cais',MATS_CAIS,setMatCais);
-buildMatGrid('mg-vasque',MATS_VASQUE,setMatVasque,'Minéral');
+buildMatGrid('mg-vasque',MATS_VASQUE,setMatVasque,'Matériaux recyclés');
 // Charge les textures par défaut au démarrage
 setMatPlan(0);     // Evok
 setMatCais(0);     // Chêne
