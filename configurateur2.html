@@ -114,6 +114,12 @@ html,body{width:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;backgroun
 
 .intro-section{padding:72px 0}
 .intro-section-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#CD3E00;font-weight:700;margin-bottom:14px;display:block}
+.intro-section-link{transition:background .25s}
+.intro-section-link:hover{background:#FBF3E4}
+.intro-section-link:hover .intro-gallery img,.intro-section-link:hover .intro-showcase img{transform:translateY(-2px)}
+.intro-section-cta{display:inline-flex;align-items:center;gap:8px;margin-top:28px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#CD3E00}
+.intro-section-link:hover .intro-section-cta svg{transform:translateX(3px)}
+.intro-section-cta svg{transition:transform .2s}
 .intro-section-title{font-family:'Archivo',sans-serif;font-size:clamp(26px,3vw,36px);font-weight:800;line-height:1.2;color:#1A1A1A;margin-bottom:32px;max-width:640px;letter-spacing:-.01em}
 .intro-section-title strong{color:#CD3E00}
 .intro-showcase{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -1184,7 +1190,7 @@ window.addEventListener('scroll', function(){
   </div>
 </div>
 
-<div class="intro-band-cream">
+<a href="https://www.kobo-design.fr/projets.html" class="intro-band-cream intro-section-link" style="display:block;text-decoration:none;color:inherit">
   <div class="intro-body intro-section">
     <span class="intro-section-eyebrow">Nos réalisations</span>
     <div class="intro-section-title">Des meubles pensés pour <strong>chaque pièce</strong> de votre intérieur.</div>
@@ -1198,8 +1204,9 @@ window.addEventListener('scroll', function(){
       <img src="img/projets/cuisine-hausmannien_01.jpg" alt="Cuisine sur mesure style haussmannien">
       <img src="img/projets/chambre-enfant_01.jpg" alt="Chambre enfant sur mesure">
     </div>
+    <div class="intro-section-cta">Voir tous nos projets <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
   </div>
-</div>
+</a>
 
 <div class="intro-band-tint">
   <div class="intro-body intro-section">
