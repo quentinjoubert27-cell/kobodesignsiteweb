@@ -755,12 +755,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </div>
         <div class="sec">Matériau</div>
-        <div class="cosentino-brand-row">
-          <img src="img/logos/silestone.png" alt="Silestone">
-          <img src="img/logos/dekton.png" alt="Dekton">
-        </div>
         <div class="mat-grid" id="mg-plan"></div>
-        <div class="cosentino-mention">Kōbō Design conçoit des meubles sur mesure intégrant des surfaces Silestone® et Dekton®, marques de Cosentino®.</div>
+        <div class="cosentino-brand-row" id="cos-brand-plan" style="display:none">
+          <img id="cos-logo-plan" src="" alt="">
+        </div>
+        <div class="cosentino-mention" id="cos-mention-plan" style="display:none">Kōbō Design conçoit des meubles sur mesure intégrant des surfaces <span id="cos-brandname-plan"></span>, marque de Cosentino®.</div>
       </div>
 
       <!-- STEP 3 — Vasque -->
@@ -780,12 +779,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button class="facade-btn" id="vt-encastree" onclick="setVasqueType('encastree')">Encastrée</button>
         </div>
         <div class="sec">Finition vasque</div>
-        <div class="cosentino-brand-row">
-          <img src="img/logos/silestone.png" alt="Silestone">
-          <img src="img/logos/dekton.png" alt="Dekton">
-        </div>
         <div class="mat-grid" id="mg-vasque"></div>
-        <div class="cosentino-mention">Kōbō Design conçoit des meubles sur mesure intégrant des surfaces Silestone® et Dekton®, marques de Cosentino®.</div>
+        <div class="cosentino-brand-row" id="cos-brand-vasque" style="display:none">
+          <img id="cos-logo-vasque" src="" alt="">
+        </div>
+        <div class="cosentino-mention" id="cos-mention-vasque" style="display:none">Kōbō Design conçoit des meubles sur mesure intégrant des surfaces <span id="cos-brandname-vasque"></span>, marque de Cosentino®.</div>
         <div class="sec">Position</div>
         <div class="pos-info">
           Distance bord gauche : <strong id="pos-x">—</strong><br>
@@ -3452,10 +3450,24 @@ function applyVasqueMat(){
     });
   });
 }
+function _updateCosentinoBrand(scope, md){
+  var brandRow=document.getElementById('cos-brand-'+scope);
+  var mention=document.getElementById('cos-mention-'+scope);
+  if(!brandRow || !mention) return;
+  if(md.brand==='Dekton' || md.brand==='Silestone'){
+    document.getElementById('cos-logo-'+scope).src='img/logos/'+md.brand.toLowerCase()+'.png';
+    document.getElementById('cos-logo-'+scope).alt=md.brand;
+    document.getElementById('cos-brandname-'+scope).textContent=md.brand+'®';
+    brandRow.style.display=''; mention.style.display='';
+  } else {
+    brandRow.style.display='none'; mention.style.display='none';
+  }
+}
 function setMatVasque(i){
   S_matVasque=i; checkAlerts();
   document.querySelectorAll('#mg-vasque .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
   var md=MATS_VASQUE[i];
+  _updateCosentinoBrand('vasque', md);
   if(!md.src){ applyVasqueMat(); return; }
   if(_vasqueTexCache[i]){ applyVasqueMat(); return; }
   new THREE.TextureLoader().load(md.src,function(tex){
@@ -3467,6 +3479,7 @@ function setMatPlan(i){
   S.matPlan=i;
   document.querySelectorAll('#mg-plan .mat-btn').forEach(function(b,j){b.classList.toggle('on',j===i);});
   var md=MATS_PLAN[i];
+  _updateCosentinoBrand('plan', md);
   if(!md.src){ buildPlan(); checkAlerts(); return; }
   if(_planTexCache[i]){ buildPlan(); checkAlerts(); return; }
   new THREE.TextureLoader().load(md.src,function(tex){
