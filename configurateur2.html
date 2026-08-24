@@ -23,6 +23,49 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(--text)}
 #app{display:flex;width:100%;height:100%}
 
+/* ─── PAGE INTRO (style produit) ─── */
+#intro-page{position:fixed;inset:0;z-index:100000;background:#FFFAF0;overflow-y:auto;overflow-x:hidden}
+#intro-page.hidden{display:none}
+.intro-header{position:sticky;top:0;z-index:10;background:#FFFAF0;border-bottom:1px solid rgba(26,26,26,.08);padding:18px 32px;display:flex;align-items:center;justify-content:space-between}
+.intro-logo{font-family:'Archivo',sans-serif;font-size:14px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#1A1A1A}
+.intro-header-cta{background:#CD3E00;color:#fff;border:none;border-radius:30px;padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.intro-header-cta:hover{background:#a83200}
+.intro-body{max-width:1180px;margin:0 auto;padding:48px 32px 120px}
+.intro-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(205,62,0,.08);border:1px solid rgba(205,62,0,.22);border-radius:30px;padding:6px 14px;margin-bottom:22px}
+.intro-eyebrow span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#CD3E00;font-weight:700}
+.intro-title{font-size:44px;font-weight:300;line-height:1.15;letter-spacing:-.01em;color:#1A1A1A;margin-bottom:18px;max-width:720px}
+.intro-title strong{font-weight:700}
+.intro-sub{font-size:15px;line-height:1.7;color:rgba(26,26,26,.55);max-width:520px;margin-bottom:36px}
+.intro-price-row{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.intro-price{font-size:26px;font-weight:700;color:#1A1A1A}
+.intro-price-note{font-size:13px;color:rgba(26,26,26,.45)}
+.intro-rating{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(26,26,26,.55);margin-bottom:40px}
+.intro-rating strong{color:#1A1A1A}
+.intro-hero{width:100%;border-radius:20px;overflow:hidden;margin-bottom:20px;background:#EFE9DC;position:relative}
+.intro-hero img{width:100%;height:520px;object-fit:cover;display:block}
+@media(max-width:768px){.intro-hero img{height:320px}}
+.intro-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:56px}
+.intro-gallery img{width:100%;height:150px;object-fit:cover;border-radius:12px;cursor:pointer;transition:opacity .15s}
+.intro-gallery img:hover{opacity:.82}
+@media(max-width:768px){.intro-gallery{grid-template-columns:repeat(2,1fr)}}
+.intro-reassure{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:64px;border-top:1px solid rgba(26,26,26,.1);border-bottom:1px solid rgba(26,26,26,.1);padding:28px 0}
+@media(max-width:768px){.intro-reassure{grid-template-columns:1fr}}
+.intro-reassure-item{display:flex;align-items:flex-start;gap:14px}
+.intro-reassure-ico{width:38px;height:38px;border-radius:10px;background:rgba(205,62,0,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#CD3E00}
+.intro-reassure-txt strong{display:block;font-size:13px;font-weight:700;color:#1A1A1A;margin-bottom:2px}
+.intro-reassure-txt span{font-size:12px;color:rgba(26,26,26,.5);line-height:1.5}
+.intro-section{margin-bottom:64px}
+.intro-section-title{font-size:28px;font-weight:300;line-height:1.25;color:#1A1A1A;margin-bottom:28px;max-width:640px}
+.intro-section-title strong{font-weight:700}
+.intro-showcase{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:768px){.intro-showcase{grid-template-columns:1fr}}
+.intro-showcase img{width:100%;height:340px;object-fit:cover;border-radius:16px;display:block}
+.intro-cosentino-row{display:flex;align-items:center;gap:28px;padding:20px 0;flex-wrap:wrap}
+.intro-cosentino-row img{height:20px;width:auto;object-fit:contain;opacity:.85}
+.intro-sticky-cta{position:sticky;bottom:0;background:#FFFAF0;border-top:1px solid rgba(26,26,26,.1);padding:16px 32px;display:flex;justify-content:center}
+.intro-sticky-cta button{background:#CD3E00;color:#fff;border:none;border-radius:12px;padding:16px 36px;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;max-width:480px;transition:background .15s}
+.intro-sticky-cta button:hover{background:#a83200}
+
 #sidebar{width:var(--w);min-width:var(--w);background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;box-shadow:2px 0 12px rgba(26,26,26,.06)}
 #sb-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
 .logo-txt{font-family:'Archivo',sans-serif;font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
@@ -463,6 +506,85 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T76V743S"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE INTRO — style produit (avant configurateur)
+     ═══════════════════════════════════════════════════════ -->
+<div id="intro-page">
+  <div class="intro-header">
+    <div class="intro-logo">Kōbō Design</div>
+    <button class="intro-header-cta" onclick="enterConfigurator()">Configurer mon meuble</button>
+  </div>
+  <div class="intro-body">
+    <div class="intro-eyebrow">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#CD3E00"/><circle cx="5" cy="5" r="2" fill="#CD3E00"/></svg>
+      <span>Fabrication française · Sur mesure</span>
+    </div>
+    <div class="intro-title">Créez votre <strong>meuble sur mesure</strong>, du dessin 3D à la fabrication.</div>
+    <div class="intro-sub">Bibliothèque, dressing, meuble TV ou salle de bain — dessinez vos dimensions, choisissez vos finitions et visualisez le résultat en temps réel avant de commander.</div>
+    <div class="intro-price-row">
+      <span class="intro-price">À partir de 490 €</span>
+      <span class="intro-price-note">selon dimensions et finitions</span>
+    </div>
+    <div class="intro-rating">★★★★★ <strong>4.9/5</strong> · fabriqué en France</div>
+
+    <div class="intro-hero">
+      <img src="img/bureau-bibliotheque-2.png" alt="Meuble sur mesure Kōbō Design">
+    </div>
+    <div class="intro-gallery">
+      <img src="img/Bibliothequesboi2.png" alt="Bibliothèque sur mesure">
+      <img src="img/bureau-bibliotheque-1.png" alt="Bureau bibliothèque">
+      <img src="img/porte-coulissante.png" alt="Dressing porte coulissante">
+      <img src="img/meuble-tv.png" alt="Meuble TV sur mesure">
+    </div>
+
+    <div class="intro-reassure">
+      <div class="intro-reassure-item">
+        <div class="intro-reassure-ico">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.5v9L12 22l-9-4.5v-9L12 2z"/><path d="M12 22V12M3 6.5l9 5 9-5"/></svg>
+        </div>
+        <div class="intro-reassure-txt"><strong>100% sur mesure</strong><span>Dimensions, matières et aménagements adaptés à votre espace</span></div>
+      </div>
+      <div class="intro-reassure-item">
+        <div class="intro-reassure-ico">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="13" height="10" rx="1"/><path d="M16 10h3l2 3v4h-5"/><circle cx="7.5" cy="19" r="1.5"/><circle cx="17.5" cy="19" r="1.5"/></svg>
+        </div>
+        <div class="intro-reassure-txt"><strong>Fabrication française</strong><span>Conçu et fabriqué en atelier, matériaux sélectionnés</span></div>
+      </div>
+      <div class="intro-reassure-item">
+        <div class="intro-reassure-ico">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        </div>
+        <div class="intro-reassure-txt"><strong>Configurateur 3D</strong><span>Visualisez votre meuble avant de commander, sans surprise</span></div>
+      </div>
+    </div>
+
+    <div class="intro-section">
+      <div class="intro-section-title">Des meubles pensés pour <strong>chaque pièce de votre intérieur</strong>.</div>
+      <div class="intro-showcase">
+        <img src="img/Bibliothequesbois.png" alt="Bibliothèque bois sur mesure">
+        <img src="img/cuisine-1.png" alt="Aménagement sur mesure">
+      </div>
+    </div>
+
+    <div class="intro-section">
+      <div class="intro-section-title">Des matériaux <strong>haut de gamme</strong>, y compris pour vos salles de bain.</div>
+      <div class="intro-cosentino-row">
+        <img src="img/logos/silestone.png" alt="Silestone">
+        <img src="img/logos/dekton.png" alt="Dekton">
+      </div>
+      <div class="intro-sub" style="margin-bottom:0">Nos plans de travail et vasques intègrent des surfaces Silestone® et Dekton®, marques de Cosentino®.</div>
+    </div>
+  </div>
+  <div class="intro-sticky-cta">
+    <button onclick="enterConfigurator()">Configurer mon meuble →</button>
+  </div>
+</div>
+<script>
+function enterConfigurator(){
+  document.getElementById('intro-page').classList.add('hidden');
+}
+</script>
 
 <!-- OVERLAY TYPE DE MEUBLE -->
 <div id="type-overlay">
