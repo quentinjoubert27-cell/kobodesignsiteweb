@@ -4317,7 +4317,7 @@ function buildTechSpec(els, CL, CH, CP){
       material_divider:matCais.n||null,
       material_shelf:matCais.n||null,
       material_joue:matCais.n||null,
-      ...(currentFT==='sdb'?{
+      ...(isSDBMode?{
         material_plan:(MATS_PLAN[S.matPlan]||{}).n||null,
         material_vasque:(MATS_VASQUE[S_matVasque]||{}).n||null
       }:{})
@@ -4360,8 +4360,11 @@ async function submitConfig(){
   if(currentFT==='tv') tvElems.forEach(function(els){ els.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;}); });
 
   // Résumé lisible de la configuration
+  // isSDBMode reflète la case "Meuble salle de bain" cochée par l'utilisateur —
+  // currentFT reste toujours 'tv' dans configurateur2, donc on ne peut pas s'y fier pour distinguer SDB.
+  var submitFT = isSDBMode ? 'sdb' : currentFT;
   var ftLabels={biblio:'Bibliothèque',tv:'Meuble TV',dressing:'Dressing',sdb:'Meuble salle de bain'};
-  var ftLabel = ftLabels[currentFT] || currentFT;
+  var ftLabel = ftLabels[submitFT] || submitFT;
   var projetNom = ftLabel + ' sur mesure — ' + Math.round(S.CL*100) + 'x' + Math.round(S.CH*100) + ' cm';
   var tvSideDesc = [];
   if(currentFT==='tv'){
@@ -4388,13 +4391,13 @@ async function submitConfig(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         prenom:prenom, email:email, telephone:telephone, code_postal:codePostal, decouverte:decouverte, message:message, botcheck:bot,
-        furniture_type: currentFT || 'sdb',
+        furniture_type: submitFT,
         thumbnail: thumbSrc,
         config:{
-          furniture_type: currentFT,
+          furniture_type: submitFT,
           meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },
-          ...(currentFT==='sdb' ? {
+          ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10,
                    matLabel:MATS_PLAN[S.matPlan].n, matId:S.matPlan },
             vasques:{ nb:S.nbVasques, W:Math.round(S.vasqueW*100), D:Math.round(S.vasqueD*100),
