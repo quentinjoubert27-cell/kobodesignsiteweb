@@ -1888,8 +1888,25 @@
         const cfg = { W: c.largeur, H: c.hauteur, D: c.profondeur, matId: 'chene', elements: c.elements || [] };
         vizUrl = '/configurateur?ft=biblio&c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
       } else if (!isBiblio && c.meuble_l) {
-        const ft = c.type || 'sdb';
-        vizUrl = '/configurateur?ft=' + encodeURIComponent(ft);
+        // configs_sdb vient toujours de configurateur2 — on reconstruit le cfg dans le format
+        // attendu par son loader ?c= (voir configurateur2.html, bloc "Chargement depuis ?c=")
+        const rc = c.raw_config || {};
+        const rcMeuble  = rc.meuble  || {};
+        const rcPlan    = rc.plan    || {};
+        const rcVasques = rc.vasques || {};
+        const cfg2 = {
+          ft: c.type || 'sdb',
+          L: rcMeuble.L || c.meuble_l,
+          H: rcMeuble.H || c.meuble_h,
+          P: rcMeuble.P || c.meuble_p,
+          matLabel: rcMeuble.matLabel || c.meuble_mat,
+          elements: rc.elements || c.elements || [],
+          ...( (c.type || 'sdb') === 'sdb' ? {
+            plan: { L: rcPlan.L || c.plan_l, P: rcPlan.P || c.plan_p, matLabel: rcPlan.matLabel || c.plan_mat },
+            vasques: { nb: rcVasques.nb || c.nb_vasques, id: rcVasques.id, vx: rcVasques.vx, vz: rcVasques.vz, vx2: rcVasques.vx2, vz2: rcVasques.vz2 },
+          } : {} ),
+        };
+        vizUrl = '/configurateur2?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg2))));
       }
       if (vizUrl) html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;">🔗 Ouvrir dans le configurateur →</a>`;
     } catch(e) {}
@@ -2118,7 +2135,7 @@
           plan: { L: c.plan_l, P: c.plan_p, matLabel: c.plan_mat || '' },
           vasques: rc.vasques || { nb: c.nb_vasques || 1 },
         };
-        vizUrl = '/configurateur?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+        vizUrl = '/configurateur2?c=' + btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
       }
       if (vizUrl) html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 9l-9-7-9 7v11a2 2 0 002 2h14a2 2 0 002-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Voir le meuble →</a>`;
     } catch(e) {}
