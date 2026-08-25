@@ -1101,6 +1101,8 @@ window.addEventListener('scroll', function(){
           </div>
 
           <input type="text" id="cfgCodePostal" class="cfg-field" placeholder="Votre code postal *" maxlength="10" autocomplete="postal-code" inputmode="numeric"/>
+          <input type="text" id="cfgSociete" class="cfg-field" placeholder="Société (si professionnel)" maxlength="150" autocomplete="organization"/>
+          <input type="text" id="cfgSiret" class="cfg-field" placeholder="SIRET (facultatif)" maxlength="20"/>
           <select id="cfgDecouverte" class="cfg-field" style="cursor:pointer;">
             <option value="">Comment nous avez-vous trouvés ? *</option>
             <option value="Instagram">Instagram</option>
@@ -4346,6 +4348,8 @@ async function submitConfig(){
   errEl.style.display='none';
   if (!_cfgSession) telephone = (document.getElementById('cfgTelephoneVis').value||'').trim();
   var codePostal  = (document.getElementById('cfgCodePostal').value||'').trim();
+  var societe     = (document.getElementById('cfgSociete').value||'').trim();
+  var siret       = (document.getElementById('cfgSiret').value||'').trim();
   var decouverte  = (document.getElementById('cfgDecouverte').value||'').trim();
   if(!prenom||!nom||!email){ errEl.textContent='Prénom, nom et email obligatoires.'; errEl.style.display='block'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
@@ -4426,7 +4430,7 @@ async function submitConfig(){
     var regResp = await fetch('/api/auto-register',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Register-Secret':'kobo-configurateur-2024'},
-      body:JSON.stringify({ prenom, nom, email, telephone, decouverte, projetNom, projetDesc,
+      body:JSON.stringify({ prenom, nom, email, telephone, decouverte, projetNom, projetDesc, societe, siret,
         configId: data.configId || null, configTable: 'configs_sdb' })
     });
     var regData = await regResp.json();

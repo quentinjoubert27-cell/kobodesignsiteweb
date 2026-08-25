@@ -30,6 +30,9 @@ module.exports = async function handler(req, res) {
   const projetDesc = [decouverte ? `Découverte : ${decouverte}` : null, projetDescRaw || null].filter(Boolean).join('\n').slice(0, 2000);
   const configId   = body.configId   || null;
   const configTable= body.configTable || null;
+  const siret      = (body.siret      || '').toString().trim().slice(0, 20);
+  const societe    = (body.societe    || '').toString().trim().slice(0, 150);
+  const typeClient = (siret || societe) ? 'professionnel' : 'particulier';
 
   if (!prenom || !email) return res.status(400).json({ error: 'Prénom et email obligatoires' });
 
@@ -83,6 +86,9 @@ module.exports = async function handler(req, res) {
       nom: nom || '',
       email,
       telephone: telephone || null,
+      ...(siret   ? { siret }   : {}),
+      ...(societe ? { societe } : {}),
+      ...((siret || societe) ? { type_client: typeClient } : {}),
     }, { onConflict: 'id' });
 
     // 3. Créer le projet

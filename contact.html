@@ -629,6 +629,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <p class="form__error" id="err-code-postal">Veuillez entrer votre code postal.</p>
         </div>
         <div class="form__group">
+          <label class="form__label" for="societe">Société <span style="font-weight:400;opacity:.6">(si vous êtes un professionnel)</span></label>
+          <input class="form__input" type="text" id="societe" name="societe" placeholder="Nom de votre entreprise" autocomplete="organization"/>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="siret">SIRET <span style="font-weight:400;opacity:.6">(facultatif)</span></label>
+          <input class="form__input" type="text" id="siret" name="siret" placeholder="123 456 789 00012" maxlength="20"/>
+        </div>
+        <div class="form__group">
           <label class="form__label" for="decouverte">Comment nous avez-vous trouvés ? *</label>
           <select class="form__input" id="decouverte" name="decouverte" required style="cursor:pointer;">
             <option value="">— Sélectionnez —</option>

@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
   // Créer le client avec la clé service role
   const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const { prenom, nom, email, telephone, password } = req.body || {};
+  const { prenom, nom, email, telephone, password, siret, societe } = req.body || {};
   if (!prenom || !nom || !email || !password)
     return res.status(400).json({ error: 'Champs manquants' });
 
@@ -39,12 +39,18 @@ module.exports = async function handler(req, res) {
 
   if (error) return res.status(400).json({ error: error.message });
 
+  const siretTrim = (siret || '').toString().trim();
+  const societeTrim = (societe || '').toString().trim();
+
   await sb.from('clients').upsert({
     id: data.user.id,
     prenom,
     nom,
     email,
     telephone: telephone || null,
+    siret: siretTrim || null,
+    societe: societeTrim || null,
+    type_client: (siretTrim || societeTrim) ? 'professionnel' : 'particulier',
   });
 
   return res.status(200).json({ success: true });

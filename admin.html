@@ -701,14 +701,19 @@
           <h1 class="view-title">Clients</h1>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <select id="client-type-filter" style="padding:9px 13px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;cursor:pointer;" onchange="filterClients()">
+            <option value="">Tous</option>
+            <option value="particulier">Particuliers</option>
+            <option value="professionnel">Professionnels</option>
+          </select>
           <input type="search" id="client-search" placeholder="Rechercher…" style="padding:9px 13px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;width:200px;" oninput="filterClients()"/>
           <button class="btn btn-primary" onclick="openModalNewClient()">+ Nouveau client</button>
         </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Projets</th><th>Inscrit le</th><th></th></tr></thead>
-          <tbody id="clients-table"><tr><td colspan="6" class="loading">Chargement…</td></tr></tbody>
+          <thead><tr><th>Nom</th><th>Type</th><th>Email</th><th>Téléphone</th><th>Projets</th><th>Inscrit le</th><th></th></tr></thead>
+          <tbody id="clients-table"><tr><td colspan="7" class="loading">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -735,7 +740,7 @@
       <div class="client-info-banner" id="cd-banner">
         <div class="client-avatar" id="cd-avatar">?</div>
         <div class="client-info-main">
-          <div class="client-info-name" id="cd-fullname">—</div>
+          <div class="client-info-name" id="cd-fullname" style="display:flex;align-items:center;gap:8px;">—<span id="cd-type-badge"></span></div>
           <div class="client-info-details">
             <span class="client-info-item" id="cd-email-wrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="1.6"/><polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="1.6"/></svg>
@@ -744,6 +749,10 @@
             <span class="client-info-item" id="cd-tel-wrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="1.6"/></svg>
               <span id="cd-tel-val">—</span>
+            </span>
+            <span class="client-info-item" id="cd-societe-wrap" style="display:none;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="14" rx="1"/><path d="M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
+              <span id="cd-societe-val">—</span>
             </span>
           </div>
         </div>
@@ -1013,6 +1022,10 @@
     </div>
     <div class="field"><label>Email</label><input type="email" id="nc-email" placeholder="jean@exemple.fr"/></div>
     <div class="field"><label>Téléphone (optionnel)</label><input type="tel" id="nc-tel" placeholder="+33 6 12 34 56 78"/></div>
+    <div class="field-row">
+      <div class="field"><label>Société (si professionnel)</label><input type="text" id="nc-societe" placeholder="Nom de l'entreprise"/></div>
+      <div class="field"><label>SIRET (optionnel)</label><input type="text" id="nc-siret" placeholder="123 456 789 00012"/></div>
+    </div>
     <div class="field"><label>Mot de passe temporaire</label><input type="text" id="nc-pw" placeholder="Minimum 8 caractères"/></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-client')">Annuler</button>
@@ -1484,12 +1497,21 @@
     renderClientsTable(allClients);
   }
 
+  function clientTypeBadge(c) {
+    const isPro = c.type_client === 'professionnel';
+    const bg = isPro ? '#fff7ed' : '#f0fdf4';
+    const color = isPro ? '#c2410c' : '#166534';
+    const label = isPro ? 'Pro' : 'Particulier';
+    return `<span style="display:inline-block;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.04em;background:${bg};color:${color};">${label}</span>`;
+  }
+
   function renderClientsTable(list) {
     const tbody = document.getElementById('clients-table');
-    if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun client.</td></tr>'; return; }
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Aucun client.</td></tr>'; return; }
     tbody.innerHTML = list.map(c => `
       <tr class="client-row" onclick="openClientDetail('${c.id}')">
         <td>${escHtml(c.prenom)} ${escHtml(c.nom)}</td>
+        <td>${clientTypeBadge(c)}</td>
         <td style="color:rgba(26,26,26,.55);">${escHtml(c.email || '')}</td>
         <td style="color:rgba(26,26,26,.55);">${escHtml(c.telephone || '—')}</td>
         <td>${(c.projets || []).length}</td>
@@ -1500,8 +1522,10 @@
 
   function filterClients() {
     const q = document.getElementById('client-search').value.toLowerCase();
+    const typeFilter = document.getElementById('client-type-filter').value;
     renderClientsTable(allClients.filter(c =>
-      (c.prenom + ' ' + c.nom + ' ' + c.email).toLowerCase().includes(q)
+      (c.prenom + ' ' + c.nom + ' ' + c.email).toLowerCase().includes(q) &&
+      (!typeFilter || (c.type_client || 'particulier') === typeFilter)
     ));
   }
 
@@ -1513,6 +1537,14 @@
     document.getElementById('cd-fullname').textContent = fullName.trim() || '—';
     document.getElementById('cd-email-val').textContent = client.email || '—';
     document.getElementById('cd-tel-val').textContent = client.telephone || '—';
+    document.getElementById('cd-type-badge').innerHTML = clientTypeBadge(client);
+    const societeWrap = document.getElementById('cd-societe-wrap');
+    if (client.societe || client.siret) {
+      societeWrap.style.display = '';
+      document.getElementById('cd-societe-val').textContent = [client.societe, client.siret].filter(Boolean).join(' · ');
+    } else {
+      societeWrap.style.display = 'none';
+    }
 
     // Avatar initials
     const initials = ((client.prenom || '').charAt(0) + (client.nom || '').charAt(0)).toUpperCase();
@@ -2572,6 +2604,8 @@
     const nom = document.getElementById('nc-nom').value.trim();
     const email = document.getElementById('nc-email').value.trim();
     const telephone = document.getElementById('nc-tel').value.trim();
+    const societe = document.getElementById('nc-societe').value.trim();
+    const siret = document.getElementById('nc-siret').value.trim();
     const pw = document.getElementById('nc-pw').value;
     if (!prenom || !nom || !email || !pw) return showToast('Tous les champs obligatoires', 'err');
     if (pw.length < 8) return showToast('Mot de passe trop court', 'err');
@@ -2582,7 +2616,7 @@
     const resp = await fetch('/api/create-client', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ prenom, nom, email, telephone, password: pw }),
+      body: JSON.stringify({ prenom, nom, email, telephone, password: pw, societe, siret }),
     });
     const result = await resp.json();
     if (!resp.ok) return showToast('Erreur: ' + (result.error || 'Inconnue'), 'err');

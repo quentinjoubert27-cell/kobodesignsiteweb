@@ -32,6 +32,9 @@ module.exports = async function handler(req, res) {
     const message     = (body.message || '').toString().slice(0, 5000);
     const fichiers    = (body.fichiers || '').toString().slice(0, 2000);
     const decouverte  = (body.decouverte || '').toString().slice(0, 100);
+    const siret       = (body.siret   || '').toString().trim().slice(0, 20);
+    const societe     = (body.societe || '').toString().trim().slice(0, 150);
+    const typeClient  = (siret || societe) ? 'professionnel' : 'particulier';
 
     // Validation
     if (!prenom || !email || !message) {
@@ -90,6 +93,9 @@ module.exports = async function handler(req, res) {
         nom: nom || '',
         email,
         telephone: telephone || null,
+        ...(siret   ? { siret }   : {}),
+        ...(societe ? { societe } : {}),
+        ...((siret || societe) ? { type_client: typeClient } : {}),
       }, { onConflict: 'id' });
       if (upsertErr) throw new Error('upsert client: ' + upsertErr.message);
 
