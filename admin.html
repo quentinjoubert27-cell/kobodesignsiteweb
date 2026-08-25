@@ -620,6 +620,10 @@
       Sécurité
       <span class="nav-badge" id="nav-audit-badge" style="display:none"></span>
     </button>
+    <button class="nav-item" onclick="showView('tarifs', this)" id="nav-tarifs">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Tarifs
+    </button>
 
     <div class="sidebar-footer">
       <div class="sidebar-admin-name" id="admin-email-label"></div>
@@ -937,6 +941,35 @@
       </div>
     </div>
 
+    <!-- ── VUE TARIFS (visible admin uniquement) ── -->
+    <div class="view" id="view-tarifs">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Tarification</p>
+          <h1 class="view-title">Prix unitaires</h1>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveTarifs()">Enregistrer</button>
+      </div>
+      <p style="font-size:12px;color:rgba(26,26,26,.5);margin-bottom:20px;max-width:640px;">Ces prix servent à calculer automatiquement le coût de revient et le prix de vente (× coefficient) de chaque configuration reçue. Renseignez-les au fur et à mesure — les configurations sans prix pour un matériau afficheront un coût partiel.</p>
+
+      <div style="background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:20px;border:1px solid rgba(26,26,26,.08);">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">Panneaux — € / m²</div>
+        <div id="tarifs-materiaux" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+      </div>
+
+      <div style="background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:20px;border:1px solid rgba(26,26,26,.08);">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;">Quincaillerie et finitions</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+          <div class="field"><label>Chant plaqué (€ / mètre linéaire)</label><input type="number" step="0.01" id="tarif-chant"/></div>
+          <div class="field"><label>Vis (€ / unité)</label><input type="number" step="0.01" id="tarif-vis"/></div>
+          <div class="field"><label>Charnière (€ / unité)</label><input type="number" step="0.01" id="tarif-charniere"/></div>
+          <div class="field"><label>Mécanisme tiroir (€ / unité)</label><input type="number" step="0.01" id="tarif-tiroir"/></div>
+          <div class="field"><label>Équerre d'angle (€ / unité)</label><input type="number" step="0.01" id="tarif-equerre"/></div>
+          <div class="field"><label>Coefficient de revente</label><input type="number" step="0.1" id="tarif-coefficient" value="2"/></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1219,6 +1252,7 @@
     loadClients();
     loadProjets();
     loadUnreadCount();
+    loadTarifs();
   }
 
   // ── NAVIGATION ────────────────────────────────────────────────────
@@ -1232,6 +1266,94 @@
     if (id === 'configs') loadConfigs();
     if (id === 'audit') loadAuditLogs();
     if (id === 'analytics') loadAnalytics(30, document.getElementById('an-btn-30'));
+    if (id === 'tarifs') loadTarifs();
+  }
+
+  // ── TARIFS (devis) ────────────────────────────────────────────────
+  var TARIF_MATERIAUX = ['Chêne','Noyer','Chêne Foncé','Sapelli','Frêne Blanchi','Bois Blanc','Marron','Taupe',
+    'Noir Charbon','Noir Mat','Vert Forêt','Vert Sauge','Bleu Nuit','Bordeaux','Terracotta','Jaune Pâle','Crème',
+    'Gris Perle','Gris Ardoise','Brun Rosé','Blanc','Blanc Gris','Blanc Multicolore','Noir',
+    'Evok','Kedar','Keena','Thala','Zira','Arden Blue','Blanc Elysée','Eternal Calacatta Gold','Chateau Brown',
+    'Eternal Marquina','Jardin Emerald','Linen Cream','Miami White','White Arabesque'];
+  var currentTarifs = null;
+
+  function renderTarifMateriaux(panelM2) {
+    var el = document.getElementById('tarifs-materiaux');
+    el.innerHTML = TARIF_MATERIAUX.map(function(m) {
+      var val = (panelM2 && panelM2[m] != null) ? panelM2[m] : '';
+      return '<div class="field"><label>' + escHtml(m) + '</label><input type="number" step="0.01" class="tarif-mat-input" data-mat="' + escHtml(m) + '" value="' + val + '"/></div>';
+    }).join('');
+  }
+
+  async function loadTarifs() {
+    const { data } = await sb.from('tarifs').select('*').eq('id', 1).maybeSingle();
+    currentTarifs = data || { panel_m2: {}, edge_banding_ml: 0, screw_unit: 0, hinge_unit: 0, drawer_mechanism_unit: 0, corner_bracket_unit: 0, coefficient_revente: 2 };
+    renderTarifMateriaux(currentTarifs.panel_m2 || {});
+    document.getElementById('tarif-chant').value = currentTarifs.edge_banding_ml || 0;
+    document.getElementById('tarif-vis').value = currentTarifs.screw_unit || 0;
+    document.getElementById('tarif-charniere').value = currentTarifs.hinge_unit || 0;
+    document.getElementById('tarif-tiroir').value = currentTarifs.drawer_mechanism_unit || 0;
+    document.getElementById('tarif-equerre').value = currentTarifs.corner_bracket_unit || 0;
+    document.getElementById('tarif-coefficient').value = currentTarifs.coefficient_revente || 2;
+  }
+
+  async function saveTarifs() {
+    var panelM2 = {};
+    document.querySelectorAll('.tarif-mat-input').forEach(function(inp) {
+      var v = parseFloat(inp.value);
+      if (!isNaN(v) && v > 0) panelM2[inp.dataset.mat] = v;
+    });
+    var payload = {
+      id: 1,
+      panel_m2: panelM2,
+      edge_banding_ml: parseFloat(document.getElementById('tarif-chant').value) || 0,
+      screw_unit: parseFloat(document.getElementById('tarif-vis').value) || 0,
+      hinge_unit: parseFloat(document.getElementById('tarif-charniere').value) || 0,
+      drawer_mechanism_unit: parseFloat(document.getElementById('tarif-tiroir').value) || 0,
+      corner_bracket_unit: parseFloat(document.getElementById('tarif-equerre').value) || 0,
+      coefficient_revente: parseFloat(document.getElementById('tarif-coefficient').value) || 2,
+      updated_at: new Date().toISOString(),
+    };
+    const { error } = await sb.from('tarifs').upsert(payload);
+    if (error) return showToast('Erreur : ' + error.message, 'err');
+    currentTarifs = payload;
+    showToast('Tarifs enregistrés !');
+  }
+
+  function renderDevisPriceBlock(q) {
+    var price = computeDevisPriceAdmin(q, currentTarifs);
+    if (!price) return '';
+    var warn = price.missing_materials.length
+      ? `<div style="font-size:11px;color:#c2410c;margin-top:8px;">⚠ Prix manquant pour : ${price.missing_materials.map(escHtml).join(', ')} — <a href="#" onclick="showView('tarifs', document.getElementById('nav-tarifs')); return false;" style="color:#c2410c;text-decoration:underline;">compléter les tarifs</a></div>`
+      : '';
+    return `<div style="background:#1A1A1A;color:#FFFAF0;border-radius:10px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">Prix (admin uniquement)</div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;">
+        <div><div style="font-size:10px;opacity:.6;">Coût de revient</div><div style="font-size:18px;font-weight:700;">${price.cost_revient.toFixed(2)} €</div></div>
+        <div><div style="font-size:10px;opacity:.6;">Prix de vente</div><div style="font-size:18px;font-weight:700;color:var(--accent);">${price.prix_vente.toFixed(2)} €</div></div>
+      </div>
+      ${warn}
+    </div>`;
+  }
+
+  function computeDevisPriceAdmin(q, tarifs) {
+    if (!q || !tarifs) return null;
+    var costPanels = Object.keys(q.panels_m2 || {}).reduce(function(sum, mat) {
+      var pu = (tarifs.panel_m2 || {})[mat] || 0;
+      return sum + q.panels_m2[mat] * pu;
+    }, 0);
+    var cost = costPanels
+      + (q.edge_banding_m || 0) * (tarifs.edge_banding_ml || 0)
+      + (q.screws || 0) * (tarifs.screw_unit || 0)
+      + (q.hinges || 0) * (tarifs.hinge_unit || 0)
+      + (q.drawer_mechanisms || 0) * (tarifs.drawer_mechanism_unit || 0)
+      + (q.corner_brackets || 0) * (tarifs.corner_bracket_unit || 0);
+    var missingMats = Object.keys(q.panels_m2 || {}).filter(function(mat) { return !((tarifs.panel_m2 || {})[mat] > 0); });
+    return {
+      cost_revient: Math.round(cost * 100) / 100,
+      prix_vente: Math.round(cost * (tarifs.coefficient_revente || 2) * 100) / 100,
+      missing_materials: missingMats,
+    };
   }
 
   // ── ANALYTICS ─────────────────────────────────────────────────────
@@ -1893,6 +2015,13 @@
         };
         injectTechSpec(fullCfg);
       }
+
+      // Prix (admin uniquement) — calculé à partir des quantités + des tarifs enregistrés
+      if (!isBiblio && fullCfg.devis_quantities) {
+        const priceHtml = renderDevisPriceBlock(fullCfg.devis_quantities);
+        html += priceHtml;
+      }
+
       const jsonStr = JSON.stringify(fullCfg, null, 2);
       const jsonB64 = btoa(unescape(encodeURIComponent(jsonStr)));
       const filename = `config-${fullCfg.type || 'meuble'}-${(c.prenom || 'client').toLowerCase()}.json`;
