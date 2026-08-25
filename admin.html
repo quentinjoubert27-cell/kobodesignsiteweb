@@ -1634,14 +1634,14 @@
 
   // ── PROJETS ───────────────────────────────────────────────────────
   async function loadProjets() {
-    const { data } = await sb.from('projets').select('*, clients(prenom, nom)').order('created_at', { ascending: false });
+    const { data } = await sb.from('projets').select('*, clients(prenom, nom, type_client)').order('created_at', { ascending: false });
     allProjets = data || [];
     const tbody = document.getElementById('projets-table');
     if (!allProjets.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun projet.</td></tr>'; return; }
     tbody.innerHTML = allProjets.map(p => `
       <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
         <td style="font-weight:600;">${escHtml(p.nom)}</td>
-        <td>${p.clients ? escHtml(p.clients.prenom + ' ' + p.clients.nom) : '—'}</td>
+        <td>${p.clients ? `<span style="display:inline-flex;align-items:center;gap:6px;">${escHtml(p.clients.prenom + ' ' + p.clients.nom)}${clientTypeBadge(p.clients)}</span>` : '—'}</td>
         <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span></td>
         <td style="font-weight:600;">${p.montant ? formatCurrency(p.montant) : '—'}</td>
         <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
@@ -1652,14 +1652,14 @@
   // ── COMMANDES ─────────────────────────────────────────────────────
   async function loadCommandes() {
     const { data } = await sb.from('projets')
-      .select('*, clients(prenom, nom)')
+      .select('*, clients(prenom, nom, type_client)')
       .in('statut', ['Commandé', 'Livraison'])
       .order('date_livraison', { ascending: true, nullsFirst: false });
     const tbody = document.getElementById('commandes-table');
     if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucune commande en cours.</td></tr>'; return; }
     tbody.innerHTML = data.map(p => `
       <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
-        <td>${p.clients ? escHtml(p.clients.prenom + ' ' + p.clients.nom) : '—'}</td>
+        <td>${p.clients ? `<span style="display:inline-flex;align-items:center;gap:6px;">${escHtml(p.clients.prenom + ' ' + p.clients.nom)}${clientTypeBadge(p.clients)}</span>` : '—'}</td>
         <td style="font-weight:600;">${escHtml(p.nom)}</td>
         <td style="font-weight:700;color:var(--accent);">${p.montant ? formatCurrency(p.montant) : '—'}</td>
         <td style="font-size:12px;">${p.date_livraison ? new Date(p.date_livraison).toLocaleDateString('fr-FR') : '—'}</td>
@@ -1975,8 +1975,8 @@
         pdClient.innerHTML = `<div style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:10px;padding:12px 16px;">
           <div style="width:36px;height:36px;border-radius:50%;background:var(--dark);color:#FFFAF0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${escHtml(initials.toUpperCase())}</div>
           <div>
-            <div style="font-weight:700;font-size:14px;">${escHtml((client.prenom||'') + ' ' + (client.nom||''))}</div>
-            <div style="font-size:12px;color:rgba(26,26,26,.5);">${escHtml(client.email||'')}${client.telephone ? ' · ' + escHtml(client.telephone) : ''}</div>
+            <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;">${escHtml((client.prenom||'') + ' ' + (client.nom||''))}${clientTypeBadge(client)}</div>
+            <div style="font-size:12px;color:rgba(26,26,26,.5);">${escHtml(client.email||'')}${client.telephone ? ' · ' + escHtml(client.telephone) : ''}${client.societe ? ' · ' + escHtml(client.societe) : ''}</div>
           </div>
           <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="closeModal('modal-projet-detail');openClientDetail('${projet.client_id}')">Voir client →</button>
         </div>`;
