@@ -4343,6 +4343,163 @@ function buildTechSpec(els, CL, CH, CP){
   };
 }
 
+// ═══════════════════════════════════════════════════════
+// DEVIS — extraction des quantités pour calcul du prix de revient
+// Règles validées avec Quentin (25/08/2026) :
+//  - Vis : 4 vis par jonction panneau-panneau (joues-traverses, séparateurs, tablettes fixes)
+//  - Charnières par porte selon hauteur : <70cm=2, 70-130cm=3, 130-200cm=4, >200cm=5
+//  - "Angle" = équerres d'assemblage du caisson (joues/traverses), 4 par caisson (un par coin)
+//  - Chant plaqué : uniquement les bords visibles côté client (porte/tiroir = 4 côtés, reste = bord avant)
+//  - Mécanisme tiroir : 1 jeu de coulisses par tiroir
+// ═══════════════════════════════════════════════════════
+function computeDevisQuantities(techSpec, matLabel){
+  var q = {
+    panels_m2: {},        // { "Matériau": m2 }
+    edge_banding_m: 0,     // longueur totale de chant plaqué (m)
+    screws: 0,             // nombre de vis
+    hinges: 0,              // nombre de charnières
+    drawer_mechanisms: 0,   // nombre de jeux de coulisses tiroir
+    corner_brackets: 0,     // nombre d'équerres d'angle (assemblage caisson)
+    doors_count: 0,
+    drawers_count: 0,
+    shelves_count: 0,
+    separators_count: 0,
+    pieces: []              // détail par pièce : {type, w_mm, h_mm, perimeter_mm}
+  };
+  var mat = matLabel || 'Non défini';
+
+  function addPanel(material, w_mm, h_mm, type){
+    var w = Math.abs(w_mm), h = Math.abs(h_mm);
+    q.panels_m2[material] = (q.panels_m2[material]||0) + (w*h)/1e6;
+    q.pieces.push({ type: type, w_mm: Math.round(w), h_mm: Math.round(h), perimeter_mm: Math.round(2*(w+h)) });
+  }
+
+  // Structurel : joues, traverses (le fond n'a pas de chant, matériau à part car 8mm)
+  (techSpec.structural_panels||[]).forEach(function(p){
+    var w = p.x_right_mm-p.x_left_mm, h = p.y_top_mm-p.y_bottom_mm;
+    if(p.type==='fond'){ addPanel('Fond (' + mat + ')', w, h, 'fond'); return; }
+    addPanel(mat, w, h, p.type);
+    q.edge_banding_m += ((p.type==='joue_gauche'||p.type==='joue_droite') ? h : w) / 1000;
+  });
+  q.corner_brackets += 4; // 4 coins joues/traverses par caisson
+
+  // Séparateurs verticaux
+  (techSpec.separators||[]).forEach(function(s){
+    var h = s.y_top_mm - s.y_bottom_mm;
+    addPanel(mat, s.thickness_mm, h, 'separateur');
+    q.edge_banding_m += h/1000;
+    q.screws += 2*4; // jonction haut + bas
+    q.separators_count++;
+  });
+
+  // Étagères
+  (techSpec.shelves||[]).forEach(function(sh){
+    var w = sh.x_right_mm - sh.x_left_mm;
+    addPanel(mat, w, sh.depth_mm, 'etagere');
+    q.edge_banding_m += w/1000;
+    if(sh.shelf_type==='fixe') q.screws += 2*4; // fixée aux 2 côtés
+    q.shelves_count++;
+  });
+
+  // Portes
+  (techSpec.doors||[]).forEach(function(d){
+    var w = d.x_right_mm-d.x_left_mm, h = d.height_mm;
+    addPanel(mat, w, h, 'porte');
+    q.edge_banding_m += 2*(w+h)/1000; // 4 côtés visibles
+    q.doors_count++;
+    var hcm = h/10;
+    q.hinges += (hcm<70) ? 2 : (hcm<=130) ? 3 : (hcm<=200) ? 4 : 5;
+  });
+
+  // Tiroirs
+  (techSpec.drawers||[]).forEach(function(dr){
+    var w = dr.x_right_mm-dr.x_left_mm, h = dr.height_mm;
+    addPanel(mat, w, h, 'facade_tiroir');
+    q.edge_banding_m += 2*(w+h)/1000;
+    q.drawer_mechanisms += 1;
+    q.drawers_count++;
+  });
+
+  return q;
+}
+
+function mergeDevisQuantities(list){
+  var out = { panels_m2:{}, edge_banding_m:0, screws:0, hinges:0, drawer_mechanisms:0,
+    corner_brackets:0, doors_count:0, drawers_count:0, shelves_count:0, separators_count:0, pieces:[] };
+  list.forEach(function(q){
+    if(!q) return;
+    Object.keys(q.panels_m2).forEach(function(k){ out.panels_m2[k] = (out.panels_m2[k]||0) + q.panels_m2[k]; });
+    out.edge_banding_m += q.edge_banding_m;
+    out.screws += q.screws;
+    out.hinges += q.hinges;
+    out.drawer_mechanisms += q.drawer_mechanisms;
+    out.corner_brackets += q.corner_brackets;
+    out.doors_count += q.doors_count;
+    out.drawers_count += q.drawers_count;
+    out.shelves_count += q.shelves_count;
+    out.separators_count += q.separators_count;
+    out.pieces = out.pieces.concat(q.pieces);
+  });
+  return out;
+}
+
+// Assemble les quantités de TOUTE la configuration actuelle (caisson central + angle + caissons TV latéraux + plan/vasques SDB)
+function computeFullDevisQuantities(){
+  var matLabel = (MATS_CAIS[S.matCais]||{}).n || 'Non défini';
+  var list = [];
+
+  list.push(computeDevisQuantities(buildTechSpec(caissonElements, S.CL, S.CH, caissonCP()), matLabel));
+
+  if(hasAngle){
+    list.push(computeDevisQuantities(buildTechSpec(caissonElements2, S.CL2, S.CH, caissonCP()), matLabel));
+  }
+  if(currentFT==='tv' && S_tvSide){
+    if(S_tvSide.leftActive)  list.push(computeDevisQuantities(buildTechSpec(tvElems[0], S_tvSide.leftW/100,  S_tvSide.leftH/100,  caissonCP()), matLabel));
+    if(S_tvSide.rightActive) list.push(computeDevisQuantities(buildTechSpec(tvElems[1], S_tvSide.rightW/100, S_tvSide.rightH/100, caissonCP()), matLabel));
+    if(S_tvSide.topActive)   list.push(computeDevisQuantities(buildTechSpec(tvElems[2], S_tvSide.topW/100,   S_tvSide.topH/100,   caissonCP()), matLabel));
+  }
+
+  var merged = mergeDevisQuantities(list);
+
+  // Plan de travail + vasques (SDB) — pas d'assemblage vis/charnière, juste surface et comptage
+  if(isSDBMode){
+    var planMatLabel = (MATS_PLAN[S.matPlan]||{}).n || 'Non défini';
+    merged.panels_m2[planMatLabel] = (merged.panels_m2[planMatLabel]||0) + (S.L*S.P);
+    merged.edge_banding_m += 2*(S.L+S.P); // chant sur tout le pourtour du plan (visible)
+    merged.vasques_count = S.nbVasques || 0;
+    merged.vasque_model = (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{}).label || null;
+  }
+
+  return merged;
+}
+
+// ── Tarification : prix unitaires à renseigner (en attente des tarifs Kobo) ──
+// coefficient_revente : coût de revient × ce coefficient = prix de vente
+var PRICES = {
+  panel_m2: {},          // { "Nom matériau": prix €/m2 } — ex: {"Chêne": 45}
+  edge_banding_ml: 0,     // € / mètre linéaire de chant plaqué
+  screw_unit: 0,          // € / vis
+  hinge_unit: 0,          // € / charnière
+  drawer_mechanism_unit: 0, // € / jeu de coulisses tiroir
+  corner_bracket_unit: 0,  // € / équerre d'angle
+  coefficient_revente: 2
+};
+
+function computeDevisPrice(q, prices){
+  prices = prices || PRICES;
+  var costPanels = Object.keys(q.panels_m2).reduce(function(sum,mat){
+    var pu = prices.panel_m2[mat] || 0;
+    return sum + q.panels_m2[mat]*pu;
+  }, 0);
+  var cost = costPanels
+    + q.edge_banding_m * (prices.edge_banding_ml||0)
+    + q.screws * (prices.screw_unit||0)
+    + q.hinges * (prices.hinge_unit||0)
+    + q.drawer_mechanisms * (prices.drawer_mechanism_unit||0)
+    + q.corner_brackets * (prices.corner_bracket_unit||0);
+  return { cost_revient: Math.round(cost*100)/100, prix_vente: Math.round(cost*(prices.coefficient_revente||2)*100)/100 };
+}
+
 async function submitConfig(){
   var prenom, nom, email, telephone;
   if (_cfgSession) {
@@ -4435,6 +4592,7 @@ async function submitConfig(){
             top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:tvElems[2] } : null,
           } : undefined,
           cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
+          devis_quantities: computeFullDevisQuantities(),
           counts:counts
         }
       })
