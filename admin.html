@@ -1076,6 +1076,12 @@
       <div id="pd-config-content"></div>
     </div>
 
+    <!-- Devis : quantités + prix unitaires par projet -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:10px;">Devis (admin uniquement)</div>
+      <div id="pd-devis">Chargement…</div>
+    </div>
+
     <div class="modal-sep"></div>
 
     <!-- Documents -->
@@ -2062,7 +2068,96 @@
       } else if (pdClient) pdClient.style.display = 'none';
     }
 
-    await Promise.all([loadProjetDocs(), loadProjetMsgs(), loadProjetConfig()]);
+    await Promise.all([loadProjetDocs(), loadProjetMsgs(), loadProjetConfig(), renderProjetDevis(projetId)]);
+  }
+
+  // ── DEVIS : quantités + prix unitaires par projet (autonome, robuste) ──
+  async function renderProjetDevis(projetId) {
+    const el = document.getElementById('pd-devis');
+    el.innerHTML = 'Chargement…';
+    try {
+      const [{ data: sdb }, { data: biblio }, { data: projetRow }] = await Promise.all([
+        sb.from('configs_sdb').select('*').eq('projet_id', projetId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        sb.from('configs_biblio').select('*').eq('projet_id', projetId).limit(1).maybeSingle(),
+        sb.from('projets').select('devis_prices').eq('id', projetId).maybeSingle(),
+      ]);
+
+      if (biblio && !sdb) {
+        el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;">Configuration bibliothèque (ancien format) — pas de calcul de prix automatique disponible pour ce type.</div>';
+        return;
+      }
+      if (!sdb) {
+        el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune configuration liée à ce projet.</div>';
+        return;
+      }
+
+      const rc = sdb.raw_config || {};
+      let q = rc.devis_quantities;
+      if (!q) {
+        // Config antérieure à la fonctionnalité : on reconstruit les quantités depuis les données brutes disponibles
+        const meuble = rc.meuble || { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
+        const elements = rc.elements || sdb.elements || [];
+        const spec = buildTechSpec(elements, meuble.L || sdb.meuble_l, meuble.H || sdb.meuble_h, meuble.P || sdb.meuble_p);
+        q = computeDevisQuantitiesAdmin(spec, meuble.matLabel || sdb.meuble_mat || 'Non défini');
+        if (rc.plan || sdb.plan_l) {
+          const planMat = (rc.plan && rc.plan.matLabel) || sdb.plan_mat || 'Non défini';
+          const planL = (rc.plan && rc.plan.L) || sdb.plan_l || 0;
+          const planP = (rc.plan && rc.plan.P) || sdb.plan_p || 0;
+          q.panels_m2[planMat] = (q.panels_m2[planMat] || 0) + (planL * planP) / 10000;
+        }
+      }
+
+      currentDevisQuantities = q;
+      el.innerHTML = renderDevisPriceForm(q, projetRow && projetRow.devis_prices);
+    } catch (err) {
+      console.error('renderProjetDevis error:', err);
+      el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;color:#c2410c;">Erreur lors du calcul du devis : ' + escHtml(err.message || String(err)) + '</div>';
+    }
+  }
+
+  // Version simplifiée de computeDevisQuantities (configurateur2.html) réutilisable côté admin
+  function computeDevisQuantitiesAdmin(techSpec, matLabel) {
+    var q = { panels_m2: {}, edge_banding_m: 0, screws: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0 };
+    var mat = matLabel || 'Non défini';
+    function addPanel(material, w_mm, h_mm) {
+      q.panels_m2[material] = (q.panels_m2[material] || 0) + (Math.abs(w_mm) * Math.abs(h_mm)) / 1e6;
+    }
+    (techSpec.structural_panels || []).forEach(function (p) {
+      var w = p.x_right_mm - p.x_left_mm, h = p.y_top_mm - p.y_bottom_mm;
+      if (p.type === 'fond') { addPanel('Fond (' + mat + ')', w, h); return; }
+      addPanel(mat, w, h);
+      q.edge_banding_m += ((p.type === 'joue_gauche' || p.type === 'joue_droite') ? h : w) / 1000;
+    });
+    (techSpec.separators || []).forEach(function (s) {
+      var h = s.y_top_mm - s.y_bottom_mm;
+      addPanel(mat, s.thickness_mm, h);
+      q.edge_banding_m += h / 1000;
+      q.screws += 8;
+      q.separators_count++;
+    });
+    (techSpec.shelves || []).forEach(function (sh) {
+      var w = sh.x_right_mm - sh.x_left_mm;
+      addPanel(mat, w, sh.depth_mm);
+      q.edge_banding_m += w / 1000;
+      if (sh.shelf_type === 'fixe') q.screws += 8;
+      q.shelves_count++;
+    });
+    (techSpec.doors || []).forEach(function (d) {
+      var w = d.x_right_mm - d.x_left_mm, h = d.height_mm;
+      addPanel(mat, w, h);
+      q.edge_banding_m += 2 * (w + h) / 1000;
+      q.doors_count++;
+      var hcm = h / 10;
+      q.hinges += (hcm < 70) ? 2 : (hcm <= 130) ? 3 : (hcm <= 200) ? 4 : 5;
+    });
+    (techSpec.drawers || []).forEach(function (dr) {
+      var w = dr.x_right_mm - dr.x_left_mm, h = dr.height_mm;
+      addPanel(mat, w, h);
+      q.edge_banding_m += 2 * (w + h) / 1000;
+      q.drawer_mechanisms += 1;
+      q.drawers_count++;
+    });
+    return q;
   }
 
   async function loadProjetDocs() {
@@ -2220,16 +2315,6 @@
           elements: c.elements || [],
         };
         injectTechSpec(fullCfg);
-      }
-
-      if (!isBiblioProjet) {
-        if (fullCfg.devis_quantities) {
-          currentDevisQuantities = fullCfg.devis_quantities;
-          const projetRow = allProjets.find(pr => pr.id === currentProjetId);
-          html += renderDevisPriceForm(fullCfg.devis_quantities, projetRow?.devis_prices);
-        } else {
-          html += '<div class="empty" style="padding:10px 0;font-size:12px;">Configuration antérieure à la fonctionnalité de calcul de prix — pas de quantités disponibles.</div>';
-        }
       }
 
       const jsonStr2 = JSON.stringify(fullCfg, null, 2);
