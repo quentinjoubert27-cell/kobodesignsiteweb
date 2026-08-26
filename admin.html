@@ -2134,14 +2134,38 @@
       if (!q) {
         // Config antérieure à la fonctionnalité : on reconstruit les quantités depuis les données brutes disponibles
         const meuble = rc.meuble || { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
+        const matLabel = meuble.matLabel || sdb.meuble_mat || 'Non défini';
         const elements = rc.elements || sdb.elements || [];
         const spec = buildTechSpec(elements, meuble.L || sdb.meuble_l, meuble.H || sdb.meuble_h, meuble.P || sdb.meuble_p);
-        q = computeDevisQuantitiesAdmin(spec, meuble.matLabel || sdb.meuble_mat || 'Non défini');
-        if (rc.plan || sdb.plan_l) {
-          const planMat = (rc.plan && rc.plan.matLabel) || sdb.plan_mat || 'Non défini';
-          const planL = (rc.plan && rc.plan.L) || sdb.plan_l || 0;
-          const planP = (rc.plan && rc.plan.P) || sdb.plan_p || 0;
-          q.panels_m2[planMat] = (q.panels_m2[planMat] || 0) + (planL * planP) / 10000;
+        const parts = [computeDevisQuantitiesAdmin(spec, matLabel)];
+
+        // Caisson d'angle
+        if (rc.caisson2 && Array.isArray(rc.caisson2.elements)) {
+          const spec2 = buildTechSpec(rc.caisson2.elements, rc.caisson2.L_cm || meuble.L, meuble.H, meuble.P);
+          parts.push(computeDevisQuantitiesAdmin(spec2, matLabel));
+        }
+
+        // Caissons latéraux TV (gauche / droite / haut)
+        if (rc.tvSide) {
+          ['left', 'right', 'top'].forEach(function (side) {
+            const s = rc.tvSide[side];
+            if (s && s.W_cm && s.H_cm) {
+              const specSide = buildTechSpec(s.elements || [], s.W_cm, s.H_cm, meuble.P || sdb.meuble_p);
+              parts.push(computeDevisQuantitiesAdmin(specSide, matLabel));
+            }
+          });
+        }
+
+        q = mergeDevisQuantitiesAdmin(parts);
+
+        // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
+        const ft = rc.furniture_type || sdb.type;
+        if (ft === 'sdb' && rc.plan && rc.plan.L && rc.plan.P) {
+          const planMat = rc.plan.matLabel || sdb.plan_mat || 'Non défini';
+          q.panels_m2[planMat] = (q.panels_m2[planMat] || 0) + (rc.plan.L * rc.plan.P) / 10000;
+        } else if (ft === 'sdb' && sdb.plan_l && sdb.plan_p) {
+          const planMat = sdb.plan_mat || 'Non défini';
+          q.panels_m2[planMat] = (q.panels_m2[planMat] || 0) + (sdb.plan_l * sdb.plan_p) / 10000;
         }
       }
 
@@ -2154,6 +2178,26 @@
   }
 
   // Version simplifiée de computeDevisQuantities (configurateur2.html) réutilisable côté admin
+  function mergeDevisQuantitiesAdmin(list) {
+    var out = { panels_m2: {}, edge_banding_m: 0, screws: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
+      doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
+    list.forEach(function (q) {
+      if (!q) return;
+      Object.keys(q.panels_m2 || {}).forEach(function (k) { out.panels_m2[k] = (out.panels_m2[k] || 0) + q.panels_m2[k]; });
+      out.edge_banding_m += q.edge_banding_m || 0;
+      out.screws += q.screws || 0;
+      out.hinges += q.hinges || 0;
+      out.drawer_mechanisms += q.drawer_mechanisms || 0;
+      out.corner_brackets += q.corner_brackets || 0;
+      out.doors_count += q.doors_count || 0;
+      out.drawers_count += q.drawers_count || 0;
+      out.shelves_count += q.shelves_count || 0;
+      out.separators_count += q.separators_count || 0;
+      out.pieces = out.pieces.concat(q.pieces || []);
+    });
+    return out;
+  }
+
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
     var q = { panels_m2: {}, edge_banding_m: 0, screws: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
     var mat = matLabel || 'Non défini';
