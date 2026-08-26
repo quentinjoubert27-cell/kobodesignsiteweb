@@ -4470,6 +4470,9 @@ function computeFullDevisQuantities(){
     merged.vasque_model = (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{}).label || null;
   }
 
+  // Chant plaqué exprimé en m² (longueur des bords visibles × épaisseur du panneau)
+  merged.edge_banding_m2 = Math.round(merged.edge_banding_m * EP * 10000) / 10000;
+
   return merged;
 }
 
@@ -4477,7 +4480,7 @@ function computeFullDevisQuantities(){
 // coefficient_revente : coût de revient × ce coefficient = prix de vente
 var PRICES = {
   panel_m2: {},          // { "Nom matériau": prix €/m2 } — ex: {"Chêne": 45}
-  edge_banding_ml: 0,     // € / mètre linéaire de chant plaqué
+  edge_banding_m2: 0,     // € / m2 de chant plaqué (longueur bord × épaisseur panneau)
   screw_unit: 0,          // € / vis
   hinge_unit: 0,          // € / charnière
   drawer_mechanism_unit: 0, // € / jeu de coulisses tiroir
@@ -4492,7 +4495,7 @@ function computeDevisPrice(q, prices){
     return sum + q.panels_m2[mat]*pu;
   }, 0);
   var cost = costPanels
-    + q.edge_banding_m * (prices.edge_banding_ml||0)
+    + (q.edge_banding_m2||0) * (prices.edge_banding_m2||0)
     + q.screws * (prices.screw_unit||0)
     + q.hinges * (prices.hinge_unit||0)
     + q.drawer_mechanisms * (prices.drawer_mechanism_unit||0)
