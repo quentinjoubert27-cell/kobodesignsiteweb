@@ -2208,7 +2208,7 @@
     }
     (techSpec.structural_panels || []).forEach(function (p) {
       var w = p.x_right_mm - p.x_left_mm, h = p.y_top_mm - p.y_bottom_mm;
-      if (p.type === 'fond') { addPanel('Fond (' + mat + ')', w, h, 'fond'); return; }
+      if (p.type === 'fond') { addPanel(mat, w, h, 'fond'); return; }
       addPanel(mat, w, h, p.type);
       q.edge_banding_m += ((p.type === 'joue_gauche' || p.type === 'joue_droite') ? h : w) / 1000;
     });
