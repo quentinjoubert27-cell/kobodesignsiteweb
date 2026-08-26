@@ -2141,7 +2141,11 @@
     }
 
     const c = biblio || sdb;
-    if (!c) return;
+    if (!c) {
+      content.innerHTML = '<div class="empty" style="padding:16px 0;">Aucune configuration liée à ce projet (ni par projet, ni par email du client).</div>';
+      wrap.style.display = 'block';
+      return;
+    }
 
     const isBiblio = !!biblio;
     c._type = isBiblio ? 'biblio' : (c.type || 'sdb');
@@ -2218,10 +2222,14 @@
         injectTechSpec(fullCfg);
       }
 
-      if (!isBiblioProjet && fullCfg.devis_quantities) {
-        currentDevisQuantities = fullCfg.devis_quantities;
-        const projetRow = allProjets.find(pr => pr.id === currentProjetId);
-        html += renderDevisPriceForm(fullCfg.devis_quantities, projetRow?.devis_prices);
+      if (!isBiblioProjet) {
+        if (fullCfg.devis_quantities) {
+          currentDevisQuantities = fullCfg.devis_quantities;
+          const projetRow = allProjets.find(pr => pr.id === currentProjetId);
+          html += renderDevisPriceForm(fullCfg.devis_quantities, projetRow?.devis_prices);
+        } else {
+          html += '<div class="empty" style="padding:10px 0;font-size:12px;">Configuration antérieure à la fonctionnalité de calcul de prix — pas de quantités disponibles.</div>';
+        }
       }
 
       const jsonStr2 = JSON.stringify(fullCfg, null, 2);
