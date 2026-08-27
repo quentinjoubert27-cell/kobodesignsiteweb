@@ -2206,6 +2206,24 @@
 
         q = mergeDevisQuantitiesAdmin(parts);
 
+        // Joues/dessus de finition — config antérieure à la case à cocher, donc pas de choix client connu :
+        // on calcule les valeurs théoriques et on les propose cochées par défaut (l'admin peut décocher)
+        const CPcm = meuble.P || sdb.meuble_p || 0;
+        const hGauche = (rc.tvSide && rc.tvSide.left && rc.tvSide.left.H_cm) || meuble.H || sdb.meuble_h || 0;
+        const hDroite = (rc.tvSide && rc.tvSide.right && rc.tvSide.right.H_cm) || meuble.H || sdb.meuble_h || 0;
+        q.caisson_material = matLabel;
+        q.finish_joue_gauche_m2 = Math.round(hGauche * CPcm) / 10000;
+        q.finish_joue_droite_m2 = Math.round(hDroite * CPcm) / 10000;
+        q.finish_joue_gauche_visible = true;
+        q.finish_joue_droite_visible = true;
+        let largeursDessus = [meuble.L || sdb.meuble_l || 0];
+        if (rc.caisson2 && rc.caisson2.L_cm) largeursDessus.push(rc.caisson2.L_cm);
+        if (rc.tvSide && rc.tvSide.left && rc.tvSide.left.W_cm) largeursDessus.push(rc.tvSide.left.W_cm);
+        if (rc.tvSide && rc.tvSide.right && rc.tvSide.right.W_cm) largeursDessus.push(rc.tvSide.right.W_cm);
+        q.finish_dessus_m2 = Math.round(largeursDessus.reduce((s, l) => s + l * CPcm, 0)) / 10000;
+        q.finish_dessus_visible = true;
+        q.panels_m2[matLabel] = (q.panels_m2[matLabel] || 0) + q.finish_joue_gauche_m2 + q.finish_joue_droite_m2 + q.finish_dessus_m2;
+
         // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
         const ft = rc.furniture_type || sdb.type;
         if (ft === 'sdb' && rc.plan && rc.plan.L && rc.plan.P) {
