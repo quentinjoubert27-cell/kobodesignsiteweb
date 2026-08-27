@@ -2210,6 +2210,7 @@
     var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
       ((techSpec.structural_panels || []).find(function (p) { return p.depth_mm; }) || {}).depth_mm || 0;
     var tourillonsParJonction = Math.max(1, Math.ceil((CP_mm / 10) / 10));
+    q.dowels += 4 * tourillonsParJonction; // 4 coins joues/traverses × tourillons selon profondeur
     function addPanel(material, w_mm, h_mm, type) {
       var w = Math.abs(w_mm), h = Math.abs(h_mm);
       q.panels_m2[material] = (q.panels_m2[material] || 0) + (w * h) / 1e6;

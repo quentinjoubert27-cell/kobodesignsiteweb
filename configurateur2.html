@@ -4387,6 +4387,7 @@ function computeDevisQuantities(techSpec, matLabel){
     q.edge_banding_m += ((p.type==='joue_gauche'||p.type==='joue_droite') ? h : w) / 1000;
   });
   q.corner_brackets += 4; // 4 coins joues/traverses par caisson
+  q.dowels += 4*tourillonsParJonction; // 4 coins × tourillons selon profondeur (1 tous les 10cm)
 
   // Séparateurs verticaux
   (techSpec.separators||[]).forEach(function(s){
