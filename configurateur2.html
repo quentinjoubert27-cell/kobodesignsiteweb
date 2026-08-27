@@ -957,7 +957,11 @@ window.addEventListener('scroll', function(){
               <input type="checkbox" id="face-droite-toggle" checked onchange="S.faceDroiteVisible=this.checked" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
               Face droite visible (pas contre un mur)
             </label>
-            <div style="font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.4">Décochez le côté qui sera collé à un mur — une finition n'y est pas nécessaire.</div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:var(--text);margin-top:6px">
+              <input type="checkbox" id="face-dessus-toggle" checked onchange="S.faceDessusVisible=this.checked" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
+              Dessus visible (rien au-dessus)
+            </label>
+            <div style="font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.4">Décochez un côté collé à un mur, ou le dessus si un élément est posé dessus — une finition n'y est pas nécessaire.</div>
           </div>
 
           <div class="sec">Finition bois</div>
@@ -1352,7 +1356,7 @@ var S = {
   // Meuble
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
   CL2:1.20,
-  faceGaucheVisible:true, faceDroiteVisible:true,
+  faceGaucheVisible:true, faceDroiteVisible:true, faceDessusVisible:true,
   caissonOffset:0,
   sdbBaseH:10, caissonYOff:0.10,
   // Plan
@@ -4505,6 +4509,22 @@ function computeFullDevisQuantities(){
   if(S.faceDroiteVisible){
     merged.finish_joue_droite_m2 = Math.round(hDroite*CPm*10000)/10000;
     merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_droite_m2;
+  }
+
+  // Dessus de finition — panneau plein (largeur × profondeur) posé sur le dessus de chaque caisson, si visible
+  merged.finish_dessus_m2 = 0;
+  if(S.faceDessusVisible){
+    var largeurs=[S.CL];
+    if(hasAngle) largeurs.push(S.CL2);
+    if(currentFT==='tv' && S_tvSide){
+      if(S_tvSide.leftActive)  largeurs.push(S_tvSide.leftW/100);
+      if(S_tvSide.rightActive) largeurs.push(S_tvSide.rightW/100);
+    }
+    largeurs.forEach(function(largeur){
+      var m2 = Math.round(largeur*CPm*10000)/10000;
+      merged.finish_dessus_m2 += m2;
+      merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + m2;
+    });
   }
 
   // Plan de travail + vasques (SDB) — pas d'assemblage vis/charnière, juste surface et comptage
