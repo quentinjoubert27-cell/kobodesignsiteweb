@@ -1276,6 +1276,18 @@
       ${q.doors_count||0} porte(s) · ${q.drawers_count||0} tiroir(s) · ${q.shelves_count||0} étagère(s) · ${q.separators_count||0} séparateur(s)
     </div>`;
 
+    var finitionSummary = '';
+    if (q.finish_joue_gauche_m2 != null || q.finish_joue_droite_m2 != null || q.finish_dessus_m2 != null) {
+      var fParts = [];
+      fParts.push('Face gauche : ' + (q.finish_joue_gauche_m2 > 0 ? 'visible (+' + q.finish_joue_gauche_m2.toFixed(2) + ' m²)' : 'cachée'));
+      fParts.push('Face droite : ' + (q.finish_joue_droite_m2 > 0 ? 'visible (+' + q.finish_joue_droite_m2.toFixed(2) + ' m²)' : 'cachée'));
+      fParts.push('Dessus : ' + (q.finish_dessus_m2 > 0 ? 'visible (+' + q.finish_dessus_m2.toFixed(2) + ' m²)' : 'caché'));
+      finitionSummary = `<div style="background:var(--bg);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:rgba(26,26,26,.6);">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:6px;">Finitions (déjà incluses dans le m² panneau ci-dessus)</div>
+        ${fParts.join(' · ')}
+      </div>`;
+    }
+
     var piecesDetail = '';
     if (Array.isArray(q.pieces) && q.pieces.length) {
       var piecesRows = q.pieces.map(function(pc) {
@@ -1295,6 +1307,7 @@
       ${matRows}
       ${otherRows}
       ${countsSummary}
+      ${finitionSummary}
       ${piecesDetail}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;margin-bottom:14px;">
         <label style="font-size:12px;font-weight:600;">Coefficient de revente</label>
