@@ -4495,35 +4495,38 @@ function computeFullDevisQuantities(){
 
   var merged = mergeDevisQuantities(list);
 
-  // Joues de finition — panneau plein (H×P) posé sur chaque face extérieure réellement visible
-  // (le caisson structurel brut est toujours identique, la finition ne s'ajoute que côté visible)
-  // On stocke toujours la valeur théorique (m2 si le panneau existait) + un booléen visible,
-  // pour que l'admin puisse re-cocher/décocher après coup sans perdre la donnée.
+  // Joues/dessus de finition — chaque caisson (principal, angle, gauche, droite) habille ses PROPRES
+  // faces réellement exposées avec un panneau plein de finition (le caisson brut dessous est toujours identique).
+  // Une face qui touche un autre caisson n'est jamais exposée, donc pas de ligne pour elle.
+  // Chaque ligne est indépendante (checkbox à part) pour que l'admin puisse ajuster caisson par caisson.
   var CPm = caissonCP();
-  var hGauche = (currentFT==='tv' && S_tvSide && S_tvSide.leftActive)  ? S_tvSide.leftH/100  : S.CH;
-  var hDroite = (currentFT==='tv' && S_tvSide && S_tvSide.rightActive) ? S_tvSide.rightH/100 : S.CH;
-  merged.caisson_material = matLabel; // matériau concerné par les finitions gauche/droite/dessus
-  merged.finish_joue_gauche_visible = !!S.faceGaucheVisible;
-  merged.finish_joue_droite_visible = !!S.faceDroiteVisible;
-  merged.finish_joue_gauche_m2 = Math.round(hGauche*CPm*10000)/10000;
-  merged.finish_joue_droite_m2 = Math.round(hDroite*CPm*10000)/10000;
+  var leftActive  = currentFT==='tv' && S_tvSide && S_tvSide.leftActive;
+  var rightActive = currentFT==='tv' && S_tvSide && S_tvSide.rightActive;
+  merged.caisson_material = matLabel; // matériau du caisson (les finitions ont leur propre prix au m², distinct)
+  merged.finitions = [];
+  function addFin(id, label, m2, visible){
+    merged.finitions.push({ id:id, label:label, m2: Math.round(m2*10000)/10000, visible: !!visible });
+  }
+  // Caisson principal : gauche/droite exposés seulement si aucun caisson latéral ne les recouvre
+  if(!leftActive)  addFin('main_gauche', 'Joue gauche — caisson principal', S.CH*CPm, S.faceGaucheVisible);
+  if(!rightActive) addFin('main_droite', 'Joue droite — caisson principal', S.CH*CPm, S.faceDroiteVisible);
+  addFin('main_dessus', 'Dessus — caisson principal', S.CL*CPm, S.faceDessusVisible);
+  // Caisson d'angle : son bout extérieur + son propre dessus
+  if(hasAngle){
+    addFin('angle_bout',   'Joue — bout du caisson d\'angle', S.CH*CPm, S.faceDroiteVisible);
+    addFin('angle_dessus', 'Dessus — caisson d\'angle', S.CL2*CPm, S.faceDessusVisible);
+  }
+  // Caissons latéraux TV : leur bout extérieur (jamais le côté qui touche le principal) + leur propre dessus
+  if(leftActive){
+    addFin('left_gauche', 'Joue gauche — caisson gauche', S_tvSide.leftH/100*CPm, S.faceGaucheVisible);
+    addFin('left_dessus', 'Dessus — caisson gauche', S_tvSide.leftW/100*CPm, S.faceDessusVisible);
+  }
+  if(rightActive){
+    addFin('right_droite', 'Joue droite — caisson droit', S_tvSide.rightH/100*CPm, S.faceDroiteVisible);
+    addFin('right_dessus', 'Dessus — caisson droit', S_tvSide.rightW/100*CPm, S.faceDessusVisible);
+  }
   // Note : les finitions ont leur propre matériau/prix au m² (souvent différent du panneau du caisson),
   // donc elles ne sont PAS ajoutées à panels_m2 — elles sont pricées séparément dans l'admin.
-
-  // Dessus de finition — panneau plein (largeur × profondeur) posé sur le dessus de chaque caisson, si visible
-  merged.finish_dessus_visible = !!S.faceDessusVisible;
-  var largeursDessus=[S.CL];
-  if(hasAngle) largeursDessus.push(S.CL2);
-  if(currentFT==='tv' && S_tvSide){
-    if(S_tvSide.leftActive)  largeursDessus.push(S_tvSide.leftW/100);
-    if(S_tvSide.rightActive) largeursDessus.push(S_tvSide.rightW/100);
-    if(S_tvSide.topActive)   largeursDessus.push(S_tvSide.topW/100); // le caisson posé au-dessus a lui aussi son propre dessus visible
-  }
-  merged.finish_dessus_m2 = 0;
-  largeursDessus.forEach(function(largeur){
-    merged.finish_dessus_m2 += Math.round(largeur*CPm*10000)/10000;
-  });
-  merged.finish_dessus_m2 = Math.round(merged.finish_dessus_m2*10000)/10000;
 
   // Plan de travail + vasques (SDB) — pas d'assemblage vis/charnière, juste surface et comptage
   if(isSDBMode){
