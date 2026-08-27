@@ -1254,16 +1254,9 @@
 
     var matRows = Object.keys(q.panels_m2).map(function(mat) {
       var val = (p.panel_m2 && p.panel_m2[mat] != null) ? p.panel_m2[mat] : '';
-      var isCaissonMat = (mat === q.caisson_material);
-      var qtyId = isCaissonMat ? ' id="devis-qty-caisson"' : '';
-      var qtyAttrs = isCaissonMat ? ` data-base="${(q.panels_m2[mat]
-          - (q.finish_joue_gauche_visible ? (q.finish_joue_gauche_m2||0) : 0)
-          - (q.finish_joue_droite_visible ? (q.finish_joue_droite_m2||0) : 0)
-          - (q.finish_dessus_visible ? (q.finish_dessus_m2||0) : 0)
-        ).toFixed(4)}"` : '';
       return row(
         'Panneau — ' + escHtml(mat),
-        `<span${qtyId}${qtyAttrs}>${q.panels_m2[mat].toFixed(2)}</span> m²`,
+        `${q.panels_m2[mat].toFixed(2)} m²`,
         `<input type="number" step="0.01" class="devis-mat-input" data-mat="${escHtml(mat)}" value="${val}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
       );
     }).join('');
@@ -1285,14 +1278,23 @@
 
     var finitionRows = '';
     if (q.caisson_material && (q.finish_joue_gauche_m2 != null || q.finish_joue_droite_m2 != null || q.finish_dessus_m2 != null)) {
+      var fp = p.finition_visible || {};
+      var gaucheChecked = fp.gauche != null ? fp.gauche : q.finish_joue_gauche_visible;
+      var droiteChecked = fp.droite != null ? fp.droite : q.finish_joue_droite_visible;
+      var dessusChecked = fp.dessus != null ? fp.dessus : q.finish_dessus_visible;
       function finRow(id, label, m2, checked) {
         var checkbox = `<input type="checkbox" id="${id}" ${checked ? 'checked' : ''} data-m2="${m2 || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">`;
-        return row(label + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(inclus dans le panneau ci-dessus)</span>', (m2 || 0).toFixed(2) + ' m²', checkbox + '<div></div>');
+        return row(label + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', (m2 || 0).toFixed(2) + ' m²', '<div></div>' + checkbox);
       }
       finitionRows =
-        finRow('devis-fin-gauche', 'Joue de finition — gauche', q.finish_joue_gauche_m2, q.finish_joue_gauche_visible) +
-        finRow('devis-fin-droite', 'Joue de finition — droite', q.finish_joue_droite_m2, q.finish_joue_droite_visible) +
-        finRow('devis-fin-dessus', 'Panneau de finition — dessus', q.finish_dessus_m2, q.finish_dessus_visible);
+        finRow('devis-fin-gauche', 'Joue de finition — gauche', q.finish_joue_gauche_m2, gaucheChecked) +
+        finRow('devis-fin-droite', 'Joue de finition — droite', q.finish_joue_droite_m2, droiteChecked) +
+        finRow('devis-fin-dessus', 'Panneau de finition — dessus', q.finish_dessus_m2, dessusChecked) +
+        row(
+          'Total finitions <span style="font-weight:400;color:rgba(26,26,26,.45);">(matériau différent, prix propre)</span>',
+          `<span id="devis-fin-total-qty">0.00</span> m²`,
+          `<input type="number" step="0.01" id="devis-finition-price" value="${p.finition_unit_m2 ?? ''}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
+        );
     }
 
     var piecesDetail = '';
@@ -1330,15 +1332,14 @@
   var currentDevisQuantities = null;
 
   function recomputeFinitionPanels() {
-    var qtyEl = document.getElementById('devis-qty-caisson');
-    if (!qtyEl) return;
-    var base = parseFloat(qtyEl.dataset.base) || 0;
-    var total = base;
+    var totalEl = document.getElementById('devis-fin-total-qty');
+    if (!totalEl) return;
+    var total = 0;
     ['devis-fin-gauche', 'devis-fin-droite', 'devis-fin-dessus'].forEach(function (id) {
       var cb = document.getElementById(id);
       if (cb && cb.checked) total += parseFloat(cb.dataset.m2) || 0;
     });
-    qtyEl.textContent = total.toFixed(2);
+    totalEl.textContent = total.toFixed(2);
   }
 
   function computeAndSaveDevisPrice() {
@@ -1357,14 +1358,29 @@
       corner_bracket_unit: parseFloat(document.getElementById('devis-equerre').value) || 0,
       coefficient_revente: parseFloat(document.getElementById('devis-coefficient').value) || 2,
     };
-    // Recalcule la quantité du matériau caisson selon les cases finitions cochées (gauche/droite/dessus)
-    var quantities = currentDevisQuantities;
-    var qtyEl = document.getElementById('devis-qty-caisson');
-    if (qtyEl && quantities && quantities.caisson_material) {
-      quantities = Object.assign({}, quantities, { panels_m2: Object.assign({}, quantities.panels_m2) });
-      quantities.panels_m2[quantities.caisson_material] = parseFloat(qtyEl.textContent) || 0;
+    // Finitions : matériau/prix au m² propre, distinct du panneau du caisson
+    var q = currentDevisQuantities;
+    var finGaucheCb = document.getElementById('devis-fin-gauche');
+    var finDroiteCb = document.getElementById('devis-fin-droite');
+    var finDessusCb = document.getElementById('devis-fin-dessus');
+    var finitionVisible = {
+      gauche: finGaucheCb ? finGaucheCb.checked : false,
+      droite: finDroiteCb ? finDroiteCb.checked : false,
+      dessus: finDessusCb ? finDessusCb.checked : false,
+    };
+    var finitionUnitM2 = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
+    prices.finition_visible = finitionVisible;
+    prices.finition_unit_m2 = finitionUnitM2;
+    var finitionM2 = 0;
+    if (q) {
+      if (finitionVisible.gauche) finitionM2 += q.finish_joue_gauche_m2 || 0;
+      if (finitionVisible.droite) finitionM2 += q.finish_joue_droite_m2 || 0;
+      if (finitionVisible.dessus) finitionM2 += q.finish_dessus_m2 || 0;
     }
-    var price = computeDevisPriceAdmin(quantities, prices);
+
+    var price = computeDevisPriceAdmin(q, prices);
+    price.cost_revient += finitionM2 * finitionUnitM2;
+    price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
     document.getElementById('devis-result').innerHTML =
       'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente : ' + price.prix_vente.toFixed(2) + ' €</span>';
@@ -2216,7 +2232,8 @@
         if (rc.tvSide && rc.tvSide.right && rc.tvSide.right.W_cm) largeursDessus.push(rc.tvSide.right.W_cm);
         q.finish_dessus_m2 = Math.round(largeursDessus.reduce((s, l) => s + l * CPcm, 0)) / 10000;
         q.finish_dessus_visible = true;
-        q.panels_m2[matLabel] = (q.panels_m2[matLabel] || 0) + q.finish_joue_gauche_m2 + q.finish_joue_droite_m2 + q.finish_dessus_m2;
+        // Note : les finitions ont leur propre prix au m² (souvent un matériau différent du caisson),
+        // donc elles ne sont PAS ajoutées à panels_m2 — pricées séparément dans le formulaire devis.
 
         // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
         const ft = rc.furniture_type || sdb.type;
@@ -2231,6 +2248,7 @@
 
       currentDevisQuantities = q;
       el.innerHTML = renderDevisPriceForm(q, projetRow && projetRow.devis_prices);
+      recomputeFinitionPanels();
     } catch (err) {
       console.error('renderProjetDevis error:', err);
       el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;color:#c2410c;">Erreur lors du calcul du devis : ' + escHtml(err.message || String(err)) + '</div>';

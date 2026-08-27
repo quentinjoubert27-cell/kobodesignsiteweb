@@ -4507,8 +4507,8 @@ function computeFullDevisQuantities(){
   merged.finish_joue_droite_visible = !!S.faceDroiteVisible;
   merged.finish_joue_gauche_m2 = Math.round(hGauche*CPm*10000)/10000;
   merged.finish_joue_droite_m2 = Math.round(hDroite*CPm*10000)/10000;
-  if(S.faceGaucheVisible) merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_gauche_m2;
-  if(S.faceDroiteVisible) merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_droite_m2;
+  // Note : les finitions ont leur propre matériau/prix au m² (souvent différent du panneau du caisson),
+  // donc elles ne sont PAS ajoutées à panels_m2 — elles sont pricées séparément dans l'admin.
 
   // Dessus de finition — panneau plein (largeur × profondeur) posé sur le dessus de chaque caisson, si visible
   merged.finish_dessus_visible = !!S.faceDessusVisible;
@@ -4523,7 +4523,6 @@ function computeFullDevisQuantities(){
     merged.finish_dessus_m2 += Math.round(largeur*CPm*10000)/10000;
   });
   merged.finish_dessus_m2 = Math.round(merged.finish_dessus_m2*10000)/10000;
-  if(S.faceDessusVisible) merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_dessus_m2;
 
   // Plan de travail + vasques (SDB) — pas d'assemblage vis/charnière, juste surface et comptage
   if(isSDBMode){
