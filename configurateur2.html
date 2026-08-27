@@ -4367,6 +4367,10 @@ function computeDevisQuantities(techSpec, matLabel){
     pieces: []              // détail par pièce : {type, w_mm, h_mm, perimeter_mm}
   };
   var mat = matLabel || 'Non défini';
+  // Profondeur du caisson (mm) — sert à calculer le nb de tourillons par jonction (1 tous les 10cm)
+  var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
+    ((techSpec.structural_panels||[]).find(function(p){return p.depth_mm;})||{}).depth_mm || 0;
+  var tourillonsParJonction = Math.max(1, Math.ceil((CP_mm/10)/10)); // 1 tourillon tous les 10cm de profondeur
 
   function addPanel(material, w_mm, h_mm, type){
     var w = Math.abs(w_mm), h = Math.abs(h_mm);
@@ -4388,7 +4392,7 @@ function computeDevisQuantities(techSpec, matLabel){
     var h = s.y_top_mm - s.y_bottom_mm;
     addPanel(mat, s.thickness_mm, h, 'separateur');
     q.edge_banding_m += h/1000;
-    q.screws += 2*4; // jonction haut + bas
+    q.screws += 2*tourillonsParJonction; // jonction haut + bas, 1 tourillon tous les 10cm de profondeur
     q.separators_count++;
   });
 
@@ -4397,7 +4401,7 @@ function computeDevisQuantities(techSpec, matLabel){
     var w = sh.x_right_mm - sh.x_left_mm;
     addPanel(mat, w, sh.depth_mm, 'etagere');
     q.edge_banding_m += w/1000;
-    if(sh.shelf_type==='fixe') q.screws += 2*4; // fixée aux 2 côtés
+    if(sh.shelf_type==='fixe') q.screws += 2*tourillonsParJonction; // fixée aux 2 côtés, 1 tourillon tous les 10cm de profondeur
     q.shelves_count++;
   });
 
