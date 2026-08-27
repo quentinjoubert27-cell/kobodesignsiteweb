@@ -1264,7 +1264,8 @@
     var otherRows = [
       ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', 'devis-equerre', p.corner_bracket_unit, '€/unité'],
       ['Chant plaqué', (q.edge_banding_m2||0).toFixed(3) + ' m²', 'devis-chant', p.edge_banding_m2, '€/m²'],
-      ['Vis / tourillons', (q.screws||0) + ' unité(s)', 'devis-vis', p.screw_unit, '€/unité'],
+      ['Vis', (q.screws||0) + ' unité(s)', 'devis-vis', p.screw_unit, '€/unité'],
+      ['Tourillons', (q.dowels||0) + ' unité(s)', 'devis-tourillon', p.dowel_unit, '€/unité'],
       ['Charnières', (q.hinges||0) + ' unité(s)', 'devis-charniere', p.hinge_unit, '€/unité'],
       ['Mécanismes tiroir', (q.drawer_mechanisms||0) + ' unité(s)', 'devis-tiroir', p.drawer_mechanism_unit, '€/unité'],
     ].map(function(r) {
@@ -1318,6 +1319,7 @@
       panel_m2: panelM2,
       edge_banding_m2: parseFloat(document.getElementById('devis-chant').value) || 0,
       screw_unit: parseFloat(document.getElementById('devis-vis').value) || 0,
+      dowel_unit: parseFloat(document.getElementById('devis-tourillon').value) || 0,
       hinge_unit: parseFloat(document.getElementById('devis-charniere').value) || 0,
       drawer_mechanism_unit: parseFloat(document.getElementById('devis-tiroir').value) || 0,
       corner_bracket_unit: parseFloat(document.getElementById('devis-equerre').value) || 0,
@@ -1344,6 +1346,7 @@
     var cost = costPanels
       + (q.edge_banding_m2 || 0) * (tarifs.edge_banding_m2 || 0)
       + (q.screws || 0) * (tarifs.screw_unit || 0)
+      + (q.dowels || 0) * (tarifs.dowel_unit || 0)
       + (q.hinges || 0) * (tarifs.hinge_unit || 0)
       + (q.drawer_mechanisms || 0) * (tarifs.drawer_mechanism_unit || 0)
       + (q.corner_brackets || 0) * (tarifs.corner_bracket_unit || 0);
@@ -2179,13 +2182,14 @@
 
   // Version simplifiée de computeDevisQuantities (configurateur2.html) réutilisable côté admin
   function mergeDevisQuantitiesAdmin(list) {
-    var out = { panels_m2: {}, edge_banding_m: 0, screws: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
+    var out = { panels_m2: {}, edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
       doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
     list.forEach(function (q) {
       if (!q) return;
       Object.keys(q.panels_m2 || {}).forEach(function (k) { out.panels_m2[k] = (out.panels_m2[k] || 0) + q.panels_m2[k]; });
       out.edge_banding_m += q.edge_banding_m || 0;
       out.screws += q.screws || 0;
+      out.dowels += q.dowels || 0;
       out.hinges += q.hinges || 0;
       out.drawer_mechanisms += q.drawer_mechanisms || 0;
       out.corner_brackets += q.corner_brackets || 0;
@@ -2200,7 +2204,7 @@
   }
 
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
-    var q = { panels_m2: {}, edge_banding_m: 0, screws: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
+    var q = { panels_m2: {}, edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
     var mat = matLabel || 'Non défini';
     // Profondeur du caisson (mm) — 1 tourillon tous les 10cm de profondeur, par jonction
     var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
@@ -2221,14 +2225,14 @@
       var h = s.y_top_mm - s.y_bottom_mm;
       addPanel(mat, s.thickness_mm, h, 'separateur');
       q.edge_banding_m += h / 1000;
-      q.screws += 2 * tourillonsParJonction;
+      q.dowels += 2 * tourillonsParJonction;
       q.separators_count++;
     });
     (techSpec.shelves || []).forEach(function (sh) {
       var w = sh.x_right_mm - sh.x_left_mm;
       addPanel(mat, w, sh.depth_mm, 'etagere');
       q.edge_banding_m += w / 1000;
-      if (sh.shelf_type === 'fixe') q.screws += 2 * tourillonsParJonction;
+      if (sh.shelf_type === 'fixe') q.dowels += 2 * tourillonsParJonction;
       q.shelves_count++;
     });
     (techSpec.doors || []).forEach(function (d) {
