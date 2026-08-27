@@ -1283,22 +1283,16 @@
       ${q.doors_count||0} porte(s) · ${q.drawers_count||0} tiroir(s) · ${q.shelves_count||0} étagère(s) · ${q.separators_count||0} séparateur(s)
     </div>`;
 
-    var finitionSummary = '';
+    var finitionRows = '';
     if (q.caisson_material && (q.finish_joue_gauche_m2 != null || q.finish_joue_droite_m2 != null || q.finish_dessus_m2 != null)) {
-      function finCheck(id, label, m2, checked) {
-        return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;">
-          <input type="checkbox" id="${id}" ${checked ? 'checked' : ''} data-m2="${m2 || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
-          ${label} <span style="color:rgba(26,26,26,.45);">(${(m2 || 0).toFixed(2)} m² si visible)</span>
-        </label>`;
+      function finRow(id, label, m2, checked) {
+        var checkbox = `<input type="checkbox" id="${id}" ${checked ? 'checked' : ''} data-m2="${m2 || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">`;
+        return row(label + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(inclus dans le panneau ci-dessus)</span>', (m2 || 0).toFixed(2) + ' m²', checkbox + '<div></div>');
       }
-      finitionSummary = `<div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:10px;">Finitions (côté client — modifiable ici)</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${finCheck('devis-fin-gauche', 'Face gauche visible', q.finish_joue_gauche_m2, q.finish_joue_gauche_visible)}
-          ${finCheck('devis-fin-droite', 'Face droite visible', q.finish_joue_droite_m2, q.finish_joue_droite_visible)}
-          ${finCheck('devis-fin-dessus', 'Dessus visible', q.finish_dessus_m2, q.finish_dessus_visible)}
-        </div>
-      </div>`;
+      finitionRows =
+        finRow('devis-fin-gauche', 'Joue de finition — gauche', q.finish_joue_gauche_m2, q.finish_joue_gauche_visible) +
+        finRow('devis-fin-droite', 'Joue de finition — droite', q.finish_joue_droite_m2, q.finish_joue_droite_visible) +
+        finRow('devis-fin-dessus', 'Panneau de finition — dessus', q.finish_dessus_m2, q.finish_dessus_visible);
     }
 
     var piecesDetail = '';
@@ -1319,8 +1313,8 @@
       <div style="${headStyle}"><div>Élément</div><div>Quantité</div><div>Prix unitaire</div><div></div></div>
       ${matRows}
       ${otherRows}
+      ${finitionRows}
       ${countsSummary}
-      ${finitionSummary}
       ${piecesDetail}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;margin-bottom:14px;">
         <label style="font-size:12px;font-weight:600;">Coefficient de revente</label>
