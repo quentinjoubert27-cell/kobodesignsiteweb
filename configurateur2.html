@@ -946,6 +946,20 @@ window.addEventListener('scroll', function(){
             <div style="font-size:10.5px;color:var(--text2);margin-top:4px;line-height:1.4">Active les étapes Plan de travail et Vasque</div>
           </div>
 
+          <!-- ── FACES VISIBLES ── -->
+          <div style="margin-top:14px;padding:12px 14px;background:var(--bg2);border-radius:10px;border:1px solid var(--border)">
+            <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Faces visibles du meuble</div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:var(--text);margin-bottom:6px">
+              <input type="checkbox" id="face-gauche-toggle" checked onchange="S.faceGaucheVisible=this.checked" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
+              Face gauche visible (pas contre un mur)
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:var(--text)">
+              <input type="checkbox" id="face-droite-toggle" checked onchange="S.faceDroiteVisible=this.checked" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
+              Face droite visible (pas contre un mur)
+            </label>
+            <div style="font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.4">Décochez le côté qui sera collé à un mur — une finition n'y est pas nécessaire.</div>
+          </div>
+
           <div class="sec">Finition bois</div>
           <div class="mat-grid" id="mg-cais"></div>
         </div>
@@ -1338,6 +1352,7 @@ var S = {
   // Meuble
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
   CL2:1.20,
+  faceGaucheVisible:true, faceDroiteVisible:true,
   caissonOffset:0,
   sdbBaseH:10, caissonYOff:0.10,
   // Plan
@@ -4475,6 +4490,22 @@ function computeFullDevisQuantities(){
   }
 
   var merged = mergeDevisQuantities(list);
+
+  // Joues de finition — panneau plein (H×P) posé sur chaque face extérieure réellement visible
+  // (le caisson structurel brut est toujours identique, la finition ne s'ajoute que côté visible)
+  var CPm = caissonCP();
+  var hGauche = (currentFT==='tv' && S_tvSide && S_tvSide.leftActive)  ? S_tvSide.leftH/100  : S.CH;
+  var hDroite = (currentFT==='tv' && S_tvSide && S_tvSide.rightActive) ? S_tvSide.rightH/100 : S.CH;
+  merged.finish_joue_gauche_m2 = 0;
+  merged.finish_joue_droite_m2 = 0;
+  if(S.faceGaucheVisible){
+    merged.finish_joue_gauche_m2 = Math.round(hGauche*CPm*10000)/10000;
+    merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_gauche_m2;
+  }
+  if(S.faceDroiteVisible){
+    merged.finish_joue_droite_m2 = Math.round(hDroite*CPm*10000)/10000;
+    merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_droite_m2;
+  }
 
   // Plan de travail + vasques (SDB) — pas d'assemblage vis/charnière, juste surface et comptage
   if(isSDBMode){
