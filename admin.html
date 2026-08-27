@@ -1261,12 +1261,18 @@
       );
     }).join('');
 
+    // Petite note de comparaison avec l'ancienne règle (avant l'alignement sur l'outil atelier KoboMeuble)
+    function ancienneNote(oldVal) {
+      if (oldVal == null) return '';
+      return ` <span style="font-weight:400;color:rgba(26,26,26,.4);">(ancienne règle : ${oldVal})</span>`;
+    }
+
     var otherRows = [
       ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', 'devis-equerre', p.corner_bracket_unit, '€/unité'],
       ['Chant plaqué', (q.edge_banding_m2||0).toFixed(3) + ' m²', 'devis-chant', p.edge_banding_m2, '€/m²'],
-      ['Vis', (q.screws||0) + ' unité(s)', 'devis-vis', p.screw_unit, '€/unité'],
-      ['Tourillons', (q.dowels||0) + ' unité(s)', 'devis-tourillon', p.dowel_unit, '€/unité'],
-      ['Charnières', (q.hinges||0) + ' unité(s)', 'devis-charniere', p.hinge_unit, '€/unité'],
+      ['Vis', (q.screws||0) + ' unité(s)' + ancienneNote(q.screws_ancienne_regle), 'devis-vis', p.screw_unit, '€/unité'],
+      ['Tourillons', (q.dowels||0) + ' unité(s)' + ancienneNote(q.dowels_ancienne_regle), 'devis-tourillon', p.dowel_unit, '€/unité'],
+      ['Charnières', (q.hinges||0) + ' unité(s)' + ancienneNote(q.hinges_ancienne_regle), 'devis-charniere', p.hinge_unit, '€/unité'],
       ['Mécanismes tiroir', (q.drawer_mechanisms||0) + ' unité(s)', 'devis-tiroir', p.drawer_mechanism_unit, '€/unité'],
     ].map(function(r) {
       return row(r[0], r[1], `<input type="number" step="0.01" id="${r[2]}" value="${r[3] ?? ''}" placeholder="${r[4]}" style="${inputStyle}"/><div></div>`);
@@ -2258,7 +2264,8 @@
   // Version simplifiée de computeDevisQuantities (configurateur2.html) réutilisable côté admin
   function mergeDevisQuantitiesAdmin(list) {
     var out = { panels_m2: {}, edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
-      doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
+      doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [],
+      screws_ancienne_regle: 0, dowels_ancienne_regle: 0, hinges_ancienne_regle: 0 };
     list.forEach(function (q) {
       if (!q) return;
       Object.keys(q.panels_m2 || {}).forEach(function (k) { out.panels_m2[k] = (out.panels_m2[k] || 0) + q.panels_m2[k]; });
@@ -2273,13 +2280,19 @@
       out.shelves_count += q.shelves_count || 0;
       out.separators_count += q.separators_count || 0;
       out.pieces = out.pieces.concat(q.pieces || []);
+      out.screws_ancienne_regle += q.screws_ancienne_regle || 0;
+      out.dowels_ancienne_regle += q.dowels_ancienne_regle || 0;
+      out.hinges_ancienne_regle += q.hinges_ancienne_regle || 0;
     });
     out.edge_banding_m2 = Math.round(out.edge_banding_m * 0.018 * 10000) / 10000; // longueur × épaisseur panneau (18mm)
     return out;
   }
 
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
-    var q = { panels_m2: {}, edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
+    var q = { panels_m2: {}, edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [],
+      // Comparaison avec l'ancienne règle (avant l'alignement sur l'outil atelier KoboMeuble),
+      // gardée à titre indicatif pour voir la différence — n'entre pas dans le prix.
+      screws_ancienne_regle: 0, dowels_ancienne_regle: 0, hinges_ancienne_regle: 0 };
     var mat = matLabel || 'Non défini';
     // Profondeur du caisson (mm) — 1 tourillon tous les 10cm de profondeur, par jonction
     var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
@@ -2293,7 +2306,17 @@
       return { vis: nDowels - 1, tourillons: nDowels };
     }
     var jointCP = fastenersForJoint(CP_mm);
+    // Ancienne règle (gardée pour comparaison) : 1ère vis à 3cm du début, puis un tourillon +
+    // une vis tous les 20cm, dernière vis à 3cm de la fin.
+    function fastenersForJointAncienneRegle(L_cm) {
+      var first = 3, last = L_cm - 3;
+      if (last <= first) return { vis: 1, tourillons: 0 };
+      var nInterior = Math.max(0, Math.floor((last - first - 1) / 20));
+      return { vis: 2 + nInterior, tourillons: nInterior };
+    }
+    var jointCPAncien = fastenersForJointAncienneRegle(CP_mm / 10);
     q.screws += 4 * jointCP.vis; q.dowels += 4 * jointCP.tourillons; // 4 coins joues/traverses
+    q.screws_ancienne_regle += 4 * jointCPAncien.vis; q.dowels_ancienne_regle += 4 * jointCPAncien.tourillons;
     function addPanel(material, w_mm, h_mm, type) {
       var w = Math.abs(w_mm), h = Math.abs(h_mm);
       q.panels_m2[material] = (q.panels_m2[material] || 0) + (w * h) / 1e6;
@@ -2310,13 +2333,17 @@
       addPanel(mat, s.thickness_mm, h, 'separateur');
       q.edge_banding_m += h / 1000;
       q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons;
+      q.screws_ancienne_regle += 2 * jointCPAncien.vis; q.dowels_ancienne_regle += 2 * jointCPAncien.tourillons;
       q.separators_count++;
     });
     (techSpec.shelves || []).forEach(function (sh) {
       var w = sh.x_right_mm - sh.x_left_mm;
       addPanel(mat, w, sh.depth_mm, 'etagere');
       q.edge_banding_m += w / 1000;
-      if (sh.shelf_type === 'fixe') { q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons; }
+      if (sh.shelf_type === 'fixe') {
+        q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons;
+        q.screws_ancienne_regle += 2 * jointCPAncien.vis; q.dowels_ancienne_regle += 2 * jointCPAncien.tourillons;
+      }
       q.shelves_count++;
     });
     (techSpec.doors || []).forEach(function (d) {
@@ -2327,6 +2354,9 @@
       // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
       // >200mm -> 3 charnières, >100mm -> 2, sinon 1
       q.hinges += (h > 200) ? 3 : (h > 100) ? 2 : 1;
+      // Ancienne règle (comparaison) : paliers de hauteur en cm
+      var hcm = h / 10;
+      q.hinges_ancienne_regle += (hcm < 70) ? 2 : (hcm <= 130) ? 3 : (hcm <= 200) ? 4 : 5;
     });
     (techSpec.drawers || []).forEach(function (dr) {
       var w = dr.x_right_mm - dr.x_left_mm, h = dr.height_mm;

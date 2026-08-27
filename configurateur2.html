@@ -4384,7 +4384,12 @@ function computeDevisQuantities(techSpec, matLabel){
     drawers_count: 0,
     shelves_count: 0,
     separators_count: 0,
-    pieces: []              // détail par pièce : {type, w_mm, h_mm, perimeter_mm}
+    pieces: [],             // détail par pièce : {type, w_mm, h_mm, perimeter_mm}
+    // Comparaison avec l'ancienne règle (avant l'alignement sur l'outil atelier KoboMeuble),
+    // gardée à titre indicatif pour voir la différence — n'entre pas dans le prix.
+    screws_ancienne_regle: 0,
+    dowels_ancienne_regle: 0,
+    hinges_ancienne_regle: 0
   };
   var mat = matLabel || 'Non défini';
   // Profondeur du caisson (mm) — sert à calculer vis + tourillons par jonction
@@ -4402,6 +4407,15 @@ function computeDevisQuantities(techSpec, matLabel){
     return { vis: nDowels-1, tourillons: nDowels };
   }
   var jointCP = fastenersForJoint(CP_mm);
+  // Ancienne règle (gardée pour comparaison) : 1ère vis à 3cm du début, puis un tourillon +
+  // une vis tous les 20cm, dernière vis à 3cm de la fin.
+  function fastenersForJointAncienneRegle(L_cm){
+    var first=3, last=L_cm-3;
+    if(last<=first) return {vis:1, tourillons:0};
+    var nInterior=Math.max(0, Math.floor((last-first-1)/20));
+    return { vis: 2+nInterior, tourillons: nInterior };
+  }
+  var jointCPAncien = fastenersForJointAncienneRegle(CP_mm/10);
 
   function addPanel(material, w_mm, h_mm, type){
     var w = Math.abs(w_mm), h = Math.abs(h_mm);
@@ -4418,6 +4432,7 @@ function computeDevisQuantities(techSpec, matLabel){
   });
   q.corner_brackets += 4; // 4 coins joues/traverses par caisson
   q.screws += 4*jointCP.vis; q.dowels += 4*jointCP.tourillons; // 4 coins, fixation selon règle joint
+  q.screws_ancienne_regle += 4*jointCPAncien.vis; q.dowels_ancienne_regle += 4*jointCPAncien.tourillons;
 
   // Séparateurs verticaux
   (techSpec.separators||[]).forEach(function(s){
@@ -4425,6 +4440,7 @@ function computeDevisQuantities(techSpec, matLabel){
     addPanel(mat, s.thickness_mm, h, 'separateur');
     q.edge_banding_m += h/1000;
     q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; // jonction haut + bas
+    q.screws_ancienne_regle += 2*jointCPAncien.vis; q.dowels_ancienne_regle += 2*jointCPAncien.tourillons;
     q.separators_count++;
   });
 
@@ -4433,7 +4449,10 @@ function computeDevisQuantities(techSpec, matLabel){
     var w = sh.x_right_mm - sh.x_left_mm;
     addPanel(mat, w, sh.depth_mm, 'etagere');
     q.edge_banding_m += w/1000;
-    if(sh.shelf_type==='fixe'){ q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; } // fixée aux 2 côtés
+    if(sh.shelf_type==='fixe'){
+      q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; // fixée aux 2 côtés
+      q.screws_ancienne_regle += 2*jointCPAncien.vis; q.dowels_ancienne_regle += 2*jointCPAncien.tourillons;
+    }
     q.shelves_count++;
   });
 
@@ -4446,6 +4465,9 @@ function computeDevisQuantities(techSpec, matLabel){
     // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
     // >200mm -> 3 charnières, >100mm -> 2, sinon 1
     q.hinges += (h>200) ? 3 : (h>100) ? 2 : 1;
+    // Ancienne règle (comparaison) : paliers de hauteur en cm
+    var hcm = h/10;
+    q.hinges_ancienne_regle += (hcm<70) ? 2 : (hcm<=130) ? 3 : (hcm<=200) ? 4 : 5;
   });
 
   // Tiroirs
@@ -4462,7 +4484,8 @@ function computeDevisQuantities(techSpec, matLabel){
 
 function mergeDevisQuantities(list){
   var out = { panels_m2:{}, edge_banding_m:0, screws:0, dowels:0, hinges:0, drawer_mechanisms:0,
-    corner_brackets:0, doors_count:0, drawers_count:0, shelves_count:0, separators_count:0, pieces:[] };
+    corner_brackets:0, doors_count:0, drawers_count:0, shelves_count:0, separators_count:0, pieces:[],
+    screws_ancienne_regle:0, dowels_ancienne_regle:0, hinges_ancienne_regle:0 };
   list.forEach(function(q){
     if(!q) return;
     Object.keys(q.panels_m2).forEach(function(k){ out.panels_m2[k] = (out.panels_m2[k]||0) + q.panels_m2[k]; });
@@ -4477,6 +4500,9 @@ function mergeDevisQuantities(list){
     out.shelves_count += q.shelves_count;
     out.separators_count += q.separators_count;
     out.pieces = out.pieces.concat(q.pieces);
+    out.screws_ancienne_regle += q.screws_ancienne_regle||0;
+    out.dowels_ancienne_regle += q.dowels_ancienne_regle||0;
+    out.hinges_ancienne_regle += q.hinges_ancienne_regle||0;
   });
   return out;
 }
