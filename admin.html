@@ -2230,6 +2230,7 @@
         if (rc.caisson2 && rc.caisson2.L_cm) largeursDessus.push(rc.caisson2.L_cm);
         if (rc.tvSide && rc.tvSide.left && rc.tvSide.left.W_cm) largeursDessus.push(rc.tvSide.left.W_cm);
         if (rc.tvSide && rc.tvSide.right && rc.tvSide.right.W_cm) largeursDessus.push(rc.tvSide.right.W_cm);
+        if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm) largeursDessus.push(rc.tvSide.top.W_cm);
         q.finish_dessus_m2 = Math.round(largeursDessus.reduce((s, l) => s + l * CPcm, 0)) / 10000;
         q.finish_dessus_visible = true;
         // Note : les finitions ont leur propre prix au m² (souvent un matériau différent du caisson),

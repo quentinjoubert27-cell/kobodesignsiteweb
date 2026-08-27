@@ -4517,6 +4517,7 @@ function computeFullDevisQuantities(){
   if(currentFT==='tv' && S_tvSide){
     if(S_tvSide.leftActive)  largeursDessus.push(S_tvSide.leftW/100);
     if(S_tvSide.rightActive) largeursDessus.push(S_tvSide.rightW/100);
+    if(S_tvSide.topActive)   largeursDessus.push(S_tvSide.topW/100); // le caisson posé au-dessus a lui aussi son propre dessus visible
   }
   merged.finish_dessus_m2 = 0;
   largeursDessus.forEach(function(largeur){
