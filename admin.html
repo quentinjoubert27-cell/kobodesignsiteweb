@@ -2284,15 +2284,15 @@
     // Profondeur du caisson (mm) — 1 tourillon tous les 10cm de profondeur, par jonction
     var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
       ((techSpec.structural_panels || []).find(function (p) { return p.depth_mm; }) || {}).depth_mm || 0;
-    // Règle de fixation sur un joint de longueur L (cm) :
-    // 1ère vis à 3cm du début, puis un tourillon + une vis tous les 20cm, dernière vis à 3cm de la fin
-    function fastenersForJoint(L_cm) {
-      var first = 3, last = L_cm - 3;
-      if (last <= first) return { vis: 1, tourillons: 0 };
-      var nInterior = Math.max(0, Math.floor((last - first - 1) / 20));
-      return { vis: 2 + nInterior, tourillons: nInterior };
+    // Règle de fixation sur un joint de longueur L (mm) — reprise de l'outil atelier KoboMeuble
+    // (machining_logic.py / calculate_hole_positions) : toujours 1 tourillon à chaque bord,
+    // puis un nombre de tourillons par palier de longueur, avec une vis entre chaque paire.
+    //   0-300mm : 2 tourillons (1 vis) · 300-500mm : 3 (2) · 500-700mm : 4 (3) · >700mm : 5 (4)
+    function fastenersForJoint(L_mm) {
+      var nDowels = (L_mm <= 300) ? 2 : (L_mm <= 500) ? 3 : (L_mm <= 700) ? 4 : 5;
+      return { vis: nDowels - 1, tourillons: nDowels };
     }
-    var jointCP = fastenersForJoint(CP_mm / 10);
+    var jointCP = fastenersForJoint(CP_mm);
     q.screws += 4 * jointCP.vis; q.dowels += 4 * jointCP.tourillons; // 4 coins joues/traverses
     function addPanel(material, w_mm, h_mm, type) {
       var w = Math.abs(w_mm), h = Math.abs(h_mm);
@@ -2324,8 +2324,9 @@
       addPanel(mat, w, h, 'porte');
       q.edge_banding_m += 2 * (w + h) / 1000;
       q.doors_count++;
-      var hcm = h / 10;
-      q.hinges += (hcm < 70) ? 2 : (hcm <= 130) ? 3 : (hcm <= 200) ? 4 : 5;
+      // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
+      // >200mm -> 3 charnières, >100mm -> 2, sinon 1
+      q.hinges += (h > 200) ? 3 : (h > 100) ? 2 : 1;
     });
     (techSpec.drawers || []).forEach(function (dr) {
       var w = dr.x_right_mm - dr.x_left_mm, h = dr.height_mm;
