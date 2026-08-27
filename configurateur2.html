@@ -4497,35 +4497,33 @@ function computeFullDevisQuantities(){
 
   // Joues de finition — panneau plein (H×P) posé sur chaque face extérieure réellement visible
   // (le caisson structurel brut est toujours identique, la finition ne s'ajoute que côté visible)
+  // On stocke toujours la valeur théorique (m2 si le panneau existait) + un booléen visible,
+  // pour que l'admin puisse re-cocher/décocher après coup sans perdre la donnée.
   var CPm = caissonCP();
   var hGauche = (currentFT==='tv' && S_tvSide && S_tvSide.leftActive)  ? S_tvSide.leftH/100  : S.CH;
   var hDroite = (currentFT==='tv' && S_tvSide && S_tvSide.rightActive) ? S_tvSide.rightH/100 : S.CH;
-  merged.finish_joue_gauche_m2 = 0;
-  merged.finish_joue_droite_m2 = 0;
-  if(S.faceGaucheVisible){
-    merged.finish_joue_gauche_m2 = Math.round(hGauche*CPm*10000)/10000;
-    merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_gauche_m2;
-  }
-  if(S.faceDroiteVisible){
-    merged.finish_joue_droite_m2 = Math.round(hDroite*CPm*10000)/10000;
-    merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_droite_m2;
-  }
+  merged.caisson_material = matLabel; // matériau concerné par les finitions gauche/droite/dessus
+  merged.finish_joue_gauche_visible = !!S.faceGaucheVisible;
+  merged.finish_joue_droite_visible = !!S.faceDroiteVisible;
+  merged.finish_joue_gauche_m2 = Math.round(hGauche*CPm*10000)/10000;
+  merged.finish_joue_droite_m2 = Math.round(hDroite*CPm*10000)/10000;
+  if(S.faceGaucheVisible) merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_gauche_m2;
+  if(S.faceDroiteVisible) merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_joue_droite_m2;
 
   // Dessus de finition — panneau plein (largeur × profondeur) posé sur le dessus de chaque caisson, si visible
-  merged.finish_dessus_m2 = 0;
-  if(S.faceDessusVisible){
-    var largeurs=[S.CL];
-    if(hasAngle) largeurs.push(S.CL2);
-    if(currentFT==='tv' && S_tvSide){
-      if(S_tvSide.leftActive)  largeurs.push(S_tvSide.leftW/100);
-      if(S_tvSide.rightActive) largeurs.push(S_tvSide.rightW/100);
-    }
-    largeurs.forEach(function(largeur){
-      var m2 = Math.round(largeur*CPm*10000)/10000;
-      merged.finish_dessus_m2 += m2;
-      merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + m2;
-    });
+  merged.finish_dessus_visible = !!S.faceDessusVisible;
+  var largeursDessus=[S.CL];
+  if(hasAngle) largeursDessus.push(S.CL2);
+  if(currentFT==='tv' && S_tvSide){
+    if(S_tvSide.leftActive)  largeursDessus.push(S_tvSide.leftW/100);
+    if(S_tvSide.rightActive) largeursDessus.push(S_tvSide.rightW/100);
   }
+  merged.finish_dessus_m2 = 0;
+  largeursDessus.forEach(function(largeur){
+    merged.finish_dessus_m2 += Math.round(largeur*CPm*10000)/10000;
+  });
+  merged.finish_dessus_m2 = Math.round(merged.finish_dessus_m2*10000)/10000;
+  if(S.faceDessusVisible) merged.panels_m2[matLabel] = (merged.panels_m2[matLabel]||0) + merged.finish_dessus_m2;
 
   // Plan de travail + vasques (SDB) — pas d'assemblage vis/charnière, juste surface et comptage
   if(isSDBMode){

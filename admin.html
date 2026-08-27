@@ -1254,9 +1254,16 @@
 
     var matRows = Object.keys(q.panels_m2).map(function(mat) {
       var val = (p.panel_m2 && p.panel_m2[mat] != null) ? p.panel_m2[mat] : '';
+      var isCaissonMat = (mat === q.caisson_material);
+      var qtyId = isCaissonMat ? ' id="devis-qty-caisson"' : '';
+      var qtyAttrs = isCaissonMat ? ` data-base="${(q.panels_m2[mat]
+          - (q.finish_joue_gauche_visible ? (q.finish_joue_gauche_m2||0) : 0)
+          - (q.finish_joue_droite_visible ? (q.finish_joue_droite_m2||0) : 0)
+          - (q.finish_dessus_visible ? (q.finish_dessus_m2||0) : 0)
+        ).toFixed(4)}"` : '';
       return row(
         'Panneau — ' + escHtml(mat),
-        q.panels_m2[mat].toFixed(2) + ' m²',
+        `<span${qtyId}${qtyAttrs}>${q.panels_m2[mat].toFixed(2)}</span> m²`,
         `<input type="number" step="0.01" class="devis-mat-input" data-mat="${escHtml(mat)}" value="${val}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
       );
     }).join('');
@@ -1277,14 +1284,20 @@
     </div>`;
 
     var finitionSummary = '';
-    if (q.finish_joue_gauche_m2 != null || q.finish_joue_droite_m2 != null || q.finish_dessus_m2 != null) {
-      var fParts = [];
-      fParts.push('Face gauche : ' + (q.finish_joue_gauche_m2 > 0 ? 'visible (+' + q.finish_joue_gauche_m2.toFixed(2) + ' m²)' : 'cachée'));
-      fParts.push('Face droite : ' + (q.finish_joue_droite_m2 > 0 ? 'visible (+' + q.finish_joue_droite_m2.toFixed(2) + ' m²)' : 'cachée'));
-      fParts.push('Dessus : ' + (q.finish_dessus_m2 > 0 ? 'visible (+' + q.finish_dessus_m2.toFixed(2) + ' m²)' : 'caché'));
-      finitionSummary = `<div style="background:var(--bg);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:rgba(26,26,26,.6);">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:6px;">Finitions (déjà incluses dans le m² panneau ci-dessus)</div>
-        ${fParts.join(' · ')}
+    if (q.caisson_material && (q.finish_joue_gauche_m2 != null || q.finish_joue_droite_m2 != null || q.finish_dessus_m2 != null)) {
+      function finCheck(id, label, m2, checked) {
+        return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="${id}" ${checked ? 'checked' : ''} data-m2="${m2 || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
+          ${label} <span style="color:rgba(26,26,26,.45);">(${(m2 || 0).toFixed(2)} m² si visible)</span>
+        </label>`;
+      }
+      finitionSummary = `<div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:10px;">Finitions (côté client — modifiable ici)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${finCheck('devis-fin-gauche', 'Face gauche visible', q.finish_joue_gauche_m2, q.finish_joue_gauche_visible)}
+          ${finCheck('devis-fin-droite', 'Face droite visible', q.finish_joue_droite_m2, q.finish_joue_droite_visible)}
+          ${finCheck('devis-fin-dessus', 'Dessus visible', q.finish_dessus_m2, q.finish_dessus_visible)}
+        </div>
       </div>`;
     }
 
@@ -1322,6 +1335,18 @@
 
   var currentDevisQuantities = null;
 
+  function recomputeFinitionPanels() {
+    var qtyEl = document.getElementById('devis-qty-caisson');
+    if (!qtyEl) return;
+    var base = parseFloat(qtyEl.dataset.base) || 0;
+    var total = base;
+    ['devis-fin-gauche', 'devis-fin-droite', 'devis-fin-dessus'].forEach(function (id) {
+      var cb = document.getElementById(id);
+      if (cb && cb.checked) total += parseFloat(cb.dataset.m2) || 0;
+    });
+    qtyEl.textContent = total.toFixed(2);
+  }
+
   function computeAndSaveDevisPrice() {
     var panelM2 = {};
     document.querySelectorAll('.devis-mat-input').forEach(function(inp) {
@@ -1338,7 +1363,14 @@
       corner_bracket_unit: parseFloat(document.getElementById('devis-equerre').value) || 0,
       coefficient_revente: parseFloat(document.getElementById('devis-coefficient').value) || 2,
     };
-    var price = computeDevisPriceAdmin(currentDevisQuantities, prices);
+    // Recalcule la quantité du matériau caisson selon les cases finitions cochées (gauche/droite/dessus)
+    var quantities = currentDevisQuantities;
+    var qtyEl = document.getElementById('devis-qty-caisson');
+    if (qtyEl && quantities && quantities.caisson_material) {
+      quantities = Object.assign({}, quantities, { panels_m2: Object.assign({}, quantities.panels_m2) });
+      quantities.panels_m2[quantities.caisson_material] = parseFloat(qtyEl.textContent) || 0;
+    }
+    var price = computeDevisPriceAdmin(quantities, prices);
     document.getElementById('devis-result').innerHTML =
       'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente : ' + price.prix_vente.toFixed(2) + ' €</span>';
