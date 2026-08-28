@@ -4385,10 +4385,13 @@ function computeDevisQuantities(techSpec, matLabel){
   var jointCP = fastenersForJoint(CP_mm/10);
 
   // category: 'caisson' | 'etagere' | 'porte' | 'tiroir' — chacune a son propre total m² et son propre prix
-  function addPanel(bucket, material, w_mm, h_mm, type){
+  // extra (optionnel) : { group, vis, tourillons, charnieres, mecanisme_tiroir } — recap par pièce/élément
+  function addPanel(bucket, material, w_mm, h_mm, type, extra){
     var w = Math.abs(w_mm), h = Math.abs(h_mm);
     bucket[material] = (bucket[material]||0) + (w*h)/1e6;
-    q.pieces.push({ type: type, w_mm: Math.round(w), h_mm: Math.round(h), perimeter_mm: Math.round(2*(w+h)) });
+    var piece = { type: type, w_mm: Math.round(w), h_mm: Math.round(h), perimeter_mm: Math.round(2*(w+h)) };
+    if(extra) Object.assign(piece, extra);
+    q.pieces.push(piece);
   }
 
   // Structurel : joues, traverses, fond — tous comptés dans le même matériau (le fond n'a pas de chant)
@@ -4400,49 +4403,59 @@ function computeDevisQuantities(techSpec, matLabel){
   });
   q.corner_brackets += 4; // 4 coins joues/traverses par caisson
   q.screws += 4*jointCP.vis; q.dowels += 4*jointCP.tourillons; // 4 coins, fixation selon règle joint
+  // Récapitulatif : assemblage global du caisson (les 4 coins ne sont pas attribuables à un seul panneau)
+  q.pieces.push({ type:'caisson_assemblage', group:'Caisson (assemblage 4 coins)', vis:4*jointCP.vis, tourillons:4*jointCP.tourillons });
 
   // Séparateurs verticaux (intercalaires) — comptés avec les étagères
-  (techSpec.separators||[]).forEach(function(s){
+  (techSpec.separators||[]).forEach(function(s, idx){
     var h = s.y_top_mm - s.y_bottom_mm;
-    addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur');
+    addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
+      group: 'Intercalaire '+(idx+1), vis: 2*jointCP.vis, tourillons: 2*jointCP.tourillons
+    });
     q.edge_banding_m += h/1000;
     q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; // jonction haut + bas
     q.separators_count++;
   });
 
   // Étagères
-  (techSpec.shelves||[]).forEach(function(sh){
+  (techSpec.shelves||[]).forEach(function(sh, idx){
     var w = sh.x_right_mm - sh.x_left_mm;
-    addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere');
+    var fixe = sh.shelf_type==='fixe';
+    addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {
+      group: 'Étagère '+(idx+1)+(fixe?'':' (mobile)'),
+      vis: fixe ? 2*jointCP.vis : 0, tourillons: fixe ? 2*jointCP.tourillons : 0
+    });
     q.edge_banding_m += w/1000;
-    if(sh.shelf_type==='fixe'){ q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; } // fixée aux 2 côtés
+    if(fixe){ q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; } // fixée aux 2 côtés
     q.shelves_count++;
   });
 
   // Portes
-  (techSpec.doors||[]).forEach(function(d){
+  (techSpec.doors||[]).forEach(function(d, idx){
     var w = d.x_right_mm-d.x_left_mm, h = d.height_mm;
-    addPanel(q.panels_porte_m2, mat, w, h, 'porte');
-    q.edge_banding_m += 2*(w+h)/1000; // 4 côtés visibles
-    q.doors_count++;
     // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
     // >200mm -> 3 charnières, 100-200mm -> 2, sinon 1
-    q.hinges += (h>200) ? 3 : (h>100) ? 2 : 1;
+    var nCharnieres = (h>200) ? 3 : (h>100) ? 2 : 1;
+    addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group:'Porte '+(idx+1), charnieres: nCharnieres });
+    q.edge_banding_m += 2*(w+h)/1000; // 4 côtés visibles
+    q.doors_count++;
+    q.hinges += nCharnieres;
   });
 
   // Tiroirs — la façade visible est dans le matériau de finition ; la caisse intérieure
   // (fond, dos, 2 côtés) est dans le même matériau que le caisson, coulisses non comprises.
-  (techSpec.drawers||[]).forEach(function(dr){
+  (techSpec.drawers||[]).forEach(function(dr, idx){
     var w = dr.x_right_mm-dr.x_left_mm, h = dr.height_mm;
-    addPanel(q.panels_tiroir_m2, mat, w, h, 'facade_tiroir');
+    var groupLabel = 'Tiroir '+(idx+1);
+    addPanel(q.panels_tiroir_m2, mat, w, h, 'facade_tiroir', { group: groupLabel+' — façade', mecanisme_tiroir: 1 });
     q.edge_banding_m += 2*(w+h)/1000;
     q.drawer_mechanisms += 1;
     q.drawers_count++;
     var dTiroir = Math.max(0, CP_mm-30); // profondeur du tiroir : légèrement < profondeur caisson (jeu de coulisses)
-    addPanel(q.panels_tiroir_caisse_m2, mat, w, dTiroir, 'tiroir_fond');
-    addPanel(q.panels_tiroir_caisse_m2, mat, w, h, 'tiroir_dos');
-    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_gauche');
-    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_droit');
+    addPanel(q.panels_tiroir_caisse_m2, mat, w, dTiroir, 'tiroir_fond', { group: groupLabel+' — fond' });
+    addPanel(q.panels_tiroir_caisse_m2, mat, w, h, 'tiroir_dos', { group: groupLabel+' — dos' });
+    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_gauche', { group: groupLabel+' — côté gauche' });
+    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_droit', { group: groupLabel+' — côté droit' });
   });
 
   return q;
