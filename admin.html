@@ -1242,7 +1242,9 @@
 
   // ── PRIX PAR PROJET (au cas par cas, saisi dans la fiche projet) ──
   function renderDevisPriceForm(q, savedPrices) {
-    if (!q || !q.panels_m2 || !Object.keys(q.panels_m2).length) return '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune quantité calculable pour cette configuration.</div>';
+    var hasAnyPanel = q && ['panels_caisson_m2','panels_etagere_m2','panels_porte_m2','panels_tiroir_m2','panels_plan_m2']
+      .some(function(k){ return q[k] && Object.keys(q[k]).length; });
+    if (!hasAnyPanel) return '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune quantité calculable pour cette configuration.</div>';
     var p = savedPrices || {};
     var rowStyle = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
     var headStyle = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;padding:0 0 8px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.15);';
@@ -1252,13 +1254,26 @@
       return `<div style="${rowStyle}"><div style="font-size:13px;font-weight:600;">${label}</div><div style="font-size:13px;color:rgba(26,26,26,.6);">${qtyText}</div>${inputHtml}</div>`;
     }
 
-    var matRows = Object.keys(q.panels_m2).map(function(mat) {
-      var val = (p.panel_m2 && p.panel_m2[mat] != null) ? p.panel_m2[mat] : '';
-      return row(
-        'Panneau — ' + escHtml(mat),
-        `${q.panels_m2[mat].toFixed(2)} m²`,
-        `<input type="number" step="0.01" class="devis-mat-input" data-mat="${escHtml(mat)}" value="${val}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
-      );
+    // Chaque catégorie de pièce (caisson / étagère+intercalaires / porte / tiroir / plan de travail)
+    // a son propre total m² par matériau ET son propre prix au m² (clé combinée "categorie|matériau").
+    var PANEL_CATEGORIES = [
+      { key: 'panels_caisson_m2', label: 'Caisson' },
+      { key: 'panels_etagere_m2', label: 'Étagère / intercalaire' },
+      { key: 'panels_porte_m2', label: 'Porte' },
+      { key: 'panels_tiroir_m2', label: 'Tiroir' },
+      { key: 'panels_plan_m2', label: 'Plan de travail' }
+    ];
+    var matRows = PANEL_CATEGORIES.map(function(cat) {
+      var bucket = q[cat.key] || {};
+      return Object.keys(bucket).map(function(mat) {
+        var priceKey = cat.key + '|' + mat;
+        var val = (p.panel_m2 && p.panel_m2[priceKey] != null) ? p.panel_m2[priceKey] : '';
+        return row(
+          cat.label + ' — ' + escHtml(mat),
+          `${bucket[mat].toFixed(2)} m²`,
+          `<input type="number" step="0.01" class="devis-mat-input" data-mat="${escHtml(priceKey)}" value="${val}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
+        );
+      }).join('');
     }).join('');
 
     var otherRows = [
@@ -1380,9 +1395,16 @@
 
   function computeDevisPriceAdmin(q, tarifs) {
     if (!q || !tarifs) return null;
-    var costPanels = Object.keys(q.panels_m2 || {}).reduce(function(sum, mat) {
-      var pu = (tarifs.panel_m2 || {})[mat] || 0;
-      return sum + q.panels_m2[mat] * pu;
+    var PANEL_CATEGORY_KEYS = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_plan_m2'];
+    var missingMats = [];
+    var costPanels = PANEL_CATEGORY_KEYS.reduce(function(sumCat, catKey) {
+      var bucket = q[catKey] || {};
+      return sumCat + Object.keys(bucket).reduce(function(sum, mat) {
+        var priceKey = catKey + '|' + mat;
+        var pu = (tarifs.panel_m2 || {})[priceKey] || 0;
+        if (!(pu > 0)) missingMats.push(priceKey);
+        return sum + bucket[mat] * pu;
+      }, 0);
     }, 0);
     var cost = costPanels
       + (q.edge_banding_m2 || 0) * (tarifs.edge_banding_m2 || 0)
@@ -1391,7 +1413,6 @@
       + (q.hinges || 0) * (tarifs.hinge_unit || 0)
       + (q.drawer_mechanisms || 0) * (tarifs.drawer_mechanism_unit || 0)
       + (q.corner_brackets || 0) * (tarifs.corner_bracket_unit || 0);
-    var missingMats = Object.keys(q.panels_m2 || {}).filter(function(mat) { return !((tarifs.panel_m2 || {})[mat] > 0); });
     return {
       cost_revient: Math.round(cost * 100) / 100,
       prix_vente: Math.round(cost * (tarifs.coefficient_revente || 2) * 100) / 100,
@@ -2238,13 +2259,14 @@
         }
 
         // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
+        q.panels_plan_m2 = {};
         const ft = rc.furniture_type || sdb.type;
         if (ft === 'sdb' && rc.plan && rc.plan.L && rc.plan.P) {
           const planMat = rc.plan.matLabel || sdb.plan_mat || 'Non défini';
-          q.panels_m2[planMat] = (q.panels_m2[planMat] || 0) + (rc.plan.L * rc.plan.P) / 10000;
+          q.panels_plan_m2[planMat] = (q.panels_plan_m2[planMat] || 0) + (rc.plan.L * rc.plan.P) / 10000;
         } else if (ft === 'sdb' && sdb.plan_l && sdb.plan_p) {
           const planMat = sdb.plan_mat || 'Non défini';
-          q.panels_m2[planMat] = (q.panels_m2[planMat] || 0) + (sdb.plan_l * sdb.plan_p) / 10000;
+          q.panels_plan_m2[planMat] = (q.panels_plan_m2[planMat] || 0) + (sdb.plan_l * sdb.plan_p) / 10000;
         }
       }
 
@@ -2259,11 +2281,18 @@
 
   // Version simplifiée de computeDevisQuantities (configurateur2.html) réutilisable côté admin
   function mergeDevisQuantitiesAdmin(list) {
-    var out = { panels_m2: {}, edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
+    var out = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {},
+      edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
       doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
+    function mergeBucket(outBucket, qBucket) {
+      Object.keys(qBucket || {}).forEach(function (k) { outBucket[k] = (outBucket[k] || 0) + qBucket[k]; });
+    }
     list.forEach(function (q) {
       if (!q) return;
-      Object.keys(q.panels_m2 || {}).forEach(function (k) { out.panels_m2[k] = (out.panels_m2[k] || 0) + q.panels_m2[k]; });
+      mergeBucket(out.panels_caisson_m2, q.panels_caisson_m2);
+      mergeBucket(out.panels_etagere_m2, q.panels_etagere_m2);
+      mergeBucket(out.panels_porte_m2, q.panels_porte_m2);
+      mergeBucket(out.panels_tiroir_m2, q.panels_tiroir_m2);
       out.edge_banding_m += q.edge_banding_m || 0;
       out.screws += q.screws || 0;
       out.dowels += q.dowels || 0;
@@ -2281,7 +2310,8 @@
   }
 
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
-    var q = { panels_m2: {}, edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
+    var q = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {},
+      edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
     var mat = matLabel || 'Non défini';
     // Profondeur du caisson (mm) — 1 tourillon tous les 10cm de profondeur, par jonction
     var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
@@ -2296,34 +2326,35 @@
     }
     var jointCP = fastenersForJoint(CP_mm / 10);
     q.screws += 4 * jointCP.vis; q.dowels += 4 * jointCP.tourillons; // 4 coins joues/traverses
-    function addPanel(material, w_mm, h_mm, type) {
+    // bucket: q.panels_caisson_m2 | q.panels_etagere_m2 | q.panels_porte_m2 | q.panels_tiroir_m2
+    function addPanel(bucket, material, w_mm, h_mm, type) {
       var w = Math.abs(w_mm), h = Math.abs(h_mm);
-      q.panels_m2[material] = (q.panels_m2[material] || 0) + (w * h) / 1e6;
+      bucket[material] = (bucket[material] || 0) + (w * h) / 1e6;
       q.pieces.push({ type: type, w_mm: Math.round(w), h_mm: Math.round(h), perimeter_mm: Math.round(2 * (w + h)) });
     }
     (techSpec.structural_panels || []).forEach(function (p) {
       var w = p.x_right_mm - p.x_left_mm, h = p.y_top_mm - p.y_bottom_mm;
-      if (p.type === 'fond') { addPanel(mat, w, h, 'fond'); return; }
-      addPanel(mat, w, h, p.type);
+      if (p.type === 'fond') { addPanel(q.panels_caisson_m2, mat, w, h, 'fond'); return; }
+      addPanel(q.panels_caisson_m2, mat, w, h, p.type);
       q.edge_banding_m += ((p.type === 'joue_gauche' || p.type === 'joue_droite') ? h : w) / 1000;
     });
     (techSpec.separators || []).forEach(function (s) {
       var h = s.y_top_mm - s.y_bottom_mm;
-      addPanel(mat, s.thickness_mm, h, 'separateur');
+      addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur');
       q.edge_banding_m += h / 1000;
       q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons;
       q.separators_count++;
     });
     (techSpec.shelves || []).forEach(function (sh) {
       var w = sh.x_right_mm - sh.x_left_mm;
-      addPanel(mat, w, sh.depth_mm, 'etagere');
+      addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere');
       q.edge_banding_m += w / 1000;
       if (sh.shelf_type === 'fixe') { q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons; }
       q.shelves_count++;
     });
     (techSpec.doors || []).forEach(function (d) {
       var w = d.x_right_mm - d.x_left_mm, h = d.height_mm;
-      addPanel(mat, w, h, 'porte');
+      addPanel(q.panels_porte_m2, mat, w, h, 'porte');
       q.edge_banding_m += 2 * (w + h) / 1000;
       q.doors_count++;
       // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
@@ -2332,7 +2363,7 @@
     });
     (techSpec.drawers || []).forEach(function (dr) {
       var w = dr.x_right_mm - dr.x_left_mm, h = dr.height_mm;
-      addPanel(mat, w, h, 'facade_tiroir');
+      addPanel(q.panels_tiroir_m2, mat, w, h, 'facade_tiroir');
       q.edge_banding_m += 2 * (w + h) / 1000;
       q.drawer_mechanisms += 1;
       q.drawers_count++;
