@@ -2326,8 +2326,9 @@
       addPanel(mat, w, h, 'porte');
       q.edge_banding_m += 2 * (w + h) / 1000;
       q.doors_count++;
-      var hcm = h / 10;
-      q.hinges += (hcm < 70) ? 2 : (hcm <= 130) ? 3 : (hcm <= 200) ? 4 : 5;
+      // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
+      // >200mm -> 3 charnières, 100-200mm -> 2, sinon 1
+      q.hinges += (h > 200) ? 3 : (h > 100) ? 2 : 1;
     });
     (techSpec.drawers || []).forEach(function (dr) {
       var w = dr.x_right_mm - dr.x_left_mm, h = dr.height_mm;
