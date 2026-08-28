@@ -946,24 +946,6 @@ window.addEventListener('scroll', function(){
             <div style="font-size:10.5px;color:var(--text2);margin-top:4px;line-height:1.4">Active les étapes Plan de travail et Vasque</div>
           </div>
 
-          <!-- ── FACES VISIBLES ── -->
-          <div style="margin-top:14px;padding:12px 14px;background:var(--bg2);border-radius:10px;border:1px solid var(--border)">
-            <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Faces visibles du meuble</div>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:var(--text);margin-bottom:6px">
-              <input type="checkbox" id="face-gauche-toggle" checked onchange="S.faceGaucheVisible=this.checked" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
-              Face gauche visible (pas contre un mur)
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:var(--text)">
-              <input type="checkbox" id="face-droite-toggle" checked onchange="S.faceDroiteVisible=this.checked" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
-              Face droite visible (pas contre un mur)
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:var(--text);margin-top:6px">
-              <input type="checkbox" id="face-dessus-toggle" checked onchange="S.faceDessusVisible=this.checked" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
-              Dessus visible (rien au-dessus)
-            </label>
-            <div style="font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.4">Une face "visible" est une face que vous verrez une fois le meuble installé (par exemple si le meuble n'est pas poussé contre un mur, ou si rien n'est posé au-dessus). Décochez une face si elle sera cachée (contre un mur, sous un plan de travail, encastrée…) — pas besoin de finition à cet endroit, ce qui réduit le prix.</div>
-          </div>
-
           <div class="sec">Finition bois</div>
           <div class="mat-grid" id="mg-cais"></div>
         </div>
@@ -1356,7 +1338,6 @@ var S = {
   // Meuble
   CL:1.20, CH:0.45, CairsonP:0.36, matCais:0,
   CL2:1.20,
-  faceGaucheVisible:true, faceDroiteVisible:true, faceDessusVisible:true,
   caissonOffset:0,
   sdbBaseH:10, caissonYOff:0.10,
   // Plan
@@ -4507,23 +4488,26 @@ function computeFullDevisQuantities(){
   function addFin(id, label, m2, visible){
     merged.finitions.push({ id:id, label:label, m2: Math.round(m2*10000)/10000, visible: !!visible });
   }
+  // Toute face réellement exposée (qui ne touche pas un autre caisson) reçoit automatiquement
+  // une finition — pas de choix à faire côté client, l'admin peut ensuite décocher si besoin
+  // (ex: meuble pousé contre un mur) directement dans le formulaire devis.
   // Caisson principal : gauche/droite exposés seulement si aucun caisson latéral ne les recouvre
-  if(!leftActive)  addFin('main_gauche', 'Joue gauche — caisson principal', S.CH*CPm, S.faceGaucheVisible);
-  if(!rightActive) addFin('main_droite', 'Joue droite — caisson principal', S.CH*CPm, S.faceDroiteVisible);
-  addFin('main_dessus', 'Dessus — caisson principal', S.CL*CPm, S.faceDessusVisible);
+  if(!leftActive)  addFin('main_gauche', 'Joue gauche — caisson principal', S.CH*CPm, true);
+  if(!rightActive) addFin('main_droite', 'Joue droite — caisson principal', S.CH*CPm, true);
+  addFin('main_dessus', 'Dessus — caisson principal', S.CL*CPm, true);
   // Caisson d'angle : son bout extérieur + son propre dessus
   if(hasAngle){
-    addFin('angle_bout',   'Joue — bout du caisson d\'angle', S.CH*CPm, S.faceDroiteVisible);
-    addFin('angle_dessus', 'Dessus — caisson d\'angle', S.CL2*CPm, S.faceDessusVisible);
+    addFin('angle_bout',   'Joue — bout du caisson d\'angle', S.CH*CPm, true);
+    addFin('angle_dessus', 'Dessus — caisson d\'angle', S.CL2*CPm, true);
   }
   // Caissons latéraux TV : leur bout extérieur (jamais le côté qui touche le principal) + leur propre dessus
   if(leftActive){
-    addFin('left_gauche', 'Joue gauche — caisson gauche', S_tvSide.leftH/100*CPm, S.faceGaucheVisible);
-    addFin('left_dessus', 'Dessus — caisson gauche', S_tvSide.leftW/100*CPm, S.faceDessusVisible);
+    addFin('left_gauche', 'Joue gauche — caisson gauche', S_tvSide.leftH/100*CPm, true);
+    addFin('left_dessus', 'Dessus — caisson gauche', S_tvSide.leftW/100*CPm, true);
   }
   if(rightActive){
-    addFin('right_droite', 'Joue droite — caisson droit', S_tvSide.rightH/100*CPm, S.faceDroiteVisible);
-    addFin('right_dessus', 'Dessus — caisson droit', S_tvSide.rightW/100*CPm, S.faceDessusVisible);
+    addFin('right_droite', 'Joue droite — caisson droit', S_tvSide.rightH/100*CPm, true);
+    addFin('right_dessus', 'Dessus — caisson droit', S_tvSide.rightW/100*CPm, true);
   }
   // Note : les finitions ont leur propre matériau/prix au m² (souvent différent du panneau du caisson),
   // donc elles ne sont PAS ajoutées à panels_m2 — elles sont pricées séparément dans l'admin.
