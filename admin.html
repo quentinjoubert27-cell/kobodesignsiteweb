@@ -1350,6 +1350,7 @@
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" onclick="computeAndSaveDevisPrice()">Calculer et enregistrer</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger en PDF</button>
         <div id="devis-result" style="font-size:14px;font-weight:700;"></div>
       </div>
     </div>`;
@@ -1367,7 +1368,8 @@
     totalEl.textContent = total.toFixed(2);
   }
 
-  function computeAndSaveDevisPrice() {
+  // Lit les prix saisis dans le formulaire devis (partagé entre "Calculer et enregistrer" et l'export PDF)
+  function readDevisPricesFromForm() {
     var panelM2 = {};
     document.querySelectorAll('.devis-mat-input').forEach(function(inp) {
       var v = parseFloat(inp.value);
@@ -1383,20 +1385,24 @@
       corner_bracket_unit: parseFloat(document.getElementById('devis-equerre').value) || 0,
       coefficient_revente: parseFloat(document.getElementById('devis-coefficient').value) || 2,
     };
-    // Finitions : matériau/prix au m² propre, distinct du panneau du caisson — une case par face par caisson
-    var q = currentDevisQuantities;
     var finitionVisible = {};
     var finitionM2 = 0;
     document.querySelectorAll('.devis-fin-checkbox').forEach(function (cb) {
       finitionVisible[cb.dataset.finId] = cb.checked;
       if (cb.checked) finitionM2 += parseFloat(cb.dataset.m2) || 0;
     });
-    var finitionUnitM2 = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
     prices.finition_visible = finitionVisible;
-    prices.finition_unit_m2 = finitionUnitM2;
+    prices.finition_unit_m2 = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
+    return { prices: prices, finitionM2: finitionM2 };
+  }
+
+  function computeAndSaveDevisPrice() {
+    var q = currentDevisQuantities;
+    var read = readDevisPricesFromForm();
+    var prices = read.prices;
 
     var price = computeDevisPriceAdmin(q, prices);
-    price.cost_revient += finitionM2 * finitionUnitM2;
+    price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
     price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
     document.getElementById('devis-result').innerHTML =
       'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
@@ -1407,6 +1413,85 @@
         .then(function(){ showToast('Prix enregistré sur le projet !'); document.getElementById('pd-montant').value = price.prix_vente; })
         .catch(function(){ showToast('Erreur d\'enregistrement', 'err'); });
     }
+  }
+
+  // Génère une vue imprimable du devis (catégories, fixations, récap par pièce) et ouvre
+  // la boîte d'impression du navigateur — l'utilisateur choisit "Enregistrer en PDF".
+  function exportDevisPDF() {
+    var q = currentDevisQuantities;
+    if (!q) { showToast('Aucun devis à exporter', 'err'); return; }
+    var read = readDevisPricesFromForm();
+    var prices = read.prices;
+    var price = computeDevisPriceAdmin(q, prices);
+    price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
+    price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
+
+    var projetNom = (document.getElementById('pd-title') || {}).textContent || 'Projet';
+    var PANEL_CATEGORIES_PDF = [
+      { key: 'panels_caisson_m2', label: 'Caisson' },
+      { key: 'panels_etagere_m2', label: 'Étagère / intercalaire' },
+      { key: 'panels_porte_m2', label: 'Porte' },
+      { key: 'panels_tiroir_m2', label: 'Tiroir (façade)' },
+      { key: 'panels_tiroir_caisse_m2', label: 'Caisse tiroir (fond/dos/côtés)' },
+      { key: 'panels_plan_m2', label: 'Plan de travail' }
+    ];
+    var NO_MAT_SUFFIX_PDF = { panels_caisson_m2: true, panels_tiroir_caisse_m2: true };
+    function trPdf(label, qty, pu) {
+      return `<tr><td>${escHtml(label)}</td><td>${escHtml(qty)}</td><td>${pu != null ? (parseFloat(pu)||0).toFixed(2) + ' €' : '—'}</td></tr>`;
+    }
+    var matRowsPdf = PANEL_CATEGORIES_PDF.map(function(cat) {
+      var bucket = q[cat.key] || {};
+      return Object.keys(bucket).map(function(mat) {
+        var priceKey = cat.key + '|' + mat;
+        var label = NO_MAT_SUFFIX_PDF[cat.key] ? cat.label : (cat.label + ' — ' + mat);
+        return trPdf(label, bucket[mat].toFixed(2) + ' m²', prices.panel_m2[priceKey]);
+      }).join('');
+    }).join('');
+    var otherRowsPdf = [
+      ['Équerres d\'angle', (q.corner_brackets||0) + ' unité(s)', prices.corner_bracket_unit],
+      ['Chant plaqué', (q.edge_banding_m2||0).toFixed(3) + ' m²', prices.edge_banding_m2],
+      ['Vis', (q.screws||0) + ' unité(s)', prices.screw_unit],
+      ['Tourillons', (q.dowels||0) + ' unité(s)', prices.dowel_unit],
+      ['Charnières', (q.hinges||0) + ' unité(s)', prices.hinge_unit],
+      ['Mécanismes tiroir', (q.drawer_mechanisms||0) + ' unité(s)', prices.drawer_mechanism_unit],
+    ].map(function(r){ return trPdf(r[0], r[1], r[2]); }).join('');
+    var finMatSuffix = q.caisson_material ? ' — ' + q.caisson_material : '';
+    var finitionRowsPdf = (Array.isArray(q.finitions) ? q.finitions : []).map(function(fin) {
+      var checked = (prices.finition_visible || {})[fin.id] != null ? prices.finition_visible[fin.id] : fin.visible;
+      return `<tr><td>${escHtml(fin.label + finMatSuffix)}${checked ? '' : ' (non retenu)'}</td><td>${(fin.m2||0).toFixed(2)} m²</td><td>—</td></tr>`;
+    }).join('') + trPdf('Total finitions' + finMatSuffix, read.finitionM2.toFixed(2) + ' m²', prices.finition_unit_m2);
+    var piecesRowsPdf = (q.pieces||[]).map(function(pc) {
+      var dims = (pc.w_mm != null && pc.h_mm != null) ? `${pc.w_mm} × ${pc.h_mm} mm` : '—';
+      var fasteners = [];
+      if (pc.vis) fasteners.push(pc.vis + ' vis');
+      if (pc.tourillons) fasteners.push(pc.tourillons + ' tourillon(s)');
+      if (pc.charnieres) fasteners.push(pc.charnieres + ' charnière(s)');
+      if (pc.mecanisme_tiroir) fasteners.push(pc.mecanisme_tiroir + ' mécanisme(s)');
+      return `<tr><td>${escHtml(pc.group || pc.type)}</td><td>${dims}</td><td>${fasteners.length ? escHtml(fasteners.join(', ')) : '—'}</td></tr>`;
+    }).join('');
+
+    var html = `<!doctype html><html><head><meta charset="utf-8"><title>Devis — ${escHtml(projetNom)}</title>
+      <style>
+        body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:32px;font-size:13px;}
+        h1{font-size:20px;margin:0 0 4px;} h2{font-size:14px;margin:24px 0 8px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px;}
+        table{width:100%;border-collapse:collapse;margin-bottom:8px;} td,th{padding:5px 8px;border-bottom:1px solid #ddd;text-align:left;}
+        .meta{color:#666;margin-bottom:16px;} .total{font-size:15px;font-weight:700;margin-top:16px;}
+        .total .accent{color:#CD3E00;}
+        @media print { button{display:none;} }
+      </style></head><body>
+      <h1>Devis — ${escHtml(projetNom)}</h1>
+      <div class="meta">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+      <h2>Matériaux et panneaux</h2>
+      <table><thead><tr><th>Élément</th><th>Quantité</th><th>Prix unitaire</th></tr></thead><tbody>${matRowsPdf}${otherRowsPdf}</tbody></table>
+      ${finitionRowsPdf ? `<h2>Finitions</h2><table><thead><tr><th>Élément</th><th>Quantité</th><th>Prix unitaire</th></tr></thead><tbody>${finitionRowsPdf}</tbody></table>` : ''}
+      ${piecesRowsPdf ? `<h2>Récapitulatif par pièce/élément</h2><table><thead><tr><th>Élément</th><th>Dimensions</th><th>Fixations</th></tr></thead><tbody>${piecesRowsPdf}</tbody></table>` : ''}
+      <div class="total">Coût de revient : ${price.cost_revient.toFixed(2)} € · <span class="accent">Prix de vente : ${price.prix_vente.toFixed(2)} €</span></div>
+      <script>window.onload = function(){ window.print(); };<\/script>
+      </body></html>`;
+
+    var win = window.open('', '_blank');
+    if (!win) { showToast('Autorise les pop-ups pour exporter le PDF', 'err'); return; }
+    win.document.open(); win.document.write(html); win.document.close();
   }
 
   function computeDevisPriceAdmin(q, tarifs) {
