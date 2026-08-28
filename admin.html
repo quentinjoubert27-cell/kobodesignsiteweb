@@ -1286,10 +1286,10 @@
     var otherRows = [
       ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', 'devis-equerre', p.corner_bracket_unit, '€/unité'],
       ['Chant plaqué', (q.edge_banding_m2||0).toFixed(3) + ' m²', 'devis-chant', p.edge_banding_m2, '€/m²'],
-      ['Vis', (q.screws||0) + ' unité(s)', 'devis-vis', p.screw_unit, '€/unité'],
-      ['Tourillons', (q.dowels||0) + ' unité(s)', 'devis-tourillon', p.dowel_unit, '€/unité'],
-      ['Charnières', (q.hinges||0) + ' unité(s)', 'devis-charniere', p.hinge_unit, '€/unité'],
-      ['Mécanismes tiroir', (q.drawer_mechanisms||0) + ' unité(s)', 'devis-tiroir', p.drawer_mechanism_unit, '€/unité'],
+      ['Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', (q.screws||0) + ' unité(s)', 'devis-vis', p.screw_unit, '€/unité'],
+      ['Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', (q.dowels||0) + ' unité(s)', 'devis-tourillon', p.dowel_unit, '€/unité'],
+      ['Charnières <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.hinges||0) + ' unité(s)', 'devis-charniere', p.hinge_unit, '€/unité'],
+      ['Mécanismes tiroir <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.drawer_mechanisms||0) + ' unité(s)', 'devis-tiroir', p.drawer_mechanism_unit, '€/unité'],
     ].map(function(r) {
       return row(r[0], r[1], `<input type="number" step="0.01" id="${r[2]}" value="${r[3] ?? ''}" placeholder="${r[4]}" style="${inputStyle}"/><div></div>`);
     }).join('');
@@ -1450,10 +1450,10 @@
     var otherRowsPdf = [
       ['Équerres d\'angle', (q.corner_brackets||0) + ' unité(s)', prices.corner_bracket_unit],
       ['Chant plaqué', (q.edge_banding_m2||0).toFixed(3) + ' m²', prices.edge_banding_m2],
-      ['Vis', (q.screws||0) + ' unité(s)', prices.screw_unit],
-      ['Tourillons', (q.dowels||0) + ' unité(s)', prices.dowel_unit],
-      ['Charnières', (q.hinges||0) + ' unité(s)', prices.hinge_unit],
-      ['Mécanismes tiroir', (q.drawer_mechanisms||0) + ' unité(s)', prices.drawer_mechanism_unit],
+      ['Vis (assemblage caisson, usinage inclus)', (q.screws||0) + ' unité(s)', prices.screw_unit],
+      ['Tourillons (usinage inclus)', (q.dowels||0) + ' unité(s)', prices.dowel_unit],
+      ['Charnières (pose + vis incluses)', (q.hinges||0) + ' unité(s)', prices.hinge_unit],
+      ['Mécanismes tiroir (pose + vis incluses)', (q.drawer_mechanisms||0) + ' unité(s)', prices.drawer_mechanism_unit],
     ].map(function(r){ return trPdf(r[0], r[1], r[2]); }).join('');
     var finMatSuffix = q.caisson_material ? ' — ' + q.caisson_material : '';
     var finitionRowsPdf = (Array.isArray(q.finitions) ? q.finitions : []).map(function(fin) {
