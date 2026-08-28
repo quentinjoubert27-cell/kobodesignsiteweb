@@ -1268,8 +1268,11 @@
       return Object.keys(bucket).map(function(mat) {
         var priceKey = cat.key + '|' + mat;
         var val = (p.panel_m2 && p.panel_m2[priceKey] != null) ? p.panel_m2[priceKey] : '';
+        // Le nom choisi par le client ("Chêne", "Bois Blanc"...) est la finition visible, pas le panneau
+        // brut du caisson — donc on ne l'affiche pas ici, seulement sur les lignes Joue/finition.
+        var label = (cat.key === 'panels_caisson_m2') ? cat.label : (cat.label + ' — ' + escHtml(mat));
         return row(
-          cat.label + ' — ' + escHtml(mat),
+          label,
           `${bucket[mat].toFixed(2)} m²`,
           `<input type="number" step="0.01" class="devis-mat-input" data-mat="${escHtml(priceKey)}" value="${val}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
         );
@@ -1294,14 +1297,16 @@
     var finitionRows = '';
     if (Array.isArray(q.finitions) && q.finitions.length) {
       var fp = p.finition_visible || {};
+      // Le nom choisi par le client (ex: "Bois Blanc") est la finition visible du meuble — on l'affiche ici.
+      var finMatSuffix = q.caisson_material ? ' — ' + escHtml(q.caisson_material) : '';
       function finRow(fin) {
         var checked = fp[fin.id] != null ? fp[fin.id] : fin.visible;
         var checkbox = `<input type="checkbox" id="devis-fin-${fin.id}" class="devis-fin-checkbox" data-fin-id="${fin.id}" ${checked ? 'checked' : ''} data-m2="${fin.m2 || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">`;
-        return row(escHtml(fin.label) + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', (fin.m2 || 0).toFixed(2) + ' m²', '<div></div>' + checkbox);
+        return row(escHtml(fin.label) + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', (fin.m2 || 0).toFixed(2) + ' m²', '<div></div>' + checkbox);
       }
       finitionRows = q.finitions.map(finRow).join('') +
         row(
-          'Total finitions <span style="font-weight:400;color:rgba(26,26,26,.45);">(matériau différent, prix propre)</span>',
+          'Total finitions' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre)</span>',
           `<span id="devis-fin-total-qty">0.00</span> m²`,
           `<input type="number" step="0.01" id="devis-finition-price" value="${p.finition_unit_m2 ?? ''}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
         );
