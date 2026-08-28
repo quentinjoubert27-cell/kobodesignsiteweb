@@ -4500,13 +4500,17 @@ function computeFullDevisQuantities(){
     addFin('angle_bout',   'Joue — bout du caisson d\'angle', S.CH*CPm, true);
     addFin('angle_dessus', 'Dessus — caisson d\'angle', S.CL2*CPm, true);
   }
-  // Caissons latéraux TV : leur bout extérieur (jamais le côté qui touche le principal) + leur propre dessus
+  // Caissons latéraux TV : leur bout extérieur + leur propre dessus, ET leur côté intérieur
+  // (celui qui touche le principal) — car si le caisson principal est moins haut que le
+  // latéral, ce côté-là dépasse et reste exposé au-dessus du principal.
   if(leftActive){
     addFin('left_gauche', 'Joue gauche — caisson gauche', S_tvSide.leftH/100*CPm, true);
+    addFin('left_droite', 'Joue droite — caisson gauche (côté principal)', S_tvSide.leftH/100*CPm, true);
     addFin('left_dessus', 'Dessus — caisson gauche', S_tvSide.leftW/100*CPm, true);
   }
   if(rightActive){
     addFin('right_droite', 'Joue droite — caisson droit', S_tvSide.rightH/100*CPm, true);
+    addFin('right_gauche', 'Joue gauche — caisson droit (côté principal)', S_tvSide.rightH/100*CPm, true);
     addFin('right_dessus', 'Dessus — caisson droit', S_tvSide.rightW/100*CPm, true);
   }
   // Note : les finitions ont leur propre matériau/prix au m² (souvent différent du panneau du caisson),

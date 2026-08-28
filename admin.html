@@ -2225,10 +2225,12 @@
         }
         if (leftActive2) {
           addFinAdmin('left_gauche', 'Joue gauche — caisson gauche', rc.tvSide.left.H_cm * CPcm, true);
+          addFinAdmin('left_droite', 'Joue droite — caisson gauche (côté principal)', rc.tvSide.left.H_cm * CPcm, true);
           addFinAdmin('left_dessus', 'Dessus — caisson gauche', rc.tvSide.left.W_cm * CPcm, true);
         }
         if (rightActive2) {
           addFinAdmin('right_droite', 'Joue droite — caisson droit', rc.tvSide.right.H_cm * CPcm, true);
+          addFinAdmin('right_gauche', 'Joue gauche — caisson droit (côté principal)', rc.tvSide.right.H_cm * CPcm, true);
           addFinAdmin('right_dessus', 'Dessus — caisson droit', rc.tvSide.right.W_cm * CPcm, true);
         }
         if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm) {
