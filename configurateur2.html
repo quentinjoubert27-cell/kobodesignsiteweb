@@ -4355,8 +4355,9 @@ function buildTechSpec(els, CL, CH, CP){
 function computeDevisQuantities(techSpec, matLabel){
   var q = {
     // Surfaces séparées par catégorie de pièce (chacune peut avoir un prix au m² différent) :
-    // caisson (joues/traverses/fond), etagere (étagères + intercalaires/séparateurs), porte, tiroir
-    panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {},
+    // caisson (joues/traverses/fond), etagere (étagères + intercalaires/séparateurs), porte,
+    // tiroir (façade visible, matériau de finition), tiroir_caisse (fond/dos/côtés intérieurs, même matériau que le caisson)
+    panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
     edge_banding_m: 0,     // longueur totale de chant plaqué (m)
     screws: 0,             // nombre de vis (usage à définir)
     dowels: 0,             // nombre de tourillons (assemblage, 1 tous les 10cm de profondeur par jonction)
@@ -4429,20 +4430,26 @@ function computeDevisQuantities(techSpec, matLabel){
     q.hinges += (h>200) ? 3 : (h>100) ? 2 : 1;
   });
 
-  // Tiroirs
+  // Tiroirs — la façade visible est dans le matériau de finition ; la caisse intérieure
+  // (fond, dos, 2 côtés) est dans le même matériau que le caisson, coulisses non comprises.
   (techSpec.drawers||[]).forEach(function(dr){
     var w = dr.x_right_mm-dr.x_left_mm, h = dr.height_mm;
     addPanel(q.panels_tiroir_m2, mat, w, h, 'facade_tiroir');
     q.edge_banding_m += 2*(w+h)/1000;
     q.drawer_mechanisms += 1;
     q.drawers_count++;
+    var dTiroir = Math.max(0, CP_mm-30); // profondeur du tiroir : légèrement < profondeur caisson (jeu de coulisses)
+    addPanel(q.panels_tiroir_caisse_m2, mat, w, dTiroir, 'tiroir_fond');
+    addPanel(q.panels_tiroir_caisse_m2, mat, w, h, 'tiroir_dos');
+    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_gauche');
+    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_droit');
   });
 
   return q;
 }
 
 function mergeDevisQuantities(list){
-  var out = { panels_caisson_m2:{}, panels_etagere_m2:{}, panels_porte_m2:{}, panels_tiroir_m2:{},
+  var out = { panels_caisson_m2:{}, panels_etagere_m2:{}, panels_porte_m2:{}, panels_tiroir_m2:{}, panels_tiroir_caisse_m2:{},
     edge_banding_m:0, screws:0, dowels:0, hinges:0, drawer_mechanisms:0,
     corner_brackets:0, doors_count:0, drawers_count:0, shelves_count:0, separators_count:0, pieces:[] };
   function mergeBucket(outBucket, qBucket){
@@ -4454,6 +4461,7 @@ function mergeDevisQuantities(list){
     mergeBucket(out.panels_etagere_m2, q.panels_etagere_m2);
     mergeBucket(out.panels_porte_m2, q.panels_porte_m2);
     mergeBucket(out.panels_tiroir_m2, q.panels_tiroir_m2);
+    mergeBucket(out.panels_tiroir_caisse_m2, q.panels_tiroir_caisse_m2);
     out.edge_banding_m += q.edge_banding_m;
     out.screws += q.screws;
     out.dowels += q.dowels;
@@ -4564,7 +4572,7 @@ function computeDevisPrice(q, prices){
       return sum + bucket[mat]*pu;
     }, 0);
   }
-  var costPanels = sumBucket(q.panels_caisson_m2) + sumBucket(q.panels_etagere_m2) + sumBucket(q.panels_porte_m2) + sumBucket(q.panels_tiroir_m2) + sumBucket(q.panels_plan_m2);
+  var costPanels = sumBucket(q.panels_caisson_m2) + sumBucket(q.panels_etagere_m2) + sumBucket(q.panels_porte_m2) + sumBucket(q.panels_tiroir_m2) + sumBucket(q.panels_tiroir_caisse_m2) + sumBucket(q.panels_plan_m2);
   var cost = costPanels
     + (q.edge_banding_m2||0) * (prices.edge_banding_m2||0)
     + q.screws * (prices.screw_unit||0)

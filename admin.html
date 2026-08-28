@@ -1242,7 +1242,7 @@
 
   // ── PRIX PAR PROJET (au cas par cas, saisi dans la fiche projet) ──
   function renderDevisPriceForm(q, savedPrices) {
-    var hasAnyPanel = q && ['panels_caisson_m2','panels_etagere_m2','panels_porte_m2','panels_tiroir_m2','panels_plan_m2']
+    var hasAnyPanel = q && ['panels_caisson_m2','panels_etagere_m2','panels_porte_m2','panels_tiroir_m2','panels_tiroir_caisse_m2','panels_plan_m2']
       .some(function(k){ return q[k] && Object.keys(q[k]).length; });
     if (!hasAnyPanel) return '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune quantité calculable pour cette configuration.</div>';
     var p = savedPrices || {};
@@ -1260,9 +1260,13 @@
       { key: 'panels_caisson_m2', label: 'Caisson' },
       { key: 'panels_etagere_m2', label: 'Étagère / intercalaire' },
       { key: 'panels_porte_m2', label: 'Porte' },
-      { key: 'panels_tiroir_m2', label: 'Tiroir' },
+      { key: 'panels_tiroir_m2', label: 'Tiroir (façade)' },
+      { key: 'panels_tiroir_caisse_m2', label: 'Caisse tiroir (fond/dos/côtés)' },
       { key: 'panels_plan_m2', label: 'Plan de travail' }
     ];
+    // Ces deux catégories utilisent le même matériau que le caisson (pas la finition visible),
+    // donc pas besoin d'afficher le nom du matériau à côté.
+    var NO_MAT_SUFFIX = { panels_caisson_m2: true, panels_tiroir_caisse_m2: true };
     var matRows = PANEL_CATEGORIES.map(function(cat) {
       var bucket = q[cat.key] || {};
       return Object.keys(bucket).map(function(mat) {
@@ -1270,7 +1274,7 @@
         var val = (p.panel_m2 && p.panel_m2[priceKey] != null) ? p.panel_m2[priceKey] : '';
         // Le nom choisi par le client ("Chêne", "Bois Blanc"...) est la finition visible, pas le panneau
         // brut du caisson — donc on ne l'affiche pas ici, seulement sur les lignes Joue/finition.
-        var label = (cat.key === 'panels_caisson_m2') ? cat.label : (cat.label + ' — ' + escHtml(mat));
+        var label = NO_MAT_SUFFIX[cat.key] ? cat.label : (cat.label + ' — ' + escHtml(mat));
         return row(
           label,
           `${bucket[mat].toFixed(2)} m²`,
@@ -1400,7 +1404,7 @@
 
   function computeDevisPriceAdmin(q, tarifs) {
     if (!q || !tarifs) return null;
-    var PANEL_CATEGORY_KEYS = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_plan_m2'];
+    var PANEL_CATEGORY_KEYS = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_tiroir_caisse_m2', 'panels_plan_m2'];
     var missingMats = [];
     var costPanels = PANEL_CATEGORY_KEYS.reduce(function(sumCat, catKey) {
       var bucket = q[catKey] || {};
@@ -2292,7 +2296,7 @@
 
   // Version simplifiée de computeDevisQuantities (configurateur2.html) réutilisable côté admin
   function mergeDevisQuantitiesAdmin(list) {
-    var out = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {},
+    var out = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
       edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
       doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
     function mergeBucket(outBucket, qBucket) {
@@ -2304,6 +2308,7 @@
       mergeBucket(out.panels_etagere_m2, q.panels_etagere_m2);
       mergeBucket(out.panels_porte_m2, q.panels_porte_m2);
       mergeBucket(out.panels_tiroir_m2, q.panels_tiroir_m2);
+      mergeBucket(out.panels_tiroir_caisse_m2, q.panels_tiroir_caisse_m2);
       out.edge_banding_m += q.edge_banding_m || 0;
       out.screws += q.screws || 0;
       out.dowels += q.dowels || 0;
@@ -2321,7 +2326,7 @@
   }
 
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
-    var q = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {},
+    var q = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
       edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
     var mat = matLabel || 'Non défini';
     // Profondeur du caisson (mm) — 1 tourillon tous les 10cm de profondeur, par jonction
@@ -2372,12 +2377,19 @@
       // >200mm -> 3 charnières, 100-200mm -> 2, sinon 1
       q.hinges += (h > 200) ? 3 : (h > 100) ? 2 : 1;
     });
+    // Tiroirs — la façade visible est dans le matériau de finition ; la caisse intérieure
+    // (fond, dos, 2 côtés) est dans le même matériau que le caisson, coulisses non comprises.
     (techSpec.drawers || []).forEach(function (dr) {
       var w = dr.x_right_mm - dr.x_left_mm, h = dr.height_mm;
       addPanel(q.panels_tiroir_m2, mat, w, h, 'facade_tiroir');
       q.edge_banding_m += 2 * (w + h) / 1000;
       q.drawer_mechanisms += 1;
       q.drawers_count++;
+      var dTiroir = Math.max(0, CP_mm - 30); // profondeur du tiroir : légèrement < profondeur caisson (jeu de coulisses)
+      addPanel(q.panels_tiroir_caisse_m2, mat, w, dTiroir, 'tiroir_fond');
+      addPanel(q.panels_tiroir_caisse_m2, mat, w, h, 'tiroir_dos');
+      addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_gauche');
+      addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_droit');
     });
     return q;
   }
