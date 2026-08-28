@@ -2196,6 +2196,11 @@
 
       const rc = sdb.raw_config || {};
       let q = rc.devis_quantities;
+      // Compat : les configs soumises avant la séparation par catégorie (caisson/étagère/porte/tiroir)
+      // stockent tout dans un seul panels_m2 — on le rapatrie dans panels_caisson_m2 pour ne rien perdre.
+      if (q && q.panels_m2 && !q.panels_caisson_m2) {
+        q = Object.assign({}, q, { panels_caisson_m2: q.panels_m2, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_plan_m2: {} });
+      }
       if (!q) {
         // Config antérieure à la fonctionnalité : on reconstruit les quantités depuis les données brutes disponibles
         const meuble = rc.meuble || { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
