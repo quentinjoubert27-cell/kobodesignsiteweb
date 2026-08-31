@@ -4361,10 +4361,12 @@ function computeDevisQuantities(techSpec, matLabel){
     edge_banding_m: 0,     // longueur totale de chant plaqué (m)
     // Découpe/usinage : à la découpe, le coût est lié au périmètre de chaque pièce (longueur de coupe),
     // pas juste à sa surface — donc quantité en mètre linéaire, avec son propre prix (rien à voir avec
-    // le chant plaqué). Suivi séparément pour le caisson (joues/traverses/fond) et pour les
-    // étagères/intercalaires, puisque ce sont deux lignes de prix différentes.
-    decoupe_usinage_m: 0,
-    decoupe_etagere_m: 0,
+    // le chant plaqué). Suivi séparément par catégorie puisque ce sont des lignes de prix différentes.
+    decoupe_usinage_m: 0,      // caisson (joues/traverses/fond)
+    decoupe_etagere_m: 0,      // étagères + intercalaires
+    decoupe_porte_m: 0,        // portes
+    decoupe_tiroir_m: 0,       // façade tiroir
+    decoupe_tiroir_caisse_m: 0, // caisse intérieure tiroir (fond/dos/côtés)
     screws: 0,             // nombre de vis (usage à définir)
     dowels: 0,             // nombre de tourillons (assemblage, 1 tous les 10cm de profondeur par jonction)
     hinges: 0,              // nombre de charnières
@@ -4392,15 +4394,17 @@ function computeDevisQuantities(techSpec, matLabel){
 
   // category: 'caisson' | 'etagere' | 'porte' | 'tiroir' — chacune a son propre total m² et son propre prix
   // extra (optionnel) : { group, vis, tourillons, charnieres, mecanisme_tiroir } — recap par pièce/élément
-  // decoupeBucket : 'caisson' | 'etagere' | rien — ajoute le périmètre de la pièce au bon compteur ml
+  // decoupeBucket : 'caisson' | 'etagere' | 'porte' | 'tiroir' | 'tiroir_caisse' — ajoute le périmètre
+  // de la pièce au bon compteur ml (chaque catégorie a son propre prix de découpe/usinage)
+  var DECOUPE_FIELD = { caisson:'decoupe_usinage_m', etagere:'decoupe_etagere_m', porte:'decoupe_porte_m', tiroir:'decoupe_tiroir_m', tiroir_caisse:'decoupe_tiroir_caisse_m' };
   function addPanel(bucket, material, w_mm, h_mm, type, extra, decoupeBucket){
     var w = Math.abs(w_mm), h = Math.abs(h_mm);
     bucket[material] = (bucket[material]||0) + (w*h)/1e6;
     var piece = { type: type, w_mm: Math.round(w), h_mm: Math.round(h), perimeter_mm: Math.round(2*(w+h)) };
     if(extra) Object.assign(piece, extra);
     q.pieces.push(piece);
-    if(decoupeBucket==='caisson') q.decoupe_usinage_m += 2*(w+h)/1000;
-    if(decoupeBucket==='etagere') q.decoupe_etagere_m += 2*(w+h)/1000;
+    var field = DECOUPE_FIELD[decoupeBucket];
+    if(field) q[field] += 2*(w+h)/1000;
   }
 
   // Structurel : joues, traverses, fond — tous comptés dans le même matériau (le fond n'a pas de chant)
@@ -4445,7 +4449,7 @@ function computeDevisQuantities(techSpec, matLabel){
     // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
     // >200mm -> 3 charnières, 100-200mm -> 2, sinon 1
     var nCharnieres = (h>200) ? 3 : (h>100) ? 2 : 1;
-    addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group:'Porte '+(idx+1), charnieres: nCharnieres });
+    addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group:'Porte '+(idx+1), charnieres: nCharnieres }, 'porte');
     q.edge_banding_m += 2*(w+h)/1000; // 4 côtés visibles
     q.doors_count++;
     q.hinges += nCharnieres;
@@ -4456,15 +4460,15 @@ function computeDevisQuantities(techSpec, matLabel){
   (techSpec.drawers||[]).forEach(function(dr, idx){
     var w = dr.x_right_mm-dr.x_left_mm, h = dr.height_mm;
     var groupLabel = 'Tiroir '+(idx+1);
-    addPanel(q.panels_tiroir_m2, mat, w, h, 'facade_tiroir', { group: groupLabel+' — façade', mecanisme_tiroir: 1 });
+    addPanel(q.panels_tiroir_m2, mat, w, h, 'facade_tiroir', { group: groupLabel+' — façade', mecanisme_tiroir: 1 }, 'tiroir');
     q.edge_banding_m += 2*(w+h)/1000;
     q.drawer_mechanisms += 1;
     q.drawers_count++;
     var dTiroir = Math.max(0, CP_mm-30); // profondeur du tiroir : légèrement < profondeur caisson (jeu de coulisses)
-    addPanel(q.panels_tiroir_caisse_m2, mat, w, dTiroir, 'tiroir_fond', { group: groupLabel+' — fond' });
-    addPanel(q.panels_tiroir_caisse_m2, mat, w, h, 'tiroir_dos', { group: groupLabel+' — dos' });
-    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_gauche', { group: groupLabel+' — côté gauche' });
-    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_droit', { group: groupLabel+' — côté droit' });
+    addPanel(q.panels_tiroir_caisse_m2, mat, w, dTiroir, 'tiroir_fond', { group: groupLabel+' — fond' }, 'tiroir_caisse');
+    addPanel(q.panels_tiroir_caisse_m2, mat, w, h, 'tiroir_dos', { group: groupLabel+' — dos' }, 'tiroir_caisse');
+    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_gauche', { group: groupLabel+' — côté gauche' }, 'tiroir_caisse');
+    addPanel(q.panels_tiroir_caisse_m2, mat, dTiroir, h, 'tiroir_cote_droit', { group: groupLabel+' — côté droit' }, 'tiroir_caisse');
   });
 
   return q;
@@ -4472,7 +4476,8 @@ function computeDevisQuantities(techSpec, matLabel){
 
 function mergeDevisQuantities(list){
   var out = { panels_caisson_m2:{}, panels_etagere_m2:{}, panels_porte_m2:{}, panels_tiroir_m2:{}, panels_tiroir_caisse_m2:{},
-    edge_banding_m:0, decoupe_usinage_m:0, decoupe_etagere_m:0, screws:0, dowels:0, hinges:0, drawer_mechanisms:0,
+    edge_banding_m:0, decoupe_usinage_m:0, decoupe_etagere_m:0, decoupe_porte_m:0, decoupe_tiroir_m:0, decoupe_tiroir_caisse_m:0,
+    screws:0, dowels:0, hinges:0, drawer_mechanisms:0,
     corner_brackets:0, doors_count:0, drawers_count:0, shelves_count:0, separators_count:0, pieces:[] };
   function mergeBucket(outBucket, qBucket){
     Object.keys(qBucket||{}).forEach(function(k){ outBucket[k] = (outBucket[k]||0) + qBucket[k]; });
@@ -4487,6 +4492,9 @@ function mergeDevisQuantities(list){
     out.edge_banding_m += q.edge_banding_m;
     out.decoupe_usinage_m += q.decoupe_usinage_m||0;
     out.decoupe_etagere_m += q.decoupe_etagere_m||0;
+    out.decoupe_porte_m += q.decoupe_porte_m||0;
+    out.decoupe_tiroir_m += q.decoupe_tiroir_m||0;
+    out.decoupe_tiroir_caisse_m += q.decoupe_tiroir_caisse_m||0;
     out.screws += q.screws;
     out.dowels += q.dowels;
     out.hinges += q.hinges;
@@ -4582,6 +4590,9 @@ function computeFullDevisQuantities(){
   merged.edge_banding_ml = Math.round(merged.edge_banding_m * 1000) / 1000;
   merged.decoupe_usinage_m = Math.round(merged.decoupe_usinage_m * 1000) / 1000;
   merged.decoupe_etagere_m = Math.round(merged.decoupe_etagere_m * 1000) / 1000;
+  merged.decoupe_porte_m = Math.round(merged.decoupe_porte_m * 1000) / 1000;
+  merged.decoupe_tiroir_m = Math.round(merged.decoupe_tiroir_m * 1000) / 1000;
+  merged.decoupe_tiroir_caisse_m = Math.round(merged.decoupe_tiroir_caisse_m * 1000) / 1000;
 
   return merged;
 }
@@ -4616,7 +4627,10 @@ function computeDevisPrice(q, prices){
   }
   var costCaisson = sumPerimeterBucket(q.panels_caisson_m2, q.decoupe_usinage_m);
   var costEtagere = sumPerimeterBucket(q.panels_etagere_m2, q.decoupe_etagere_m);
-  var costPanels = costCaisson + costEtagere + sumBucket(q.panels_porte_m2) + sumBucket(q.panels_tiroir_m2) + sumBucket(q.panels_tiroir_caisse_m2) + sumBucket(q.panels_plan_m2);
+  var costPorte = sumPerimeterBucket(q.panels_porte_m2, q.decoupe_porte_m);
+  var costTiroir = sumPerimeterBucket(q.panels_tiroir_m2, q.decoupe_tiroir_m);
+  var costTiroirCaisse = sumPerimeterBucket(q.panels_tiroir_caisse_m2, q.decoupe_tiroir_caisse_m);
+  var costPanels = costCaisson + costEtagere + costPorte + costTiroir + costTiroirCaisse + sumBucket(q.panels_plan_m2);
   var cost = costPanels
     + (q.edge_banding_ml||0) * (prices.edge_banding_ml||0)
     + q.screws * (prices.screw_unit||0)
