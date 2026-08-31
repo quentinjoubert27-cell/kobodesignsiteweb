@@ -2474,7 +2474,7 @@
       var w = p.x_right_mm - p.x_left_mm, h = p.y_top_mm - p.y_bottom_mm;
       if (p.type === 'fond') { addPanel(q.panels_caisson_m2, mat, w, h, 'fond'); return; }
       addPanel(q.panels_caisson_m2, mat, w, h, p.type);
-      q.edge_banding_m += ((p.type === 'joue_gauche' || p.type === 'joue_droite') ? h : w) / 1000;
+      q.edge_banding_m += 2 * (w + h) / 1000; // périmètre entier (découpe/usinage)
     });
     // Récapitulatif : assemblage global du caisson (les 4 coins ne sont pas attribuables à un seul panneau)
     q.pieces.push({ type: 'caisson_assemblage', group: 'Caisson (assemblage 4 coins)', vis: 4 * jointCP.vis, tourillons: 4 * jointCP.tourillons });
@@ -2483,7 +2483,7 @@
       addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
         group: 'Intercalaire ' + (idx + 1), vis: 2 * jointCP.vis, tourillons: 2 * jointCP.tourillons
       });
-      q.edge_banding_m += h / 1000;
+      q.edge_banding_m += 2 * (s.thickness_mm + h) / 1000; // périmètre entier (découpe/usinage)
       q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons;
       q.separators_count++;
     });
@@ -2494,7 +2494,7 @@
         group: 'Étagère ' + (idx + 1) + (fixe ? '' : ' (mobile)'),
         vis: fixe ? 2 * jointCP.vis : 0, tourillons: fixe ? 2 * jointCP.tourillons : 0
       });
-      q.edge_banding_m += w / 1000;
+      q.edge_banding_m += 2 * (w + sh.depth_mm) / 1000; // périmètre entier (découpe/usinage)
       if (fixe) { q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons; }
       q.shelves_count++;
     });
