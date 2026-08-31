@@ -4416,7 +4416,7 @@ function computeDevisQuantities(techSpec, matLabel){
     var h = s.y_top_mm - s.y_bottom_mm;
     addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
       group: 'Intercalaire '+(idx+1), vis: 2*jointCP.vis, tourillons: 2*jointCP.tourillons
-    }, true);
+    });
     q.edge_banding_m += h/1000;
     q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; // jonction haut + bas
     q.separators_count++;
@@ -4429,7 +4429,7 @@ function computeDevisQuantities(techSpec, matLabel){
     addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {
       group: 'Étagère '+(idx+1)+(fixe?'':' (mobile)'),
       vis: fixe ? 2*jointCP.vis : 0, tourillons: fixe ? 2*jointCP.tourillons : 0
-    }, true);
+    });
     q.edge_banding_m += w/1000;
     if(fixe){ q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; } // fixée aux 2 côtés
     q.shelves_count++;

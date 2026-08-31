@@ -1325,14 +1325,16 @@
       function finRow(fin) {
         var checked = fp[fin.id] != null ? fp[fin.id] : fin.visible;
         var checkbox = `<input type="checkbox" id="devis-fin-${fin.id}" class="devis-fin-checkbox" data-fin-id="${fin.id}" ${checked ? 'checked' : ''} data-m2="${fin.m2 || 0}" data-perimeter="${fin.perimeter_m || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">`;
-        var qty = (fin.m2 || 0).toFixed(2) + ' m² · ' + (fin.perimeter_m || 0).toFixed(2) + ' ml de chant';
+        var qty = (fin.perimeter_m || 0).toFixed(2) + ' ml <span style="color:rgba(26,26,26,.4);">(' + (fin.m2 || 0).toFixed(2) + ' m²)</span>';
         return row(escHtml(fin.label) + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', qty, '<div></div>' + checkbox);
       }
+      // Les joues sont facturées au mètre linéaire de périmètre, comme le caisson, mais avec leur
+      // propre prix (matériau de finition différent) — ligne séparée du "Caisson".
       finitionRows = q.finitions.map(finRow).join('') +
         row(
-          'Total finitions' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre)</span>',
-          `<span id="devis-fin-total-qty">0.00</span> m²`,
-          `<input type="number" step="0.01" id="devis-finition-price" value="${p.finition_unit_m2 ?? ''}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
+          'Joues' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre, au ml)</span>',
+          `<span id="devis-fin-total-qty">0.00</span> ml`,
+          `<input type="number" step="0.01" id="devis-finition-price" value="${p.finition_unit_ml ?? ''}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
         );
     }
 
@@ -1388,7 +1390,7 @@
         totalPerimeter += parseFloat(cb.dataset.perimeter) || 0;
       }
     });
-    if (totalEl) totalEl.textContent = totalM2.toFixed(2);
+    if (totalEl) totalEl.textContent = totalPerimeter.toFixed(2);
     if (chantEl) {
       var base = parseFloat(chantEl.dataset.base) || 0;
       chantEl.textContent = (base + totalPerimeter).toFixed(2);
@@ -1413,17 +1415,18 @@
       coefficient_revente: parseFloat(document.getElementById('devis-coefficient').value) || 2,
     };
     var finitionVisible = {};
-    var finitionM2 = 0;
+    var finitionPerimeter = 0;
     document.querySelectorAll('.devis-fin-checkbox').forEach(function (cb) {
       finitionVisible[cb.dataset.finId] = cb.checked;
-      if (cb.checked) finitionM2 += parseFloat(cb.dataset.m2) || 0;
+      if (cb.checked) finitionPerimeter += parseFloat(cb.dataset.perimeter) || 0;
     });
     prices.finition_visible = finitionVisible;
-    prices.finition_unit_m2 = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
+    // Les joues sont facturées au mètre linéaire (périmètre), comme le caisson, mais à part (matériau différent)
+    prices.finition_unit_ml = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
     // Chant plaqué total = base (caisson/étagères/portes/tiroirs/plan) + périmètre des joues cochées
     var chantQtyEl = document.getElementById('devis-chant-qty');
     var edgeBandingTotalMl = chantQtyEl ? (parseFloat(chantQtyEl.textContent) || 0) : 0;
-    return { prices: prices, finitionM2: finitionM2, edgeBandingTotalMl: edgeBandingTotalMl };
+    return { prices: prices, finitionPerimeter: finitionPerimeter, edgeBandingTotalMl: edgeBandingTotalMl };
   }
 
   function computeAndSaveDevisPrice() {
@@ -1433,7 +1436,7 @@
     var qForPrice = Object.assign({}, q, { edge_banding_ml: read.edgeBandingTotalMl });
 
     var price = computeDevisPriceAdmin(qForPrice, prices);
-    price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
+    price.cost_revient += read.finitionPerimeter * prices.finition_unit_ml;
     price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
     document.getElementById('devis-result').innerHTML =
       'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
@@ -1455,7 +1458,7 @@
     var prices = read.prices;
     var qForPrice = Object.assign({}, q, { edge_banding_ml: read.edgeBandingTotalMl });
     var price = computeDevisPriceAdmin(qForPrice, prices);
-    price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
+    price.cost_revient += read.finitionPerimeter * prices.finition_unit_ml;
     price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
 
     var projetNom = (document.getElementById('pd-title') || {}).textContent || 'Projet';
@@ -1494,9 +1497,9 @@
     var finMatSuffix = q.caisson_material ? ' — ' + q.caisson_material : '';
     var finitionRowsPdf = (Array.isArray(q.finitions) ? q.finitions : []).map(function(fin) {
       var checked = (prices.finition_visible || {})[fin.id] != null ? prices.finition_visible[fin.id] : fin.visible;
-      var qtyTxt = (fin.m2||0).toFixed(2) + ' m² · ' + (fin.perimeter_m||0).toFixed(2) + ' ml';
+      var qtyTxt = (fin.perimeter_m||0).toFixed(2) + ' ml (' + (fin.m2||0).toFixed(2) + ' m²)';
       return `<tr><td>${escHtml(fin.label + finMatSuffix)}${checked ? '' : ' (non retenu)'}</td><td>${escHtml(qtyTxt)}</td><td>—</td></tr>`;
-    }).join('') + trPdf('Total finitions' + finMatSuffix, read.finitionM2.toFixed(2) + ' m²', prices.finition_unit_m2);
+    }).join('') + trPdf('Joues' + finMatSuffix, read.finitionPerimeter.toFixed(2) + ' ml', prices.finition_unit_ml);
     var piecesRowsPdf = (q.pieces||[]).map(function(pc) {
       var dims = (pc.w_mm != null && pc.h_mm != null) ? `${pc.w_mm} × ${pc.h_mm} mm` : '—';
       var fasteners = [];
@@ -2511,7 +2514,7 @@
       var h = s.y_top_mm - s.y_bottom_mm;
       addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
         group: 'Intercalaire ' + (idx + 1), vis: 2 * jointCP.vis, tourillons: 2 * jointCP.tourillons
-      }, true);
+      });
       q.edge_banding_m += h / 1000;
       q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons;
       q.separators_count++;
@@ -2522,7 +2525,7 @@
       addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {
         group: 'Étagère ' + (idx + 1) + (fixe ? '' : ' (mobile)'),
         vis: fixe ? 2 * jointCP.vis : 0, tourillons: fixe ? 2 * jointCP.tourillons : 0
-      }, true);
+      });
       q.edge_banding_m += w / 1000;
       if (fixe) { q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons; }
       q.shelves_count++;
