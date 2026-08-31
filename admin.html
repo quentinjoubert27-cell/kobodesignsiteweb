@@ -1283,9 +1283,15 @@
       }).join('');
     }).join('');
 
+    // Chant plaqué : base (caisson/étagères/portes/tiroirs/plan) + périmètre des joues de finition
+    // cochées (recalculé en direct par recomputeFinitionPanels quand une case change).
+    var chantRow = row(
+      'Chant plaqué',
+      `<span id="devis-chant-qty" data-base="${(q.edge_banding_ml||0).toFixed(4)}">${(q.edge_banding_ml||0).toFixed(2)}</span> ml`,
+      `<input type="number" step="0.01" id="devis-chant" value="${p.edge_banding_ml ?? ''}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
+    );
     var otherRows = [
       ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', 'devis-equerre', p.corner_bracket_unit, '€/unité'],
-      ['Chant plaqué', (q.edge_banding_m2||0).toFixed(3) + ' m²', 'devis-chant', p.edge_banding_m2, '€/m²'],
       ['Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', (q.screws||0) + ' unité(s)', 'devis-vis', p.screw_unit, '€/unité'],
       ['Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', (q.dowels||0) + ' unité(s)', 'devis-tourillon', p.dowel_unit, '€/unité'],
       ['Charnières <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.hinges||0) + ' unité(s)', 'devis-charniere', p.hinge_unit, '€/unité'],
@@ -1293,6 +1299,7 @@
     ].map(function(r) {
       return row(r[0], r[1], `<input type="number" step="0.01" id="${r[2]}" value="${r[3] ?? ''}" placeholder="${r[4]}" style="${inputStyle}"/><div></div>`);
     }).join('');
+    otherRows = chantRow + otherRows;
 
     var countsSummary = `<div style="font-size:12px;color:rgba(26,26,26,.55);margin:10px 0 16px;line-height:1.7;">
       ${q.doors_count||0} porte(s) · ${q.drawers_count||0} tiroir(s) · ${q.shelves_count||0} étagère(s) · ${q.separators_count||0} séparateur(s)
@@ -1305,8 +1312,9 @@
       var finMatSuffix = q.caisson_material ? ' — ' + escHtml(q.caisson_material) : '';
       function finRow(fin) {
         var checked = fp[fin.id] != null ? fp[fin.id] : fin.visible;
-        var checkbox = `<input type="checkbox" id="devis-fin-${fin.id}" class="devis-fin-checkbox" data-fin-id="${fin.id}" ${checked ? 'checked' : ''} data-m2="${fin.m2 || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">`;
-        return row(escHtml(fin.label) + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', (fin.m2 || 0).toFixed(2) + ' m²', '<div></div>' + checkbox);
+        var checkbox = `<input type="checkbox" id="devis-fin-${fin.id}" class="devis-fin-checkbox" data-fin-id="${fin.id}" ${checked ? 'checked' : ''} data-m2="${fin.m2 || 0}" data-perimeter="${fin.perimeter_m || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">`;
+        var qty = (fin.m2 || 0).toFixed(2) + ' m² · ' + (fin.perimeter_m || 0).toFixed(2) + ' ml de chant';
+        return row(escHtml(fin.label) + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', qty, '<div></div>' + checkbox);
       }
       finitionRows = q.finitions.map(finRow).join('') +
         row(
@@ -1360,12 +1368,19 @@
 
   function recomputeFinitionPanels() {
     var totalEl = document.getElementById('devis-fin-total-qty');
-    if (!totalEl) return;
-    var total = 0;
+    var chantEl = document.getElementById('devis-chant-qty');
+    var totalM2 = 0, totalPerimeter = 0;
     document.querySelectorAll('.devis-fin-checkbox').forEach(function (cb) {
-      if (cb.checked) total += parseFloat(cb.dataset.m2) || 0;
+      if (cb.checked) {
+        totalM2 += parseFloat(cb.dataset.m2) || 0;
+        totalPerimeter += parseFloat(cb.dataset.perimeter) || 0;
+      }
     });
-    totalEl.textContent = total.toFixed(2);
+    if (totalEl) totalEl.textContent = totalM2.toFixed(2);
+    if (chantEl) {
+      var base = parseFloat(chantEl.dataset.base) || 0;
+      chantEl.textContent = (base + totalPerimeter).toFixed(2);
+    }
   }
 
   // Lit les prix saisis dans le formulaire devis (partagé entre "Calculer et enregistrer" et l'export PDF)
@@ -1377,7 +1392,7 @@
     });
     var prices = {
       panel_m2: panelM2,
-      edge_banding_m2: parseFloat(document.getElementById('devis-chant').value) || 0,
+      edge_banding_ml: parseFloat(document.getElementById('devis-chant').value) || 0,
       screw_unit: parseFloat(document.getElementById('devis-vis').value) || 0,
       dowel_unit: parseFloat(document.getElementById('devis-tourillon').value) || 0,
       hinge_unit: parseFloat(document.getElementById('devis-charniere').value) || 0,
@@ -1393,15 +1408,19 @@
     });
     prices.finition_visible = finitionVisible;
     prices.finition_unit_m2 = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
-    return { prices: prices, finitionM2: finitionM2 };
+    // Chant plaqué total = base (caisson/étagères/portes/tiroirs/plan) + périmètre des joues cochées
+    var chantQtyEl = document.getElementById('devis-chant-qty');
+    var edgeBandingTotalMl = chantQtyEl ? (parseFloat(chantQtyEl.textContent) || 0) : 0;
+    return { prices: prices, finitionM2: finitionM2, edgeBandingTotalMl: edgeBandingTotalMl };
   }
 
   function computeAndSaveDevisPrice() {
     var q = currentDevisQuantities;
     var read = readDevisPricesFromForm();
     var prices = read.prices;
+    var qForPrice = Object.assign({}, q, { edge_banding_ml: read.edgeBandingTotalMl });
 
-    var price = computeDevisPriceAdmin(q, prices);
+    var price = computeDevisPriceAdmin(qForPrice, prices);
     price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
     price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
     document.getElementById('devis-result').innerHTML =
@@ -1422,7 +1441,8 @@
     if (!q) { showToast('Aucun devis à exporter', 'err'); return; }
     var read = readDevisPricesFromForm();
     var prices = read.prices;
-    var price = computeDevisPriceAdmin(q, prices);
+    var qForPrice = Object.assign({}, q, { edge_banding_ml: read.edgeBandingTotalMl });
+    var price = computeDevisPriceAdmin(qForPrice, prices);
     price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
     price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
 
@@ -1449,7 +1469,7 @@
     }).join('');
     var otherRowsPdf = [
       ['Équerres d\'angle', (q.corner_brackets||0) + ' unité(s)', prices.corner_bracket_unit],
-      ['Chant plaqué', (q.edge_banding_m2||0).toFixed(3) + ' m²', prices.edge_banding_m2],
+      ['Chant plaqué', read.edgeBandingTotalMl.toFixed(2) + ' ml', prices.edge_banding_ml],
       ['Vis (assemblage caisson, usinage inclus)', (q.screws||0) + ' unité(s)', prices.screw_unit],
       ['Tourillons (usinage inclus)', (q.dowels||0) + ' unité(s)', prices.dowel_unit],
       ['Charnières (pose + vis incluses)', (q.hinges||0) + ' unité(s)', prices.hinge_unit],
@@ -1458,7 +1478,8 @@
     var finMatSuffix = q.caisson_material ? ' — ' + q.caisson_material : '';
     var finitionRowsPdf = (Array.isArray(q.finitions) ? q.finitions : []).map(function(fin) {
       var checked = (prices.finition_visible || {})[fin.id] != null ? prices.finition_visible[fin.id] : fin.visible;
-      return `<tr><td>${escHtml(fin.label + finMatSuffix)}${checked ? '' : ' (non retenu)'}</td><td>${(fin.m2||0).toFixed(2)} m²</td><td>—</td></tr>`;
+      var qtyTxt = (fin.m2||0).toFixed(2) + ' m² · ' + (fin.perimeter_m||0).toFixed(2) + ' ml';
+      return `<tr><td>${escHtml(fin.label + finMatSuffix)}${checked ? '' : ' (non retenu)'}</td><td>${escHtml(qtyTxt)}</td><td>—</td></tr>`;
     }).join('') + trPdf('Total finitions' + finMatSuffix, read.finitionM2.toFixed(2) + ' m²', prices.finition_unit_m2);
     var piecesRowsPdf = (q.pieces||[]).map(function(pc) {
       var dims = (pc.w_mm != null && pc.h_mm != null) ? `${pc.w_mm} × ${pc.h_mm} mm` : '—';
@@ -1508,7 +1529,7 @@
       }, 0);
     }, 0);
     var cost = costPanels
-      + (q.edge_banding_m2 || 0) * (tarifs.edge_banding_m2 || 0)
+      + (q.edge_banding_ml || 0) * (tarifs.edge_banding_ml || 0)
       + (q.screws || 0) * (tarifs.screw_unit || 0)
       + (q.dowels || 0) * (tarifs.dowel_unit || 0)
       + (q.hinges || 0) * (tarifs.hinge_unit || 0)
@@ -2341,28 +2362,34 @@
         const rightActive2 = !!(rc.tvSide && rc.tvSide.right && rc.tvSide.right.W_cm);
         q.caisson_material = matLabel;
         q.finitions = [];
-        function addFinAdmin(id, label, m2_cm2, visible) {
-          q.finitions.push({ id: id, label: label, m2: Math.round(m2_cm2) / 10000, visible: visible });
+        // dim1/dim2 en cm — la joue a du chant plaqué sur tout son périmètre (4 côtés)
+        function addFinAdmin(id, label, dim1_cm, dim2_cm, visible) {
+          q.finitions.push({
+            id: id, label: label,
+            m2: Math.round(dim1_cm * dim2_cm) / 10000,
+            perimeter_m: Math.round(2 * (dim1_cm + dim2_cm) * 10) / 1000,
+            visible: visible
+          });
         }
-        if (!leftActive2)  addFinAdmin('main_gauche', 'Joue gauche — caisson principal', mainH * CPcm, true);
-        if (!rightActive2) addFinAdmin('main_droite', 'Joue droite — caisson principal', mainH * CPcm, true);
-        addFinAdmin('main_dessus', 'Dessus — caisson principal', mainL * CPcm, true);
+        if (!leftActive2)  addFinAdmin('main_gauche', 'Joue gauche — caisson principal', mainH, CPcm, true);
+        if (!rightActive2) addFinAdmin('main_droite', 'Joue droite — caisson principal', mainH, CPcm, true);
+        addFinAdmin('main_dessus', 'Dessus — caisson principal', mainL, CPcm, true);
         if (rc.caisson2 && rc.caisson2.L_cm) {
-          addFinAdmin('angle_bout', "Joue — bout du caisson d'angle", mainH * CPcm, true);
-          addFinAdmin('angle_dessus', "Dessus — caisson d'angle", rc.caisson2.L_cm * CPcm, true);
+          addFinAdmin('angle_bout', "Joue — bout du caisson d'angle", mainH, CPcm, true);
+          addFinAdmin('angle_dessus', "Dessus — caisson d'angle", rc.caisson2.L_cm, CPcm, true);
         }
         if (leftActive2) {
-          addFinAdmin('left_gauche', 'Joue gauche — caisson gauche', rc.tvSide.left.H_cm * CPcm, true);
-          addFinAdmin('left_droite', 'Joue droite — caisson gauche (côté principal)', rc.tvSide.left.H_cm * CPcm, true);
-          addFinAdmin('left_dessus', 'Dessus — caisson gauche', rc.tvSide.left.W_cm * CPcm, true);
+          addFinAdmin('left_gauche', 'Joue gauche — caisson gauche', rc.tvSide.left.H_cm, CPcm, true);
+          addFinAdmin('left_droite', 'Joue droite — caisson gauche (côté principal)', rc.tvSide.left.H_cm, CPcm, true);
+          addFinAdmin('left_dessus', 'Dessus — caisson gauche', rc.tvSide.left.W_cm, CPcm, true);
         }
         if (rightActive2) {
-          addFinAdmin('right_droite', 'Joue droite — caisson droit', rc.tvSide.right.H_cm * CPcm, true);
-          addFinAdmin('right_gauche', 'Joue gauche — caisson droit (côté principal)', rc.tvSide.right.H_cm * CPcm, true);
-          addFinAdmin('right_dessus', 'Dessus — caisson droit', rc.tvSide.right.W_cm * CPcm, true);
+          addFinAdmin('right_droite', 'Joue droite — caisson droit', rc.tvSide.right.H_cm, CPcm, true);
+          addFinAdmin('right_gauche', 'Joue gauche — caisson droit (côté principal)', rc.tvSide.right.H_cm, CPcm, true);
+          addFinAdmin('right_dessus', 'Dessus — caisson droit', rc.tvSide.right.W_cm, CPcm, true);
         }
         if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm) {
-          addFinAdmin('top_dessus', 'Dessus — caisson du dessus', rc.tvSide.top.W_cm * CPcm, true);
+          addFinAdmin('top_dessus', 'Dessus — caisson du dessus', rc.tvSide.top.W_cm, CPcm, true);
         }
 
         // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
@@ -2413,7 +2440,7 @@
       out.separators_count += q.separators_count || 0;
       out.pieces = out.pieces.concat(q.pieces || []);
     });
-    out.edge_banding_m2 = Math.round(out.edge_banding_m * 0.018 * 10000) / 10000; // longueur × épaisseur panneau (18mm)
+    out.edge_banding_ml = Math.round(out.edge_banding_m * 1000) / 1000; // en mètre linéaire
     return out;
   }
 

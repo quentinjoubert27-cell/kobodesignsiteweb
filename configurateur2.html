@@ -4517,33 +4517,40 @@ function computeFullDevisQuantities(){
   var rightActive = currentFT==='tv' && S_tvSide && S_tvSide.rightActive;
   merged.caisson_material = matLabel; // matériau du caisson (les finitions ont leur propre prix au m², distinct)
   merged.finitions = [];
-  function addFin(id, label, m2, visible){
-    merged.finitions.push({ id:id, label:label, m2: Math.round(m2*10000)/10000, visible: !!visible });
+  // dim1/dim2 en mètres — la joue a du chant plaqué sur tout son périmètre (4 côtés), contrairement
+  // aux panneaux internes du caisson qui n'en ont qu'un seul (bord avant).
+  function addFin(id, label, dim1, dim2, visible){
+    merged.finitions.push({
+      id:id, label:label,
+      m2: Math.round(dim1*dim2*10000)/10000,
+      perimeter_m: Math.round(2*(dim1+dim2)*1000)/1000,
+      visible: !!visible
+    });
   }
   // Toute face réellement exposée (qui ne touche pas un autre caisson) reçoit automatiquement
   // une finition — pas de choix à faire côté client, l'admin peut ensuite décocher si besoin
   // (ex: meuble pousé contre un mur) directement dans le formulaire devis.
   // Caisson principal : gauche/droite exposés seulement si aucun caisson latéral ne les recouvre
-  if(!leftActive)  addFin('main_gauche', 'Joue gauche — caisson principal', S.CH*CPm, true);
-  if(!rightActive) addFin('main_droite', 'Joue droite — caisson principal', S.CH*CPm, true);
-  addFin('main_dessus', 'Dessus — caisson principal', S.CL*CPm, true);
+  if(!leftActive)  addFin('main_gauche', 'Joue gauche — caisson principal', S.CH, CPm, true);
+  if(!rightActive) addFin('main_droite', 'Joue droite — caisson principal', S.CH, CPm, true);
+  addFin('main_dessus', 'Dessus — caisson principal', S.CL, CPm, true);
   // Caisson d'angle : son bout extérieur + son propre dessus
   if(hasAngle){
-    addFin('angle_bout',   'Joue — bout du caisson d\'angle', S.CH*CPm, true);
-    addFin('angle_dessus', 'Dessus — caisson d\'angle', S.CL2*CPm, true);
+    addFin('angle_bout',   'Joue — bout du caisson d\'angle', S.CH, CPm, true);
+    addFin('angle_dessus', 'Dessus — caisson d\'angle', S.CL2, CPm, true);
   }
   // Caissons latéraux TV : leur bout extérieur + leur propre dessus, ET leur côté intérieur
   // (celui qui touche le principal) — car si le caisson principal est moins haut que le
   // latéral, ce côté-là dépasse et reste exposé au-dessus du principal.
   if(leftActive){
-    addFin('left_gauche', 'Joue gauche — caisson gauche', S_tvSide.leftH/100*CPm, true);
-    addFin('left_droite', 'Joue droite — caisson gauche (côté principal)', S_tvSide.leftH/100*CPm, true);
-    addFin('left_dessus', 'Dessus — caisson gauche', S_tvSide.leftW/100*CPm, true);
+    addFin('left_gauche', 'Joue gauche — caisson gauche', S_tvSide.leftH/100, CPm, true);
+    addFin('left_droite', 'Joue droite — caisson gauche (côté principal)', S_tvSide.leftH/100, CPm, true);
+    addFin('left_dessus', 'Dessus — caisson gauche', S_tvSide.leftW/100, CPm, true);
   }
   if(rightActive){
-    addFin('right_droite', 'Joue droite — caisson droit', S_tvSide.rightH/100*CPm, true);
-    addFin('right_gauche', 'Joue gauche — caisson droit (côté principal)', S_tvSide.rightH/100*CPm, true);
-    addFin('right_dessus', 'Dessus — caisson droit', S_tvSide.rightW/100*CPm, true);
+    addFin('right_droite', 'Joue droite — caisson droit', S_tvSide.rightH/100, CPm, true);
+    addFin('right_gauche', 'Joue gauche — caisson droit (côté principal)', S_tvSide.rightH/100, CPm, true);
+    addFin('right_dessus', 'Dessus — caisson droit', S_tvSide.rightW/100, CPm, true);
   }
   // Note : les finitions ont leur propre matériau/prix au m² (souvent différent du panneau du caisson),
   // donc elles ne sont PAS ajoutées aux catégories ci-dessus — elles sont pricées séparément dans l'admin.
@@ -4558,8 +4565,10 @@ function computeFullDevisQuantities(){
     merged.vasque_model = (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{}).label || null;
   }
 
-  // Chant plaqué exprimé en m² (longueur des bords visibles × épaisseur du panneau)
-  merged.edge_banding_m2 = Math.round(merged.edge_banding_m * EP * 10000) / 10000;
+  // Chant plaqué de base (caisson/étagères/portes/tiroirs/plan), en mètre linéaire.
+  // Le chant des joues de finition (périmètre complet, 4 côtés) est tracké séparément par ligne
+  // (finition.perimeter_m) et recalculé dynamiquement dans l'admin selon les cases cochées.
+  merged.edge_banding_ml = Math.round(merged.edge_banding_m * 1000) / 1000;
 
   return merged;
 }
@@ -4568,7 +4577,7 @@ function computeFullDevisQuantities(){
 // coefficient_revente : coût de revient × ce coefficient = prix de vente
 var PRICES = {
   panel_m2: {},          // { "Nom matériau": prix €/m2 } — ex: {"Chêne": 45}
-  edge_banding_m2: 0,     // € / m2 de chant plaqué (longueur bord × épaisseur panneau)
+  edge_banding_ml: 0,     // € / mètre linéaire de chant plaqué
   screw_unit: 0,          // € / vis (usage à définir)
   dowel_unit: 0,          // € / tourillon
   hinge_unit: 0,          // € / charnière
@@ -4587,7 +4596,7 @@ function computeDevisPrice(q, prices){
   }
   var costPanels = sumBucket(q.panels_caisson_m2) + sumBucket(q.panels_etagere_m2) + sumBucket(q.panels_porte_m2) + sumBucket(q.panels_tiroir_m2) + sumBucket(q.panels_tiroir_caisse_m2) + sumBucket(q.panels_plan_m2);
   var cost = costPanels
-    + (q.edge_banding_m2||0) * (prices.edge_banding_m2||0)
+    + (q.edge_banding_ml||0) * (prices.edge_banding_ml||0)
     + q.screws * (prices.screw_unit||0)
     + q.dowels * (prices.dowel_unit||0)
     + q.hinges * (prices.hinge_unit||0)
