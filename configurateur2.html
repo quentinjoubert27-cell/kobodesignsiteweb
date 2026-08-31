@@ -4583,9 +4583,8 @@ function computeFullDevisQuantities(){
 // ── Tarification : prix unitaires à renseigner (en attente des tarifs Kobo) ──
 // coefficient_revente : coût de revient × ce coefficient = prix de vente
 var PRICES = {
-  panel_m2: {},          // { "Nom matériau": prix €/m2 } — ex: {"Chêne": 45}
+  panel_m2: {},          // { "Nom matériau": prix €/m2 } — sauf le caisson, facturé au ml (voir decoupe_usinage_m)
   edge_banding_ml: 0,     // € / mètre linéaire de chant plaqué
-  decoupe_usinage_ml: 0,  // € / mètre linéaire de découpe (périmètre des planches du caisson)
   screw_unit: 0,          // € / vis (usage à définir)
   dowel_unit: 0,          // € / tourillon
   hinge_unit: 0,          // € / charnière
@@ -4602,10 +4601,14 @@ function computeDevisPrice(q, prices){
       return sum + bucket[mat]*pu;
     }, 0);
   }
-  var costPanels = sumBucket(q.panels_caisson_m2) + sumBucket(q.panels_etagere_m2) + sumBucket(q.panels_porte_m2) + sumBucket(q.panels_tiroir_m2) + sumBucket(q.panels_tiroir_caisse_m2) + sumBucket(q.panels_plan_m2);
+  // Le caisson (joues/traverses/fond) est facturé au mètre linéaire de périmètre, pas au m².
+  var costCaisson = Object.keys(q.panels_caisson_m2||{}).reduce(function(sum,mat){
+    var pu = (prices.panel_m2||{})[mat] || 0;
+    return sum + (q.decoupe_usinage_m||0)*pu;
+  }, 0);
+  var costPanels = costCaisson + sumBucket(q.panels_etagere_m2) + sumBucket(q.panels_porte_m2) + sumBucket(q.panels_tiroir_m2) + sumBucket(q.panels_tiroir_caisse_m2) + sumBucket(q.panels_plan_m2);
   var cost = costPanels
     + (q.edge_banding_ml||0) * (prices.edge_banding_ml||0)
-    + (q.decoupe_usinage_m||0) * (prices.decoupe_usinage_ml||0)
     + q.screws * (prices.screw_unit||0)
     + q.dowels * (prices.dowel_unit||0)
     + q.hinges * (prices.hinge_unit||0)
