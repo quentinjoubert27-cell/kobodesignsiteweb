@@ -1291,6 +1291,7 @@
       `<input type="number" step="0.01" id="devis-chant" value="${p.edge_banding_ml ?? ''}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
     );
     var otherRows = [
+      ['Découpe / usinage <span style="font-weight:400;color:rgba(26,26,26,.45);">(planches du caisson, au périmètre)</span>', (q.decoupe_usinage_m||0).toFixed(2) + ' ml', 'devis-decoupe', p.decoupe_usinage_ml, '€/ml'],
       ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', 'devis-equerre', p.corner_bracket_unit, '€/unité'],
       ['Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', (q.screws||0) + ' unité(s)', 'devis-vis', p.screw_unit, '€/unité'],
       ['Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', (q.dowels||0) + ' unité(s)', 'devis-tourillon', p.dowel_unit, '€/unité'],
@@ -1393,6 +1394,7 @@
     var prices = {
       panel_m2: panelM2,
       edge_banding_ml: parseFloat(document.getElementById('devis-chant').value) || 0,
+      decoupe_usinage_ml: parseFloat(document.getElementById('devis-decoupe').value) || 0,
       screw_unit: parseFloat(document.getElementById('devis-vis').value) || 0,
       dowel_unit: parseFloat(document.getElementById('devis-tourillon').value) || 0,
       hinge_unit: parseFloat(document.getElementById('devis-charniere').value) || 0,
@@ -1469,6 +1471,7 @@
     }).join('');
     var otherRowsPdf = [
       ['Équerres d\'angle', (q.corner_brackets||0) + ' unité(s)', prices.corner_bracket_unit],
+      ['Découpe / usinage (planches du caisson)', (q.decoupe_usinage_m||0).toFixed(2) + ' ml', prices.decoupe_usinage_ml],
       ['Chant plaqué', read.edgeBandingTotalMl.toFixed(2) + ' ml', prices.edge_banding_ml],
       ['Vis (assemblage caisson, usinage inclus)', (q.screws||0) + ' unité(s)', prices.screw_unit],
       ['Tourillons (usinage inclus)', (q.dowels||0) + ' unité(s)', prices.dowel_unit],
@@ -1530,6 +1533,7 @@
     }, 0);
     var cost = costPanels
       + (q.edge_banding_ml || 0) * (tarifs.edge_banding_ml || 0)
+      + (q.decoupe_usinage_m || 0) * (tarifs.decoupe_usinage_ml || 0)
       + (q.screws || 0) * (tarifs.screw_unit || 0)
       + (q.dowels || 0) * (tarifs.dowel_unit || 0)
       + (q.hinges || 0) * (tarifs.hinge_unit || 0)
@@ -2416,7 +2420,7 @@
   // Version simplifiée de computeDevisQuantities (configurateur2.html) réutilisable côté admin
   function mergeDevisQuantitiesAdmin(list) {
     var out = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
-      edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
+      edge_banding_m: 0, decoupe_usinage_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
       doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
     function mergeBucket(outBucket, qBucket) {
       Object.keys(qBucket || {}).forEach(function (k) { outBucket[k] = (outBucket[k] || 0) + qBucket[k]; });
@@ -2429,6 +2433,7 @@
       mergeBucket(out.panels_tiroir_m2, q.panels_tiroir_m2);
       mergeBucket(out.panels_tiroir_caisse_m2, q.panels_tiroir_caisse_m2);
       out.edge_banding_m += q.edge_banding_m || 0;
+      out.decoupe_usinage_m += q.decoupe_usinage_m || 0;
       out.screws += q.screws || 0;
       out.dowels += q.dowels || 0;
       out.hinges += q.hinges || 0;
@@ -2441,12 +2446,13 @@
       out.pieces = out.pieces.concat(q.pieces || []);
     });
     out.edge_banding_ml = Math.round(out.edge_banding_m * 1000) / 1000; // en mètre linéaire
+    out.decoupe_usinage_m = Math.round((out.decoupe_usinage_m || 0) * 1000) / 1000;
     return out;
   }
 
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
     var q = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
-      edge_banding_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
+      edge_banding_m: 0, decoupe_usinage_m: 0, screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, pieces: [] };
     var mat = matLabel || 'Non défini';
     // Profondeur du caisson (mm) — 1 tourillon tous les 10cm de profondeur, par jonction
     var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
@@ -2463,17 +2469,20 @@
     q.screws += 4 * jointCP.vis; q.dowels += 4 * jointCP.tourillons; // 4 coins joues/traverses
     // bucket: q.panels_caisson_m2 | q.panels_etagere_m2 | q.panels_porte_m2 | q.panels_tiroir_m2
     // extra (optionnel) : { group, vis, tourillons, charnieres, mecanisme_tiroir } — recap par pièce/élément
-    function addPanel(bucket, material, w_mm, h_mm, type, extra) {
+    // countDecoupe : ajoute le périmètre de la pièce à decoupe_usinage_m (planches du caisson uniquement —
+    // à la découpe le coût dépend de la longueur de coupe, pas seulement de la surface)
+    function addPanel(bucket, material, w_mm, h_mm, type, extra, countDecoupe) {
       var w = Math.abs(w_mm), h = Math.abs(h_mm);
       bucket[material] = (bucket[material] || 0) + (w * h) / 1e6;
       var piece = { type: type, w_mm: Math.round(w), h_mm: Math.round(h), perimeter_mm: Math.round(2 * (w + h)) };
       if (extra) Object.assign(piece, extra);
       q.pieces.push(piece);
+      if (countDecoupe) q.decoupe_usinage_m += 2 * (w + h) / 1000;
     }
     (techSpec.structural_panels || []).forEach(function (p) {
       var w = p.x_right_mm - p.x_left_mm, h = p.y_top_mm - p.y_bottom_mm;
-      if (p.type === 'fond') { addPanel(q.panels_caisson_m2, mat, w, h, 'fond'); return; }
-      addPanel(q.panels_caisson_m2, mat, w, h, p.type);
+      if (p.type === 'fond') { addPanel(q.panels_caisson_m2, mat, w, h, 'fond', null, true); return; }
+      addPanel(q.panels_caisson_m2, mat, w, h, p.type, null, true);
       q.edge_banding_m += ((p.type === 'joue_gauche' || p.type === 'joue_droite') ? h : w) / 1000;
     });
     // Récapitulatif : assemblage global du caisson (les 4 coins ne sont pas attribuables à un seul panneau)
@@ -2482,7 +2491,7 @@
       var h = s.y_top_mm - s.y_bottom_mm;
       addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
         group: 'Intercalaire ' + (idx + 1), vis: 2 * jointCP.vis, tourillons: 2 * jointCP.tourillons
-      });
+      }, true);
       q.edge_banding_m += h / 1000;
       q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons;
       q.separators_count++;
@@ -2493,7 +2502,7 @@
       addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {
         group: 'Étagère ' + (idx + 1) + (fixe ? '' : ' (mobile)'),
         vis: fixe ? 2 * jointCP.vis : 0, tourillons: fixe ? 2 * jointCP.tourillons : 0
-      });
+      }, true);
       q.edge_banding_m += w / 1000;
       if (fixe) { q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons; }
       q.shelves_count++;
