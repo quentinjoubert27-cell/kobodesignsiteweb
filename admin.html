@@ -615,6 +615,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Analytics
     </button>
+    <button class="nav-item" onclick="showView('materiaux-prix', this)" id="nav-materiaux-prix">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Matériaux &amp; Prix
+    </button>
     <button class="nav-item" onclick="showView('audit', this)" id="nav-audit">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Sécurité
@@ -891,6 +895,22 @@
           <div id="an-countries"></div>
         </div>
       </div>
+    </div>
+
+    <!-- ── VUE MATÉRIAUX & PRIX (base de tarifs globale) ── -->
+    <div class="view" id="view-materiaux-prix">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Tarification</p>
+          <h1 class="view-title">Matériaux &amp; Prix</h1>
+        </div>
+        <button class="btn btn-primary" onclick="saveMateriauxPrix()">Enregistrer les prix</button>
+      </div>
+      <p style="font-size:13px;color:rgba(26,26,26,.6);max-width:70ch;margin:-8px 0 20px;">
+        Ces prix servent de base par défaut sur chaque nouveau devis — plus besoin de les ressaisir à chaque projet.
+        Tu peux toujours ajuster ponctuellement un prix directement dans la fiche d'un projet, sans que ça modifie cette base.
+      </p>
+      <div id="materiaux-prix-content">Chargement…</div>
     </div>
 
     <!-- ── VUE SÉCURITÉ / AUDIT LOGS ── -->
@@ -1225,6 +1245,111 @@
     loadClients();
     loadProjets();
     loadUnreadCount();
+    preloadTarifsGlobaux();
+  }
+
+  // Charge la base de prix globale au démarrage pour pouvoir pré-remplir n'importe quelle
+  // fiche projet, même si l'onglet "Matériaux & Prix" n'a pas encore été ouvert.
+  async function preloadTarifsGlobaux() {
+    try {
+      const { data } = await sb.from('tarifs_globaux').select('prices').eq('id', 1).maybeSingle();
+      currentTarifsGlobaux = (data && data.prices) || {};
+    } catch (err) {
+      currentTarifsGlobaux = {};
+    }
+  }
+
+  // ── LISTES DE MATÉRIAUX (copie des noms définis dans configurateur2.html —
+  // les seuls utilisés pour la tarification, pas besoin des textures/couleurs 3D) ──
+  var MATS_CAIS_NAMES = ['Chêne','Noyer','Chêne Foncé','Sapelli','Frêne Blanchi','Bois Blanc','Marron','Taupe',
+    'Noir Charbon','Noir Mat','Vert Forêt','Vert Sauge','Bleu Nuit','Bordeaux','Terracotta','Jaune Pâle','Crème',
+    'Gris Perle','Gris Ardoise','Brun Rosé','Blanc','Blanc Gris','Blanc Multicolore','Noir'];
+  var MATS_PLAN_NAMES = ['Evok','Kedar','Keena','Thala','Zira','Arden Blue','Blanc Elysée','Eternal Calacatta Gold',
+    'Chateau Brown','Eternal Marquina','Jardin Emerald','Linen Cream','Miami White','White Arabesque',
+    'Blanc Gris','Blanc Multicolore','Noir'];
+
+  var currentTarifsGlobaux = null; // { panel_m2: {...}, edge_banding_ml, screw_unit, ... } — chargé depuis Supabase
+
+  async function loadMateriauxPrix() {
+    var content = document.getElementById('materiaux-prix-content');
+    content.innerHTML = 'Chargement…';
+    try {
+      const { data } = await sb.from('tarifs_globaux').select('prices').eq('id', 1).maybeSingle();
+      currentTarifsGlobaux = (data && data.prices) || {};
+      content.innerHTML = renderMateriauxPrixForm(currentTarifsGlobaux);
+    } catch (err) {
+      content.innerHTML = '<div class="empty" style="color:#c2410c;">Erreur de chargement : ' + escHtml(err.message || String(err)) + '</div>';
+    }
+  }
+
+  function renderMateriauxPrixForm(prices) {
+    var p = prices || {};
+    var panelM2 = p.panel_m2 || {};
+    var inputStyle = 'width:140px;padding:7px 9px;border:1.5px solid rgba(26,26,26,.15);border-radius:6px;font-family:var(--font);font-size:13px;';
+    var rowStyle = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(26,26,26,.06);';
+
+    function matSection(title, bucketKey, unit, matNames) {
+      var rows = matNames.map(function(mat) {
+        var key = bucketKey + '|' + mat;
+        var val = panelM2[key] != null ? panelM2[key] : '';
+        return `<div style="${rowStyle}"><span style="font-size:13px;">${escHtml(mat)}</span>
+          <input type="number" step="0.01" class="mp-panel-input" data-key="${escHtml(key)}" value="${val}" placeholder="€/${unit}" style="${inputStyle}"/></div>`;
+      }).join('');
+      return `<details style="margin-bottom:14px;">
+        <summary style="cursor:pointer;font-weight:600;font-size:14px;padding:10px 0;">${escHtml(title)} <span style="font-weight:400;color:rgba(26,26,26,.45);">(€/${unit} par matériau)</span></summary>
+        <div style="padding:4px 4px 8px;">${rows}</div>
+      </details>`;
+    }
+
+    function fixedRow(label, id, val, unit) {
+      return `<div style="${rowStyle}"><span style="font-size:13px;">${escHtml(label)}</span>
+        <input type="number" step="0.01" id="${id}" value="${val ?? ''}" placeholder="${unit}" style="${inputStyle}"/></div>`;
+    }
+
+    return `
+      ${matSection('Caisson', 'panels_caisson_m2', 'ml', MATS_CAIS_NAMES)}
+      ${matSection('Étagère / intercalaire', 'panels_etagere_m2', 'ml', MATS_CAIS_NAMES)}
+      ${matSection('Porte', 'panels_porte_m2', 'ml', MATS_CAIS_NAMES)}
+      ${matSection('Tiroir (façade)', 'panels_tiroir_m2', 'ml', MATS_CAIS_NAMES)}
+      ${matSection('Caisse tiroir (fond/dos/côtés)', 'panels_tiroir_caisse_m2', 'ml', MATS_CAIS_NAMES)}
+      ${matSection('Joues (finitions)', 'finition_ml', 'ml', MATS_CAIS_NAMES)}
+      ${matSection('Plan de travail', 'panels_plan_m2', 'm²', MATS_PLAN_NAMES)}
+      <div class="detail-panel" style="padding:16px 20px;margin-top:8px;">
+        <p class="section-title" style="margin-bottom:8px;">Quincaillerie &amp; divers</p>
+        ${fixedRow('Chant plaqué', 'mp-chant', p.edge_banding_ml, '€/ml')}
+        ${fixedRow('Vis (assemblage caisson, usinage inclus)', 'mp-vis', p.screw_unit, '€/unité')}
+        ${fixedRow('Tourillons (usinage inclus)', 'mp-tourillon', p.dowel_unit, '€/unité')}
+        ${fixedRow('Charnières (pose + vis incluses)', 'mp-charniere', p.hinge_unit, '€/unité')}
+        ${fixedRow('Mécanismes tiroir (pose + vis incluses)', 'mp-tiroir', p.drawer_mechanism_unit, '€/unité')}
+        ${fixedRow("Équerres d'angle", 'mp-equerre', p.corner_bracket_unit, '€/unité')}
+        ${fixedRow('Coefficient de revente (par défaut)', 'mp-coefficient', p.coefficient_revente ?? 2, '')}
+      </div>
+    `;
+  }
+
+  async function saveMateriauxPrix() {
+    var panelM2 = {};
+    document.querySelectorAll('.mp-panel-input').forEach(function(inp) {
+      var v = parseFloat(inp.value);
+      if (!isNaN(v)) panelM2[inp.dataset.key] = v;
+    });
+    var prices = {
+      panel_m2: panelM2,
+      edge_banding_ml: parseFloat(document.getElementById('mp-chant').value) || 0,
+      screw_unit: parseFloat(document.getElementById('mp-vis').value) || 0,
+      dowel_unit: parseFloat(document.getElementById('mp-tourillon').value) || 0,
+      hinge_unit: parseFloat(document.getElementById('mp-charniere').value) || 0,
+      drawer_mechanism_unit: parseFloat(document.getElementById('mp-tiroir').value) || 0,
+      corner_bracket_unit: parseFloat(document.getElementById('mp-equerre').value) || 0,
+      coefficient_revente: parseFloat(document.getElementById('mp-coefficient').value) || 2,
+    };
+    try {
+      await sb.from('tarifs_globaux').upsert({ id: 1, prices: prices, updated_at: new Date().toISOString() });
+      currentTarifsGlobaux = prices;
+      showToast('Prix enregistrés !');
+    } catch (err) {
+      showToast('Erreur d\'enregistrement', 'err');
+    }
   }
 
   // ── NAVIGATION ────────────────────────────────────────────────────
@@ -1238,6 +1363,7 @@
     if (id === 'configs') loadConfigs();
     if (id === 'audit') loadAuditLogs();
     if (id === 'analytics') loadAnalytics(30, document.getElementById('an-btn-30'));
+    if (id === 'materiaux-prix') loadMateriauxPrix();
   }
 
   // ── PRIX PAR PROJET (au cas par cas, saisi dans la fiche projet) ──
@@ -1254,6 +1380,20 @@
       return `<div style="${rowStyle}"><div style="font-size:13px;font-weight:600;">${label}</div><div style="font-size:13px;color:rgba(26,26,26,.6);">${qtyText}</div>${inputHtml}</div>`;
     }
 
+    // Pré-remplit avec le prix ponctuel du projet s'il existe, sinon avec le tarif global par
+    // défaut (onglet "Matériaux & Prix") — l'admin n'a donc normalement plus rien à taper.
+    var g = (currentTarifsGlobaux || {});
+    function defVal(key) {
+      if (p.panel_m2 && p.panel_m2[key] != null) return p.panel_m2[key];
+      if (g.panel_m2 && g.panel_m2[key] != null) return g.panel_m2[key];
+      return '';
+    }
+    function defFixed(field) {
+      if (p[field] != null) return p[field];
+      if (g[field] != null) return g[field];
+      return '';
+    }
+
     // Le caisson (joues/traverses/fond) et les étagères/intercalaires sont facturés au mètre linéaire
     // de périmètre, pas au m² — à la découpe le coût dépend de la longueur de coupe de chaque planche,
     // pas de sa surface. Les autres catégories restent au m² classique.
@@ -1263,7 +1403,7 @@
       var bucket = q[bucketKey] || {};
       return Object.keys(bucket).map(function(mat) {
         var priceKey = bucketKey + '|' + mat;
-        var val = (p.panel_m2 && p.panel_m2[priceKey] != null) ? p.panel_m2[priceKey] : '';
+        var val = defVal(priceKey);
         var rowLabel = showMat ? (label + ' — ' + escHtml(mat)) : label;
         return row(
           rowLabel,
@@ -1282,7 +1422,7 @@
     // pièce par pièce comparable) — son matériau est choisi séparément, donc affiché à côté.
     var planRows = Object.keys(q.panels_plan_m2 || {}).map(function(mat) {
       var priceKey = 'panels_plan_m2|' + mat;
-      var val = (p.panel_m2 && p.panel_m2[priceKey] != null) ? p.panel_m2[priceKey] : '';
+      var val = defVal(priceKey);
       return row(
         'Plan de travail — ' + escHtml(mat),
         `${q.panels_plan_m2[mat].toFixed(2)} m²`,
@@ -1296,14 +1436,14 @@
     var chantRow = row(
       'Chant plaqué',
       `<span id="devis-chant-qty" data-base="${(q.edge_banding_ml||0).toFixed(4)}">${(q.edge_banding_ml||0).toFixed(2)}</span> ml`,
-      `<input type="number" step="0.01" id="devis-chant" value="${p.edge_banding_ml ?? ''}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
+      `<input type="number" step="0.01" id="devis-chant" value="${defFixed('edge_banding_ml')}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
     );
     var otherRows = [
-      ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', 'devis-equerre', p.corner_bracket_unit, '€/unité'],
-      ['Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', (q.screws||0) + ' unité(s)', 'devis-vis', p.screw_unit, '€/unité'],
-      ['Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', (q.dowels||0) + ' unité(s)', 'devis-tourillon', p.dowel_unit, '€/unité'],
-      ['Charnières <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.hinges||0) + ' unité(s)', 'devis-charniere', p.hinge_unit, '€/unité'],
-      ['Mécanismes tiroir <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.drawer_mechanisms||0) + ' unité(s)', 'devis-tiroir', p.drawer_mechanism_unit, '€/unité'],
+      ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', 'devis-equerre', defFixed('corner_bracket_unit'), '€/unité'],
+      ['Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', (q.screws||0) + ' unité(s)', 'devis-vis', defFixed('screw_unit'), '€/unité'],
+      ['Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', (q.dowels||0) + ' unité(s)', 'devis-tourillon', defFixed('dowel_unit'), '€/unité'],
+      ['Charnières <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.hinges||0) + ' unité(s)', 'devis-charniere', defFixed('hinge_unit'), '€/unité'],
+      ['Mécanismes tiroir <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.drawer_mechanisms||0) + ' unité(s)', 'devis-tiroir', defFixed('drawer_mechanism_unit'), '€/unité'],
     ].map(function(r) {
       return row(r[0], r[1], `<input type="number" step="0.01" id="${r[2]}" value="${r[3] ?? ''}" placeholder="${r[4]}" style="${inputStyle}"/><div></div>`);
     }).join('');
@@ -1326,11 +1466,14 @@
       }
       // Les joues sont facturées au mètre linéaire de périmètre, comme le caisson, mais avec leur
       // propre prix (matériau de finition différent) — ligne séparée du "Caisson".
+      var finitionPriceKey = q.caisson_material ? ('finition_ml|' + q.caisson_material) : null;
+      var finitionPriceDefault = p.finition_unit_ml != null ? p.finition_unit_ml
+        : (finitionPriceKey ? defVal(finitionPriceKey) : '');
       finitionRows = q.finitions.map(finRow).join('') +
         row(
           'Joues' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre, au ml)</span>',
           `<span id="devis-fin-total-qty">0.00</span> ml`,
-          `<input type="number" step="0.01" id="devis-finition-price" value="${p.finition_unit_ml ?? ''}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
+          `<input type="number" step="0.01" id="devis-finition-price" value="${finitionPriceDefault}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
         );
     }
 
@@ -1364,7 +1507,7 @@
       ${piecesDetail}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;margin-bottom:14px;">
         <label style="font-size:12px;font-weight:600;">Coefficient de revente</label>
-        <input type="number" step="0.1" id="devis-coefficient" value="${p.coefficient_revente ?? 2}" style="${inputStyle}"/>
+        <input type="number" step="0.1" id="devis-coefficient" value="${defFixed('coefficient_revente') || 2}" style="${inputStyle}"/>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" onclick="computeAndSaveDevisPrice()">Calculer et enregistrer</button>
@@ -2329,6 +2472,7 @@
   async function renderProjetDevis(projetId) {
     const el = document.getElementById('pd-devis');
     el.innerHTML = 'Chargement…';
+    if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
     try {
       const [{ data: sdb }, { data: biblio }, { data: projetRow }] = await Promise.all([
         sb.from('configs_sdb').select('*').eq('projet_id', projetId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
