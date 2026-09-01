@@ -4425,7 +4425,7 @@ function computeDevisQuantities(techSpec, matLabel){
   // Séparateurs verticaux (intercalaires) — comptés avec les étagères
   (techSpec.separators||[]).forEach(function(s, idx){
     var h = s.y_top_mm - s.y_bottom_mm;
-    addPanel(q.panels_etagere_m2, STRUCT_MAT, s.thickness_mm, h, 'separateur', {
+    addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
       group: 'Intercalaire '+(idx+1), vis: 2*jointCP.vis, tourillons: 2*jointCP.tourillons
     }, 'etagere');
     q.edge_banding_m += h/1000;
@@ -4437,7 +4437,7 @@ function computeDevisQuantities(techSpec, matLabel){
   (techSpec.shelves||[]).forEach(function(sh, idx){
     var w = sh.x_right_mm - sh.x_left_mm;
     var fixe = sh.shelf_type==='fixe';
-    addPanel(q.panels_etagere_m2, STRUCT_MAT, w, sh.depth_mm, 'etagere', {
+    addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {
       group: 'Étagère '+(idx+1)+(fixe?'':' (mobile)'),
       vis: fixe ? 2*jointCP.vis : 0, tourillons: fixe ? 2*jointCP.tourillons : 0
     }, 'etagere');

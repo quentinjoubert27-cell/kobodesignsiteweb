@@ -1320,8 +1320,8 @@
 
     return `
       ${singlePriceRow('Caisson', 'panels_caisson_m2|Caisson', 'ml')}
-      ${singlePriceRow('Étagère / intercalaire', 'panels_etagere_m2|Caisson', 'ml')}
       ${singlePriceRow('Caisse tiroir (fond/dos/côtés)', 'panels_tiroir_caisse_m2|Caisson', 'ml')}
+      ${matSection('Étagère / intercalaire', 'panels_etagere_m2', 'ml', MATS_CAIS_NAMES)}
       ${matSection('Porte', 'panels_porte_m2', 'ml', MATS_CAIS_NAMES)}
       ${matSection('Tiroir (façade)', 'panels_tiroir_m2', 'ml', MATS_CAIS_NAMES)}
       ${matSection('Joues (finitions)', 'finition_ml', 'ml', MATS_CAIS_NAMES)}
@@ -1425,7 +1425,7 @@
       }).join('');
     }
     var caissonRows = perimeterRows('panels_caisson_m2', 'Caisson', q.decoupe_usinage_m, '€/ml', false);
-    var etagereRows = perimeterRows('panels_etagere_m2', 'Étagère / intercalaire', q.decoupe_etagere_m, '€/ml', false);
+    var etagereRows = perimeterRows('panels_etagere_m2', 'Étagère / intercalaire', q.decoupe_etagere_m, '€/ml', true);
     var porteRows = perimeterRows('panels_porte_m2', 'Porte', q.decoupe_porte_m, '€/ml', true);
     var tiroirRows = perimeterRows('panels_tiroir_m2', 'Tiroir (façade)', q.decoupe_tiroir_m, '€/ml', true);
     var tiroirCaisseRows = perimeterRows('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', q.decoupe_tiroir_caisse_m, '€/ml', false);
@@ -1626,7 +1626,7 @@
       }).join('');
     }
     var caissonRowsPdf = perimeterRowsPdf('panels_caisson_m2', 'Caisson', q.decoupe_usinage_m, false);
-    var etagereRowsPdf = perimeterRowsPdf('panels_etagere_m2', 'Étagère / intercalaire', q.decoupe_etagere_m, false);
+    var etagereRowsPdf = perimeterRowsPdf('panels_etagere_m2', 'Étagère / intercalaire', q.decoupe_etagere_m, true);
     var porteRowsPdf = perimeterRowsPdf('panels_porte_m2', 'Porte', q.decoupe_porte_m, true);
     var tiroirRowsPdf = perimeterRowsPdf('panels_tiroir_m2', 'Tiroir (façade)', q.decoupe_tiroir_m, true);
     var tiroirCaisseRowsPdf = perimeterRowsPdf('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', q.decoupe_tiroir_caisse_m, false);
@@ -2686,7 +2686,7 @@
     q.pieces.push({ type: 'caisson_assemblage', group: 'Caisson (assemblage 4 coins)', vis: 4 * jointCP.vis, tourillons: 4 * jointCP.tourillons });
     (techSpec.separators || []).forEach(function (s, idx) {
       var h = s.y_top_mm - s.y_bottom_mm;
-      addPanel(q.panels_etagere_m2, STRUCT_MAT, s.thickness_mm, h, 'separateur', {
+      addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
         group: 'Intercalaire ' + (idx + 1), vis: 2 * jointCP.vis, tourillons: 2 * jointCP.tourillons
       }, 'etagere');
       q.edge_banding_m += h / 1000;
@@ -2696,7 +2696,7 @@
     (techSpec.shelves || []).forEach(function (sh, idx) {
       var w = sh.x_right_mm - sh.x_left_mm;
       var fixe = sh.shelf_type === 'fixe';
-      addPanel(q.panels_etagere_m2, STRUCT_MAT, w, sh.depth_mm, 'etagere', {
+      addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {
         group: 'Étagère ' + (idx + 1) + (fixe ? '' : ' (mobile)'),
         vis: fixe ? 2 * jointCP.vis : 0, tourillons: fixe ? 2 * jointCP.tourillons : 0
       }, 'etagere');
