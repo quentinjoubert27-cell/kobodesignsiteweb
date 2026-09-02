@@ -16,3 +16,11 @@ create table if not exists tarifs_globaux (
 insert into tarifs_globaux (id, prices)
 values (1, '{}'::jsonb)
 on conflict (id) do nothing;
+
+-- RLS : sans policy, Supabase bloque silencieusement l'écriture (pas d'erreur JS levée,
+-- juste rien d'enregistré) — même pattern que les autres tables admin.
+alter table tarifs_globaux enable row level security;
+
+create policy "Admin accès total tarifs_globaux" on tarifs_globaux for all
+  using ((auth.jwt() ->> 'email') = 'quentin.joubert@icloud.com')
+  with check ((auth.jwt() ->> 'email') = 'quentin.joubert@icloud.com');

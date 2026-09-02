@@ -1274,11 +1274,13 @@
     var content = document.getElementById('materiaux-prix-content');
     content.innerHTML = 'Chargement…';
     try {
-      const { data } = await sb.from('tarifs_globaux').select('prices').eq('id', 1).maybeSingle();
+      const { data, error } = await sb.from('tarifs_globaux').select('prices').eq('id', 1).maybeSingle();
+      if (error) throw error;
       currentTarifsGlobaux = (data && data.prices) || {};
       content.innerHTML = renderMateriauxPrixForm(currentTarifsGlobaux);
     } catch (err) {
-      content.innerHTML = '<div class="empty" style="color:#c2410c;">Erreur de chargement : ' + escHtml(err.message || String(err)) + '</div>';
+      console.error('loadMateriauxPrix error:', err);
+      content.innerHTML = '<div class="empty" style="color:#c2410c;">Erreur de chargement : ' + escHtml(err.message || String(err)) + ' — la table "tarifs_globaux" existe-t-elle dans Supabase ?</div>';
     }
   }
 
@@ -1356,11 +1358,13 @@
       coefficient_revente: parseFloat(document.getElementById('mp-coefficient').value) || 2,
     };
     try {
-      await sb.from('tarifs_globaux').upsert({ id: 1, prices: prices, updated_at: new Date().toISOString() });
+      const { error } = await sb.from('tarifs_globaux').upsert({ id: 1, prices: prices, updated_at: new Date().toISOString() });
+      if (error) throw error;
       currentTarifsGlobaux = prices;
       showToast('Prix enregistrés !');
     } catch (err) {
-      showToast('Erreur d\'enregistrement', 'err');
+      console.error('saveMateriauxPrix error:', err);
+      showToast('Erreur d\'enregistrement : ' + (err.message || String(err)), 'err');
     }
   }
 
