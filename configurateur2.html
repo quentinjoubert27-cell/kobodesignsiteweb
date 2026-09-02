@@ -4621,19 +4621,7 @@ function computeDevisPrice(q, prices){
       return sum + bucket[mat]*pu;
     }, 0);
   }
-  // Caisson et étagères/intercalaires sont facturés au mètre linéaire de périmètre, pas au m².
-  function sumPerimeterBucket(bucket, perimeterM){
-    return Object.keys(bucket||{}).reduce(function(sum,mat){
-      var pu = (prices.panel_m2||{})[mat] || 0;
-      return sum + (perimeterM||0)*pu;
-    }, 0);
-  }
-  var costCaisson = sumPerimeterBucket(q.panels_caisson_m2, q.decoupe_usinage_m);
-  var costEtagere = sumPerimeterBucket(q.panels_etagere_m2, q.decoupe_etagere_m);
-  var costPorte = sumPerimeterBucket(q.panels_porte_m2, q.decoupe_porte_m);
-  var costTiroir = sumPerimeterBucket(q.panels_tiroir_m2, q.decoupe_tiroir_m);
-  var costTiroirCaisse = sumPerimeterBucket(q.panels_tiroir_caisse_m2, q.decoupe_tiroir_caisse_m);
-  var costPanels = costCaisson + costEtagere + costPorte + costTiroir + costTiroirCaisse + sumBucket(q.panels_plan_m2);
+  var costPanels = sumBucket(q.panels_caisson_m2) + sumBucket(q.panels_etagere_m2) + sumBucket(q.panels_porte_m2) + sumBucket(q.panels_tiroir_m2) + sumBucket(q.panels_tiroir_caisse_m2) + sumBucket(q.panels_plan_m2);
   var cost = costPanels
     + (q.edge_banding_ml||0) * (prices.edge_banding_ml||0)
     + q.screws * (prices.screw_unit||0)

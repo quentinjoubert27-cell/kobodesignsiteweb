@@ -1319,12 +1319,12 @@
     }
 
     return `
-      ${singlePriceRow('Caisson', 'panels_caisson_m2|Caisson', 'ml')}
-      ${singlePriceRow('Caisse tiroir (fond/dos/côtés)', 'panels_tiroir_caisse_m2|Caisson', 'ml')}
-      ${matSection('Étagère / intercalaire', 'panels_etagere_m2', 'ml', MATS_CAIS_NAMES)}
-      ${matSection('Porte', 'panels_porte_m2', 'ml', MATS_CAIS_NAMES)}
-      ${matSection('Tiroir (façade)', 'panels_tiroir_m2', 'ml', MATS_CAIS_NAMES)}
-      ${matSection('Joues (finitions)', 'finition_ml', 'ml', MATS_CAIS_NAMES)}
+      ${singlePriceRow('Caisson', 'panels_caisson_m2|Caisson', 'm²')}
+      ${singlePriceRow('Caisse tiroir (fond/dos/côtés)', 'panels_tiroir_caisse_m2|Caisson', 'm²')}
+      ${matSection('Étagère / intercalaire', 'panels_etagere_m2', 'm²', MATS_CAIS_NAMES)}
+      ${matSection('Porte', 'panels_porte_m2', 'm²', MATS_CAIS_NAMES)}
+      ${matSection('Tiroir (façade)', 'panels_tiroir_m2', 'm²', MATS_CAIS_NAMES)}
+      ${matSection('Joues (finitions)', 'finition_m2', 'm²', MATS_CAIS_NAMES)}
       ${matSection('Plan de travail', 'panels_plan_m2', 'm²', MATS_PLAN_NAMES)}
       <div class="detail-panel" style="padding:16px 20px;margin-top:8px;">
         <p class="section-title" style="margin-bottom:8px;">Quincaillerie &amp; divers</p>
@@ -1406,12 +1406,9 @@
       return '';
     }
 
-    // Le caisson (joues/traverses/fond) et les étagères/intercalaires sont facturés au mètre linéaire
-    // de périmètre, pas au m² — à la découpe le coût dépend de la longueur de coupe de chaque planche,
-    // pas de sa surface. Les autres catégories restent au m² classique.
     // showMat : affiche le nom du matériau à côté du libellé (pour les catégories en finition visible —
-    // pas pour Caisson/Étagère/Caisse tiroir qui utilisent le matériau générique du caisson)
-    function perimeterRows(bucketKey, label, perimeterM, placeholder, showMat) {
+    // pas pour Caisson/Caisse tiroir qui utilisent le matériau générique du caisson)
+    function panelM2Rows(bucketKey, label, placeholder, showMat) {
       var bucket = q[bucketKey] || {};
       return Object.keys(bucket).map(function(mat) {
         var priceKey = bucketKey + '|' + mat;
@@ -1419,16 +1416,16 @@
         var rowLabel = showMat ? (label + ' — ' + escHtml(mat)) : label;
         return row(
           rowLabel,
-          `${(perimeterM||0).toFixed(2)} ml`,
+          `${bucket[mat].toFixed(2)} m²`,
           `<input type="number" step="0.01" class="devis-mat-input" data-mat="${escHtml(priceKey)}" value="${val}" placeholder="${placeholder}" style="${inputStyle}"/><div></div>`
         );
       }).join('');
     }
-    var caissonRows = perimeterRows('panels_caisson_m2', 'Caisson', q.decoupe_usinage_m, '€/ml', false);
-    var etagereRows = perimeterRows('panels_etagere_m2', 'Étagère / intercalaire', q.decoupe_etagere_m, '€/ml', true);
-    var porteRows = perimeterRows('panels_porte_m2', 'Porte', q.decoupe_porte_m, '€/ml', true);
-    var tiroirRows = perimeterRows('panels_tiroir_m2', 'Tiroir (façade)', q.decoupe_tiroir_m, '€/ml', true);
-    var tiroirCaisseRows = perimeterRows('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', q.decoupe_tiroir_caisse_m, '€/ml', false);
+    var caissonRows = panelM2Rows('panels_caisson_m2', 'Caisson', '€/m²', false);
+    var etagereRows = panelM2Rows('panels_etagere_m2', 'Étagère / intercalaire', '€/m²', true);
+    var porteRows = panelM2Rows('panels_porte_m2', 'Porte', '€/m²', true);
+    var tiroirRows = panelM2Rows('panels_tiroir_m2', 'Tiroir (façade)', '€/m²', true);
+    var tiroirCaisseRows = panelM2Rows('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', '€/m²', false);
 
     // Seul le plan de travail reste au m² classique (grande surface plane, pas de logique de découpe
     // pièce par pièce comparable) — son matériau est choisi séparément, donc affiché à côté.
@@ -1473,19 +1470,19 @@
       function finRow(fin) {
         var checked = fp[fin.id] != null ? fp[fin.id] : fin.visible;
         var checkbox = `<input type="checkbox" id="devis-fin-${fin.id}" class="devis-fin-checkbox" data-fin-id="${fin.id}" ${checked ? 'checked' : ''} data-m2="${fin.m2 || 0}" data-perimeter="${fin.perimeter_m || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">`;
-        var qty = (fin.perimeter_m || 0).toFixed(2) + ' ml <span style="color:rgba(26,26,26,.4);">(' + (fin.m2 || 0).toFixed(2) + ' m²)</span>';
+        var qty = (fin.m2 || 0).toFixed(2) + ' m²';
         return row(escHtml(fin.label) + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', qty, '<div></div>' + checkbox);
       }
-      // Les joues sont facturées au mètre linéaire de périmètre, comme le caisson, mais avec leur
-      // propre prix (matériau de finition différent) — ligne séparée du "Caisson".
-      var finitionPriceKey = q.caisson_material ? ('finition_ml|' + q.caisson_material) : null;
-      var finitionPriceDefault = p.finition_unit_ml != null ? p.finition_unit_ml
+      // Les joues sont facturées au m², avec leur propre prix (matériau de finition différent) —
+      // ligne séparée du "Caisson".
+      var finitionPriceKey = q.caisson_material ? ('finition_m2|' + q.caisson_material) : null;
+      var finitionPriceDefault = p.finition_unit_m2 != null ? p.finition_unit_m2
         : (finitionPriceKey ? defVal(finitionPriceKey) : '');
       finitionRows = q.finitions.map(finRow).join('') +
         row(
-          'Joues' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre, au ml)</span>',
-          `<span id="devis-fin-total-qty">0.00</span> ml`,
-          `<input type="number" step="0.01" id="devis-finition-price" value="${finitionPriceDefault}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
+          'Joues' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre)</span>',
+          `<span id="devis-fin-total-qty">0.00</span> m²`,
+          `<input type="number" step="0.01" id="devis-finition-price" value="${finitionPriceDefault}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
         );
     }
 
@@ -1541,7 +1538,7 @@
         totalPerimeter += parseFloat(cb.dataset.perimeter) || 0;
       }
     });
-    if (totalEl) totalEl.textContent = totalPerimeter.toFixed(2);
+    if (totalEl) totalEl.textContent = totalM2.toFixed(2);
     if (chantEl) {
       var base = parseFloat(chantEl.dataset.base) || 0;
       chantEl.textContent = (base + totalPerimeter).toFixed(2);
@@ -1566,18 +1563,22 @@
       coefficient_revente: parseFloat(document.getElementById('devis-coefficient').value) || 2,
     };
     var finitionVisible = {};
-    var finitionPerimeter = 0;
+    var finitionM2 = 0, finitionPerimeter = 0;
     document.querySelectorAll('.devis-fin-checkbox').forEach(function (cb) {
       finitionVisible[cb.dataset.finId] = cb.checked;
-      if (cb.checked) finitionPerimeter += parseFloat(cb.dataset.perimeter) || 0;
+      if (cb.checked) {
+        finitionM2 += parseFloat(cb.dataset.m2) || 0;
+        finitionPerimeter += parseFloat(cb.dataset.perimeter) || 0;
+      }
     });
     prices.finition_visible = finitionVisible;
-    // Les joues sont facturées au mètre linéaire (périmètre), comme le caisson, mais à part (matériau différent)
-    prices.finition_unit_ml = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
+    // Les joues sont facturées au m², avec leur propre prix (matériau de finition différent)
+    prices.finition_unit_m2 = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
     // Chant plaqué total = base (caisson/étagères/portes/tiroirs/plan) + périmètre des joues cochées
+    // (le chant, lui, reste toujours au ml quelle que soit l'unité de facturation du panneau)
     var chantQtyEl = document.getElementById('devis-chant-qty');
     var edgeBandingTotalMl = chantQtyEl ? (parseFloat(chantQtyEl.textContent) || 0) : 0;
-    return { prices: prices, finitionPerimeter: finitionPerimeter, edgeBandingTotalMl: edgeBandingTotalMl };
+    return { prices: prices, finitionM2: finitionM2, finitionPerimeter: finitionPerimeter, edgeBandingTotalMl: edgeBandingTotalMl };
   }
 
   function computeAndSaveDevisPrice() {
@@ -1587,7 +1588,7 @@
     var qForPrice = Object.assign({}, q, { edge_banding_ml: read.edgeBandingTotalMl });
 
     var price = computeDevisPriceAdmin(qForPrice, prices);
-    price.cost_revient += read.finitionPerimeter * prices.finition_unit_ml;
+    price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
     price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
     document.getElementById('devis-result').innerHTML =
       'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
@@ -1609,31 +1610,27 @@
     var prices = read.prices;
     var qForPrice = Object.assign({}, q, { edge_banding_ml: read.edgeBandingTotalMl });
     var price = computeDevisPriceAdmin(qForPrice, prices);
-    price.cost_revient += read.finitionPerimeter * prices.finition_unit_ml;
+    price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
     price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
 
     var projetNom = (document.getElementById('pd-title') || {}).textContent || 'Projet';
     function trPdf(label, qty, pu) {
       return `<tr><td>${escHtml(label)}</td><td>${escHtml(qty)}</td><td>${pu != null ? (parseFloat(pu)||0).toFixed(2) + ' €' : '—'}</td></tr>`;
     }
-    // Caisson (joues/traverses/fond) et étagères/intercalaires sont facturés au mètre linéaire de
-    // périmètre, pas au m².
-    function perimeterRowsPdf(bucketKey, label, perimeterM, showMat) {
-      return Object.keys(q[bucketKey] || {}).map(function(mat) {
+    function panelM2RowsPdf(bucketKey, label, showMat) {
+      var bucket = q[bucketKey] || {};
+      return Object.keys(bucket).map(function(mat) {
         var priceKey = bucketKey + '|' + mat;
         var rowLabel = showMat ? (label + ' — ' + mat) : label;
-        return trPdf(rowLabel, (perimeterM||0).toFixed(2) + ' ml', prices.panel_m2[priceKey]);
+        return trPdf(rowLabel, bucket[mat].toFixed(2) + ' m²', prices.panel_m2[priceKey]);
       }).join('');
     }
-    var caissonRowsPdf = perimeterRowsPdf('panels_caisson_m2', 'Caisson', q.decoupe_usinage_m, false);
-    var etagereRowsPdf = perimeterRowsPdf('panels_etagere_m2', 'Étagère / intercalaire', q.decoupe_etagere_m, true);
-    var porteRowsPdf = perimeterRowsPdf('panels_porte_m2', 'Porte', q.decoupe_porte_m, true);
-    var tiroirRowsPdf = perimeterRowsPdf('panels_tiroir_m2', 'Tiroir (façade)', q.decoupe_tiroir_m, true);
-    var tiroirCaisseRowsPdf = perimeterRowsPdf('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', q.decoupe_tiroir_caisse_m, false);
-    var planRowsPdf = Object.keys(q.panels_plan_m2 || {}).map(function(mat) {
-      var priceKey = 'panels_plan_m2|' + mat;
-      return trPdf('Plan de travail — ' + mat, q.panels_plan_m2[mat].toFixed(2) + ' m²', prices.panel_m2[priceKey]);
-    }).join('');
+    var caissonRowsPdf = panelM2RowsPdf('panels_caisson_m2', 'Caisson', false);
+    var etagereRowsPdf = panelM2RowsPdf('panels_etagere_m2', 'Étagère / intercalaire', true);
+    var porteRowsPdf = panelM2RowsPdf('panels_porte_m2', 'Porte', true);
+    var tiroirRowsPdf = panelM2RowsPdf('panels_tiroir_m2', 'Tiroir (façade)', true);
+    var tiroirCaisseRowsPdf = panelM2RowsPdf('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', false);
+    var planRowsPdf = panelM2RowsPdf('panels_plan_m2', 'Plan de travail', true);
     var matRowsPdf = caissonRowsPdf + etagereRowsPdf + porteRowsPdf + tiroirRowsPdf + tiroirCaisseRowsPdf + planRowsPdf;
     var otherRowsPdf = [
       ['Équerres d\'angle', (q.corner_brackets||0) + ' unité(s)', prices.corner_bracket_unit],
@@ -1646,9 +1643,9 @@
     var finMatSuffix = q.caisson_material ? ' — ' + q.caisson_material : '';
     var finitionRowsPdf = (Array.isArray(q.finitions) ? q.finitions : []).map(function(fin) {
       var checked = (prices.finition_visible || {})[fin.id] != null ? prices.finition_visible[fin.id] : fin.visible;
-      var qtyTxt = (fin.perimeter_m||0).toFixed(2) + ' ml (' + (fin.m2||0).toFixed(2) + ' m²)';
+      var qtyTxt = (fin.m2||0).toFixed(2) + ' m²';
       return `<tr><td>${escHtml(fin.label + finMatSuffix)}${checked ? '' : ' (non retenu)'}</td><td>${escHtml(qtyTxt)}</td><td>—</td></tr>`;
-    }).join('') + trPdf('Joues' + finMatSuffix, read.finitionPerimeter.toFixed(2) + ' ml', prices.finition_unit_ml);
+    }).join('') + trPdf('Joues' + finMatSuffix, read.finitionM2.toFixed(2) + ' m²', prices.finition_unit_m2);
     var piecesRowsPdf = (q.pieces||[]).map(function(pc) {
       var dims = (pc.w_mm != null && pc.h_mm != null) ? `${pc.w_mm} × ${pc.h_mm} mm` : '—';
       var fasteners = [];
@@ -1686,24 +1683,8 @@
   function computeDevisPriceAdmin(q, tarifs) {
     if (!q || !tarifs) return null;
     var missingMats = [];
-    // Caisson (joues/traverses/fond) et étagères/intercalaires sont facturés au mètre linéaire de
-    // périmètre (découpe), pas au m².
-    function perimeterCost(bucketKey, perimeterM) {
-      var bucket = q[bucketKey] || {};
-      return Object.keys(bucket).reduce(function(sum, mat) {
-        var priceKey = bucketKey + '|' + mat;
-        var pu = (tarifs.panel_m2 || {})[priceKey] || 0;
-        if (!(pu > 0)) missingMats.push(priceKey);
-        return sum + (perimeterM || 0) * pu;
-      }, 0);
-    }
-    var costCaisson = perimeterCost('panels_caisson_m2', q.decoupe_usinage_m);
-    var costEtagere = perimeterCost('panels_etagere_m2', q.decoupe_etagere_m);
-    var costPorte = perimeterCost('panels_porte_m2', q.decoupe_porte_m);
-    var costTiroir = perimeterCost('panels_tiroir_m2', q.decoupe_tiroir_m);
-    var costTiroirCaisse = perimeterCost('panels_tiroir_caisse_m2', q.decoupe_tiroir_caisse_m);
-    var PANEL_CATEGORY_KEYS = ['panels_plan_m2'];
-    var costPanels = costCaisson + costEtagere + costPorte + costTiroir + costTiroirCaisse + PANEL_CATEGORY_KEYS.reduce(function(sumCat, catKey) {
+    var PANEL_CATEGORY_KEYS = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_tiroir_caisse_m2', 'panels_plan_m2'];
+    var costPanels = PANEL_CATEGORY_KEYS.reduce(function(sumCat, catKey) {
       var bucket = q[catKey] || {};
       return sumCat + Object.keys(bucket).reduce(function(sum, mat) {
         var priceKey = catKey + '|' + mat;
