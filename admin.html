@@ -1382,83 +1382,62 @@
     if (id === 'materiaux-prix') loadMateriauxPrix();
   }
 
-  // ── PRIX PAR PROJET (au cas par cas, saisi dans la fiche projet) ──
-  function renderDevisPriceForm(q, savedPrices) {
+  // ── PRIX AUTOMATIQUE (calculé depuis la base "Matériaux & Prix", non modifiable ici) ──
+  function renderDevisPriceForm(q) {
     var hasAnyPanel = q && ['panels_caisson_m2','panels_etagere_m2','panels_porte_m2','panels_tiroir_m2','panels_tiroir_caisse_m2','panels_plan_m2']
       .some(function(k){ return q[k] && Object.keys(q[k]).length; });
     if (!hasAnyPanel) return '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune quantité calculable pour cette configuration.</div>';
-    var p = savedPrices || {};
-    var rowStyle = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
-    var headStyle = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;padding:0 0 8px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.15);';
-    var inputStyle = 'width:100%;padding:8px 10px;border:1.5px solid rgba(26,26,26,.15);border-radius:6px;font-family:var(--font);font-size:13px;';
+    var rowStyle = 'display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
+    var headStyle = 'display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;padding:0 0 8px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.15);';
 
-    function row(label, qtyText, inputHtml) {
-      return `<div style="${rowStyle}"><div style="font-size:13px;font-weight:600;">${label}</div><div style="font-size:13px;color:rgba(26,26,26,.6);">${qtyText}</div>${inputHtml}</div>`;
+    function row(label, qtyText, priceText, extra) {
+      return `<div style="${rowStyle}"><div style="font-size:13px;font-weight:600;">${label}</div><div style="font-size:13px;color:rgba(26,26,26,.6);">${qtyText}</div><div style="font-size:13px;">${priceText}${extra||''}</div></div>`;
     }
 
-    // Pré-remplit avec le prix ponctuel du projet s'il existe, sinon avec le tarif global par
-    // défaut (onglet "Matériaux & Prix") — l'admin n'a donc normalement plus rien à taper.
+    // Tous les prix viennent uniquement de la base globale (onglet "Matériaux & Prix") — plus de
+    // saisie ni de surcharge possible depuis la fiche projet.
     var g = (currentTarifsGlobaux || {});
-    function defVal(key) {
-      if (p.panel_m2 && p.panel_m2[key] != null) return p.panel_m2[key];
-      if (g.panel_m2 && g.panel_m2[key] != null) return g.panel_m2[key];
-      return '';
+    function priceText(val) {
+      return (val != null && val !== '') ? Number(val).toFixed(2) + ' €' : '<span style="color:#c2410c;">prix non défini</span>';
     }
-    function defFixed(field) {
-      if (p[field] != null) return p[field];
-      if (g[field] != null) return g[field];
-      return '';
-    }
+    function defVal(key) { return (g.panel_m2 && g.panel_m2[key] != null) ? g.panel_m2[key] : null; }
+    function defFixed(field) { return g[field] != null ? g[field] : null; }
 
     // showMat : affiche le nom du matériau à côté du libellé (pour les catégories en finition visible —
     // pas pour Caisson/Caisse tiroir qui utilisent le matériau générique du caisson)
-    function panelM2Rows(bucketKey, label, placeholder, showMat) {
+    function panelM2Rows(bucketKey, label, unit, showMat) {
       var bucket = q[bucketKey] || {};
       return Object.keys(bucket).map(function(mat) {
         var priceKey = bucketKey + '|' + mat;
         var val = defVal(priceKey);
         var rowLabel = showMat ? (label + ' — ' + escHtml(mat)) : label;
-        return row(
-          rowLabel,
-          `${bucket[mat].toFixed(2)} m²`,
-          `<input type="number" step="0.01" class="devis-mat-input" data-mat="${escHtml(priceKey)}" value="${val}" placeholder="${placeholder}" style="${inputStyle}"/><div></div>`
-        );
+        return row(rowLabel, `${bucket[mat].toFixed(2)} ${unit}`, priceText(val) + (val != null ? ` / ${unit}` : ''));
       }).join('');
     }
-    var caissonRows = panelM2Rows('panels_caisson_m2', 'Caisson', '€/m²', false);
-    var etagereRows = panelM2Rows('panels_etagere_m2', 'Étagère / intercalaire', '€/m²', true);
-    var porteRows = panelM2Rows('panels_porte_m2', 'Porte', '€/m²', true);
-    var tiroirRows = panelM2Rows('panels_tiroir_m2', 'Tiroir (façade)', '€/m²', true);
-    var tiroirCaisseRows = panelM2Rows('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', '€/m²', false);
-
-    // Seul le plan de travail reste au m² classique (grande surface plane, pas de logique de découpe
-    // pièce par pièce comparable) — son matériau est choisi séparément, donc affiché à côté.
-    var planRows = Object.keys(q.panels_plan_m2 || {}).map(function(mat) {
-      var priceKey = 'panels_plan_m2|' + mat;
-      var val = defVal(priceKey);
-      return row(
-        'Plan de travail — ' + escHtml(mat),
-        `${q.panels_plan_m2[mat].toFixed(2)} m²`,
-        `<input type="number" step="0.01" class="devis-mat-input" data-mat="${escHtml(priceKey)}" value="${val}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
-      );
-    }).join('');
+    var caissonRows = panelM2Rows('panels_caisson_m2', 'Caisson', 'm²', false);
+    var etagereRows = panelM2Rows('panels_etagere_m2', 'Étagère / intercalaire', 'm²', true);
+    var porteRows = panelM2Rows('panels_porte_m2', 'Porte', 'm²', true);
+    var tiroirRows = panelM2Rows('panels_tiroir_m2', 'Tiroir (façade)', 'm²', true);
+    var tiroirCaisseRows = panelM2Rows('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', 'm²', false);
+    var planRows = panelM2Rows('panels_plan_m2', 'Plan de travail', 'm²', true);
     var matRows = caissonRows + etagereRows + porteRows + tiroirRows + tiroirCaisseRows + planRows;
 
     // Chant plaqué : base (caisson/étagères/portes/tiroirs/plan) + périmètre des joues de finition
     // cochées (recalculé en direct par recomputeFinitionPanels quand une case change).
+    var chantVal = defFixed('edge_banding_ml');
     var chantRow = row(
       'Chant plaqué',
       `<span id="devis-chant-qty" data-base="${(q.edge_banding_ml||0).toFixed(4)}">${(q.edge_banding_ml||0).toFixed(2)}</span> ml`,
-      `<input type="number" step="0.01" id="devis-chant" value="${defFixed('edge_banding_ml')}" placeholder="€/ml" style="${inputStyle}"/><div></div>`
+      priceText(chantVal) + (chantVal != null ? ' / ml' : '')
     );
     var otherRows = [
-      ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', 'devis-equerre', defFixed('corner_bracket_unit'), '€/unité'],
-      ['Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', (q.screws||0) + ' unité(s)', 'devis-vis', defFixed('screw_unit'), '€/unité'],
-      ['Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', (q.dowels||0) + ' unité(s)', 'devis-tourillon', defFixed('dowel_unit'), '€/unité'],
-      ['Charnières <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.hinges||0) + ' unité(s)', 'devis-charniere', defFixed('hinge_unit'), '€/unité'],
-      ['Mécanismes tiroir <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.drawer_mechanisms||0) + ' unité(s)', 'devis-tiroir', defFixed('drawer_mechanism_unit'), '€/unité'],
+      ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', defFixed('corner_bracket_unit')],
+      ['Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', (q.screws||0) + ' unité(s)', defFixed('screw_unit')],
+      ['Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', (q.dowels||0) + ' unité(s)', defFixed('dowel_unit')],
+      ['Charnières <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.hinges||0) + ' unité(s)', defFixed('hinge_unit')],
+      ['Mécanismes tiroir <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.drawer_mechanisms||0) + ' unité(s)', defFixed('drawer_mechanism_unit')],
     ].map(function(r) {
-      return row(r[0], r[1], `<input type="number" step="0.01" id="${r[2]}" value="${r[3] ?? ''}" placeholder="${r[4]}" style="${inputStyle}"/><div></div>`);
+      return row(r[0], r[1], priceText(r[2]) + (r[2] != null ? ' / unité' : ''));
     }).join('');
     otherRows = chantRow + otherRows;
 
@@ -1468,25 +1447,22 @@
 
     var finitionRows = '';
     if (Array.isArray(q.finitions) && q.finitions.length) {
-      var fp = p.finition_visible || {};
       // Le nom choisi par le client (ex: "Bois Blanc") est la finition visible du meuble — on l'affiche ici.
       var finMatSuffix = q.caisson_material ? ' — ' + escHtml(q.caisson_material) : '';
       function finRow(fin) {
-        var checked = fp[fin.id] != null ? fp[fin.id] : fin.visible;
-        var checkbox = `<input type="checkbox" id="devis-fin-${fin.id}" class="devis-fin-checkbox" data-fin-id="${fin.id}" ${checked ? 'checked' : ''} data-m2="${fin.m2 || 0}" data-perimeter="${fin.perimeter_m || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">`;
+        var checkbox = `<input type="checkbox" id="devis-fin-${fin.id}" class="devis-fin-checkbox" data-fin-id="${fin.id}" ${fin.visible ? 'checked' : ''} data-m2="${fin.m2 || 0}" data-perimeter="${fin.perimeter_m || 0}" onchange="recomputeFinitionPanels()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;margin-right:8px;">`;
         var qty = (fin.m2 || 0).toFixed(2) + ' m²';
-        return row(escHtml(fin.label) + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', qty, '<div></div>' + checkbox);
+        return row(checkbox + escHtml(fin.label) + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(visible ?)</span>', qty, '');
       }
       // Les joues sont facturées au m², avec leur propre prix (matériau de finition différent) —
       // ligne séparée du "Caisson".
       var finitionPriceKey = q.caisson_material ? ('finition_m2|' + q.caisson_material) : null;
-      var finitionPriceDefault = p.finition_unit_m2 != null ? p.finition_unit_m2
-        : (finitionPriceKey ? defVal(finitionPriceKey) : '');
+      var finitionPriceVal = finitionPriceKey ? defVal(finitionPriceKey) : null;
       finitionRows = q.finitions.map(finRow).join('') +
         row(
           'Joues' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre)</span>',
           `<span id="devis-fin-total-qty">0.00</span> m²`,
-          `<input type="number" step="0.01" id="devis-finition-price" value="${finitionPriceDefault}" placeholder="€/m²" style="${inputStyle}"/><div></div>`
+          priceText(finitionPriceVal) + (finitionPriceVal != null ? ' / m²' : '')
         );
     }
 
@@ -1511,19 +1487,20 @@
       </details>`;
     }
 
+    var coefVal = defFixed('coefficient_revente') || 2;
+
     return `<div style="background:#fff;border:1px solid rgba(26,26,26,.1);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
-      <div style="${headStyle}"><div>Élément</div><div>Quantité</div><div>Prix unitaire</div><div></div></div>
+      <div style="${headStyle}"><div>Élément</div><div>Quantité</div><div>Prix unitaire</div></div>
       ${matRows}
       ${otherRows}
       ${finitionRows}
       ${countsSummary}
       ${piecesDetail}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;margin-bottom:14px;">
-        <label style="font-size:12px;font-weight:600;">Coefficient de revente</label>
-        <input type="number" step="0.1" id="devis-coefficient" value="${defFixed('coefficient_revente') || 2}" style="${inputStyle}"/>
+      <div style="font-size:12px;color:rgba(26,26,26,.55);margin-bottom:14px;">
+        Coefficient de revente : <strong>${coefVal}</strong>
+        <span style="color:rgba(26,26,26,.4);"> (modifiable dans l'onglet Matériaux &amp; Prix)</span>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" onclick="computeAndSaveDevisPrice()">Calculer et enregistrer</button>
         <button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger en PDF</button>
         <div id="devis-result" style="font-size:14px;font-weight:700;"></div>
       </div>
@@ -1547,27 +1524,15 @@
       var base = parseFloat(chantEl.dataset.base) || 0;
       chantEl.textContent = (base + totalPerimeter).toFixed(2);
     }
+    updateDevisAutoTotal();
   }
 
-  // Lit les prix saisis dans le formulaire devis (partagé entre "Calculer et enregistrer" et l'export PDF)
-  function readDevisPricesFromForm() {
-    var panelM2 = {};
-    document.querySelectorAll('.devis-mat-input').forEach(function(inp) {
-      var v = parseFloat(inp.value);
-      if (!isNaN(v)) panelM2[inp.dataset.mat] = v;
-    });
-    var prices = {
-      panel_m2: panelM2,
-      edge_banding_ml: parseFloat(document.getElementById('devis-chant').value) || 0,
-      screw_unit: parseFloat(document.getElementById('devis-vis').value) || 0,
-      dowel_unit: parseFloat(document.getElementById('devis-tourillon').value) || 0,
-      hinge_unit: parseFloat(document.getElementById('devis-charniere').value) || 0,
-      drawer_mechanism_unit: parseFloat(document.getElementById('devis-tiroir').value) || 0,
-      corner_bracket_unit: parseFloat(document.getElementById('devis-equerre').value) || 0,
-      coefficient_revente: parseFloat(document.getElementById('devis-coefficient').value) || 2,
-    };
-    var finitionVisible = {};
-    var finitionM2 = 0, finitionPerimeter = 0;
+  // Rassemble tout ce qu'il faut pour calculer le prix : les quantités du projet, les tarifs
+  // globaux (onglet "Matériaux & Prix"), et l'état actuel des cases "faces visibles" des joues.
+  function collectDevisAutoContext() {
+    var q = currentDevisQuantities;
+    var g = currentTarifsGlobaux || {};
+    var finitionVisible = {}, finitionM2 = 0, finitionPerimeter = 0;
     document.querySelectorAll('.devis-fin-checkbox').forEach(function (cb) {
       finitionVisible[cb.dataset.finId] = cb.checked;
       if (cb.checked) {
@@ -1575,47 +1540,50 @@
         finitionPerimeter += parseFloat(cb.dataset.perimeter) || 0;
       }
     });
-    prices.finition_visible = finitionVisible;
-    // Les joues sont facturées au m², avec leur propre prix (matériau de finition différent)
-    prices.finition_unit_m2 = parseFloat((document.getElementById('devis-finition-price') || {}).value) || 0;
-    // Chant plaqué total = base (caisson/étagères/portes/tiroirs/plan) + périmètre des joues cochées
-    // (le chant, lui, reste toujours au ml quelle que soit l'unité de facturation du panneau)
     var chantQtyEl = document.getElementById('devis-chant-qty');
-    var edgeBandingTotalMl = chantQtyEl ? (parseFloat(chantQtyEl.textContent) || 0) : 0;
-    return { prices: prices, finitionM2: finitionM2, finitionPerimeter: finitionPerimeter, edgeBandingTotalMl: edgeBandingTotalMl };
+    var edgeBandingTotalMl = chantQtyEl ? (parseFloat(chantQtyEl.textContent) || 0) : ((q && q.edge_banding_ml) || 0);
+    var finitionPriceKey = (q && q.caisson_material) ? ('finition_m2|' + q.caisson_material) : null;
+    var finitionUnitM2 = (finitionPriceKey && g.panel_m2 && g.panel_m2[finitionPriceKey] != null) ? g.panel_m2[finitionPriceKey] : 0;
+    return { q: q, g: g, finitionVisible: finitionVisible, finitionM2: finitionM2, finitionPerimeter: finitionPerimeter, edgeBandingTotalMl: edgeBandingTotalMl, finitionUnitM2: finitionUnitM2 };
   }
 
-  function computeAndSaveDevisPrice() {
-    var q = currentDevisQuantities;
-    var read = readDevisPricesFromForm();
-    var prices = read.prices;
-    var qForPrice = Object.assign({}, q, { edge_banding_ml: read.edgeBandingTotalMl });
+  // Calcule le prix automatiquement à partir de la base de tarifs globale — pas de saisie possible ici.
+  function computeDevisAutoPrice() {
+    var ctx = collectDevisAutoContext();
+    if (!ctx.q) return null;
+    var qForPrice = Object.assign({}, ctx.q, { edge_banding_ml: ctx.edgeBandingTotalMl });
+    var price = computeDevisPriceAdmin(qForPrice, ctx.g);
+    if (!price) return null;
+    price.cost_revient = Math.round((price.cost_revient + ctx.finitionM2 * ctx.finitionUnitM2) * 100) / 100;
+    price.prix_vente = Math.round(price.cost_revient * (ctx.g.coefficient_revente || 2) * 100) / 100;
+    return price;
+  }
 
-    var price = computeDevisPriceAdmin(qForPrice, prices);
-    price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
-    price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
-    document.getElementById('devis-result').innerHTML =
-      'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
+  // Recalcule et affiche le total, et met à jour le montant du projet en base — automatique,
+  // déclenché au chargement de la fiche et à chaque case "face visible" cochée/décochée.
+  function updateDevisAutoTotal() {
+    var resultEl = document.getElementById('devis-result');
+    if (!resultEl) return;
+    var price = computeDevisAutoPrice();
+    if (!price) { resultEl.textContent = ''; return; }
+    resultEl.innerHTML = 'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente : ' + price.prix_vente.toFixed(2) + ' €</span>';
-
     if (currentProjetId) {
-      sb.from('projets').update({ devis_prices: prices, montant: price.prix_vente }).eq('id', currentProjetId)
-        .then(function(){ showToast('Prix enregistré sur le projet !'); document.getElementById('pd-montant').value = price.prix_vente; })
-        .catch(function(){ showToast('Erreur d\'enregistrement', 'err'); });
+      sb.from('projets').update({ montant: price.prix_vente }).eq('id', currentProjetId)
+        .then(function (r) {
+          if (!r.error) { var m = document.getElementById('pd-montant'); if (m) m.value = price.prix_vente; }
+        });
     }
   }
 
   // Génère une vue imprimable du devis (catégories, fixations, récap par pièce) et ouvre
   // la boîte d'impression du navigateur — l'utilisateur choisit "Enregistrer en PDF".
   function exportDevisPDF() {
-    var q = currentDevisQuantities;
+    var ctx = collectDevisAutoContext();
+    var q = ctx.q, g = ctx.g;
     if (!q) { showToast('Aucun devis à exporter', 'err'); return; }
-    var read = readDevisPricesFromForm();
-    var prices = read.prices;
-    var qForPrice = Object.assign({}, q, { edge_banding_ml: read.edgeBandingTotalMl });
-    var price = computeDevisPriceAdmin(qForPrice, prices);
-    price.cost_revient += read.finitionM2 * prices.finition_unit_m2;
-    price.prix_vente = price.cost_revient * (prices.coefficient_revente || 2);
+    var price = computeDevisAutoPrice();
+    if (!price) { showToast('Prix non calculable', 'err'); return; }
 
     var projetNom = (document.getElementById('pd-title') || {}).textContent || 'Projet';
     function trPdf(label, qty, pu) {
@@ -1626,7 +1594,7 @@
       return Object.keys(bucket).map(function(mat) {
         var priceKey = bucketKey + '|' + mat;
         var rowLabel = showMat ? (label + ' — ' + mat) : label;
-        return trPdf(rowLabel, bucket[mat].toFixed(2) + ' m²', prices.panel_m2[priceKey]);
+        return trPdf(rowLabel, bucket[mat].toFixed(2) + ' m²', (g.panel_m2||{})[priceKey]);
       }).join('');
     }
     var caissonRowsPdf = panelM2RowsPdf('panels_caisson_m2', 'Caisson', false);
@@ -1637,19 +1605,19 @@
     var planRowsPdf = panelM2RowsPdf('panels_plan_m2', 'Plan de travail', true);
     var matRowsPdf = caissonRowsPdf + etagereRowsPdf + porteRowsPdf + tiroirRowsPdf + tiroirCaisseRowsPdf + planRowsPdf;
     var otherRowsPdf = [
-      ['Équerres d\'angle', (q.corner_brackets||0) + ' unité(s)', prices.corner_bracket_unit],
-      ['Chant plaqué', read.edgeBandingTotalMl.toFixed(2) + ' ml', prices.edge_banding_ml],
-      ['Vis (assemblage caisson, usinage inclus)', (q.screws||0) + ' unité(s)', prices.screw_unit],
-      ['Tourillons (usinage inclus)', (q.dowels||0) + ' unité(s)', prices.dowel_unit],
-      ['Charnières (pose + vis incluses)', (q.hinges||0) + ' unité(s)', prices.hinge_unit],
-      ['Mécanismes tiroir (pose + vis incluses)', (q.drawer_mechanisms||0) + ' unité(s)', prices.drawer_mechanism_unit],
+      ['Équerres d\'angle', (q.corner_brackets||0) + ' unité(s)', g.corner_bracket_unit],
+      ['Chant plaqué', ctx.edgeBandingTotalMl.toFixed(2) + ' ml', g.edge_banding_ml],
+      ['Vis (assemblage caisson, usinage inclus)', (q.screws||0) + ' unité(s)', g.screw_unit],
+      ['Tourillons (usinage inclus)', (q.dowels||0) + ' unité(s)', g.dowel_unit],
+      ['Charnières (pose + vis incluses)', (q.hinges||0) + ' unité(s)', g.hinge_unit],
+      ['Mécanismes tiroir (pose + vis incluses)', (q.drawer_mechanisms||0) + ' unité(s)', g.drawer_mechanism_unit],
     ].map(function(r){ return trPdf(r[0], r[1], r[2]); }).join('');
     var finMatSuffix = q.caisson_material ? ' — ' + q.caisson_material : '';
     var finitionRowsPdf = (Array.isArray(q.finitions) ? q.finitions : []).map(function(fin) {
-      var checked = (prices.finition_visible || {})[fin.id] != null ? prices.finition_visible[fin.id] : fin.visible;
+      var checked = ctx.finitionVisible[fin.id] != null ? ctx.finitionVisible[fin.id] : fin.visible;
       var qtyTxt = (fin.m2||0).toFixed(2) + ' m²';
       return `<tr><td>${escHtml(fin.label + finMatSuffix)}${checked ? '' : ' (non retenu)'}</td><td>${escHtml(qtyTxt)}</td><td>—</td></tr>`;
-    }).join('') + trPdf('Joues' + finMatSuffix, read.finitionM2.toFixed(2) + ' m²', prices.finition_unit_m2);
+    }).join('') + trPdf('Joues' + finMatSuffix, ctx.finitionM2.toFixed(2) + ' m²', ctx.finitionUnitM2);
     var piecesRowsPdf = (q.pieces||[]).map(function(pc) {
       var dims = (pc.w_mm != null && pc.h_mm != null) ? `${pc.w_mm} × ${pc.h_mm} mm` : '—';
       var fasteners = [];
@@ -2471,10 +2439,9 @@
     el.innerHTML = 'Chargement…';
     if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
     try {
-      const [{ data: sdb }, { data: biblio }, { data: projetRow }] = await Promise.all([
+      const [{ data: sdb }, { data: biblio }] = await Promise.all([
         sb.from('configs_sdb').select('*').eq('projet_id', projetId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         sb.from('configs_biblio').select('*').eq('projet_id', projetId).limit(1).maybeSingle(),
-        sb.from('projets').select('devis_prices').eq('id', projetId).maybeSingle(),
       ]);
 
       if (biblio && !sdb) {
@@ -2575,7 +2542,7 @@
       }
 
       currentDevisQuantities = q;
-      el.innerHTML = renderDevisPriceForm(q, projetRow && projetRow.devis_prices);
+      el.innerHTML = renderDevisPriceForm(q);
       recomputeFinitionPanels();
     } catch (err) {
       console.error('renderProjetDevis error:', err);
