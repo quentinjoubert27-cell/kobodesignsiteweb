@@ -2475,15 +2475,20 @@
           parts.push(computeDevisQuantitiesAdmin(spec2, matLabel));
         }
 
-        // Caissons latéraux TV (gauche / droite / haut)
-        if (rc.tvSide) {
-          ['left', 'right', 'top'].forEach(function (side) {
-            const s = rc.tvSide[side];
-            if (s && s.W_cm && s.H_cm) {
-              const specSide = buildTechSpec(s.elements || [], s.W_cm, s.H_cm, meuble.P || sdb.meuble_p);
-              parts.push(computeDevisQuantitiesAdmin(specSide, matLabel));
-            }
-          });
+        // Caissons latéraux TV (gauche / droite illimités, + dessus). Compat : gauche/droite étaient
+        // un objet unique avant les caissons illimités — on normalise toujours en tableau.
+        function toTvArray(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
+        const tvLeftArr = rc.tvSide ? toTvArray(rc.tvSide.left) : [];
+        const tvRightArr = rc.tvSide ? toTvArray(rc.tvSide.right) : [];
+        tvLeftArr.concat(tvRightArr).forEach(function (s) {
+          if (s && s.W_cm && s.H_cm) {
+            const specSide = buildTechSpec(s.elements || [], s.W_cm, s.H_cm, meuble.P || sdb.meuble_p);
+            parts.push(computeDevisQuantitiesAdmin(specSide, matLabel));
+          }
+        });
+        if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm && rc.tvSide.top.H_cm) {
+          const specTop = buildTechSpec(rc.tvSide.top.elements || [], rc.tvSide.top.W_cm, rc.tvSide.top.H_cm, meuble.P || sdb.meuble_p);
+          parts.push(computeDevisQuantitiesAdmin(specTop, matLabel));
         }
 
         q = mergeDevisQuantitiesAdmin(parts);
@@ -2495,8 +2500,6 @@
         const CPcm = meuble.P || sdb.meuble_p || 0;
         const mainH = meuble.H || sdb.meuble_h || 0;
         const mainL = meuble.L || sdb.meuble_l || 0;
-        const leftActive2  = !!(rc.tvSide && rc.tvSide.left && rc.tvSide.left.W_cm);
-        const rightActive2 = !!(rc.tvSide && rc.tvSide.right && rc.tvSide.right.W_cm);
         q.caisson_material = matLabel;
         q.finitions = [];
         // dim1/dim2 en cm — la joue a du chant plaqué sur tout son périmètre (4 côtés)
@@ -2508,22 +2511,26 @@
             visible: visible
           });
         }
-        if (!leftActive2)  addFinAdmin('main_gauche', 'Joue gauche — caisson principal', mainH, CPcm, true);
-        if (!rightActive2) addFinAdmin('main_droite', 'Joue droite — caisson principal', mainH, CPcm, true);
-        addFinAdmin('main_dessus', 'Dessus — caisson principal', mainL, CPcm, true);
         if (rc.caisson2 && rc.caisson2.L_cm) {
           addFinAdmin('angle_bout', "Joue — bout du caisson d'angle", mainH, CPcm, true);
           addFinAdmin('angle_dessus', "Dessus — caisson d'angle", rc.caisson2.L_cm, CPcm, true);
         }
-        if (leftActive2) {
-          addFinAdmin('left_gauche', 'Joue gauche — caisson gauche', rc.tvSide.left.H_cm, CPcm, true);
-          addFinAdmin('left_droite', 'Joue droite — caisson gauche (côté principal)', rc.tvSide.left.H_cm, CPcm, true);
-          addFinAdmin('left_dessus', 'Dessus — caisson gauche', rc.tvSide.left.W_cm, CPcm, true);
-        }
-        if (rightActive2) {
-          addFinAdmin('right_droite', 'Joue droite — caisson droit', rc.tvSide.right.H_cm, CPcm, true);
-          addFinAdmin('right_gauche', 'Joue gauche — caisson droit (côté principal)', rc.tvSide.right.H_cm, CPcm, true);
-          addFinAdmin('right_dessus', 'Dessus — caisson droit', rc.tvSide.right.W_cm, CPcm, true);
+        // Rangée gauche→droite : caissons gauche (du plus loin au plus proche) + principal + caissons droite.
+        const tvRow = tvLeftArr.slice().reverse().map(function (s, i) {
+          return { label: 'caisson gauche ' + (tvLeftArr.length - i), H: s.H_cm, W: s.W_cm };
+        }).concat([{ label: 'caisson principal', H: mainH, W: mainL }])
+          .concat(tvRightArr.map(function (s, i) { return { label: 'caisson droit ' + (i + 1), H: s.H_cm, W: s.W_cm }; }));
+        tvRow.forEach(function (entry, i) {
+          addFinAdmin('dessus_' + i, 'Dessus — ' + entry.label, entry.W, CPcm, true);
+        });
+        addFinAdmin('bout_gauche', 'Joue gauche — ' + tvRow[0].label + ' (bout extérieur)', tvRow[0].H, CPcm, true);
+        addFinAdmin('bout_droit', 'Joue droite — ' + tvRow[tvRow.length - 1].label + ' (bout extérieur)', tvRow[tvRow.length - 1].H, CPcm, true);
+        for (let i = 0; i < tvRow.length - 1; i++) {
+          const a = tvRow[i], b = tvRow[i + 1];
+          if (Math.abs(a.H - b.H) < 0.5) continue; // même hauteur (à 0.5cm près) → côté caché
+          const taller = a.H > b.H ? a : b;
+          const tallerSide = a.H > b.H ? 'droite' : 'gauche';
+          addFinAdmin('jonction_' + i, 'Joue ' + tallerSide + ' — ' + taller.label + ' (jonction, plus haut que son voisin)', taller.H, CPcm, true);
         }
         if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm) {
           addFinAdmin('top_dessus', 'Dessus — caisson du dessus', rc.tvSide.top.W_cm, CPcm, true);

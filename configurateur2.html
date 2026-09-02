@@ -886,55 +886,15 @@ window.addEventListener('scroll', function(){
             </div>
           </div>
 
-          <!-- ── CAISSONS LATÉRAUX ── -->
+          <!-- ── CAISSONS LATÉRAUX (illimités de chaque côté) ── -->
           <div>
             <div class="sec" style="margin-top:18px">Caissons supplémentaires</div>
             <div class="facade-row" style="margin-bottom:10px;flex-wrap:wrap;gap:5px">
-              <button class="facade-btn" id="tvl-btn" onclick="toggleTVLeft()">+ Gauche</button>
-              <button class="facade-btn" id="tvr-btn" onclick="toggleTVRight()">+ Droite</button>
+              <button class="facade-btn" onclick="addTvSide('left')">+ Ajouter à gauche</button>
+              <button class="facade-btn" onclick="addTvSide('right')">+ Ajouter à droite</button>
             </div>
-            <div id="tvl-opts" style="display:none">
-              <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson gauche</div>
-              <div class="dim-row">
-                <span class="dim-lbl">Largeur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvLW',function(v){setTVSide('left','W',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvLW" min="20" max="120" value="40" oninput="setTVSide('left','W',+this.value)" onblur="clampDim(this,function(v){setTVSide('left','W',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvLW',function(v){setTVSide('left','W',v)},+1)">+</button>
-                </div>
-              </div>
-              <div class="dim-row">
-                <span class="dim-lbl">Hauteur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvLH',function(v){setTVSide('left','H',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvLH" min="20" max="280" value="120" oninput="setTVSide('left','H',+this.value)" onblur="clampDim(this,function(v){setTVSide('left','H',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvLH',function(v){setTVSide('left','H',v)},+1)">+</button>
-                </div>
-              </div>
-            </div>
-            <div id="tvr-opts" style="display:none">
-              <div class="sec" style="margin-top:10px;font-size:10px;color:var(--text2)">Caisson droit</div>
-              <div class="dim-row">
-                <span class="dim-lbl">Largeur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvRW',function(v){setTVSide('right','W',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvRW" min="20" max="120" value="40" oninput="setTVSide('right','W',+this.value)" onblur="clampDim(this,function(v){setTVSide('right','W',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvRW',function(v){setTVSide('right','W',v)},+1)">+</button>
-                </div>
-              </div>
-              <div class="dim-row">
-                <span class="dim-lbl">Hauteur</span>
-                <div class="dim-ctrl">
-                  <button class="dim-step" onclick="stepDim('inp-tvRH',function(v){setTVSide('right','H',v)},-1)">−</button>
-                  <input class="dim-inp" type="number" id="inp-tvRH" min="20" max="280" value="120" oninput="setTVSide('right','H',+this.value)" onblur="clampDim(this,function(v){setTVSide('right','H',v)})">
-                  <span class="dim-unit">cm</span>
-                  <button class="dim-step" onclick="stepDim('inp-tvRH',function(v){setTVSide('right','H',v)},+1)">+</button>
-                </div>
-              </div>
-            </div>
+            <div id="tv-left-list"></div>
+            <div id="tv-right-list"></div>
           </div>
 
           <!-- ── TOGGLE SALLE DE BAIN ── -->
@@ -1416,20 +1376,22 @@ var bDrag = false, bLastX = 0, bLastY = 0;
 var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
 
 // ── CAISSONS LATÉRAUX (meuble TV) ──
-// activeCaisson: 1=centre, 2=angle, 3=tv-gauche, 4=tv-droite, 5=tv-dessus
-var S_tvSide = { leftActive:false, leftW:40, leftH:120, rightActive:false, rightW:40, rightH:120, topActive:false, topW:80, topH:100, topX:0, topY:0 };
+// activeCaisson: 1=centre, 2=angle, 'L0'/'L1'/... = caissons gauche (0=le plus proche du principal),
+// 'R0'/'R1'/... = caissons droite, 'T' = caisson du dessus (toujours unique, UI retirée mais code inerte conservé)
+// Chaque caisson latéral gauche/droite est un "record" autonome regroupant ses données + son état 3D,
+// ce qui permet d'en avoir un nombre illimité de chaque côté (au lieu d'un seul avant).
+function makeTvRecord(W_cm, H_cm){
+  return { W:W_cm, H:H_cm, elems:[], openState:{}, meshes:[], hp:null, guides:null, ghost:null, grp:null };
+}
+var tvSideLeft = [];   // [{W,H,elems,openState,meshes,hp,guides,ghost,grp}, ...] — index 0 = collé au principal
+var tvSideRight = [];  // idem, côté droit
+var S_tvSide = { topActive:false, topW:80, topH:100, topX:0, topY:0 };
 var currentNS = 1;
 var tvTopDragging = false, tvTopDragPlane = null, tvTopDragOffsetX = 0, tvTopDragOffsetY = 0;
 var showCotes = false;
-// TV extra caissons — groupes + données édition (activeCaisson 3/4/5)
 var tvCableHoles=[]; // [{x:cm_depuis_gauche_intérieur, y:cm_depuis_bas_intérieur, r:rayon_cm}]
-var tvGrp=[null,null,null]; // [left,right,top]
-var tvElems=[[],[],[]];
-var tvOpenState=[{},{},{}];
-var tvMeshes=[[],[],[]];
-var tvHP=[null,null,null];
-var tvGuides=[null,null,null];
-var tvGhost=[null,null,null];
+// Caisson du dessus — slot unique, inchangé (variables dédiées au lieu d'un index de tableau fixe)
+var tvTopGrp=null, tvTopElems=[], tvTopOpenState={}, tvTopMeshes=[], tvTopHP=null, tvTopGuides=null, tvTopGhost=null;
 
 // ── C2 DRAG / POSITION LIBRE ──
 
@@ -1535,31 +1497,38 @@ function localToXcm(x_loc){ return (x_loc+getActiveCL()/2-EP)*100; }
 function xcmToLocal(x_cm) { return -getActiveCL()/2+EP+x_cm/100; }
 
 // ── Helpers caisson actif (1=centre, 2=angle, 3=tv-gauche, 4=tv-droite, 5=tv-dessus) ──
-function _tvIdx(){ return activeCaisson-3; } // 0=left,1=right,2=top
-function _isTVExtra(){ return activeCaisson>=3; }
+// activeCaisson : 1=principal, 2=angle, 'T'=dessus (slot unique), 'L{i}'/'R{i}'=caisson latéral
+// gauche/droite d'index i (0=le plus proche du principal). _tvRecord() résout le record correspondant
+// pour 'L{i}'/'R{i}' — c'est le seul endroit qui connaît le format de l'id, tout le reste du code
+// passe par les accesseurs getActive*/setActive* ci-dessous, inchangés dans leur usage.
+function _isTVExtra(){ return typeof activeCaisson==='string'; }
+function _tvRecord(){
+  if(activeCaisson==='T') return null; // le dessus a ses propres variables dédiées, pas de record
+  if(typeof activeCaisson!=='string') return null;
+  var side=activeCaisson[0], i=parseInt(activeCaisson.slice(1),10);
+  return side==='L' ? tvSideLeft[i] : tvSideRight[i];
+}
 function getActiveCL(){
   if(activeCaisson===1) return S.CL;
   if(activeCaisson===2) return S.CL2;
-  if(activeCaisson===3) return S_tvSide.leftW/100;
-  if(activeCaisson===4) return S_tvSide.rightW/100;
-  if(activeCaisson===5) return S_tvSide.topW/100;
+  if(activeCaisson==='T') return S_tvSide.topW/100;
+  var r=_tvRecord(); if(r) return r.W/100;
   return S.CL;
 }
 function getActiveCH(){
-  if(activeCaisson===3) return S_tvSide.leftH/100;
-  if(activeCaisson===4) return S_tvSide.rightH/100;
-  if(activeCaisson===5) return S_tvSide.topH/100;
+  if(activeCaisson==='T') return S_tvSide.topH/100;
+  var r=_tvRecord(); if(r) return r.H/100;
   return S.CH;
 }
-function getActiveEls(){ return _isTVExtra()?tvElems[_tvIdx()]:(activeCaisson===1?caissonElements:caissonElements2); }
-function setActiveEls(v){ if(_isTVExtra()) tvElems[_tvIdx()]=v; else if(activeCaisson===1) caissonElements=v; else caissonElements2=v; }
-function getActiveElemMeshes(){ return _isTVExtra()?tvMeshes[_tvIdx()]:(activeCaisson===1?caissonElemMeshes:caissonElemMeshes2); }
-function getActiveHP(){ return _isTVExtra()?tvHP[_tvIdx()]:(activeCaisson===1?caissonHitPlane:caissonHitPlane2); }
-function getActiveGrp(){ return _isTVExtra()?tvGrp[_tvIdx()]:(activeCaisson===1?caissonGrp:caissonGrp2); }
-function getActiveGhost(){ return _isTVExtra()?tvGhost[_tvIdx()]:(activeCaisson===1?caissonGhost:caissonGhost2); }
-function setActiveGhost(v){ if(_isTVExtra()) tvGhost[_tvIdx()]=v; else if(activeCaisson===1) caissonGhost=v; else caissonGhost2=v; }
-function getActiveGuidesGrp(){ return _isTVExtra()?tvGuides[_tvIdx()]:(activeCaisson===1?caissonGuidesGrp:caissonGuidesGrp2); }
-function getActiveOpenState(){ return _isTVExtra()?tvOpenState[_tvIdx()]:(activeCaisson===1?caissonOpenState:caissonOpenState2); }
+function getActiveEls(){ if(activeCaisson==='T') return tvTopElems; var r=_tvRecord(); if(r) return r.elems; return activeCaisson===1?caissonElements:caissonElements2; }
+function setActiveEls(v){ if(activeCaisson==='T'){ tvTopElems=v; return; } var r=_tvRecord(); if(r){ r.elems=v; return; } if(activeCaisson===1) caissonElements=v; else caissonElements2=v; }
+function getActiveElemMeshes(){ if(activeCaisson==='T') return tvTopMeshes; var r=_tvRecord(); if(r) return r.meshes; return activeCaisson===1?caissonElemMeshes:caissonElemMeshes2; }
+function getActiveHP(){ if(activeCaisson==='T') return tvTopHP; var r=_tvRecord(); if(r) return r.hp; return activeCaisson===1?caissonHitPlane:caissonHitPlane2; }
+function getActiveGrp(){ if(activeCaisson==='T') return tvTopGrp; var r=_tvRecord(); if(r) return r.grp; return activeCaisson===1?caissonGrp:caissonGrp2; }
+function getActiveGhost(){ if(activeCaisson==='T') return tvTopGhost; var r=_tvRecord(); if(r) return r.ghost; return activeCaisson===1?caissonGhost:caissonGhost2; }
+function setActiveGhost(v){ if(activeCaisson==='T'){ tvTopGhost=v; return; } var r=_tvRecord(); if(r){ r.ghost=v; return; } if(activeCaisson===1) caissonGhost=v; else caissonGhost2=v; }
+function getActiveGuidesGrp(){ if(activeCaisson==='T') return tvTopGuides; var r=_tvRecord(); if(r) return r.guides; return activeCaisson===1?caissonGuidesGrp:caissonGuidesGrp2; }
+function getActiveOpenState(){ if(activeCaisson==='T') return tvTopOpenState; var r=_tvRecord(); if(r) return r.openState; return activeCaisson===1?caissonOpenState:caissonOpenState2; }
 
 function getCompartment(y_cm, x_cm, includeSimple){
   var iH_cm=(getActiveCH()-2*EP)*100;
@@ -2099,22 +2068,32 @@ function getC2DefaultPos(){
 // BUILD CAISSONS TV EXTRA (gauche=3, droite=4, dessus=5)
 // ═══════════════════════════════════════════════════════
 function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,mainCL,mainCH,CP,ep){
-  tvGrp=[null,null,null]; tvHP=[null,null,null]; tvGuides=[null,null,null]; tvGhost=[null,null,null];
-  tvMeshes=[[],[],[]];
-
-  var defs=[
-    {active:S_tvSide.leftActive,  idx:0, acId:3, W:S_tvSide.leftW/100,  H:S_tvSide.leftH/100,  px:function(W){return -(mainCL/2+W/2);}, py:0},
-    {active:S_tvSide.rightActive, idx:1, acId:4, W:S_tvSide.rightW/100, H:S_tvSide.rightH/100, px:function(W){return  (mainCL/2+W/2);}, py:0},
-    {active:S_tvSide.topActive,   idx:2, acId:5, W:S_tvSide.topW/100,   H:S_tvSide.topH/100,   px:function()  {return S_tvSide.topX;},  py:mainCH+S_tvSide.topY}
-  ];
+  // defs : chaque entrée = {W,H,px,py, record?, isTop?} — record porte l'état 3D (grp/hp/guides/meshes)
+  // pour un caisson latéral gauche/droite ; le dessus garde ses variables dédiées (tvTop*).
+  // Empilement cumulé : le caisson gauche d'index i se colle au bord du précédent (ou du principal si i=0).
+  var defs=[];
+  var offL=mainCL/2;
+  tvSideLeft.forEach(function(r){
+    var W=r.W/100, H=r.H/100;
+    defs.push({ W:W, H:H, px:-(offL+W/2), py:0, record:r });
+    offL+=W;
+  });
+  var offR=mainCL/2;
+  tvSideRight.forEach(function(r){
+    var W=r.W/100, H=r.H/100;
+    defs.push({ W:W, H:H, px:(offR+W/2), py:0, record:r });
+    offR+=W;
+  });
+  if(S_tvSide.topActive){
+    defs.push({ W:S_tvSide.topW/100, H:S_tvSide.topH/100, px:S_tvSide.topX, py:mainCH+S_tvSide.topY, isTop:true });
+  }
 
   defs.forEach(function(d){
-    if(!d.active) return;
     var W=d.W, H=d.H, ep2=ep, iWc=W-2*ep2, iHc=H-2*ep2;
     var fz=CP/2-0.001;
 
-    var g=new THREE.Group(); g.position.set(d.px(W),d.py,0);
-    tvGrp[d.idx]=g;
+    var g=new THREE.Group(); g.position.set(d.px,d.py,0);
+    if(d.isTop) tvTopGrp=g; else d.record.grp=g;
 
     // ── Structure ──
     var jg=box(ep2,H,CP,matCais); jg.position.set(-W/2+ep2/2,H/2,0); g.add(jg);
@@ -2125,8 +2104,9 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
 
     // ── Éléments éditables ──
     var iWcm=Math.round(iWc*100), iHcm=Math.round(iHc*100);
-    var elems=tvElems[d.idx], openSt=tvOpenState[d.idx], meshArr=tvMeshes[d.idx];
-    meshArr.length=0;
+    var elems=d.isTop?tvTopElems:d.record.elems, openSt=d.isTop?tvTopOpenState:d.record.openState;
+    var meshArr=[];
+    if(d.isTop) tvTopMeshes=meshArr; else d.record.meshes=meshArr;
 
     function xcm(v){ return -W/2+ep2+v/100; }
     function ycm(v){ return ep2+v/100; }
@@ -2203,11 +2183,11 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
     // ── Hit plane ──
     var hp=new THREE.Mesh(new THREE.PlaneGeometry(iWc,iHc),new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide}));
     hp.position.set(0,ep2+iHc/2,CP/2-0.002); g.add(hp);
-    tvHP[d.idx]=hp;
+    if(d.isTop) tvTopHP=hp; else d.record.hp=hp;
 
     // ── Guides ──
     var gg=new THREE.Group(); gg.renderOrder=4; g.add(gg);
-    tvGuides[d.idx]=gg;
+    if(d.isTop) tvTopGuides=gg; else d.record.guides=gg;
 
     caissonGrp.add(g);
   });
@@ -2281,37 +2261,71 @@ function setCL2(v){
   if(hasAngle) buildCaisson();
 }
 
-function toggleTVLeft(){
-  S_tvSide.leftActive=!S_tvSide.leftActive;
-  if(!S_tvSide.leftActive && activeCaisson===3) activeCaisson=1;
-  else if(S_tvSide.leftActive && caissonEditMode) activeCaisson=3;
-  var btn=document.getElementById('tvl-btn'); if(btn) btn.textContent=S_tvSide.leftActive?'− Gauche':'+ Gauche';
-  var opts=document.getElementById('tvl-opts'); if(opts) opts.style.display=S_tvSide.leftActive?'':'none';
-  buildCaisson(); if(caissonEditMode) _rebuildEditBar();
+// Caissons latéraux illimités : gauche/droite sont des listes ("tvSideLeft"/"tvSideRight"),
+// chaque entrée un caisson indépendant. addTvSide en ajoute un (toujours possible, pas de bascule
+// unique comme avant), removeTvSide en retire un précis.
+function addTvSide(side){
+  var list = side==='left' ? tvSideLeft : tvSideRight;
+  var rec = makeTvRecord(40,120);
+  list.push(rec);
+  activeCaisson = (side==='left'?'L':'R') + (list.length-1);
+  buildCaisson();
+  renderTvSideList();
+  if(caissonEditMode) _rebuildEditBar();
 }
-function toggleTVRight(){
-  S_tvSide.rightActive=!S_tvSide.rightActive;
-  if(!S_tvSide.rightActive && activeCaisson===4) activeCaisson=1;
-  else if(S_tvSide.rightActive && caissonEditMode) activeCaisson=4;
-  var btn=document.getElementById('tvr-btn'); if(btn) btn.textContent=S_tvSide.rightActive?'− Droite':'+ Droite';
-  var opts=document.getElementById('tvr-opts'); if(opts) opts.style.display=S_tvSide.rightActive?'':'none';
-  buildCaisson(); if(caissonEditMode) _rebuildEditBar();
+function removeTvSide(side, idx){
+  var list = side==='left' ? tvSideLeft : tvSideRight;
+  list.splice(idx,1);
+  activeCaisson = 1; // retour au principal, plus simple que de recalculer un id encore valide
+  buildCaisson();
+  renderTvSideList();
+  if(caissonEditMode) _rebuildEditBar();
+}
+function setTvSideDim(side, idx, dim, v){
+  v=Math.round(v);
+  var list = side==='left' ? tvSideLeft : tvSideRight;
+  var rec = list[idx]; if(!rec) return;
+  rec[dim]=v; // dim: 'W' ou 'H'
+  var inp=document.getElementById('inp-tv'+side[0].toUpperCase()+idx+dim);
+  if(inp) inp.value=v;
+  buildCaisson();
+}
+function renderTvSideList(){
+  function renderSide(side, list, containerId){
+    var el=document.getElementById(containerId); if(!el) return;
+    el.innerHTML = list.map(function(rec, idx){
+      var tag=side==='left'?'L':'R', label=(side==='left'?'Gauche':'Droite')+' '+(idx+1);
+      var active = activeCaisson===(tag+idx);
+      return '<div style="margin-top:10px;padding:8px 10px;border-radius:8px;'+(active?'background:var(--bg2);border:1px solid var(--accent);':'border:1px solid var(--border);')+'">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;cursor:pointer" onclick="switchActiveCaisson(\''+tag+idx+'\')">'
+        +'<span style="font-size:10px;font-weight:700;color:'+(active?'var(--accent)':'var(--text2)')+'">'+label+'</span>'
+        +'<button onclick="event.stopPropagation();removeTvSide(\''+side+'\','+idx+')" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2);padding:0 2px;">✕</button>'
+        +'</div>'
+        +'<div class="dim-row"><span class="dim-lbl">Largeur</span><div class="dim-ctrl">'
+        +'<button class="dim-step" onclick="stepDim(\'inp-tv'+tag+idx+'W\',function(v){setTvSideDim(\''+side+'\','+idx+',\'W\',v)},-1)">−</button>'
+        +'<input class="dim-inp" type="number" id="inp-tv'+tag+idx+'W" min="20" max="120" value="'+rec.W+'" oninput="setTvSideDim(\''+side+'\','+idx+',\'W\',+this.value)" onblur="clampDim(this,function(v){setTvSideDim(\''+side+'\','+idx+',\'W\',v)})">'
+        +'<span class="dim-unit">cm</span>'
+        +'<button class="dim-step" onclick="stepDim(\'inp-tv'+tag+idx+'W\',function(v){setTvSideDim(\''+side+'\','+idx+',\'W\',v)},+1)">+</button>'
+        +'</div></div>'
+        +'<div class="dim-row"><span class="dim-lbl">Hauteur</span><div class="dim-ctrl">'
+        +'<button class="dim-step" onclick="stepDim(\'inp-tv'+tag+idx+'H\',function(v){setTvSideDim(\''+side+'\','+idx+',\'H\',v)},-1)">−</button>'
+        +'<input class="dim-inp" type="number" id="inp-tv'+tag+idx+'H" min="20" max="280" value="'+rec.H+'" oninput="setTvSideDim(\''+side+'\','+idx+',\'H\',+this.value)" onblur="clampDim(this,function(v){setTvSideDim(\''+side+'\','+idx+',\'H\',v)})">'
+        +'<span class="dim-unit">cm</span>'
+        +'<button class="dim-step" onclick="stepDim(\'inp-tv'+tag+idx+'H\',function(v){setTvSideDim(\''+side+'\','+idx+',\'H\',v)},+1)">+</button>'
+        +'</div></div>'
+        +'</div>';
+    }).join('');
+  }
+  renderSide('left', tvSideLeft, 'tv-left-list');
+  renderSide('right', tvSideRight, 'tv-right-list');
 }
 function toggleTVTop(){
   S_tvSide.topActive=!S_tvSide.topActive;
-  if(!S_tvSide.topActive){ if(activeCaisson===5) activeCaisson=1; S_tvSide.topX=0; S_tvSide.topY=0; }
-  else if(caissonEditMode) activeCaisson=5;
+  if(!S_tvSide.topActive){ if(activeCaisson==='T') activeCaisson=1; S_tvSide.topX=0; S_tvSide.topY=0; }
+  else if(caissonEditMode) activeCaisson='T';
   var btn=document.getElementById('tvt-btn'); if(btn) btn.textContent=S_tvSide.topActive?'− Dessus':'+ Dessus';
   var opts=document.getElementById('tvt-opts'); if(opts) opts.style.display=S_tvSide.topActive?'':'none';
   buildCaisson(); if(caissonEditMode) _rebuildEditBar();
-}
-function setTVSide(side, dim, v){
-  v=Math.round(v);
-  var key=side==='left'?'left':side==='right'?'right':'top';
-  S_tvSide[key+dim]=v;
-  var inpId='inp-tv'+(side==='left'?'L':side==='right'?'R':'T')+dim;
-  var inp=document.getElementById(inpId); if(inp) inp.value=v;
-  buildCaisson();
 }
 
 var WALL_BIBLIO_Z = -1.1;
@@ -2609,6 +2623,7 @@ function setCaissonType(t){
 function switchActiveCaisson(n){
   activeCaisson=n;
   _rebuildEditBar(); // re-render pour mettre à jour active state
+  renderTvSideList();
   clearCaissonGhost();
   updateAmgtCount();
 }
@@ -2635,17 +2650,18 @@ function _rebuildEditBar(){
     if(hasAngle && currentFT!=='tv'){
       cBtns.push({id:1,lbl:'Caisson 1'}); cBtns.push({id:2,lbl:'Caisson 2'});
     }
-    // Caissons TV
+    // Caissons TV — un bouton par caisson latéral, plus le centre et le dessus
     if(currentFT==='tv'){
       cBtns.push({id:1,lbl:'Centre'});
-      if(S_tvSide.leftActive)  cBtns.push({id:3,lbl:'Gauche'});
-      if(S_tvSide.rightActive) cBtns.push({id:4,lbl:'Droite'});
-      if(S_tvSide.topActive)   cBtns.push({id:5,lbl:'Dessus'});
+      tvSideLeft.forEach(function(r,i){ cBtns.push({id:'L'+i,lbl:'Gauche '+(i+1)}); });
+      tvSideRight.forEach(function(r,i){ cBtns.push({id:'R'+i,lbl:'Droite '+(i+1)}); });
+      if(S_tvSide.topActive)   cBtns.push({id:'T',lbl:'Dessus'});
     }
     if(cBtns.length>1){
       selectorHTML='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">';
       cBtns.forEach(function(b){
-        selectorHTML+='<button class="c-caisson-btn'+(activeCaisson===b.id?' active':'')+'" onclick="switchActiveCaisson('+b.id+')">'+b.lbl+'</button>';
+        var idArg = typeof b.id==='string' ? "'"+b.id+"'" : b.id;
+        selectorHTML+='<button class="c-caisson-btn'+(activeCaisson===b.id?' active':'')+'" onclick="switchActiveCaisson('+idArg+')">'+b.lbl+'</button>';
       });
       selectorHTML+='</div>';
     }
@@ -2688,7 +2704,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire — non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
-    } else if(isTV && activeCaisson>=3){
+    } else if(isTV && _isTVExtra()){
       // Caissons latéraux / dessus : étagère, intercalaire, porte, tiroir
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale — les portes et tiroirs s\'accrochent dessus')+
@@ -2708,8 +2724,12 @@ function _rebuildEditBar(){
     }
     if(isTV){
       // Bouton ouvrir/fermer toutes les portes
-      var allEls=[caissonElements,caissonElements2].concat(tvElems);
-      var allOs=[caissonOpenState,caissonOpenState2].concat(tvOpenState);
+      var allEls=[caissonElements,caissonElements2,tvTopElems]
+        .concat(tvSideLeft.map(function(r){return r.elems;}))
+        .concat(tvSideRight.map(function(r){return r.elems;}));
+      var allOs=[caissonOpenState,caissonOpenState2,tvTopOpenState]
+        .concat(tvSideLeft.map(function(r){return r.openState;}))
+        .concat(tvSideRight.map(function(r){return r.openState;}));
       var hasAny=allEls.some(function(els){ return els.some(function(e){ return e.type==='porte'||e.type==='tiroir'; }); });
       if(hasAny){
         var allOpen=allEls.every(function(els){ return els.filter(function(e){ return e.type==='porte'||e.type==='tiroir'; }).every(function(e){ return allOs.some(function(os){ return os[e.key]; }); }); });
@@ -2858,9 +2878,9 @@ function getCaissonHit(e){
   // sur quel caisson le curseur pointe, sans sélection manuelle
   if(currentFT==='tv' && BIBLIO_MODE){
     var candidates=[{id:1, hp:caissonHitPlane, grp:caissonGrp}];
-    if(S_tvSide.leftActive  && tvHP[0] && tvGrp[0]) candidates.push({id:3, hp:tvHP[0], grp:tvGrp[0]});
-    if(S_tvSide.rightActive && tvHP[1] && tvGrp[1]) candidates.push({id:4, hp:tvHP[1], grp:tvGrp[1]});
-    if(S_tvSide.topActive   && tvHP[2] && tvGrp[2]) candidates.push({id:5, hp:tvHP[2], grp:tvGrp[2]});
+    tvSideLeft.forEach(function(r,i){ if(r.hp && r.grp) candidates.push({id:'L'+i, hp:r.hp, grp:r.grp}); });
+    tvSideRight.forEach(function(r,i){ if(r.hp && r.grp) candidates.push({id:'R'+i, hp:r.hp, grp:r.grp}); });
+    if(S_tvSide.topActive && tvTopHP && tvTopGrp) candidates.push({id:'T', hp:tvTopHP, grp:tvTopGrp});
     for(var ci=0;ci<candidates.length;ci++){
       var c=candidates[ci];
       var hits=raycaster.intersectObject(c.hp,false);
@@ -3124,10 +3144,14 @@ function _elsSnapshot(){
   return {
     els:  JSON.parse(JSON.stringify(caissonElements)),
     els2: JSON.parse(JSON.stringify(caissonElements2)),
-    tv:   JSON.parse(JSON.stringify(tvElems)),
+    tvTop:   JSON.parse(JSON.stringify(tvTopElems)),
+    tvL:  JSON.parse(JSON.stringify(tvSideLeft.map(function(r){return r.elems;}))),
+    tvR:  JSON.parse(JSON.stringify(tvSideRight.map(function(r){return r.elems;}))),
     os:   JSON.parse(JSON.stringify(caissonOpenState)),
     os2:  JSON.parse(JSON.stringify(caissonOpenState2)),
-    tvo:  JSON.parse(JSON.stringify(tvOpenState)),
+    tvTopO: JSON.parse(JSON.stringify(tvTopOpenState)),
+    tvLo: JSON.parse(JSON.stringify(tvSideLeft.map(function(r){return r.openState;}))),
+    tvRo: JSON.parse(JSON.stringify(tvSideRight.map(function(r){return r.openState;}))),
   };
 }
 function pushUndo(){
@@ -3139,8 +3163,12 @@ function pushUndo(){
 function undoLast(){
   if(!_undoStack.length) return;
   var snap=_undoStack.pop();
-  caissonElements=snap.els; caissonElements2=snap.els2; tvElems=snap.tv;
-  caissonOpenState=snap.os; caissonOpenState2=snap.os2; tvOpenState=snap.tvo;
+  caissonElements=snap.els; caissonElements2=snap.els2; tvTopElems=snap.tvTop;
+  caissonOpenState=snap.os; caissonOpenState2=snap.os2; tvTopOpenState=snap.tvTopO;
+  // Ne restaure que si le nombre de caissons latéraux n'a pas changé depuis (l'ajout/suppression
+  // de caisson n'est pas dans la pile d'undo, comme avant pour les 2 slots fixes).
+  if(snap.tvL.length===tvSideLeft.length) tvSideLeft.forEach(function(r,i){ r.elems=snap.tvL[i]; r.openState=snap.tvLo[i]; });
+  if(snap.tvR.length===tvSideRight.length) tvSideRight.forEach(function(r,i){ r.elems=snap.tvR[i]; r.openState=snap.tvRo[i]; });
   clearCaissonGhost(); buildCaisson();
   var btn=document.getElementById('btn-undo');
   if(btn) btn.disabled=(_undoStack.length===0);
@@ -3259,16 +3287,20 @@ function downloadScreenshot(){
 function resetCaissonElements(){
   pushUndo();
   setActiveEls([]);
-  if(_isTVExtra()) tvOpenState[_tvIdx()]={};
-  else if(activeCaisson===1) caissonOpenState={}; else caissonOpenState2={};
+  if(activeCaisson==='T') tvTopOpenState={};
+  else { var r=_tvRecord(); if(r) r.openState={}; else if(activeCaisson===1) caissonOpenState={}; else caissonOpenState2={}; }
   clearCaissonGhost(); buildCaisson();
 }
 
 function toggleAllDoorsTv(){
   // Collecte toutes les portes/tiroirs de tous les caissons TV
   var allKeys=[];
-  var allStates=[caissonOpenState, caissonOpenState2, tvOpenState[0], tvOpenState[1], tvOpenState[2]];
-  var allEls=[caissonElements, caissonElements2].concat(tvElems);
+  var allStates=[caissonOpenState, caissonOpenState2, tvTopOpenState]
+    .concat(tvSideLeft.map(function(r){return r.openState;}))
+    .concat(tvSideRight.map(function(r){return r.openState;}));
+  var allEls=[caissonElements, caissonElements2, tvTopElems]
+    .concat(tvSideLeft.map(function(r){return r.elems;}))
+    .concat(tvSideRight.map(function(r){return r.elems;}));
   allEls.forEach(function(els){ els.forEach(function(e){ if(e.type==='porte'||e.type==='tiroir') allKeys.push(e.key); }); });
   // Si au moins une est fermée → tout ouvrir, sinon tout fermer
   var anyClose=allKeys.some(function(k){ return !allStates.some(function(os){ return os[k]; }); });
@@ -3438,19 +3470,19 @@ cvs.addEventListener('pointerdown',function(e){
   }
 
   // Drag du caisson dessus TV (désactivé en mode édition)
-  if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1&&!caissonEditMode){
+  if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvTopGrp&&S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var topMeshes=tvMeshes[2].concat(tvHP[2]?[tvHP[2]]:[]);
+    var topMeshes=tvTopMeshes.concat(tvTopHP?[tvTopHP]:[]);
     var hits0=raycaster.intersectObjects(topMeshes,false);
     if(hits0.length){
       tvTopDragging=true; controls.enabled=false; cvs.style.cursor='grabbing';
-      tvGrp[2].updateMatrixWorld(true);
+      tvTopGrp.updateMatrixWorld(true);
       var localFront=new THREE.Vector3(0,0,S.CairsonP/200);
-      var worldFront=localFront.applyMatrix4(tvGrp[2].matrixWorld);
+      var worldFront=localFront.applyMatrix4(tvTopGrp.matrixWorld);
       tvTopDragPlane=new THREE.Plane(new THREE.Vector3(0,0,1),-worldFront.z);
       var hitW=hits0[0].point.clone(); caissonGrp.worldToLocal(hitW);
-      tvTopDragOffsetX=hitW.x-tvGrp[2].position.x;
-      tvTopDragOffsetY=hitW.y-tvGrp[2].position.y;
+      tvTopDragOffsetX=hitW.x-tvTopGrp.position.x;
+      tvTopDragOffsetY=hitW.y-tvTopGrp.position.y;
       e.stopPropagation(); return;
     }
   }
@@ -3458,15 +3490,16 @@ cvs.addEventListener('pointerdown',function(e){
   // Tester porte/tiroir AVANT de démarrer la rotation
   if(S.step===1&&!caissonEditMode){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
-    var allMeshes=caissonElemMeshes.concat(caissonElemMeshes2)
-      .concat(tvMeshes[0]).concat(tvMeshes[1]).concat(tvMeshes[2]);
+    var tvAllRecords = tvSideLeft.concat(tvSideRight);
+    var allMeshes=caissonElemMeshes.concat(caissonElemMeshes2).concat(tvTopMeshes);
+    tvAllRecords.forEach(function(r){ allMeshes=allMeshes.concat(r.meshes); });
     var hits=raycaster.intersectObjects(allMeshes,false);
     if(hits.length){
       var obj=hits[0].object;
       var os=null;
-      if(tvMeshes[0].indexOf(obj)>=0)      os=tvOpenState[0];
-      else if(tvMeshes[1].indexOf(obj)>=0) os=tvOpenState[1];
-      else if(tvMeshes[2].indexOf(obj)>=0) os=tvOpenState[2];
+      var recMatch = tvAllRecords.find(function(r){ return r.meshes.indexOf(obj)>=0; });
+      if(recMatch) os=recMatch.openState;
+      else if(tvTopMeshes.indexOf(obj)>=0) os=tvTopOpenState;
       else if(caissonElemMeshes2.indexOf(obj)>=0) os=caissonOpenState2;
       else os=caissonOpenState;
       if(obj.userData.isTiroir){ os[obj.userData.tirKey]=!os[obj.userData.tirKey]; buildCaisson(); return; }
@@ -3531,7 +3564,7 @@ cvs.addEventListener('pointermove',function(e){
     }
     return;
   }
-  if(tvTopDragging&&tvTopDragPlane&&tvGrp[2]){
+  if(tvTopDragging&&tvTopDragPlane&&tvTopGrp){
     toNDC(e); raycaster.setFromCamera(mouse,camera);
     var tgt=new THREE.Vector3();
     if(raycaster.ray.intersectPlane(tvTopDragPlane,tgt)){
@@ -3550,16 +3583,18 @@ cvs.addEventListener('pointermove',function(e){
         {v:-(mainCL/2+topW/2), lbl:'ext-gauche'},
         {v: (mainCL/2-topW/2), lbl:'ext-droit'},
       ];
-      if(S_tvSide.leftActive)  snapsX.push({v:-(mainCL/2+S_tvSide.leftW/200), lbl:'centre-gauche'});
-      if(S_tvSide.rightActive) snapsX.push({v: (mainCL/2+S_tvSide.rightW/200), lbl:'centre-droite'});
+      var totalLeftW=tvSideLeft.reduce(function(s,r){return s+r.W/100;},0);
+      var totalRightW=tvSideRight.reduce(function(s,r){return s+r.W/100;},0);
+      if(tvSideLeft.length)  snapsX.push({v:-(mainCL/2+totalLeftW/2), lbl:'centre-gauche'});
+      if(tvSideRight.length) snapsX.push({v: (mainCL/2+totalRightW/2), lbl:'centre-droite'});
       snapsX.forEach(function(s){ if(Math.abs(newX-s.v)<thresh){ newX=s.v; snapX=s.v; } });
-      // Snap Y
-      var snapsY=[mainCH];
-      if(S_tvSide.leftActive)  snapsY.push(S_tvSide.leftH/100);
-      if(S_tvSide.rightActive) snapsY.push(S_tvSide.rightH/100);
+      // Snap Y — sur la hauteur du principal ou de n'importe quel caisson latéral
+      var snapsY=[mainCH]
+        .concat(tvSideLeft.map(function(r){return r.H/100;}))
+        .concat(tvSideRight.map(function(r){return r.H/100;}));
       snapsY.forEach(function(sy){ if(Math.abs(newY-sy)<thresh){ newY=sy; snapY=sy+S_tvSide.topH/100; } });
-      tvGrp[2].position.x=newX;
-      tvGrp[2].position.y=newY;
+      tvTopGrp.position.x=newX;
+      tvTopGrp.position.y=newY;
       S_tvSide.topX=newX;
       S_tvSide.topY=newY-mainCH;
       updateTVSnapGuides(snapX,snapY);
@@ -3570,8 +3605,8 @@ cvs.addEventListener('pointermove',function(e){
   }
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   if(!isDragging){
-    if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvGrp[2]&&S.step===1){
-      var topMeshes2=tvMeshes[2].concat(tvHP[2]?[tvHP[2]]:[]);
+    if(BIBLIO_MODE&&currentFT==='tv'&&S_tvSide.topActive&&tvTopGrp&&S.step===1){
+      var topMeshes2=tvTopMeshes.concat(tvTopHP?[tvTopHP]:[]);
       var hovHit=raycaster.intersectObjects(topMeshes2,false).length>0;
       cvs.style.cursor=hovHit?'grab':'';
       if(hovHit) return;
@@ -3974,13 +4009,15 @@ function selectFurnitureType(ft){
   // Reset éléments caisson principal (étagères, séparateurs, portes, tiroirs…)
   caissonElements=[]; caissonElements2=[];
   // Caissons latéraux TV — reset + show/hide
-  S_tvSide={leftActive:false,leftW:40,leftH:120,rightActive:false,rightW:40,rightH:120,topActive:false,topW:80,topH:100,topX:0,topY:0};
+  S_tvSide={topActive:false,topW:80,topH:100,topX:0,topY:0};
+  tvSideLeft=[]; tvSideRight=[];
   tvTopDragging=false; hideTVSnapGuides();
-  tvElems=[[],[],[]]; tvOpenState=[{},{},{}]; activeCaisson=1;
+  tvTopElems=[]; tvTopOpenState={}; activeCaisson=1;
+  renderTvSideList();
   tvCableHoles=[]; renderCableHolesUI();
   document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=(ft==='tv')?'':'none'; });
-  ['tvl-btn','tvr-btn','tvt-btn'].forEach(function(id,i){ var b=document.getElementById(id); if(b) b.textContent=['+Gauche','+Droite','+Dessus'][i].replace('+',' + ').trim(); });
-  ['tvl-opts','tvr-opts','tvt-opts'].forEach(function(id){ var o=document.getElementById(id); if(o) o.style.display='none'; });
+  var tvtBtn=document.getElementById('tvt-btn'); if(tvtBtn) tvtBtn.textContent='+ Dessus';
+  var tvtOpts=document.getElementById('tvt-opts'); if(tvtOpts) tvtOpts.style.display='none';
   // Onglets Formulaire/Fonction — cachés en SDB
   var tabs=document.getElementById('p1-tabs');
   if(tabs) tabs.style.display=(ft!=='sdb')?'':'none';
@@ -4195,9 +4232,9 @@ function buildRecap4(){
     rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
   }
   if(currentFT==='tv'){
-    if(S_tvSide.leftActive)  rows.push(['Caisson gauche', S_tvSide.leftW+' × '+S_tvSide.leftH+' cm — '+tvElems[0].length+' élément'+(tvElems[0].length!==1?'s':'')]);
-    if(S_tvSide.rightActive) rows.push(['Caisson droit',  S_tvSide.rightW+' × '+S_tvSide.rightH+' cm — '+tvElems[1].length+' élément'+(tvElems[1].length!==1?'s':'')]);
-    if(S_tvSide.topActive)   rows.push(['Caisson haut',   S_tvSide.topW+' × '+S_tvSide.topH+' cm — '+tvElems[2].length+' élément'+(tvElems[2].length!==1?'s':'')]);
+    tvSideLeft.forEach(function(r,i){ rows.push(['Caisson gauche '+(i+1), r.W+' × '+r.H+' cm — '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
+    tvSideRight.forEach(function(r,i){ rows.push(['Caisson droit '+(i+1), r.W+' × '+r.H+' cm — '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
+    if(S_tvSide.topActive)   rows.push(['Caisson haut',   S_tvSide.topW+' × '+S_tvSide.topH+' cm — '+tvTopElems.length+' élément'+(tvTopElems.length!==1?'s':'')]);
   }
   var elemLabels={shelf:'Étagère',shelf_simple:'Liseré horiz.',separator:'Intercalaire',separator_simple:'Liseré vert.',porte:'Porte',tiroir:'Tiroir',barre:'Tringle'};
   Object.keys(counts).forEach(function(k){ if(counts[k]) rows.push([elemLabels[k]||k, counts[k]]); });
@@ -4522,10 +4559,10 @@ function computeFullDevisQuantities(){
   if(hasAngle){
     list.push(computeDevisQuantities(buildTechSpec(caissonElements2, S.CL2, S.CH, caissonCP()), matLabel));
   }
-  if(currentFT==='tv' && S_tvSide){
-    if(S_tvSide.leftActive)  list.push(computeDevisQuantities(buildTechSpec(tvElems[0], S_tvSide.leftW/100,  S_tvSide.leftH/100,  caissonCP()), matLabel));
-    if(S_tvSide.rightActive) list.push(computeDevisQuantities(buildTechSpec(tvElems[1], S_tvSide.rightW/100, S_tvSide.rightH/100, caissonCP()), matLabel));
-    if(S_tvSide.topActive)   list.push(computeDevisQuantities(buildTechSpec(tvElems[2], S_tvSide.topW/100,   S_tvSide.topH/100,   caissonCP()), matLabel));
+  if(currentFT==='tv'){
+    tvSideLeft.forEach(function(r){ list.push(computeDevisQuantities(buildTechSpec(r.elems, r.W/100, r.H/100, caissonCP()), matLabel)); });
+    tvSideRight.forEach(function(r){ list.push(computeDevisQuantities(buildTechSpec(r.elems, r.W/100, r.H/100, caissonCP()), matLabel)); });
+    if(S_tvSide.topActive) list.push(computeDevisQuantities(buildTechSpec(tvTopElems, S_tvSide.topW/100, S_tvSide.topH/100, caissonCP()), matLabel));
   }
 
   var merged = mergeDevisQuantities(list);
@@ -4535,8 +4572,6 @@ function computeFullDevisQuantities(){
   // Une face qui touche un autre caisson n'est jamais exposée, donc pas de ligne pour elle.
   // Chaque ligne est indépendante (checkbox à part) pour que l'admin puisse ajuster caisson par caisson.
   var CPm = caissonCP();
-  var leftActive  = currentFT==='tv' && S_tvSide && S_tvSide.leftActive;
-  var rightActive = currentFT==='tv' && S_tvSide && S_tvSide.rightActive;
   merged.caisson_material = matLabel; // matériau du caisson (les finitions ont leur propre prix au m², distinct)
   merged.finitions = [];
   // dim1/dim2 en mètres — la joue a du chant plaqué sur tout son périmètre (4 côtés), contrairement
@@ -4549,30 +4584,39 @@ function computeFullDevisQuantities(){
       visible: !!visible
     });
   }
-  // Toute face réellement exposée (qui ne touche pas un autre caisson) reçoit automatiquement
-  // une finition — pas de choix à faire côté client, l'admin peut ensuite décocher si besoin
-  // (ex: meuble pousé contre un mur) directement dans le formulaire devis.
-  // Caisson principal : gauche/droite exposés seulement si aucun caisson latéral ne les recouvre
-  if(!leftActive)  addFin('main_gauche', 'Joue gauche — caisson principal', S.CH, CPm, true);
-  if(!rightActive) addFin('main_droite', 'Joue droite — caisson principal', S.CH, CPm, true);
-  addFin('main_dessus', 'Dessus — caisson principal', S.CL, CPm, true);
-  // Caisson d'angle : son bout extérieur + son propre dessus
+  // Caisson d'angle (mode bibliothèque, jamais combiné au mode TV) : son bout extérieur + son propre dessus
   if(hasAngle){
     addFin('angle_bout',   'Joue — bout du caisson d\'angle', S.CH, CPm, true);
     addFin('angle_dessus', 'Dessus — caisson d\'angle', S.CL2, CPm, true);
   }
-  // Caissons latéraux TV : leur bout extérieur + leur propre dessus, ET leur côté intérieur
-  // (celui qui touche le principal) — car si le caisson principal est moins haut que le
-  // latéral, ce côté-là dépasse et reste exposé au-dessus du principal.
-  if(leftActive){
-    addFin('left_gauche', 'Joue gauche — caisson gauche', S_tvSide.leftH/100, CPm, true);
-    addFin('left_droite', 'Joue droite — caisson gauche (côté principal)', S_tvSide.leftH/100, CPm, true);
-    addFin('left_dessus', 'Dessus — caisson gauche', S_tvSide.leftW/100, CPm, true);
-  }
-  if(rightActive){
-    addFin('right_droite', 'Joue droite — caisson droit', S_tvSide.rightH/100, CPm, true);
-    addFin('right_gauche', 'Joue gauche — caisson droit (côté principal)', S_tvSide.rightH/100, CPm, true);
-    addFin('right_dessus', 'Dessus — caisson droit', S_tvSide.rightW/100, CPm, true);
+  // Rangée de caissons : le principal, entouré (en mode TV) de ses caissons latéraux —
+  // ...gauche N, ..., gauche 1, principal, droite 1, ..., droite N. En dehors du mode TV, la
+  // rangée ne contient que le principal (les règles ci-dessous s'appliquent alors telles quelles).
+  // Toute face réellement exposée (bout de rangée, ou jonction entre 2 caissons de hauteurs différentes)
+  // reçoit automatiquement une finition — pas de choix à faire côté client, l'admin peut décocher si besoin.
+  {
+    var row=[];
+    if(currentFT==='tv') for(var li=tvSideLeft.length-1; li>=0; li--) row.push({label:'caisson gauche '+(li+1), H:tvSideLeft[li].H/100, W:tvSideLeft[li].W/100});
+    row.push({label:'caisson principal', H:S.CH, W:S.CL});
+    if(currentFT==='tv') tvSideRight.forEach(function(r,ri){ row.push({label:'caisson droit '+(ri+1), H:r.H/100, W:r.W/100}); });
+
+    row.forEach(function(entry,i){
+      addFin('dessus_'+i, 'Dessus — '+entry.label, entry.W, CPm, true);
+    });
+    // Bout gauche de toute la rangée
+    addFin('bout_gauche', 'Joue gauche — '+row[0].label+' (bout extérieur)', row[0].H, CPm, true);
+    // Bout droit de toute la rangée
+    var last=row.length-1;
+    addFin('bout_droit', 'Joue droite — '+row[last].label+' (bout extérieur)', row[last].H, CPm, true);
+    // Jonctions internes : si les 2 caissons voisins n'ont pas la même hauteur, celui qui dépasse
+    // a une joue de finition supplémentaire sur ce côté (la partie exposée au-dessus du plus petit).
+    for(var i=0;i<row.length-1;i++){
+      var a=row[i], b=row[i+1];
+      if(Math.abs(a.H-b.H)<0.001) continue; // même hauteur → côté caché, pas de joue
+      var taller = a.H>b.H ? a : b;
+      var tallerSide = a.H>b.H ? 'droite' : 'gauche'; // côté du plus haut qui fait face à la jonction
+      addFin('jonction_'+i, 'Joue '+tallerSide+' — '+taller.label+' (jonction, plus haut que son voisin)', taller.H, CPm, true);
+    }
   }
   // Note : les finitions ont leur propre matériau/prix au m² (souvent différent du panneau du caisson),
   // donc elles ne sont PAS ajoutées aux catégories ci-dessus — elles sont pricées séparément dans l'admin.
@@ -4666,7 +4710,7 @@ async function submitConfig(){
 
   var counts={shelf:0,separator:0,porte:0,tiroir:0};
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
-  if(currentFT==='tv') tvElems.forEach(function(els){ els.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;}); });
+  if(currentFT==='tv') [tvTopElems].concat(tvSideLeft.map(function(r){return r.elems;})).concat(tvSideRight.map(function(r){return r.elems;})).forEach(function(els){ els.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;}); });
 
   // Résumé lisible de la configuration
   // isSDBMode reflète la case "Meuble salle de bain" cochée par l'utilisateur —
@@ -4677,9 +4721,9 @@ async function submitConfig(){
   var projetNom = ftLabel + ' sur mesure — ' + Math.round(S.CL*100) + 'x' + Math.round(S.CH*100) + ' cm';
   var tvSideDesc = [];
   if(currentFT==='tv'){
-    if(S_tvSide.leftActive)  tvSideDesc.push('Caisson gauche : '+S_tvSide.leftW+'×'+S_tvSide.leftH+' cm ('+tvElems[0].length+' él.)');
-    if(S_tvSide.rightActive) tvSideDesc.push('Caisson droit : '+S_tvSide.rightW+'×'+S_tvSide.rightH+' cm ('+tvElems[1].length+' él.)');
-    if(S_tvSide.topActive)   tvSideDesc.push('Caisson haut : '+S_tvSide.topW+'×'+S_tvSide.topH+' cm ('+tvElems[2].length+' él.)');
+    tvSideLeft.forEach(function(r,i){ tvSideDesc.push('Caisson gauche '+(i+1)+' : '+r.W+'×'+r.H+' cm ('+r.elems.length+' él.)'); });
+    tvSideRight.forEach(function(r,i){ tvSideDesc.push('Caisson droit '+(i+1)+' : '+r.W+'×'+r.H+' cm ('+r.elems.length+' él.)'); });
+    if(S_tvSide.topActive)   tvSideDesc.push('Caisson haut : '+S_tvSide.topW+'×'+S_tvSide.topH+' cm ('+tvTopElems.length+' él.)');
   }
   var projetDesc = [
     'Type : ' + ftLabel,
@@ -4719,9 +4763,12 @@ async function submitConfig(){
           technical_spec: buildTechSpec(caissonElements, S.CL, S.CH, caissonCP()),
           caisson2: hasAngle ? { L_cm: Math.round(S.CL2*100), elements: caissonElements2, technical_spec: buildTechSpec(caissonElements2, S.CL2, S.CH, caissonCP()) } : undefined,
           tvSide: (currentFT==='tv') ? {
-            left:  S_tvSide.leftActive  ? { W_cm:S_tvSide.leftW,  H_cm:S_tvSide.leftH,  elements:tvElems[0] } : null,
-            right: S_tvSide.rightActive ? { W_cm:S_tvSide.rightW, H_cm:S_tvSide.rightH, elements:tvElems[1] } : null,
-            top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:tvElems[2] } : null,
+            // left/right : tableaux (illimités), du plus proche du principal au plus éloigné.
+            // Ancien format (avant les caissons illimités) : un seul objet par côté — admin.html
+            // sait encore lire les deux formats pour les anciennes configs déjà en base.
+            left:  tvSideLeft.map(function(r){ return { W_cm:r.W, H_cm:r.H, elements:r.elems }; }),
+            right: tvSideRight.map(function(r){ return { W_cm:r.W, H_cm:r.H, elements:r.elems }; }),
+            top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:tvTopElems } : null,
           } : undefined,
           cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
           devis_quantities: computeFullDevisQuantities(),
@@ -4954,8 +5001,8 @@ function updateCotes(){
   // ── Caisson principal ────────────────────────────────────────────
   var BL=pp(-CL/2,0), BR=pp(CL/2,0), TL=pp(-CL/2,CH), TR=pp(CL/2,CH);
 
-  var hasLeft =isTVMode&&S_tvSide.leftActive;
-  var hasRight=isTVMode&&S_tvSide.rightActive;
+  var hasLeft =isTVMode&&tvSideLeft.length>0;
+  var hasRight=isTVMode&&tvSideRight.length>0;
   var hasTop  =isTVMode&&S_tvSide.topActive;
 
   // Largeur caisson principal (au-dessus)
@@ -4963,38 +5010,39 @@ function updateCotes(){
   // Hauteur caisson principal (à droite si pas de caisson droit, sinon plus près)
   vDim(TR,BR,Math.round(CH*100)+' cm',hasRight?16:38);
 
-  // ── Caissons TV extra ────────────────────────────────────────────
+  // ── Caissons TV extra (illimités de chaque côté) ──────────────────
   if(isTVMode){
-    var lW=S_tvSide.leftW/100, lH=S_tvSide.leftH/100;
-    var rW=S_tvSide.rightW/100, rH=S_tvSide.rightH/100;
     var tW=S_tvSide.topW/100, tH=S_tvSide.topH/100;
     var tX=S_tvSide.topX, tY=S_tvSide.topY;
+    var xMin=-CL/2, xMax=CL/2, yMax=CH;
 
-    if(hasLeft){
-      var LBL=pp(-(CL/2+lW),0), LTL=pp(-(CL/2+lW),lH), LTR=pp(-CL/2,lH);
+    var offL=CL/2;
+    tvSideLeft.forEach(function(r){
+      var lW=r.W/100, lH=r.H/100;
+      var LBL=pp(-(offL+lW),0), LTL=pp(-(offL+lW),lH), LTR=pp(-offL,lH);
       hDim(LTL,LTR,Math.round(lW*100)+' cm',-20);
       vDim(LTL,LBL,Math.round(lH*100)+' cm',-38);
-    }
-    if(hasRight){
-      var RBR=pp(CL/2+rW,0), RTL=pp(CL/2,rH), RTR=pp(CL/2+rW,rH);
+      offL+=lW; xMin=Math.min(xMin,-offL); yMax=Math.max(yMax,lH);
+    });
+    var offR=CL/2;
+    tvSideRight.forEach(function(r){
+      var rW=r.W/100, rH=r.H/100;
+      var RBR=pp(offR+rW,0), RTL=pp(offR,rH), RTR=pp(offR+rW,rH);
       hDim(RTL,RTR,Math.round(rW*100)+' cm',-20);
       vDim(RTR,RBR,Math.round(rH*100)+' cm',38);
-    }
+      offR+=rW; xMax=Math.max(xMax,offR); yMax=Math.max(yMax,rH);
+    });
     if(hasTop){
       var topY_loc=CH+tY;
       var TTL=pp(tX-tW/2,topY_loc+tH), TTR=pp(tX+tW/2,topY_loc+tH);
       var TBR=pp(tX+tW/2,topY_loc);
       hDim(TTL,TTR,Math.round(tW*100)+' cm',-20);
       vDim(TTR,TBR,Math.round(tH*100)+' cm',28);
+      xMin=Math.min(xMin,tX-tW/2); xMax=Math.max(xMax,tX+tW/2); yMax=Math.max(yMax,CH+tY+tH);
     }
 
     // ── Dimensions d'ensemble ────────────────────────────────────
     if(hasLeft||hasRight||hasTop){
-      var xMin=-CL/2, xMax=CL/2, yMax=CH;
-      if(hasLeft)  { xMin=Math.min(xMin,-(CL/2+lW)); yMax=Math.max(yMax,lH); }
-      if(hasRight) { xMax=Math.max(xMax, CL/2+rW);   yMax=Math.max(yMax,rH); }
-      if(hasTop)   { xMin=Math.min(xMin,tX-tW/2); xMax=Math.max(xMax,tX+tW/2); yMax=Math.max(yMax,CH+tY+tH); }
-
       var farBL=pp(xMin,0), farBR=pp(xMax,0);
       var farTL=pp(xMin,yMax);
 
@@ -5094,8 +5142,8 @@ function _repositionPlanOnCaisson(){
   var ns = currentNS || 1;
   // Les caissons latéraux sont enfants de caissonGrp → ils décalent le centre X dans normalizeCaisson.
   // Le caisson central (local X=0) est décalé en world par -center.x*ns où center.x=(rightW-leftW)/2
-  var leftW  = (S_tvSide && S_tvSide.leftActive)  ? S_tvSide.leftW/100  : 0;
-  var rightW = (S_tvSide && S_tvSide.rightActive) ? S_tvSide.rightW/100 : 0;
+  var leftW  = tvSideLeft.reduce(function(s,r){return s+r.W/100;},0);
+  var rightW = tvSideRight.reduce(function(s,r){return s+r.W/100;},0);
   var centerX = (rightW - leftW) / 2;
   planMesh.scale.setScalar(ns);
   planMesh.position.x = -centerX * ns;
