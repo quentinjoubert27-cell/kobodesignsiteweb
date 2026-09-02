@@ -18,9 +18,11 @@ values (1, '{}'::jsonb)
 on conflict (id) do nothing;
 
 -- RLS : sans policy, Supabase bloque silencieusement l'écriture (pas d'erreur JS levée,
--- juste rien d'enregistré) — même pattern que les autres tables admin.
+-- juste rien d'enregistré). Ici ouvert à tout utilisateur connecté (authenticated) — pas
+-- restreint à un seul email, contrairement aux autres tables admin — mais toujours fermé
+-- aux visiteurs anonymes du site public.
 alter table tarifs_globaux enable row level security;
 
-create policy "Admin accès total tarifs_globaux" on tarifs_globaux for all
-  using ((auth.jwt() ->> 'email') = 'quentin.joubert@icloud.com')
-  with check ((auth.jwt() ->> 'email') = 'quentin.joubert@icloud.com');
+create policy "Utilisateurs connectés accès total tarifs_globaux" on tarifs_globaux for all
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
