@@ -377,6 +377,8 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 /* Screenshot btn */
 #btn-screenshot{position:absolute;bottom:18px;left:16px;display:none;align-items:center;gap:6px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;background:rgba(255,250,240,.95);border:1.5px solid rgba(26,26,26,.14);border-radius:100px;cursor:pointer;color:var(--text2);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(26,26,26,.08);transition:border-color .15s;white-space:nowrap;pointer-events:auto;z-index:5}
 #btn-screenshot:hover{border-color:rgba(26,26,26,.35)}
+#price-badge{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:6px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;background:rgba(255,250,240,.95);border:1.5px solid rgba(26,26,26,.14);border-radius:100px;color:var(--text2);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(26,26,26,.08);white-space:nowrap;pointer-events:none;z-index:6}
+#price-badge strong{color:var(--accent);font-size:15px;font-weight:800}
 
 /* Récap visuel */
 .recap-thumb{width:100%;border-radius:10px;margin-bottom:12px;display:block;border:1px solid var(--border)}
@@ -1119,6 +1121,7 @@ window.addEventListener('scroll', function(){
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7.5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 3 L5.8 1.5 H8.2 L9 3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
       Télécharger
     </button>
+    <div id="price-badge">Prix estimé <strong id="price-badge-val">—</strong></div>
     <div id="c-action-hint">Toucher pour poser</div>
     <div id="del-toast">
       <span id="del-toast-msg">Élément supprimé</span>
@@ -4676,6 +4679,56 @@ function computeDevisPrice(q, prices){
   return { cost_revient: Math.round(cost*100)/100, prix_vente: Math.round(cost*(prices.coefficient_revente||2)*100)/100 };
 }
 
+// ── Prix estimé affiché au client pendant la configuration ──
+// Reprend exactement la logique de computeDevisPriceAdmin (admin.html) : mêmes clés de tarifs
+// ("panels_caisson_m2|Caisson", "finition_m2|<matériau>", etc.), même base "tarifs_globaux".
+// Toutes les finitions (joues/dessus) sont considérées visibles ici — le client ne peut pas
+// en décocher, seul l'admin peut ajuster ça plus tard sur la fiche projet.
+var clientTarifs = null; // { panel_m2:{...}, edge_banding_ml, screw_unit, ... } chargé depuis Supabase
+var PANEL_CATEGORY_KEYS = ['panels_caisson_m2','panels_etagere_m2','panels_porte_m2','panels_tiroir_m2','panels_tiroir_caisse_m2','panels_plan_m2'];
+
+function computeClientPrice(q, tarifs){
+  if(!q || !tarifs) return null;
+  var costPanels = PANEL_CATEGORY_KEYS.reduce(function(sumCat, catKey){
+    var bucket = q[catKey] || {};
+    return sumCat + Object.keys(bucket).reduce(function(sum, mat){
+      var pu = (tarifs.panel_m2||{})[catKey+'|'+mat] || 0;
+      return sum + bucket[mat]*pu;
+    }, 0);
+  }, 0);
+  var finitionM2 = (q.finitions||[]).reduce(function(sum,f){ return sum + (f.m2||0); }, 0);
+  var finitionUnitM2 = (q.caisson_material && tarifs.panel_m2) ? (tarifs.panel_m2['finition_m2|'+q.caisson_material]||0) : 0;
+  var cost = costPanels
+    + finitionM2 * finitionUnitM2
+    + (q.edge_banding_ml||0) * (tarifs.edge_banding_ml||0)
+    + (q.screws||0) * (tarifs.screw_unit||0)
+    + (q.dowels||0) * (tarifs.dowel_unit||0)
+    + (q.hinges||0) * (tarifs.hinge_unit||0)
+    + (q.drawer_mechanisms||0) * (tarifs.drawer_mechanism_unit||0)
+    + (q.corner_brackets||0) * (tarifs.corner_bracket_unit||0);
+  return { prix_vente: Math.round(cost*(tarifs.coefficient_revente||2)*100)/100 };
+}
+
+var _priceBadgeTimer = null;
+function refreshPriceBadge(){
+  var badge = document.getElementById('price-badge');
+  var valEl = document.getElementById('price-badge-val');
+  if(!badge || !valEl) return;
+  if(!clientTarifs){ badge.style.display='none'; return; }
+  try {
+    var q = computeFullDevisQuantities();
+    var price = computeClientPrice(q, clientTarifs);
+    if(!price || !(price.prix_vente>0)){ badge.style.display='none'; return; }
+    valEl.textContent = price.prix_vente.toFixed(0)+' €';
+    badge.style.display='flex';
+  } catch(e){ badge.style.display='none'; }
+}
+function startPriceBadgeLoop(){
+  if(_priceBadgeTimer) return;
+  refreshPriceBadge();
+  _priceBadgeTimer = setInterval(refreshPriceBadge, 1000);
+}
+
 async function submitConfig(){
   var prenom, nom, email, telephone;
   if (_cfgSession) {
@@ -4805,6 +4858,21 @@ async function submitConfig(){
   }
 }
 window.submitConfig=submitConfig;
+
+// Chargement des tarifs globaux (lecture publique) pour afficher un prix estimé au client
+// pendant qu'il configure — voir computeClientPrice/refreshPriceBadge plus haut.
+(function(){
+  try {
+    var sbPrix = supabase.createClient(
+      'https://auzcbtipzqxmllkzdxls.supabase.co',
+      'sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U'
+    );
+    sbPrix.from('tarifs_globaux').select('prices').eq('id', 1).maybeSingle().then(function(r){
+      clientTarifs = (r.data && r.data.prices) || {};
+      startPriceBadgeLoop();
+    }).catch(function(){});
+  } catch(e){}
+})();
 
 // Détection session — mode connecté ou non
 var _cfgSession = null;

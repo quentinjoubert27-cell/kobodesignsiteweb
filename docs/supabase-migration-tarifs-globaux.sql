@@ -26,3 +26,9 @@ alter table tarifs_globaux enable row level security;
 create policy "Utilisateurs connectés accès total tarifs_globaux" on tarifs_globaux for all
   using (auth.role() = 'authenticated')
   with check (auth.role() = 'authenticated');
+
+-- Lecture publique (visiteurs anonymes inclus) : nécessaire pour afficher un prix estimé
+-- au client pendant qu'il configure son meuble, sans qu'il soit connecté. Écriture toujours
+-- réservée aux utilisateurs connectés (policy ci-dessus).
+create policy "Lecture publique tarifs_globaux" on tarifs_globaux for select
+  using (true);
