@@ -5182,6 +5182,14 @@ goStep(1);
   document.querySelectorAll('.tv-only').forEach(function(el){ el.style.display=''; });
 })();
 
+// ── Auto-sélection via ?ft= (liens depuis le site, ex: gamme.html) ──
+(function(){
+  var ft = new URLSearchParams(location.search).get('ft');
+  if(!ft || !FT_CONFIGS[ft]) return;
+  selectFurnitureType(ft);
+  if(ft==='sdb') toggleSDBMode(true);
+})();
+
 var isSDBMode = false;
 
 // ── Toggle SDB ──────────────────────────────────────────
