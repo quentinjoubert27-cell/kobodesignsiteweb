@@ -327,7 +327,9 @@ textarea.cfg-field{resize:vertical;min-height:72px}
   opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;
   border:1px solid var(--border);box-shadow:0 4px 20px rgba(26,26,26,.1);
 }
-#cv-wrap.mode-edit #c-edit-bar{opacity:1;pointer-events:auto}
+/* Barre "Mode édition / Annuler / Terminer" retirée : redondante avec Retour/Suivant
+   et l'aménagement surchargeait l'affichage mobile (trop de badges superposés). */
+#c-edit-bar{display:none}
 .c-edit-lbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text2)}
 .c-type-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;background:none;border-radius:0;overflow:visible}
 .c-type-btn{
@@ -389,6 +391,7 @@ textarea.cfg-field{resize:vertical;min-height:72px}
 .recap-v{font-weight:600;color:var(--text)}
 #c-action-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);background:rgba(255,250,240,.92);padding:6px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .2s;border:1px solid var(--border)}
 #cv-wrap.mode-edit #c-action-hint{opacity:1}
+#cv-wrap.mode-edit.has-elements #c-action-hint{opacity:0}
 #drag-height-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:5px;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px;pointer-events:none;z-index:20;letter-spacing:.01em;box-shadow:0 2px 8px rgba(205,62,0,.3)}
 
 /* ─── TABLETTE (761–1024px) : layout desktop mais interactions tactiles ─── */
@@ -2628,6 +2631,7 @@ function switchActiveCaisson(n){
   renderTvSideList();
   clearCaissonGhost();
   updateAmgtCount();
+  updateElementsList();
 }
 
 function _rebuildEditBar(){
@@ -3357,6 +3361,10 @@ function deleteElementAt(i){
   showDelToast();
 }
 function updateElementsList(){
+  // La bulle d'aide "Toucher le meuble = poser" ne sert qu'au tout début, avant le
+  // premier élément posé — une fois le meuble en cours d'aménagement, elle n'apporte
+  // plus rien et surcharge l'affichage (surtout sur mobile, déjà chargé en cotes/badges).
+  if(wrap) wrap.classList.toggle('has-elements', caissonEditMode && getActiveEls().length>0);
   var containers=document.querySelectorAll('.elements-placed-list');
   if(!containers.length) return;
   var els=caissonEditMode ? getActiveEls() : [];
