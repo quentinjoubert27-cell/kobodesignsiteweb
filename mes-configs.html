@@ -11,7 +11,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="robots" content="noindex,nofollow"/>
-  <title>Configs — Kobo Design</title>
+  <title>Configs : Kobo Design</title>
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
   <style>
@@ -572,7 +572,7 @@ function buildFicheHTML(cfg, idx){
     html += drow('Case '+(j+1)+' ('+yBounds[j]+'→'+yBounds[j+1]+' cm)', caseH+' cm');
   }
   if(shelves.length>0 && fullShelves.length===0){
-    html += '<div class="fiche-empty">Étagères partielles — cases variables par colonne</div>';
+    html += '<div class="fiche-empty">Étagères partielles : cases variables par colonne</div>';
   }
   html += '</div></div>';
 
@@ -661,7 +661,7 @@ function copyFiche(btn, cfg){
   var doors = elems.filter(function(e){return e.type==='door';});
 
   var lines = [
-    'BIBLIOTHÈQUE '+W+'×'+H+'×'+D+' cm — '+esc(cfg.essence||''),
+    'BIBLIOTHÈQUE '+W+'×'+H+'×'+D+' cm, '+esc(cfg.essence||''),
     'Client : '+esc(cfg.prenom)+' <'+esc(cfg.email)+'>',
     '',
     'INTÉRIEUR',
@@ -898,7 +898,7 @@ function buildPDFHtml(cfg){
     var xl=s.x_left_cm||0, xr=s.x_right_cm||maxX;
     var sw=Math.round((xr-xl)*10)/10;
     var partial=(xl!==0||Math.abs(xr-maxX)>0.5);
-    return [(s.type==='traverse'?'Traverse':'Étagère')+' n°'+(i+1)+' — H = '+s.y_cm+' cm',
+    return [(s.type==='traverse'?'Traverse':'Étagère')+' n°'+(i+1)+' : H = '+s.y_cm+' cm',
       '<strong>Larg. '+sw+' cm</strong>'+(partial?' <span class="note">partielle ('+xl+' → '+xr+' cm)</span>':'')];
   });
 
@@ -912,11 +912,11 @@ function buildPDFHtml(cfg){
   var doorRows=doors.map(function(d,i){
     var dW=Math.round(((d.x_right_cm-d.x_left_cm)-0.3)*10)/10;
     var dH=Math.round(((d.ceil_y_cm-d.floor_y_cm)-0.4)*10)/10;
-    return ['Porte n°'+(i+1)+' — baie '+d.x_left_cm+' → '+d.x_right_cm+' cm', '<strong>'+dW+' × '+dH+' cm</strong>'];
+    return ['Porte n°'+(i+1)+' : baie '+d.x_left_cm+' → '+d.x_right_cm+' cm', '<strong>'+dW+' × '+dH+' cm</strong>'];
   });
 
   return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>'
-    +'<title>Fiche '+ref+' — '+esc(cfg.prenom)+'</title>'
+    +'<title>Fiche '+ref+' : '+esc(cfg.prenom)+'</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>'
     +'<style>'
     +'*{box-sizing:border-box;margin:0;padding:0}'
@@ -1001,7 +1001,7 @@ function buildPDFHtml(cfg){
     // Message client
     +(cfg.message?'<div class="sect"><div class="sect-title">Message client</div><div style="background:#F8F5F0;border-radius:8px;padding:10px 14px;font-size:11px;font-style:italic;color:rgba(26,26,26,.6)">'+esc(cfg.message)+'</div></div>':'')
     // Footer
-    +'<div class="footer"><span>Kobo Design — document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
+    +'<div class="footer"><span>Kobo Design, document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
     // Bouton impression
     +'<button class="print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>'
     +'<script>!function(){if(window._kbNoTrack)return;var k="kb_tracked_"+location.pathname;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");var vid=document.cookie.match(/kb_vid=([^;]+)/);if(!vid){var u=(Math.random().toString(36)+Math.random().toString(36)).replace(/[^a-z0-9]/g,"").slice(0,16);document.cookie="kb_vid="+u+";max-age=31536000;path=/;SameSite=Lax";vid=[null,u];}fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:location.pathname,referrer:document.referrer||null,language:navigator.language||null,screen:screen.width+"x"+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||null,visitor_id:vid[1]})}).catch(function(){});}();</script>
@@ -1157,7 +1157,7 @@ function buildPDFHtmlSdb(cfg){
   var s_etag=0; shelves.forEach(function(sh){var xl=sh.x_left_cm||0,xr=sh.x_right_cm||iW;s_etag+=((xr-xl)/100)*(P/100*0.9);});
   var s_fac=0; portes.concat(tiroirs).forEach(function(p){var k=parseKeyS(p.key);if(k)s_fac+=((k.xright-k.xleft)/100)*((k.top-k.bot)/100);});
 
-  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Fiche '+ref+' — '+esc(cfg.prenom)+'</title>'
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Fiche '+ref+' : '+esc(cfg.prenom)+'</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>'
     +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Poppins,sans-serif;color:#1A1A1A;background:#fff;padding:32px 40px;font-size:12px}'
     +'@page{size:A4;margin:14mm 12mm}@media print{body{padding:0}.print-btn{display:none!important}}'
@@ -1182,15 +1182,15 @@ function buildPDFHtmlSdb(cfg){
     +'.footer{border-top:1px solid rgba(26,26,26,.1);padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:rgba(26,26,26,.35)}'
     +'.print-btn{position:fixed;bottom:24px;right:24px;padding:12px 24px;background:#CD3E00;color:#fff;border:none;border-radius:100px;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(205,62,0,.3)}'
     +'</style></head><body>'
-    +'<div class="header"><div class="brand">Kobo <em>Design</em> — Salle de Bain</div><div><div class="ref">'+ref+'</div><div class="ref-date">'+dateStr+'</div></div></div>'
+    +'<div class="header"><div class="brand">Kobo <em>Design</em> : Salle de Bain</div><div><div class="ref">'+ref+'</div><div class="ref-date">'+dateStr+'</div></div></div>'
     +'<div class="meta">'
       +'<div class="meta-block"><div class="meta-title">Client</div><div class="meta-val">'+esc(cfg.prenom)+'</div><div class="meta-sub">'+esc(cfg.email)+'</div></div>'
       +'<div class="meta-block"><div class="meta-title">Meuble</div><div class="meta-val">'+W+'×'+H+'×'+P+' cm</div><div class="meta-sub">'+esc(cfg.meuble_mat)+'</div></div>'
       +'<div class="meta-block"><div class="meta-title">Plan de travail</div><div class="meta-val">'+cfg.plan_l+'×'+cfg.plan_p+' cm</div><div class="meta-sub">'+esc(cfg.plan_mat)+'</div></div>'
     +'</div>'
     +'<div class="schemas">'
-      +'<div><div class="schema-title schema-avec">Vue de face — avec tiroirs</div>'+svgAvec+'</div>'
-      +'<div><div class="schema-title schema-sans">Vue de face — sans tiroirs</div>'+svgSans+'</div>'
+      +'<div><div class="schema-title schema-avec">Vue de face, avec tiroirs</div>'+svgAvec+'</div>'
+      +'<div><div class="schema-title schema-sans">Vue de face, sans tiroirs</div>'+svgSans+'</div>'
     +'</div>'
     +'<div class="body-grid"><div>'
       +'<div class="sect"><div class="sect-title">Dimensions intérieures</div>'+tbl([['Largeur int.',Math.round(iW)+' cm'],['Hauteur int.',Math.round(iH)+' cm'],['Profondeur',P+' cm'],['Épaisseur panneau',ep+' mm']])+'</div>'
@@ -1208,7 +1208,7 @@ function buildPDFHtmlSdb(cfg){
       +'<div><div class="sval" style="color:#1A1A1A">'+r2(s_struct+s_etag+s_fac)+'</div><div class="slbl">m² total</div></div>'
     +'</div></div>'
     +(cfg.message?'<div class="sect"><div class="sect-title">Message client</div><div style="background:#F8F5F0;border-radius:8px;padding:8px 12px;font-size:11px;font-style:italic;color:rgba(26,26,26,.6)">'+esc(cfg.message)+'</div></div>':'')
-    +'<div class="footer"><span>Kobo Design — document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
+    +'<div class="footer"><span>Kobo Design, document interne</span><span>'+ref+' · '+dateStr+'</span></div>'
     +'<button class="print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>'
     +'</body></html>';
 }
