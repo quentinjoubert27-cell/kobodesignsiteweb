@@ -566,6 +566,26 @@
         onkeydown="if(event.key==='Enter') adminLogin()"/>
     </div>
     <button class="form-btn" onclick="adminLogin()">Accéder →</button>
+    <p style="text-align:center;margin-top:14px;font-size:12.5px;">
+      <a href="#" onclick="requestPasswordReset();return false;" style="color:var(--text2);text-decoration:underline;">Mot de passe oublié ?</a>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     RECOVERY — définir un nouveau mot de passe (après clic sur le lien reçu par email)
+═══════════════════════════════════════════ -->
+<div class="auth-screen" id="recoveryScreen" style="display:none">
+  <div class="auth-box">
+    <p class="auth-eyebrow">Administration</p>
+    <h2 class="auth-title">Nouveau mot de passe</h2>
+    <div class="auth-error" id="recovery-error"></div>
+    <div class="form-group">
+      <label class="form-label" for="r-pw">Nouveau mot de passe</label>
+      <input class="form-input" type="password" id="r-pw" placeholder="••••••••" autocomplete="new-password"
+        onkeydown="if(event.key==='Enter') updateRecoveryPassword()"/>
+    </div>
+    <button class="form-btn" onclick="updateRecoveryPassword()">Enregistrer →</button>
   </div>
 </div>
 
@@ -1194,7 +1214,10 @@
       adminUser = session.user;
       showApp();
     }
-    sb.auth.onAuthStateChange((_, session) => {
+    sb.auth.onAuthStateChange((event, session) => {
+      // Lien de récupération cliqué : Supabase ouvre une session temporaire avec cet événement —
+      // on affiche l'écran "nouveau mot de passe" au lieu de connecter directement à l'admin.
+      if (event === 'PASSWORD_RECOVERY') { showRecovery(); return; }
       if (session && ADMIN_EMAILS.includes(session.user.email)) {
         adminUser = session.user;
         showApp();
@@ -1234,7 +1257,44 @@
 
   function showLogin() {
     document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('recoveryScreen').style.display = 'none';
     document.getElementById('app').style.display = 'none';
+  }
+
+  function showRecovery() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('recoveryScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+
+  async function requestPasswordReset() {
+    const email = (document.getElementById('a-email').value || '').trim();
+    const errEl = document.getElementById('auth-error');
+    errEl.classList.remove('show');
+    errEl.style.color = '';
+    if (!email) { errEl.textContent = 'Saisis ton email ci-dessus puis clique sur "Mot de passe oublié ?".'; errEl.classList.add('show'); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    if (error) { errEl.textContent = 'Erreur : ' + error.message; errEl.classList.add('show'); return; }
+    errEl.style.color = '#166534';
+    errEl.textContent = 'Email envoyé — clique sur le lien qu\'il contient pour définir un nouveau mot de passe.';
+    errEl.classList.add('show');
+  }
+
+  async function updateRecoveryPassword() {
+    const pw = document.getElementById('r-pw').value;
+    const errEl = document.getElementById('recovery-error');
+    errEl.classList.remove('show');
+    if (!pw || pw.length < 6) { errEl.textContent = 'Le mot de passe doit faire au moins 6 caractères.'; errEl.classList.add('show'); return; }
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) { errEl.textContent = 'Erreur : ' + error.message; errEl.classList.add('show'); return; }
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && ADMIN_EMAILS.includes(session.user.email)) {
+      adminUser = session.user;
+      showApp();
+    } else {
+      await sb.auth.signOut();
+      showLogin();
+    }
   }
 
   function showApp() {
