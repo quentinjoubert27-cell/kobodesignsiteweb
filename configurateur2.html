@@ -4862,7 +4862,10 @@ window.submitConfig=submitConfig;
 
 // Chargement des tarifs globaux (lecture publique) pour afficher un prix estimé au client
 // pendant qu'il configure — voir computeClientPrice/refreshPriceBadge plus haut.
+// Désactivé pour l'instant (SHOW_CLIENT_PRICE=false) : sera réactivé plus tard, code conservé tel quel.
+var SHOW_CLIENT_PRICE = false;
 (function(){
+  if(!SHOW_CLIENT_PRICE) return;
   try {
     var sbPrix = supabase.createClient(
       'https://auzcbtipzqxmllkzdxls.supabase.co',
