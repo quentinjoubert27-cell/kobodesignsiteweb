@@ -1065,7 +1065,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button class="modal__close" onclick="closeConcoursPopup()" aria-label="Fermer">✕</button>
       <p class="modal__eyebrow">🎉 Jeu concours</p>
       <h2 class="modal__title">Le concours,<br>c'est sur Instagram.</h2>
-      <p class="modal__sub">Inscris-toi à la newsletter Kōbō Design pour une <strong>chance supplémentaire de gagner</strong>.</p>
+      <p class="modal__sub">Inscris-toi à la newsletter Kōbō Design pour tenter une <strong>chance supplémentaire de gagner</strong>. Si tu gagnes, on te contactera par email.</p>
       <div id="concours-form-panel">
         <div class="form__group">
           <label class="form__label" for="cc-nom">Nom complet</label>
@@ -1077,16 +1077,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:18px;cursor:pointer;">
           <input type="checkbox" id="cc-consent" style="margin-top:3px;flex-shrink:0;width:15px;height:15px;accent-color:var(--accent);cursor:pointer;" />
-          <span style="font-size:11.5px;line-height:1.5;color:rgba(26,26,26,.65);">Je m'inscris à la newsletter Kōbō Design (actus, réalisations, offres) — obligatoire pour participer.</span>
+          <span style="font-size:11.5px;line-height:1.5;color:rgba(26,26,26,.65);">Je m'inscris à la newsletter Kōbō Design (actus, réalisations, offres).</span>
         </label>
         <div class="cc-err" id="cc-err" style="display:none;color:#c2410c;font-size:12px;margin-bottom:12px;"></div>
         <button class="form__btn" id="cc-submit-btn" onclick="submitConcoursLead()">Je participe →</button>
-        <p style="font-size:10.5px;color:rgba(26,26,26,.4);margin-top:14px;line-height:1.5;">Tu peux te désinscrire de la newsletter à tout moment. Aucun spam.</p>
+        <p style="font-size:10.5px;color:rgba(26,26,26,.4);margin-top:14px;line-height:1.5;">Tu peux te désinscrire de la newsletter à tout moment, sans conséquence sur ta participation au concours. Aucun spam.</p>
       </div>
       <div id="concours-success-panel" style="display:none;text-align:center;padding:12px 0;">
         <p style="font-size:34px;margin-bottom:10px;">🍀</p>
         <p style="font-size:16px;font-weight:700;margin-bottom:6px;">C'est noté !</p>
-        <p style="font-size:13px;color:rgba(26,26,26,.55);">Bonne chance pour le concours — réponse sur Instagram.</p>
+        <p style="font-size:13px;color:rgba(26,26,26,.55);">Bonne chance pour le concours. On te contactera par email si tu es tiré(e) au sort.</p>
       </div>
     </div>
   </div>
@@ -1673,7 +1673,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const btn = document.getElementById('cc-submit-btn');
       errEl.style.display = 'none';
       if (!nom || !email) { errEl.textContent = 'Nom et email obligatoires.'; errEl.style.display = 'block'; return; }
-      if (!consent) { errEl.textContent = 'Coche la case newsletter pour participer.'; errEl.style.display = 'block'; return; }
+      if (!consent) { errEl.textContent = 'Coche la case pour t\'inscrire à la newsletter.'; errEl.style.display = 'block'; return; }
       btn.disabled = true; btn.textContent = 'Envoi…';
       const { error } = await sb.from('concours_leads').insert({ nom, email, source_page: location.pathname, newsletter_consent: true });
       if (error) {
