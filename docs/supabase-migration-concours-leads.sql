@@ -10,9 +10,13 @@ create table if not exists concours_leads (
   id uuid primary key default gen_random_uuid(),
   nom text not null,
   email text not null,
-  source_page text,        -- page sur laquelle le popup a été rempli
+  source_page text,             -- page sur laquelle le popup a été rempli
+  newsletter_consent boolean not null default false, -- case à cocher explicite (RGPD)
   created_at timestamptz not null default now()
 );
+
+-- Si la table existait déjà sans cette colonne (migration lancée avant cet ajout) :
+alter table concours_leads add column if not exists newsletter_consent boolean not null default false;
 
 -- RLS : écriture ouverte à tous (visiteurs anonymes du site, c'est le but du
 -- formulaire), lecture réservée aux 4 emails admin (mêmes que admin.html).
