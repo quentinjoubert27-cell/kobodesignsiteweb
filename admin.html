@@ -639,6 +639,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Matériaux &amp; Prix
     </button>
+    <button class="nav-item" onclick="showView('newsletter', this)" id="nav-newsletter">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 6l8 7 8-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Newsletter
+    </button>
     <button class="nav-item" onclick="showView('audit', this)" id="nav-audit">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Sécurité
@@ -931,6 +935,37 @@
         Tu peux toujours ajuster ponctuellement un prix directement dans la fiche d'un projet, sans que ça modifie cette base.
       </p>
       <div id="materiaux-prix-content">Chargement…</div>
+    </div>
+
+    <!-- ── VUE NEWSLETTER (adresses collectées) ── -->
+    <div class="view" id="view-newsletter">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Communication</p>
+          <h1 class="view-title">Newsletter</h1>
+        </div>
+      </div>
+      <p style="font-size:13px;color:rgba(26,26,26,.6);max-width:70ch;margin:-8px 0 20px;">
+        Deux sources bien distinctes : les adresses laissées via le popup jeu concours (opt-in newsletter explicite),
+        et les adresses des clients qui ont un projet chez Kōbō (qui n'ont pas forcément coché de case newsletter).
+        Ne pas les mélanger dans un envoi sans vérifier le consentement de chacune.
+      </p>
+
+      <div class="detail-panel" style="padding:18px 20px;margin-bottom:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <p class="section-title" style="margin:0;">🎉 Via le popup jeu concours <span id="nl-concours-count" style="font-weight:400;color:rgba(26,26,26,.4);"></span></p>
+          <button class="btn btn-ghost btn-sm" onclick="exportNewsletterCSV('concours')">Exporter CSV</button>
+        </div>
+        <div id="nl-concours-content" style="max-height:420px;overflow-y:auto;">Chargement…</div>
+      </div>
+
+      <div class="detail-panel" style="padding:18px 20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <p class="section-title" style="margin:0;">📁 Via un projet client <span id="nl-clients-count" style="font-weight:400;color:rgba(26,26,26,.4);"></span></p>
+          <button class="btn btn-ghost btn-sm" onclick="exportNewsletterCSV('clients')">Exporter CSV</button>
+        </div>
+        <div id="nl-clients-content" style="max-height:420px;overflow-y:auto;">Chargement…</div>
+      </div>
     </div>
 
     <!-- ── VUE SÉCURITÉ / AUDIT LOGS ── -->
@@ -1428,6 +1463,69 @@
     }
   }
 
+  // ── NEWSLETTER : deux sources distinctes (popup concours / clients projet) ──
+  var _nlConcours = [], _nlClients = [];
+
+  async function loadNewsletter() {
+    document.getElementById('nl-concours-content').innerHTML = 'Chargement…';
+    document.getElementById('nl-clients-content').innerHTML = 'Chargement…';
+    try {
+      const [{ data: concours, error: e1 }, { data: clients, error: e2 }] = await Promise.all([
+        sb.from('concours_leads').select('nom, email, newsletter_consent, created_at').order('created_at', { ascending: false }),
+        sb.from('clients').select('prenom, nom, email, created_at').order('created_at', { ascending: false }),
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+      _nlConcours = concours || [];
+      _nlClients = clients || [];
+      document.getElementById('nl-concours-count').textContent = '(' + _nlConcours.length + ')';
+      document.getElementById('nl-clients-count').textContent = '(' + _nlClients.length + ')';
+      document.getElementById('nl-concours-content').innerHTML = renderNewsletterTable(_nlConcours.map(function(r) {
+        return { nom: r.nom, email: r.email, date: r.created_at, extra: r.newsletter_consent ? 'Consentement ✓' : 'Sans consentement' };
+      }), 'Aucune inscription via le popup concours pour l\'instant.');
+      document.getElementById('nl-clients-content').innerHTML = renderNewsletterTable(_nlClients.map(function(r) {
+        return { nom: [r.prenom, r.nom].filter(Boolean).join(' '), email: r.email, date: r.created_at, extra: null };
+      }), 'Aucun client pour l\'instant.');
+    } catch (err) {
+      console.error('loadNewsletter error:', err);
+      var msg = '<div class="empty" style="color:#c2410c;">Erreur : ' + escHtml(err.message || String(err)) + '</div>';
+      document.getElementById('nl-concours-content').innerHTML = msg;
+      document.getElementById('nl-clients-content').innerHTML = msg;
+    }
+  }
+
+  function renderNewsletterTable(rows, emptyMsg) {
+    if (!rows.length) return '<div class="empty" style="padding:10px 0;">' + emptyMsg + '</div>';
+    var head = '<div style="display:grid;grid-template-columns:1.2fr 1.6fr 1fr 100px;gap:10px;padding:0 0 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.12);">'
+      + '<div>Nom</div><div>Email</div><div>Date</div><div></div></div>';
+    var body = rows.map(function(r) {
+      var d = r.date ? new Date(r.date).toLocaleDateString('fr-FR') : '—';
+      return '<div style="display:grid;grid-template-columns:1.2fr 1.6fr 1fr 100px;gap:10px;padding:9px 0;font-size:13px;border-bottom:1px solid rgba(26,26,26,.06);align-items:center;">'
+        + '<div>' + escHtml(r.nom || '—') + '</div>'
+        + '<div style="color:rgba(26,26,26,.7);">' + escHtml(r.email) + '</div>'
+        + '<div style="color:rgba(26,26,26,.5);font-size:12px;">' + d + '</div>'
+        + '<div style="font-size:11px;color:rgba(26,26,26,.45);">' + (r.extra ? escHtml(r.extra) : '') + '</div>'
+        + '</div>';
+    }).join('');
+    return head + body;
+  }
+
+  function exportNewsletterCSV(source) {
+    var rows = source === 'concours'
+      ? _nlConcours.map(function(r) { return [r.nom, r.email, r.newsletter_consent ? 'oui' : 'non', r.created_at]; })
+      : _nlClients.map(function(r) { return [[r.prenom, r.nom].filter(Boolean).join(' '), r.email, '', r.created_at]; });
+    if (!rows.length) { showToast('Rien à exporter', 'err'); return; }
+    var header = source === 'concours' ? ['nom', 'email', 'consentement', 'date'] : ['nom', 'email', '', 'date'];
+    var csv = [header].concat(rows).map(function(row) {
+      return row.map(function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\n');
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'newsletter-' + source + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+  }
+
   // ── NAVIGATION ────────────────────────────────────────────────────
   function showView(id, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1440,6 +1538,7 @@
     if (id === 'audit') loadAuditLogs();
     if (id === 'analytics') loadAnalytics(30, document.getElementById('an-btn-30'));
     if (id === 'materiaux-prix') loadMateriauxPrix();
+    if (id === 'newsletter') loadNewsletter();
   }
 
   // ── PRIX AUTOMATIQUE (calculé depuis la base "Matériaux & Prix", non modifiable ici) ──
