@@ -951,6 +951,14 @@
         Ne pas les mélanger dans un envoi sans vérifier le consentement de chacune.
       </p>
 
+      <div class="detail-panel" style="padding:18px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <p class="section-title" style="margin:0 0 4px;">Popup jeu concours sur le site</p>
+          <p style="font-size:12.5px;color:rgba(26,26,26,.5);margin:0;" id="nl-popup-status">Chargement…</p>
+        </div>
+        <button class="btn btn-primary" id="nl-popup-toggle-btn" onclick="toggleConcoursPopup()" disabled>…</button>
+      </div>
+
       <div class="detail-panel" style="padding:18px 20px;margin-bottom:24px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <p class="section-title" style="margin:0;">🎉 Via le popup jeu concours <span id="nl-concours-count" style="font-weight:400;color:rgba(26,26,26,.4);"></span></p>
@@ -1464,11 +1472,61 @@
   }
 
   // ── NEWSLETTER : deux sources distinctes (popup concours / clients projet) ──
-  var _nlConcours = [], _nlClients = [];
+  var _nlConcours = [], _nlClients = [], _nlPopupEnabled = false;
+
+  async function loadConcoursPopupStatus() {
+    var statusEl = document.getElementById('nl-popup-status');
+    var btn = document.getElementById('nl-popup-toggle-btn');
+    try {
+      const { data, error } = await sb.from('concours_settings').select('popup_enabled').eq('id', 1).maybeSingle();
+      if (error) throw error;
+      _nlPopupEnabled = !!(data && data.popup_enabled);
+      renderConcoursPopupStatus();
+      btn.disabled = false;
+    } catch (err) {
+      console.error('loadConcoursPopupStatus error:', err);
+      statusEl.textContent = 'Erreur : ' + (err.message || String(err));
+      statusEl.style.color = '#c2410c';
+    }
+  }
+
+  function renderConcoursPopupStatus() {
+    var statusEl = document.getElementById('nl-popup-status');
+    var btn = document.getElementById('nl-popup-toggle-btn');
+    if (_nlPopupEnabled) {
+      statusEl.innerHTML = '🟢 Actif — visible par les visiteurs du site en ce moment.';
+      statusEl.style.color = '';
+      btn.textContent = 'Désactiver le popup';
+      btn.classList.add('btn-danger'); btn.classList.remove('btn-primary');
+    } else {
+      statusEl.innerHTML = '⚪ Inactif — invisible pour les visiteurs.';
+      statusEl.style.color = '';
+      btn.textContent = 'Activer le popup';
+      btn.classList.add('btn-primary'); btn.classList.remove('btn-danger');
+    }
+  }
+
+  async function toggleConcoursPopup() {
+    var btn = document.getElementById('nl-popup-toggle-btn');
+    btn.disabled = true;
+    var next = !_nlPopupEnabled;
+    try {
+      const { error } = await sb.from('concours_settings').update({ popup_enabled: next, updated_at: new Date().toISOString() }).eq('id', 1);
+      if (error) throw error;
+      _nlPopupEnabled = next;
+      renderConcoursPopupStatus();
+      showToast(next ? 'Popup activé — visible sur le site immédiatement.' : 'Popup désactivé.');
+    } catch (err) {
+      console.error('toggleConcoursPopup error:', err);
+      showToast('Erreur : ' + (err.message || String(err)), 'err');
+    }
+    btn.disabled = false;
+  }
 
   async function loadNewsletter() {
     document.getElementById('nl-concours-content').innerHTML = 'Chargement…';
     document.getElementById('nl-clients-content').innerHTML = 'Chargement…';
+    loadConcoursPopupStatus();
     try {
       const [{ data: concours, error: e1 }, { data: clients, error: e2 }] = await Promise.all([
         sb.from('concours_leads').select('nom, email, newsletter_consent, created_at').order('created_at', { ascending: false }),

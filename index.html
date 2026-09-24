@@ -1058,7 +1058,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <!-- ================================================================
        POPUP JEU CONCOURS — lié au concours Instagram, capture nom+email
-       Activé uniquement le jour J via CONCOURS_POPUP_ENABLED (voir script en bas)
+       Activé/désactivé depuis l'admin (table concours_settings), pas de redéploiement nécessaire
   ================================================================ -->
   <div class="modal-overlay" id="concoursModal" role="dialog" aria-modal="true" aria-label="Jeu concours">
     <div class="modal">
@@ -1656,10 +1656,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     // ── POPUP JEU CONCOURS ──────────────────────────────────────────────
-    // Désactivé par défaut : passer à true (et déployer) le jour du lancement
-    // du concours Instagram, pas avant.
-    var CONCOURS_POPUP_ENABLED = false;
-
+    // Activé/désactivé depuis l'admin (onglet Newsletter), pas besoin de
+    // redéployer le site pour lancer ou stopper le popup.
     function openConcoursPopup() {
       document.getElementById('concoursModal').classList.add('open');
     }
@@ -1688,9 +1686,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       document.getElementById('concours-form-panel').style.display = 'none';
       document.getElementById('concours-success-panel').style.display = 'block';
     }
-    (function () {
-      if (!CONCOURS_POPUP_ENABLED) return;
+    (async function () {
       try { if (localStorage.getItem('kb_concours_dismissed')) return; } catch (e) {}
+      var enabled = false;
+      try {
+        const { data } = await sb.from('concours_settings').select('popup_enabled').eq('id', 1).maybeSingle();
+        enabled = !!(data && data.popup_enabled);
+      } catch (e) {}
+      if (!enabled) return;
       setTimeout(function () {
         var scrolled = false;
         function trigger() {

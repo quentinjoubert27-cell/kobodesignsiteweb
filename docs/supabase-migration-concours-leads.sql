@@ -29,3 +29,28 @@ create policy "Lecture admin concours_leads" on concours_leads for select
   using (auth.jwt()->>'email' in (
     'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr'
   ));
+
+-- ── Réglage : activer/désactiver le popup depuis l'admin, sans redéploiement ──
+create table if not exists concours_settings (
+  id smallint primary key default 1,
+  popup_enabled boolean not null default false,
+  updated_at timestamptz not null default now(),
+  constraint concours_settings_singleton check (id = 1)
+);
+
+insert into concours_settings (id, popup_enabled) values (1, false) on conflict (id) do nothing;
+
+alter table concours_settings enable row level security;
+
+-- Lecture publique (le site doit pouvoir savoir si le popup est actif, y compris
+-- pour un visiteur anonyme), écriture réservée aux admins.
+create policy "Lecture publique concours_settings" on concours_settings for select
+  using (true);
+
+create policy "Ecriture admin concours_settings" on concours_settings for update
+  using (auth.jwt()->>'email' in (
+    'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr'
+  ))
+  with check (auth.jwt()->>'email' in (
+    'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr'
+  ));
