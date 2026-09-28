@@ -990,6 +990,15 @@ window.addEventListener('scroll', function(){
             <button class="dim-step" onclick="stepDim('inp-P',setPro,+1)">+</button>
           </div>
         </div>
+        <div class="dim-row">
+          <span class="dim-lbl">Épaisseur du plan</span>
+          <div class="dim-ctrl">
+            <button class="dim-step" onclick="stepDim('inp-Ep',setEp,-1)">−</button>
+            <input class="dim-inp" type="number" id="inp-Ep" min="3" max="20" value="6" oninput="setEp(+this.value)" onblur="clampDim(this,setEp)">
+            <span class="dim-unit">cm</span>
+            <button class="dim-step" onclick="stepDim('inp-Ep',setEp,+1)">+</button>
+          </div>
+        </div>
         <div class="sec">Matériau</div>
         <div class="mat-grid" id="mg-plan"></div>
         <div class="cosentino-mention">Kōbō Design conçoit des meubles sur mesure intégrant des surfaces Silestone® et Dekton®, marques de Cosentino®.</div>
@@ -2429,7 +2438,7 @@ function bibl_animateTo(tx,ty,ms){
 // BUILD PLAN DE TRAVAIL
 // ═══════════════════════════════════════════════════════
 var WALL_Z = -0.75;
-function planTopY(){ return S.caissonYOff+S.CH+0.04+S.Ep; }
+function planTopY(){ return S.caissonYOff+S.CH+S.Ep; }
 function planCZ()  { return WALL_Z + S.P/2; }
 function caissCZ() { return WALL_Z + caissonCP()/2; }
 
@@ -2459,7 +2468,8 @@ function buildPlan(){
   }
 
   var geo=new THREE.ExtrudeGeometry(shape,{depth:Ep,bevelEnabled:false,curveSegments:48});
-  geo.rotateX(Math.PI/2); geo.translate(0,S.CH+0.04,0);
+  // La base du plan repose directement sur le caisson (S.CH) ; l'épaisseur s'ajoute vers le haut.
+  geo.rotateX(Math.PI/2); geo.translate(0,S.CH+Ep,0);
   var md=MATS_PLAN[S.matPlan];
   var planMat;
   if(_planTexCache[S.matPlan]){
@@ -3790,7 +3800,12 @@ function setL(v){ // compatibilité — ignoré maintenant, on passe par setDepa
   var v2=Math.round(v); var inpL=document.getElementById('inp-L'); if(inpL) inpL.value=v2;
 }
 function setPro(v){ v=Math.round(v); S.P=v/100; var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=v; S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z'); positionVasque(); buildPlan(); updatePosInfo(); }
-function setEp(v){ S.Ep=v/100; document.getElementById('v-E').textContent=v.toFixed(1)+' cm'; buildPlan(); if(currentFT==='sdb'){ setCH(_sdbComputeCH()); _updateSdbInfo(); } }
+function setEp(v){
+  v=Math.round(v); S.Ep=v/100;
+  var inp=document.getElementById('inp-Ep'); if(inp) inp.value=v;
+  buildPlan();
+  if(currentFT==='sdb'){ setCH(_sdbComputeCH()); _updateSdbInfo(); }
+}
 function _sdbComputeCH(){
   // CH auto = 85cm - bas - épaisseur plan (toujours 85cm au plan de travail)
   return Math.max(1, 85 - S.sdbBaseH - Math.round(S.Ep*100));
@@ -5235,10 +5250,13 @@ function toggleSDBMode(on){
     S.depassG = 0; S.depassD = 0;
     S.L = S.CL;
     S.P = caissonCP();
+    S.Ep = 0.06; // plan de travail plus épais en mode salle de bain (visuel plus massif)
     var ltot = document.getElementById('v-L-total');
     if(ltot) ltot.textContent = Math.round(S.CL*100) + ' cm';
+    setCH(_sdbComputeCH());
     buildPlan();
     _repositionPlanOnCaisson();
+    _updateSdbInfo();
     checkAlerts();
   } else {
     currentPanels = ['p1','p-amgt','p4'];
