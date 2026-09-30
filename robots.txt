@@ -3,10 +3,17 @@ Allow: /
 
 Disallow: /admin.html
 Disallow: /espace-client.html
+Disallow: /espace-client2.html
 Disallow: /configurateur-biblio-test.html
 Disallow: /mes-configs.html
 Disallow: /mes-configs
+Disallow: /mes-configs-sdb.html
 Disallow: /configurateur-compose.html
+Disallow: /configurateur.html
+Disallow: /configurateur-biblio.html
+Disallow: /configurateur-sdb.html
+Disallow: /configurateurs-dev.html
+Disallow: /configurateurs.html
 Disallow: /mentions-legales.html
 Disallow: /politique-confidentialite.html
 
