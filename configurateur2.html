@@ -5241,6 +5241,7 @@ goStep(1);
 var isSDBMode = false;
 
 // ── Toggle SDB ──────────────────────────────────────────
+var _sdbDefaultsApplied = false; // n'applique les valeurs par défaut (épaisseur, hauteur) qu'une seule fois par session — pas à chaque coche/décoche
 function toggleSDBMode(on){
   isSDBMode = on;
   if(on){
@@ -5250,10 +5251,15 @@ function toggleSDBMode(on){
     S.depassG = 0; S.depassD = 0;
     S.L = S.CL;
     S.P = caissonCP();
-    S.Ep = 0.06; // plan de travail plus épais en mode salle de bain (visuel plus massif)
     var ltot = document.getElementById('v-L-total');
     if(ltot) ltot.textContent = Math.round(S.CL*100) + ' cm';
-    setCH(_sdbComputeCH());
+    if(!_sdbDefaultsApplied){
+      // Première activation seulement : épaisseur/hauteur par défaut. Les fois suivantes,
+      // on respecte ce que le client a déjà réglé plutôt que d'écraser ses choix.
+      S.Ep = 0.06;
+      setCH(_sdbComputeCH());
+      _sdbDefaultsApplied = true;
+    }
     buildPlan();
     _repositionPlanOnCaisson();
     _updateSdbInfo();
