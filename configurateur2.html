@@ -5241,7 +5241,6 @@ goStep(1);
 var isSDBMode = false;
 
 // ── Toggle SDB ──────────────────────────────────────────
-var _sdbDefaultsApplied = false; // n'applique les valeurs par défaut (épaisseur, hauteur) qu'une seule fois par session — pas à chaque coche/décoche
 function toggleSDBMode(on){
   isSDBMode = on;
   if(on){
@@ -5253,13 +5252,8 @@ function toggleSDBMode(on){
     S.P = caissonCP();
     var ltot = document.getElementById('v-L-total');
     if(ltot) ltot.textContent = Math.round(S.CL*100) + ' cm';
-    if(!_sdbDefaultsApplied){
-      // Première activation seulement : épaisseur/hauteur par défaut. Les fois suivantes,
-      // on respecte ce que le client a déjà réglé plutôt que d'écraser ses choix.
-      S.Ep = 0.06;
-      setCH(_sdbComputeCH());
-      _sdbDefaultsApplied = true;
-    }
+    // Ne jamais forcer S.CH/S.Ep ici : on respecte la hauteur et l'épaisseur déjà
+    // réglées par le client (à la première coche comme aux suivantes).
     buildPlan();
     _repositionPlanOnCaisson();
     _updateSdbInfo();
