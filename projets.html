@@ -366,16 +366,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
     .proj-card__img {
       position: absolute; inset: 0;
-      background-size: cover; background-position: center;
+      overflow: hidden;
+    }
+    .proj-card__img img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
       transition: transform .75s var(--ease);
     }
     .proj-card__img::after {
       content: '';
-      position: absolute; inset: 0;
+      position: absolute; inset: 0; z-index: 1;
       background: rgba(0,0,0,.15);
       transition: background .45s;
     }
-    .proj-card:hover .proj-card__img { transform: scale(1.06); }
+    .proj-card:hover .proj-card__img img { transform: scale(1.06); }
     .proj-card:hover .proj-card__img::after { background: rgba(0,0,0,.45); }
 
     /* Numéro flottant */
@@ -771,7 +774,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-7" data-cat="cuisine">
         <div class="proj-card" tabindex="0" onclick="openLb('01')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/kitchen-touch_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/kitchen-touch_01.jpg" alt="Cuisine sur-mesure Bordeaux, projet Kitchen Touch, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">01</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -785,7 +788,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-5" data-cat="cuisine">
         <div class="proj-card" tabindex="0" onclick="openLb('02')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/kitchen-touch-2_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/kitchen-touch-2_01.jpg" alt="Cuisine sur-mesure Bordeaux, projet Kitchen Touch 2, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">02</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -799,7 +802,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-4" data-cat="cuisine">
         <div class="proj-card" tabindex="0" onclick="openLb('03')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/cuisine-busca_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/cuisine-busca_01.jpg" alt="Cuisine sur-mesure Bordeaux, maison Busca, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">03</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -813,7 +816,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-8" data-cat="cuisine">
         <div class="proj-card" tabindex="0" onclick="openLb('04')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/cuisine-hausmannien_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/cuisine-hausmannien_01.jpg" alt="Cuisine sur-mesure dans un appartement haussmannien à Bordeaux, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">04</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -827,7 +830,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-12" data-cat="bain">
         <div class="proj-card" tabindex="0" onclick="openLb('05')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/sdb-busca_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/sdb-busca_01.jpg" alt="Meuble de salle de bain sur-mesure Bordeaux, maison Busca, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">05</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -841,7 +844,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-5" data-cat="dressing">
         <div class="proj-card" tabindex="0" onclick="openLb('06')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/mur-dressing_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/mur-dressing_01.jpg" alt="Dressing sur-mesure Bordeaux, mur de rangement, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">06</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -855,7 +858,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-7" data-cat="chambre">
         <div class="proj-card" tabindex="0" onclick="openLb('07')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/chambre-enfant_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/chambre-enfant_01.jpg" alt="Chambre d'enfant sur-mesure Bordeaux, mobilier intégré, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">07</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -869,7 +872,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-4" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb('08')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/ibiza-style_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/ibiza-style_01.jpg" alt="Aménagement intérieur sur-mesure Bordeaux, style Ibiza, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">08</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -883,7 +886,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-6" data-cat="chambre">
         <div class="proj-card" tabindex="0" onclick="openLb('13')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/chambre-isa-do_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/chambre-isa-do_01.jpg" alt="Chambre sur-mesure Bordeaux avec dressings intégrés, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">13</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -897,7 +900,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-4" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb('14')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/bureau-niche_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/bureau-niche_01.jpg" alt="Bureau sur-mesure intégré dans une niche, Bordeaux, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">14</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -911,7 +914,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-4" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb('09')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/marbre-pierre-corian_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/marbre-pierre-corian_01.jpg" alt="Mobilier sur-mesure Bordeaux, plan en marbre et pierre, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">09</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -925,7 +928,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-4" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb('10')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/bar-cocktail_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/bar-cocktail_01.jpg" alt="Bar à cocktail sur-mesure Bordeaux, agencement Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">10</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -939,7 +942,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-6" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb('11')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/artist-studio_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/artist-studio_01.jpg" alt="Studio d'artiste sur-mesure Bordeaux, aménagement Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">11</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
@@ -953,7 +956,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div class="proj-card-wrap col-6" data-cat="salon">
         <div class="proj-card" tabindex="0" onclick="openLb('12')" style="cursor:pointer;">
-          <div class="proj-card__img" style="background-image:url('img/projets/ecole-danse_01.jpg')"></div>
+          <div class="proj-card__img"><img src="img/projets/ecole-danse_01.jpg" alt="Aménagement sur-mesure d'une école de danse à Bordeaux, Kōbō Design" loading="lazy"></div>
           <span class="proj-card__num">12</span>
           <div class="proj-card__overlay"></div>
           <div class="proj-card__body">
