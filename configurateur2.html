@@ -837,12 +837,16 @@ window.addEventListener('scroll', function(){
     <div id="sb-header">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="logo-txt">Kōbō Design</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <a href="guide-configurateur.html" target="_blank" rel="noopener" title="Mode d'emploi du configurateur" style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;font-size:11px;font-weight:700;color:var(--text2);text-decoration:none;border:1px solid var(--border);border-radius:50%;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'">?</a>
-          <a href="https://www.kobo-design.fr" style="font-size:10px;font-weight:600;color:var(--text2);text-decoration:none;border:1px solid var(--border);border-radius:100px;padding:4px 8px;transition:color .15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">← Site</a>
-        </div>
+        <a href="https://www.kobo-design.fr" style="font-size:10px;font-weight:600;color:var(--text2);text-decoration:none;border:1px solid var(--border);border-radius:100px;padding:4px 8px;transition:color .15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">← Site</a>
       </div>
       <div class="logo-sub" id="logo-sub">Configurateur universel</div>
+      <a href="guide-configurateur.html" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:9px 12px;background:rgba(205,62,0,.06);border:1px solid rgba(205,62,0,.25);border-radius:8px;text-decoration:none;color:var(--accent);font-size:12px;font-weight:600;transition:background .15s" onmouseover="this.style.background='rgba(205,62,0,.12)'" onmouseout="this.style.background='rgba(205,62,0,.06)'">
+        <span style="display:flex;align-items:center;gap:7px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 9a2.5 2.5 0 014.8 1c0 1.5-2.3 1.8-2.3 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1" fill="currentColor"/></svg>
+          Comment utiliser le configurateur ?
+        </span>
+        <span style="font-weight:800">→</span>
+      </a>
       <div id="price-badge">Prix estimé <strong id="price-badge-val">—</strong></div>
     </div>
     <div id="stepper"></div>
