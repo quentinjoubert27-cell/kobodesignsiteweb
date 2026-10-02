@@ -475,6 +475,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
+    /* Variante deux colonnes (image + formulaire) — popup newsletter */
+    .modal--split {
+      width: min(780px,94vw); padding: 0;
+      display: grid; grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+    .modal--split__img { position: relative; min-height: 100%; background: #e5ddd2; }
+    .modal--split__img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .modal--split__body { padding: 44px clamp(28px,4vw,44px); }
+    .modal--split .modal__close { color: var(--white); background: rgba(26,26,26,.35); }
+    .modal--split .modal__close:hover { background: rgba(26,26,26,.55); color: var(--white); }
+    @media (max-width: 680px) {
+      .modal--split { grid-template-columns: 1fr; width: min(440px,92vw); }
+      .modal--split__img { height: 160px; }
+      .modal--split__body { padding: 32px clamp(24px,5vw,32px); }
+    }
+
     .modal__close {
       position: absolute; top: 20px; right: 20px;
       width: 32px; height: 32px; display: flex; align-items: center;
@@ -1061,33 +1078,38 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
        POPUP JEU CONCOURS — lié au concours Instagram, capture nom+email
        Activé/désactivé depuis l'admin (table concours_settings), pas de redéploiement nécessaire
   ================================================================ -->
-  <div class="modal-overlay" id="concoursModal" role="dialog" aria-modal="true" aria-label="Jeu concours">
-    <div class="modal">
+  <div class="modal-overlay" id="concoursModal" role="dialog" aria-modal="true" aria-label="Newsletter Kōbō Design">
+    <div class="modal modal--split">
       <button class="modal__close" onclick="closeConcoursPopup()" aria-label="Fermer">✕</button>
-      <p class="modal__eyebrow">🎉 Jeu concours</p>
-      <h2 class="modal__title">Le concours,<br>c'est sur Instagram.</h2>
-      <p class="modal__sub">Inscris-toi à la newsletter Kōbō Design pour tenter une <strong>chance supplémentaire de gagner</strong>. Si tu gagnes, on te contactera par email.</p>
-      <div id="concours-form-panel">
-        <div class="form__group">
-          <label class="form__label" for="cc-nom">Nom complet</label>
-          <input class="form__input" type="text" id="cc-nom" placeholder="Jean Dupont" autocomplete="name" />
-        </div>
-        <div class="form__group">
-          <label class="form__label" for="cc-email">Adresse e-mail</label>
-          <input class="form__input" type="email" id="cc-email" placeholder="vous@exemple.fr" autocomplete="email" />
-        </div>
-        <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:18px;cursor:pointer;">
-          <input type="checkbox" id="cc-consent" style="margin-top:3px;flex-shrink:0;width:15px;height:15px;accent-color:var(--accent);cursor:pointer;" />
-          <span style="font-size:11.5px;line-height:1.5;color:rgba(26,26,26,.65);">Je m'inscris à la newsletter Kōbō Design (actus, réalisations, offres).</span>
-        </label>
-        <div class="cc-err" id="cc-err" style="display:none;color:#c2410c;font-size:12px;margin-bottom:12px;"></div>
-        <button class="form__btn" id="cc-submit-btn" onclick="submitConcoursLead()">Je participe →</button>
-        <p style="font-size:10.5px;color:rgba(26,26,26,.4);margin-top:14px;line-height:1.5;">Tu peux te désinscrire de la newsletter à tout moment, sans conséquence sur ta participation au concours. Aucun spam.</p>
+      <div class="modal--split__img">
+        <img src="img/projets/chambre-isa-do_01.jpg" alt="Chambre sur-mesure Kōbō Design avec rangements intégrés" loading="lazy"/>
       </div>
-      <div id="concours-success-panel" style="display:none;text-align:center;padding:12px 0;">
-        <p style="font-size:34px;margin-bottom:10px;">🍀</p>
-        <p style="font-size:16px;font-weight:700;margin-bottom:6px;">C'est noté !</p>
-        <p style="font-size:13px;color:rgba(26,26,26,.55);">Bonne chance pour le concours. On te contactera par email si tu es tiré(e) au sort.</p>
+      <div class="modal--split__body">
+        <p class="modal__eyebrow">✉️ Newsletter</p>
+        <h2 class="modal__title">Restez dans<br>la boucle.</h2>
+        <p class="modal__sub">Nouvelles réalisations, conseils d'aménagement, et en avant-première nos <strong>jeux concours</strong> : inscrivez-vous à la newsletter Kōbō Design.</p>
+        <div id="concours-form-panel">
+          <div class="form__group">
+            <label class="form__label" for="cc-nom">Nom complet</label>
+            <input class="form__input" type="text" id="cc-nom" placeholder="Jean Dupont" autocomplete="name" />
+          </div>
+          <div class="form__group">
+            <label class="form__label" for="cc-email">Adresse e-mail</label>
+            <input class="form__input" type="email" id="cc-email" placeholder="vous@exemple.fr" autocomplete="email" />
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:18px;cursor:pointer;">
+            <input type="checkbox" id="cc-consent" style="margin-top:3px;flex-shrink:0;width:15px;height:15px;accent-color:var(--accent);cursor:pointer;" />
+            <span style="font-size:11.5px;line-height:1.5;color:rgba(26,26,26,.65);">Je m'inscris à la newsletter Kōbō Design (actus, réalisations, jeux concours).</span>
+          </label>
+          <div class="cc-err" id="cc-err" style="display:none;color:#c2410c;font-size:12px;margin-bottom:12px;"></div>
+          <button class="form__btn" id="cc-submit-btn" onclick="submitConcoursLead()">Je m'inscris →</button>
+          <p style="font-size:10.5px;color:rgba(26,26,26,.4);margin-top:14px;line-height:1.5;">Désinscription possible à tout moment en un clic. Aucun spam.</p>
+        </div>
+        <div id="concours-success-panel" style="display:none;text-align:center;padding:12px 0;">
+          <p style="font-size:34px;margin-bottom:10px;">🎉</p>
+          <p style="font-size:16px;font-weight:700;margin-bottom:6px;">Bienvenue !</p>
+          <p style="font-size:13px;color:rgba(26,26,26,.55);">Vous êtes inscrit(e) à la newsletter. On vous préviendra dès qu'un jeu concours démarre.</p>
+        </div>
       </div>
     </div>
   </div>
