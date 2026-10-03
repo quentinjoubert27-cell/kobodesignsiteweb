@@ -263,7 +263,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .budget-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
     .budget-label{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.5)}
     .budget-value{font-size:14px;font-weight:700;color:var(--accent)}
-    .budget-slider{width:100%;-webkit-appearance:none;appearance:none;height:3px;background:rgba(26,26,26,.1);border-radius:2px;outline:none;margin-bottom:18px;cursor:pointer}
+    .budget-value-input{width:110px;font-family:var(--font);font-size:14px;font-weight:700;color:var(--accent);text-align:right;border:none;border-bottom:1.5px solid rgba(205,62,0,.3);background:none;padding:0 0 2px;outline:none;transition:border-color .2s}
+    .budget-value-input:focus{border-color:var(--accent)}
+    .budget-slider{width:100%;-webkit-appearance:none;appearance:none;height:3px;background:rgba(26,26,26,.1);border-radius:2px;outline:none;margin-bottom:8px;cursor:pointer}
+    .budget-hint{font-size:11px;font-weight:300;color:rgba(26,26,26,.4);margin-bottom:18px}
     .budget-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--white);box-shadow:0 0 0 1.5px var(--accent)}
     .budget-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:none}
 
@@ -664,9 +667,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="form__group">
           <div class="budget-row">
             <label class="budget-label" for="budget">Budget estimé</label>
-            <span class="budget-value" id="budgetDisplay">15 000 €</span>
+            <span style="display:flex;align-items:center;gap:4px;">
+              <input class="budget-value-input" type="number" id="budgetInput" min="0" step="500" value="15000" inputmode="numeric" oninput="updateBudgetFromInput(this.value)"/>
+              <span class="budget-value">€</span>
+            </span>
           </div>
-          <input class="budget-slider" type="range" id="budget" name="budget_affiche" min="5000" max="100000" step="1000" value="15000" oninput="updateBudget(this.value)"/>
+          <input class="budget-slider" type="range" id="budget" name="budget_affiche" min="0" max="100000" step="1000" value="15000" oninput="updateBudgetFromSlider(this.value)"/>
+          <p class="budget-hint">Déplacez le curseur ou saisissez directement votre budget, même en dessous de 5 000 €.</p>
           <input type="hidden" name="budget" id="budgetHidden" value="15 000 €"/>
         </div>
 
@@ -836,12 +843,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     btn.classList.add('active');
   }
 
-  /* Budget slider */
-  function updateBudget(val){
-    const v=parseInt(val);
-    const label=v>=100000?'100 000 €+':v.toLocaleString('fr-FR')+' €';
-    document.getElementById('budgetDisplay').textContent=label;
-    document.getElementById('budgetHidden').value=label;
+  /* Budget : slider + saisie libre, synchronisés dans les deux sens */
+  function _budgetLabel(v){
+    return v>=100000?'100 000 €+':v.toLocaleString('fr-FR')+' €';
+  }
+  function updateBudgetFromSlider(val){
+    const v=parseInt(val)||0;
+    document.getElementById('budgetInput').value=v;
+    document.getElementById('budgetHidden').value=_budgetLabel(v);
+  }
+  function updateBudgetFromInput(val){
+    const v=Math.max(0, parseInt(val)||0);
+    const slider=document.getElementById('budget');
+    slider.value=Math.min(v, parseInt(slider.max));
+    document.getElementById('budgetHidden').value=_budgetLabel(v);
   }
 
   /* Étape 1 → 2 avec validation */
