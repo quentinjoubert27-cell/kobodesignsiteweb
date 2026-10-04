@@ -2115,6 +2115,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
   // defs : chaque entrée = {W,H,px,py, record?, isTop?} — record porte l'état 3D (grp/hp/guides/meshes)
   // pour un caisson latéral gauche/droite ; le dessus garde ses variables dédiées (tvTop*).
   // Empilement cumulé : le caisson gauche d'index i se colle au bord du précédent (ou du principal si i=0).
+  var matBarreTV=new THREE.MeshStandardMaterial({color:0xC8C8C8,roughness:0.10,metalness:0.90});
   var defs=[];
   var offL=mainCL/2;
   tvSideLeft.forEach(function(r){
@@ -2175,6 +2176,19 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         var tw=ep2;
         var m=box(tw,h,CP-ep2,matElem); m.position.set(xcm(el.x_cm),ep2+(bot+top)/200,-ep2/2);
         m.userData.elemIdx=eidx; meshArr.push(m); g.add(m);
+
+      } else if(el.type==='barre'){
+        var bsl=el.x_left_cm!==undefined?el.x_left_cm:0, bsr=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
+        var barLen=(bsr-bsl)/100;
+        var barGeo=new THREE.CylinderGeometry(0.014,0.014,barLen,16);
+        barGeo.rotateZ(Math.PI/2);
+        var bm=new THREE.Mesh(barGeo,matBarreTV); bm.castShadow=true;
+        bm.position.set(xcm((bsl+bsr)/2), ycm(el.y_cm), 0);
+        bm.userData.elemIdx=eidx; meshArr.push(bm); g.add(bm);
+        var bSupG=box(0.020,0.020,CP*0.5-0.014,matBarreTV);
+        bSupG.position.set(xcm(bsl)+0.010, ycm(el.y_cm), 0); g.add(bSupG);
+        var bSupD=box(0.020,0.020,CP*0.5-0.014,matBarreTV);
+        bSupD.position.set(xcm(bsr)-0.010, ycm(el.y_cm), 0); g.add(bSupD);
 
       } else if(el.type==='porte'){
         var kp=el.key.split('_').map(Number);
@@ -2742,19 +2756,21 @@ function _rebuildEditBar(){
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && activeCaisson===1){
-      // Caisson central bas : étagère, intercalaire, porte, tiroir
+      // Caisson central bas : étagère, intercalaire, tringle, porte, tiroir
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale, les portes et tiroirs s\'accrochent dessus')+
         cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire, non prise en compte par les portes')+
+        cBtn('barre',            false, svgBarre,      'Tringle',      'Barre pour suspendre les vêtements')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && _isTVExtra()){
-      // Caissons latéraux / dessus : étagère, intercalaire, porte, tiroir
+      // Caissons latéraux / dessus : étagère, intercalaire, tringle, porte, tiroir
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale, les portes et tiroirs s\'accrochent dessus')+
         cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire, non prise en compte par les portes')+
+        cBtn('barre',            false, svgBarre,      'Tringle',      'Barre pour suspendre les vêtements')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
