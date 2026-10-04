@@ -1646,7 +1646,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (!email || !pw) return alert('Veuillez remplir tous les champs.');
       const { error } = await sb.auth.signInWithPassword({ email, password: pw });
       if (error) return alert('Email ou mot de passe incorrect.');
-      window.location.href = 'espace-client.html';
+      window.location.href = '/espace-client';
     }
 
     async function registerFromModal() {
@@ -1667,7 +1667,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       e.preventDefault();
       const email = document.getElementById('l-email').value.trim();
       if (!email) return alert("Entrez votre email d'abord.");
-      await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/espace-client.html' });
+      await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/espace-client' });
       alert('Email de réinitialisation envoyé !');
     }
 

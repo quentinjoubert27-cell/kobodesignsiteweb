@@ -683,8 +683,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       window.history.replaceState({}, '', window.location.pathname);
       if (error) { showAuth(); return; }
       currentUser = data.user;
-      if (isNew || data.user?.user_metadata?.needs_password === true) {
-        showSetPassword();
+      if (type === 'recovery') {
+        showSetPassword(true);
+      } else if (isNew || data.user?.user_metadata?.needs_password === true) {
+        showSetPassword(false);
       } else {
         showDashboard();
       }
@@ -701,6 +703,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     showAuth();
     sb.auth.onAuthStateChange((event, session) => {
+      // Lien "mot de passe oublié" : Supabase ouvre une session temporaire
+      // et émet cet évènement — il ne faut PAS aller direct au dashboard,
+      // il faut laisser l'utilisateur définir son nouveau mot de passe.
+      if (event === 'PASSWORD_RECOVERY') { currentUser = session.user; showSetPassword(true); return; }
       if (session) { currentUser = session.user; showDashboard(); }
       else { showAuth(); }
     });
@@ -766,7 +772,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const email = document.getElementById('l-email').value.trim();
     if (!email) return showMsg('Entrez votre email d\'abord.');
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/espace-client.html'
+      redirectTo: window.location.origin + '/espace-client'
     });
     if (error) return showMsg(error.message);
     showMsg('Email de réinitialisation envoyé !', 'success');
@@ -1210,28 +1216,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
   }
 
-  // ── SET PASSWORD (premier accès via invite) ──────────────────────
-  function showSetPassword() {
+  // ── SET PASSWORD (premier accès via invite, ou réinitialisation) ──
+  function showSetPassword(isRecovery) {
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('set-password-screen').style.display = 'flex';
+    const title = document.getElementById('sp-title');
+    const sub   = document.getElementById('sp-sub');
+    const btn   = document.getElementById('sp-btn');
+    if (isRecovery) {
+      title.textContent = 'Réinitialisez votre mot de passe';
+      sub.textContent = 'Choisissez un nouveau mot de passe pour votre espace client.';
+      btn.textContent = 'Enregistrer →';
+    } else {
+      title.textContent = 'Créez votre mot de passe';
+      sub.textContent = 'Pour accéder à votre espace client, choisissez un mot de passe sécurisé.';
+      btn.textContent = 'Créer mon mot de passe →';
+    }
   }
 
   async function submitSetPassword() {
     const pwd  = document.getElementById('sp-pwd').value;
     const pwd2 = document.getElementById('sp-pwd2').value;
     const err  = document.getElementById('sp-err');
+    const btn  = document.getElementById('sp-btn');
+    const btnLabel = btn.textContent;
     err.style.display = 'none';
     if (pwd.length < 8) { err.textContent = 'Mot de passe trop court (8 caractères min).'; err.style.display = 'block'; return; }
     if (pwd !== pwd2)   { err.textContent = 'Les mots de passe ne correspondent pas.'; err.style.display = 'block'; return; }
-    const btn = document.getElementById('sp-btn');
     btn.disabled = true; btn.textContent = 'Enregistrement…';
     const { error } = await sb.auth.updateUser({ password: pwd, data: { needs_password: false } });
-    if (error) { err.textContent = error.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Créer mon mot de passe →'; return; }
+    if (error) { err.textContent = error.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = btnLabel; return; }
     document.getElementById('set-password-screen').style.display = 'none';
     window.history.replaceState(null, '', window.location.pathname);
     showDashboard();
-    showToast('Mot de passe créé !');
+    showToast('Mot de passe enregistré !');
   }
 
   // ── TOAST ────────────────────────────────────────────────────────
@@ -1247,8 +1266,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div id="set-password-screen" style="display:none;position:fixed;inset:0;background:#F2EDE3;z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:16px;padding:40px;max-width:400px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.12);">
     <img src="img/logo-kobo.png" alt="Kobo Design" style="height:36px;margin-bottom:28px;display:block;">
-    <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;color:#1A1A1A;">Créez votre mot de passe</h2>
-    <p style="font-size:13px;color:#666;margin:0 0 24px;line-height:1.6;">Pour accéder à votre espace client, choisissez un mot de passe sécurisé.</p>
+    <h2 id="sp-title" style="font-size:20px;font-weight:700;margin:0 0 8px;color:#1A1A1A;">Créez votre mot de passe</h2>
+    <p id="sp-sub" style="font-size:13px;color:#666;margin:0 0 24px;line-height:1.6;">Pour accéder à votre espace client, choisissez un mot de passe sécurisé.</p>
     <div id="sp-err" style="display:none;background:#fef2f2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;"></div>
     <input id="sp-pwd"  type="password" placeholder="Mot de passe (8 caractères min)" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid rgba(26,26,26,.15);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;">
     <input id="sp-pwd2" type="password" placeholder="Confirmer le mot de passe" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid rgba(26,26,26,.15);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:20px;">
