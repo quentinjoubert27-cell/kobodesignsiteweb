@@ -1205,10 +1205,9 @@
           </select>
         </div>
       </div>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;cursor:pointer;">
-        <input type="checkbox" id="doc-notify-check" checked style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)"/>
-        Notifier le client par email
-      </label>
+      <p style="display:flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;color:rgba(26,26,26,.45);">
+        📧 Le client sera automatiquement notifié par email (avec le fichier joint)
+      </p>
       <button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="uploadFile()">Envoyer le document</button>
     </div>
 
@@ -3335,17 +3334,15 @@
     showToast('Document envoyé !');
     await loadProjetDocs();
     await loadDashboard();
-    // Notifier le client uniquement si la case est cochée
-    if (document.getElementById('doc-notify-check')?.checked) {
-      try {
-        const { data: { session } } = await sb.auth.getSession();
-        await fetch('/api/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-          body: JSON.stringify({ action: 'document', projet_id: currentProjetId, nom_fichier: file.name, doc_path: path, taille_kb: Math.round(file.size / 1024) })
-        });
-      } catch(e) { console.warn('notify-document error', e); }
-    }
+    // Le client est toujours notifié par email lors de l'ajout d'un document
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'document', projet_id: currentProjetId, nom_fichier: file.name, doc_path: path, taille_kb: Math.round(file.size / 1024) })
+      });
+    } catch(e) { console.warn('notify-document error', e); }
   }
 
   function onCategorieChange(val) {
