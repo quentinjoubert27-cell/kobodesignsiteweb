@@ -4858,7 +4858,7 @@ async function submitConfig(){
   // isSDBMode reflète la case "Meuble salle de bain" cochée par l'utilisateur —
   // currentFT reste toujours 'tv' dans configurateur2, donc on ne peut pas s'y fier pour distinguer SDB.
   var submitFT = isSDBMode ? 'sdb' : currentFT;
-  var ftLabels={biblio:'Bibliothèque',tv:'Meuble TV',dressing:'Dressing',sdb:'Meuble salle de bain'};
+  var ftLabels={biblio:'Bibliothèque',tv:'Meuble',dressing:'Dressing',sdb:'Meuble salle de bain'};
   var ftLabel = ftLabels[submitFT] || submitFT;
   var projetNom = ftLabel + ' sur mesure, ' + Math.round(S.CL*100) + 'x' + Math.round(S.CH*100) + ' cm';
   var tvSideDesc = [];
