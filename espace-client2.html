@@ -113,6 +113,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
     .status--etude { background: #fef3c7; color: #92400e; }
     .status--etude::before { background: #f59e0b; }
+    .status--devis { background: #ffedd5; color: #9a3412; }
+    .status--devis::before { background: #f97316; }
     .status--fabrication { background: #dbeafe; color: #1e40af; }
     .status--fabrication::before { background: #3b82f6; }
     .status--livraison { background: #dcfce7; color: #166534; }
@@ -906,12 +908,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   function statusClass(s) {
-    const map = { 'En étude': 'etude', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const map = { 'En étude': 'etude', 'Devis en cours': 'devis', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return map[s] || 'etude';
   }
 
   function statusProgress(s) {
-    const map = { 'En étude': 20, 'Fabrication': 50, 'Commandé': 70, 'Livraison': 88, 'Terminé': 100 };
+    const map = { 'En étude': 20, 'Devis en cours': 35, 'Fabrication': 50, 'Commandé': 70, 'Livraison': 88, 'Terminé': 100 };
     return map[s] || 20;
   }
 

@@ -86,7 +86,7 @@
     .btn-danger:hover { background: #dc2626; color: #fff; }
 
     /* KPI Stats */
-    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+    .stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 28px; }
     .stat { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 20px 18px; position: relative; overflow: hidden; }
     .stat::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); opacity: 0; transition: opacity .2s; }
     .stat:hover::after { opacity: 1; }
@@ -124,6 +124,7 @@
     .sbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 4px 9px; border-radius: 100px; white-space: nowrap; }
     .sbadge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
     .sb-etude { background: #fef3c7; color: #92400e; } .sb-etude::before { background: #f59e0b; }
+    .sb-devis { background: #ffedd5; color: #9a3412; } .sb-devis::before { background: #f97316; }
     .sb-fabrication { background: #dbeafe; color: #1e40af; } .sb-fabrication::before { background: #3b82f6; }
     .sb-commande { background: #ede9fe; color: #5b21b6; } .sb-commande::before { background: #7c3aed; }
     .sb-livraison { background: #dcfce7; color: #166534; } .sb-livraison::before { background: #22c55e; }
@@ -311,7 +312,7 @@
       /* Pipeline → grille compacte 5 colonnes sans scroll */
       .pipeline {
         display: grid !important;
-        grid-template-columns: repeat(5, 1fr) !important;
+        grid-template-columns: repeat(6, 1fr) !important;
         overflow-x: visible !important;
         gap: 6px !important;
         padding-bottom: 0 !important;
@@ -705,6 +706,7 @@
       <p class="section-title">Pipeline projets</p>
       <div class="pipeline" id="dash-pipeline">
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">En étude</span><span class="pipeline-count" id="pip-etude">0</span></div><div class="pipeline-chips" id="pip-chips-etude"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis en cours</span><span class="pipeline-count" id="pip-devis">0</span></div><div class="pipeline-chips" id="pip-chips-devis"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Fabrication</span><span class="pipeline-count" id="pip-fabrication">0</span></div><div class="pipeline-chips" id="pip-chips-fabrication"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Commandé</span><span class="pipeline-count" id="pip-commande">0</span></div><div class="pipeline-chips" id="pip-chips-commande"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Livraison</span><span class="pipeline-count" id="pip-livraison">0</span></div><div class="pipeline-chips" id="pip-chips-livraison"></div></div>
@@ -1058,6 +1060,7 @@
         <label>Statut</label>
         <select id="np-statut">
           <option value="En étude">En étude</option>
+          <option value="Devis en cours">Devis en cours</option>
           <option value="Fabrication">Fabrication</option>
           <option value="Commandé">Commandé</option>
           <option value="Livraison">Livraison</option>
@@ -1132,6 +1135,7 @@
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
       <select id="pd-statut" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
         <option value="En étude">En étude</option>
+        <option value="Devis en cours">Devis en cours</option>
         <option value="Fabrication">Fabrication</option>
         <option value="Commandé">Commandé</option>
         <option value="Livraison">Livraison</option>
@@ -2144,8 +2148,8 @@
   }
 
   function buildPipeline(projets) {
-    const statuts = ['En étude', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
-    const keys = ['etude', 'fabrication', 'commande', 'livraison', 'termine'];
+    const statuts = ['En étude', 'Devis en cours', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+    const keys = ['etude', 'devis', 'fabrication', 'commande', 'livraison', 'termine'];
     statuts.forEach((s, i) => {
       const list = projets.filter(p => p.statut === s);
       document.getElementById('pip-' + keys[i]).textContent = list.length;
@@ -3576,7 +3580,7 @@
 
   // ── HELPERS ───────────────────────────────────────────────────────
   function statusKey(s) {
-    const m = { 'En étude': 'etude', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const m = { 'En étude': 'etude', 'Devis en cours': 'devis', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return m[s] || 'etude';
   }
 

@@ -85,6 +85,18 @@ module.exports = async function handler(req, res) {
               ${BTN('https://www.kobo-design.fr/espace-client2', 'Accéder à mon espace client →')}
             </div>${FOOTER}</div>`,
         },
+        'Devis en cours': {
+          subject: `Votre devis est en cours de création — Kobo Design`,
+          html: `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#1A1A1A;">
+            ${HEADER('Votre devis est en préparation.', 'Vous le recevrez très bientôt.')}
+            <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
+              <p style="font-size:15px;margin:0 0 20px;line-height:1.7">Bonjour <strong>${prenom}</strong>,</p>
+              ${badge}
+              <p style="font-size:14px;line-height:1.8;margin:0 0 16px;color:#333">Bonne nouvelle : votre <strong>devis est en cours de création</strong>. Notre équipe le prépare avec soin à partir de votre projet.</p>
+              <p style="font-size:14px;line-height:1.8;margin:0 0 24px;color:#333">Vous le recevrez très bientôt, directement par email et dans votre espace client.</p>
+              ${BTN('https://www.kobo-design.fr/espace-client2', 'Accéder à mon espace client →')}
+            </div>${FOOTER}</div>`,
+        },
         'Devis envoyé': {
           subject: `Votre devis est prêt — Kobo Design`,
           html: `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#1A1A1A;">
