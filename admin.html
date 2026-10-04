@@ -3342,7 +3342,7 @@
         await fetch('/api/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-          body: JSON.stringify({ action: 'document', projet_id: currentProjetId, nom_fichier: file.name })
+          body: JSON.stringify({ action: 'document', projet_id: currentProjetId, nom_fichier: file.name, doc_path: path, taille_kb: Math.round(file.size / 1024) })
         });
       } catch(e) { console.warn('notify-document error', e); }
     }

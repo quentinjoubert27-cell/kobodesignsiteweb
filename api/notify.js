@@ -159,12 +159,25 @@ module.exports = async function handler(req, res) {
 
     // ── ACTION : document ──────────────────────────────────────────
     if (action === 'document') {
-      const { projet_id, nom_fichier } = body;
+      const { projet_id, nom_fichier, doc_path, taille_kb } = body;
       if (!projet_id) return res.status(400).json({ error: 'Paramètres manquants' });
       const { data: projet } = await sb.from('projets').select('nom, client_id').eq('id', projet_id).single();
       if (!projet) return res.status(404).json({ error: 'Projet introuvable' });
       const { data: client } = await sb.from('clients').select('email, prenom').eq('id', projet.client_id).single();
       if (!client?.email) return res.status(404).json({ error: 'Client introuvable' });
+
+      // Tente de joindre le fichier directement (limite Resend : 40 Mo par email, on se limite à 15 Mo par prudence)
+      let attachments;
+      if (doc_path && (!taille_kb || taille_kb < 15000)) {
+        try {
+          const { data: fileBlob, error: dlErr } = await sb.storage.from('documents-client').download(doc_path);
+          if (!dlErr && fileBlob) {
+            const buffer = Buffer.from(await fileBlob.arrayBuffer());
+            attachments = [{ filename: nom_fichier || 'document.pdf', content: buffer }];
+          }
+        } catch (e) { console.warn('notify-document: echec telechargement piece jointe', e); }
+      }
+
       await resend.emails.send({
         from: 'Kobo Design <contact@kobo-design.fr>',
         to: client.email,
@@ -175,13 +188,14 @@ module.exports = async function handler(req, res) {
             <p style="font-size:14px;margin:0 0 20px">Bonjour ${esc(client.prenom || '')},</p>
             ${PROJET_BADGE(projet.nom)}
             <p style="font-size:14px;line-height:1.8;margin:0 0 24px;color:#333">
-              Un nouveau document${nom_fichier ? ` (<strong>${esc(nom_fichier)}</strong>)` : ''} vient d'être ajouté à votre projet. Consultez-le et téléchargez-le depuis votre espace client.
+              Un nouveau document${nom_fichier ? ` (<strong>${esc(nom_fichier)}</strong>)` : ''} vient d'être ajouté à votre projet${attachments ? ', vous le trouverez en pièce jointe' : ''}. Vous pouvez aussi le consulter à tout moment depuis votre espace client.
             </p>
-            ${BTN('https://www.kobo-design.fr/espace-client2', 'Voir le document →')}
+            ${BTN('https://www.kobo-design.fr/espace-client2', 'Voir mon espace client →')}
           </div>${FOOTER}
         </div>`,
+        ...(attachments ? { attachments } : {}),
       });
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true, attached: !!attachments });
     }
 
     // ── ACTION : email-libre ───────────────────────────────────────
