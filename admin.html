@@ -1280,7 +1280,7 @@
   }
 
   async function adminLogin() {
-    const email = document.getElementById('a-email').value.trim();
+    const email = document.getElementById('a-email').value.trim().toLowerCase();
     const pw = document.getElementById('a-pw').value;
     const errEl = document.getElementById('auth-error');
     errEl.classList.remove('show');
@@ -1289,7 +1289,9 @@
     if (error || !ADMIN_EMAILS.includes(email)) {
       await sb.auth.signOut();
       auditLog('admin_login_failed', email);
-      errEl.textContent = 'Accès non autorisé.';
+      errEl.textContent = error
+        ? 'Email ou mot de passe incorrect (ou compte inexistant).'
+        : 'Cet email n\'est pas autorisé comme administrateur.';
       errEl.classList.add('show');
       return;
     }
