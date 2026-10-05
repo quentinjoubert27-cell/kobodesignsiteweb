@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
     const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     const token = (req.headers['authorization'] || '').replace('Bearer ', '');
     const { data: { user }, error: authErr } = await sb.auth.getUser(token);
-    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr').split(',').map(e => e.trim());
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr,armelle@symetry.fr').split(',').map(e => e.trim());
     if (authErr || !user || !ADMIN_EMAILS.includes(user.email)) return res.status(401).json({ error: 'Non autorisé' });
     const resend = new Resend(process.env.RESEND_API_KEY);
     const body = req.body || {};

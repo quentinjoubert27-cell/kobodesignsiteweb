@@ -27,7 +27,7 @@ create policy "Inscription publique concours_leads" on concours_leads for insert
 
 create policy "Lecture admin concours_leads" on concours_leads for select
   using (auth.jwt()->>'email' in (
-    'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr'
+    'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr', 'armelle@symetry.fr'
   ));
 
 -- ── Réglage : activer/désactiver le popup depuis l'admin, sans redéploiement ──
@@ -49,8 +49,8 @@ create policy "Lecture publique concours_settings" on concours_settings for sele
 
 create policy "Ecriture admin concours_settings" on concours_settings for update
   using (auth.jwt()->>'email' in (
-    'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr'
+    'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr', 'armelle@symetry.fr'
   ))
   with check (auth.jwt()->>'email' in (
-    'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr'
+    'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr', 'armelle@symetry.fr'
   ));
