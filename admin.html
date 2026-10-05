@@ -954,6 +954,7 @@
           <p class="view-eyebrow">Répartition géographique</p>
           <h1 class="view-title">Carte des clients</h1>
         </div>
+        <button class="btn btn-primary" id="carte-export-btn" onclick="exportCarteExcel()">Exporter en Excel</button>
       </div>
       <div id="carte-stats" style="font-size:13px;color:rgba(26,26,26,.55);margin-bottom:14px;">Chargement…</div>
       <div id="carte-map" style="height:560px;border-radius:12px;border:1px solid rgba(26,26,26,.1);overflow:hidden;background:#e8e2d6;"></div>
@@ -1630,7 +1631,7 @@
 
 
   // ── CARTE DES CLIENTS (par code postal) ───────────────────────────
-  let _carteMap = null, _carteLayer = null;
+  let _carteMap = null, _carteLayer = null, _carteData = null;
   function _loadLeaflet() {
     if (window.L) return Promise.resolve();
     return new Promise((resolve, reject) => {
@@ -1664,6 +1665,95 @@
     if (/^97[1-6]/.test(cp)) return cp.slice(0, 3);
     if (cp.slice(0, 2) === '20') return parseInt(cp, 10) < 20200 ? '2A' : '2B';
     return cp.slice(0, 2);
+  }
+
+  function _loadScriptOnce(src, test) {
+    if (test()) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const sc = document.createElement('script'); sc.src = src; sc.onload = resolve;
+      sc.onerror = () => reject(new Error('Chargement impossible : ' + src));
+      document.head.appendChild(sc);
+    });
+  }
+  // Capture de la carte en image : on redessine les tuiles visibles puis les ronds par-dessus
+  function _carteToPng() {
+    const el = document.getElementById('carte-map');
+    const W = el.clientWidth, H = el.clientHeight;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#e8e2d6'; ctx.fillRect(0, 0, W, H);
+    const box = el.getBoundingClientRect();
+    el.querySelectorAll('img.leaflet-tile').forEach(img => {
+      if (!img.complete || !img.naturalWidth) return;
+      const r = img.getBoundingClientRect();
+      ctx.drawImage(img, r.left - box.left, r.top - box.top, r.width, r.height);
+    });
+    const byCP = _carteData.byCP, geos = _carteData.geos;
+    Object.keys(byCP).forEach(cp => {
+      const g = geos[cp]; if (!g) return;
+      const pt = _carteMap.latLngToContainerPoint([g.lat, g.lng]);
+      const rad = 7 + Math.min(byCP[cp].length, 12) * 2;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, rad, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(205,62,0,.45)'; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#CD3E00'; ctx.stroke();
+    });
+    ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(W - 150, H - 18, 150, 18);
+    ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.fillText('© OpenStreetMap', W - 142, H - 5);
+    return { dataUrl: cv.toDataURL('image/png'), W, H };
+  }
+  async function exportCarteExcel() {
+    const btn = document.getElementById('carte-export-btn');
+    if (!_carteData) { showToast('La carte n\'est pas encore chargée', 'err'); return; }
+    btn.disabled = true; const old = btn.textContent; btn.textContent = 'Export en cours…';
+    try {
+      await _loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js', () => window.ExcelJS);
+      const d = _carteData;
+      const wb = new ExcelJS.Workbook();
+      const head = ws => { const r = ws.getRow(1); r.font = { bold: true, color: { argb: 'FFFFFFFF' } }; r.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCD3E00' } }; };
+
+      // 1. Carte (image) + résumé
+      const wsC = wb.addWorksheet('Carte');
+      wsC.getCell('A1').value = 'Carte des clients Kobo Design'; wsC.getCell('A1').font = { bold: true, size: 16 };
+      wsC.getCell('A2').value = d.total + ' client(s) au total · ' + d.placed + ' placé(s) sur la carte · ' + d.sansList.length + ' sans code postal';
+      try {
+        const png = _carteToPng();
+        const imgId = wb.addImage({ base64: png.dataUrl, extension: 'png' });
+        wsC.addImage(imgId, { tl: { col: 0, row: 3 }, ext: { width: png.W, height: png.H } });
+      } catch (e) {
+        wsC.getCell('A4').value = 'Image de la carte indisponible (' + (e.message || e) + ')';
+      }
+
+      // 2. Départements
+      const wsD = wb.addWorksheet('Départements');
+      wsD.columns = [{ header: '#', width: 5 }, { header: 'Dép.', width: 7 }, { header: 'Département', width: 28 }, { header: 'Clients', width: 10 }, { header: 'Villes', width: 70 }];
+      d.rows.forEach((x, i) => wsD.addRow([i + 1, x.d, DEPARTEMENTS[x.d] || '', x.n,
+        Object.entries(x.villes).sort((a, b) => b[1] - a[1]).map(([v, n]) => v + (n > 1 ? ' (' + n + ')' : '')).join(', ')]));
+      head(wsD);
+
+      // 3. Codes postaux
+      const wsP = wb.addWorksheet('Codes postaux');
+      wsP.columns = [{ header: 'Code postal', width: 13 }, { header: 'Ville', width: 28 }, { header: 'Dép.', width: 7 }, { header: 'Clients', width: 10 }, { header: 'Latitude', width: 11 }, { header: 'Longitude', width: 11 }, { header: 'Noms', width: 70 }];
+      Object.keys(d.byCP).sort((a, b) => d.byCP[b].length - d.byCP[a].length || a.localeCompare(b)).forEach(cp => {
+        const g = d.geos[cp] || {};
+        wsP.addRow([cp, g.ville || '', _deptOf(cp), d.byCP[cp].length, g.lat || '', g.lng || '', d.byCP[cp].join(', ')]);
+      });
+      head(wsP);
+
+      // 4. Sans code postal
+      const wsS = wb.addWorksheet('Sans code postal');
+      wsS.columns = [{ header: 'Nom', width: 30 }, { header: 'Email', width: 40 }];
+      d.sansList.forEach(p => wsS.addRow([p.nom, p.email || '']));
+      head(wsS);
+
+      const buf = await wb.xlsx.writeBuffer();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      a.download = 'carte-clients-kobo-' + new Date().toISOString().slice(0, 10) + '.xlsx';
+      document.body.appendChild(a); a.click(); a.remove();
+      showToast('Excel exporté');
+    } catch (err) {
+      console.error(err); showToast('Erreur export : ' + (err.message || err), 'err');
+    } finally { btn.disabled = false; btn.textContent = old; }
   }
   async function loadCarteClients() {
     const stats = document.getElementById('carte-stats');
@@ -1721,7 +1811,7 @@
 
       if (!_carteMap) {
         _carteMap = L.map('carte-map').setView([46.6, 2.4], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(_carteMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap', crossOrigin: 'anonymous' }).addTo(_carteMap);
       }
       if (_carteLayer) _carteLayer.remove();
       _carteLayer = L.layerGroup().addTo(_carteMap);
@@ -1746,6 +1836,7 @@
         e.villes[v] = (e.villes[v] || 0) + byCP[cp].length;
       });
       const rows = Object.values(depts).sort((a, b) => b.n - a.n || a.d.localeCompare(b.d));
+      _carteData = { rows, byCP, geos, sansList, total: Object.keys(people).length, placed };
       const th = 'text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.15);';
       const td = 'padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(26,26,26,.07);vertical-align:top;';
       list.innerHTML = '<table style="width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;"><thead><tr>'
