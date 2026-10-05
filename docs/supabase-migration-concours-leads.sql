@@ -19,12 +19,14 @@ create table if not exists concours_leads (
 alter table concours_leads add column if not exists newsletter_consent boolean not null default false;
 
 -- RLS : écriture ouverte à tous (visiteurs anonymes du site, c'est le but du
--- formulaire), lecture réservée aux 4 emails admin (mêmes que admin.html).
+-- formulaire), lecture réservée aux emails admin (mêmes que admin.html).
 alter table concours_leads enable row level security;
 
+drop policy if exists "Inscription publique concours_leads" on concours_leads;
 create policy "Inscription publique concours_leads" on concours_leads for insert
   with check (true);
 
+drop policy if exists "Lecture admin concours_leads" on concours_leads;
 create policy "Lecture admin concours_leads" on concours_leads for select
   using (auth.jwt()->>'email' in (
     'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr', 'armelle@symetry.fr'
@@ -44,9 +46,11 @@ alter table concours_settings enable row level security;
 
 -- Lecture publique (le site doit pouvoir savoir si le popup est actif, y compris
 -- pour un visiteur anonyme), écriture réservée aux admins.
+drop policy if exists "Lecture publique concours_settings" on concours_settings;
 create policy "Lecture publique concours_settings" on concours_settings for select
   using (true);
 
+drop policy if exists "Ecriture admin concours_settings" on concours_settings;
 create policy "Ecriture admin concours_settings" on concours_settings for update
   using (auth.jwt()->>'email' in (
     'quentin.joubert@icloud.com', 'pascal@symetry.fr', 'lena@symetry.fr', 'mathilde@symetry.fr', 'armelle@symetry.fr'
