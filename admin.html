@@ -644,6 +644,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 6l8 7 8-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Newsletter
     </button>
+    <button class="nav-item" onclick="showView('carte', this)" id="nav-carte">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6"/></svg>
+      Carte clients
+    </button>
     <button class="nav-item" onclick="showView('audit', this)" id="nav-audit">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Sécurité
@@ -941,6 +945,19 @@
         Tu peux toujours ajuster ponctuellement un prix directement dans la fiche d'un projet, sans que ça modifie cette base.
       </p>
       <div id="materiaux-prix-content">Chargement…</div>
+    </div>
+
+    <!-- ── VUE CARTE DES CLIENTS (par code postal) ── -->
+    <div class="view" id="view-carte">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Répartition géographique</p>
+          <h1 class="view-title">Carte des clients</h1>
+        </div>
+      </div>
+      <div id="carte-stats" style="font-size:13px;color:rgba(26,26,26,.55);margin-bottom:14px;">Chargement…</div>
+      <div id="carte-map" style="height:560px;border-radius:12px;border:1px solid rgba(26,26,26,.1);overflow:hidden;background:#e8e2d6;"></div>
+      <div id="carte-list" style="margin-top:18px;"></div>
     </div>
 
     <!-- ── VUE NEWSLETTER (adresses collectées) ── -->
@@ -1608,6 +1625,95 @@
     if (id === 'analytics') loadAnalytics(30, document.getElementById('an-btn-30'));
     if (id === 'materiaux-prix') loadMateriauxPrix();
     if (id === 'newsletter') loadNewsletter();
+    if (id === 'carte') loadCarteClients();
+  }
+
+
+  // ── CARTE DES CLIENTS (par code postal) ───────────────────────────
+  let _carteMap = null, _carteLayer = null;
+  function _loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
+      document.head.appendChild(css);
+      const sc = document.createElement('script');
+      sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
+      sc.onload = resolve; sc.onerror = () => reject(new Error('Leaflet indisponible'));
+      document.head.appendChild(sc);
+    });
+  }
+  async function _geocodeCP(cp) {
+    let cache = {};
+    try { cache = JSON.parse(localStorage.getItem('kb_cp_geo') || '{}'); } catch (e) {}
+    if (cache[cp]) return cache[cp];
+    try {
+      const r = await fetch('https://geo.api.gouv.fr/communes?codePostal=' + encodeURIComponent(cp) + '&fields=nom,centre&limit=1');
+      const j = await r.json();
+      if (j && j[0] && j[0].centre) {
+        const g = { lat: j[0].centre.coordinates[1], lng: j[0].centre.coordinates[0], ville: j[0].nom };
+        cache[cp] = g;
+        try { localStorage.setItem('kb_cp_geo', JSON.stringify(cache)); } catch (e) {}
+        return g;
+      }
+    } catch (e) {}
+    return null;
+  }
+  async function loadCarteClients() {
+    const stats = document.getElementById('carte-stats');
+    const list = document.getElementById('carte-list');
+    stats.textContent = 'Chargement…'; list.innerHTML = '';
+    try {
+      await _loadLeaflet();
+      // email -> { nom, cp } : fiche client en priorité, sinon codes postaux saisis dans les formulaires
+      const people = {};
+      const norm = v => String(v || '').trim().toLowerCase();
+      const { data: clients } = await sb.from('clients').select('*');
+      (clients || []).forEach(c => { people[norm(c.email)] = { nom: ((c.prenom || '') + ' ' + (c.nom || '')).trim() || c.email, cp: c.code_postal || '' }; });
+      for (const t of ['configs_sdb', 'demandes']) {
+        try {
+          const { data } = await sb.from(t).select('email, prenom, code_postal');
+          (data || []).forEach(r => {
+            const k = norm(r.email); if (!k) return;
+            if (!people[k]) people[k] = { nom: r.prenom || r.email, cp: '' };
+            if (!people[k].cp && r.code_postal) people[k].cp = r.code_postal;
+          });
+        } catch (e) {}
+      }
+      const byCP = {}; let sans = 0;
+      Object.values(people).forEach(p => {
+        const cp = String(p.cp || '').replace(/\s/g, '');
+        if (!/^\d{5}$/.test(cp)) { sans++; return; }
+        (byCP[cp] = byCP[cp] || []).push(p.nom);
+      });
+      const cps = Object.keys(byCP);
+      const geos = {};
+      await Promise.all(cps.map(async cp => { geos[cp] = await _geocodeCP(cp); }));
+
+      if (!_carteMap) {
+        _carteMap = L.map('carte-map').setView([46.6, 2.4], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(_carteMap);
+      }
+      if (_carteLayer) _carteLayer.remove();
+      _carteLayer = L.layerGroup().addTo(_carteMap);
+      const pts = []; let placed = 0;
+      cps.forEach(cp => {
+        const g = geos[cp]; if (!g) return;
+        const names = byCP[cp]; placed += names.length;
+        pts.push([g.lat, g.lng]);
+        L.circleMarker([g.lat, g.lng], { radius: 7 + Math.min(names.length, 12) * 2, color: '#CD3E00', weight: 2, fillColor: '#CD3E00', fillOpacity: .45 })
+          .bindPopup('<strong>' + escHtml(cp + ' ' + g.ville) + '</strong><br>' + names.length + ' client(s)<br>' + names.map(escHtml).join('<br>'))
+          .addTo(_carteLayer);
+      });
+      if (pts.length) _carteMap.fitBounds(pts, { padding: [40, 40], maxZoom: 9 });
+      setTimeout(() => _carteMap.invalidateSize(), 150);
+      stats.textContent = placed + ' client(s) placé(s) sur la carte' + (sans ? ' · ' + sans + ' sans code postal' : '');
+      list.innerHTML = cps.map(cp => ({ cp, n: byCP[cp].length, ville: (geos[cp] || {}).ville || '' }))
+        .sort((a, b) => b.n - a.n)
+        .map(x => '<span style="display:inline-block;margin:0 8px 8px 0;padding:5px 11px;border-radius:100px;background:var(--white);border:1px solid rgba(26,26,26,.1);font-size:12px;"><strong>' + escHtml(x.cp) + '</strong> ' + escHtml(x.ville) + ' · ' + x.n + '</span>').join('');
+    } catch (err) {
+      stats.textContent = 'Erreur : ' + (err.message || err);
+    }
   }
 
   // ── PRIX AUTOMATIQUE (calculé depuis la base "Matériaux & Prix", non modifiable ici) ──
