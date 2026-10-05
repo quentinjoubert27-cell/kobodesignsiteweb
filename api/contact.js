@@ -98,6 +98,7 @@ module.exports = async function handler(req, res) {
         ...((siret || societe) ? { type_client: typeClient } : {}),
       }, { onConflict: 'id' });
       if (upsertErr) throw new Error('upsert client: ' + upsertErr.message);
+      if (code_postal) await supabase.from('clients').update({ code_postal }).eq('id', userId).then(() => {}, () => {});
 
       // Créer le projet
       const nomProjet = `Demande ${type_projet ? '— ' + type_projet : ''} · ${prenom} ${nom}`.slice(0, 200);

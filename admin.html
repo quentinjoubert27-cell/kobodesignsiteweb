@@ -742,7 +742,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Nom</th><th>Type</th><th>Email</th><th>Téléphone</th><th>Projets</th><th>Inscrit le</th><th></th></tr></thead>
+          <thead><tr><th>Nom</th><th>Type</th><th>Email</th><th>Téléphone</th><th>Code postal</th><th>Projets</th><th>Inscrit le</th><th></th></tr></thead>
           <tbody id="clients-table"><tr><td colspan="7" class="loading">Chargement…</td></tr></tbody>
         </table>
       </div>
@@ -779,6 +779,10 @@
             <span class="client-info-item" id="cd-tel-wrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="1.6"/></svg>
               <span id="cd-tel-val">—</span>
+            </span>
+            <span class="client-info-item" id="cd-cp-wrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span id="cd-cp-val">—</span>
             </span>
             <span class="client-info-item" id="cd-societe-wrap" style="display:none;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="14" rx="1"/><path d="M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
@@ -2179,13 +2183,14 @@
 
   function renderClientsTable(list) {
     const tbody = document.getElementById('clients-table');
-    if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Aucun client.</td></tr>'; return; }
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Aucun client.</td></tr>'; return; }
     tbody.innerHTML = list.map(c => `
       <tr class="client-row" onclick="openClientDetail('${c.id}')">
         <td>${escHtml(c.prenom)} ${escHtml(c.nom)}</td>
         <td>${clientTypeBadge(c)}</td>
         <td style="color:rgba(26,26,26,.55);">${escHtml(c.email || '')}</td>
         <td style="color:rgba(26,26,26,.55);">${escHtml(c.telephone || '—')}</td>
+        <td style="color:rgba(26,26,26,.55);">${escHtml(c.code_postal || '—')}</td>
         <td>${(c.projets || []).length}</td>
         <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openClientDetail('${c.id}')">Voir</button></td>
@@ -2209,6 +2214,7 @@
     document.getElementById('cd-fullname').textContent = fullName.trim() || '—';
     document.getElementById('cd-email-val').textContent = client.email || '—';
     document.getElementById('cd-tel-val').textContent = client.telephone || '—';
+    document.getElementById('cd-cp-val').textContent = client.code_postal || '—';
     document.getElementById('cd-type-badge').innerHTML = clientTypeBadge(client);
     const societeWrap = document.getElementById('cd-societe-wrap');
     if (client.societe || client.siret) {

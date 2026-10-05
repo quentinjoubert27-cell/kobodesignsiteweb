@@ -25,6 +25,7 @@ module.exports = async function handler(req, res) {
   const email      = (body.email      || '').toString().trim().toLowerCase().slice(0, 200);
   const telephone  = (body.telephone  || '').toString().trim().slice(0, 30);
   const projetNom  = (body.projetNom  || 'Configuration').toString().trim().slice(0, 200);
+  const code_postal = (body.code_postal || '').toString().trim().slice(0, 10);
   const decouverte = (body.decouverte || '').toString().trim().slice(0, 100);
   const projetDescRaw = (body.projetDesc || '').toString().trim();
   const projetDesc = [decouverte ? `Découverte : ${decouverte}` : null, projetDescRaw || null].filter(Boolean).join('\n').slice(0, 2000);
@@ -90,6 +91,7 @@ module.exports = async function handler(req, res) {
       ...(societe ? { societe } : {}),
       ...((siret || societe) ? { type_client: typeClient } : {}),
     }, { onConflict: 'id' });
+    if (code_postal) await sb.from('clients').update({ code_postal }).eq('id', userId).then(() => {}, () => {});
 
     // 3. Créer le projet
     const { data: projet, error: projetErr } = await sb.from('projets').insert({

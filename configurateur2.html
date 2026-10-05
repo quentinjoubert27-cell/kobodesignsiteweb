@@ -4925,7 +4925,7 @@ async function submitConfig(){
     var regResp = await fetch('/api/auto-register',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Register-Secret':'kobo-configurateur-2024'},
-      body:JSON.stringify({ prenom, nom, email, telephone, decouverte, projetNom, projetDesc, societe, siret,
+      body:JSON.stringify({ prenom, nom, email, telephone, code_postal:codePostal, decouverte, projetNom, projetDesc, societe, siret,
         configId: data.configId || null, configTable: 'configs_sdb' })
     });
     var regData = await regResp.json();
