@@ -1233,9 +1233,16 @@
           </select>
         </div>
       </div>
-      <p style="display:flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;color:rgba(26,26,26,.45);">
-        📧 Le client sera automatiquement notifié par email (avec le fichier joint)
-      </p>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;font-size:13px;">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+          <input type="radio" name="doc-origine" value="kobo" checked style="margin-top:3px;accent-color:var(--accent);"/>
+          <span><strong>Document pour le client</strong><br><span style="font-size:12px;color:rgba(26,26,26,.5);">📧 Il reçoit un email avec le fichier joint (devis, plan, facture…)</span></span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+          <input type="radio" name="doc-origine" value="client" style="margin-top:3px;accent-color:var(--accent);"/>
+          <span><strong>Pièce reçue du client</strong><br><span style="font-size:12px;color:rgba(26,26,26,.5);">🔕 Ajoutée à son projet sans aucun email (un document qu'il vous a envoyé)</span></span>
+        </label>
+      </div>
       <button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="uploadFile()">Envoyer le document</button>
     </div>
 
@@ -3202,7 +3209,7 @@
             <div class="doc-meta">${d.type} · ${d.uploade_par === 'client' ? 'Envoyé par le client' : 'Kobo Design'} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}${d.taille_kb ? ' · ' + formatSize(d.taille_kb) : ''}</div>
           </div>
           <a href="${d.signedUrl}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
-          ${d.uploade_par !== 'client' ? `<button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}','${d.url}')">Supprimer</button>` : ''}
+          <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}','${d.url}')">Supprimer</button>
         </div>`;
     }).join('');
   }
@@ -3561,6 +3568,7 @@
     document.getElementById('upload-preview').style.display = 'none';
     document.getElementById('upload-options').style.display = 'none';
     document.getElementById('upload-area').style.display = '';
+    const r0 = document.querySelector('input[name="doc-origine"][value="kobo"]'); if (r0) r0.checked = true;
   }
 
   async function uploadFile() {
@@ -3569,6 +3577,7 @@
     if (!currentProjetId) return showToast('Aucun projet sélectionné', 'err');
     const type = document.getElementById('doc-type-select').value;
     const categorie = document.getElementById('doc-categorie-select').value;
+    const deDuClient = (document.querySelector('input[name="doc-origine"]:checked') || {}).value === 'client';
     const path = `${currentProjetId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 
     const pw = document.getElementById('upload-progress-wrap');
@@ -3591,7 +3600,7 @@
       categorie,
       url: path,
       taille_kb: Math.round(file.size / 1024),
-      uploade_par: 'kobo'
+      uploade_par: deDuClient ? 'client' : 'kobo'
     }]);
 
     pb.style.width = '100%';
@@ -3602,7 +3611,8 @@
     showToast('Document envoyé !');
     await loadProjetDocs();
     await loadDashboard();
-    // Le client est toujours notifié par email lors de l'ajout d'un document
+    // Document pour le client : toujours notifié par email. Pièce reçue du client : aucun email.
+    if (deDuClient) { showToast('Pièce du client ajoutée (aucun email envoyé)'); return; }
     try {
       const { data: { session } } = await sb.auth.getSession();
       await fetch('/api/notify', {
