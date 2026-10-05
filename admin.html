@@ -1731,9 +1731,14 @@
       if (pts.length) _carteMap.fitBounds(pts, { padding: [40, 40], maxZoom: 9 });
       setTimeout(() => _carteMap.invalidateSize(), 150);
       stats.textContent = Object.keys(people).length + ' client(s) au total · ' + placed + ' placé(s) sur la carte' + (sans ? ' · ' + sans + ' sans code postal (liste ci-dessous)' : '');
-      list.innerHTML = cps.map(cp => ({ cp, n: byCP[cp].length, ville: (geos[cp] || {}).ville || '' }))
-        .sort((a, b) => b.n - a.n)
-        .map(x => '<span style="display:inline-block;margin:0 8px 8px 0;padding:5px 11px;border-radius:100px;background:var(--white);border:1px solid rgba(26,26,26,.1);font-size:12px;"><strong>' + escHtml(x.cp) + '</strong> ' + escHtml(x.ville) + ' · ' + x.n + '</span>').join('')
+      const rows = cps.map(cp => ({ cp, n: byCP[cp].length, ville: (geos[cp] || {}).ville || '', noms: byCP[cp] }))
+        .sort((a, b) => b.n - a.n || a.cp.localeCompare(b.cp));
+      const th = 'text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.15);';
+      const td = 'padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(26,26,26,.07);vertical-align:top;';
+      list.innerHTML = '<table style="width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;"><thead><tr>'
+        + '<th style="' + th + '">#</th><th style="' + th + '">Code postal</th><th style="' + th + '">Ville</th><th style="' + th + 'text-align:right;">Clients</th><th style="' + th + '">Noms</th></tr></thead><tbody>'
+        + rows.map((x, i) => '<tr><td style="' + td + 'color:rgba(26,26,26,.35);">' + (i + 1) + '</td><td style="' + td + 'font-weight:700;">' + escHtml(x.cp) + '</td><td style="' + td + '">' + escHtml(x.ville) + '</td><td style="' + td + 'text-align:right;font-weight:800;color:var(--accent);">' + x.n + '</td><td style="' + td + 'color:rgba(26,26,26,.55);">' + x.noms.map(escHtml).join(', ') + '</td></tr>').join('')
+        + '</tbody></table>'
         + (sans ? '<div style="margin-top:14px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,26,26,.4);">Sans code postal (' + sans + ')</div><div style="margin-top:8px;font-size:13px;color:rgba(26,26,26,.6);line-height:1.8;">' + sansList.map(p => escHtml(p.nom) + (p.email ? ' <span style="color:rgba(26,26,26,.35);">(' + escHtml(p.email) + ')</span>' : '')).join('<br>') + '</div>' : '');
     } catch (err) {
       stats.textContent = 'Erreur : ' + (err.message || err);
