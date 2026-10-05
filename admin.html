@@ -537,6 +537,9 @@
       .toast { right: 12px; left: 12px; text-align: center; }
     }
 
+    #bulk-statuts label { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 400; color: var(--dark); white-space: nowrap; margin: 0; }
+    #bulk-statuts input { width: auto; margin: 0; }
+
     /* ── Carte clients : base (desktop) ── */
     #carte-map { position: relative; z-index: 0; isolation: isolate; height: 560px; border-radius: 12px; border: 1px solid rgba(26,26,26,.1); overflow: hidden; background: #e8e2d6; }
     #carte-list { overflow-x: auto; }
@@ -772,6 +775,7 @@
             <option value="professionnel">Professionnels</option>
           </select>
           <input type="search" id="client-search" placeholder="Rechercher…" style="padding:9px 13px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;width:200px;" oninput="filterClients()"/>
+          <button class="btn btn-ghost" onclick="openBulkEmail()">✉ Email groupé</button>
           <button class="btn btn-primary" onclick="openModalNewClient()">+ Nouveau client</button>
         </div>
       </div>
@@ -1173,6 +1177,35 @@
       <button class="btn btn-ghost" onclick="closeModal('modal-client')">Annuler</button>
       <button class="btn btn-ghost" id="nc-btn-create" onclick="createClient(false)">Créer seulement</button>
       <button class="btn btn-primary" id="nc-btn-send" onclick="createClient(true)">Créer et envoyer l'accès</button>
+    </div>
+  </div>
+</div>
+
+<!-- Email groupé aux clients en attente -->
+<div class="modal-overlay" id="modal-bulk">
+  <div class="modal" style="max-width:600px;">
+    <h2 class="modal-title">Email groupé</h2>
+    <p style="font-size:12.5px;color:rgba(26,26,26,.55);margin:-6px 0 14px;line-height:1.5;">Un seul email par client (même avec plusieurs projets). Le prénom et le nom du projet sont ajoutés automatiquement.</p>
+    <div class="field"><label>Clients dont le projet est…</label>
+      <div id="bulk-statuts" style="display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;">
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="En étude" checked/> En étude</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Analyse en cours" checked/> Analyse en cours</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Devis en cours" checked/> Devis en cours</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Devis envoyé"/> Devis envoyé</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Fabrication"/> Fabrication</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Commandé"/> Commandé</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Livraison"/> Livraison</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Terminé"/> Terminé</label>
+      </div>
+    </div>
+    <div class="field"><label>Objet</label><input type="text" id="bulk-sujet"/></div>
+    <div class="field"><label>Message (après « Bonjour Prénom, »)</label><textarea id="bulk-message" rows="9" style="width:100%;padding:12px 14px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:14px;line-height:1.6;"></textarea></div>
+    <div id="bulk-preview" style="font-size:13px;margin:6px 0 4px;color:rgba(26,26,26,.7);"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-bulk')">Fermer</button>
+      <button class="btn btn-ghost" onclick="bulkPreview()">1 · Voir les destinataires</button>
+      <button class="btn btn-ghost" id="bulk-btn-test" onclick="bulkTest()">2 · M'envoyer un test</button>
+      <button class="btn btn-primary" id="bulk-btn-send" onclick="bulkSend()" disabled>3 · Envoyer</button>
     </div>
   </div>
 </div>
@@ -3868,6 +3901,57 @@
       await loadClients();
       await loadDashboard();
     } finally { btns.forEach(b => b.disabled = false); }
+  }
+
+
+  // ── EMAIL GROUPÉ (clients en attente) ─────────────────────────────
+  let _bulkCount = null;
+  function openBulkEmail() {
+    document.getElementById('bulk-sujet').value = 'Votre projet Kobo Design : réponse et devis d\'ici la fin de la semaine';
+    document.getElementById('bulk-message').value = 'Nous avons bien reçu votre demande et nous y portons toute notre attention.\n\nNous vous transmettrons une réponse ainsi qu\'un devis chiffré, avec le prix, d\'ici la fin de la semaine au plus tard.\n\nSi vous souhaitez nous apporter des précisions (dimensions, photos, contraintes), répondez simplement à cet email.';
+    document.getElementById('bulk-preview').textContent = '';
+    document.getElementById('bulk-btn-send').disabled = true; _bulkCount = null;
+    document.querySelectorAll('#bulk-statuts input').forEach(i => i.addEventListener('change', () => { document.getElementById('bulk-btn-send').disabled = true; _bulkCount = null; document.getElementById('bulk-preview').textContent = 'Statuts modifiés : relance « Voir les destinataires ».'; }));
+    document.getElementById('modal-bulk').classList.add('open');
+  }
+  async function _bulkCall(mode, extra) {
+    const statuts = [...document.querySelectorAll('#bulk-statuts input:checked')].map(i => i.value);
+    const { data: { session } } = await sb.auth.getSession();
+    const resp = await fetch('/api/bulk-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify(Object.assign({ mode, statuts, sujet: document.getElementById('bulk-sujet').value, message: document.getElementById('bulk-message').value }, extra || {}))
+    });
+    const j = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(j.error || 'Erreur ' + resp.status);
+    return j;
+  }
+  async function bulkPreview() {
+    const box = document.getElementById('bulk-preview'); box.textContent = 'Recherche…';
+    try {
+      const j = await _bulkCall('preview');
+      _bulkCount = j.count;
+      box.innerHTML = '<strong>' + j.count + ' client(s)</strong> recevront cet email :<br><span style="font-size:12px;color:rgba(26,26,26,.55);line-height:1.7;">' + j.recipients.map(r => escHtml((r.prenom || '—') + ' · ' + r.email)).join('<br>') + '</span>';
+      document.getElementById('bulk-btn-send').disabled = !j.count;
+      document.getElementById('bulk-btn-send').textContent = '3 · Envoyer à ' + j.count;
+    } catch (e) { box.textContent = 'Erreur : ' + e.message; }
+  }
+  async function bulkTest() {
+    const btn = document.getElementById('bulk-btn-test'); btn.disabled = true;
+    try { const j = await _bulkCall('test'); showToast('Test envoyé à ' + j.sentTo); }
+    catch (e) { showToast('Erreur : ' + e.message, 'err'); }
+    finally { btn.disabled = false; }
+  }
+  async function bulkSend() {
+    if (_bulkCount == null) return showToast('Commence par « Voir les destinataires »', 'err');
+    if (!confirm('Envoyer cet email à ' + _bulkCount + ' client(s) ? Cette action est définitive.')) return;
+    const btn = document.getElementById('bulk-btn-send'); btn.disabled = true; btn.textContent = 'Envoi…';
+    try {
+      const j = await _bulkCall('send', { confirmCount: _bulkCount });
+      showToast(j.sent + ' email(s) envoyé(s)' + (j.failed && j.failed.length ? ' · ' + j.failed.length + ' échec(s)' : ''), j.failed && j.failed.length ? 'err' : undefined);
+      document.getElementById('bulk-preview').innerHTML = '<strong>Envoyé à ' + j.sent + ' client(s).</strong>' + (j.failed && j.failed.length ? '<br>Échecs : ' + j.failed.map(escHtml).join(', ') : '');
+      _bulkCount = null;
+    } catch (e) { showToast('Erreur : ' + e.message, 'err'); btn.disabled = false; btn.textContent = '3 · Envoyer'; }
   }
 
   // ── UNREAD COUNT ──────────────────────────────────────────────────
