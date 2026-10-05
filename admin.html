@@ -1668,24 +1668,47 @@
       // email -> { nom, cp } : fiche client en priorité, sinon codes postaux saisis dans les formulaires
       const people = {};
       const norm = v => String(v || '').trim().toLowerCase();
-      const { data: clients } = await sb.from('clients').select('*');
-      (clients || []).forEach(c => { people[norm(c.email)] = { nom: ((c.prenom || '') + ' ' + (c.nom || '')).trim() || c.email, cp: c.code_postal || '' }; });
+      async function fetchAll(table, cols) {
+        let all = [], from = 0;
+        for (;;) {
+          const { data, error } = await sb.from(table).select(cols).range(from, from + 999);
+          if (error || !data) break;
+          all = all.concat(data);
+          if (data.length < 1000) break;
+          from += 1000;
+        }
+        return all;
+      }
+      const clients = await fetchAll('clients', '*');
+      const idToKey = {};
+      clients.forEach(c => {
+        const k = norm(c.email) || c.id;
+        idToKey[c.id] = k;
+        people[k] = { nom: ((c.prenom || '') + ' ' + (c.nom || '')).trim() || c.email || 'Client', email: c.email || '', cp: c.code_postal || '' };
+      });
+      // Clients sans code postal sur leur fiche : on le récupère là où il a été saisi
       for (const t of ['configs_sdb', 'demandes']) {
         try {
-          const { data } = await sb.from(t).select('email, prenom, code_postal');
-          (data || []).forEach(r => {
-            const k = norm(r.email); if (!k) return;
-            if (!people[k]) people[k] = { nom: r.prenom || r.email, cp: '' };
-            if (!people[k].cp && r.code_postal) people[k].cp = r.code_postal;
+          (await fetchAll(t, 'email, code_postal')).forEach(r => {
+            const k = norm(r.email);
+            if (people[k] && !people[k].cp && r.code_postal) people[k].cp = r.code_postal;
           });
         } catch (e) {}
       }
-      const byCP = {}; let sans = 0;
+      try {
+        (await fetchAll('projets', 'client_id, description')).forEach(pr => {
+          const k = idToKey[pr.client_id];
+          const m = /Code postal\s*:\s*(\d{5})/i.exec(pr.description || '');
+          if (k && people[k] && !people[k].cp && m) people[k].cp = m[1];
+        });
+      } catch (e) {}
+      const byCP = {}; const sansList = [];
       Object.values(people).forEach(p => {
         const cp = String(p.cp || '').replace(/\s/g, '');
-        if (!/^\d{5}$/.test(cp)) { sans++; return; }
+        if (!/^\d{5}$/.test(cp)) { sansList.push(p); return; }
         (byCP[cp] = byCP[cp] || []).push(p.nom);
       });
+      const sans = sansList.length;
       const cps = Object.keys(byCP);
       const geos = {};
       await Promise.all(cps.map(async cp => { geos[cp] = await _geocodeCP(cp); }));
@@ -1707,10 +1730,11 @@
       });
       if (pts.length) _carteMap.fitBounds(pts, { padding: [40, 40], maxZoom: 9 });
       setTimeout(() => _carteMap.invalidateSize(), 150);
-      stats.textContent = placed + ' client(s) placé(s) sur la carte' + (sans ? ' · ' + sans + ' sans code postal' : '');
+      stats.textContent = Object.keys(people).length + ' client(s) au total · ' + placed + ' placé(s) sur la carte' + (sans ? ' · ' + sans + ' sans code postal (liste ci-dessous)' : '');
       list.innerHTML = cps.map(cp => ({ cp, n: byCP[cp].length, ville: (geos[cp] || {}).ville || '' }))
         .sort((a, b) => b.n - a.n)
-        .map(x => '<span style="display:inline-block;margin:0 8px 8px 0;padding:5px 11px;border-radius:100px;background:var(--white);border:1px solid rgba(26,26,26,.1);font-size:12px;"><strong>' + escHtml(x.cp) + '</strong> ' + escHtml(x.ville) + ' · ' + x.n + '</span>').join('');
+        .map(x => '<span style="display:inline-block;margin:0 8px 8px 0;padding:5px 11px;border-radius:100px;background:var(--white);border:1px solid rgba(26,26,26,.1);font-size:12px;"><strong>' + escHtml(x.cp) + '</strong> ' + escHtml(x.ville) + ' · ' + x.n + '</span>').join('')
+        + (sans ? '<div style="margin-top:14px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,26,26,.4);">Sans code postal (' + sans + ')</div><div style="margin-top:8px;font-size:13px;color:rgba(26,26,26,.6);line-height:1.8;">' + sansList.map(p => escHtml(p.nom) + (p.email ? ' <span style="color:rgba(26,26,26,.35);">(' + escHtml(p.email) + ')</span>' : '')).join('<br>') + '</div>' : '');
     } catch (err) {
       stats.textContent = 'Erreur : ' + (err.message || err);
     }
