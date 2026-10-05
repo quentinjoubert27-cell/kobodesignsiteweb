@@ -3811,7 +3811,7 @@
       const result = await resp.json();
       if (!resp.ok) return showToast('Erreur: ' + (result.error || 'Inconnue'), 'err');
 
-      let msg = 'Client créé !';
+      let msg = result.rattache ? 'Fiche client créée (le compte d\'accès existait déjà)' : 'Client créé !';
       if (sendAccess) {
         const r2 = await fetch('/api/send-access', { method: 'POST', headers, body: JSON.stringify({ clientId: result.clientId }) });
         const j2 = await r2.json().catch(() => ({}));

@@ -34,14 +34,26 @@ module.exports = async function handler(req, res) {
   // Le client choisira le sien via le lien "Créer mon mot de passe" (needs_password).
   const password = (req.body && req.body.password) || require('crypto').randomBytes(24).toString('base64url');
 
-  const { data, error } = await sb.auth.admin.createUser({
+  let { data, error } = await sb.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
     user_metadata: { prenom, nom, needs_password: !(req.body && req.body.password) },
   });
 
-  if (error) return res.status(400).json({ error: error.message });
+  let target = data && data.user, rattache = false;
+  if (error) {
+    if (!/already been registered|already registered/i.test(error.message || ''))
+      return res.status(400).json({ error: error.message });
+    // L'email a déjà un compte d'accès : on regarde s'il a déjà une fiche client
+    const { data: fiche } = await sb.from('clients').select('id').ilike('email', email).maybeSingle();
+    if (fiche) return res.status(409).json({ error: 'Ce client existe déjà (fiche trouvée avec cet email).', clientId: fiche.id });
+    const { data: list } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    target = ((list && list.users) || []).find(u => (u.email || '').toLowerCase() === email.toLowerCase());
+    if (!target) return res.status(400).json({ error: error.message });
+    rattache = true; // compte d'accès existant sans fiche client : on crée simplement la fiche
+  }
+  data = { user: target };
 
   const siretTrim = (siret || '').toString().trim();
   const societeTrim = (societe || '').toString().trim();
@@ -59,5 +71,5 @@ module.exports = async function handler(req, res) {
 
   if (code_postal) await sb.from('clients').update({ code_postal: String(code_postal).trim().slice(0, 10) }).eq('id', data.user.id).then(() => {}, () => {});
 
-  return res.status(200).json({ success: true, clientId: data.user.id });
+  return res.status(200).json({ success: true, clientId: data.user.id, rattache });
 };
