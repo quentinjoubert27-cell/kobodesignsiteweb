@@ -1134,10 +1134,12 @@
       <div class="field"><label>Société (si professionnel)</label><input type="text" id="nc-societe" placeholder="Nom de l'entreprise"/></div>
       <div class="field"><label>SIRET (optionnel)</label><input type="text" id="nc-siret" placeholder="123 456 789 00012"/></div>
     </div>
-    <div class="field"><label>Mot de passe temporaire</label><input type="text" id="nc-pw" placeholder="Minimum 8 caractères"/></div>
+    <div class="field"><label>Code postal (optionnel)</label><input type="text" id="nc-cp" maxlength="10" placeholder="33000"/></div>
+    <p style="font-size:12px;color:rgba(26,26,26,.5);margin:4px 0 0;line-height:1.5;">Pas de mot de passe à saisir : le client le choisira lui-même via le lien reçu par email.</p>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-client')">Annuler</button>
-      <button class="btn btn-primary" onclick="createClient()">Créer le compte</button>
+      <button class="btn btn-ghost" id="nc-btn-create" onclick="createClient(false)">Créer seulement</button>
+      <button class="btn btn-primary" id="nc-btn-send" onclick="createClient(true)">Créer et envoyer l'accès</button>
     </div>
   </div>
 </div>
@@ -3753,7 +3755,7 @@
   }
 
   function openModalNewClient() {
-    ['nc-prenom', 'nc-nom', 'nc-email', 'nc-tel', 'nc-pw'].forEach(id => document.getElementById(id).value = '');
+    ['nc-prenom', 'nc-nom', 'nc-email', 'nc-tel', 'nc-cp', 'nc-societe', 'nc-siret'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('modal-client').classList.add('open');
   }
 
@@ -3788,32 +3790,38 @@
     if (currentClientId) loadClientProjets(currentClientId);
   }
 
-  async function createClient() {
+  async function createClient(sendAccess) {
     const prenom = document.getElementById('nc-prenom').value.trim();
     const nom = document.getElementById('nc-nom').value.trim();
-    const email = document.getElementById('nc-email').value.trim();
+    const email = document.getElementById('nc-email').value.trim().toLowerCase();
     const telephone = document.getElementById('nc-tel').value.trim();
     const societe = document.getElementById('nc-societe').value.trim();
     const siret = document.getElementById('nc-siret').value.trim();
-    const pw = document.getElementById('nc-pw').value;
-    if (!prenom || !nom || !email || !pw) return showToast('Tous les champs obligatoires', 'err');
-    if (pw.length < 8) return showToast('Mot de passe trop court', 'err');
+    const code_postal = document.getElementById('nc-cp').value.trim();
+    if (!prenom || !nom || !email) return showToast('Prénom, nom et email obligatoires', 'err');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showToast('Email invalide', 'err');
 
-    const { data: { session } } = await sb.auth.getSession();
-    const token = session?.access_token;
+    const btns = [document.getElementById('nc-btn-create'), document.getElementById('nc-btn-send')];
+    btns.forEach(b => b.disabled = true);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session?.access_token };
 
-    const resp = await fetch('/api/create-client', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ prenom, nom, email, telephone, password: pw, societe, siret }),
-    });
-    const result = await resp.json();
-    if (!resp.ok) return showToast('Erreur: ' + (result.error || 'Inconnue'), 'err');
+      const resp = await fetch('/api/create-client', { method: 'POST', headers, body: JSON.stringify({ prenom, nom, email, telephone, societe, siret, code_postal }) });
+      const result = await resp.json();
+      if (!resp.ok) return showToast('Erreur: ' + (result.error || 'Inconnue'), 'err');
 
-    showToast('Client créé !');
-    closeModal('modal-client');
-    await loadClients();
-    await loadDashboard();
+      let msg = 'Client créé !';
+      if (sendAccess) {
+        const r2 = await fetch('/api/send-access', { method: 'POST', headers, body: JSON.stringify({ clientId: result.clientId }) });
+        const j2 = await r2.json().catch(() => ({}));
+        msg = r2.ok ? 'Client créé, email d\'accès envoyé à ' + email : 'Client créé, mais envoi de l\'accès échoué : ' + (j2.error || 'erreur') + ' (réessaie depuis sa fiche)';
+      }
+      showToast(msg, sendAccess && msg.includes('échoué') ? 'err' : undefined);
+      closeModal('modal-client');
+      await loadClients();
+      await loadDashboard();
+    } finally { btns.forEach(b => b.disabled = false); }
   }
 
   // ── UNREAD COUNT ──────────────────────────────────────────────────

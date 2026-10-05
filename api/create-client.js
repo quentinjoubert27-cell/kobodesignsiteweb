@@ -20,21 +20,25 @@ module.exports = async function handler(req, res) {
   const { data: { user }, error: authErr } = await sbAnon.auth.getUser(token);
   if (authErr || !user) return res.status(401).json({ error: 'Token invalide' });
 
-  const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'quentin.joubert@icloud.com').split(',');
+  const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr,armelle@symetry.fr').split(',').map(e => e.trim());
   if (!ADMIN_EMAILS.includes(user.email)) return res.status(403).json({ error: 'Accès refusé' });
 
   // Créer le client avec la clé service role
   const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const { prenom, nom, email, telephone, password, siret, societe } = req.body || {};
-  if (!prenom || !nom || !email || !password)
+  const { prenom, nom, email, telephone, siret, societe, code_postal } = req.body || {};
+  if (!prenom || !nom || !email)
     return res.status(400).json({ error: 'Champs manquants' });
+
+  // Pas de mot de passe saisi par l'admin : on en génère un aléatoire que personne ne connaît.
+  // Le client choisira le sien via le lien "Créer mon mot de passe" (needs_password).
+  const password = (req.body && req.body.password) || require('crypto').randomBytes(24).toString('base64url');
 
   const { data, error } = await sb.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { prenom, nom },
+    user_metadata: { prenom, nom, needs_password: !(req.body && req.body.password) },
   });
 
   if (error) return res.status(400).json({ error: error.message });
@@ -53,5 +57,7 @@ module.exports = async function handler(req, res) {
     type_client: (siretTrim || societeTrim) ? 'professionnel' : 'particulier',
   });
 
-  return res.status(200).json({ success: true });
+  if (code_postal) await sb.from('clients').update({ code_postal: String(code_postal).trim().slice(0, 10) }).eq('id', data.user.id).then(() => {}, () => {});
+
+  return res.status(200).json({ success: true, clientId: data.user.id });
 };
