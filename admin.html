@@ -535,6 +535,33 @@
       /* Toast */
       .toast { right: 12px; left: 12px; text-align: center; }
     }
+
+    /* ── Carte clients : base (desktop) ── */
+    #carte-map { position: relative; z-index: 0; isolation: isolate; height: 560px; border-radius: 12px; border: 1px solid rgba(26,26,26,.1); overflow: hidden; background: #e8e2d6; }
+    #carte-list { overflow-x: auto; }
+    #carte-list table { min-width: 320px; }
+
+    /* ── Mobile : ajouts du jour (carte, pipeline, stats, nouveau client) ── */
+    @media (max-width: 600px) {
+      #carte-map { height: 52vh; min-height: 300px; }
+      #carte-export-btn { width: 100%; justify-content: center; }
+      #view-carte .view-header { flex-direction: column; align-items: stretch; gap: 12px; }
+      #carte-stats { line-height: 1.5; }
+      #carte-list table th, #carte-list table td { padding: 8px 7px !important; font-size: 12px !important; }
+
+      /* Pipeline à 7 colonnes : 4 + 3, titres lisibles (sinon "EN É…", "DEVI…") */
+      .pipeline { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+      .pipeline-col { padding: 10px 6px !important; }
+      .pipeline-col-title { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; font-size: 9px !important; line-height: 1.25; letter-spacing: .08em; }
+
+      /* Cartes de stats : la dernière occupe toute la largeur si le nombre est impair */
+      .stats-row .stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+      /* Nouveau client : champs côte à côte, boutons toujours visibles en bas */
+      #modal-client .field-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+      #modal-client .modal-actions { position: sticky; bottom: 0; background: var(--bg); padding: 12px 0 6px; margin-top: 12px; border-top: 1px solid rgba(26,26,26,.08); gap: 8px; }
+      #modal-client .modal-actions .btn { padding-top: 11px; padding-bottom: 11px; }
+    }
   </style>
 </head>
 <body>
@@ -959,7 +986,7 @@
         <button class="btn btn-primary" id="carte-export-btn" onclick="exportCarteExcel()">Exporter en Excel</button>
       </div>
       <div id="carte-stats" style="font-size:13px;color:rgba(26,26,26,.55);margin-bottom:14px;">Chargement…</div>
-      <div id="carte-map" style="height:560px;border-radius:12px;border:1px solid rgba(26,26,26,.1);overflow:hidden;background:#e8e2d6;"></div>
+      <div id="carte-map"></div>
       <div id="carte-list" style="margin-top:18px;"></div>
     </div>
 
