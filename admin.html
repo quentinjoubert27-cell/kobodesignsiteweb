@@ -3917,10 +3917,10 @@
   async function _bulkCall(mode, extra) {
     const statuts = [...document.querySelectorAll('#bulk-statuts input:checked')].map(i => i.value);
     const { data: { session } } = await sb.auth.getSession();
-    const resp = await fetch('/api/bulk-email', {
+    const resp = await fetch('/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify(Object.assign({ mode, statuts, sujet: document.getElementById('bulk-sujet').value, message: document.getElementById('bulk-message').value }, extra || {}))
+      body: JSON.stringify(Object.assign({ action: 'bulk-email', mode, statuts, sujet: document.getElementById('bulk-sujet').value, message: document.getElementById('bulk-message').value }, extra || {}))
     });
     const j = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error(j.error || 'Erreur ' + resp.status);
