@@ -86,7 +86,7 @@
     .btn-danger:hover { background: #dc2626; color: #fff; }
 
     /* KPI Stats */
-    .stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 28px; }
+    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
     .stat { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 20px 18px; position: relative; overflow: hidden; }
     .stat::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); opacity: 0; transition: opacity .2s; }
     .stat:hover::after { opacity: 1; }
@@ -97,7 +97,7 @@
     .stat__trend.neutral { color: rgba(26,26,26,.3); }
 
     /* Kanban pipeline */
-    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 32px; }
+    .pipeline { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 32px; }
     .pipeline-col { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 16px; }
     .pipeline-col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .pipeline-col-title { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); }
@@ -124,6 +124,7 @@
     .sbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 4px 9px; border-radius: 100px; white-space: nowrap; }
     .sbadge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
     .sb-etude { background: #fef3c7; color: #92400e; } .sb-etude::before { background: #f59e0b; }
+    .sb-analyse { background: #e0e7ff; color: #3730a3; } .sb-analyse::before { background: #6366f1; }
     .sb-devis { background: #ffedd5; color: #9a3412; } .sb-devis::before { background: #f97316; }
     .sb-fabrication { background: #dbeafe; color: #1e40af; } .sb-fabrication::before { background: #3b82f6; }
     .sb-commande { background: #ede9fe; color: #5b21b6; } .sb-commande::before { background: #7c3aed; }
@@ -312,7 +313,7 @@
       /* Pipeline → grille compacte 5 colonnes sans scroll */
       .pipeline {
         display: grid !important;
-        grid-template-columns: repeat(6, 1fr) !important;
+        grid-template-columns: repeat(7, 1fr) !important;
         overflow-x: visible !important;
         gap: 6px !important;
         padding-bottom: 0 !important;
@@ -710,6 +711,7 @@
       <p class="section-title">Pipeline projets</p>
       <div class="pipeline" id="dash-pipeline">
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">En étude</span><span class="pipeline-count" id="pip-etude">0</span></div><div class="pipeline-chips" id="pip-chips-etude"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Analyse en cours</span><span class="pipeline-count" id="pip-analyse">0</span></div><div class="pipeline-chips" id="pip-chips-analyse"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis en cours</span><span class="pipeline-count" id="pip-devis">0</span></div><div class="pipeline-chips" id="pip-chips-devis"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Fabrication</span><span class="pipeline-count" id="pip-fabrication">0</span></div><div class="pipeline-chips" id="pip-chips-fabrication"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Commandé</span><span class="pipeline-count" id="pip-commande">0</span></div><div class="pipeline-chips" id="pip-chips-commande"></div></div>
@@ -1082,6 +1084,7 @@
         <label>Statut</label>
         <select id="np-statut">
           <option value="En étude">En étude</option>
+          <option value="Analyse en cours">Analyse en cours (interne)</option>
           <option value="Devis en cours">Devis en cours</option>
           <option value="Fabrication">Fabrication</option>
           <option value="Commandé">Commandé</option>
@@ -1159,6 +1162,7 @@
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
       <select id="pd-statut" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
         <option value="En étude">En étude</option>
+        <option value="Analyse en cours">Analyse en cours (interne, sans email)</option>
         <option value="Devis en cours">Devis en cours</option>
         <option value="Fabrication">Fabrication</option>
         <option value="Commandé">Commandé</option>
@@ -2402,8 +2406,8 @@
   }
 
   function buildPipeline(projets) {
-    const statuts = ['En étude', 'Devis en cours', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
-    const keys = ['etude', 'devis', 'fabrication', 'commande', 'livraison', 'termine'];
+    const statuts = ['En étude', 'Analyse en cours', 'Devis en cours', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+    const keys = ['etude', 'analyse', 'devis', 'fabrication', 'commande', 'livraison', 'termine'];
     statuts.forEach((s, i) => {
       const list = projets.filter(p => p.statut === s);
       document.getElementById('pip-' + keys[i]).textContent = list.length;
@@ -3427,7 +3431,8 @@
     if (!error) {
       showToast('Projet mis à jour');
       await Promise.all([loadProjets(), loadDashboard()]);
-      // Notifier le client du changement de statut
+      // Notifier le client du changement de statut (sauf statut interne "Analyse en cours")
+      if (statut === 'Analyse en cours') return;
       try {
         const { data: { session } } = await sb.auth.getSession();
         await fetch('/api/notify', {
@@ -3845,7 +3850,7 @@
 
   // ── HELPERS ───────────────────────────────────────────────────────
   function statusKey(s) {
-    const m = { 'En étude': 'etude', 'Devis en cours': 'devis', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Devis en cours': 'devis', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return m[s] || 'etude';
   }
 

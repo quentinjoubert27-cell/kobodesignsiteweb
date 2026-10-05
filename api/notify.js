@@ -64,6 +64,7 @@ module.exports = async function handler(req, res) {
     if (action === 'statut') {
       const { projet_id, statut } = body;
       if (!projet_id || !statut) return res.status(400).json({ error: 'Paramètres manquants' });
+      if (statut === 'Analyse en cours') return res.status(200).json({ ok: true, skipped: 'statut interne' }); // jamais d'email pour ce statut
       const { data: projet } = await sb.from('projets').select('nom, client_id').eq('id', projet_id).single();
       if (!projet) return res.status(404).json({ error: 'Projet introuvable' });
       const { data: client } = await sb.from('clients').select('email, prenom').eq('id', projet.client_id).single();

@@ -893,7 +893,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <div style="font-size:18px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px;">${actif.nom}</div>
               ${actif.description ? `<p style="font-size:13px;color:rgba(26,26,26,.5);font-weight:300;line-height:1.6;">${actif.description}</p>` : ''}
             </div>
-            <span class="status-badge status--${statusClass(actif.statut)}">${actif.statut || 'En étude'}</span>
+            <span class="status-badge status--${statusClass(actif.statut)}">${statutClient(actif.statut) || 'En étude'}</span>
           </div>
           <div class="progress-wrap">
             <div class="progress-label"><span>Avancement</span><span>${progress}%</span></div>
@@ -906,6 +906,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>`;
     }
   }
+
+  // Statut interne "Analyse en cours" : le client voit "En étude"
+  function statutClient(s) { return s === 'Analyse en cours' ? 'En étude' : s; }
 
   function statusClass(s) {
     const map = { 'En étude': 'etude', 'Devis en cours': 'devis', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
@@ -924,7 +927,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="project-card">
         <div class="project-card__header">
           <div class="project-card__name">${p.nom}</div>
-          <span class="status-badge status--${statusClass(p.statut)}">${p.statut || 'En étude'}</span>
+          <span class="status-badge status--${statusClass(p.statut)}">${statutClient(p.statut) || 'En étude'}</span>
         </div>
         ${p.description ? `<p class="project-card__desc">${p.description}</p>` : ''}
         <div class="progress-wrap">
@@ -950,7 +953,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return `<div class="commande-card">
         <div class="commande-card__header">
           <div class="commande-card__name">${p.nom}</div>
-          <span class="status-badge status--${statusClass(p.statut)}">${p.statut}</span>
+          <span class="status-badge status--${statusClass(p.statut)}">${statutClient(p.statut)}</span>
         </div>
         <div class="commande-meta">
           ${montant ? `<div class="commande-meta-item"><div class="commande-meta-item__label">Montant</div><div class="commande-meta-item__val">${montant}</div></div>` : ''}
