@@ -97,7 +97,7 @@
     .stat__trend.neutral { color: rgba(26,26,26,.3); }
 
     /* Kanban pipeline */
-    .pipeline { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 32px; }
+    .pipeline { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-bottom: 32px; }
     .pipeline-col { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 16px; }
     .pipeline-col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .pipeline-col-title { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); }
@@ -126,6 +126,7 @@
     .sb-etude { background: #fef3c7; color: #92400e; } .sb-etude::before { background: #f59e0b; }
     .sb-analyse { background: #e0e7ff; color: #3730a3; } .sb-analyse::before { background: #6366f1; }
     .sb-devis { background: #ffedd5; color: #9a3412; } .sb-devis::before { background: #f97316; }
+    .sb-devisenvoye { background: #cffafe; color: #155e75; } .sb-devisenvoye::before { background: #06b6d4; }
     .sb-fabrication { background: #dbeafe; color: #1e40af; } .sb-fabrication::before { background: #3b82f6; }
     .sb-commande { background: #ede9fe; color: #5b21b6; } .sb-commande::before { background: #7c3aed; }
     .sb-livraison { background: #dcfce7; color: #166534; } .sb-livraison::before { background: #22c55e; }
@@ -313,7 +314,7 @@
       /* Pipeline → grille compacte 5 colonnes sans scroll */
       .pipeline {
         display: grid !important;
-        grid-template-columns: repeat(7, 1fr) !important;
+        grid-template-columns: repeat(8, 1fr) !important;
         overflow-x: visible !important;
         gap: 6px !important;
         padding-bottom: 0 !important;
@@ -740,6 +741,7 @@
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">En étude</span><span class="pipeline-count" id="pip-etude">0</span></div><div class="pipeline-chips" id="pip-chips-etude"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Analyse en cours</span><span class="pipeline-count" id="pip-analyse">0</span></div><div class="pipeline-chips" id="pip-chips-analyse"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis en cours</span><span class="pipeline-count" id="pip-devis">0</span></div><div class="pipeline-chips" id="pip-chips-devis"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis envoyé</span><span class="pipeline-count" id="pip-devisenvoye">0</span></div><div class="pipeline-chips" id="pip-chips-devisenvoye"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Fabrication</span><span class="pipeline-count" id="pip-fabrication">0</span></div><div class="pipeline-chips" id="pip-chips-fabrication"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Commandé</span><span class="pipeline-count" id="pip-commande">0</span></div><div class="pipeline-chips" id="pip-chips-commande"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Livraison</span><span class="pipeline-count" id="pip-livraison">0</span></div><div class="pipeline-chips" id="pip-chips-livraison"></div></div>
@@ -1113,6 +1115,7 @@
           <option value="En étude">En étude</option>
           <option value="Analyse en cours">Analyse en cours (interne)</option>
           <option value="Devis en cours">Devis en cours</option>
+          <option value="Devis envoyé">Devis envoyé</option>
           <option value="Fabrication">Fabrication</option>
           <option value="Commandé">Commandé</option>
           <option value="Livraison">Livraison</option>
@@ -1191,6 +1194,7 @@
         <option value="En étude">En étude</option>
         <option value="Analyse en cours">Analyse en cours (interne, sans email)</option>
         <option value="Devis en cours">Devis en cours</option>
+        <option value="Devis envoyé">Devis envoyé</option>
         <option value="Fabrication">Fabrication</option>
         <option value="Commandé">Commandé</option>
         <option value="Livraison">Livraison</option>
@@ -2433,8 +2437,8 @@
   }
 
   function buildPipeline(projets) {
-    const statuts = ['En étude', 'Analyse en cours', 'Devis en cours', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
-    const keys = ['etude', 'analyse', 'devis', 'fabrication', 'commande', 'livraison', 'termine'];
+    const statuts = ['En étude', 'Analyse en cours', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+    const keys = ['etude', 'analyse', 'devis', 'devisenvoye', 'fabrication', 'commande', 'livraison', 'termine'];
     statuts.forEach((s, i) => {
       const list = projets.filter(p => p.statut === s);
       document.getElementById('pip-' + keys[i]).textContent = list.length;
@@ -3877,7 +3881,7 @@
 
   // ── HELPERS ───────────────────────────────────────────────────────
   function statusKey(s) {
-    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Devis en cours': 'devis', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return m[s] || 'etude';
   }
 
