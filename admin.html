@@ -566,6 +566,60 @@
       #modal-client .modal-actions { position: sticky; bottom: 0; background: var(--bg); padding: 12px 0 6px; margin-top: 12px; border-top: 1px solid rgba(26,26,26,.08); gap: 8px; }
       #modal-client .modal-actions .btn { padding-top: 11px; padding-bottom: 11px; }
     }
+
+    /* ── CRM / suivi client ── */
+    .rappel-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border:1px solid rgba(26,26,26,.08); border-left:4px solid #94a3b8; border-radius:10px; background:var(--white); margin-bottom:8px; flex-wrap:wrap; }
+    .rappel-item.late { border-left-color:#dc2626; background:#fef7f7; }
+    .rappel-item.today { border-left-color:var(--accent); background:#fff8f4; }
+    .rappel-date { font-size:11px; font-weight:700; letter-spacing:.04em; min-width:92px; color:rgba(26,26,26,.6); }
+    .rappel-item.late .rappel-date { color:#dc2626; }
+    .rappel-item.today .rappel-date { color:var(--accent); }
+    .rappel-main { flex:1; min-width:160px; }
+    .rappel-client { font-weight:700; font-size:13px; cursor:pointer; }
+    .rappel-client:hover { color:var(--accent); }
+    .rappel-motif { font-size:12px; color:rgba(26,26,26,.55); margin-top:2px; }
+    .rappel-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .rappel-group-title { font-size:10px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:rgba(26,26,26,.4); margin:14px 0 8px; }
+    .crm-types { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+    .crm-type-btn { font-family:var(--font); font-size:12px; font-weight:600; padding:7px 12px; border:1.5px solid rgba(26,26,26,.12); border-radius:100px; background:var(--white); cursor:pointer; }
+    .crm-type-btn.active { background:var(--black); color:#fff; border-color:var(--black); }
+    .crm-compose textarea { width:100%; min-height:84px; padding:11px 13px; border:1.5px solid rgba(26,26,26,.12); border-radius:8px; font-family:var(--font); font-size:13px; resize:vertical; }
+    .crm-compose textarea:focus { outline:none; border-color:var(--accent); }
+    .crm-compose-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+    .crm-compose-row select, .crm-compose-row input[type=date], .crm-inline input[type=date], .crm-inline input[type=text] { padding:8px 11px; border:1.5px solid rgba(26,26,26,.12); border-radius:8px; font-family:var(--font); font-size:13px; background:var(--white); }
+    .crm-chk { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; cursor:pointer; }
+    .crm-chk input { width:auto; margin:0; }
+    .crm-quick { font-family:var(--font); font-size:11px; font-weight:600; padding:5px 9px; border:1px solid rgba(26,26,26,.14); border-radius:6px; background:var(--white); cursor:pointer; }
+    .crm-quick:hover { border-color:var(--accent); color:var(--accent); }
+    .crm-inline { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+    .crm-inline input[type=text] { flex:1; min-width:140px; }
+    .crm-meta { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .crm-meta .field { margin-bottom:0; }
+    .tl { position:relative; margin-top:6px; }
+    .tl::before { content:''; position:absolute; left:15px; top:6px; bottom:6px; width:2px; background:rgba(26,26,26,.08); }
+    .tl-item { position:relative; display:flex; gap:12px; padding:0 0 16px 0; }
+    .tl-dot { position:relative; z-index:1; flex:0 0 32px; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; background:var(--white); border:2px solid #cbd5e1; }
+    .tl-body { flex:1; min-width:0; background:var(--white); border:1px solid rgba(26,26,26,.08); border-radius:10px; padding:10px 14px; }
+    .tl-item.pinned .tl-body { border-color:#f59e0b; background:#fffbeb; }
+    .tl-item.sys .tl-body { background:transparent; border-style:dashed; padding:7px 12px; }
+    .tl-head { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11px; color:rgba(26,26,26,.45); margin-bottom:4px; }
+    .tl-label { font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+    .tl-txt { font-size:13px; line-height:1.55; white-space:pre-wrap; word-break:break-word; }
+    .tl-item.sys .tl-txt { font-size:12px; color:rgba(26,26,26,.6); }
+    .tl-tools { margin-left:auto; display:flex; gap:4px; }
+    .tl-tool { border:none; background:none; cursor:pointer; font-size:13px; opacity:.45; padding:2px 4px; }
+    .tl-tool:hover { opacity:1; }
+    .temp-badge { display:inline-block; padding:2px 8px; border-radius:100px; font-size:10px; font-weight:700; margin-left:6px; }
+    .temp-chaud { background:#fee2e2; color:#b91c1c; } .temp-tiede { background:#fef3c7; color:#92400e; } .temp-froid { background:#dbeafe; color:#1d4ed8; }
+    .tag-chip { display:inline-block; padding:2px 8px; border-radius:100px; font-size:10px; font-weight:600; background:rgba(26,26,26,.07); margin-right:4px; }
+    .rappel-flag { display:inline-block; padding:2px 8px; border-radius:100px; font-size:10px; font-weight:700; background:#fff1ea; color:var(--accent); }
+    .rappel-flag.late { background:#fee2e2; color:#b91c1c; }
+    @media (max-width:600px) {
+      .crm-meta { grid-template-columns:1fr; }
+      .rappel-item { padding:10px 12px; }
+      .rappel-actions { width:100%; }
+      .rappel-actions .btn { flex:1; justify-content:center; }
+    }
   </style>
 </head>
 <body>
@@ -650,6 +704,11 @@
     <button class="nav-item" onclick="showView('clients', this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Clients
+    </button>
+    <button class="nav-item" onclick="showView('rappels', this)" id="nav-rappels">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      À rappeler
+      <span class="nav-badge" id="nav-rappels-badge" style="display:none"></span>
     </button>
     <button class="nav-item" onclick="showView('projets', this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -738,6 +797,13 @@
         </div>
       </div>
 
+      <!-- Rappels -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <p class="section-title" style="margin:0;">À rappeler</p>
+        <button class="btn btn-ghost btn-sm" onclick="showView('rappels', document.getElementById('nav-rappels'))">Tout voir</button>
+      </div>
+      <div id="dash-rappels" style="margin:12px 0 22px;"></div>
+
       <!-- Pipeline Kanban -->
       <p class="section-title">Pipeline projets</p>
       <div class="pipeline" id="dash-pipeline">
@@ -775,16 +841,38 @@
             <option value="professionnel">Professionnels</option>
           </select>
           <input type="search" id="client-search" placeholder="Rechercher…" style="padding:9px 13px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;width:200px;" oninput="filterClients()"/>
+          <select id="client-suivi-filter" style="padding:9px 13px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;cursor:pointer;" onchange="filterClients()">
+            <option value="">Tout le suivi</option>
+            <option value="rappel">À rappeler</option>
+            <option value="retard">Rappel en retard</option>
+            <option value="chaud">Leads chauds</option>
+            <option value="sans30">Sans contact &gt; 30 j</option>
+            <option value="jamais">Jamais contacté</option>
+          </select>
           <button class="btn btn-ghost" onclick="openBulkEmail()">✉ Email groupé</button>
           <button class="btn btn-primary" onclick="openModalNewClient()">+ Nouveau client</button>
         </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Nom</th><th>Type</th><th>Email</th><th>Téléphone</th><th>Code postal</th><th>Projets</th><th>Inscrit le</th><th></th></tr></thead>
-          <tbody id="clients-table"><tr><td colspan="7" class="loading">Chargement…</td></tr></tbody>
+          <thead><tr><th>Nom</th><th>Type</th><th>Email</th><th>Téléphone</th><th>Code postal</th><th>Projets</th><th>Dernier contact</th><th>Rappel</th><th></th></tr></thead>
+          <tbody id="clients-table"><tr><td colspan="9" class="loading">Chargement…</td></tr></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- ── RAPPELS ── -->
+    <div class="view" id="view-rappels">
+      <div class="view-header">
+        <div class="view-title-wrap">
+          <p class="view-eyebrow">Suivi commercial</p>
+          <h1 class="view-title">À rappeler</h1>
+        </div>
+        <button class="btn btn-primary" onclick="openModalRappel()">+ Nouveau rappel</button>
+      </div>
+      <div id="rappels-list"></div>
+      <p class="section-title" style="margin-top:28px;">Rappels effectués (30 derniers)</p>
+      <div id="rappels-done"></div>
     </div>
 
     <!-- ── CLIENT DETAIL ── -->
@@ -833,11 +921,81 @@
 
       <!-- Tabs -->
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchClientTab('projets', this)">Projets</button>
+        <button class="tab-btn active" onclick="switchClientTab('suivi', this)">Suivi</button>
+        <button class="tab-btn" onclick="switchClientTab('projets', this)">Projets</button>
         <button class="tab-btn" onclick="switchClientTab('messages', this)">Messages</button>
       </div>
 
-      <div class="tab-pane active" id="cd-tab-projets">
+      <div class="tab-pane active" id="cd-tab-suivi">
+        <div class="detail-panel">
+          <h3>Fiche commerciale</h3>
+          <div class="crm-meta">
+            <div class="field"><label>Température</label>
+              <select id="cd-temp" onchange="saveClientMeta()">
+                <option value="">Non définie</option><option value="chaud">🔥 Chaud</option><option value="tiede">Tiède</option><option value="froid">Froid</option>
+              </select></div>
+            <div class="field"><label>Source</label>
+              <select id="cd-source" onchange="saveClientMeta()">
+                <option value="">—</option><option>Site / configurateur</option><option>Formulaire de contact</option><option>Instagram</option><option>Bouche à oreille</option><option>Architecte / prescripteur</option><option>Salon / événement</option><option>Jeu concours</option><option>Autre</option>
+              </select></div>
+            <div class="field"><label>Étiquettes (séparées par des virgules)</label>
+              <input type="text" id="cd-tags" placeholder="ex : dressing, budget serré, VIP" onchange="saveClientMeta()"/></div>
+          </div>
+          <p id="cd-lastcontact" style="font-size:12px;color:rgba(26,26,26,.5);margin-top:12px;"></p>
+        </div>
+
+        <div class="detail-panel">
+          <h3>Rappels</h3>
+          <div id="cd-rappels"></div>
+          <div class="crm-inline">
+            <input type="date" id="cd-rappel-date"/>
+            <input type="text" id="cd-rappel-motif" placeholder="Motif (ex : relancer pour le devis)"/>
+            <button class="btn btn-primary btn-sm" onclick="addRappelFromFiche()">Programmer</button>
+          </div>
+          <div class="crm-inline" style="margin-top:6px;">
+            <button class="crm-quick" onclick="setRappelQuick('cd-rappel-date',1)">Demain</button>
+            <button class="crm-quick" onclick="setRappelQuick('cd-rappel-date',3)">+3 jours</button>
+            <button class="crm-quick" onclick="setRappelQuick('cd-rappel-date',7)">+1 semaine</button>
+            <button class="crm-quick" onclick="setRappelQuick('cd-rappel-date',14)">+2 semaines</button>
+          </div>
+        </div>
+
+        <div class="detail-panel crm-compose">
+          <h3>Ajouter à l'historique</h3>
+          <div class="crm-types" id="crm-types">
+            <button class="crm-type-btn active" data-t="note" onclick="setCrmType('note',this)">📝 Note</button>
+            <button class="crm-type-btn" data-t="appel" onclick="setCrmType('appel',this)">📞 Appel</button>
+            <button class="crm-type-btn" data-t="email" onclick="setCrmType('email',this)">✉️ Email</button>
+            <button class="crm-type-btn" data-t="rdv" onclick="setCrmType('rdv',this)">📅 Rendez-vous</button>
+            <button class="crm-type-btn" data-t="visite" onclick="setCrmType('visite',this)">📐 Visite / mesures</button>
+          </div>
+          <textarea id="crm-note" placeholder="Ce qui a été dit ou fait, décisions, budget évoqué, prochaine étape…"></textarea>
+          <div class="crm-compose-row">
+            <select id="crm-projet"><option value="">Projet concerné (optionnel)</option></select>
+            <label class="crm-chk"><input type="checkbox" id="crm-rappel-chk" onchange="document.getElementById('crm-rappel-box').style.display=this.checked?'flex':'none'"/> Programmer un rappel</label>
+          </div>
+          <div class="crm-compose-row" id="crm-rappel-box" style="display:none;">
+            <input type="date" id="crm-rappel-date"/>
+            <button class="crm-quick" onclick="setRappelQuick('crm-rappel-date',1)">Demain</button>
+            <button class="crm-quick" onclick="setRappelQuick('crm-rappel-date',3)">+3 j</button>
+            <button class="crm-quick" onclick="setRappelQuick('crm-rappel-date',7)">+1 sem</button>
+            <button class="crm-quick" onclick="setRappelQuick('crm-rappel-date',14)">+2 sem</button>
+          </div>
+          <div style="margin-top:12px;"><button class="btn btn-primary" onclick="submitCrmNote()">Enregistrer</button></div>
+        </div>
+
+        <div class="detail-panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+            <h3 style="margin:0;">Historique</h3>
+            <select id="crm-filter" onchange="renderTimeline()" style="padding:7px 11px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:12px;">
+              <option value="">Tout</option><option value="manuel">Notes &amp; échanges</option><option value="systeme">Événements système</option>
+            </select>
+          </div>
+          <div class="tl" id="cd-timeline"><div class="loading">Chargement…</div></div>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="cd-tab-projets">
         <div id="cd-projets"></div>
       </div>
       <div class="tab-pane" id="cd-tab-messages">
@@ -1130,6 +1288,25 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-projet')">Annuler</button>
       <button class="btn btn-primary" onclick="createProjet()">Créer le projet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nouveau rappel -->
+<div class="modal-overlay" id="modal-rappel">
+  <div class="modal">
+    <h2 class="modal-title">Nouveau rappel</h2>
+    <div class="field"><label>Client</label><select id="nr-client"></select></div>
+    <div class="field"><label>Date</label><input type="date" id="nr-date"/></div>
+    <div class="crm-inline" style="margin:-8px 0 14px;">
+      <button class="crm-quick" onclick="setRappelQuick('nr-date',1)">Demain</button>
+      <button class="crm-quick" onclick="setRappelQuick('nr-date',3)">+3 jours</button>
+      <button class="crm-quick" onclick="setRappelQuick('nr-date',7)">+1 semaine</button>
+    </div>
+    <div class="field"><label>Motif</label><input type="text" id="nr-motif" placeholder="ex : relancer pour le devis"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-rappel')">Annuler</button>
+      <button class="btn btn-primary" onclick="createRappelFromModal()">Programmer</button>
     </div>
   </div>
 </div>
@@ -1704,6 +1881,7 @@
     if (id === 'materiaux-prix') loadMateriauxPrix();
     if (id === 'newsletter') loadNewsletter();
     if (id === 'carte') loadCarteClients();
+    if (id === 'rappels') loadRappels();
   }
 
 
@@ -2456,6 +2634,7 @@
 
     // Pipeline
     buildPipeline(projets || []);
+    loadRappels();
 
     const tbody = document.getElementById('dash-table');
     if (!projets || projets.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun projet.</td></tr>'; return; }
@@ -2486,6 +2665,7 @@
   async function loadClients() {
     const { data } = await sb.from('clients').select('*, projets(id)').order('created_at', { ascending: false });
     allClients = data || [];
+    await loadCrmSummary();
     renderClientsTable(allClients);
   }
 
@@ -2499,27 +2679,44 @@
 
   function renderClientsTable(list) {
     const tbody = document.getElementById('clients-table');
-    if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Aucun client.</td></tr>'; return; }
-    tbody.innerHTML = list.map(c => `
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty">Aucun client.</td></tr>'; return; }
+    tbody.innerHTML = list.map(c => {
+      const lc = crmLastContact[c.id];
+      const rp = crmNextRappel[c.id];
+      const tmp = c.temperature ? `<span class="temp-badge temp-${escHtml(c.temperature)}">${{chaud:'Chaud',tiede:'Tiède',froid:'Froid'}[c.temperature] || ''}</span>` : '';
+      const tags = (c.tags || []).slice(0, 3).map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('');
+      return `
       <tr class="client-row" onclick="openClientDetail('${c.id}')">
-        <td>${escHtml(c.prenom)} ${escHtml(c.nom)}</td>
+        <td>${escHtml(c.prenom)} ${escHtml(c.nom)}${tmp}${tags ? '<div style="margin-top:4px;">' + tags + '</div>' : ''}</td>
         <td>${clientTypeBadge(c)}</td>
         <td style="color:rgba(26,26,26,.55);">${escHtml(c.email || '')}</td>
         <td style="color:rgba(26,26,26,.55);">${escHtml(c.telephone || '—')}</td>
         <td style="color:rgba(26,26,26,.55);">${escHtml(c.code_postal || '—')}</td>
         <td>${(c.projets || []).length}</td>
-        <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
+        <td style="font-size:11px;color:rgba(26,26,26,.5);">${lc ? relDays(lc) : '<span style="color:rgba(26,26,26,.3);">Jamais</span>'}</td>
+        <td>${rp ? `<span class="rappel-flag ${rp < crmToday() ? 'late' : ''}">${fmtDateShort(rp)}</span>` : ''}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openClientDetail('${c.id}')">Voir</button></td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
   }
 
   function filterClients() {
     const q = document.getElementById('client-search').value.toLowerCase();
     const typeFilter = document.getElementById('client-type-filter').value;
-    renderClientsTable(allClients.filter(c =>
-      (c.prenom + ' ' + c.nom + ' ' + c.email).toLowerCase().includes(q) &&
-      (!typeFilter || (c.type_client || 'particulier') === typeFilter)
-    ));
+    const suivi = (document.getElementById('client-suivi-filter') || {}).value || '';
+    const today = crmToday();
+    const limit30 = Date.now() - 30 * 86400000;
+    renderClientsTable(allClients.filter(c => {
+      const hay = (c.prenom + ' ' + c.nom + ' ' + c.email + ' ' + (c.tags || []).join(' ') + ' ' + (c.source || '')).toLowerCase();
+      if (!hay.includes(q)) return false;
+      if (typeFilter && (c.type_client || 'particulier') !== typeFilter) return false;
+      if (suivi === 'rappel' && !crmNextRappel[c.id]) return false;
+      if (suivi === 'retard' && !(crmNextRappel[c.id] && crmNextRappel[c.id] < today)) return false;
+      if (suivi === 'chaud' && c.temperature !== 'chaud') return false;
+      if (suivi === 'sans30' && !(crmLastContact[c.id] && new Date(crmLastContact[c.id]).getTime() < limit30)) return false;
+      if (suivi === 'jamais' && crmLastContact[c.id]) return false;
+      return true;
+    }));
   }
 
   async function openClientDetail(clientId) {
@@ -2550,9 +2747,9 @@
     document.querySelectorAll('#view-client-detail .tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('#view-client-detail .tab-btn').classList.add('active');
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.getElementById('cd-tab-projets').classList.add('active');
+    document.getElementById('cd-tab-suivi').classList.add('active');
 
-    await loadClientProjets(clientId);
+    await Promise.all([loadClientProjets(clientId), loadClientSuivi(clientId)]);
   }
 
   async function loadClientProjets(clientId) {
@@ -2608,6 +2805,7 @@
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.getElementById('cd-tab-' + tab).classList.add('active');
 
+    if (tab === 'suivi') loadClientSuivi(currentClientId);
     if (tab === 'messages') loadClientMessages(currentClientId);
     if (tab === 'configurations') loadClientConfigs(currentClientId);
   }
@@ -2624,6 +2822,315 @@
       await loadClientMessages(currentClientId);
       notifyClient(currentClientId, contenu);
     } else showToast('Erreur envoi message', 'err');
+  }
+
+
+  // ── CRM : SUIVI CLIENT, NOTES, RAPPELS ───────────────────────────
+  const CRM_TYPES = {
+    note:     { l: 'Note',            i: '📝', c: '#64748b' },
+    appel:    { l: 'Appel',           i: '📞', c: '#0e7490' },
+    email:    { l: 'Email',           i: '✉️', c: '#7c3aed' },
+    rdv:      { l: 'Rendez-vous',     i: '📅', c: '#c2410c' },
+    visite:   { l: 'Visite / mesures', i: '📐', c: '#166534' },
+    statut:   { l: 'Statut',          i: '🔄', c: '#94a3b8' },
+    rappel:   { l: 'Rappel',          i: '🔔', c: '#CD3E00' },
+    projet:   { l: 'Projet',          i: '📁', c: '#94a3b8' },
+    document: { l: 'Document',        i: '📄', c: '#94a3b8' },
+    message:  { l: 'Message',         i: '💬', c: '#94a3b8' },
+    client:   { l: 'Fiche client',    i: '👤', c: '#94a3b8' },
+  };
+  let crmType = 'note';
+  let crmReady = true;
+  let allRappels = [];
+  let crmLastContact = {};   // client_id -> dernière date de contact
+  let crmNextRappel = {};    // client_id -> prochaine date de rappel (en attente)
+  let crmEvents = [];
+
+  function crmToday() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function crmAddDays(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function fmtDateShort(iso) { return new Date(iso + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }); }
+  function fmtDateTime(iso) { const d = new Date(iso); return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
+  function relDays(iso) {
+    const n = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    return n <= 0 ? "Aujourd'hui" : n === 1 ? 'Hier' : 'Il y a ' + n + ' j';
+  }
+  function setRappelQuick(inputId, days) { document.getElementById(inputId).value = crmAddDays(days); }
+  function adminShort() { return (adminUser && adminUser.email || '').split('@')[0]; }
+
+  // Journalise un événement (jamais bloquant : si la table n'existe pas encore, on ignore)
+  async function logActivite(clientId, type, contenu, opts) {
+    opts = opts || {};
+    try {
+      const { error } = await sb.from('crm_activites').insert([{
+        client_id: clientId, projet_id: opts.projet_id || null, type, contenu,
+        auteur: adminUser && adminUser.email, auto: !!opts.auto,
+      }]);
+      if (error) return false;
+      crmLastContact[clientId] = (type === 'statut') ? crmLastContact[clientId] : new Date().toISOString();
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // Résumé pour la liste des clients : dernier contact + prochain rappel
+  async function loadCrmSummary() {
+    crmLastContact = {}; crmNextRappel = {};
+    const [{ data: acts, error: e1 }, { data: rps, error: e2 }] = await Promise.all([
+      sb.from('crm_activites').select('client_id, created_at, type').in('type', ['note', 'appel', 'email', 'rdv', 'visite']).order('created_at', { ascending: false }).limit(10000),
+      sb.from('crm_rappels').select('client_id, date_rappel').eq('fait', false).order('date_rappel', { ascending: true }),
+    ]);
+    crmReady = !(e1 || e2);
+    (acts || []).forEach(a => { if (!crmLastContact[a.client_id]) crmLastContact[a.client_id] = a.created_at; });
+    (rps || []).forEach(r => { if (!crmNextRappel[r.client_id]) crmNextRappel[r.client_id] = r.date_rappel; });
+  }
+
+  // ── Rappels : chargement + affichage (tableau de bord + vue dédiée) ──
+  async function loadRappels() {
+    const { data, error } = await sb.from('crm_rappels').select('*, clients(prenom, nom)').eq('fait', false).order('date_rappel', { ascending: true });
+    if (error) {
+      crmReady = false; allRappels = [];
+      const msg = '<div class="empty">Le suivi client n\'est pas encore activé : lance <b>docs/supabase-migration-crm.sql</b> dans Supabase (SQL Editor), puis recharge la page.</div>';
+      const d = document.getElementById('dash-rappels'); if (d) d.innerHTML = msg;
+      const l = document.getElementById('rappels-list'); if (l) l.innerHTML = msg;
+      updateRappelsBadge(); return;
+    }
+    crmReady = true; allRappels = data || [];
+    allRappels.forEach(r => { if (!crmNextRappel[r.client_id] || r.date_rappel < crmNextRappel[r.client_id]) crmNextRappel[r.client_id] = r.date_rappel; });
+    renderRappelsWidget(); updateRappelsBadge();
+    if (document.getElementById('view-rappels').classList.contains('active')) renderRappelsView();
+  }
+
+  function updateRappelsBadge() {
+    const today = crmToday();
+    const n = allRappels.filter(r => r.date_rappel <= today).length;
+    const b = document.getElementById('nav-rappels-badge');
+    if (!b) return;
+    if (n > 0) { b.textContent = n; b.style.display = ''; } else b.style.display = 'none';
+  }
+
+  function rappelItemHtml(r) {
+    const today = crmToday();
+    const cls = r.date_rappel < today ? 'late' : r.date_rappel === today ? 'today' : '';
+    const label = r.date_rappel < today ? 'En retard · ' + fmtDateShort(r.date_rappel) : r.date_rappel === today ? "Aujourd'hui" : fmtDateShort(r.date_rappel);
+    const nom = r.clients ? (r.clients.prenom + ' ' + r.clients.nom) : 'Client';
+    return `<div class="rappel-item ${cls}">
+      <div class="rappel-date">${label}</div>
+      <div class="rappel-main">
+        <div class="rappel-client" onclick="openClientDetail('${r.client_id}')">${escHtml(nom)}</div>
+        <div class="rappel-motif">${escHtml(r.motif || 'Rappeler')}</div>
+      </div>
+      <div class="rappel-actions">
+        <button class="btn btn-primary btn-sm" onclick="markRappelFait('${r.id}')">✓ Fait</button>
+        <button class="btn btn-ghost btn-sm" onclick="reporterRappel('${r.id}',1)">+1 j</button>
+        <button class="btn btn-ghost btn-sm" onclick="reporterRappel('${r.id}',7)">+1 sem</button>
+        <button class="btn btn-ghost btn-sm" onclick="openClientDetail('${r.client_id}')">Fiche</button>
+      </div>
+    </div>`;
+  }
+
+  function renderRappelsWidget() {
+    const el = document.getElementById('dash-rappels');
+    if (!el) return;
+    const today = crmToday(), in7 = crmAddDays(7);
+    const due = allRappels.filter(r => r.date_rappel <= today);
+    const soon = allRappels.filter(r => r.date_rappel > today && r.date_rappel <= in7);
+    if (!due.length && !soon.length) {
+      el.innerHTML = '<div class="empty" style="padding:18px;">Aucun rappel à faire ces 7 prochains jours. ' + (allRappels.length ? '(' + allRappels.length + ' plus tard)' : 'Programme-en depuis une fiche client.') + '</div>';
+      return;
+    }
+    let html = '';
+    if (due.length) html += '<div class="rappel-group-title" style="margin-top:0;">À faire maintenant (' + due.length + ')</div>' + due.slice(0, 8).map(rappelItemHtml).join('') + (due.length > 8 ? '<div style="font-size:12px;color:rgba(26,26,26,.5);margin:-2px 0 8px;">+ ' + (due.length - 8) + ' autres dans « À rappeler »</div>' : '');
+    if (soon.length) html += '<div class="rappel-group-title">Cette semaine (' + soon.length + ')</div>' + soon.slice(0, 5).map(rappelItemHtml).join('');
+    el.innerHTML = html;
+  }
+
+  async function renderRappelsView() {
+    const el = document.getElementById('rappels-list');
+    if (!crmReady) return;
+    const today = crmToday();
+    const late = allRappels.filter(r => r.date_rappel < today);
+    const td = allRappels.filter(r => r.date_rappel === today);
+    const next = allRappels.filter(r => r.date_rappel > today);
+    let html = '';
+    if (late.length) html += '<div class="rappel-group-title" style="margin-top:0;color:#dc2626;">En retard (' + late.length + ')</div>' + late.map(rappelItemHtml).join('');
+    if (td.length) html += '<div class="rappel-group-title">Aujourd\'hui (' + td.length + ')</div>' + td.map(rappelItemHtml).join('');
+    if (next.length) html += '<div class="rappel-group-title">À venir (' + next.length + ')</div>' + next.map(rappelItemHtml).join('');
+    el.innerHTML = html || '<div class="empty">Aucun rappel en attente.</div>';
+    const { data: done } = await sb.from('crm_rappels').select('*, clients(prenom, nom)').eq('fait', true).order('fait_at', { ascending: false }).limit(30);
+    document.getElementById('rappels-done').innerHTML = (done || []).length ? (done || []).map(r =>
+      `<div class="rappel-item" style="opacity:.7;"><div class="rappel-date">${r.fait_at ? new Date(r.fait_at).toLocaleDateString('fr-FR') : ''}</div>
+       <div class="rappel-main"><div class="rappel-client" onclick="openClientDetail('${r.client_id}')">${escHtml(r.clients ? r.clients.prenom + ' ' + r.clients.nom : 'Client')}</div><div class="rappel-motif">${escHtml(r.motif || '')}</div></div></div>`).join('') : '<div class="empty">Aucun rappel effectué.</div>';
+  }
+
+  async function markRappelFait(id) {
+    const r = allRappels.find(x => x.id === id);
+    const { error } = await sb.from('crm_rappels').update({ fait: true, fait_at: new Date().toISOString() }).eq('id', id);
+    if (error) return showToast('Erreur', 'err');
+    if (r) await logActivite(r.client_id, 'rappel', 'Rappel effectué' + (r.motif ? ' : ' + r.motif : ''), { auto: true, projet_id: r.projet_id });
+    showToast('Rappel fait ✓');
+    await refreshCrmAfterRappel(r && r.client_id);
+  }
+
+  async function reporterRappel(id, days) {
+    const r = allRappels.find(x => x.id === id);
+    const nd = crmAddDays(days);
+    const { error } = await sb.from('crm_rappels').update({ date_rappel: nd }).eq('id', id);
+    if (error) return showToast('Erreur', 'err');
+    if (r) await logActivite(r.client_id, 'rappel', 'Rappel reporté au ' + new Date(nd + 'T12:00:00').toLocaleDateString('fr-FR') + (r.motif ? ' (' + r.motif + ')' : ''), { auto: true, projet_id: r.projet_id });
+    showToast('Rappel reporté');
+    await refreshCrmAfterRappel(r && r.client_id);
+  }
+
+  async function deleteRappel(id) {
+    if (!confirm('Supprimer ce rappel ?')) return;
+    const r = allRappels.find(x => x.id === id);
+    await sb.from('crm_rappels').delete().eq('id', id);
+    await refreshCrmAfterRappel(r && r.client_id);
+  }
+
+  async function refreshCrmAfterRappel(clientId) {
+    await loadCrmSummary();
+    await loadRappels();
+    if (document.getElementById('view-clients').classList.contains('active')) filterClients();
+    if (currentClientId && document.getElementById('view-client-detail').classList.contains('active')) loadClientSuivi(currentClientId);
+  }
+
+  async function insertRappel(clientId, date, motif, projetId) {
+    const { error } = await sb.from('crm_rappels').insert([{ client_id: clientId, projet_id: projetId || null, date_rappel: date, motif: motif || null, created_by: adminUser && adminUser.email }]);
+    if (error) { showToast('Erreur : ' + error.message, 'err'); return false; }
+    await logActivite(clientId, 'rappel', 'Rappel programmé pour le ' + new Date(date + 'T12:00:00').toLocaleDateString('fr-FR') + (motif ? ' : ' + motif : ''), { auto: true, projet_id: projetId });
+    return true;
+  }
+
+  async function addRappelFromFiche() {
+    const date = document.getElementById('cd-rappel-date').value;
+    const motif = document.getElementById('cd-rappel-motif').value.trim();
+    if (!date) return showToast('Choisis une date', 'err');
+    if (!await insertRappel(currentClientId, date, motif)) return;
+    document.getElementById('cd-rappel-date').value = ''; document.getElementById('cd-rappel-motif').value = '';
+    showToast('Rappel programmé');
+    await refreshCrmAfterRappel(currentClientId);
+  }
+
+  function openModalRappel() {
+    populateClientSelect('nr-client', currentClientId);
+    document.getElementById('nr-date').value = crmAddDays(1);
+    document.getElementById('nr-motif').value = '';
+    document.getElementById('modal-rappel').classList.add('open');
+  }
+  async function createRappelFromModal() {
+    const cid = document.getElementById('nr-client').value, date = document.getElementById('nr-date').value, motif = document.getElementById('nr-motif').value.trim();
+    if (!cid || !date) return showToast('Client et date requis', 'err');
+    if (!await insertRappel(cid, date, motif)) return;
+    closeModal('modal-rappel'); showToast('Rappel programmé');
+    await refreshCrmAfterRappel(cid);
+  }
+
+  // ── Fiche client : onglet Suivi ──
+  function setCrmType(t, btn) {
+    crmType = t;
+    document.querySelectorAll('#crm-types .crm-type-btn').forEach(b => b.classList.toggle('active', b === btn));
+  }
+
+  async function loadClientSuivi(clientId) {
+    const client = allClients.find(c => c.id === clientId) || {};
+    document.getElementById('cd-temp').value = client.temperature || '';
+    document.getElementById('cd-source').value = client.source || '';
+    document.getElementById('cd-tags').value = (client.tags || []).join(', ');
+    document.getElementById('crm-note').value = '';
+    document.getElementById('crm-rappel-chk').checked = false;
+    document.getElementById('crm-rappel-box').style.display = 'none';
+    crmType = 'note';
+    document.querySelectorAll('#crm-types .crm-type-btn').forEach(b => b.classList.toggle('active', b.dataset.t === 'note'));
+
+    const { data: projets } = await sb.from('projets').select('id, nom, statut, created_at').eq('client_id', clientId);
+    const projetIds = (projets || []).map(p => p.id);
+    document.getElementById('crm-projet').innerHTML = '<option value="">Projet concerné (optionnel)</option>' + (projets || []).map(p => `<option value="${p.id}">${escHtml(p.nom)}</option>`).join('');
+
+    const [actsR, rapsR, msgsR, docsR] = await Promise.all([
+      sb.from('crm_activites').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
+      sb.from('crm_rappels').select('*').eq('client_id', clientId).eq('fait', false).order('date_rappel', { ascending: true }),
+      sb.from('messages_general').select('expediteur, contenu, created_at').eq('client_id', clientId).order('created_at', { ascending: false }).limit(40),
+      projetIds.length ? sb.from('documents').select('nom, uploade_par, created_at, projet_id').in('projet_id', projetIds) : Promise.resolve({ data: [] }),
+    ]);
+    if (actsR.error || rapsR.error) {
+      crmReady = false;
+      document.getElementById('cd-rappels').innerHTML = '';
+      document.getElementById('cd-timeline').innerHTML = '<div class="empty">Le suivi client n\'est pas encore activé : lance <b>docs/supabase-migration-crm.sql</b> dans Supabase (SQL Editor), puis recharge la page.</div>';
+      return;
+    }
+    const pname = id => ((projets || []).find(p => p.id === id) || {}).nom;
+    crmEvents = [];
+    (actsR.data || []).forEach(a => crmEvents.push({ id: a.id, date: a.created_at, type: a.type, txt: a.contenu, who: a.auteur, auto: a.auto, pin: a.epingle, projet: pname(a.projet_id), db: true }));
+    (projets || []).forEach(p => crmEvents.push({ date: p.created_at, type: 'projet', txt: 'Projet créé : ' + p.nom, auto: true, sys: true }));
+    (docsR.data || []).forEach(d => crmEvents.push({ date: d.created_at, type: 'document', txt: (d.uploade_par === 'client' ? 'Document reçu du client : ' : 'Document déposé : ') + d.nom, auto: true, sys: true, projet: pname(d.projet_id) }));
+    (msgsR.data || []).forEach(m => crmEvents.push({ date: m.created_at, type: 'message', txt: (m.expediteur === 'client' ? 'Message du client : ' : 'Réponse envoyée : ') + String(m.contenu || '').slice(0, 220), auto: true, sys: true }));
+    if (client.created_at) crmEvents.push({ date: client.created_at, type: 'client', txt: 'Fiche client créée', auto: true, sys: true });
+    crmEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const today = crmToday();
+    document.getElementById('cd-rappels').innerHTML = (rapsR.data || []).length ? (rapsR.data || []).map(r => {
+      const cls = r.date_rappel < today ? 'late' : r.date_rappel === today ? 'today' : '';
+      const lbl = r.date_rappel < today ? 'En retard · ' + fmtDateShort(r.date_rappel) : r.date_rappel === today ? "Aujourd'hui" : fmtDateShort(r.date_rappel);
+      return `<div class="rappel-item ${cls}"><div class="rappel-date">${lbl}</div><div class="rappel-main"><div class="rappel-motif" style="color:var(--black);font-size:13px;">${escHtml(r.motif || 'Rappeler')}</div></div>
+        <div class="rappel-actions"><button class="btn btn-primary btn-sm" onclick="markRappelFait('${r.id}')">✓ Fait</button><button class="btn btn-ghost btn-sm" onclick="reporterRappel('${r.id}',1)">+1 j</button><button class="btn btn-ghost btn-sm" onclick="reporterRappel('${r.id}',7)">+1 sem</button><button class="btn btn-ghost btn-sm" onclick="deleteRappel('${r.id}')">🗑</button></div></div>`;
+    }).join('') : '<div style="font-size:13px;color:rgba(26,26,26,.45);">Aucun rappel programmé pour ce client.</div>';
+
+    const last = (actsR.data || []).find(a => ['note', 'appel', 'email', 'rdv', 'visite'].includes(a.type));
+    document.getElementById('cd-lastcontact').textContent = last ? 'Dernier contact : ' + relDays(last.created_at) + ' (' + (CRM_TYPES[last.type] || {}).l + ', ' + fmtDateTime(last.created_at) + ')' : "Aucun contact enregistré pour l'instant.";
+    renderTimeline();
+  }
+
+  function renderTimeline() {
+    const f = document.getElementById('crm-filter').value;
+    const list = crmEvents.filter(e => !f || (f === 'manuel' ? !e.auto : e.auto));
+    const sorted = list.slice().sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0));
+    document.getElementById('cd-timeline').innerHTML = sorted.length ? sorted.map(e => {
+      const t = CRM_TYPES[e.type] || CRM_TYPES.note;
+      const sys = e.auto;
+      return `<div class="tl-item ${e.pin ? 'pinned' : ''} ${sys ? 'sys' : ''}">
+        <div class="tl-dot" style="border-color:${t.c};">${t.i}</div>
+        <div class="tl-body"><div class="tl-head"><span class="tl-label" style="color:${t.c};">${t.l}</span><span>${fmtDateTime(e.date)}</span>${e.who ? '<span>· ' + escHtml(e.who.split('@')[0]) + '</span>' : ''}${e.projet ? '<span>· ' + escHtml(e.projet) + '</span>' : ''}${e.pin ? '<span>📌</span>' : ''}
+          ${e.db ? `<span class="tl-tools">${!e.auto ? `<button class="tl-tool" title="Épingler" onclick="togglePinActivite('${e.id}',${!e.pin})">📌</button>` : ''}${!e.auto ? `<button class="tl-tool" title="Supprimer" onclick="deleteActivite('${e.id}')">🗑</button>` : ''}</span>` : ''}</div>
+          <div class="tl-txt">${escHtml(e.txt)}</div></div></div>`;
+    }).join('') : '<div class="empty">Rien dans l\'historique pour l\'instant.</div>';
+  }
+
+  async function submitCrmNote() {
+    const txt = document.getElementById('crm-note').value.trim();
+    if (!txt) return showToast("Écris quelque chose d'abord", 'err');
+    const projetId = document.getElementById('crm-projet').value || null;
+    const withRappel = document.getElementById('crm-rappel-chk').checked;
+    const rdate = document.getElementById('crm-rappel-date').value;
+    if (withRappel && !rdate) return showToast('Choisis la date du rappel', 'err');
+    const ok = await logActivite(currentClientId, crmType, txt, { projet_id: projetId });
+    if (!ok) return showToast("Erreur : le suivi n'est pas activé (lance la migration SQL CRM)", 'err');
+    if (withRappel) await insertRappel(currentClientId, rdate, txt.split('\n')[0].slice(0, 120), projetId);
+    crmLastContact[currentClientId] = new Date().toISOString();
+    showToast('Ajouté à l\'historique');
+    document.getElementById('crm-rappel-date').value = '';
+    await refreshCrmAfterRappel(currentClientId);
+  }
+
+  async function deleteActivite(id) {
+    if (!confirm('Supprimer cette entrée de l\'historique ?')) return;
+    await sb.from('crm_activites').delete().eq('id', id);
+    loadClientSuivi(currentClientId);
+  }
+  async function togglePinActivite(id, v) {
+    await sb.from('crm_activites').update({ epingle: v }).eq('id', id);
+    loadClientSuivi(currentClientId);
+  }
+
+  async function saveClientMeta() {
+    const upd = {
+      temperature: document.getElementById('cd-temp').value || null,
+      source: document.getElementById('cd-source').value || null,
+      tags: document.getElementById('cd-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+    };
+    const { error } = await sb.from('clients').update(upd).eq('id', currentClientId);
+    if (error) return showToast('Erreur (migration SQL CRM lancée ?) : ' + error.message, 'err');
+    const c = allClients.find(x => x.id === currentClientId); if (c) Object.assign(c, upd);
+    showToast('Fiche enregistrée');
   }
 
   // ── PROJETS ───────────────────────────────────────────────────────
@@ -3491,9 +3998,13 @@
     if (montant !== null) updateObj.montant = montant;
     if (date_livraison !== undefined) updateObj.date_livraison = date_livraison;
 
+    const prevProjet = allProjets.find(x => x.id === currentProjetId) || {};
     const { error } = await sb.from('projets').update(updateObj).eq('id', currentProjetId);
     if (!error) {
       showToast('Projet mis à jour');
+      if (prevProjet.client_id && prevProjet.statut !== statut) {
+        logActivite(prevProjet.client_id, 'statut', 'Statut du projet « ' + (prevProjet.nom || '') + ' » : ' + (prevProjet.statut || '—') + ' → ' + statut, { projet_id: currentProjetId, auto: true });
+      }
       await Promise.all([loadProjets(), loadDashboard()]);
       // Notifier le client du changement de statut (sauf statut interne "Analyse en cours")
       if (statut === 'Analyse en cours') return;
@@ -3562,7 +4073,7 @@
       body: JSON.stringify({ action: 'email-libre', to_email: client.email, to_prenom: client.prenom, sujet, contenu }),
     });
     btn.disabled = false; btn.textContent = 'Envoyer';
-    if (resp.ok) { closeModal('modal-email-client'); showToast('Email envoyé !'); }
+    if (resp.ok) { closeModal('modal-email-client'); showToast('Email envoyé !'); logActivite(client.id, 'email', 'Email envoyé : « ' + sujet + ' »\n\n' + contenu, { auto: true }); }
     else showToast('Erreur envoi email', 'err');
   }
 
