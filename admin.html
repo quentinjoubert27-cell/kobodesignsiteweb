@@ -2316,6 +2316,8 @@
       return '<div style="' + row + '"><div style="font-size:13px;font-weight:700;">' + escHtml(f.label) + '</div><div style="font-size:12px;color:rgba(26,26,26,.6);">' + escHtml(f.detail) + '</div>' +
         '<div style="display:flex;align-items:center;gap:4px;"><input type="number" step="10" min="0" value="' + f.prix + '" data-fam="' + f.id + '" oninput="devisSimpleEdit(this)" style="width:84px;padding:7px 8px;border:1.5px solid rgba(26,26,26,.14);border-radius:7px;font-family:var(--font);font-size:13px;text-align:right;"/> €</div></div>';
     }).join('') + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.5);">Total HT</div><div id="pd-devis-simple-total" style="font-size:18px;font-weight:800;color:var(--accent);"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(26,26,26,.6);padding-top:4px;"><div>TVA 20 %</div><div id="pd-devis-simple-tva"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:4px;"><div>Total TTC</div><div id="pd-devis-simple-ttc"></div></div>' +
       '<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="devisSimpleApply()">Utiliser ce total comme montant du projet</button></div>';
     devisSimpleTotal();
   }
@@ -2329,6 +2331,9 @@
     var t = (devisSimpleFam || []).reduce(function (s, f) { return s + (f.prix || 0); }, 0);
     var el = document.getElementById('pd-devis-simple-total');
     if (el) el.textContent = formatCurrency(t);
+    var tv = document.getElementById('pd-devis-simple-tva'), tt = document.getElementById('pd-devis-simple-ttc');
+    if (tv) tv.textContent = formatCurrency(t * 0.2);
+    if (tt) tt.textContent = formatCurrency(t * 1.2);
     return t;
   }
   async function devisSimpleApply() {
@@ -2411,11 +2416,14 @@
       '.imgs{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:12mm}figure img,.ph{width:100%;aspect-ratio:1500/1100;object-fit:cover;display:block;background:#f4f1ee}.ph{display:flex;align-items:center;justify-content:center;color:#999;font-size:11pt}' +
       'figcaption{margin-top:3mm;font-size:12pt;font-weight:400}table{width:100%;border-collapse:collapse;margin-top:10mm}td{padding:6mm 0;border-bottom:.3mm solid #ddd;vertical-align:top;font-weight:300;font-size:14pt}' +
       'td.l div{color:#6b6b6b;font-size:11pt;margin-top:1mm}td.r{text-align:right;white-space:nowrap;font-size:15pt;font-weight:400}.tot td{border:none;padding-top:8mm;font-weight:700;font-size:20pt}' +
-      '.cond{margin-top:12mm;font-size:11pt;line-height:1.7;font-weight:300;color:#444;max-width:230mm}</style>' +
+      '.sub2 td{padding:3.5mm 0;font-size:13pt}.mentions{margin-top:10mm;font-size:11pt;font-weight:400;line-height:1.7}.mentions p::before{content:"– "}.cond{margin-top:12mm;font-size:11pt;line-height:1.7;font-weight:300;color:#444;max-width:230mm}</style>' +
       '<div class="pg"><div class="tag">DEVIS</div><div class="sub">Étude de conception · Kōbō Design</div><h1>' + escHtml(p.nom || 'Meuble sur mesure') + '</h1>' + (cl ? '<div class="sub" style="margin-top:2mm">' + escHtml(cl) + '</div>' : '') +
       '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><div class="bar"></div></div>' +
-      '<div class="pg"><div class="tag">DEVIS</div><h2>Votre meuble</h2><table>' + rows + '<tr class="tot"><td class="l">Total HT</td><td class="r" style="font-size:22pt;font-weight:700">' + formatCurrency(total) + '</td></tr></table>' +
-      '<div class="cond">Prix en euros HT, hors livraison. Fixation murale prévue. Meuble livré prêt à monter, accompagné d\'une notice illustrée et d\'une vidéo de pose. Le coût de livraison sera confirmé dès communication du lieu de destination. Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi. Validité de l\'offre : 30 jours.</div><div class="bar"></div></div>';
+      '<div class="pg"><div class="tag">DEVIS</div><h2>Votre meuble</h2><table>' + rows + '<tr class="sub2"><td class="l">Total HT</td><td class="r">' + formatCurrency(total) + '</td></tr>' +
+      '<tr class="sub2"><td class="l">TVA 20 %</td><td class="r">' + formatCurrency(total * 0.2) + '</td></tr>' +
+      '<tr class="tot"><td class="l">Total TTC</td><td class="r" style="font-size:22pt;font-weight:700">' + formatCurrency(total * 1.2) + '</td></tr></table>' +
+      '<div class="mentions"><p>Les images présentées dans ce devis sont non contractuelles.</p><p>Les poignées de portes et de tiroirs ne sont pas comprises dans le prix.</p></div>' +
+      '<div class="cond">Prix en euros, TVA 20 % incluse dans le total TTC, hors livraison. Fixation murale prévue. Meuble livré prêt à monter, accompagné d\'une notice illustrée et d\'une vidéo de pose. Le coût de livraison sera confirmé dès communication du lieu de destination. Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi. Validité de l\'offre : 30 jours.</div><div class="bar"></div></div>';
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
