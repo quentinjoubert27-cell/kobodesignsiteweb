@@ -60,3 +60,17 @@ do $$ begin
   )
   update clients c set source = p.src from premiere p where lower(c.email) = p.e and c.source is null;
 exception when others then raise notice 'source auto ignorée: %', sqlerrm; end $$;
+
+-- ── Rappels : heure optionnelle + suivi des relances envoyées ──
+alter table crm_rappels add column if not exists heure time;                       -- ex : 14:30 (optionnel)
+alter table crm_rappels add column if not exists h1_envoye boolean not null default false;      -- mail « dans 1 h » envoyé
+alter table crm_rappels add column if not exists retard_envoye boolean not null default false;  -- mail « pas encore appelé » envoyé
+
+-- Journal des récaps du jour (évite les doublons) — accessible uniquement par le serveur
+create table if not exists crm_digest_log (
+  kind text not null,
+  jour date not null,
+  created_at timestamptz not null default now(),
+  primary key (kind, jour)
+);
+alter table crm_digest_log enable row level security;

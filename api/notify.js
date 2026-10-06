@@ -1,44 +1,115 @@
 // api/notify.js — Endpoint unifié pour toutes les notifications email client
-// actions : message | statut | document | email-libre | bulk-email | rappels-digest (+ GET cron)
-// ── Récap quotidien des rappels (appels à passer) envoyé à l'équipe ──
-// Déclenché chaque matin par le cron Vercel (GET + CRON_SECRET) ou à la demande depuis l'admin (POST).
-async function sendRappelsDigest(sb, resend, recipients) {
-  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const iso = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(d);
-  const today = iso(new Date());
-  const { data, error } = await sb.from('crm_rappels')
-    .select('date_rappel, motif, client_id, clients(prenom, nom, telephone, email)')
-    .eq('fait', false).lte('date_rappel', today).order('date_rappel', { ascending: true });
-  if (error) throw new Error('Lecture rappels : ' + error.message);
-  const list = data || [];
-  if (!list.length) return { count: 0, sent: 0 };
+// actions : message | statut | document | email-libre | bulk-email | rappels-digest (+ GET rappels-tick pour le planificateur)
+// ── Rappels clients : récap du matin, « pas encore appelés » du soir, « dans 1 h » et « pas appelé » ──
+const escH = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function parisNow() {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hour12: false }).formatToParts(new Date()).map(p => [p.type, p.value]));
+  const h = parseInt(parts.hour, 10) % 24;
+  return { today: parts.year + '-' + parts.month + '-' + parts.day, h, min: h * 60 + parseInt(parts.minute, 10), weekday: parts.weekday };
+}
+const hhmm = t => (t || '').slice(0, 5);
+const toMin = t => { const [h, m] = (t || '0:0').split(':'); return parseInt(h, 10) * 60 + parseInt(m, 10); };
+
+function rappelsHtml(list, today, titre, kicker) {
   const row = r => {
     const c = r.clients || {};
     const late = r.date_rappel < today;
-    const tel = c.telephone ? `<a href="tel:${esc(c.telephone.replace(/\s/g, ''))}" style="color:#CD3E00;text-decoration:none;font-weight:700;">${esc(c.telephone)}</a>` : '<span style="color:#aaa;">pas de téléphone</span>';
+    const tel = c.telephone ? `<a href="tel:${escH(c.telephone.replace(/\s/g, ''))}" style="color:#CD3E00;text-decoration:none;font-weight:700;">${escH(c.telephone)}</a>` : '<span style="color:#aaa;">pas de téléphone</span>';
+    const quand = late ? 'En retard<br>' + new Date(r.date_rappel + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : (r.heure ? hhmm(r.heure) : "Aujourd'hui");
     return `<tr><td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:top;">
-      <div style="font-weight:800;font-size:14px;">${esc((c.prenom || '') + ' ' + (c.nom || ''))}</div>
-      <div style="font-size:13px;color:#555;margin-top:2px;">${esc(r.motif || 'Rappeler')}</div>
-      <div style="font-size:12px;margin-top:4px;">${tel}${c.email ? ' · ' + esc(c.email) : ''}</div></td>
-      <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:top;white-space:nowrap;font-size:12px;font-weight:700;color:${late ? '#dc2626' : '#CD3E00'};">${late ? 'En retard<br>' + new Date(r.date_rappel + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : "Aujourd'hui"}</td></tr>`;
+      <div style="font-weight:800;font-size:14px;">${escH((c.prenom || '') + ' ' + (c.nom || ''))}</div>
+      <div style="font-size:13px;color:#555;margin-top:2px;">${escH(r.motif || 'Rappeler')}</div>
+      <div style="font-size:12px;margin-top:4px;">${tel}${c.email ? ' · ' + escH(c.email) : ''}</div></td>
+      <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:top;white-space:nowrap;font-size:12px;font-weight:700;color:${late ? '#dc2626' : '#CD3E00'};">${quand}</td></tr>`;
   };
-  const n = list.length;
-  const html = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
+  return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
     <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
-      <p style="color:#CD3E00;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px">Kobo Design · Suivi client</p>
-      <h1 style="color:#FFFAF0;font-size:21px;font-weight:800;margin:0;">${n} client${n > 1 ? 's' : ''} à rappeler</h1>
+      <p style="color:#CD3E00;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px">${kicker}</p>
+      <h1 style="color:#FFFAF0;font-size:21px;font-weight:800;margin:0;">${titre}</h1>
     </div>
     <div style="background:#F2EDE3;padding:24px 32px;border-radius:0 0 8px 8px;">
       <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;">${list.map(row).join('')}</table>
       <p style="margin:22px 0 0;"><a href="https://www.kobo-design.fr/admin" style="display:inline-block;background:#CD3E00;color:#fff;padding:13px 28px;border-radius:6px;font-weight:700;font-size:13px;text-decoration:none;">Ouvrir le tableau de bord</a></p>
     </div></div>`;
-  const subject = `📞 ${n} client${n > 1 ? 's' : ''} à rappeler aujourd'hui`;
-  let sent = 0;
-  for (const to of recipients) {
-    await resend.emails.send({ from: 'Kobo Design <contact@kobo-design.fr>', to, subject, html });
-    sent++;
-  }
+}
+
+// Notification push optionnelle sur le téléphone (appli gratuite ntfy) : variable NTFY_TOPIC
+async function pushPhone(title, message) {
+  const topic = process.env.NTFY_TOPIC;
+  if (!topic) return;
+  try {
+    await fetch('https://ntfy.sh/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ topic, title, message, click: 'https://www.kobo-design.fr/admin', priority: 4 }) });
+  } catch (e) { console.warn('ntfy:', e.message); }
+}
+
+async function fetchDue(sb, today) {
+  const { data, error } = await sb.from('crm_rappels')
+    .select('id, date_rappel, heure, motif, client_id, created_by, clients(prenom, nom, telephone, email)')
+    .eq('fait', false).lte('date_rappel', today).order('date_rappel', { ascending: true }).order('heure', { ascending: true, nullsFirst: false });
+  if (error) throw new Error('Lecture rappels : ' + error.message);
+  return data || [];
+}
+
+async function sendMail(resend, recipients, subject, html) {
+  for (const to of recipients) await resend.emails.send({ from: 'Kobo Design <contact@kobo-design.fr>', to, subject, html });
+  return recipients.length;
+}
+
+// Récap complet (matin ou à la demande depuis l'admin)
+async function sendRappelsDigest(sb, resend, recipients) {
+  const { today } = parisNow();
+  const list = await fetchDue(sb, today);
+  if (!list.length) return { count: 0, sent: 0 };
+  const n = list.length;
+  const sent = await sendMail(resend, recipients, `📞 ${n} client${n > 1 ? 's' : ''} à rappeler aujourd'hui`, rappelsHtml(list, today, `${n} client${n > 1 ? 's' : ''} à rappeler`, 'Kobo Design · Suivi client'));
+  await pushPhone('📞 À rappeler aujourd\'hui', list.slice(0, 6).map(r => (r.clients ? r.clients.prenom + ' ' + r.clients.nom : 'Client') + (r.heure ? ' (' + hhmm(r.heure) + ')' : '')).join('\n') + (n > 6 ? '\n+ ' + (n - 6) + ' autres' : ''));
   return { count: n, sent };
+}
+
+// Appelé toutes les ~15 min par un planificateur externe (cron-job.org) avec CRON_SECRET
+async function runRappelsTick(sb, resend, admins) {
+  const now = parisNow();
+  const out = { matin: false, soir: false, h1: 0, retard: 0 };
+  const claim = async kind => { const { error } = await sb.from('crm_digest_log').insert({ kind, jour: now.today }); return !error; };
+
+  // 1) Récap du matin (lun→sam, à partir de 8h)
+  if (now.weekday !== 'Sun' && now.h >= 8 && now.h < 12 && await claim('matin')) {
+    try { const r = await sendRappelsDigest(sb, resend, admins); out.matin = r.count; }
+    catch (e) { await sb.from('crm_digest_log').delete().eq('kind', 'matin').eq('jour', now.today); throw e; }
+  }
+
+  const due = await fetchDue(sb, now.today);
+  const toWho = r => (r.created_by && admins.includes(r.created_by)) ? [r.created_by] : admins;
+
+  // 2) Un mail 1 h avant, pour les rappels avec une heure
+  for (const r of due.filter(x => x.date_rappel === now.today && x.heure)) {
+    const diff = toMin(r.heure) - now.min;
+    const { data: flags } = await sb.from('crm_rappels').select('h1_envoye, retard_envoye').eq('id', r.id).single();
+    if (!flags) continue;
+    if (!flags.h1_envoye && diff <= 60 && diff >= -5) {
+      await sendMail(resend, toWho(r), `⏰ Appel à passer dans ${Math.max(diff, 1)} min : ${(r.clients || {}).prenom || ''} ${(r.clients || {}).nom || ''}`, rappelsHtml([r], now.today, `Appel à passer à ${hhmm(r.heure)}`, 'Kobo Design · Rappel dans 1 h'));
+      await pushPhone('⏰ Appel dans ~1 h', ((r.clients || {}).prenom || '') + ' ' + ((r.clients || {}).nom || '') + ' — ' + hhmm(r.heure) + (r.motif ? '\n' + r.motif : ''));
+      await sb.from('crm_rappels').update({ h1_envoye: true }).eq('id', r.id); out.h1++;
+    }
+    // 3) Toujours pas marqué comme fait 1 h après l'heure prévue
+    if (!flags.retard_envoye && -diff >= 60) {
+      await sendMail(resend, toWho(r), `⚠️ Pas encore appelé : ${(r.clients || {}).prenom || ''} ${(r.clients || {}).nom || ''}`, rappelsHtml([r], now.today, `Cet appel n'a pas été fait (prévu à ${hhmm(r.heure)})`, 'Kobo Design · Rappel manqué'));
+      await pushPhone('⚠️ Pas encore appelé', ((r.clients || {}).prenom || '') + ' ' + ((r.clients || {}).nom || '') + ' — prévu à ' + hhmm(r.heure));
+      await sb.from('crm_rappels').update({ retard_envoye: true }).eq('id', r.id); out.retard++;
+    }
+  }
+
+  // 4) Récap du soir (lun→sam, à partir de 17h) : ce qui n'a toujours pas été fait
+  if (now.weekday !== 'Sun' && now.h >= 17 && now.h < 20 && await claim('soir')) {
+    const left = due.filter(x => x.date_rappel < now.today || !x.heure || toMin(x.heure) < now.min);
+    if (left.length) {
+      const n = left.length;
+      await sendMail(resend, admins, `⚠️ ${n} client${n > 1 ? 's' : ''} pas encore rappelé${n > 1 ? 's' : ''}`, rappelsHtml(left, now.today, `${n} rappel${n > 1 ? 's' : ''} pas encore fait${n > 1 ? 's' : ''}`, 'Kobo Design · Point de fin de journée'));
+      await pushPhone('⚠️ Pas encore rappelés', left.slice(0, 6).map(r => (r.clients ? r.clients.prenom + ' ' + r.clients.nom : 'Client')).join('\n'));
+      out.soir = n;
+    }
+  }
+  return out;
 }
 
 const DEFAULT_ADMINS = 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr,armelle@symetry.fr';
@@ -48,17 +119,17 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  // Cron quotidien Vercel : GET /api/notify?action=rappels-digest avec Authorization: Bearer $CRON_SECRET
-  if (req.method === 'GET' && req.query && req.query.action === 'rappels-digest') {
+  // Cron quotidien Vercel : GET /api/notify?action=rappels-tick avec Authorization: Bearer $CRON_SECRET
+  if (req.method === 'GET' && req.query && req.query.action === 'rappels-tick') {
     const secret = process.env.CRON_SECRET;
     if (!secret || (req.headers['authorization'] || '') !== 'Bearer ' + secret) return res.status(401).json({ error: 'Non autorisé' });
     try {
       const { createClient } = require('@supabase/supabase-js');
       const { Resend } = require('resend');
       const sbc = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-      const out = await sendRappelsDigest(sbc, new Resend(process.env.RESEND_API_KEY), (process.env.ADMIN_EMAILS || DEFAULT_ADMINS).split(',').map(e => e.trim()).filter(Boolean));
+      const out = await runRappelsTick(sbc, new Resend(process.env.RESEND_API_KEY), (process.env.ADMIN_EMAILS || DEFAULT_ADMINS).split(',').map(e => e.trim()).filter(Boolean));
       return res.status(200).json({ ok: true, ...out });
-    } catch (err) { console.error('rappels-digest cron:', err); return res.status(500).json({ error: err.message }); }
+    } catch (err) { console.error('rappels-tick cron:', err); return res.status(500).json({ error: err.message }); }
   }
   if (req.method !== 'POST') return res.status(405).end();
 
