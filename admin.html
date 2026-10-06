@@ -769,7 +769,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
           <h3 style="margin:0;">🔔 À rappeler</h3>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-ghost btn-sm" id="btn-digest" onclick="sendRappelsDigest()">✉ M'envoyer le récap</button>
+            <button class="btn btn-ghost btn-sm" id="btn-digest" onclick="sendRappelsDigest()">✉ Envoyer le récap</button>
             <button class="btn btn-primary btn-sm" onclick="openModalRappel()">+ Nouveau rappel</button>
           </div>
         </div>
@@ -2950,11 +2950,11 @@
     btn.disabled = true; const old = btn.textContent; btn.textContent = 'Envoi…';
     try {
       const { data: { session } } = await sb.auth.getSession();
-      const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'rappels-digest', only: adminUser.email }) });
+      const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'rappels-digest' }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) showToast('Erreur : ' + (j.error || r.status), 'err');
       else if (!j.count) showToast('Aucun rappel à faire aujourd\'hui : pas de mail envoyé');
-      else showToast('Récap envoyé à ' + adminUser.email + ' (' + j.count + ' rappel' + (j.count > 1 ? 's' : '') + ')');
+      else showToast('Récap envoyé à contact@kobo-design.fr (' + j.count + ' rappel' + (j.count > 1 ? 's' : '') + ')');
     } catch (e) { showToast('Erreur envoi', 'err'); }
     btn.disabled = false; btn.textContent = old;
   }

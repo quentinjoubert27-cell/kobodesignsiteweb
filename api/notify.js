@@ -90,6 +90,9 @@ async function runRappelsTick(sb, resend, admins) {
   return out;
 }
 
+// Destinataire des récaps de rappels (modifiable via la variable RAPPELS_EMAIL)
+const RAPPELS_TO = () => (process.env.RAPPELS_EMAIL || 'contact@kobo-design.fr').split(',').map(e => e.trim()).filter(Boolean);
+
 const DEFAULT_ADMINS = 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr,armelle@symetry.fr';
 
 module.exports = async function handler(req, res) {
@@ -105,7 +108,7 @@ module.exports = async function handler(req, res) {
       const { createClient } = require('@supabase/supabase-js');
       const { Resend } = require('resend');
       const sbc = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-      const out = await runRappelsTick(sbc, new Resend(process.env.RESEND_API_KEY), (process.env.ADMIN_EMAILS || DEFAULT_ADMINS).split(',').map(e => e.trim()).filter(Boolean));
+      const out = await runRappelsTick(sbc, new Resend(process.env.RESEND_API_KEY), RAPPELS_TO());
       return res.status(200).json({ ok: true, ...out });
     } catch (err) { console.error('rappels-tick cron:', err); return res.status(500).json({ error: err.message }); }
   }
@@ -141,8 +144,7 @@ module.exports = async function handler(req, res) {
 
     // ── ACTION : rappels-digest (à la demande depuis l'admin) ──────
     if (action === 'rappels-digest') {
-      const to = body.only && ADMIN_EMAILS.includes(body.only) ? [body.only] : ADMIN_EMAILS;
-      const out = await sendRappelsDigest(sb, resend, to);
+      const out = await sendRappelsDigest(sb, resend, RAPPELS_TO());
       return res.status(200).json({ ok: true, ...out });
     }
 
