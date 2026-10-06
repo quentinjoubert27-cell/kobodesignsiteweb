@@ -586,7 +586,7 @@
     .crm-compose textarea { width:100%; min-height:84px; padding:11px 13px; border:1.5px solid rgba(26,26,26,.12); border-radius:8px; font-family:var(--font); font-size:13px; resize:vertical; }
     .crm-compose textarea:focus { outline:none; border-color:var(--accent); }
     .crm-compose-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
-    .crm-compose-row select, .crm-compose-row input[type=date], .crm-compose-row input[type=time], .crm-inline input[type=date], .crm-inline input[type=time], .crm-inline input[type=text] { padding:8px 11px; border:1.5px solid rgba(26,26,26,.12); border-radius:8px; font-family:var(--font); font-size:13px; background:var(--white); }
+    .crm-compose-row select, .crm-compose-row input[type=date], .crm-inline input[type=date], .crm-inline input[type=text] { padding:8px 11px; border:1.5px solid rgba(26,26,26,.12); border-radius:8px; font-family:var(--font); font-size:13px; background:var(--white); }
     .crm-chk { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; cursor:pointer; }
     .crm-chk input { width:auto; margin:0; }
     .crm-quick { font-family:var(--font); font-size:11px; font-weight:600; padding:5px 9px; border:1px solid rgba(26,26,26,.14); border-radius:6px; background:var(--white); cursor:pointer; }
@@ -941,7 +941,6 @@
           <div id="cd-rappels"></div>
           <div class="crm-inline">
             <input type="date" id="cd-rappel-date"/>
-            <input type="time" id="cd-rappel-time" title="Heure (optionnel)"/>
             <input type="text" id="cd-rappel-motif" placeholder="Motif (ex : relancer pour le devis)"/>
             <button class="btn btn-primary btn-sm" onclick="addRappelFromFiche()">Programmer</button>
           </div>
@@ -969,7 +968,6 @@
           </div>
           <div class="crm-compose-row" id="crm-rappel-box" style="display:none;">
             <input type="date" id="crm-rappel-date"/>
-            <input type="time" id="crm-rappel-time" title="Heure (optionnel)"/>
             <button class="crm-quick" onclick="setRappelQuick('crm-rappel-date',1)">Demain</button>
             <button class="crm-quick" onclick="setRappelQuick('crm-rappel-date',3)">+3 j</button>
             <button class="crm-quick" onclick="setRappelQuick('crm-rappel-date',7)">+1 sem</button>
@@ -1292,7 +1290,6 @@
     <h2 class="modal-title">Nouveau rappel</h2>
     <div class="field"><label>Client</label><select id="nr-client"></select></div>
     <div class="field"><label>Date</label><input type="date" id="nr-date"/></div>
-    <div class="field"><label>Heure (optionnel — mail 1 h avant)</label><input type="time" id="nr-time"/></div>
     <div class="crm-inline" style="margin:-8px 0 14px;">
       <button class="crm-quick" onclick="setRappelQuick('nr-date',1)">Demain</button>
       <button class="crm-quick" onclick="setRappelQuick('nr-date',3)">+3 jours</button>
@@ -2879,7 +2876,7 @@
 
   // ── Rappels : chargement + affichage (tableau de bord + vue dédiée) ──
   async function loadRappels() {
-    const { data, error } = await sb.from('crm_rappels').select('*, clients(prenom, nom)').eq('fait', false).order('date_rappel', { ascending: true }).order('heure', { ascending: true, nullsFirst: false });
+    const { data, error } = await sb.from('crm_rappels').select('*, clients(prenom, nom)').eq('fait', false).order('date_rappel', { ascending: true });
     if (error) {
       crmReady = false; allRappels = [];
       const msg = '<div class="empty">Le suivi client n\'est pas encore activé : lance <b>docs/supabase-migration-crm.sql</b> dans Supabase (SQL Editor), puis recharge la page.</div>';
@@ -2902,8 +2899,7 @@
   function rappelItemHtml(r) {
     const today = crmToday();
     const cls = r.date_rappel < today ? 'late' : r.date_rappel === today ? 'today' : '';
-    const hh = r.heure ? ' · ' + r.heure.slice(0, 5) : '';
-    const label = (r.date_rappel < today ? 'En retard · ' + fmtDateShort(r.date_rappel) : r.date_rappel === today ? "Aujourd'hui" : fmtDateShort(r.date_rappel)) + hh;
+    const label = (r.date_rappel < today ? 'En retard · ' + fmtDateShort(r.date_rappel) : r.date_rappel === today ? "Aujourd'hui" : fmtDateShort(r.date_rappel));
     const nom = r.clients ? (r.clients.prenom + ' ' + r.clients.nom) : 'Client';
     return `<div class="rappel-item ${cls}">
       <div class="rappel-date">${label}</div>
@@ -2996,10 +2992,10 @@
     if (currentClientId && document.getElementById('view-client-detail').classList.contains('active')) loadClientSuivi(currentClientId);
   }
 
-  async function insertRappel(clientId, date, motif, projetId, heure) {
-    const { error } = await sb.from('crm_rappels').insert([{ client_id: clientId, projet_id: projetId || null, date_rappel: date, heure: heure || null, motif: motif || null, created_by: adminUser && adminUser.email }]);
+  async function insertRappel(clientId, date, motif, projetId) {
+    const { error } = await sb.from('crm_rappels').insert([{ client_id: clientId, projet_id: projetId || null, date_rappel: date, motif: motif || null, created_by: adminUser && adminUser.email }]);
     if (error) { showToast('Erreur : ' + error.message, 'err'); return false; }
-    await logActivite(clientId, 'rappel', 'Rappel programmé pour le ' + new Date(date + 'T12:00:00').toLocaleDateString('fr-FR') + (heure ? ' à ' + heure : '') + (motif ? ' : ' + motif : ''), { auto: true, projet_id: projetId });
+    await logActivite(clientId, 'rappel', 'Rappel programmé pour le ' + new Date(date + 'T12:00:00').toLocaleDateString('fr-FR') + (motif ? ' : ' + motif : ''), { auto: true, projet_id: projetId });
     return true;
   }
 
@@ -3007,8 +3003,7 @@
     const date = document.getElementById('cd-rappel-date').value;
     const motif = document.getElementById('cd-rappel-motif').value.trim();
     if (!date) return showToast('Choisis une date', 'err');
-    if (!await insertRappel(currentClientId, date, motif, null, document.getElementById('cd-rappel-time').value)) return;
-    document.getElementById('cd-rappel-time').value = '';
+    if (!await insertRappel(currentClientId, date, motif)) return;
     document.getElementById('cd-rappel-date').value = ''; document.getElementById('cd-rappel-motif').value = '';
     showToast('Rappel programmé');
     await refreshCrmAfterRappel(currentClientId);
@@ -3018,13 +3013,12 @@
     populateClientSelect('nr-client', currentClientId);
     document.getElementById('nr-date').value = crmAddDays(1);
     document.getElementById('nr-motif').value = '';
-    document.getElementById('nr-time').value = '';
     document.getElementById('modal-rappel').classList.add('open');
   }
   async function createRappelFromModal() {
     const cid = document.getElementById('nr-client').value, date = document.getElementById('nr-date').value, motif = document.getElementById('nr-motif').value.trim();
     if (!cid || !date) return showToast('Client et date requis', 'err');
-    if (!await insertRappel(cid, date, motif, null, document.getElementById('nr-time').value)) return;
+    if (!await insertRappel(cid, date, motif)) return;
     closeModal('modal-rappel'); showToast('Rappel programmé');
     await refreshCrmAfterRappel(cid);
   }
@@ -3074,7 +3068,7 @@
     const today = crmToday();
     document.getElementById('cd-rappels').innerHTML = (rapsR.data || []).length ? (rapsR.data || []).map(r => {
       const cls = r.date_rappel < today ? 'late' : r.date_rappel === today ? 'today' : '';
-      const lbl = (r.date_rappel < today ? 'En retard · ' + fmtDateShort(r.date_rappel) : r.date_rappel === today ? "Aujourd'hui" : fmtDateShort(r.date_rappel)) + (r.heure ? ' · ' + r.heure.slice(0, 5) : '');
+      const lbl = (r.date_rappel < today ? 'En retard · ' + fmtDateShort(r.date_rappel) : r.date_rappel === today ? "Aujourd'hui" : fmtDateShort(r.date_rappel));
       return `<div class="rappel-item ${cls}"><div class="rappel-date">${lbl}</div><div class="rappel-main"><div class="rappel-motif" style="color:var(--black);font-size:13px;">${escHtml(r.motif || 'Rappeler')}</div></div>
         <div class="rappel-actions"><button class="btn btn-primary btn-sm" onclick="markRappelFait('${r.id}')">✓ Fait</button><button class="btn btn-ghost btn-sm" onclick="reporterRappel('${r.id}',1)">+1 j</button><button class="btn btn-ghost btn-sm" onclick="reporterRappel('${r.id}',7)">+1 sem</button><button class="btn btn-ghost btn-sm" onclick="deleteRappel('${r.id}')">🗑</button></div></div>`;
     }).join('') : '<div style="font-size:13px;color:rgba(26,26,26,.45);">Aucun rappel programmé pour ce client.</div>';
@@ -3108,10 +3102,10 @@
     if (withRappel && !rdate) return showToast('Choisis la date du rappel', 'err');
     const ok = await logActivite(currentClientId, crmType, txt, { projet_id: projetId });
     if (!ok) return showToast("Erreur : le suivi n'est pas activé (lance la migration SQL CRM)", 'err');
-    if (withRappel) await insertRappel(currentClientId, rdate, txt.split('\n')[0].slice(0, 120), projetId, document.getElementById('crm-rappel-time').value);
+    if (withRappel) await insertRappel(currentClientId, rdate, txt.split('\n')[0].slice(0, 120), projetId);
     crmLastContact[currentClientId] = new Date().toISOString();
     showToast('Ajouté à l\'historique');
-    document.getElementById('crm-rappel-date').value = ''; document.getElementById('crm-rappel-time').value = '';
+    document.getElementById('crm-rappel-date').value = '';
     await refreshCrmAfterRappel(currentClientId);
   }
 
