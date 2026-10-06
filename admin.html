@@ -1430,6 +1430,17 @@
       <div id="pd-devis">Chargement…</div>
     </div>
 
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);">Devis simplifié (à envoyer au client)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" id="btn-devis-pdf" onclick="openDevisSimplePdf()">📄 Créer le PDF (images + devis)</button>
+        </div>
+      </div>
+      <div id="pd-devis-simple" class="detail-panel" style="padding:14px 16px;margin:0;"><div class="empty" style="padding:6px 0;font-size:12px;">Chargement…</div></div>
+      <p style="font-size:11px;color:rgba(26,26,26,.45);margin-top:8px;">Un clic : les 2 images (meuble fermé / ouvert) sont fabriquées sur ton Mac (≈ 40 s, l'assistant « Rendus Kōbō » doit être lancé) puis le PDF s'ouvre pour l'enregistrer.</p>
+    </div>
+
     <div class="modal-sep"></div>
 
     <!-- Documents -->
@@ -1644,6 +1655,7 @@
     'Chateau Brown','Eternal Marquina','Jardin Emerald','Linen Cream','Miami White','White Arabesque',
     'Blanc Gris','Blanc Multicolore','Noir'];
 
+  var currentProjetRc = null; // config brute (raw_config) du projet ouvert — JSON du meuble
   var currentTarifsGlobaux = null; // { panel_m2: {...}, edge_banding_ml, screw_unit, ... } — chargé depuis Supabase
 
   async function loadMateriauxPrix() {
@@ -2223,6 +2235,175 @@
 
   var currentDevisQuantities = null;
 
+
+  // ── DEVIS SIMPLIFIÉ (client) : quantités par famille + un prix par grande famille ──────────
+  var devisSimpleFam = null; // [{id,label,detail,prix}] état courant (prix modifiables)
+
+  function devisFamiliesCompute() {
+    var ctx = collectDevisAutoContext();
+    if (!ctx.q) return null;
+    var q = ctx.q, g = ctx.g || {}, pm = g.panel_m2 || {};
+    var cat = function (k) { var b = q[k] || {}; return Object.keys(b).reduce(function (sum, m) { return sum + b[m] * (pm[k + '|' + m] || 0); }, 0); };
+    var fin = (ctx.finitionM2 || 0) * (ctx.finitionUnitM2 || 0);
+    var cost = {
+      caisson: cat('panels_caisson_m2') + fin + (q.corner_brackets || 0) * (g.corner_bracket_unit || 0),
+      facades: cat('panels_porte_m2') + cat('panels_tiroir_m2') + (q.hinges || 0) * (g.hinge_unit || 0) + (q.drawer_mechanisms || 0) * (g.drawer_mechanism_unit || 0),
+      amenagement: cat('panels_etagere_m2') + cat('panels_tiroir_caisse_m2') + (q.bars_count || 0) * (g.bar_unit || 0),
+      plan: cat('panels_plan_m2')
+    };
+    // chants, vis et tourillons : répartis au prorata des familles (le client ne voit pas ce détail)
+    var common = (ctx.edgeBandingTotalMl || 0) * (g.edge_banding_ml || 0) + (q.screws || 0) * (g.screw_unit || 0) + (q.dowels || 0) * (g.dowel_unit || 0);
+    var base = cost.caisson + cost.facades + cost.amenagement + cost.plan;
+    var coef = g.coefficient_revente || 2;
+    var out = {};
+    Object.keys(cost).forEach(function (k) {
+      var part = base > 0 ? cost[k] / base : (k === 'caisson' ? 1 : 0);
+      out[k] = Math.round((cost[k] + common * part) * coef / 10) * 10;
+    });
+    return out;
+  }
+
+  function devisSimpleDetails() {
+    var rc = currentProjetRc || {}, q = currentDevisQuantities || {};
+    var m = rc.meuble || {};
+    function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
+    var left = arr(rc.tvSide && rc.tvSide.left), right = arr(rc.tvSide && rc.tvSide.right);
+    var nCais = 1 + (rc.caisson2 ? 1 : 0) + left.length + right.length + (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm ? 1 : 0);
+    var W = (m.L || 0) + left.concat(right).reduce(function (s, r) { return s + (r.W_cm || 0); }, 0) + (rc.caisson2 ? (rc.caisson2.L_cm || 0) : 0);
+    var H = Math.max.apply(null, [m.H || 0].concat(left.concat(right).map(function (r) { return r.H_cm || 0; })));
+    var plur = function (n, w) { return n + ' ' + w + (n > 1 ? 's' : ''); };
+    var facades = [], amen = [];
+    if (q.doors_count) facades.push(plur(q.doors_count, 'porte'));
+    if (q.drawers_count) facades.push(plur(q.drawers_count, 'tiroir'));
+    if (q.shelves_count) amen.push(plur(q.shelves_count, 'étagère'));
+    if (q.separators_count) amen.push(plur(q.separators_count, 'séparateur'));
+    if (q.bars_count) amen.push(plur(q.bars_count, 'tringle'));
+    return {
+      caisson: plur(nCais, 'caisson') + ' — ' + Math.round(W) + ' × ' + Math.round(H) + ' × ' + Math.round(m.P || 0) + ' cm, ' + (m.matLabel || 'décor à confirmer') + ', plinthe et fixation murale',
+      facades: facades.join(', '), amenagement: amen.join(', '), plan: 'Plan de travail'
+    };
+  }
+
+  function renderDevisSimple() {
+    var el = document.getElementById('pd-devis-simple');
+    if (!el) return;
+    var prix = devisFamiliesCompute();
+    if (!prix) { el.innerHTML = '<div class="empty" style="padding:6px 0;font-size:12px;">Pas de configuration liée à ce projet.</div>'; return; }
+    var det = devisSimpleDetails();
+    var labels = { caisson: 'Caissons', facades: 'Façades (portes, tiroirs)', amenagement: 'Aménagement intérieur', plan: 'Plan de travail' };
+    var prev = {}; (devisSimpleFam || []).forEach(function (f) { if (f.edited) prev[f.id] = f.prix; });
+    devisSimpleFam = Object.keys(labels).filter(function (k) { return det[k] && (k === 'caisson' || prix[k] > 0 || (k !== 'plan' && det[k])); })
+      .filter(function (k) { return k !== 'plan' || prix.plan > 0; })
+      .map(function (k) { return { id: k, label: labels[k], detail: det[k], prix: prev[k] != null ? prev[k] : prix[k], edited: prev[k] != null }; });
+    var row = 'display:grid;grid-template-columns:1.2fr 2fr 110px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
+    el.innerHTML = devisSimpleFam.map(function (f) {
+      return '<div style="' + row + '"><div style="font-size:13px;font-weight:700;">' + escHtml(f.label) + '</div><div style="font-size:12px;color:rgba(26,26,26,.6);">' + escHtml(f.detail) + '</div>' +
+        '<div style="display:flex;align-items:center;gap:4px;"><input type="number" step="10" min="0" value="' + f.prix + '" data-fam="' + f.id + '" oninput="devisSimpleEdit(this)" style="width:84px;padding:7px 8px;border:1.5px solid rgba(26,26,26,.14);border-radius:7px;font-family:var(--font);font-size:13px;text-align:right;"/> €</div></div>';
+    }).join('') + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.5);">Total HT</div><div id="pd-devis-simple-total" style="font-size:18px;font-weight:800;color:var(--accent);"></div></div>' +
+      '<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="devisSimpleApply()">Utiliser ce total comme montant du projet</button></div>';
+    devisSimpleTotal();
+  }
+
+  function devisSimpleEdit(inp) {
+    var f = (devisSimpleFam || []).find(function (x) { return x.id === inp.dataset.fam; });
+    if (f) { f.prix = parseFloat(inp.value) || 0; f.edited = true; }
+    devisSimpleTotal();
+  }
+  function devisSimpleTotal() {
+    var t = (devisSimpleFam || []).reduce(function (s, f) { return s + (f.prix || 0); }, 0);
+    var el = document.getElementById('pd-devis-simple-total');
+    if (el) el.textContent = formatCurrency(t);
+    return t;
+  }
+  async function devisSimpleApply() {
+    var t = devisSimpleTotal();
+    var { error } = await sb.from('projets').update({ montant: t }).eq('id', currentProjetId);
+    if (error) return showToast('Erreur', 'err');
+    var m = document.getElementById('pd-montant'); if (m) m.value = t;
+    showToast('Montant du projet : ' + formatCurrency(t));
+  }
+
+  function downloadProjetJson() {
+    if (!currentProjetRc) return showToast('Aucune configuration pour ce projet', 'err');
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var nom = (p.nom || 'projet').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'projet';
+    var blob = new Blob([JSON.stringify(currentProjetRc, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom + '.json'; a.click();
+    showToast('JSON téléchargé : glisse-le dans le dossier « A-traiter » de ton Bureau');
+  }
+
+  var devisImgCache = {}; // empreinte du JSON -> {ferme, ouvert}
+
+  async function devisRendersFromHelper(rc, w) {
+    var txt = JSON.stringify(rc);
+    var key = txt.length + ':' + txt.slice(0, 80) + txt.slice(-80);
+    if (devisImgCache[key]) return devisImgCache[key];
+    var ok = false;
+    try {
+      var ctl = new AbortController(); var tm = setTimeout(function () { ctl.abort(); }, 2500);
+      var pr = await fetch('http://127.0.0.1:8765/ping', { signal: ctl.signal }); clearTimeout(tm); ok = pr.ok;
+    } catch (e) { ok = false; }
+    if (!ok) return null;
+    w.document.body.innerHTML = '<p style="font-family:sans-serif;padding:40px;font-size:18px">Fabrication des rendus 3D (fermé / ouvert)… environ 40 secondes.</p>';
+    var r = await fetch('http://127.0.0.1:8765/rendre', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: txt });
+    if (!r.ok) throw new Error('rendu impossible (' + r.status + ')');
+    var j = await r.json();
+    devisImgCache[key] = j;
+    return j;
+  }
+
+  async function openDevisSimplePdf() {
+    if (!devisSimpleFam || !devisSimpleFam.length) return showToast('Devis simplifié indisponible', 'err');
+    var btn = document.getElementById('btn-devis-pdf');
+    // la fenêtre doit s'ouvrir tout de suite (clic), les images arrivent ensuite
+    var w = window.open('', '_blank');
+    if (!w) return showToast('Autorise les fenêtres pop-up pour créer le PDF', 'err');
+    w.document.write('<!doctype html><meta charset="utf-8"><title>Devis…</title><body style="font-family:sans-serif;padding:40px;font-size:18px">Préparation du devis…</body>');
+    btn.disabled = true; var old = btn.textContent; btn.textContent = 'Rendus en cours…';
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
+    var total = devisSimpleTotal();
+    var imgs = { ferme: '', ouvert: '' }, helperMsg = '';
+    try {
+      var j = currentProjetRc ? await devisRendersFromHelper(currentProjetRc, w) : null;
+      if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; }
+      else helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
+    } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
+    if (!imgs.ferme) {  // repli : images déjà ajoutées dans les documents du projet
+      var { data: docs } = await sb.from('documents').select('nom, url').eq('projet_id', currentProjetId);
+      for (var d of (docs || [])) {
+        var n = (d.nom || '').toLowerCase();
+        var key = /ouvert/.test(n) ? 'ouvert' : /ferme/.test(n) ? 'ferme' : null;
+        if (!key || imgs[key] || !/\.(png|jpe?g|webp)$/.test(n)) continue;
+        if (d.url && !d.url.startsWith('http')) { var r2 = await sb.storage.from('documents-client').createSignedUrl(d.url, 3600); imgs[key] = (r2.data && r2.data.signedUrl) || ''; }
+        else imgs[key] = d.url;
+      }
+      if (imgs.ferme) helperMsg = '';
+    }
+    btn.disabled = false; btn.textContent = old;
+    if (helperMsg) showToast(helperMsg, 'err');
+    var rows = devisSimpleFam.map(function (f) {
+      return '<tr><td class="l"><b>' + escHtml(f.label) + '</b><div>' + escHtml(f.detail) + '</div></td><td class="r">' + formatCurrency(f.prix) + '</td></tr>';
+    }).join('');
+    var im = function (k, t) { return '<figure>' + (imgs[k] ? '<img src="' + imgs[k] + '">' : '<div class="ph">Rendu « ' + t + ' » non disponible</div>') + '<figcaption>' + t + '</figcaption></figure>'; };
+    var html = '<!doctype html><meta charset="utf-8"><title>Devis – ' + escHtml(p.nom || '') + (cl ? ' – ' + escHtml(cl) : '') + '</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet"><style>' +
+      '@page{size:A3 landscape;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Poppins,sans-serif;color:#231a20;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      '.pg{width:420mm;height:297mm;position:relative;padding:22mm 18mm 30mm;page-break-after:always;overflow:hidden}.pg:last-child{page-break-after:auto}' +
+      '.bar{position:absolute;left:0;right:0;bottom:14mm;height:6mm;background:#d96c2c}.tag{position:absolute;top:12mm;right:18mm;font-weight:700;font-size:13pt}' +
+      'h1{font-size:30pt;font-weight:700;margin-top:6mm}h2{font-size:15pt;font-weight:400;margin:6mm 0 2mm}.sub{font-size:11pt;color:#6b6b6b;font-weight:300}' +
+      '.imgs{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:12mm}figure img,.ph{width:100%;aspect-ratio:1500/1100;object-fit:cover;display:block;background:#f4f1ee}.ph{display:flex;align-items:center;justify-content:center;color:#999;font-size:11pt}' +
+      'figcaption{margin-top:3mm;font-size:12pt;font-weight:400}table{width:100%;border-collapse:collapse;margin-top:10mm}td{padding:6mm 0;border-bottom:.3mm solid #ddd;vertical-align:top;font-weight:300;font-size:14pt}' +
+      'td.l div{color:#6b6b6b;font-size:11pt;margin-top:1mm}td.r{text-align:right;white-space:nowrap;font-size:15pt;font-weight:400}.tot td{border:none;padding-top:8mm;font-weight:700;font-size:20pt}' +
+      '.cond{margin-top:12mm;font-size:11pt;line-height:1.7;font-weight:300;color:#444;max-width:230mm}</style>' +
+      '<div class="pg"><div class="tag">DEVIS</div><div class="sub">Étude de conception · Kōbō Design</div><h1>' + escHtml(p.nom || 'Meuble sur mesure') + '</h1>' + (cl ? '<div class="sub" style="margin-top:2mm">' + escHtml(cl) + '</div>' : '') +
+      '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><div class="bar"></div></div>' +
+      '<div class="pg"><div class="tag">DEVIS</div><h2>Votre meuble</h2><table>' + rows + '<tr class="tot"><td class="l">Total HT</td><td class="r" style="font-size:22pt;font-weight:700">' + formatCurrency(total) + '</td></tr></table>' +
+      '<div class="cond">Prix en euros HT, hors livraison. Fixation murale prévue. Meuble livré prêt à monter, accompagné d\'une notice illustrée et d\'une vidéo de pose. Le coût de livraison sera confirmé dès communication du lieu de destination. Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi. Validité de l\'offre : 30 jours.</div><div class="bar"></div></div>';
+    w.document.open(); w.document.write(html); w.document.close();
+    setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
+  }
+
   function recomputeFinitionPanels() {
     var totalEl = document.getElementById('devis-fin-total-qty');
     var chantEl = document.getElementById('devis-chant-qty');
@@ -2280,6 +2461,7 @@
     if (!resultEl) return;
     var price = computeDevisAutoPrice();
     if (!price) { resultEl.textContent = ''; return; }
+    try { renderDevisSimple(); } catch (e) { console.warn('devis simplifié', e); }
     resultEl.innerHTML = 'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente : ' + price.prix_vente.toFixed(2) + ' €</span>';
     if (currentProjetId) {
@@ -3457,6 +3639,8 @@
 
   // ── PROJET DETAIL MODAL ───────────────────────────────────────────
   async function openProjetDetail(projetId, nom) {
+    currentProjetRc = null;
+    var _ds = document.getElementById('pd-devis-simple'); if (_ds) _ds.innerHTML = '<div class="empty" style="padding:6px 0;font-size:12px;">Chargement…</div>';
     currentProjetId = projetId;
     document.getElementById('pd-title').textContent = nom;
     document.getElementById('modal-projet-detail').classList.add('open');
@@ -3513,6 +3697,7 @@
       }
 
       const rc = sdb.raw_config || {};
+      currentProjetRc = rc;
       let q = rc.devis_quantities;
       // Compat : les configs soumises avant la séparation par catégorie (caisson/étagère/porte/tiroir)
       // stockent tout dans un seul panels_m2 — on ignore ce blob et on force le recalcul ci-dessous
