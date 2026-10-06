@@ -3178,7 +3178,10 @@ function placeOrRemoveCaisson(e, skipUndo){
     var bay3=getBay(hit.x_cm,hit.y_cm);
     if(comp3.height_cm<1||bay3.width_cm<1) return true;
     var k=mkKey(comp3,bay3);
-    var existing=els.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&el.key===k; });
+    var midD=Math.round((bay3.left_cm+bay3.right_cm)/2);
+    var kD1=Math.round(comp3.bottom_cm)+'_'+Math.round(bay3.left_cm)+'_'+Math.round(comp3.top_cm)+'_'+midD;
+    var kD2=Math.round(comp3.bottom_cm)+'_'+midD+'_'+Math.round(comp3.top_cm)+'_'+Math.round(bay3.right_cm);
+    var existing=els.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&(el.key===k||el.key===kD1||el.key===kD2); });
     if(existing>=0){
       // Supprimer — si double battant, supprimer les deux moitiés
       var mid=Math.round((bay3.left_cm+bay3.right_cm)/2);
@@ -4334,7 +4337,16 @@ function buildRecap4(){
   });
 }
 
+function dedupeEls(els){
+  var seen={}, out=[];
+  (els||[]).forEach(function(e){
+    var k=[e.type,e.key,e.y_cm,e.x_cm,e.x_left_cm,e.x_right_cm].join('|');
+    if(seen[k]) return; seen[k]=1; out.push(e);
+  });
+  return out;
+}
 function buildTechSpec(els, CL, CH, CP){
+  els=dedupeEls(els); // un clic répété pouvait enregistrer la même porte plusieurs fois
   var ep=EP, ep_mm=Math.round(ep*1000);
   var CL_mm=Math.round(CL*1000), CH_mm=Math.round(CH*1000), CP_mm=Math.round(CP*1000);
   var iW_mm=CL_mm-2*ep_mm, iH_mm=CH_mm-2*ep_mm;

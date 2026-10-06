@@ -3428,7 +3428,16 @@
     }).join('');
   }
 
+  function dedupeEls(els){
+    var seen={}, out=[];
+    (els||[]).forEach(function(e){
+      var k=[e.type,e.key,e.y_cm,e.x_cm,e.x_left_cm,e.x_right_cm].join('|');
+      if(seen[k]) return; seen[k]=1; out.push(e);
+    });
+    return out;
+  }
   function buildTechSpec(els, CL_cm, CH_cm, CP_cm) {
+    els = dedupeEls(els); // un clic répété pouvait enregistrer la même porte plusieurs fois
     const ep_mm = 18;
     const CL_mm = Math.round(CL_cm * 10), CH_mm = Math.round(CH_cm * 10), CP_mm = Math.round(CP_cm * 10);
     const iW_mm = CL_mm - 2*ep_mm, iH_mm = CH_mm - 2*ep_mm;
