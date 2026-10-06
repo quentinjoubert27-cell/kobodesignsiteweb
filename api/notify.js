@@ -1,10 +1,65 @@
 // api/notify.js — Endpoint unifié pour toutes les notifications email client
-// actions : message | statut | document | email-libre | bulk-email
+// actions : message | statut | document | email-libre | bulk-email | rappels-digest (+ GET cron)
+// ── Récap quotidien des rappels (appels à passer) envoyé à l'équipe ──
+// Déclenché chaque matin par le cron Vercel (GET + CRON_SECRET) ou à la demande depuis l'admin (POST).
+async function sendRappelsDigest(sb, resend, recipients) {
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const iso = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(d);
+  const today = iso(new Date());
+  const { data, error } = await sb.from('crm_rappels')
+    .select('date_rappel, motif, client_id, clients(prenom, nom, telephone, email)')
+    .eq('fait', false).lte('date_rappel', today).order('date_rappel', { ascending: true });
+  if (error) throw new Error('Lecture rappels : ' + error.message);
+  const list = data || [];
+  if (!list.length) return { count: 0, sent: 0 };
+  const row = r => {
+    const c = r.clients || {};
+    const late = r.date_rappel < today;
+    const tel = c.telephone ? `<a href="tel:${esc(c.telephone.replace(/\s/g, ''))}" style="color:#CD3E00;text-decoration:none;font-weight:700;">${esc(c.telephone)}</a>` : '<span style="color:#aaa;">pas de téléphone</span>';
+    return `<tr><td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:top;">
+      <div style="font-weight:800;font-size:14px;">${esc((c.prenom || '') + ' ' + (c.nom || ''))}</div>
+      <div style="font-size:13px;color:#555;margin-top:2px;">${esc(r.motif || 'Rappeler')}</div>
+      <div style="font-size:12px;margin-top:4px;">${tel}${c.email ? ' · ' + esc(c.email) : ''}</div></td>
+      <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:top;white-space:nowrap;font-size:12px;font-weight:700;color:${late ? '#dc2626' : '#CD3E00'};">${late ? 'En retard<br>' + new Date(r.date_rappel + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : "Aujourd'hui"}</td></tr>`;
+  };
+  const n = list.length;
+  const html = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
+    <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
+      <p style="color:#CD3E00;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px">Kobo Design · Suivi client</p>
+      <h1 style="color:#FFFAF0;font-size:21px;font-weight:800;margin:0;">${n} client${n > 1 ? 's' : ''} à rappeler</h1>
+    </div>
+    <div style="background:#F2EDE3;padding:24px 32px;border-radius:0 0 8px 8px;">
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;">${list.map(row).join('')}</table>
+      <p style="margin:22px 0 0;"><a href="https://www.kobo-design.fr/admin" style="display:inline-block;background:#CD3E00;color:#fff;padding:13px 28px;border-radius:6px;font-weight:700;font-size:13px;text-decoration:none;">Ouvrir le tableau de bord</a></p>
+    </div></div>`;
+  const subject = `📞 ${n} client${n > 1 ? 's' : ''} à rappeler aujourd'hui`;
+  let sent = 0;
+  for (const to of recipients) {
+    await resend.emails.send({ from: 'Kobo Design <contact@kobo-design.fr>', to, subject, html });
+    sent++;
+  }
+  return { count: n, sent };
+}
+
+const DEFAULT_ADMINS = 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr,armelle@symetry.fr';
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://www.kobo-design.fr');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  // Cron quotidien Vercel : GET /api/notify?action=rappels-digest avec Authorization: Bearer $CRON_SECRET
+  if (req.method === 'GET' && req.query && req.query.action === 'rappels-digest') {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || (req.headers['authorization'] || '') !== 'Bearer ' + secret) return res.status(401).json({ error: 'Non autorisé' });
+    try {
+      const { createClient } = require('@supabase/supabase-js');
+      const { Resend } = require('resend');
+      const sbc = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const out = await sendRappelsDigest(sbc, new Resend(process.env.RESEND_API_KEY), (process.env.ADMIN_EMAILS || DEFAULT_ADMINS).split(',').map(e => e.trim()).filter(Boolean));
+      return res.status(200).json({ ok: true, ...out });
+    } catch (err) { console.error('rappels-digest cron:', err); return res.status(500).json({ error: err.message }); }
+  }
   if (req.method !== 'POST') return res.status(405).end();
 
   try {
@@ -34,6 +89,13 @@ module.exports = async function handler(req, res) {
       <p style="font-size:14px;font-weight:700;margin:0;color:#1A1A1A">${esc(nom)}</p>
     </div>`;
     const GOOGLE_REVIEW_URL = 'https://www.google.com/search?q=Kobo+design+Avis&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_5cT2chRByBSV9iD2hU40JkOKKmVHHKGSvfjfMsxMcmu1NdXPSwbTeFlQ1kOFZi3-ArTvNOGp7P8oiv8CNC1XSHGbgNI';
+
+    // ── ACTION : rappels-digest (à la demande depuis l'admin) ──────
+    if (action === 'rappels-digest') {
+      const to = body.only && ADMIN_EMAILS.includes(body.only) ? [body.only] : ADMIN_EMAILS;
+      const out = await sendRappelsDigest(sb, resend, to);
+      return res.status(200).json({ ok: true, ...out });
+    }
 
     // ── ACTION : message ───────────────────────────────────────────
     if (action === 'message') {
