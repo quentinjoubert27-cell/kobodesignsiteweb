@@ -1,0 +1,5 @@
+# Fichiers lourds non utilisés par le site en ligne (restent dans git, mais ne sont pas déployés)
+models/sdb/
+img/texture-noir.png
+img/texture-blanc-gris.png
+img/texture-blanc-multicouleurs.png
