@@ -92,6 +92,8 @@ module.exports = async function handler(req, res) {
       ...((siret || societe) ? { type_client: typeClient } : {}),
     }, { onConflict: 'id' });
     if (code_postal) await sb.from('clients').update({ code_postal }).eq('id', userId).then(() => {}, () => {});
+    // Source du contact : renseignée une seule fois (première arrivée), modifiable ensuite dans l'admin
+    await sb.from('clients').update({ source: 'Site / configurateur' }).eq('id', userId).is('source', null).then(() => {}, () => {});
 
     // 3. Créer le projet
     const { data: projet, error: projetErr } = await sb.from('projets').insert({

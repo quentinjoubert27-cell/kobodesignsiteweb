@@ -99,6 +99,8 @@ module.exports = async function handler(req, res) {
       }, { onConflict: 'id' });
       if (upsertErr) throw new Error('upsert client: ' + upsertErr.message);
       if (code_postal) await supabase.from('clients').update({ code_postal }).eq('id', userId).then(() => {}, () => {});
+      // Source du contact : renseignée une seule fois (première arrivée), modifiable ensuite dans l'admin
+      await supabase.from('clients').update({ source: 'Formulaire de contact' }).eq('id', userId).is('source', null).then(() => {}, () => {});
 
       // Créer le projet
       const nomProjet = `Demande ${type_projet ? '— ' + type_projet : ''} · ${prenom} ${nom}`.slice(0, 200);

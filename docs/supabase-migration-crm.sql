@@ -48,3 +48,15 @@ drop policy if exists "Admin crm_rappels" on crm_rappels;
 create policy "Admin crm_rappels" on crm_rappels for all
   using (auth.jwt()->>'email' in ('quentin.joubert@icloud.com','pascal@symetry.fr','lena@symetry.fr','mathilde@symetry.fr','armelle@symetry.fr'))
   with check (auth.jwt()->>'email' in ('quentin.joubert@icloud.com','pascal@symetry.fr','lena@symetry.fr','mathilde@symetry.fr','armelle@symetry.fr'));
+
+-- ── Source des clients existants (première arrivée : formulaire de contact ou configurateur) ──
+do $$ begin
+  with arrivees as (
+    select lower(email) as e, 'Formulaire de contact' as src, created_at from demandes where email is not null
+    union all select lower(email), 'Site / configurateur', created_at from configs_sdb where email is not null
+    union all select lower(email), 'Site / configurateur', created_at from configs_biblio where email is not null
+  ), premiere as (
+    select distinct on (e) e, src from arrivees order by e, created_at asc
+  )
+  update clients c set source = p.src from premiere p where lower(c.email) = p.e and c.source is null;
+exception when others then raise notice 'source auto ignorée: %', sqlerrm; end $$;
