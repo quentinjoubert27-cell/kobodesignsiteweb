@@ -2403,27 +2403,52 @@
     }
     btn.disabled = false; btn.textContent = old;
     if (helperMsg) showToast(helperMsg, 'err');
+    var cli = allClients.find(function (c) { return c.id === p.client_id; }) || {};
+    var now = new Date(), valid = new Date(now.getTime() + 30 * 86400000);
+    var fr = function (d) { return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }); };
+    var numDevis = 'DEV-' + now.getFullYear() + '-' + String(p.id || '').replace(/-/g, '').slice(0, 4).toUpperCase();
+    var det0 = devisSimpleDetails(), objet = det0.caisson;
     var rows = devisSimpleFam.map(function (f) {
-      return '<tr><td class="l"><b>' + escHtml(f.label) + '</b><div>' + escHtml(f.detail) + '</div></td><td class="r">' + formatCurrency(f.prix) + '</td></tr>';
+      return '<tr><td class="d"><b>' + escHtml(f.label) + '</b><div>' + escHtml(f.detail) + '</div></td><td class="n">' + formatCurrency(f.prix) + '</td></tr>';
     }).join('');
-    var im = function (k, t) { return '<figure>' + (imgs[k] ? '<img src="' + imgs[k] + '">' : '<div class="ph">Rendu « ' + t + ' » non disponible</div>') + '<figcaption>' + t + '</figcaption></figure>'; };
-    var html = '<!doctype html><meta charset="utf-8"><title>Devis – ' + escHtml(p.nom || '') + (cl ? ' – ' + escHtml(cl) : '') + '</title>' +
-      '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet"><style>' +
-      '@page{size:A3 landscape;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Poppins,sans-serif;color:#231a20;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
-      '.pg{width:420mm;height:297mm;position:relative;padding:22mm 18mm 30mm;page-break-after:always;overflow:hidden}.pg:last-child{page-break-after:auto}' +
-      '.bar{position:absolute;left:0;right:0;bottom:14mm;height:6mm;background:#d96c2c}.tag{position:absolute;top:12mm;right:18mm;font-weight:700;font-size:13pt}' +
-      'h1{font-size:30pt;font-weight:700;margin-top:6mm}h2{font-size:15pt;font-weight:400;margin:6mm 0 2mm}.sub{font-size:11pt;color:#6b6b6b;font-weight:300}' +
-      '.imgs{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:12mm}figure img,.ph{width:100%;aspect-ratio:1500/1100;object-fit:cover;display:block;background:#f4f1ee}.ph{display:flex;align-items:center;justify-content:center;color:#999;font-size:11pt}' +
-      'figcaption{margin-top:3mm;font-size:12pt;font-weight:400}table{width:100%;border-collapse:collapse;margin-top:10mm}td{padding:6mm 0;border-bottom:.3mm solid #ddd;vertical-align:top;font-weight:300;font-size:14pt}' +
-      'td.l div{color:#6b6b6b;font-size:11pt;margin-top:1mm}td.r{text-align:right;white-space:nowrap;font-size:15pt;font-weight:400}.tot td{border:none;padding-top:8mm;font-weight:700;font-size:20pt}' +
-      '.sub2 td{padding:3.5mm 0;font-size:13pt}.mentions{margin-top:10mm;font-size:11pt;font-weight:400;line-height:1.7}.mentions p::before{content:"– "}.cond{margin-top:12mm;font-size:11pt;line-height:1.7;font-weight:300;color:#444;max-width:230mm}</style>' +
-      '<div class="pg"><div class="tag">DEVIS</div><div class="sub">Étude de conception · Kōbō Design</div><h1>' + escHtml(p.nom || 'Meuble sur mesure') + '</h1>' + (cl ? '<div class="sub" style="margin-top:2mm">' + escHtml(cl) + '</div>' : '') +
-      '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><div class="bar"></div></div>' +
-      '<div class="pg"><div class="tag">DEVIS</div><h2>Votre meuble</h2><table>' + rows + '<tr class="sub2"><td class="l">Total HT</td><td class="r">' + formatCurrency(total) + '</td></tr>' +
-      '<tr class="sub2"><td class="l">TVA 20 %</td><td class="r">' + formatCurrency(total * 0.2) + '</td></tr>' +
-      '<tr class="tot"><td class="l">Total TTC</td><td class="r" style="font-size:22pt;font-weight:700">' + formatCurrency(total * 1.2) + '</td></tr></table>' +
-      '<div class="mentions"><p>Les images présentées dans ce devis sont non contractuelles.</p><p>Les poignées de portes et de tiroirs ne sont pas comprises dans le prix.</p></div>' +
-      '<div class="cond">Prix en euros, TVA 20 % incluse dans le total TTC, hors livraison. Fixation murale prévue. Meuble livré prêt à monter, accompagné d\'une notice illustrée et d\'une vidéo de pose. Le coût de livraison sera confirmé dès communication du lieu de destination. Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi. Validité de l\'offre : 30 jours.</div><div class="bar"></div></div>';
+    var im = function (k, t) { return '<figure>' + (imgs[k] ? '<img src="' + imgs[k] + '">' : '<div class="ph">Rendu non disponible</div>') + '<figcaption>' + t + '</figcaption></figure>'; };
+    var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
+    var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 06 42 89 98 58';
+    var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">DEVIS</div><div>N° ' + numDevis + '</div><div>Émis le ' + fr(now) + '</div><div>Valable jusqu\'au ' + fr(valid) + '</div></div></div>'; };
+    var foot = function (n) { return '<div class="foot"><span>' + legal + '</span><span>' + n + ' / 2</span></div>'; };
+    var html = '<!doctype html><meta charset="utf-8"><title>' + numDevis + ' – ' + escHtml(p.nom || '') + (cl ? ' – ' + escHtml(cl) : '') + '</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"><style>' +
+      '@page{size:A4 portrait;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Poppins,sans-serif;color:#231a20;background:#fff;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      '.pg{width:210mm;height:297mm;position:relative;padding:14mm 16mm 20mm;page-break-after:always;overflow:hidden}.pg:last-child{page-break-after:auto}' +
+      '.top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:6mm;border-bottom:.6mm solid #d96c2c}.logo{height:13mm}' +
+      '.meta{text-align:right;font-size:9pt;line-height:1.55;color:#555}.dv{font-size:20pt;font-weight:600;color:#231a20;letter-spacing:.04em}' +
+      '.parties{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:8mm}.box{border:.25mm solid #ddd;border-radius:2mm;padding:4mm 5mm;font-size:9pt;line-height:1.6;font-weight:300}' +
+      '.box h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:1.5mm}' +
+      '.obj{margin-top:8mm}.obj h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:1.5mm}.obj h2{font-size:14pt;font-weight:600}.obj p{font-weight:300;color:#555;margin-top:1mm;font-size:9.5pt}' +
+      '.imgs{display:grid;grid-template-columns:1fr 1fr;gap:6mm;margin-top:7mm}figure img,.ph{width:100%;aspect-ratio:1500/1100;object-fit:cover;display:block;background:#f4f1ee;border-radius:1.5mm}.ph{display:flex;align-items:center;justify-content:center;color:#999}' +
+      'figcaption{margin-top:2mm;font-size:8.5pt;color:#555}.nc{margin-top:3mm;font-size:8pt;color:#777;font-style:italic}' +
+      'table{width:100%;border-collapse:collapse;margin-top:8mm}th{font-size:7.5pt;letter-spacing:.12em;text-transform:uppercase;color:#777;text-align:left;font-weight:600;padding:2mm 0;border-bottom:.4mm solid #231a20}th.n{text-align:right}' +
+      'td{padding:4mm 0;border-bottom:.25mm solid #e3e3e3;vertical-align:top}td.d b{font-weight:600;font-size:10.5pt}td.d div{font-weight:300;color:#666;font-size:9pt;margin-top:.8mm}td.n{text-align:right;white-space:nowrap;font-size:10.5pt}' +
+      '.tot{margin-top:5mm;margin-left:auto;width:78mm;font-size:10pt}.tot div{display:flex;justify-content:space-between;padding:1.6mm 0}.tot .ttc{border-top:.4mm solid #231a20;margin-top:1mm;padding-top:3mm;font-size:13pt;font-weight:600}' +
+      '.cond{margin-top:9mm}.cond h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.cond ul{list-style:none;font-size:8.8pt;line-height:1.65;font-weight:300}.cond li::before{content:"– "}.cond li b{font-weight:600}' +
+      '.sig{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:9mm}.sig div{border:.25mm solid #bbb;border-radius:2mm;height:30mm;padding:3mm 4mm;font-size:8.5pt;color:#555}.sig b{display:block;color:#231a20;font-weight:600;margin-bottom:1mm}' +
+      '.foot span:last-child{white-space:nowrap}.compo{margin-top:8mm}.compo h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.compo ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300}.compo li::before{content:"– "}.foot{position:absolute;left:16mm;right:16mm;bottom:8mm;display:flex;justify-content:space-between;gap:6mm;font-size:6.8pt;color:#888;border-top:.25mm solid #ddd;padding-top:2mm;line-height:1.4}</style>' +
+      '<div class="pg">' + head() +
+      '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 06 42 89 98 58<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
+      '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
+      '<div class="obj"><h4>Objet</h4><h2>' + escHtml(p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p></div>' +
+      '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><p class="nc">Images non contractuelles.</p>' +
+      '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, det0.facades, det0.amenagement].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '<li>Livré prêt à monter, fixation murale prévue</li></ul></div>' + foot(1) + '</div>' +
+      '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(total * 0.2) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(total * 1.2) + '</span></div></div>' +
+      '<div class="cond"><h4>Conditions</h4><ul>' +
+      '<li><b>Livraison non comprise dans ce devis</b> : son coût sera confirmé dès communication du lieu de destination.</li>' +
+      '<li><b>Poignées</b> de portes et de tiroirs non comprises dans le prix.</li>' +
+      '<li>Les images présentées dans ce devis sont <b>non contractuelles</b>.</li>' +
+      '<li>Fixation murale prévue. Meuble livré prêt à monter, accompagné d\'une notice illustrée et d\'une vidéo de pose.</li>' +
+      '<li>Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.</li>' +
+      '<li>Devis valable 30 jours à compter de sa date d\'émission.</li></ul></div>' +
+      '<div class="sig"><div><b>Pour Kōbō Design</b>Date et signature</div><div><b>Bon pour accord</b>Date, signature du client précédée de la mention « Bon pour accord »</div></div>' + foot(2) + '</div>';
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
