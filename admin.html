@@ -2346,8 +2346,8 @@
     if (!ok) return null;
     w.document.body.innerHTML = '<p style="font-family:sans-serif;padding:40px;font-size:18px">Fabrication des rendus 3D (fermé / ouvert)… environ 40 secondes.</p>';
     var r = await fetch('http://127.0.0.1:8765/rendre', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: txt });
-    if (!r.ok) throw new Error('rendu impossible (' + r.status + ')');
-    var j = await r.json();
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error((j && j.error) ? String(j.error).slice(0, 220) : 'rendu impossible (' + r.status + ')');
     devisImgCache[key] = j;
     return j;
   }
