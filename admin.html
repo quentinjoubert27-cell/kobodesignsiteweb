@@ -3360,6 +3360,24 @@
     return { rc: out, removed: removed, doorsBefore: dB, doorsAfter: dA };
   }
 
+  // Nombres affichés (« Configuration d'origine », liste des configurations) : recalculés sans doublons, tous caissons confondus
+  function configCountsFromRc(rc) {
+    var cl = auditCleanRc(rc).rc, lists = [];
+    if (Array.isArray(cl.elements)) lists.push(cl.elements);
+    if (cl.caisson2 && Array.isArray(cl.caisson2.elements)) lists.push(cl.caisson2.elements);
+    ['left', 'right'].forEach(function (side) {
+      var l = cl.tvSide && cl.tvSide[side]; if (!l) return;
+      (Array.isArray(l) ? l : [l]).forEach(function (c) { if (c && Array.isArray(c.elements)) lists.push(c.elements); });
+    });
+    if (cl.tvSide && cl.tvSide.top && Array.isArray(cl.tvSide.top.elements)) lists.push(cl.tvSide.top.elements);
+    var n = { tablettes: 0, separateurs: 0, portes: 0, tiroirs: 0 };
+    lists.forEach(function (l) { l.forEach(function (e) {
+      if (e.type === 'shelf') n.tablettes++; else if (e.type === 'separator') n.separateurs++;
+      else if (e.type === 'porte') n.portes++; else if (e.type === 'tiroir') n.tiroirs++;
+    }); });
+    return n;
+  }
+
   async function openAuditDoublons() {
     document.getElementById('modal-doublons').classList.add('open');
     var body = document.getElementById('doublons-body');
@@ -3367,7 +3385,7 @@
     document.getElementById('doublons-fix-all').style.display = 'none';
     var all = [], from = 0;
     for (;;) {
-      var { data, error } = await sb.from('configs_sdb').select('id, projet_id, raw_config, created_at').range(from, from + 499);
+      var { data, error } = await sb.from('configs_sdb').select('id, projet_id, raw_config, created_at, nb_tablettes, nb_separateurs, nb_portes, nb_tiroirs').range(from, from + 499);
       if (error) { body.innerHTML = '<div class="empty">Erreur de lecture : ' + escHtml(error.message) + '</div>'; return; }
       all = all.concat(data || []);
       if (!data || data.length < 500) break;
@@ -3379,10 +3397,12 @@
       var res = auditCleanRc(c.raw_config);
       var q = c.raw_config && c.raw_config.devis_quantities;
       var storedDoors = q ? q.doors_count : null;
-      if (res.removed > 0 || (storedDoors != null && storedDoors > res.doorsAfter)) {
+      var cnt = configCountsFromRc(c.raw_config);
+      var countsOff = c.nb_portes != null && (c.nb_portes !== cnt.portes || c.nb_tiroirs !== cnt.tiroirs || c.nb_tablettes !== cnt.tablettes || c.nb_separateurs !== cnt.separateurs);
+      if (res.removed > 0 || countsOff || (storedDoors != null && storedDoors > res.doorsAfter)) {
         var pr = allProjets.find(function (p) { return p.id === c.projet_id; }) || {};
         doublonsFlagged.push({ id: c.id, projet_id: c.projet_id, projet: pr.nom || '(sans projet)', client: pr.clients ? (pr.clients.prenom + ' ' + pr.clients.nom) : '—',
-          statut: pr.statut || '—', montant: pr.montant, removed: res.removed, doorsBefore: res.doorsBefore, doorsAfter: res.doorsAfter, storedDoors: storedDoors, hasQ: !!q, clean: res.rc });
+          statut: pr.statut || '—', montant: pr.montant, removed: res.removed, doorsBefore: c.nb_portes != null ? c.nb_portes : res.doorsBefore, doorsAfter: cnt.portes, cnt: cnt, storedDoors: storedDoors, hasQ: !!q, clean: res.rc });
       }
     });
     if (!doublonsFlagged.length) { body.innerHTML = '<div class="empty" style="padding:24px 0;">✅ ' + all.length + ' configurations contrôlées : aucun doublon.</div>'; return; }
@@ -3401,10 +3421,10 @@
     var ok = 0, ko = 0, lastErr = '';
     for (var f of doublonsFlagged) {
       var rc = f.clean; delete rc.devis_quantities;
-      var upd = { raw_config: rc };
+      var upd = { raw_config: rc, nb_tablettes: f.cnt.tablettes, nb_separateurs: f.cnt.separateurs, nb_portes: f.cnt.portes, nb_tiroirs: f.cnt.tiroirs };
       if (Array.isArray(rc.elements)) upd.elements = rc.elements;
       var { error } = await sb.from('configs_sdb').update(upd).eq('id', f.id);
-      if (error && upd.elements) { var r2 = await sb.from('configs_sdb').update({ raw_config: rc }).eq('id', f.id); error = r2.error; }   // colonne `elements` absente
+      if (error && upd.elements) { delete upd.elements; var r2 = await sb.from('configs_sdb').update(upd).eq('id', f.id); error = r2.error; }   // colonne `elements` absente
       if (error) { ko++; lastErr = error.message; } else ok++;
     }
     btn.disabled = false; btn.textContent = 'Corriger tous les doublons';
@@ -4124,6 +4144,10 @@
     }
 
     const c = biblio || sdb;
+    if (c && c === sdb && sdb.raw_config) {   // compteurs recalculés sans doublons (même si la base n'est pas encore corrigée)
+      const n = configCountsFromRc(sdb.raw_config);
+      sdb.nb_tablettes = n.tablettes; sdb.nb_separateurs = n.separateurs; sdb.nb_portes = n.portes; sdb.nb_tiroirs = n.tiroirs;
+    }
     if (!c) {
       content.innerHTML = '<div class="empty" style="padding:16px 0;">Aucune configuration liée à ce projet (ni par projet, ni par email du client).</div>';
       wrap.style.display = 'block';
