@@ -3881,6 +3881,7 @@ function setNbVasques(n){
   document.getElementById('nv1').classList.toggle('on',n===1);
   document.getElementById('nv2').classList.toggle('on',n===2);
   var vo=document.getElementById('vasque-opts'); if(vo) vo.style.display=n===0?'none':'';
+  var hn=document.getElementById('hint'); if(hn && n===0) hn.classList.remove('show');
   if(n===0){
     if(vasqueGrp){ scene.remove(vasqueGrp); disposeGroup(vasqueGrp); vasqueGrp=null; }
     if(vasqueGrp2){ scene.remove(vasqueGrp2); disposeGroup(vasqueGrp2); vasqueGrp2=null; }
@@ -4175,7 +4176,7 @@ function goStep(n){
   var isLast=(n===total);
   document.getElementById('btn-next').textContent=isLast?'':'Suivant →';
   document.getElementById('btn-next').style.display=isLast?'none':'';
-  document.getElementById('hint').classList.toggle('show',currentFT==='sdb'&&n===4);
+  document.getElementById('hint').classList.toggle('show',currentFT==='sdb'&&n===4&&S.nbVasques>0);
   _syncCotesBtn();
 
   var isAmgtStep = currentPanels[n-1]==='p-amgt';
