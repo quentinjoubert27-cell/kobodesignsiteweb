@@ -4570,7 +4570,7 @@ function computeDevisQuantities(techSpec, matLabel){
   // Séparateurs verticaux (intercalaires) — comptés avec les étagères
   (techSpec.separators||[]).forEach(function(s, idx){
     var h = s.y_top_mm - s.y_bottom_mm;
-    addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
+    addPanel(q.panels_etagere_m2, mat, (s.depth_mm || ((techSpec.overall_mm && techSpec.overall_mm.depth || 0) - (techSpec.panel_thickness_mm || 18))), h, 'separateur', {
       group: 'Intercalaire '+(idx+1)+(s.doubled?' (doublé)':''), vis: 2*jointCP.vis, tourillons: 2*jointCP.tourillons
     }, 'etagere');
     q.edge_banding_m += h/1000;
