@@ -4116,6 +4116,8 @@
           P: rcMeuble.P || c.meuble_p,
           matLabel: rcMeuble.matLabel || c.meuble_mat,
           elements: rc.elements || c.elements || [],
+          // meuble complet : caissons latéraux, angle et passages de câbles
+          ...(rc.tvSide ? { tvSide: rc.tvSide } : {}), ...(rc.caisson2 ? { caisson2: rc.caisson2 } : {}), ...(rc.cableHoles ? { cableHoles: rc.cableHoles } : {}),
           ...( (c.type || 'sdb') === 'sdb' ? {
             plan: { L: rcPlan.L || c.plan_l, P: rcPlan.P || c.plan_p, matLabel: rcPlan.matLabel || c.plan_mat },
             vasques: { nb: rcVasques.nb || c.nb_vasques, id: rcVasques.id, vx: rcVasques.vx, vz: rcVasques.vz, vx2: rcVasques.vx2, vz2: rcVasques.vz2 },
@@ -4629,7 +4631,8 @@
           ft,
           L: c.meuble_l, H: c.meuble_h, P: c.meuble_p,
           matLabel: c.meuble_mat || '',
-          elements: c.elements || [],
+          elements: rc.elements || c.elements || [],
+          ...(rc.tvSide ? { tvSide: rc.tvSide } : {}), ...(rc.caisson2 ? { caisson2: rc.caisson2 } : {}), ...(rc.cableHoles ? { cableHoles: rc.cableHoles } : {}),
           plan: { L: c.plan_l, P: c.plan_p, matLabel: c.plan_mat || '' },
           vasques: rc.vasques || { nb: c.nb_vasques || 1 },
         };

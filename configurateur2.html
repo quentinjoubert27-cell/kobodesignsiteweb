@@ -5511,6 +5511,24 @@ function _repositionPlanOnCaisson(){
       if(mi>=0) setMatCais(mi);
     }
     if(Array.isArray(cfg.elements)){ caissonElements=cfg.elements; buildCaisson(); }
+    // caissons latéraux (gauche / droite), caisson d'angle et passages de câbles : restaurés comme dans la config d'origine
+    if(cfg.tvSide){
+      ['left','right'].forEach(function(side){
+        (Array.isArray(cfg.tvSide[side])?cfg.tvSide[side]:(cfg.tvSide[side]?[cfg.tvSide[side]]:[])).forEach(function(r){
+          if(!r||!r.W_cm) return;
+          addTvSide(side);
+          var list=side==='left'?tvSideLeft:tvSideRight, rec=list[list.length-1];
+          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.elems=Array.isArray(r.elements)?r.elements:[];
+        });
+      });
+      activeCaisson=1; buildCaisson(); if(typeof renderTvSideList==='function') renderTvSideList();
+    }
+    if(cfg.caisson2&&Array.isArray(cfg.caisson2.elements)){
+      if(!hasAngle) toggleAngle();
+      if(cfg.caisson2.L_cm) setCL2(Math.round(cfg.caisson2.L_cm));
+      caissonElements2=cfg.caisson2.elements; buildCaisson();
+    }
+    if(Array.isArray(cfg.cableHoles)&&cfg.cableHoles.length){ tvCableHoles=cfg.cableHoles; buildCaisson(); }
     if(ft==='sdb'){
       if(cfg.plan){
         if(cfg.plan.L) setL(Math.round(cfg.plan.L));
