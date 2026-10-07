@@ -811,6 +811,9 @@
         </div>
       </div>
 
+      <!-- CA estimatif -->
+      <div class="detail-panel" id="dash-ca-est" style="padding:16px 20px;margin-bottom:22px;display:none;"></div>
+
       <!-- Pipeline Kanban -->
       <p class="section-title">Pipeline projets</p>
       <div class="pipeline" id="dash-pipeline">
@@ -2954,6 +2957,32 @@
     // Commandes en cours
     const commandesProjets = (projetsCA || []).filter(p => p.statut === 'Commandé' || p.statut === 'Livraison');
     const caTotal = (projetsCA || []).filter(p => ['Fabrication', 'Commandé', 'Livraison', 'Terminé'].includes(p.statut)).reduce((sum, p) => sum + (parseFloat(p.montant) || 0), 0);
+
+    // CA estimatif : tous les montants enregistrés, tous statuts confondus (HT)
+    (function () {
+      const ordre = ['En étude', 'Analyse en cours', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+      const par = {}; let total = 0, chiffres = 0, ventes = 0;
+      (projetsCA || []).forEach(p => {
+        const m = parseFloat(p.montant) || 0;
+        if (!(m > 0)) return;
+        const k = ordre.includes(p.statut) ? p.statut : 'Autre';
+        par[k] = par[k] || { n: 0, m: 0 }; par[k].n++; par[k].m += m;
+        total += m; chiffres++;
+        if (['Fabrication', 'Commandé', 'Livraison', 'Terminé'].includes(p.statut)) ventes += m;
+      });
+      const nbTotal = (projetsCA || []).length;
+      const el = document.getElementById('dash-ca-est');
+      if (!el) return;
+      el.style.display = '';
+      const chips = ordre.concat(['Autre']).filter(k => par[k]).map(k =>
+        `<div style="padding:7px 12px;border-radius:8px;background:var(--bg);font-size:12px;"><span style="color:rgba(26,26,26,.55);">${escHtml(k)}</span> · <b>${par[k].n}</b> · <b style="color:var(--accent);">${formatCurrency(par[k].m)}</b></div>`).join('');
+      el.innerHTML = `<div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <div><div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:4px;">CA estimatif (HT)</div>
+        <div style="font-size:26px;font-weight:800;color:var(--accent);">${formatCurrency(total)}</div></div>
+        <div style="font-size:12px;color:rgba(26,26,26,.55);text-align:right;line-height:1.6;">${chiffres} projet(s) chiffré(s) sur ${nbTotal}<br>dont déjà vendu : <b>${formatCurrency(ventes)}</b> · à convertir : <b>${formatCurrency(total - ventes)}</b></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">${chips || '<span style="font-size:12px;color:rgba(26,26,26,.45);">Aucun montant enregistré pour l\'instant (ils se calculent à l\'ouverture de chaque projet).</span>'}</div>`;
+    })();
 
     document.getElementById('ds-clients').textContent = cc || 0;
     document.getElementById('ds-projets').textContent = pc || 0;
