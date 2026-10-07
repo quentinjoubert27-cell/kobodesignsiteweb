@@ -4952,9 +4952,9 @@ function _doubledSeparatorFlags(els, W, H){
   return els.filter(function(e){return e.type==='separator'||e.type==='separator_simple';}).map(function(e){
     var c=_cpt(els,e.x_cm,e.y_cm,m.iW,m.iH), x=e.x_cm;
     var ov=function(i){ return Math.min(i.d.t,c.top)-Math.max(i.d.b,c.bot)>1; };
-    // façade fixée sur l'intercalaire : porte dont les charnières sont de ce côté, ou tiroir (fixé des deux côtés)
-    var left=m.info.some(function(i){return i.side==='R'&&Math.abs(i.d.r-x)<=TOL&&ov(i);}) || m.drawers.some(function(w){return Math.abs(w.r-x)<=TOL&&ov({d:w});});
-    var right=m.info.some(function(i){return i.side==='L'&&Math.abs(i.d.l-x)<=TOL&&ov(i);}) || m.drawers.some(function(w){return Math.abs(w.l-x)<=TOL&&ov({d:w});});
+    // façade contre l'intercalaire : une porte ou un tiroir qui touche l'intercalaire de ce côté (quel que soit le côté de ses charnières)
+    var left=m.doors.some(function(d){return Math.abs(d.r-x)<=TOL&&ov({d:d});}) || m.drawers.some(function(w){return Math.abs(w.r-x)<=TOL&&ov({d:w});});
+    var right=m.doors.some(function(d){return Math.abs(d.l-x)<=TOL&&ov({d:d});}) || m.drawers.some(function(w){return Math.abs(w.l-x)<=TOL&&ov({d:w});});
     return left&&right;
   });
 }
