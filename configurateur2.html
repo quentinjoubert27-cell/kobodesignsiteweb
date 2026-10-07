@@ -4496,6 +4496,35 @@ function buildTechSpec(els, CL, CH, CP){
 //  - Chant plaqué : uniquement les bords visibles côté client (porte/tiroir = 4 côtés, reste = bord avant)
 //  - Mécanisme tiroir : 1 jeu de coulisses par tiroir
 // ═══════════════════════════════════════════════════════
+// Nombre d'angles / intersections du caisson, chacun compté UNE seule fois (même point = une seule jonction) :
+// 4 coins, bouts d'étagères fixes (contre une joue ou un intercalaire), bouts d'intercalaires (contre une traverse ou une étagère).
+// Là où plusieurs panneaux se rejoignent au même endroit (croisement intercalaire / étagère), c'est un seul point.
+function countJunctions(spec) {
+  var ep = spec.panel_thickness_mm || 18, W = spec.overall_mm.width, H = spec.overall_mm.height, pts = {};
+  var add = function (x, y) { pts[Math.round(x / 5) + '_' + Math.round(y / 5)] = 1; };
+  [[0, 0], [W, 0], [0, H], [W, H]].forEach(function (p) { add(p[0], p[1]); });
+  var seps = (spec.separators || []).filter(function (s) { return !s.doubled; });
+  function contactX(xEnd, side) {
+    for (var i = 0; i < seps.length; i++) {
+      var cx = seps[i].x_center_mm;
+      if (side === 'L' && Math.abs(xEnd - (cx + ep / 2)) <= 4) return cx;
+      if (side === 'R' && Math.abs(xEnd - (cx - ep / 2)) <= 4) return cx;
+    }
+    if (side === 'L') return Math.abs(xEnd - ep) <= 4 ? 0 : xEnd;
+    return Math.abs(xEnd - (W - ep)) <= 4 ? W : xEnd;
+  }
+  (spec.shelves || []).filter(function (s) { return s.shelf_type === 'fixe'; }).forEach(function (sh) {
+    var yc = (sh.y_bottom_mm + sh.y_top_mm) / 2;
+    add(contactX(sh.x_left_mm, 'L'), yc); add(contactX(sh.x_right_mm, 'R'), yc);
+  });
+  seps.forEach(function (s) {
+    var cx = s.x_center_mm;
+    add(cx, s.y_bottom_mm <= ep + 3 ? 0 : s.y_bottom_mm - ep / 2);
+    add(cx, s.y_top_mm >= H - ep - 3 ? H : s.y_top_mm + ep / 2);
+  });
+  return Object.keys(pts).length;
+}
+
 function computeDevisQuantities(techSpec, matLabel){
   var q = {
     // Surfaces séparées par catégorie de pièce (chacune peut avoir un prix au m² différent) :
@@ -4560,18 +4589,19 @@ function computeDevisQuantities(techSpec, matLabel){
     q.edge_banding_m += ((p.type==='joue_gauche'||p.type==='joue_droite') ? h : w) / 1000;
   });
   q.corner_brackets += 4; // 4 coins joues/traverses par caisson
-  q.screws += 4*jointCP.vis; q.dowels += 4*jointCP.tourillons; // 4 coins, fixation selon règle joint
+  // vis / tourillons : 4 vis + 3 tourillons à chaque angle ou intersection (chaque point compté une seule fois)
+  var nJonctions = countJunctions(techSpec);
+  q.screws += nJonctions*4; q.dowels += nJonctions*3;
   // Récapitulatif : assemblage global du caisson (les 4 coins ne sont pas attribuables à un seul panneau)
-  q.pieces.push({ type:'caisson_assemblage', group:'Caisson (assemblage 4 coins)', vis:4*jointCP.vis, tourillons:4*jointCP.tourillons });
+  q.pieces.push({ type:'jonctions', group:'Assemblage : '+nJonctions+' angle(s) / intersection(s) × (4 vis + 3 tourillons)', vis:nJonctions*4, tourillons:nJonctions*3 });
 
   // Séparateurs verticaux (intercalaires) — comptés avec les étagères
   (techSpec.separators||[]).forEach(function(s, idx){
     var h = s.y_top_mm - s.y_bottom_mm;
     addPanel(q.panels_etagere_m2, mat, (s.depth_mm || ((techSpec.overall_mm && techSpec.overall_mm.depth || 0) - (techSpec.panel_thickness_mm || 18))), h, 'separateur', {
-      group: 'Intercalaire '+(idx+1)+(s.doubled?' (doublé)':''), vis: 2*jointCP.vis, tourillons: 2*jointCP.tourillons
+      group: 'Intercalaire '+(idx+1)+(s.doubled?' (doublé)':''), vis: 0, tourillons: 0
     }, 'etagere');
     q.edge_banding_m += h/1000;
-    q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; // jonction haut + bas
     if(!s.doubled) q.separators_count++;
   });
 
@@ -4581,10 +4611,9 @@ function computeDevisQuantities(techSpec, matLabel){
     var fixe = sh.shelf_type==='fixe';
     addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {
       group: 'Étagère '+(idx+1)+(fixe?'':' (mobile)'),
-      vis: fixe ? 2*jointCP.vis : 0, tourillons: fixe ? 2*jointCP.tourillons : 0
+      vis: 0, tourillons: 0
     }, 'etagere');
     q.edge_banding_m += w/1000;
-    if(fixe){ q.screws += 2*jointCP.vis; q.dowels += 2*jointCP.tourillons; } // fixée aux 2 côtés
     q.shelves_count++;
   });
 
