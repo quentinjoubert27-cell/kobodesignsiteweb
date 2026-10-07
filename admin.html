@@ -2198,7 +2198,7 @@
     otherRows = chantRow + otherRows;
 
     var countsSummary = `<div style="font-size:12px;color:rgba(26,26,26,.55);margin:10px 0 16px;line-height:1.7;">
-      ${q.doors_count||0} porte(s) · ${q.drawers_count||0} tiroir(s) · ${q.shelves_count||0} étagère(s) · ${q.separators_count||0} séparateur(s) · ${q.bars_count||0} tringle(s)
+      ${q.doors_count||0} porte(s) · ${q.drawers_count||0} tiroir(s) · ${q.shelves_count||0} étagère(s) · ${q.separators_count||0} séparateur(s)${q.separators_doubled ? ' <span style="color:#CD3E00;font-weight:700;">(dont ' + q.separators_doubled + ' doublé' + (q.separators_doubled > 1 ? 's' : '') + ' → ' + ((q.separators_count||0) + q.separators_doubled) + ' panneaux)</span>' : ''} · ${q.bars_count||0} tringle(s)
     </div>`;
 
     var finitionRows = '';
@@ -2314,7 +2314,7 @@
     if (q.doors_count) fac.push(plur(q.doors_count, 'porte'));
     if (q.drawers_count) fac.push(plur(q.drawers_count, 'tiroir'));
     if (q.shelves_count) amen.push(plur(q.shelves_count, 'étagère'));
-    if (q.separators_count) amen.push(plur(q.separators_count, 'intercalaire'));
+    if (q.separators_count) amen.push(plur(q.separators_count, 'intercalaire') + (q.separators_doubled ? ' dont ' + q.separators_doubled + ' doublé' + (q.separators_doubled > 1 ? 's' : '') : ''));
     if (q.bars_count) quinc.push(plur(q.bars_count, 'barre') + ' de penderie');
     quinc.push('vis', 'tourillons');
     if (q.drawer_mechanisms) quinc.push('mécanismes de tiroirs');
@@ -4327,7 +4327,7 @@
     var out = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
       edge_banding_m: 0, decoupe_usinage_m: 0, decoupe_etagere_m: 0, decoupe_porte_m: 0, decoupe_tiroir_m: 0, decoupe_tiroir_caisse_m: 0,
       screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
-      doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, bars_count: 0, pieces: [] };
+      doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, separators_doubled: 0, bars_count: 0, pieces: [] };
     function mergeBucket(outBucket, qBucket) {
       Object.keys(qBucket || {}).forEach(function (k) { outBucket[k] = (outBucket[k] || 0) + qBucket[k]; });
     }
@@ -4353,6 +4353,7 @@
       out.drawers_count += q.drawers_count || 0;
       out.shelves_count += q.shelves_count || 0;
       out.separators_count += q.separators_count || 0;
+      out.separators_doubled += q.separators_doubled || 0;
       out.bars_count += q.bars_count || 0;
       out.pieces = out.pieces.concat(q.pieces || []);
     });
@@ -4368,7 +4369,7 @@
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
     var q = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
       edge_banding_m: 0, decoupe_usinage_m: 0, decoupe_etagere_m: 0, decoupe_porte_m: 0, decoupe_tiroir_m: 0, decoupe_tiroir_caisse_m: 0,
-      screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, bars_count: 0, pieces: [] };
+      screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, separators_doubled: 0, bars_count: 0, pieces: [] };
     var mat = matLabel || 'Non défini';
     // Caisson/étagère/caisse tiroir sont dans un matériau structurel générique (pas la finition
     // visible choisie par le client) : un seul prix, pas une liste de couleurs.
@@ -4416,7 +4417,7 @@
       }, 'etagere');
       q.edge_banding_m += h / 1000;
       q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons;
-      if (!s.doubled) q.separators_count++;
+      if (!s.doubled) q.separators_count++; else q.separators_doubled++;
     });
     (techSpec.shelves || []).forEach(function (sh, idx) {
       var w = sh.x_right_mm - sh.x_left_mm;
