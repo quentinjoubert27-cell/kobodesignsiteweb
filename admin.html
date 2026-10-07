@@ -2933,6 +2933,58 @@
   }
 
   // ── DASHBOARD ─────────────────────────────────────────────────────
+  // Prix de vente d'une config sans ouvrir le projet (mêmes règles que la fiche : quantités, corrections manuelles, finitions visibles)
+  function computePrixVenteFromSdb(sdb) {
+    var saveOv = currentDevisOverrides;
+    try {
+      var rc = sdb.raw_config || {};
+      currentDevisOverrides = Object.assign({}, rc.devis_overrides || {});
+      var q = buildDevisQuantitiesFromConfig(sdb);
+      var stored = rc.devis_quantities;
+      if (stored && Array.isArray(stored.finitions) && Array.isArray(q.finitions)) {
+        var vis = {}; stored.finitions.forEach(function (f) { vis[f.id] = f.visible; });
+        q.finitions.forEach(function (f) { if (vis[f.id] !== undefined) f.visible = !!vis[f.id]; });
+      }
+      var qo = applyDevisOverrides(q), g = currentTarifsGlobaux || {}, ov = currentDevisOverrides;
+      var fm2 = 0, fper = 0;
+      (q.finitions || []).forEach(function (f) { if (f.visible) { fm2 += f.m2 || 0; fper += f.perimeter_m || 0; } });
+      var edge = (q.edge_banding_ml || 0) + fper;
+      if (ov.edge_banding_ml != null) edge = ov.edge_banding_ml;
+      if (ov.finition_m2 != null) fm2 = ov.finition_m2;
+      var key = qo.caisson_material ? 'finition_m2|' + qo.caisson_material : null;
+      var unit = (key && g.panel_m2 && g.panel_m2[key] != null) ? g.panel_m2[key] : 0;
+      var price = computeDevisPriceAdmin(Object.assign({}, qo, { edge_banding_ml: edge }), g);
+      if (!price) return null;
+      var cost = Math.round((price.cost_revient + fm2 * unit) * 100) / 100;
+      return Math.round(cost * (g.coefficient_revente || 2) * 100) / 100;
+    } finally { currentDevisOverrides = saveOv; }
+  }
+
+  // Calcule et enregistre le montant de tous les projets non fermes, sans ouvrir chaque fiche. Renvoie true si quelque chose a changé.
+  async function autoRecalcMontants() {
+    try {
+      if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
+      if (!currentTarifsGlobaux) return false;
+      var [{ data: projets }, { data: configs }] = await Promise.all([
+        sb.from('projets').select('id, statut, montant'),
+        sb.from('configs_sdb').select('*').order('created_at', { ascending: false })
+      ]);
+      var latest = {};
+      (configs || []).forEach(function (c) { if (c.projet_id && !latest[c.projet_id]) latest[c.projet_id] = c; });
+      var changed = false;
+      for (var i = 0; i < (projets || []).length; i++) {
+        var p = projets[i], c = latest[p.id];
+        if (!c || STATUTS_FERMES.indexOf(p.statut) >= 0) continue;
+        var prix;
+        try { prix = computePrixVenteFromSdb(c); } catch (e) { console.warn('auto-montant', p.id, e); continue; }
+        if (!(prix > 0) || Math.abs(prix - (parseFloat(p.montant) || 0)) < 0.005) continue;
+        var r = await sb.from('projets').update({ montant: prix }).eq('id', p.id);
+        if (!r.error) changed = true;
+      }
+      return changed;
+    } catch (e) { console.warn('autoRecalcMontants', e); return false; }
+  }
+
   async function loadDashboard() {
     const [
       { count: cc },
@@ -2959,7 +3011,7 @@
     const caTotal = (projetsCA || []).filter(p => ['Fabrication', 'Commandé', 'Livraison', 'Terminé'].includes(p.statut)).reduce((sum, p) => sum + (parseFloat(p.montant) || 0), 0);
 
     // CA estimatif : tous les montants enregistrés, tous statuts confondus (HT)
-    (function () {
+    const renderCaEst = function (projetsCA) {
       const ordre = ['En étude', 'Analyse en cours', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
       const par = {}; let total = 0, chiffres = 0, ventes = 0;
       (projetsCA || []).forEach(p => {
@@ -2981,8 +3033,13 @@
         <div style="font-size:26px;font-weight:800;color:var(--accent);">${formatCurrency(total)}</div></div>
         <div style="font-size:12px;color:rgba(26,26,26,.55);text-align:right;line-height:1.6;">${chiffres} projet(s) chiffré(s) sur ${nbTotal}<br>dont déjà vendu : <b>${formatCurrency(ventes)}</b> · à convertir : <b>${formatCurrency(total - ventes)}</b></div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">${chips || '<span style="font-size:12px;color:rgba(26,26,26,.45);">Aucun montant enregistré pour l\'instant (ils se calculent à l\'ouverture de chaque projet).</span>'}</div>`;
-    })();
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">${chips || '<span style="font-size:12px;color:rgba(26,26,26,.45);">Aucun montant enregistré pour l\'instant (calcul automatique en cours…).</span>'}</div>`;
+    };
+    renderCaEst(projetsCA);
+    autoRecalcMontants().then(function (changed) {
+      if (!changed) return;
+      sb.from('projets').select('montant, statut').then(function (r) { if (r.data) renderCaEst(r.data); });
+    });
 
     document.getElementById('ds-clients').textContent = cc || 0;
     document.getElementById('ds-projets').textContent = pc || 0;
@@ -4220,6 +4277,106 @@
   }
 
   // ── DEVIS : quantités + prix unitaires par projet (autonome, robuste) ──
+  // Quantités du devis recalculées depuis la configuration (règles actuelles) — réutilisable sans interface
+  function buildDevisQuantitiesFromConfig(sdb) {
+    const rc = sdb.raw_config || {};
+    let q = null;
+    // Compat : les configs soumises avant la séparation par catégorie (caisson/étagère/porte/tiroir)
+    // stockent tout dans un seul panels_m2 — on ignore ce blob et on force le recalcul ci-dessous
+    // depuis la géométrie brute, pour obtenir les vraies catégories (porte/tiroir séparés).
+    if (q && q.panels_m2 && !q.panels_caisson_m2) {
+      q = null;
+    }
+    if (!q) {
+      // Config antérieure à la fonctionnalité (ou ancien format) : on reconstruit les quantités depuis les données brutes disponibles
+      const meuble = rc.meuble || { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
+      const matLabel = meuble.matLabel || sdb.meuble_mat || 'Non défini';
+      const elements = rc.elements || sdb.elements || [];
+      const spec = buildTechSpec(elements, meuble.L || sdb.meuble_l, meuble.H || sdb.meuble_h, meuble.P || sdb.meuble_p);
+      const parts = [computeDevisQuantitiesAdmin(spec, matLabel)];
+
+      // Caisson d'angle
+      if (rc.caisson2 && Array.isArray(rc.caisson2.elements)) {
+        const spec2 = buildTechSpec(rc.caisson2.elements, rc.caisson2.L_cm || meuble.L, meuble.H, meuble.P);
+        parts.push(computeDevisQuantitiesAdmin(spec2, matLabel));
+      }
+
+      // Caissons latéraux TV (gauche / droite illimités, + dessus). Compat : gauche/droite étaient
+      // un objet unique avant les caissons illimités — on normalise toujours en tableau.
+      function toTvArray(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
+      const tvLeftArr = rc.tvSide ? toTvArray(rc.tvSide.left) : [];
+      const tvRightArr = rc.tvSide ? toTvArray(rc.tvSide.right) : [];
+      tvLeftArr.concat(tvRightArr).forEach(function (s) {
+        if (s && s.W_cm && s.H_cm) {
+          const specSide = buildTechSpec(s.elements || [], s.W_cm, s.H_cm, meuble.P || sdb.meuble_p);
+          parts.push(computeDevisQuantitiesAdmin(specSide, matLabel));
+        }
+      });
+      if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm && rc.tvSide.top.H_cm) {
+        const specTop = buildTechSpec(rc.tvSide.top.elements || [], rc.tvSide.top.W_cm, rc.tvSide.top.H_cm, meuble.P || sdb.meuble_p);
+        parts.push(computeDevisQuantitiesAdmin(specTop, matLabel));
+      }
+
+      q = mergeDevisQuantitiesAdmin(parts);
+
+      // Joues/dessus de finition — config antérieure au système de cases à cocher, donc pas de choix
+      // client connu : on calcule chaque face théoriquement exposée, par caisson, cochée par défaut
+      // (l'admin peut décocher). Note : les finitions ont leur propre prix au m² (souvent un matériau
+      // différent du caisson), donc elles ne sont PAS ajoutées à panels_m2 — pricées séparément.
+      const CPcm = meuble.P || sdb.meuble_p || 0;
+      const mainH = meuble.H || sdb.meuble_h || 0;
+      const mainL = meuble.L || sdb.meuble_l || 0;
+      q.caisson_material = matLabel;
+      q.finitions = [];
+      // dim1/dim2 en cm — la joue a du chant plaqué sur tout son périmètre (4 côtés)
+      function addFinAdmin(id, label, dim1_cm, dim2_cm, visible) {
+        q.finitions.push({
+          id: id, label: label,
+          m2: Math.round(dim1_cm * dim2_cm) / 10000,
+          perimeter_m: Math.round(2 * (dim1_cm + dim2_cm) * 10) / 1000,
+          visible: visible
+        });
+      }
+      if (rc.caisson2 && rc.caisson2.L_cm) {
+        addFinAdmin('angle_bout', "Joue — bout du caisson d'angle", mainH, CPcm, true);
+        addFinAdmin('angle_dessus', "Dessus — caisson d'angle", rc.caisson2.L_cm, CPcm, true);
+      }
+      // Rangée gauche→droite : caissons gauche (du plus loin au plus proche) + principal + caissons droite.
+      const tvRow = tvLeftArr.slice().reverse().map(function (s, i) {
+        return { label: 'caisson gauche ' + (tvLeftArr.length - i), H: s.H_cm, W: s.W_cm };
+      }).concat([{ label: 'caisson principal', H: mainH, W: mainL }])
+        .concat(tvRightArr.map(function (s, i) { return { label: 'caisson droit ' + (i + 1), H: s.H_cm, W: s.W_cm }; }));
+      tvRow.forEach(function (entry, i) {
+        addFinAdmin('dessus_' + i, 'Dessus — ' + entry.label, entry.W, CPcm, true);
+      });
+      addFinAdmin('bout_gauche', 'Joue gauche — ' + tvRow[0].label + ' (bout extérieur)', tvRow[0].H, CPcm, true);
+      addFinAdmin('bout_droit', 'Joue droite — ' + tvRow[tvRow.length - 1].label + ' (bout extérieur)', tvRow[tvRow.length - 1].H, CPcm, true);
+      for (let i = 0; i < tvRow.length - 1; i++) {
+        const a = tvRow[i], b = tvRow[i + 1];
+        if (Math.abs(a.H - b.H) < 0.5) continue; // même hauteur (à 0.5cm près) → côté caché
+        const taller = a.H > b.H ? a : b;
+        const tallerSide = a.H > b.H ? 'droite' : 'gauche';
+        addFinAdmin('jonction_' + i, 'Joue ' + tallerSide + ' — ' + taller.label + ' (jonction, plus haut que son voisin)', taller.H, CPcm, true);
+      }
+      if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm) {
+        addFinAdmin('top_dessus', 'Dessus — caisson du dessus', rc.tvSide.top.W_cm, CPcm, true);
+      }
+
+      // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
+      q.panels_plan_m2 = {};
+      const ft = rc.furniture_type || sdb.type;
+      if (ft === 'sdb' && rc.plan && rc.plan.L && rc.plan.P) {
+        const planMat = rc.plan.matLabel || sdb.plan_mat || 'Non défini';
+        q.panels_plan_m2[planMat] = (q.panels_plan_m2[planMat] || 0) + (rc.plan.L * rc.plan.P) / 10000;
+      } else if (ft === 'sdb' && sdb.plan_l && sdb.plan_p) {
+        const planMat = sdb.plan_mat || 'Non défini';
+        q.panels_plan_m2[planMat] = (q.panels_plan_m2[planMat] || 0) + (sdb.plan_l * sdb.plan_p) / 10000;
+      }
+    }
+
+    return q;
+  }
+
   async function renderProjetDevis(projetId) {
     const el = document.getElementById('pd-devis');
     el.innerHTML = 'Chargement…';
@@ -4243,100 +4400,7 @@
       currentProjetRc = rc; currentProjetSdbId = sdb.id;
       currentDevisOverrides = Object.assign({}, rc.devis_overrides || {});
       const storedQ = rc.devis_quantities;   // quantités enregistrées à l'envoi : plus utilisées (toujours recalculé avec les règles actuelles) sauf le choix des faces visibles
-      let q = null;
-      // Compat : les configs soumises avant la séparation par catégorie (caisson/étagère/porte/tiroir)
-      // stockent tout dans un seul panels_m2 — on ignore ce blob et on force le recalcul ci-dessous
-      // depuis la géométrie brute, pour obtenir les vraies catégories (porte/tiroir séparés).
-      if (q && q.panels_m2 && !q.panels_caisson_m2) {
-        q = null;
-      }
-      if (!q) {
-        // Config antérieure à la fonctionnalité (ou ancien format) : on reconstruit les quantités depuis les données brutes disponibles
-        const meuble = rc.meuble || { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
-        const matLabel = meuble.matLabel || sdb.meuble_mat || 'Non défini';
-        const elements = rc.elements || sdb.elements || [];
-        const spec = buildTechSpec(elements, meuble.L || sdb.meuble_l, meuble.H || sdb.meuble_h, meuble.P || sdb.meuble_p);
-        const parts = [computeDevisQuantitiesAdmin(spec, matLabel)];
-
-        // Caisson d'angle
-        if (rc.caisson2 && Array.isArray(rc.caisson2.elements)) {
-          const spec2 = buildTechSpec(rc.caisson2.elements, rc.caisson2.L_cm || meuble.L, meuble.H, meuble.P);
-          parts.push(computeDevisQuantitiesAdmin(spec2, matLabel));
-        }
-
-        // Caissons latéraux TV (gauche / droite illimités, + dessus). Compat : gauche/droite étaient
-        // un objet unique avant les caissons illimités — on normalise toujours en tableau.
-        function toTvArray(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
-        const tvLeftArr = rc.tvSide ? toTvArray(rc.tvSide.left) : [];
-        const tvRightArr = rc.tvSide ? toTvArray(rc.tvSide.right) : [];
-        tvLeftArr.concat(tvRightArr).forEach(function (s) {
-          if (s && s.W_cm && s.H_cm) {
-            const specSide = buildTechSpec(s.elements || [], s.W_cm, s.H_cm, meuble.P || sdb.meuble_p);
-            parts.push(computeDevisQuantitiesAdmin(specSide, matLabel));
-          }
-        });
-        if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm && rc.tvSide.top.H_cm) {
-          const specTop = buildTechSpec(rc.tvSide.top.elements || [], rc.tvSide.top.W_cm, rc.tvSide.top.H_cm, meuble.P || sdb.meuble_p);
-          parts.push(computeDevisQuantitiesAdmin(specTop, matLabel));
-        }
-
-        q = mergeDevisQuantitiesAdmin(parts);
-
-        // Joues/dessus de finition — config antérieure au système de cases à cocher, donc pas de choix
-        // client connu : on calcule chaque face théoriquement exposée, par caisson, cochée par défaut
-        // (l'admin peut décocher). Note : les finitions ont leur propre prix au m² (souvent un matériau
-        // différent du caisson), donc elles ne sont PAS ajoutées à panels_m2 — pricées séparément.
-        const CPcm = meuble.P || sdb.meuble_p || 0;
-        const mainH = meuble.H || sdb.meuble_h || 0;
-        const mainL = meuble.L || sdb.meuble_l || 0;
-        q.caisson_material = matLabel;
-        q.finitions = [];
-        // dim1/dim2 en cm — la joue a du chant plaqué sur tout son périmètre (4 côtés)
-        function addFinAdmin(id, label, dim1_cm, dim2_cm, visible) {
-          q.finitions.push({
-            id: id, label: label,
-            m2: Math.round(dim1_cm * dim2_cm) / 10000,
-            perimeter_m: Math.round(2 * (dim1_cm + dim2_cm) * 10) / 1000,
-            visible: visible
-          });
-        }
-        if (rc.caisson2 && rc.caisson2.L_cm) {
-          addFinAdmin('angle_bout', "Joue — bout du caisson d'angle", mainH, CPcm, true);
-          addFinAdmin('angle_dessus', "Dessus — caisson d'angle", rc.caisson2.L_cm, CPcm, true);
-        }
-        // Rangée gauche→droite : caissons gauche (du plus loin au plus proche) + principal + caissons droite.
-        const tvRow = tvLeftArr.slice().reverse().map(function (s, i) {
-          return { label: 'caisson gauche ' + (tvLeftArr.length - i), H: s.H_cm, W: s.W_cm };
-        }).concat([{ label: 'caisson principal', H: mainH, W: mainL }])
-          .concat(tvRightArr.map(function (s, i) { return { label: 'caisson droit ' + (i + 1), H: s.H_cm, W: s.W_cm }; }));
-        tvRow.forEach(function (entry, i) {
-          addFinAdmin('dessus_' + i, 'Dessus — ' + entry.label, entry.W, CPcm, true);
-        });
-        addFinAdmin('bout_gauche', 'Joue gauche — ' + tvRow[0].label + ' (bout extérieur)', tvRow[0].H, CPcm, true);
-        addFinAdmin('bout_droit', 'Joue droite — ' + tvRow[tvRow.length - 1].label + ' (bout extérieur)', tvRow[tvRow.length - 1].H, CPcm, true);
-        for (let i = 0; i < tvRow.length - 1; i++) {
-          const a = tvRow[i], b = tvRow[i + 1];
-          if (Math.abs(a.H - b.H) < 0.5) continue; // même hauteur (à 0.5cm près) → côté caché
-          const taller = a.H > b.H ? a : b;
-          const tallerSide = a.H > b.H ? 'droite' : 'gauche';
-          addFinAdmin('jonction_' + i, 'Joue ' + tallerSide + ' — ' + taller.label + ' (jonction, plus haut que son voisin)', taller.H, CPcm, true);
-        }
-        if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm) {
-          addFinAdmin('top_dessus', 'Dessus — caisson du dessus', rc.tvSide.top.W_cm, CPcm, true);
-        }
-
-        // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
-        q.panels_plan_m2 = {};
-        const ft = rc.furniture_type || sdb.type;
-        if (ft === 'sdb' && rc.plan && rc.plan.L && rc.plan.P) {
-          const planMat = rc.plan.matLabel || sdb.plan_mat || 'Non défini';
-          q.panels_plan_m2[planMat] = (q.panels_plan_m2[planMat] || 0) + (rc.plan.L * rc.plan.P) / 10000;
-        } else if (ft === 'sdb' && sdb.plan_l && sdb.plan_p) {
-          const planMat = sdb.plan_mat || 'Non défini';
-          q.panels_plan_m2[planMat] = (q.panels_plan_m2[planMat] || 0) + (sdb.plan_l * sdb.plan_p) / 10000;
-        }
-      }
-
+      let q = buildDevisQuantitiesFromConfig(sdb);
       // on garde le choix du client pour les faces visibles (joues/dessus de finition) enregistré à l'envoi
       if (storedQ && Array.isArray(storedQ.finitions) && Array.isArray(q.finitions)) {
         const visFin = {}; storedQ.finitions.forEach(function (f) { visFin[f.id] = f.visible; });
