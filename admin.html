@@ -4041,7 +4041,7 @@
       let xl = e.x_left_cm != null ? ep_mm + Math.round(e.x_left_cm*10) : ep_mm, xr = e.x_right_cm != null ? ep_mm + Math.round(e.x_right_cm*10) : CL_mm-ep_mm;
       separators.forEach(sp => { if (Math.abs(xl-sp.x_center_mm) <= 3) xl = sp.x_center_mm + ep_mm/2; if (Math.abs(xr-sp.x_center_mm) <= 3) xr = sp.x_center_mm - ep_mm/2; });
       xl = Math.max(xl, ep_mm); xr = Math.min(xr, CL_mm-ep_mm);
-      return { type:e.type, x_left_mm:xl, x_right_mm:xr, y_bottom_mm:ym, y_top_mm:ym+ep_mm, thickness_mm:ep_mm, depth_mm:CP_mm-ep_mm, shelf_type:e.type==='shelf'?'fixe':'mobile' };
+      return { type:e.type, x_left_mm:xl, x_right_mm:xr, y_bottom_mm:ym, y_top_mm:ym+ep_mm, thickness_mm:ep_mm, depth_mm:CP_mm-19, shelf_type:e.type==='shelf'?'fixe':'mobile' };
     });
     const bars = (els||[]).filter(e => e.type==='barre').map(e => {
       const xl = e.x_left_cm!==undefined ? Math.round(e.x_left_cm*10) : 0;
@@ -4533,14 +4533,16 @@
     (techSpec.structural_panels || []).forEach(function (p) {
       var w = p.x_right_mm - p.x_left_mm, h = p.y_top_mm - p.y_bottom_mm;
       if (p.type === 'fond') { addPanel(q.panels_caisson_m2, STRUCT_MAT, w, h, 'fond', null, 'caisson'); return; }
-      addPanel(q.panels_caisson_m2, STRUCT_MAT, w, h, p.type, null, 'caisson');
+      // surface réelle du panneau : joue = profondeur × hauteur ; traverse = largeur × profondeur (l'épaisseur n'entre pas dans la surface)
+    var isJoue = (p.type === 'joue_gauche' || p.type === 'joue_droite');
+    addPanel(q.panels_caisson_m2, STRUCT_MAT, isJoue ? CP_mm : w, isJoue ? h : CP_mm, p.type, null, 'caisson');
       q.edge_banding_m += ((p.type === 'joue_gauche' || p.type === 'joue_droite') ? h : w) / 1000;
     });
     // Récapitulatif : assemblage global du caisson (les 4 coins ne sont pas attribuables à un seul panneau)
     q.pieces.push({ type: 'jonctions', group: 'Assemblage : ' + jInfo.points + ' angle(s) / intersection(s)' + (jInfo.doubles ? ' (dont ' + jInfo.doubles + ' sur intercalaire doublé, comptés ×2)' : '') + ' → ' + nJonctions + ' × (4 vis + 3 tourillons)', vis: nJonctions * 4, tourillons: nJonctions * 3 });
     (techSpec.separators || []).forEach(function (s, idx) {
       var h = s.y_top_mm - s.y_bottom_mm;
-      addPanel(q.panels_etagere_m2, mat, (s.depth_mm || ((techSpec.overall_mm && techSpec.overall_mm.depth || 0) - (techSpec.panel_thickness_mm || 18))), h, 'separateur', {
+      addPanel(q.panels_etagere_m2, mat, (s.depth_mm || ((techSpec.overall_mm && techSpec.overall_mm.depth || 0) - 19)), h, 'separateur', {
         group: 'Intercalaire ' + (idx + 1) + (s.doubled ? ' (doublé)' : ''), vis: 0, tourillons: 0
       }, 'etagere');
       q.edge_banding_m += h / 1000;
