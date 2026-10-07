@@ -2274,8 +2274,15 @@
     var out = {};
     Object.keys(cost).forEach(function (k) {
       var part = base > 0 ? cost[k] / base : (k === 'caisson' ? 1 : 0);
-      out[k] = Math.round((cost[k] + common * part) * coef / 10) * 10;
+      out[k] = Math.round((cost[k] + common * part) * coef * 100) / 100;
     });
+    // le total des familles doit être exactement le prix de vente du moteur (écart de centimes d'arrondi reporté sur la plus grosse famille)
+    var pv = computeDevisAutoPrice();
+    if (pv && pv.prix_vente > 0) {
+      var sum = Object.keys(out).reduce(function (a, k) { return a + out[k]; }, 0);
+      var big = Object.keys(out).sort(function (a, b) { return out[b] - out[a]; })[0];
+      out[big] = Math.round((out[big] + (Math.round(pv.prix_vente * 100) / 100 - sum)) * 100) / 100;
+    }
     return out;
   }
 
@@ -2314,7 +2321,7 @@
     var row = 'display:grid;grid-template-columns:1.2fr 2fr 110px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
     el.innerHTML = devisSimpleFam.map(function (f) {
       return '<div style="' + row + '"><div style="font-size:13px;font-weight:700;">' + escHtml(f.label) + '</div><div style="font-size:12px;color:rgba(26,26,26,.6);">' + escHtml(f.detail) + '</div>' +
-        '<div style="display:flex;align-items:center;gap:4px;"><input type="number" step="10" min="0" value="' + f.prix + '" data-fam="' + f.id + '" oninput="devisSimpleEdit(this)" style="width:84px;padding:7px 8px;border:1.5px solid rgba(26,26,26,.14);border-radius:7px;font-family:var(--font);font-size:13px;text-align:right;"/> €</div></div>';
+        '<div style="display:flex;align-items:center;gap:4px;"><input type="number" step="0.01" min="0" value="' + f.prix + '" data-fam="' + f.id + '" oninput="devisSimpleEdit(this)" style="width:84px;padding:7px 8px;border:1.5px solid rgba(26,26,26,.14);border-radius:7px;font-family:var(--font);font-size:13px;text-align:right;"/> €</div></div>';
     }).join('') + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.5);">Total HT</div><div id="pd-devis-simple-total" style="font-size:18px;font-weight:800;color:var(--accent);"></div></div>' +
       '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(26,26,26,.6);padding-top:4px;"><div>TVA 20 %</div><div id="pd-devis-simple-tva"></div></div>' +
       '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:4px;"><div>Total TTC</div><div id="pd-devis-simple-ttc"></div></div>' +
@@ -2324,16 +2331,16 @@
 
   function devisSimpleEdit(inp) {
     var f = (devisSimpleFam || []).find(function (x) { return x.id === inp.dataset.fam; });
-    if (f) { f.prix = parseFloat(inp.value) || 0; f.edited = true; }
+    if (f) { f.prix = Math.round((parseFloat(inp.value) || 0) * 100) / 100; f.edited = true; }
     devisSimpleTotal();
   }
   function devisSimpleTotal() {
-    var t = (devisSimpleFam || []).reduce(function (s, f) { return s + (f.prix || 0); }, 0);
+    var t = Math.round((devisSimpleFam || []).reduce(function (s, f) { return s + (f.prix || 0); }, 0) * 100) / 100;
     var el = document.getElementById('pd-devis-simple-total');
     if (el) el.textContent = formatCurrency(t);
     var tv = document.getElementById('pd-devis-simple-tva'), tt = document.getElementById('pd-devis-simple-ttc');
-    if (tv) tv.textContent = formatCurrency(t * 0.2);
-    if (tt) tt.textContent = formatCurrency(t * 1.2);
+    if (tv) tv.textContent = formatCurrency(Math.round(t * 20) / 100);
+    if (tt) tt.textContent = formatCurrency(Math.round(t * 120) / 100);
     return t;
   }
   async function devisSimpleApply() {
@@ -2440,7 +2447,7 @@
       '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><p class="nc">Images non contractuelles.</p>' +
       '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, det0.facades, det0.amenagement].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '<li>Livré prêt à monter, fixation murale prévue</li></ul></div>' + foot(1) + '</div>' +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(total * 0.2) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(total * 1.2) + '</span></div></div>' +
+      '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(Math.round(total * 20) / 100) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(Math.round(total * 120) / 100) + '</span></div></div>' +
       '<div class="cond"><h4>Conditions</h4><ul>' +
       '<li><b>Livraison non comprise dans ce devis</b> : son coût sera confirmé dès communication du lieu de destination.</li>' +
       '<li><b>Poignées</b> de portes et de tiroirs non comprises dans le prix.</li>' +
@@ -4843,7 +4850,7 @@
   function montantVisible(p) { return !!p && STATUTS_MONTANT.indexOf(p.statut) >= 0; }
 
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount);
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(Math.round(amount * 100) / 100) ? 0 : 2, maximumFractionDigits: 2 }).format(amount);
   }
 
   function showToast(msg, type = 'ok') {
