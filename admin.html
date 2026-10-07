@@ -2411,10 +2411,10 @@
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
     var total = devisSimpleTotal();
-    var imgs = { ferme: '', ouvert: '' }, helperMsg = '';
+    var imgs = { ferme: '', ouvert: '' }, helperMsg = '', verif = null;
     try {
       var j = currentProjetRc ? await devisRendersFromHelper(currentProjetRc, w) : null;
-      if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; }
+      if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; verif = j.verification || null; }
       else helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
     } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
     if (!imgs.ferme) {  // repli : images déjà ajoutées dans les documents du projet
@@ -2439,6 +2439,16 @@
       return '<tr><td class="d"><b>' + escHtml(f.label) + '</b><div>' + escHtml(f.detail) + '</div></td><td class="n">' + formatCurrency(f.prix) + '</td></tr>';
     }).join('');
     var im = function (k, t) { return '<figure>' + (imgs[k] ? '<img src="' + imgs[k] + '">' : '<div class="ph">Rendu non disponible</div>') + '<figcaption>' + t + '</figcaption></figure>'; };
+    // contrôle de conformité du rendu : ce qui est dessiné correspond-il au JSON ? (visible à l'écran, pas imprimé)
+    var verifHtml = '';
+    if (verif) {
+      var okAll = verif.ok && !(verif.non_dessine && verif.non_dessine.length);
+      verifHtml = '<div class="verif no-print" style="font:13px/1.6 Poppins,sans-serif;padding:10px 16px;margin:0;border-bottom:2px solid ' + (okAll ? '#16a34a' : '#dc2626') + ';background:' + (okAll ? '#f0fdf4' : '#fef2f2') + ';">' +
+        '<b>' + (verif.ok ? '✓ Rendu conforme au JSON' : '⚠ Écart entre le rendu et le JSON') + '</b> — ' +
+        verif.lignes.map(function (l) { return l.element + ' : ' + l.json + (l.ok ? '' : ' (JSON) ≠ ' + l.dessine + ' (dessiné)'); }).join(' · ') +
+        (verif.non_dessine && verif.non_dessine.length ? '<br><b style="color:#b91c1c;">Présent dans le JSON mais non dessiné dans l\'image :</b> ' + verif.non_dessine.join(', ') : '') + '</div>';
+      if (!okAll) showToast('Attention : le rendu 3D ne correspond pas entièrement au JSON (détail en haut de la page du PDF)', 'err');
+    }
     var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
     var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 06 42 89 98 58';
     var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + fr(now) + '</div></div></div>'; };
@@ -2459,7 +2469,8 @@
       '.tot{margin-top:5mm;margin-left:auto;width:78mm;font-size:10pt}.tot div{display:flex;justify-content:space-between;padding:1.6mm 0}.tot .ttc{border-top:.4mm solid #231a20;margin-top:1mm;padding-top:3mm;font-size:13pt;font-weight:600}' +
       '.cond{margin-top:9mm}.cond h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.cond ul{list-style:none;font-size:8.8pt;line-height:1.65;font-weight:300}.cond li::before{content:"– "}.cond li b{font-weight:600}' +
       '.sig{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:9mm}.sig div{border:.25mm solid #bbb;border-radius:2mm;height:30mm;padding:3mm 4mm;font-size:8.5pt;color:#555}.sig b{display:block;color:#231a20;font-weight:600;margin-bottom:1mm}' +
-      '.foot span:last-child{white-space:nowrap}.compo{margin-top:8mm}.compo h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.compo ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300}.compo li::before{content:"– "}.foot{position:absolute;left:16mm;right:16mm;bottom:8mm;display:flex;justify-content:space-between;gap:6mm;font-size:6.8pt;color:#888;border-top:.25mm solid #ddd;padding-top:2mm;line-height:1.4}</style>' +
+      '.foot span:last-child{white-space:nowrap}.compo{margin-top:8mm}.compo h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.compo ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300}.compo li::before{content:"– "}.foot{position:absolute;left:16mm;right:16mm;bottom:8mm;display:flex;justify-content:space-between;gap:6mm;font-size:6.8pt;color:#888;border-top:.25mm solid #ddd;padding-top:2mm;line-height:1.4}' +
+      '@media print{.no-print{display:none!important}}</style>' + verifHtml +
       '<div class="pg">' + head() +
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 06 42 89 98 58<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
