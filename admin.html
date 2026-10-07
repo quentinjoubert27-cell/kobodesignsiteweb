@@ -3842,6 +3842,17 @@
     }).join('');
   }
 
+  // Compartiment d'un intercalaire : de l'étagère du dessous à l'étagère du dessus (en cm, repère intérieur)
+  function _sepCompartment(els, e, iW, iH){
+    var bot=0, top=iH;
+    els.forEach(function(sh){
+      if(sh.type!=='shelf') return;
+      var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:iW;
+      if(sl<=e.x_cm&&sr>=e.x_cm){ if(sh.y_cm<e.y_cm&&sh.y_cm>bot) bot=sh.y_cm; if(sh.y_cm>e.y_cm&&sh.y_cm<top) top=sh.y_cm; }
+    });
+    return {bot:bot, top:top};
+  }
+  
   // Côté des charnières de chaque porte (règle : sur la joue ou sur un intercalaire, côté extérieur d'un groupe de portes)
   // els en cm (repère intérieur), W/H : dimensions extérieures du caisson en cm.
   function _hingeInfo(els, W, H){
@@ -3928,7 +3939,11 @@
     ];
     const separators = (els||[]).filter(e => e.type==='separator'||e.type==='separator_simple').map(e => {
       const cx = ep_mm + Math.round(e.x_cm*10);
-      return { type:e.type, x_left_mm:cx-ep_mm/2, x_right_mm:cx+ep_mm/2, x_center_mm:cx, thickness_mm:ep_mm, y_bottom_mm:ep_mm, y_top_mm:CH_mm-ep_mm };
+      // un intercalaire ne couvre que son compartiment (entre deux étagères), pas toute la hauteur du meuble
+      const cp = _sepCompartment(els, e, iW_mm/10, iH_mm/10);
+      const yb = cp.bot > 0 ? ep_mm + Math.round(cp.bot*10) + ep_mm : ep_mm;
+      const yt = cp.top < iH_mm/10 - 0.01 ? ep_mm + Math.round(cp.top*10) : CH_mm - ep_mm;
+      return { type:e.type, x_left_mm:cx-ep_mm/2, x_right_mm:cx+ep_mm/2, x_center_mm:cx, thickness_mm:ep_mm, y_bottom_mm:yb, y_top_mm:yt };
     });
     const shelves = (els||[]).filter(e => e.type==='shelf'||e.type==='shelf_simple').map(e => {
       const ym = ep_mm + Math.round(e.y_cm*10);
