@@ -3516,7 +3516,7 @@
     var is = checkPortesAppui(rc);
     if (!is.length) return '';
     return '<div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;line-height:1.6;"><b style="color:#c2410c;">⚠ ' + is.length + ' porte(s) sans appui suffisant</b> — le devis et la fabrication sont à vérifier :<ul style="margin:6px 0 0 16px;">' +
-      is.slice(0, 6).map(function (x) { return '<li>' + escHtml(x.caisson) + ', porte ' + escHtml(x.key.replace(/_/g, ' / ')) + ' : ' + escHtml(x.cause) + '</li>'; }).join('') + (is.length > 6 ? '<li>… et ' + (is.length - 6) + ' autre(s)</li>' : '') + '</ul></div>';
+      is.slice(0, 6).map(function (x) { return '<li>' + escHtml(x.caisson) + ', porte ' + escHtml(x.key.replace(/_/g, ' / ')) + ' : ' + escHtml(x.cause) + '</li>'; }).join('') + (is.length > 6 ? '<li>… et ' + (is.length - 6) + ' autre(s)</li>' : '') + '</ul>' + (configId ? '<div style="margin-top:8px;"><button class="btn btn-primary btn-sm" onclick="fixAppui(\'' + configId + '\')">➕ Ajouter l\'intercalaire manquant</button></div>' : '') + '</div>';
   }
 
   // Nombres affichés (« Configuration d'origine », liste des configurations) : recalculés sans doublons, tous caissons confondus
@@ -3555,7 +3555,7 @@
     var appuiList = [];
     all.forEach(function (c) {
       var ap = checkPortesAppui(c.raw_config);
-      if (ap.length) { var pr0 = allProjets.find(function (p) { return p.id === c.projet_id; }) || {}; appuiList.push({ projet_id: c.projet_id, projet: pr0.nom || '(sans projet)', client: pr0.clients ? (pr0.clients.prenom + ' ' + pr0.clients.nom) : '—', statut: pr0.statut || '—', n: ap.length, first: ap[0] }); }
+      if (ap.length) { var pr0 = allProjets.find(function (p) { return p.id === c.projet_id; }) || {}; appuiList.push({ config_id: c.id, projet_id: c.projet_id, projet: pr0.nom || '(sans projet)', client: pr0.clients ? (pr0.clients.prenom + ' ' + pr0.clients.nom) : '—', statut: pr0.statut || '—', n: ap.length, first: ap[0] }); }
     });
     window._appuiList = appuiList;
     all.forEach(function (c) {
@@ -3571,7 +3571,7 @@
       }
     });
     var appuiHtml = appuiList.length ? '<div style="margin-top:18px;"><p style="font-size:13px;margin-bottom:8px;"><b>⚠ ' + appuiList.length + '</b> projet(s) avec des portes sans appui suffisant :</p><table style="width:100%;border-collapse:collapse;font-size:12px;"><tbody>' +
-      appuiList.map(function (a) { return '<tr style="border-top:1px solid rgba(26,26,26,.08);cursor:pointer;" onclick="openProjetDetail(\'' + a.projet_id + '\',\'' + escHtml(a.projet).replace(/'/g, '') + '\')"><td style="padding:7px 8px;font-weight:600;">' + escHtml(a.projet) + '</td><td>' + escHtml(a.client) + '</td><td>' + escHtml(a.statut) + '</td><td>' + a.n + ' porte(s) : ' + escHtml(a.first.cause) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<p style="font-size:12px;margin-top:14px;">✅ Aucune porte sans appui détectée.</p>';
+      appuiList.map(function (a) { return '<tr style="border-top:1px solid rgba(26,26,26,.08);cursor:pointer;" onclick="openProjetDetail(\'' + a.projet_id + '\',\'' + escHtml(a.projet).replace(/'/g, '') + '\')"><td style="padding:7px 8px;font-weight:600;">' + escHtml(a.projet) + '</td><td>' + escHtml(a.client) + '</td><td>' + escHtml(a.statut) + '</td><td>' + a.n + ' porte(s) : ' + escHtml(a.first.cause) + '</td><td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();fixAppui(\'' + a.config_id + '\')">➕ Ajouter</button></td></tr>'; }).join('') + '</tbody></table><div style="margin-top:10px;"><button class="btn btn-primary btn-sm" onclick="fixAppuiAll()">➕ Ajouter les intercalaires manquants (projets avant « Devis envoyé »)</button></div></div>' : '<p style="font-size:12px;margin-top:14px;">✅ Aucune porte sans appui détectée.</p>';
     if (!doublonsFlagged.length) { body.innerHTML = '<div class="empty" style="padding:18px 0;">✅ ' + all.length + ' configurations contrôlées : aucun doublon.</div>' + appuiHtml; return; }
     body.innerHTML = '<p style="font-size:13px;margin-bottom:10px;"><b>' + doublonsFlagged.length + '</b> configuration(s) sur ' + all.length + ' à corriger :</p>' +
       '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="text-align:left;color:rgba(26,26,26,.5);"><th style="padding:6px 8px;">Projet</th><th>Client</th><th>Statut</th><th>Portes</th><th>Montant</th></tr></thead><tbody>' +
@@ -4457,7 +4457,7 @@
       if (vizUrl) html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 9l-9-7-9 7v11a2 2 0 002 2h14a2 2 0 002-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Voir le meuble →</a>`;
     } catch(e) {}
 
-    if (c === sdb && sdb.raw_config) html = appuiBannerHtml(sdb.raw_config) + html;
+    if (c === sdb && sdb.raw_config) html = appuiBannerHtml(sdb.raw_config, sdb.id) + html;
     content.innerHTML = html;
     wrap.style.display = 'block';
     if (c === sdb) {   // sauvegarde éventuelle d'avant nettoyage
