@@ -3492,7 +3492,7 @@
     var rc = plan.rc; delete rc.devis_quantities;
     var n = configCountsFromRc(rc);
     var bk = await sb.from('configs_sdb_sauvegardes').insert([{ config_id: c.id, raw_config: c.raw_config, elements: c.elements, nb_tablettes: c.nb_tablettes, nb_separateurs: c.nb_separateurs, nb_portes: c.nb_portes, nb_tiroirs: c.nb_tiroirs, motif: 'avant ajout des intercalaires manquants', saved_by: adminUser && adminUser.email }]);
-    if (bk.error) { showToast('Sauvegarde impossible : correction annulée (' + bk.error.message + ')', 'err'); return false; }
+    if (bk.error) { alert('Sauvegarde impossible, correction annulée.\n\nMessage de Supabase : ' + bk.error.message + '\n\nRelance docs/supabase-migration-sauvegardes.sql dans le SQL Editor de Supabase, puis réessaie.'); return false; }
     var upd = { raw_config: rc, nb_tablettes: n.tablettes, nb_separateurs: n.separateurs, nb_portes: n.portes, nb_tiroirs: n.tiroirs };
     if (Array.isArray(rc.elements)) upd.elements = rc.elements;
     var r = await sb.from('configs_sdb').update(upd).eq('id', c.id);
