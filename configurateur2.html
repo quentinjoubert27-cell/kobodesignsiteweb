@@ -4530,10 +4530,10 @@ function computeDevisQuantities(techSpec, matLabel){
   // Profondeur du caisson (mm) — sert à calculer vis + tourillons par jonction
   var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
     ((techSpec.structural_panels||[]).find(function(p){return p.depth_mm;})||{}).depth_mm || 0;
-  // Règle de fixation (atelier) : à chaque angle ou intersection entre deux panneaux, 4 vis et 4 tourillons.
+  // Règle de fixation (atelier) : à chaque angle ou intersection entre deux panneaux, 4 vis et 3 tourillons.
   // (ancienne règle abandonnée : 1ère vis à 3 cm, puis une vis + un tourillon tous les 20 cm)
   function fastenersForJoint(L_cm) {
-    return { vis: 4, tourillons: 4 };
+    return { vis: 4, tourillons: 3 };
   }
   var jointCP = fastenersForJoint(CP_mm/10);
 
