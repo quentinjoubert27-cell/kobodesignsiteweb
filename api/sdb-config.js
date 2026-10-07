@@ -68,7 +68,7 @@ module.exports = async function handler(req, res) {
         plan_ep: plan.Ep || 0,
         plan_mat: plan.matLabel || '',
         // vasques
-        nb_vasques: vasques.nb || (furniture_type === 'sdb' ? 1 : 0),
+        nb_vasques: vasques.nb != null ? vasques.nb : (furniture_type === 'sdb' ? 1 : 0),
         vasque_w: vasques.W || 0,
         vasque_d: vasques.D || 0,
         vasque_label: (vasques.label || vasques.id || '').toString().slice(0, 40),
