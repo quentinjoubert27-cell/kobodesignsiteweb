@@ -2,9 +2,11 @@
 -- Script RE-LANÇABLE : crée la table si besoin ET complète les colonnes manquantes si elle existait déjà.
 create table if not exists configs_sdb_sauvegardes (
   id uuid primary key default gen_random_uuid(),
-  config_id uuid
+  config_id text
 );
-alter table configs_sdb_sauvegardes add column if not exists config_id uuid;
+-- l'identifiant d'une configuration est un nombre (ex. 56) : on le stocke en texte, valable pour tout type d'identifiant
+alter table configs_sdb_sauvegardes add column if not exists config_id text;
+alter table configs_sdb_sauvegardes alter column config_id type text using config_id::text;
 alter table configs_sdb_sauvegardes add column if not exists raw_config jsonb;
 alter table configs_sdb_sauvegardes add column if not exists elements jsonb;
 alter table configs_sdb_sauvegardes add column if not exists nb_tablettes int;

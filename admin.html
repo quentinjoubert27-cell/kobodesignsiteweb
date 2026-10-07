@@ -3491,7 +3491,7 @@
     if (!silent && !confirm('Ajouter ' + plan.added.length + ' intercalaire(s) ?\n\n' + txt + '\n\nLe meuble change : son prix sera recalculé à la réouverture du projet. Une sauvegarde est faite.')) return false;
     var rc = plan.rc; delete rc.devis_quantities;
     var n = configCountsFromRc(rc);
-    var bk = await sb.from('configs_sdb_sauvegardes').insert([{ config_id: c.id, raw_config: c.raw_config, elements: c.elements, nb_tablettes: c.nb_tablettes, nb_separateurs: c.nb_separateurs, nb_portes: c.nb_portes, nb_tiroirs: c.nb_tiroirs, motif: 'avant ajout des intercalaires manquants', saved_by: adminUser && adminUser.email }]);
+    var bk = await sb.from('configs_sdb_sauvegardes').insert([{ config_id: String(c.id), raw_config: c.raw_config, elements: c.elements, nb_tablettes: c.nb_tablettes, nb_separateurs: c.nb_separateurs, nb_portes: c.nb_portes, nb_tiroirs: c.nb_tiroirs, motif: 'avant ajout des intercalaires manquants', saved_by: adminUser && adminUser.email }]);
     if (bk.error) { alert('Sauvegarde impossible, correction annulée.\n\nMessage de Supabase : ' + bk.error.message + '\n\nRelance docs/supabase-migration-sauvegardes.sql dans le SQL Editor de Supabase, puis réessaie.'); return false; }
     var upd = { raw_config: rc, nb_tablettes: n.tablettes, nb_separateurs: n.separateurs, nb_portes: n.portes, nb_tiroirs: n.tiroirs };
     if (Array.isArray(rc.elements)) upd.elements = rc.elements;
@@ -3586,7 +3586,7 @@
 
   async function restoreConfigBackup(configId) {
     if (!confirm("Restaurer la configuration telle qu'elle était avant le nettoyage des doublons ? (les doublons reviendront)")) return;
-    const { data: bk, error } = await sb.from('configs_sdb_sauvegardes').select('*').eq('config_id', configId).order('saved_at', { ascending: false }).limit(1);
+    const { data: bk, error } = await sb.from('configs_sdb_sauvegardes').select('*').eq('config_id', String(configId)).order('saved_at', { ascending: false }).limit(1);
     if (error || !bk || !bk.length) return showToast('Aucune sauvegarde trouvée', 'err');
     const b = bk[0];
     const upd = { raw_config: b.raw_config, elements: b.elements, nb_tablettes: b.nb_tablettes, nb_separateurs: b.nb_separateurs, nb_portes: b.nb_portes, nb_tiroirs: b.nb_tiroirs };
@@ -3603,7 +3603,7 @@
     // 1) copie de sauvegarde de TOUTES les configurations à modifier (la correction est annulée si elle échoue)
     var rows = doublonsFlagged.map(function (f) {
       var o = f.original || {};
-      return { config_id: f.id, raw_config: o.raw_config || null, elements: o.elements || null, nb_tablettes: o.nb_tablettes, nb_separateurs: o.nb_separateurs, nb_portes: o.nb_portes, nb_tiroirs: o.nb_tiroirs, motif: 'avant nettoyage des doublons', saved_by: adminUser && adminUser.email };
+      return { config_id: String(f.id), raw_config: o.raw_config || null, elements: o.elements || null, nb_tablettes: o.nb_tablettes, nb_separateurs: o.nb_separateurs, nb_portes: o.nb_portes, nb_tiroirs: o.nb_tiroirs, motif: 'avant nettoyage des doublons', saved_by: adminUser && adminUser.email };
     });
     for (var i = 0; i < rows.length; i += 50) {
       var { error: bkErr } = await sb.from('configs_sdb_sauvegardes').insert(rows.slice(i, i + 50));
@@ -4462,7 +4462,7 @@
     wrap.style.display = 'block';
     if (c === sdb) {   // sauvegarde éventuelle d'avant nettoyage
       try {
-        const { data: bk } = await sb.from('configs_sdb_sauvegardes').select('id, saved_at').eq('config_id', sdb.id).order('saved_at', { ascending: false }).limit(1);
+        const { data: bk } = await sb.from('configs_sdb_sauvegardes').select('id, saved_at').eq('config_id', String(sdb.id)).order('saved_at', { ascending: false }).limit(1);
         if (bk && bk.length) content.insertAdjacentHTML('beforeend', '<div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" onclick="restoreConfigBackup(\'' + sdb.id + '\')">↩ Restaurer la version d\'avant nettoyage (' + new Date(bk[0].saved_at).toLocaleDateString('fr-FR') + ')</button></div>');
       } catch (e) { /* table de sauvegarde absente : rien à afficher */ }
     }
