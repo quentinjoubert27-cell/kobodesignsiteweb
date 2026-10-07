@@ -4371,28 +4371,35 @@
   // Là où plusieurs panneaux se rejoignent au même endroit (croisement intercalaire / étagère), c'est un seul point.
   function countJunctions(spec) {
     var ep = spec.panel_thickness_mm || 18, W = spec.overall_mm.width, H = spec.overall_mm.height, pts = {};
-    var add = function (x, y) { pts[Math.round(x / 5) + '_' + Math.round(y / 5)] = 1; };
-    [[0, 0], [W, 0], [0, H], [W, H]].forEach(function (p) { add(p[0], p[1]); });
-    var seps = (spec.separators || []).filter(function (s) { return !s.doubled; });
-    function contactX(xEnd, side) {
+    // chaque point est compté une fois ; poids 2 s'il touche un intercalaire doublé (le panneau en plus a ses propres vis aux mêmes angles)
+    var add = function (x, y, w) { var k = Math.round(x / 5) + '_' + Math.round(y / 5); pts[k] = Math.max(pts[k] || 0, w || 1); };
+    [[0, 0], [W, 0], [0, H], [W, H]].forEach(function (p) { add(p[0], p[1], 1); });
+    var all = spec.separators || [];
+    var seps = all.filter(function (s) { return !s.doubled; });
+    var isDbl = function (s) { return all.some(function (d) { return d.doubled && Math.abs(d.x_center_mm - s.x_center_mm) <= 2 && Math.abs(d.y_bottom_mm - s.y_bottom_mm) <= 2 && Math.abs(d.y_top_mm - s.y_top_mm) <= 2; }); };
+    function contact(xEnd, side, yc) {
       for (var i = 0; i < seps.length; i++) {
         var cx = seps[i].x_center_mm;
-        if (side === 'L' && Math.abs(xEnd - (cx + ep / 2)) <= 4) return cx;
-        if (side === 'R' && Math.abs(xEnd - (cx - ep / 2)) <= 4) return cx;
+        if ((side === 'L' && Math.abs(xEnd - (cx + ep / 2)) <= 4) || (side === 'R' && Math.abs(xEnd - (cx - ep / 2)) <= 4)) {
+          // la jonction touche-t-elle un intercalaire doublé (à cette hauteur) ?
+          var w = seps.some(function (s) { return Math.abs(s.x_center_mm - cx) <= 2 && isDbl(s) && yc >= s.y_bottom_mm - ep - 3 && yc <= s.y_top_mm + ep + 3; }) ? 2 : 1;
+          return { x: cx, w: w };
+        }
       }
-      if (side === 'L') return Math.abs(xEnd - ep) <= 4 ? 0 : xEnd;
-      return Math.abs(xEnd - (W - ep)) <= 4 ? W : xEnd;
+      if (side === 'L') return { x: Math.abs(xEnd - ep) <= 4 ? 0 : xEnd, w: 1 };
+      return { x: Math.abs(xEnd - (W - ep)) <= 4 ? W : xEnd, w: 1 };
     }
     (spec.shelves || []).filter(function (s) { return s.shelf_type === 'fixe'; }).forEach(function (sh) {
-      var yc = (sh.y_bottom_mm + sh.y_top_mm) / 2;
-      add(contactX(sh.x_left_mm, 'L'), yc); add(contactX(sh.x_right_mm, 'R'), yc);
+      var yc = (sh.y_bottom_mm + sh.y_top_mm) / 2, a = contact(sh.x_left_mm, 'L', yc), b = contact(sh.x_right_mm, 'R', yc);
+      add(a.x, yc, a.w); add(b.x, yc, b.w);
     });
     seps.forEach(function (s) {
-      var cx = s.x_center_mm;
-      add(cx, s.y_bottom_mm <= ep + 3 ? 0 : s.y_bottom_mm - ep / 2);
-      add(cx, s.y_top_mm >= H - ep - 3 ? H : s.y_top_mm + ep / 2);
+      var cx = s.x_center_mm, w = isDbl(s) ? 2 : 1;
+      add(cx, s.y_bottom_mm <= ep + 3 ? 0 : s.y_bottom_mm - ep / 2, w);
+      add(cx, s.y_top_mm >= H - ep - 3 ? H : s.y_top_mm + ep / 2, w);
     });
-    return Object.keys(pts).length;
+    var keys = Object.keys(pts), total = keys.reduce(function (a, k) { return a + pts[k]; }, 0);
+    return { points: keys.length, total: total, doubles: keys.filter(function (k) { return pts[k] > 1; }).length };
   }
   
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
@@ -4413,7 +4420,7 @@
     }
     var jointCP = fastenersForJoint(CP_mm / 10);
     // vis / tourillons : 4 vis + 3 tourillons à chaque angle ou intersection (chaque point compté une seule fois)
-    var nJonctions = countJunctions(techSpec);
+    var jInfo = countJunctions(techSpec), nJonctions = jInfo.total;
     q.screws += nJonctions * 4; q.dowels += nJonctions * 3;
     // bucket: q.panels_caisson_m2 | q.panels_etagere_m2 | q.panels_porte_m2 | q.panels_tiroir_m2
     // extra (optionnel) : { group, vis, tourillons, charnieres, mecanisme_tiroir } — recap par pièce/élément
@@ -4437,7 +4444,7 @@
       q.edge_banding_m += ((p.type === 'joue_gauche' || p.type === 'joue_droite') ? h : w) / 1000;
     });
     // Récapitulatif : assemblage global du caisson (les 4 coins ne sont pas attribuables à un seul panneau)
-    q.pieces.push({ type: 'jonctions', group: 'Assemblage : ' + nJonctions + ' angle(s) / intersection(s) × (4 vis + 3 tourillons)', vis: nJonctions * 4, tourillons: nJonctions * 3 });
+    q.pieces.push({ type: 'jonctions', group: 'Assemblage : ' + jInfo.points + ' angle(s) / intersection(s)' + (jInfo.doubles ? ' (dont ' + jInfo.doubles + ' sur intercalaire doublé, comptés ×2)' : '') + ' → ' + nJonctions + ' × (4 vis + 3 tourillons)', vis: nJonctions * 4, tourillons: nJonctions * 3 });
     (techSpec.separators || []).forEach(function (s, idx) {
       var h = s.y_top_mm - s.y_bottom_mm;
       addPanel(q.panels_etagere_m2, mat, (s.depth_mm || ((techSpec.overall_mm && techSpec.overall_mm.depth || 0) - (techSpec.panel_thickness_mm || 18))), h, 'separateur', {
