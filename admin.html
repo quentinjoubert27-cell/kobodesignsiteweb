@@ -97,7 +97,7 @@
     .stat__trend.neutral { color: rgba(26,26,26,.3); }
 
     /* Kanban pipeline */
-    .pipeline { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-bottom: 32px; }
+    .pipeline { display: grid; grid-template-columns: repeat(9, 1fr); gap: 12px; margin-bottom: 32px; }
     .pipeline-col { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 16px; }
     .pipeline-col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .pipeline-col-title { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); }
@@ -126,6 +126,7 @@
     .sb-etude { background: #fef3c7; color: #92400e; } .sb-etude::before { background: #f59e0b; }
     .sb-analyse { background: #e0e7ff; color: #3730a3; } .sb-analyse::before { background: #6366f1; }
     .sb-devis { background: #ffedd5; color: #9a3412; } .sb-devis::before { background: #f97316; }
+    .sb-proposition { background: #ede9fe; color: #5b21b6; } .sb-proposition::before { background: #8b5cf6; }
     .sb-devisenvoye { background: #cffafe; color: #155e75; } .sb-devisenvoye::before { background: #06b6d4; }
     .sb-fabrication { background: #dbeafe; color: #1e40af; } .sb-fabrication::before { background: #3b82f6; }
     .sb-commande { background: #ede9fe; color: #5b21b6; } .sb-commande::before { background: #7c3aed; }
@@ -314,7 +315,7 @@
       /* Pipeline → grille compacte 5 colonnes sans scroll */
       .pipeline {
         display: grid !important;
-        grid-template-columns: repeat(8, 1fr) !important;
+        grid-template-columns: repeat(9, 1fr) !important;
         overflow-x: visible !important;
         gap: 6px !important;
         padding-bottom: 0 !important;
@@ -815,6 +816,7 @@
       <div class="pipeline" id="dash-pipeline">
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">En étude</span><span class="pipeline-count" id="pip-etude">0</span></div><div class="pipeline-chips" id="pip-chips-etude"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Analyse en cours</span><span class="pipeline-count" id="pip-analyse">0</span></div><div class="pipeline-chips" id="pip-chips-analyse"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Proposition envoyée</span><span class="pipeline-count" id="pip-proposition">0</span></div><div class="pipeline-chips" id="pip-chips-proposition"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis en cours</span><span class="pipeline-count" id="pip-devis">0</span></div><div class="pipeline-chips" id="pip-chips-devis"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis envoyé</span><span class="pipeline-count" id="pip-devisenvoye">0</span></div><div class="pipeline-chips" id="pip-chips-devisenvoye"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Fabrication</span><span class="pipeline-count" id="pip-fabrication">0</span></div><div class="pipeline-chips" id="pip-chips-fabrication"></div></div>
@@ -1271,7 +1273,9 @@
         <select id="np-statut">
           <option value="En étude">En étude</option>
           <option value="Analyse en cours">Analyse en cours (interne)</option>
-          <option value="Devis en cours">Devis en cours</option>
+          <option value="Proposition envoyée">Proposition envoyée</option>
+          <option value="Proposition envoyée">Proposition envoyée</option>
+        <option value="Devis en cours">Devis en cours</option>
           <option value="Devis envoyé">Devis envoyé</option>
           <option value="Fabrication">Fabrication</option>
           <option value="Commandé">Commandé</option>
@@ -1375,6 +1379,7 @@
       <div id="bulk-statuts" style="display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;">
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="En étude" checked/> En étude</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Analyse en cours" checked/> Analyse en cours</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Proposition envoyée"/> Proposition envoyée</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Devis en cours" checked/> Devis en cours</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Devis envoyé"/> Devis envoyé</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Fabrication"/> Fabrication</label>
@@ -2609,7 +2614,7 @@
     resultEl.innerHTML = 'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente : ' + price.prix_vente.toFixed(2) + ' €</span>';
     var _pj = allProjets.find(function (x) { return x.id === currentProjetId; });
-    var figé = _pj && STATUTS_MONTANT.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
+    var figé = _pj && STATUTS_FERMES.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
     if (currentProjetId && !figé) {
       sb.from('projets').update({ montant: price.prix_vente }).eq('id', currentProjetId)
         .then(function (r) {
@@ -2968,8 +2973,8 @@
   }
 
   function buildPipeline(projets) {
-    const statuts = ['En étude', 'Analyse en cours', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
-    const keys = ['etude', 'analyse', 'devis', 'devisenvoye', 'fabrication', 'commande', 'livraison', 'termine'];
+    const statuts = ['En étude', 'Analyse en cours', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+    const keys = ['etude', 'analyse', 'proposition', 'devis', 'devisenvoye', 'fabrication', 'commande', 'livraison', 'termine'];
     statuts.forEach((s, i) => {
       const list = projets.filter(p => p.statut === s);
       document.getElementById('pip-' + keys[i]).textContent = list.length;
@@ -3604,7 +3609,7 @@
     return true;
   }
 
-  var STATUTS_AVANT_DEVIS = ['En étude', 'Analyse en cours', 'Devis en cours'];
+  var STATUTS_AVANT_DEVIS = ['En étude', 'Analyse en cours', 'Proposition envoyée', 'Devis en cours'];
   async function fixAppuiAll() {
     var list = (window._appuiList || []).filter(function (a) { return STATUTS_AVANT_DEVIS.indexOf(a.statut) >= 0; });
     if (!list.length) return showToast('Aucun projet concerné avant l\'envoi du devis', 'err');
@@ -4712,8 +4717,8 @@
         logActivite(prevProjet.client_id, 'statut', 'Statut du projet « ' + (prevProjet.nom || '') + ' » : ' + (prevProjet.statut || '—') + ' → ' + statut, { projet_id: currentProjetId, auto: true });
       }
       await Promise.all([loadProjets(), loadDashboard()]);
-      // Notifier le client du changement de statut (sauf statut interne "Analyse en cours")
-      if (statut === 'Analyse en cours') return;
+      // Notifier le client du changement de statut (sauf « Analyse en cours » interne et « Proposition envoyée » : la proposition part avec son PDF)
+      if (statut === 'Analyse en cours' || statut === 'Proposition envoyée') return;
       try {
         const { data: { session } } = await sb.auth.getSession();
         await fetch('/api/notify', {
@@ -5182,7 +5187,7 @@
 
   // ── HELPERS ───────────────────────────────────────────────────────
   function statusKey(s) {
-    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Proposition envoyée': 'proposition', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return m[s] || 'etude';
   }
 
@@ -5196,7 +5201,8 @@
   }
 
   // Le montant n'est affiché qu'une fois le devis envoyé (ou plus tard dans le suivi)
-  var STATUTS_MONTANT = ['Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+  var STATUTS_MONTANT = ['Proposition envoyée', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];   // montant visible dès la proposition envoyée
+  var STATUTS_FERMES = ['Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];       // montant figé (devis ferme)
   function montantVisible(p) { return !!p && STATUTS_MONTANT.indexOf(p.statut) >= 0; }
 
   function formatCurrency(amount) {

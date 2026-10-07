@@ -113,6 +113,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
     .status--etude { background: #fef3c7; color: #92400e; }
     .status--etude::before { background: #f59e0b; }
+    .status--proposition { background: #ede9fe; color: #5b21b6; }
+    .status--proposition::before { background: #8b5cf6; }
     .status--devis { background: #ffedd5; color: #9a3412; }
     .status--devis::before { background: #f97316; }
     .status--devisenvoye { background: #cffafe; color: #155e75; }
@@ -913,12 +915,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function statutClient(s) { return s === 'Analyse en cours' ? 'En étude' : s; }
 
   function statusClass(s) {
-    const map = { 'En étude': 'etude', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const map = { 'En étude': 'etude', 'Proposition envoyée': 'proposition', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return map[s] || 'etude';
   }
 
   function statusProgress(s) {
-    const map = { 'En étude': 20, 'Devis en cours': 35, 'Devis envoyé': 45, 'Fabrication': 50, 'Commandé': 70, 'Livraison': 88, 'Terminé': 100 };
+    const map = { 'En étude': 20, 'Proposition envoyée': 28, 'Devis en cours': 35, 'Devis envoyé': 45, 'Fabrication': 50, 'Commandé': 70, 'Livraison': 88, 'Terminé': 100 };
     return map[s] || 20;
   }
 
