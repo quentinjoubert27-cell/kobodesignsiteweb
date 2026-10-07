@@ -2256,7 +2256,6 @@
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger en PDF</button>
         <button class="btn btn-ghost btn-sm" id="devis-reset-btn" onclick="resetDevisOverrides()" style="display:none;">↺ Revenir aux quantités calculées</button>
-        <button class="btn btn-ghost btn-sm" onclick="recalcDevisFromConfig()" title="Recalcule les quantités depuis la configuration du meuble (prend en compte les règles récentes, ex. intercalaires doublés)">↻ Recalculer depuis la configuration</button>
         <div id="devis-result" style="font-size:14px;font-weight:700;"></div>
       </div>
     </div>`;
@@ -2609,7 +2608,9 @@
     try { renderDevisSimple(); } catch (e) { console.warn('devis simplifié', e); }
     resultEl.innerHTML = 'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente : ' + price.prix_vente.toFixed(2) + ' €</span>';
-    if (currentProjetId) {
+    var _pj = allProjets.find(function (x) { return x.id === currentProjetId; });
+    var figé = _pj && STATUTS_MONTANT.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
+    if (currentProjetId && !figé) {
       sb.from('projets').update({ montant: price.prix_vente }).eq('id', currentProjetId)
         .then(function (r) {
           if (!r.error) { var m = document.getElementById('pd-montant'), st = document.getElementById('pd-statut'); if (m && st && STATUTS_MONTANT.indexOf(st.value) >= 0) m.value = price.prix_vente; }
@@ -4203,7 +4204,8 @@
       const rc = sdb.raw_config || {};
       currentProjetRc = rc; currentProjetSdbId = sdb.id;
       currentDevisOverrides = Object.assign({}, rc.devis_overrides || {});
-      let q = rc.devis_quantities;
+      const storedQ = rc.devis_quantities;   // quantités enregistrées à l'envoi : plus utilisées (toujours recalculé avec les règles actuelles) sauf le choix des faces visibles
+      let q = null;
       // Compat : les configs soumises avant la séparation par catégorie (caisson/étagère/porte/tiroir)
       // stockent tout dans un seul panels_m2 — on ignore ce blob et on force le recalcul ci-dessous
       // depuis la géométrie brute, pour obtenir les vraies catégories (porte/tiroir séparés).
@@ -4297,6 +4299,11 @@
         }
       }
 
+      // on garde le choix du client pour les faces visibles (joues/dessus de finition) enregistré à l'envoi
+      if (storedQ && Array.isArray(storedQ.finitions) && Array.isArray(q.finitions)) {
+        const visFin = {}; storedQ.finitions.forEach(function (f) { visFin[f.id] = f.visible; });
+        q.finitions.forEach(function (f) { if (visFin[f.id] !== undefined) f.visible = !!visFin[f.id]; });
+      }
       currentDevisQuantities = q;
       el.innerHTML = renderDevisPriceForm(q);
       recomputeFinitionPanels();
