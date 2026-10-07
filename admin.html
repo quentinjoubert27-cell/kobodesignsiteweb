@@ -3449,13 +3449,70 @@
         }
         var cl = cover(d, d.l), cr = cover(d, d.r), nl = neigh('L'), nr = neigh('R');
         var best = (nl && !nr) ? cr : (nr && !nl) ? cl : Math.max(cl, cr);   // charnières côté extérieur du groupe
-        if (best < 0.9) issues.push({ caisson: c.label, key: d.key, couverture: best, cause: best < 0.1 ? 'aucun panneau pour fixer la porte' : 'panneau de fixation trop court (' + Math.round(best * 100) + ' % de la hauteur)' });
+        var hingeX = (nl && !nr) ? d.r : (nr && !nl) ? d.l : (cr > cl ? d.r : d.l);
+        if (best < 0.9) issues.push({ caisson: c.label, key: d.key, couverture: best, x: hingeX, door: d, ctx: { els: c.els, shelves: shelves, seps: seps, iW: iW, iH: iH }, cause: best < 0.1 ? 'aucun panneau pour fixer la porte' : 'panneau de fixation trop court (' + Math.round(best * 100) + ' % de la hauteur)' });
       });
     });
     return issues;
   }
 
-  function appuiBannerHtml(rc) {
+
+  // Plan de correction : un intercalaire (cloison verticale) au droit de chaque porte mal fixée
+  function appuiFixPlan(rc) {
+    var cl = JSON.parse(JSON.stringify(rc || {})), added = [], seen = {};
+    checkPortesAppui(cl).forEach(function (is) {
+      var ctx = is.ctx, d = is.door, x = is.x;
+      // parties de la hauteur de la porte non couvertes par un intercalaire à cet endroit
+      var segs = ctx.seps.filter(function (sp) { return Math.abs(sp.x - x) <= 1.5; }).map(function (sp) { return [sp.b, sp.t]; }).sort(function (a, b) { return a[0] - b[0]; });
+      var gaps = [], cur = d.b;
+      segs.forEach(function (g) { if (g[0] > cur + 0.5) gaps.push([cur, Math.min(g[0], d.t)]); cur = Math.max(cur, g[1]); });
+      if (cur < d.t - 0.5) gaps.push([cur, d.t]);
+      gaps.forEach(function (g) {
+        var ym = (g[0] + g[1]) / 2, bot = 0, top = ctx.iH;
+        ctx.shelves.forEach(function (sh) {
+          var sl = sh.x_left_cm != null ? sh.x_left_cm : 0, sr = sh.x_right_cm != null ? sh.x_right_cm : ctx.iW;
+          if (sl <= x + 0.5 && sr >= x - 0.5) { if (sh.y_cm <= ym && sh.y_cm > bot) bot = sh.y_cm; if (sh.y_cm >= ym && sh.y_cm < top) top = sh.y_cm; }
+        });
+        var y = Math.round((bot + top) / 2 * 10) / 10, k = is.caisson + '|' + x + '|' + y;
+        if (seen[k]) return; seen[k] = 1;
+        ctx.els.push({ type: 'separator', x_cm: x, y_cm: y });
+        added.push({ caisson: is.caisson, x: x, de: bot, a: top });
+      });
+    });
+    return { rc: cl, added: added };
+  }
+
+  async function fixAppui(configId, silent) {
+    const { data: c, error } = await sb.from('configs_sdb').select('id, raw_config, elements, nb_tablettes, nb_separateurs, nb_portes, nb_tiroirs').eq('id', configId).maybeSingle();
+    if (error || !c) { showToast('Configuration introuvable', 'err'); return false; }
+    var plan = appuiFixPlan(c.raw_config);
+    if (!plan.added.length) { if (!silent) showToast('Rien à ajouter automatiquement', 'err'); return false; }
+    var txt = plan.added.map(function (a) { return '• ' + a.caisson + ' : un intercalaire à ' + a.x + ' cm du bord, de ' + a.de + ' à ' + a.a + ' cm de hauteur'; }).join('\n');
+    if (!silent && !confirm('Ajouter ' + plan.added.length + ' intercalaire(s) ?\n\n' + txt + '\n\nLe meuble change : son prix sera recalculé à la réouverture du projet. Une sauvegarde est faite.')) return false;
+    var rc = plan.rc; delete rc.devis_quantities;
+    var n = configCountsFromRc(rc);
+    var bk = await sb.from('configs_sdb_sauvegardes').insert([{ config_id: c.id, raw_config: c.raw_config, elements: c.elements, nb_tablettes: c.nb_tablettes, nb_separateurs: c.nb_separateurs, nb_portes: c.nb_portes, nb_tiroirs: c.nb_tiroirs, motif: 'avant ajout des intercalaires manquants', saved_by: adminUser && adminUser.email }]);
+    if (bk.error) { showToast('Sauvegarde impossible : correction annulée (' + bk.error.message + ')', 'err'); return false; }
+    var upd = { raw_config: rc, nb_tablettes: n.tablettes, nb_separateurs: n.separateurs, nb_portes: n.portes, nb_tiroirs: n.tiroirs };
+    if (Array.isArray(rc.elements)) upd.elements = rc.elements;
+    var r = await sb.from('configs_sdb').update(upd).eq('id', c.id);
+    if (r.error && upd.elements) { delete upd.elements; r = await sb.from('configs_sdb').update(upd).eq('id', c.id); }
+    if (r.error) { showToast('Erreur : ' + r.error.message, 'err'); return false; }
+    if (!silent) { showToast(plan.added.length + ' intercalaire(s) ajouté(s)'); if (currentProjetId) { loadProjetConfig(); renderProjetDevis(currentProjetId); } }
+    return true;
+  }
+
+  var STATUTS_AVANT_DEVIS = ['En étude', 'Analyse en cours', 'Devis en cours'];
+  async function fixAppuiAll() {
+    var list = (window._appuiList || []).filter(function (a) { return STATUTS_AVANT_DEVIS.indexOf(a.statut) >= 0; });
+    if (!list.length) return showToast('Aucun projet concerné avant l\'envoi du devis', 'err');
+    if (!confirm('Ajouter automatiquement les intercalaires manquants sur ' + list.length + ' projet(s) pas encore au stade « Devis envoyé » ?\n(Les projets plus avancés restent à traiter un par un. Une sauvegarde est faite pour chacun.)')) return;
+    var ok = 0;
+    for (var a of list) { if (await fixAppui(a.config_id, true)) ok++; }
+    showToast(ok + ' projet(s) corrigé(s)'); closeModal('modal-doublons');
+  }
+
+  function appuiBannerHtml(rc, configId) {
     var is = checkPortesAppui(rc);
     if (!is.length) return '';
     return '<div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;line-height:1.6;"><b style="color:#c2410c;">⚠ ' + is.length + ' porte(s) sans appui suffisant</b> — le devis et la fabrication sont à vérifier :<ul style="margin:6px 0 0 16px;">' +
