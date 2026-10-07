@@ -2338,9 +2338,12 @@
     var det = devisSimpleDetails();
     var labels = { caisson: 'Caissons', finitions: 'Finitions', quincaillerie: 'Quincaillerie et accessoires', plan: 'Plan de travail' };
     var prev = {}; (devisSimpleFam || []).forEach(function (f) { if (f.edited) prev[f.id] = f.prix; });
-    devisSimpleFam = Object.keys(labels).filter(function (k) { return det[k] && (k === 'caisson' || prix[k] > 0 || (k !== 'plan' && det[k])); })
+    var famCalc = Object.keys(labels).filter(function (k) { return det[k] && (k === 'caisson' || prix[k] > 0 || (k !== 'plan' && det[k])); })
       .filter(function (k) { return k !== 'plan' || prix.plan > 0; })
-      .map(function (k) { return { id: k, label: labels[k], detail: det[k], prix: prev[k] != null ? prev[k] : prix[k], edited: prev[k] != null }; });
+      .map(function (k) { return { id: k, label: labels[k], detail: det[k], prix: prix[k] }; });
+    // Proposition : un seul prix final (le détail par poste n'apparaît que dans le devis)
+    var totalCalc = Math.round(famCalc.reduce(function (t, f) { return t + (f.prix || 0); }, 0) * 100) / 100;
+    devisSimpleFam = [{ id: 'total', label: 'Meuble sur mesure', detail: 'Fourniture et fabrication', prix: prev.total != null ? prev.total : totalCalc, edited: prev.total != null }];
     var row = 'display:grid;grid-template-columns:1.2fr 2fr 110px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
     el.innerHTML = devisSimpleFam.map(function (f) {
       return '<div style="' + row + '"><div style="font-size:13px;font-weight:700;">' + escHtml(f.label) + '</div><div style="font-size:12px;color:rgba(26,26,26,.6);">' + escHtml(f.detail) + '</div>' +
