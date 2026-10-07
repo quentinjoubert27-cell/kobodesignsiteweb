@@ -1011,9 +1011,11 @@ window.addEventListener('scroll', function(){
         <div class="warn-alert" id="warn-vasque"></div>
         <div class="sec">Nombre de vasques</div>
         <div class="facade-row" style="margin-bottom:16px">
+          <button class="facade-btn" id="nv0" onclick="setNbVasques(0)">Sans vasque</button>
           <button class="facade-btn on" id="nv1" onclick="setNbVasques(1)">1 vasque</button>
           <button class="facade-btn" id="nv2" onclick="setNbVasques(2)">2 vasques</button>
         </div>
+        <div id="vasque-opts">
         <div class="sec">Modèle de vasque</div>
         <div class="vasque-grid" id="vg"></div>
         <div class="sec">Type de pose</div>
@@ -1028,6 +1030,7 @@ window.addEventListener('scroll', function(){
         <div class="pos-info">
           Distance bord gauche : <strong id="pos-x">—</strong><br>
           Distance mur : <strong id="pos-z">—</strong>
+        </div>
         </div>
         <div class="sec">Récapitulatif</div>
         <div class="recap-box" id="recap"></div>
@@ -2479,7 +2482,7 @@ function buildPlan(){
     hole.lineTo(hx-rx,lhz-rz+cr); hole.quadraticCurveTo(hx-rx,lhz-rz,hx-rx+cr,lhz-rz); hole.closePath();
     shape.holes.push(hole);
   }
-  if(vasqueEncastree && S.vasqueRx>0 && S.vasqueRz>0){
+  if(S.nbVasques>0 && vasqueEncastree && S.vasqueRx>0 && S.vasqueRz>0){
     addVasqueHole(vx, clampVasque(S.vz,'z'));
     if(S.nbVasques===2) addVasqueHole(clampVasque(S.vx2,'x'), clampVasque(S.vz2,'z'));
   }
@@ -2591,8 +2594,11 @@ function _buildOneVasqueGrp(gltf){
 }
 
 function _applyVasqueGltf(gltf){
+  if(vasqueGrp) scene.remove(vasqueGrp);
+  if(vasqueGrp2) scene.remove(vasqueGrp2);
   disposeGroup(vasqueGrp); vasqueGrp=null;
   disposeGroup(vasqueGrp2); vasqueGrp2=null;
+  if(S.nbVasques===0){ positionVasque(); buildPlan(); return; }   // meuble sans vasque
 
   var r1=_buildOneVasqueGrp(gltf);
   vasqueGrp=r1.grp; vasqueRimOffset=r1.rimOffset;
@@ -3871,10 +3877,18 @@ function setNbVasques(n){
     return;
   }
   S.nbVasques=n;
+  document.getElementById('nv0').classList.toggle('on',n===0);
   document.getElementById('nv1').classList.toggle('on',n===1);
   document.getElementById('nv2').classList.toggle('on',n===2);
-  if(n===2 && !vasqueGrp2 && _vasqueCache[_vasqueSelected]){
-    _applyVasqueGltf(_vasqueCache[_vasqueSelected]);
+  var vo=document.getElementById('vasque-opts'); if(vo) vo.style.display=n===0?'none':'';
+  if(n===0){
+    if(vasqueGrp){ scene.remove(vasqueGrp); disposeGroup(vasqueGrp); vasqueGrp=null; }
+    if(vasqueGrp2){ scene.remove(vasqueGrp2); disposeGroup(vasqueGrp2); vasqueGrp2=null; }
+    buildPlan(); checkAlerts();
+    return;
+  }
+  if((n===2 && !vasqueGrp2) || (n>=1 && !vasqueGrp)){
+    if(_vasqueCache[_vasqueSelected]) _applyVasqueGltf(_vasqueCache[_vasqueSelected]); else buildVasque();
   } else if(n===1 && vasqueGrp2){
     scene.remove(vasqueGrp2); disposeGroup(vasqueGrp2); vasqueGrp2=null;
     S.vx=clampVasque(0,'x');
@@ -4249,7 +4263,7 @@ function checkAlerts(){
   if(wVasque){
     var pMat=MATS_PLAN[S.matPlan], vMat=MATS_VASQUE[S_matVasque];
     var planName=pMat?pMat.n:'', vasqueName=vMat?vMat.n:'';
-    if(planName!==vasqueName){
+    if(S.nbVasques>0 && planName!==vasqueName){
       wVasque.textContent='⚠ La vasque ('+vasqueName+') n\'est pas de la même couleur que le plan ('+planName+').';
       wVasque.classList.add('show');
     } else {
@@ -4303,7 +4317,7 @@ function buildRecap4(){
   ];
   if(currentFT==='sdb'){
     rows.push(['Plan de travail', Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n]);
-    rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
+    if(S.nbVasques===0) rows.push(['Vasque', 'Sans vasque']); else rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
   }
   if(currentFT==='tv'){
     tvSideLeft.forEach(function(r,i){ rows.push(['Caisson gauche '+(i+1), r.W+' × '+r.H+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
@@ -5593,6 +5607,7 @@ function _repositionPlanOnCaisson(){
       }
       if(cfg.vasques){
         if(cfg.vasques.nb>1) setNbVasques(2);
+        if(cfg.vasques.nb===0) setNbVasques(0);
         if(cfg.vasques.id) selectVasque(cfg.vasques.id);
         if(cfg.vasques.vx!=null){ S.vx=cfg.vasques.vx; S.vz=cfg.vasques.vz||0; }
         if(cfg.vasques.vx2!=null){ S.vx2=cfg.vasques.vx2; S.vz2=cfg.vasques.vz2||0; }
