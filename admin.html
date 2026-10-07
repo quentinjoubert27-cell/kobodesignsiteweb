@@ -1671,6 +1671,8 @@
     'Chateau Brown','Eternal Marquina','Jardin Emerald','Linen Cream','Miami White','White Arabesque',
     'Blanc Gris','Blanc Multicolore','Noir'];
 
+  var currentDevisOverrides = {};   // quantités modifiées à la main : clé -> valeur (enregistrées dans raw_config.devis_overrides)
+  var currentProjetSdbId = null;
   var currentProjetRc = null; // config brute (raw_config) du projet ouvert — JSON du meuble
   var currentTarifsGlobaux = null; // { panel_m2: {...}, edge_banding_ml, screw_unit, ... } — chargé depuis Supabase
 
@@ -2128,12 +2130,18 @@
     var hasAnyPanel = q && ['panels_caisson_m2','panels_etagere_m2','panels_porte_m2','panels_tiroir_m2','panels_tiroir_caisse_m2','panels_plan_m2']
       .some(function(k){ return q[k] && Object.keys(q[k]).length; });
     if (!hasAnyPanel) return '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune quantité calculable pour cette configuration.</div>';
-    var rowStyle = 'display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
-    var headStyle = 'display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;padding:0 0 8px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.15);';
+    var rowStyle = 'display:grid;grid-template-columns:2fr 1.3fr 1fr 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
+    var headStyle = 'display:grid;grid-template-columns:2fr 1.3fr 1fr 1fr;gap:10px;padding:0 0 8px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.15);';
 
-    function row(label, qtyText, priceText, extra) {
-      return `<div style="${rowStyle}"><div style="font-size:13px;font-weight:600;">${label}</div><div style="font-size:13px;color:rgba(26,26,26,.6);">${qtyText}</div><div style="font-size:13px;">${priceText}${extra||''}</div></div>`;
+    function row(label, qtyText, priceText, amountHtml) {
+      return `<div style="${rowStyle}"><div style="font-size:13px;font-weight:600;">${label}</div><div style="font-size:13px;color:rgba(26,26,26,.6);">${qtyText}</div><div style="font-size:13px;">${priceText}</div><div style="font-size:13px;text-align:right;">${amountHtml||''}</div></div>`;
     }
+    // quantité modifiable à la main (le montant de la ligne et le total se recalculent seuls)
+    function qtyInput(key, qty, unit, price, dec, grp) {
+      var ov = (currentDevisOverrides || {})[key], shown = ov != null ? ov : qty;
+      return '<span style="display:inline-flex;align-items:center;gap:5px;"><input type="number" min="0" step="' + (dec ? '0.01' : '1') + '" data-ov="' + escHtml(key) + '" data-grp="' + grp + '" data-base="' + qty + '" data-price="' + (price != null ? price : '') + '" value="' + (dec ? Number(shown).toFixed(2) : shown) + '" oninput="devisOvChange(this)" style="width:86px;padding:5px 7px;border:1.5px solid ' + (ov != null ? '#CD3E00' : 'rgba(26,26,26,.15)') + ';border-radius:6px;font-family:var(--font);font-size:13px;text-align:right;"/> ' + unit + '</span>';
+    }
+    function amtCell(key) { return '<span class="devis-amt" data-amt-for="' + escHtml(key) + '"></span>'; }
 
     // Tous les prix viennent uniquement de la base globale (onglet "Matériaux & Prix") — plus de
     // saisie ni de surcharge possible depuis la fiche projet.
@@ -2152,7 +2160,7 @@
         var priceKey = bucketKey + '|' + mat;
         var val = defVal(priceKey);
         var rowLabel = showMat ? (label + ' — ' + escHtml(mat)) : label;
-        return row(rowLabel, `${bucket[mat].toFixed(2)} ${unit}`, priceText(val) + (val != null ? ` / ${unit}` : ''));
+        return row(rowLabel, qtyInput(priceKey, bucket[mat], unit, val, true, 'panel'), priceText(val) + (val != null ? ` / ${unit}` : ''), amtCell(priceKey));
       }).join('');
     }
     var caissonRows = panelM2Rows('panels_caisson_m2', 'Caisson', 'm²', false);
@@ -2168,18 +2176,19 @@
     var chantVal = defFixed('edge_banding_ml');
     var chantRow = row(
       'Chant plaqué',
-      `<span id="devis-chant-qty" data-base="${(q.edge_banding_ml||0).toFixed(4)}">${(q.edge_banding_ml||0).toFixed(2)}</span> ml`,
-      priceText(chantVal) + (chantVal != null ? ' / ml' : '')
+      `<span id="devis-chant-qty" data-base="${(q.edge_banding_ml||0).toFixed(4)}" style="display:none;">${(q.edge_banding_ml||0).toFixed(2)}</span><span id="devis-chant-input-wrap">${qtyInput('edge_banding_ml', Math.round((q.edge_banding_ml||0)*100)/100, 'ml', chantVal, true, 'chant').replace('data-ov="edge_banding_ml"', 'id="devis-chant-input" data-ov="edge_banding_ml"')}</span>`,
+      priceText(chantVal) + (chantVal != null ? ' / ml' : ''),
+      amtCell('edge_banding_ml')
     );
     var otherRows = [
-      ['Équerres d\'angle (assemblage caisson)', (q.corner_brackets||0) + ' unité(s)', defFixed('corner_bracket_unit')],
-      ['Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', (q.screws||0) + ' unité(s)', defFixed('screw_unit')],
-      ['Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', (q.dowels||0) + ' unité(s)', defFixed('dowel_unit')],
-      ['Charnières <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.hinges||0) + ' unité(s)', defFixed('hinge_unit')],
-      ['Mécanismes tiroir <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', (q.drawer_mechanisms||0) + ' unité(s)', defFixed('drawer_mechanism_unit')],
-      ['Tringles <span style="font-weight:400;color:rgba(26,26,26,.45);">(penderie, pose incluse)</span>', (q.bars_count||0) + ' unité(s)', defFixed('bar_unit')],
+      ['corner_brackets', 'Équerres d\'angle (assemblage caisson)', q.corner_brackets || 0, defFixed('corner_bracket_unit')],
+      ['screws', 'Vis <span style="font-weight:400;color:rgba(26,26,26,.45);">(assemblage caisson, usinage inclus)</span>', q.screws || 0, defFixed('screw_unit')],
+      ['dowels', 'Tourillons <span style="font-weight:400;color:rgba(26,26,26,.45);">(usinage inclus)</span>', q.dowels || 0, defFixed('dowel_unit')],
+      ['hinges', 'Charnières <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', q.hinges || 0, defFixed('hinge_unit')],
+      ['drawer_mechanisms', 'Mécanismes tiroir <span style="font-weight:400;color:rgba(26,26,26,.45);">(pose + vis incluses)</span>', q.drawer_mechanisms || 0, defFixed('drawer_mechanism_unit')],
+      ['bars_count', 'Tringles <span style="font-weight:400;color:rgba(26,26,26,.45);">(penderie, pose incluse)</span>', q.bars_count || 0, defFixed('bar_unit')],
     ].map(function(r) {
-      return row(r[0], r[1], priceText(r[2]) + (r[2] != null ? ' / unité' : ''));
+      return row(r[1], qtyInput(r[0], r[2], 'unité(s)', r[3], false, 'quinc'), priceText(r[3]) + (r[3] != null ? ' / unité' : ''), amtCell(r[0]));
     }).join('');
     otherRows = chantRow + otherRows;
 
@@ -2203,8 +2212,9 @@
       finitionRows = q.finitions.map(finRow).join('') +
         row(
           'Joues' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre)</span>',
-          `<span id="devis-fin-total-qty">0.00</span> m²`,
-          priceText(finitionPriceVal) + (finitionPriceVal != null ? ' / m²' : '')
+          `<span id="devis-fin-total-qty" style="display:none;">0.00</span><span>${qtyInput('finition_m2', 0, 'm²', finitionPriceVal, true, 'finition').replace('data-ov="finition_m2"', 'id="devis-fin-input" data-ov="finition_m2"')}</span>`,
+          priceText(finitionPriceVal) + (finitionPriceVal != null ? ' / m²' : ''),
+          amtCell('finition_m2')
         );
     }
 
@@ -2232,7 +2242,7 @@
     var coefVal = defFixed('coefficient_revente') || 2;
 
     return `<div style="background:#fff;border:1px solid rgba(26,26,26,.1);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
-      <div style="${headStyle}"><div>Élément</div><div>Quantité</div><div>Prix unitaire</div></div>
+      <div style="${headStyle}"><div>Élément</div><div>Quantité (modifiable)</div><div>Prix unitaire</div><div style="text-align:right;">Montant</div></div>
       ${matRows}
       ${otherRows}
       ${finitionRows}
@@ -2242,8 +2252,10 @@
         Coefficient de revente : <strong>${coefVal}</strong>
         <span style="color:rgba(26,26,26,.4);"> (modifiable dans l'onglet Matériaux &amp; Prix)</span>
       </div>
+      <div id="devis-breakdown" style="display:grid;grid-template-columns:1fr auto;gap:4px 18px;font-size:12px;max-width:380px;margin:0 0 12px auto;"></div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger en PDF</button>
+        <button class="btn btn-ghost btn-sm" id="devis-reset-btn" onclick="resetDevisOverrides()" style="display:none;">↺ Revenir aux quantités calculées</button>
         <div id="devis-result" style="font-size:14px;font-weight:700;"></div>
       </div>
     </div>`;
@@ -2459,6 +2471,49 @@
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
 
+
+  // ── Quantités modifiables à la main + montants par ligne ────────────────────────────────
+  var _ovTimer = null;
+  function devisOvChange(inp) {
+    var key = inp.dataset.ov, val = parseFloat(inp.value), base = parseFloat(inp.dataset.base);
+    if (!isFinite(val) || val < 0 || Math.abs(val - base) < 0.005) { delete currentDevisOverrides[key]; inp.style.borderColor = 'rgba(26,26,26,.15)'; }
+    else { currentDevisOverrides[key] = val; inp.style.borderColor = '#CD3E00'; }
+    refreshDevisAmounts(); updateDevisAutoTotal(); saveDevisOverrides();
+  }
+  function refreshDevisAmounts() {
+    var sums = { panel: 0, chant: 0, finition: 0, quinc: 0 };
+    document.querySelectorAll('#pd-devis input[data-ov]').forEach(function (inp) {
+      var qty = parseFloat(inp.value) || 0, price = parseFloat(inp.dataset.price);
+      var amt = isFinite(price) ? qty * price : null;
+      var cell = document.querySelector('#pd-devis .devis-amt[data-amt-for="' + inp.dataset.ov.replace(/"/g, '\\"') + '"]');
+      if (cell) cell.textContent = amt != null ? amt.toFixed(2) + ' €' : '—';
+      if (amt != null && sums[inp.dataset.grp] != null) sums[inp.dataset.grp] += amt;
+    });
+    var tot = sums.panel + sums.chant + sums.finition + sums.quinc;
+    var el = document.getElementById('devis-breakdown');
+    if (el) {
+      var l = function (a, b, bold) { return '<div style="color:rgba(26,26,26,.55);' + (bold ? 'font-weight:700;color:var(--dark);' : '') + '">' + a + '</div><div style="text-align:right;' + (bold ? 'font-weight:700;' : '') + '">' + b.toFixed(2) + ' €</div>'; };
+      el.innerHTML = l('Panneaux', sums.panel) + (sums.finition ? l('Joues de finition', sums.finition) : '') + l('Chants', sums.chant) + l('Quincaillerie', sums.quinc) + l('Coût de revient', tot, true);
+    }
+    var rb = document.getElementById('devis-reset-btn');
+    if (rb) rb.style.display = Object.keys(currentDevisOverrides).length ? '' : 'none';
+  }
+  function saveDevisOverrides() {
+    clearTimeout(_ovTimer);
+    _ovTimer = setTimeout(async function () {
+      if (!currentProjetSdbId || !currentProjetRc) return;
+      if (Object.keys(currentDevisOverrides).length) currentProjetRc.devis_overrides = Object.assign({}, currentDevisOverrides);
+      else delete currentProjetRc.devis_overrides;
+      var { error } = await sb.from('configs_sdb').update({ raw_config: currentProjetRc }).eq('id', currentProjetSdbId);
+      if (error) showToast('Corrections non enregistrées : ' + error.message, 'err');
+    }, 600);
+  }
+  async function resetDevisOverrides() {
+    if (!confirm('Revenir aux quantités calculées automatiquement ? (tes corrections manuelles seront perdues)')) return;
+    currentDevisOverrides = {}; saveDevisOverrides();
+    await renderProjetDevis(currentProjetId);
+  }
+
   function recomputeFinitionPanels() {
     var totalEl = document.getElementById('devis-fin-total-qty');
     var chantEl = document.getElementById('devis-chant-qty');
@@ -2474,13 +2529,32 @@
       var base = parseFloat(chantEl.dataset.base) || 0;
       chantEl.textContent = (base + totalPerimeter).toFixed(2);
     }
+    var ci = document.getElementById('devis-chant-input');
+    if (ci && chantEl) { ci.dataset.base = chantEl.textContent; if (currentDevisOverrides.edge_banding_ml == null) ci.value = chantEl.textContent; }
+    var fi = document.getElementById('devis-fin-input');
+    if (fi && totalEl) { fi.dataset.base = totalM2.toFixed(2); if (currentDevisOverrides.finition_m2 == null) fi.value = totalM2.toFixed(2); }
+    refreshDevisAmounts();
     updateDevisAutoTotal();
   }
 
   // Rassemble tout ce qu'il faut pour calculer le prix : les quantités du projet, les tarifs
   // globaux (onglet "Matériaux & Prix"), et l'état actuel des cases "faces visibles" des joues.
+  var DEVIS_PANEL_KEYS = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_tiroir_caisse_m2', 'panels_plan_m2'];
+  var DEVIS_UNIT_FIELDS = ['screws', 'dowels', 'hinges', 'drawer_mechanisms', 'corner_brackets', 'bars_count'];
+  // Quantités calculées + corrections manuelles de l'admin
+  function applyDevisOverrides(q) {
+    if (!q) return q;
+    var ov = currentDevisOverrides || {}, o = Object.assign({}, q);
+    DEVIS_PANEL_KEYS.forEach(function (k) {
+      o[k] = Object.assign({}, q[k] || {});
+      Object.keys(o[k]).forEach(function (m) { var v = ov[k + '|' + m]; if (v != null) o[k][m] = v; });
+    });
+    DEVIS_UNIT_FIELDS.forEach(function (f) { if (ov[f] != null) o[f] = ov[f]; });
+    return o;
+  }
+
   function collectDevisAutoContext() {
-    var q = currentDevisQuantities;
+    var q = applyDevisOverrides(currentDevisQuantities);
     var g = currentTarifsGlobaux || {};
     var finitionVisible = {}, finitionM2 = 0, finitionPerimeter = 0;
     document.querySelectorAll('.devis-fin-checkbox').forEach(function (cb) {
@@ -2492,6 +2566,8 @@
     });
     var chantQtyEl = document.getElementById('devis-chant-qty');
     var edgeBandingTotalMl = chantQtyEl ? (parseFloat(chantQtyEl.textContent) || 0) : ((q && q.edge_banding_ml) || 0);
+    if (currentDevisOverrides.edge_banding_ml != null) edgeBandingTotalMl = currentDevisOverrides.edge_banding_ml;
+    if (currentDevisOverrides.finition_m2 != null) finitionM2 = currentDevisOverrides.finition_m2;
     var finitionPriceKey = (q && q.caisson_material) ? ('finition_m2|' + q.caisson_material) : null;
     var finitionUnitM2 = (finitionPriceKey && g.panel_m2 && g.panel_m2[finitionPriceKey] != null) ? g.panel_m2[finitionPriceKey] : 0;
     return { q: q, g: g, finitionVisible: finitionVisible, finitionM2: finitionM2, finitionPerimeter: finitionPerimeter, edgeBandingTotalMl: edgeBandingTotalMl, finitionUnitM2: finitionUnitM2 };
@@ -4031,7 +4107,8 @@
       }
 
       const rc = sdb.raw_config || {};
-      currentProjetRc = rc;
+      currentProjetRc = rc; currentProjetSdbId = sdb.id;
+      currentDevisOverrides = Object.assign({}, rc.devis_overrides || {});
       let q = rc.devis_quantities;
       // Compat : les configs soumises avant la séparation par catégorie (caisson/étagère/porte/tiroir)
       // stockent tout dans un seul panels_m2 — on ignore ce blob et on force le recalcul ci-dessous
