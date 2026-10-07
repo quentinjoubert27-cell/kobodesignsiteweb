@@ -4830,6 +4830,105 @@ function startPriceBadgeLoop(){
   _priceBadgeTimer = setInterval(refreshPriceBadge, 1000);
 }
 
+
+// ── Contrôle des appuis : une porte doit tenir sur un intercalaire ou sur la joue du caisson ──────────
+// (même règle que l'admin Kōbō) — évite d'envoyer un meuble dont des portes « flotteraient ».
+function _supCaissons(){
+  var out=[];
+  out.push({label:'Caisson principal', W:Math.round(S.CL*100), H:Math.round(S.CH*100), els:caissonElements});
+  if(hasAngle) out.push({label:"Caisson d'angle", W:Math.round(S.CL2*100), H:Math.round(S.CH*100), els:caissonElements2});
+  if(currentFT==='tv'){
+    tvSideLeft.forEach(function(r,i){ out.push({label:'Caisson gauche '+(i+1), W:r.W, H:r.H, els:r.elems}); });
+    tvSideRight.forEach(function(r,i){ out.push({label:'Caisson droit '+(i+1), W:r.W, H:r.H, els:r.elems}); });
+    if(S_tvSide.topActive) out.push({label:'Caisson du dessus', W:S_tvSide.topW, H:S_tvSide.topH, els:tvTopElems});
+  }
+  return out;
+}
+function _supIssues(){
+  var issues=[], TOL=1.5;
+  _supCaissons().forEach(function(c){
+    var els=c.els, iW=c.W-3.6, iH=c.H-3.6;
+    var shelves=els.filter(function(e){return e.type==='shelf';});
+    var seps=els.filter(function(e){return e.type==='separator';}).map(function(e){
+      var bot=0, top=iH;
+      shelves.forEach(function(sh){
+        var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:iW;
+        if(sl<=e.x_cm&&sr>=e.x_cm){ if(sh.y_cm<e.y_cm&&sh.y_cm>bot) bot=sh.y_cm; if(sh.y_cm>e.y_cm&&sh.y_cm<top) top=sh.y_cm; }
+      });
+      return {x:e.x_cm,b:bot,t:top};
+    });
+    var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(function(e){
+      var k=e.key.split('_').map(Number); return {b:k[0],l:k[1],t:k[2],r:k[3]};
+    });
+    function cover(d,x){
+      if(x<=TOL||x>=iW-TOL) return 1;
+      var h=d.t-d.b; if(h<=0) return 1;
+      var segs=seps.filter(function(sp){return Math.abs(sp.x-x)<=TOL;}).map(function(sp){return [Math.max(d.b,sp.b-0.5),Math.min(d.t,sp.t+0.5)];})
+        .filter(function(g){return g[1]>g[0];}).sort(function(a,b){return a[0]-b[0];});
+      var tot=0, cur=-1e9;
+      segs.forEach(function(g){ var a=Math.max(g[0],cur); if(g[1]>a){ tot+=g[1]-a; cur=g[1]; } });
+      return Math.min(1,tot/h);
+    }
+    doors.forEach(function(d){
+      function neigh(side){
+        return doors.some(function(o){
+          if(o===d) return false;
+          var adj=side==='L'?Math.abs(o.r-d.l)<=TOL:Math.abs(o.l-d.r)<=TOL;
+          return adj&&Math.min(o.t,d.t)-Math.max(o.b,d.b)>1;
+        });
+      }
+      var cl=cover(d,d.l), cr=cover(d,d.r), nl=neigh('L'), nr=neigh('R');
+      var best=(nl&&!nr)?cr:(nr&&!nl)?cl:Math.max(cl,cr);
+      var x=(nl&&!nr)?d.r:(nr&&!nl)?d.l:(cr>cl?d.r:d.l);
+      if(best<0.9) issues.push({c:c, door:d, x:x, seps:seps, shelves:shelves, iW:iW, iH:iH});
+    });
+  });
+  return issues;
+}
+// Ajoute les intercalaires manquants dans les caissons concernés ; retourne le nombre ajouté
+function _supFix(issues){
+  var added=0, seen={};
+  issues.forEach(function(is){
+    var d=is.door, x=is.x;
+    var segs=is.seps.filter(function(sp){return Math.abs(sp.x-x)<=1.5;}).map(function(sp){return [sp.b,sp.t];}).sort(function(a,b){return a[0]-b[0];});
+    var gaps=[], cur=d.b;
+    segs.forEach(function(g){ if(g[0]>cur+0.5) gaps.push([cur,Math.min(g[0],d.t)]); cur=Math.max(cur,g[1]); });
+    if(cur<d.t-0.5) gaps.push([cur,d.t]);
+    gaps.forEach(function(g){
+      // un intercalaire par compartiment (entre deux étagères) traversé par la partie non couverte
+      var ys=[];
+      is.shelves.forEach(function(sh){
+        var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:is.iW;
+        if(sl<=x+0.5&&sr>=x-0.5) ys.push(sh.y_cm);
+      });
+      var bounds=[0].concat(ys.sort(function(a,b){return a-b;})).concat([is.iH]);
+      for(var i=0;i<bounds.length-1;i++){
+        var lo=bounds[i], hi=bounds[i+1];
+        if(hi-lo<=1||Math.min(hi,g[1])-Math.max(lo,g[0])<=0.5) continue;
+        var y=Math.round((lo+hi)/2*10)/10, k=is.c.label+'|'+x+'|'+y;
+        if(seen[k]) continue; seen[k]=1;
+        is.c.els.push({type:'separator',x_cm:x,y_cm:y}); added++;
+      }
+    });
+  });
+  return added;
+}
+async function ensureDoorSupports(){
+  // 1) doublons éventuels (même porte enregistrée plusieurs fois)
+  caissonElements=dedupeEls(caissonElements); caissonElements2=dedupeEls(caissonElements2);
+  tvSideLeft.forEach(function(r){ r.elems=dedupeEls(r.elems); }); tvSideRight.forEach(function(r){ r.elems=dedupeEls(r.elems); });
+  tvTopElems=dedupeEls(tvTopElems);
+  // 2) portes sans appui
+  var issues=_supIssues();
+  if(!issues.length) return true;
+  var ok=confirm("Certaines portes ne sont fixées sur aucun panneau (elles tiendraient dans le vide).\n\nPour que le meuble soit réalisable, nous allons ajouter automatiquement "+issues.length+" intercalaire(s) (panneau vertical) à l'endroit nécessaire.\n\nContinuer ?\n(Annuler : vous revenez au configurateur pour modifier le meuble.)");
+  if(!ok) return false;
+  _supFix(issues);
+  buildCaisson();
+  await new Promise(function(r){ setTimeout(r,500); });   // laisse le temps à l'affichage 3D (capture d'écran envoyée avec la demande)
+  return true;
+}
+
 async function submitConfig(){
   var prenom, nom, email, telephone;
   if (_cfgSession) {
@@ -4859,6 +4958,8 @@ async function submitConfig(){
   if(!telephone && !_cfgSession){ errEl.textContent='Numéro de téléphone obligatoire.'; errEl.style.display='block'; return; }
   if(!codePostal){ errEl.textContent='Code postal obligatoire.'; errEl.style.display='block'; return; }
   if(!decouverte){ errEl.textContent='Merci d\'indiquer comment vous nous avez trouvés.'; errEl.style.display='block'; return; }
+
+  if(!(await ensureDoorSupports())) return;
 
   btn.disabled=true; btn.textContent='Envoi en cours…';
 

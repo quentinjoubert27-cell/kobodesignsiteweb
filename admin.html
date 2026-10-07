@@ -3468,15 +3468,21 @@
       segs.forEach(function (g) { if (g[0] > cur + 0.5) gaps.push([cur, Math.min(g[0], d.t)]); cur = Math.max(cur, g[1]); });
       if (cur < d.t - 0.5) gaps.push([cur, d.t]);
       gaps.forEach(function (g) {
-        var ym = (g[0] + g[1]) / 2, bot = 0, top = ctx.iH;
+        // un intercalaire par compartiment (entre deux étagères) traversé par la partie non couverte
+        var ys = [];
         ctx.shelves.forEach(function (sh) {
           var sl = sh.x_left_cm != null ? sh.x_left_cm : 0, sr = sh.x_right_cm != null ? sh.x_right_cm : ctx.iW;
-          if (sl <= x + 0.5 && sr >= x - 0.5) { if (sh.y_cm <= ym && sh.y_cm > bot) bot = sh.y_cm; if (sh.y_cm >= ym && sh.y_cm < top) top = sh.y_cm; }
+          if (sl <= x + 0.5 && sr >= x - 0.5) ys.push(sh.y_cm);
         });
-        var y = Math.round((bot + top) / 2 * 10) / 10, k = is.caisson + '|' + x + '|' + y;
-        if (seen[k]) return; seen[k] = 1;
-        ctx.els.push({ type: 'separator', x_cm: x, y_cm: y });
-        added.push({ caisson: is.caisson, x: x, de: bot, a: top });
+        var bounds = [0].concat(ys.sort(function (a, b) { return a - b; })).concat([ctx.iH]);
+        for (var i = 0; i < bounds.length - 1; i++) {
+          var lo = bounds[i], hi = bounds[i + 1];
+          if (hi - lo <= 1 || Math.min(hi, g[1]) - Math.max(lo, g[0]) <= 0.5) continue;
+          var y = Math.round((lo + hi) / 2 * 10) / 10, k = is.caisson + '|' + x + '|' + y;
+          if (seen[k]) continue; seen[k] = 1;
+          ctx.els.push({ type: 'separator', x_cm: x, y_cm: y });
+          added.push({ caisson: is.caisson, x: x, de: lo, a: hi });
+        }
       });
     });
     return { rc: cl, added: added };
