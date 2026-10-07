@@ -3400,6 +3400,68 @@
     return { rc: out, removed: removed, doorsBefore: dB, doorsAfter: dA };
   }
 
+
+  // ── CONTRÔLE DES APPUIS : une porte doit être fixée sur un côté (joue ou intercalaire) ─────────
+  function _caissonsOfRc(rc) {
+    var out = [], m = rc.meuble || {};
+    function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
+    if (m.L && m.H) out.push({ label: 'Caisson principal', W: m.L, H: m.H, els: rc.elements || [] });
+    if (rc.caisson2 && rc.caisson2.elements) out.push({ label: "Caisson d'angle", W: rc.caisson2.L_cm || m.L, H: m.H, els: rc.caisson2.elements });
+    arr(rc.tvSide && rc.tvSide.left).forEach(function (c, i) { if (c && c.W_cm) out.push({ label: 'Caisson gauche ' + (i + 1), W: c.W_cm, H: c.H_cm, els: c.elements || [] }); });
+    arr(rc.tvSide && rc.tvSide.right).forEach(function (c, i) { if (c && c.W_cm) out.push({ label: 'Caisson droit ' + (i + 1), W: c.W_cm, H: c.H_cm, els: c.elements || [] }); });
+    if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm) out.push({ label: 'Caisson du dessus', W: rc.tvSide.top.W_cm, H: rc.tvSide.top.H_cm, els: rc.tvSide.top.elements || [] });
+    return out;
+  }
+
+  // Retourne la liste des portes mal fixées : [{caisson, key, couverture (0..1), cause}]
+  function checkPortesAppui(rc) {
+    var issues = [], TOL = 1.5;
+    _caissonsOfRc(rc || {}).forEach(function (c) {
+      var els = _dedupeList(c.els), iW = c.W - 3.6, iH = c.H - 3.6;
+      var shelves = els.filter(function (e) { return e.type === 'shelf'; });
+      var seps = els.filter(function (e) { return e.type === 'separator'; }).map(function (e) {
+        var bot = 0, top = iH;
+        shelves.forEach(function (sh) {
+          var sl = sh.x_left_cm != null ? sh.x_left_cm : 0, sr = sh.x_right_cm != null ? sh.x_right_cm : iW;
+          if (sl <= e.x_cm && sr >= e.x_cm) { if (sh.y_cm < e.y_cm && sh.y_cm > bot) bot = sh.y_cm; if (sh.y_cm > e.y_cm && sh.y_cm < top) top = sh.y_cm; }
+        });
+        return { x: e.x_cm, b: bot, t: top };
+      });
+      var doors = els.filter(function (e) { return e.type === 'porte' && e.key; }).map(function (e) {
+        var k = e.key.split('_').map(Number); return { key: e.key, b: k[0], l: k[1], t: k[2], r: k[3] };
+      });
+      function cover(d, x) {   // part de la hauteur de la porte contre un appui situé en x
+        if (x <= TOL || x >= iW - TOL) return 1;
+        var h = d.t - d.b; if (h <= 0) return 1;
+        var segs = seps.filter(function (s) { return Math.abs(s.x - x) <= TOL; }).map(function (s) { return [Math.max(d.b, s.b - 0.5), Math.min(d.t, s.t + 0.5)]; })
+          .filter(function (g) { return g[1] > g[0]; }).sort(function (a, b) { return a[0] - b[0]; });
+        var tot = 0, cur = -1e9;
+        segs.forEach(function (g) { var a = Math.max(g[0], cur); if (g[1] > a) { tot += g[1] - a; cur = g[1]; } });
+        return Math.min(1, tot / h);
+      }
+      doors.forEach(function (d) {
+        function neigh(side) {
+          return doors.some(function (o) {
+            if (o === d) return false;
+            var adj = side === 'L' ? Math.abs(o.r - d.l) <= TOL : Math.abs(o.l - d.r) <= TOL;
+            return adj && Math.min(o.t, d.t) - Math.max(o.b, d.b) > 1;
+          });
+        }
+        var cl = cover(d, d.l), cr = cover(d, d.r), nl = neigh('L'), nr = neigh('R');
+        var best = (nl && !nr) ? cr : (nr && !nl) ? cl : Math.max(cl, cr);   // charnières côté extérieur du groupe
+        if (best < 0.9) issues.push({ caisson: c.label, key: d.key, couverture: best, cause: best < 0.1 ? 'aucun panneau pour fixer la porte' : 'panneau de fixation trop court (' + Math.round(best * 100) + ' % de la hauteur)' });
+      });
+    });
+    return issues;
+  }
+
+  function appuiBannerHtml(rc) {
+    var is = checkPortesAppui(rc);
+    if (!is.length) return '';
+    return '<div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;line-height:1.6;"><b style="color:#c2410c;">⚠ ' + is.length + ' porte(s) sans appui suffisant</b> — le devis et la fabrication sont à vérifier :<ul style="margin:6px 0 0 16px;">' +
+      is.slice(0, 6).map(function (x) { return '<li>' + escHtml(x.caisson) + ', porte ' + escHtml(x.key.replace(/_/g, ' / ')) + ' : ' + escHtml(x.cause) + '</li>'; }).join('') + (is.length > 6 ? '<li>… et ' + (is.length - 6) + ' autre(s)</li>' : '') + '</ul></div>';
+  }
+
   // Nombres affichés (« Configuration d'origine », liste des configurations) : recalculés sans doublons, tous caissons confondus
   function configCountsFromRc(rc) {
     var cl = auditCleanRc(rc).rc, lists = [];
@@ -3425,7 +3487,7 @@
     document.getElementById('doublons-fix-all').style.display = 'none';
     var all = [], from = 0;
     for (;;) {
-      var { data, error } = await sb.from('configs_sdb').select('id, projet_id, raw_config, created_at, nb_tablettes, nb_separateurs, nb_portes, nb_tiroirs').range(from, from + 499);
+      var { data, error } = await sb.from('configs_sdb').select('id, projet_id, raw_config, elements, created_at, nb_tablettes, nb_separateurs, nb_portes, nb_tiroirs').range(from, from + 499);
       if (error) { body.innerHTML = '<div class="empty">Erreur de lecture : ' + escHtml(error.message) + '</div>'; return; }
       all = all.concat(data || []);
       if (!data || data.length < 500) break;
@@ -3433,6 +3495,12 @@
     }
     if (!allProjets.length) await loadProjets();
     doublonsFlagged = [];
+    var appuiList = [];
+    all.forEach(function (c) {
+      var ap = checkPortesAppui(c.raw_config);
+      if (ap.length) { var pr0 = allProjets.find(function (p) { return p.id === c.projet_id; }) || {}; appuiList.push({ projet_id: c.projet_id, projet: pr0.nom || '(sans projet)', client: pr0.clients ? (pr0.clients.prenom + ' ' + pr0.clients.nom) : '—', statut: pr0.statut || '—', n: ap.length, first: ap[0] }); }
+    });
+    window._appuiList = appuiList;
     all.forEach(function (c) {
       var res = auditCleanRc(c.raw_config);
       var q = c.raw_config && c.raw_config.devis_quantities;
@@ -3442,10 +3510,12 @@
       if (res.removed > 0 || countsOff || (storedDoors != null && storedDoors > res.doorsAfter)) {
         var pr = allProjets.find(function (p) { return p.id === c.projet_id; }) || {};
         doublonsFlagged.push({ id: c.id, projet_id: c.projet_id, projet: pr.nom || '(sans projet)', client: pr.clients ? (pr.clients.prenom + ' ' + pr.clients.nom) : '—',
-          statut: pr.statut || '—', montant: pr.montant, removed: res.removed, doorsBefore: c.nb_portes != null ? c.nb_portes : res.doorsBefore, doorsAfter: cnt.portes, cnt: cnt, storedDoors: storedDoors, hasQ: !!q, clean: res.rc });
+          statut: pr.statut || '—', montant: pr.montant, original: c, removed: res.removed, doorsBefore: c.nb_portes != null ? c.nb_portes : res.doorsBefore, doorsAfter: cnt.portes, cnt: cnt, storedDoors: storedDoors, hasQ: !!q, clean: res.rc });
       }
     });
-    if (!doublonsFlagged.length) { body.innerHTML = '<div class="empty" style="padding:24px 0;">✅ ' + all.length + ' configurations contrôlées : aucun doublon.</div>'; return; }
+    var appuiHtml = appuiList.length ? '<div style="margin-top:18px;"><p style="font-size:13px;margin-bottom:8px;"><b>⚠ ' + appuiList.length + '</b> projet(s) avec des portes sans appui suffisant :</p><table style="width:100%;border-collapse:collapse;font-size:12px;"><tbody>' +
+      appuiList.map(function (a) { return '<tr style="border-top:1px solid rgba(26,26,26,.08);cursor:pointer;" onclick="openProjetDetail(\'' + a.projet_id + '\',\'' + escHtml(a.projet).replace(/'/g, '') + '\')"><td style="padding:7px 8px;font-weight:600;">' + escHtml(a.projet) + '</td><td>' + escHtml(a.client) + '</td><td>' + escHtml(a.statut) + '</td><td>' + a.n + ' porte(s) : ' + escHtml(a.first.cause) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<p style="font-size:12px;margin-top:14px;">✅ Aucune porte sans appui détectée.</p>';
+    if (!doublonsFlagged.length) { body.innerHTML = '<div class="empty" style="padding:18px 0;">✅ ' + all.length + ' configurations contrôlées : aucun doublon.</div>' + appuiHtml; return; }
     body.innerHTML = '<p style="font-size:13px;margin-bottom:10px;"><b>' + doublonsFlagged.length + '</b> configuration(s) sur ' + all.length + ' à corriger :</p>' +
       '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="text-align:left;color:rgba(26,26,26,.5);"><th style="padding:6px 8px;">Projet</th><th>Client</th><th>Statut</th><th>Portes</th><th>Montant</th></tr></thead><tbody>' +
       doublonsFlagged.map(function (f) {
@@ -3453,12 +3523,39 @@
           '</td><td>' + f.doorsBefore + ' → <b>' + f.doorsAfter + '</b>' + (f.storedDoors != null && f.storedDoors > f.doorsAfter ? ' <span style="color:#c2410c;">(devis enregistré : ' + f.storedDoors + ')</span>' : '') + '</td><td>' + (f.montant ? formatCurrency(f.montant) : '—') + '</td></tr>';
       }).join('') + '</tbody></table>' +
       '<p style="font-size:11px;color:rgba(26,26,26,.5);margin-top:12px;">La correction nettoie la configuration et efface les quantités de devis enregistrées (elles sont recalculées à l\'ouverture du projet). <b>Les montants déjà enregistrés ne sont pas modifiés</b> : rouvre les projets concernés pour comparer avec le nouveau prix, surtout ceux déjà « Devis envoyé ».</p>';
+    body.insertAdjacentHTML('beforeend', appuiHtml);
     document.getElementById('doublons-fix-all').style.display = '';
+  }
+
+  async function restoreConfigBackup(configId) {
+    if (!confirm("Restaurer la configuration telle qu'elle était avant le nettoyage des doublons ? (les doublons reviendront)")) return;
+    const { data: bk, error } = await sb.from('configs_sdb_sauvegardes').select('*').eq('config_id', configId).order('saved_at', { ascending: false }).limit(1);
+    if (error || !bk || !bk.length) return showToast('Aucune sauvegarde trouvée', 'err');
+    const b = bk[0];
+    const upd = { raw_config: b.raw_config, elements: b.elements, nb_tablettes: b.nb_tablettes, nb_separateurs: b.nb_separateurs, nb_portes: b.nb_portes, nb_tiroirs: b.nb_tiroirs };
+    let r = await sb.from('configs_sdb').update(upd).eq('id', configId);
+    if (r.error) { delete upd.elements; r = await sb.from('configs_sdb').update(upd).eq('id', configId); }
+    if (r.error) return showToast('Restauration impossible : ' + r.error.message, 'err');
+    showToast('Configuration restaurée');
+    loadProjetConfig(); renderProjetDevis(currentProjetId);
   }
 
   async function fixDoublons() {
     var btn = document.getElementById('doublons-fix-all'); btn.disabled = true; btn.textContent = 'Correction…';
     var ok = 0, ko = 0, lastErr = '';
+    // 1) copie de sauvegarde de TOUTES les configurations à modifier (la correction est annulée si elle échoue)
+    var rows = doublonsFlagged.map(function (f) {
+      var o = f.original || {};
+      return { config_id: f.id, raw_config: o.raw_config || null, elements: o.elements || null, nb_tablettes: o.nb_tablettes, nb_separateurs: o.nb_separateurs, nb_portes: o.nb_portes, nb_tiroirs: o.nb_tiroirs, motif: 'avant nettoyage des doublons', saved_by: adminUser && adminUser.email };
+    });
+    for (var i = 0; i < rows.length; i += 50) {
+      var { error: bkErr } = await sb.from('configs_sdb_sauvegardes').insert(rows.slice(i, i + 50));
+      if (bkErr) {
+        btn.disabled = false; btn.textContent = 'Corriger tous les doublons';
+        showToast('Sauvegarde impossible : correction annulée. Lance docs/supabase-migration-sauvegardes.sql dans Supabase. (' + bkErr.message + ')', 'err');
+        return;
+      }
+    }
     for (var f of doublonsFlagged) {
       var rc = f.clean; delete rc.devis_quantities;
       var upd = { raw_config: rc, nb_tablettes: f.cnt.tablettes, nb_separateurs: f.cnt.separateurs, nb_portes: f.cnt.portes, nb_tiroirs: f.cnt.tiroirs };
@@ -3469,7 +3566,7 @@
     }
     btn.disabled = false; btn.textContent = 'Corriger tous les doublons';
     if (ko) showToast(ok + ' corrigées, ' + ko + ' en erreur : ' + lastErr, 'err');
-    else { showToast(ok + ' configuration(s) corrigée(s)'); closeModal('modal-doublons'); }
+    else { showToast(ok + ' configuration(s) corrigée(s) — sauvegardes conservées'); closeModal('modal-doublons'); }
   }
 
   // ── PROJETS ───────────────────────────────────────────────────────
@@ -4303,8 +4400,15 @@
       if (vizUrl) html += `<a href="${vizUrl}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 9l-9-7-9 7v11a2 2 0 002 2h14a2 2 0 002-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Voir le meuble →</a>`;
     } catch(e) {}
 
+    if (c === sdb && sdb.raw_config) html = appuiBannerHtml(sdb.raw_config) + html;
     content.innerHTML = html;
     wrap.style.display = 'block';
+    if (c === sdb) {   // sauvegarde éventuelle d'avant nettoyage
+      try {
+        const { data: bk } = await sb.from('configs_sdb_sauvegardes').select('id, saved_at').eq('config_id', sdb.id).order('saved_at', { ascending: false }).limit(1);
+        if (bk && bk.length) content.insertAdjacentHTML('beforeend', '<div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" onclick="restoreConfigBackup(\'' + sdb.id + '\')">↩ Restaurer la version d\'avant nettoyage (' + new Date(bk[0].saved_at).toLocaleDateString('fr-FR') + ')</button></div>');
+      } catch (e) { /* table de sauvegarde absente : rien à afficher */ }
+    }
   }
 
   async function sendReplyFromDetail() {
