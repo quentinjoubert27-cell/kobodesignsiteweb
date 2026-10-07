@@ -2256,6 +2256,7 @@
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger en PDF</button>
         <button class="btn btn-ghost btn-sm" id="devis-reset-btn" onclick="resetDevisOverrides()" style="display:none;">↺ Revenir aux quantités calculées</button>
+        <button class="btn btn-ghost btn-sm" onclick="recalcDevisFromConfig()" title="Recalcule les quantités depuis la configuration du meuble (prend en compte les règles récentes, ex. intercalaires doublés)">↻ Recalculer depuis la configuration</button>
         <div id="devis-result" style="font-size:14px;font-weight:700;"></div>
       </div>
     </div>`;
@@ -2511,6 +2512,15 @@
       var { error } = await sb.from('configs_sdb').update({ raw_config: currentProjetRc }).eq('id', currentProjetSdbId);
       if (error) showToast('Corrections non enregistrées : ' + error.message, 'err');
     }, 600);
+  }
+  async function recalcDevisFromConfig() {
+    if (!currentProjetSdbId || !currentProjetRc) return showToast('Aucune configuration liée', 'err');
+    if (!confirm("Recalculer les quantités à partir de la configuration du meuble ? (les quantités enregistrées à l'envoi sont remplacées ; tes corrections manuelles sont conservées)")) return;
+    delete currentProjetRc.devis_quantities;
+    var { error } = await sb.from('configs_sdb').update({ raw_config: currentProjetRc }).eq('id', currentProjetSdbId);
+    if (error) return showToast('Erreur : ' + error.message, 'err');
+    await renderProjetDevis(currentProjetId);
+    showToast('Quantités recalculées');
   }
   async function resetDevisOverrides() {
     if (!confirm('Revenir aux quantités calculées automatiquement ? (tes corrections manuelles seront perdues)')) return;
@@ -3832,6 +3842,64 @@
     }).join('');
   }
 
+  // Côté des charnières de chaque porte (règle : sur la joue ou sur un intercalaire, côté extérieur d'un groupe de portes)
+  // els en cm (repère intérieur), W/H : dimensions extérieures du caisson en cm.
+  function _hingeInfo(els, W, H){
+    var TOL=1.5, iW=W-3.6, iH=H-3.6;
+    var shelves=els.filter(function(e){return e.type==='shelf';});
+    var seps=els.filter(function(e){return e.type==='separator';}).map(function(e){
+      var bot=0, top=iH;
+      shelves.forEach(function(sh){
+        var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:iW;
+        if(sl<=e.x_cm&&sr>=e.x_cm){ if(sh.y_cm<e.y_cm&&sh.y_cm>bot) bot=sh.y_cm; if(sh.y_cm>e.y_cm&&sh.y_cm<top) top=sh.y_cm; }
+      });
+      return {x:e.x_cm,b:bot,t:top};
+    });
+    els.filter(function(e){return e.type==='tiroir'&&e.key;}).forEach(function(e){   // un bloc de tiroirs a un panneau de chaque côté
+      var k=e.key.split('_').map(Number); seps.push({x:k[3],b:k[0],t:k[2]}); seps.push({x:k[1],b:k[0],t:k[2]});
+    });
+    var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(function(e){
+      var k=e.key.split('_').map(Number); return {b:k[0],l:k[1],t:k[2],r:k[3]};
+    });
+    function cover(d,x){
+      if(x<=TOL||x>=iW-TOL) return 1;
+      var h=d.t-d.b; if(h<=0) return 1;
+      var segs=seps.filter(function(sp){return Math.abs(sp.x-x)<=TOL;}).map(function(sp){return [Math.max(d.b,sp.b-0.5),Math.min(d.t,sp.t+0.5)];})
+        .filter(function(g){return g[1]>g[0];}).sort(function(a,b){return a[0]-b[0];});
+      var tot=0, cur=-1e9;
+      segs.forEach(function(g){ var a=Math.max(g[0],cur); if(g[1]>a){ tot+=g[1]-a; cur=g[1]; } });
+      return Math.min(1,tot/h);
+    }
+    return doors.map(function(d){
+      function neigh(side){
+        return doors.some(function(o){
+          if(o===d) return false;
+          var adj=side==='L'?Math.abs(o.r-d.l)<=TOL:Math.abs(o.l-d.r)<=TOL;
+          return adj&&Math.min(o.t,d.t)-Math.max(o.b,d.b)>1;
+        });
+      }
+      var cl=cover(d,d.l), cr=cover(d,d.r), nl=neigh('L'), nr=neigh('R');
+      var side=(nl&&!nr)?'R':(nr&&!nl)?'L':(cr>cl?'R':'L');
+      return {d:d, side:side, x:side==='R'?d.r:d.l};
+    });
+  }
+  // Intercalaires à doubler : deux portes (une de chaque côté) pivotent sur le même intercalaire
+  function _doubledSeparatorFlags(els, W, H){
+    var TOL=1.5, iH=H-3.6, iW=W-3.6;
+    var info=_hingeInfo(els,W,H);
+    var shelves=els.filter(function(e){return e.type==='shelf';});
+    return els.filter(function(e){return e.type==='separator'||e.type==='separator_simple';}).map(function(e){
+      var x=e.x_cm, bot=0, top=iH;
+      shelves.forEach(function(sh){
+        var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:iW;
+        if(sl<=x&&sr>=x){ if(sh.y_cm<e.y_cm&&sh.y_cm>bot) bot=sh.y_cm; if(sh.y_cm>e.y_cm&&sh.y_cm<top) top=sh.y_cm; }
+      });
+      var ov=function(i){ return Math.min(i.d.t,top)-Math.max(i.d.b,bot)>1; };
+      var left=info.some(function(i){return i.side==='R'&&Math.abs(i.d.r-x)<=TOL&&ov(i);});
+      var right=info.some(function(i){return i.side==='L'&&Math.abs(i.d.l-x)<=TOL&&ov(i);});
+      return left&&right;
+    });
+  }
   function dedupeEls(els){
     var seen={}, out=[];
     (els||[]).forEach(function(e){
@@ -3884,6 +3952,13 @@
         doors.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, door_thickness_mm:ep_mm, door_gap_mm:2, door_type:w>400?'double':'single', is_double_leaf:w>400, door_opening:'left', door_model:'standard', fileur_width_mm:0, hinge_mode:'default', custom_hinge_positions_mm:[] });
       }
     });
+
+    // Règle atelier : deux portes sur le même intercalaire -> l'intercalaire est doublé (deuxième panneau)
+    (function(){
+      var flags=_doubledSeparatorFlags(dedupeEls(els||[]), CL_cm, CH_cm), extra=[];
+      separators.forEach(function(s,i){ if(flags[i]) extra.push(Object.assign({}, s, {doubled:true})); });
+      extra.forEach(function(s){ separators.push(s); });
+    })();
     return {
       reference:{ coordinates_frame:'interior', unit:'mm', origin:'bottom_left_front', axes:{x:'left_to_right',y:'bottom_to_top',z:'back_to_front'} },
       panel_thickness_mm:ep_mm,
@@ -4306,11 +4381,11 @@
     (techSpec.separators || []).forEach(function (s, idx) {
       var h = s.y_top_mm - s.y_bottom_mm;
       addPanel(q.panels_etagere_m2, mat, s.thickness_mm, h, 'separateur', {
-        group: 'Intercalaire ' + (idx + 1), vis: 2 * jointCP.vis, tourillons: 2 * jointCP.tourillons
+        group: 'Intercalaire ' + (idx + 1) + (s.doubled ? ' (doublé)' : ''), vis: 2 * jointCP.vis, tourillons: 2 * jointCP.tourillons
       }, 'etagere');
       q.edge_banding_m += h / 1000;
       q.screws += 2 * jointCP.vis; q.dowels += 2 * jointCP.tourillons;
-      q.separators_count++;
+      if (!s.doubled) q.separators_count++;
     });
     (techSpec.shelves || []).forEach(function (sh, idx) {
       var w = sh.x_right_mm - sh.x_left_mm;
