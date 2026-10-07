@@ -4377,13 +4377,10 @@
     // Profondeur du caisson (mm) — 1 tourillon tous les 10cm de profondeur, par jonction
     var CP_mm = (techSpec.overall_mm && techSpec.overall_mm.depth) ||
       ((techSpec.structural_panels || []).find(function (p) { return p.depth_mm; }) || {}).depth_mm || 0;
-    // Règle de fixation sur un joint de longueur L (cm) :
-    // 1ère vis à 3cm du début, puis un tourillon + une vis tous les 20cm, dernière vis à 3cm de la fin
+    // Règle de fixation (atelier) : à chaque angle ou intersection entre deux panneaux, 4 vis et 4 tourillons.
+    // (ancienne règle abandonnée : 1ère vis à 3 cm, puis une vis + un tourillon tous les 20 cm)
     function fastenersForJoint(L_cm) {
-      var first = 3, last = L_cm - 3;
-      if (last <= first) return { vis: 1, tourillons: 0 };
-      var nInterior = Math.max(0, Math.floor((last - first - 1) / 20));
-      return { vis: 2 + nInterior, tourillons: nInterior };
+      return { vis: 4, tourillons: 4 };
     }
     var jointCP = fastenersForJoint(CP_mm / 10);
     q.screws += 4 * jointCP.vis; q.dowels += 4 * jointCP.tourillons; // 4 coins joues/traverses
