@@ -2470,7 +2470,7 @@
       '<li>Les images présentées dans cette proposition sont <b>non contractuelles</b>.</li>' +
       '<li>Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.</li>' +
       '</ul></div>' +
-      '<div class="sig"><div><b>Pour Kōbō Design</b>Date et signature</div><div><b>Validation de la proposition</b>Date et signature du client</div></div>' + foot(2) + '</div>';
+      foot(2) + '</div>';
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
