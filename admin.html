@@ -1448,9 +1448,9 @@
 
     <div style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);">Devis simplifié (à envoyer au client)</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);">Proposition (à envoyer au client)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="btn btn-primary btn-sm" id="btn-devis-pdf" onclick="openDevisSimplePdf()">📄 Créer le PDF (images + devis)</button>
+          <button class="btn btn-primary btn-sm" id="btn-devis-pdf" onclick="openDevisSimplePdf()">📄 Créer le PDF (images + proposition)</button>
         </div>
       </div>
       <div id="pd-devis-simple" class="detail-panel" style="padding:14px 16px;margin:0;"><div class="empty" style="padding:6px 0;font-size:12px;">Chargement…</div></div>
@@ -2273,21 +2273,19 @@
     var q = ctx.q, g = ctx.g || {}, pm = g.panel_m2 || {};
     var cat = function (k) { var b = q[k] || {}; return Object.keys(b).reduce(function (sum, m) { return sum + b[m] * (pm[k + '|' + m] || 0); }, 0); };
     var fin = (ctx.finitionM2 || 0) * (ctx.finitionUnitM2 || 0);
+    var u = function (qty, price) { return (qty || 0) * (price || 0); };
     var cost = {
-      caisson: cat('panels_caisson_m2') + fin + (q.corner_brackets || 0) * (g.corner_bracket_unit || 0),
-      facades: cat('panels_porte_m2') + cat('panels_tiroir_m2') + (q.hinges || 0) * (g.hinge_unit || 0) + (q.drawer_mechanisms || 0) * (g.drawer_mechanism_unit || 0),
-      amenagement: cat('panels_etagere_m2') + cat('panels_tiroir_caisse_m2') + (q.bars_count || 0) * (g.bar_unit || 0),
+      // caissons : traverses, montants (joues), fond et étagères / intercalaires, caisses de tiroirs
+      caisson: cat('panels_caisson_m2') + cat('panels_etagere_m2') + cat('panels_tiroir_caisse_m2'),
+      // finitions : façades (portes, tiroirs), joues et dessus/dessous de finition, chants plaqués
+      finitions: cat('panels_porte_m2') + cat('panels_tiroir_m2') + fin + u(ctx.edgeBandingTotalMl, g.edge_banding_ml),
+      // quincaillerie et accessoires : barres de penderie, vis, tourillons, mécanismes de tiroirs, charnières, équerres
+      quincaillerie: u(q.bars_count, g.bar_unit) + u(q.screws, g.screw_unit) + u(q.dowels, g.dowel_unit) + u(q.drawer_mechanisms, g.drawer_mechanism_unit) + u(q.hinges, g.hinge_unit) + u(q.corner_brackets, g.corner_bracket_unit),
       plan: cat('panels_plan_m2')
     };
-    // chants, vis et tourillons : répartis au prorata des familles (le client ne voit pas ce détail)
-    var common = (ctx.edgeBandingTotalMl || 0) * (g.edge_banding_ml || 0) + (q.screws || 0) * (g.screw_unit || 0) + (q.dowels || 0) * (g.dowel_unit || 0);
-    var base = cost.caisson + cost.facades + cost.amenagement + cost.plan;
     var coef = g.coefficient_revente || 2;
     var out = {};
-    Object.keys(cost).forEach(function (k) {
-      var part = base > 0 ? cost[k] / base : (k === 'caisson' ? 1 : 0);
-      out[k] = Math.round((cost[k] + common * part) * coef * 100) / 100;
-    });
+    Object.keys(cost).forEach(function (k) { out[k] = Math.round(cost[k] * coef * 100) / 100; });
     // le total des familles doit être exactement le prix de vente du moteur (écart de centimes d'arrondi reporté sur la plus grosse famille)
     var pv = computeDevisAutoPrice();
     if (pv && pv.prix_vente > 0) {
@@ -2307,15 +2305,20 @@
     var W = (m.L || 0) + left.concat(right).reduce(function (s, r) { return s + (r.W_cm || 0); }, 0) + (rc.caisson2 ? (rc.caisson2.L_cm || 0) : 0);
     var H = Math.max.apply(null, [m.H || 0].concat(left.concat(right).map(function (r) { return r.H_cm || 0; })));
     var plur = function (n, w) { return n + ' ' + w + (n > 1 ? 's' : ''); };
-    var facades = [], amen = [];
-    if (q.doors_count) facades.push(plur(q.doors_count, 'porte'));
-    if (q.drawers_count) facades.push(plur(q.drawers_count, 'tiroir'));
+    var fac = [], quinc = [], amen = [];
+    if (q.doors_count) fac.push(plur(q.doors_count, 'porte'));
+    if (q.drawers_count) fac.push(plur(q.drawers_count, 'tiroir'));
     if (q.shelves_count) amen.push(plur(q.shelves_count, 'étagère'));
-    if (q.separators_count) amen.push(plur(q.separators_count, 'séparateur'));
-    if (q.bars_count) amen.push(plur(q.bars_count, 'tringle'));
+    if (q.separators_count) amen.push(plur(q.separators_count, 'intercalaire'));
+    if (q.bars_count) quinc.push(plur(q.bars_count, 'barre') + ' de penderie');
+    quinc.push('vis', 'tourillons');
+    if (q.drawer_mechanisms) quinc.push('mécanismes de tiroirs');
+    if (q.hinges) quinc.push(plur(q.hinges, 'charnière'));
     return {
-      caisson: plur(nCais, 'caisson') + ' — ' + Math.round(W) + ' × ' + Math.round(H) + ' × ' + Math.round(m.P || 0) + ' cm, ' + (m.matLabel || 'décor à confirmer') + ', plinthe et fixation murale',
-      facades: facades.join(', '), amenagement: amen.join(', '), plan: 'Plan de travail'
+      caisson: plur(nCais, 'caisson') + ' — ' + Math.round(W) + ' × ' + Math.round(H) + ' × ' + Math.round(m.P || 0) + ' cm, ' + (m.matLabel || 'décor à confirmer') + ' : traverses, montants et étagères' + (amen.length ? ' (' + amen.join(', ') + ')' : ''),
+      finitions: 'Façades' + (fac.length ? ' (' + fac.join(', ') + ')' : '') + ', joues, dessus et dessous éventuels',
+      quincaillerie: quinc.join(', ').replace(/^./, function (c) { return c.toUpperCase(); }),
+      plan: 'Plan de travail'
     };
   }
 
@@ -2325,7 +2328,7 @@
     var prix = devisFamiliesCompute();
     if (!prix) { el.innerHTML = '<div class="empty" style="padding:6px 0;font-size:12px;">Pas de configuration liée à ce projet.</div>'; return; }
     var det = devisSimpleDetails();
-    var labels = { caisson: 'Caissons', facades: 'Façades (portes, tiroirs)', amenagement: 'Aménagement intérieur', plan: 'Plan de travail' };
+    var labels = { caisson: 'Caissons', finitions: 'Finitions', quincaillerie: 'Quincaillerie et accessoires', plan: 'Plan de travail' };
     var prev = {}; (devisSimpleFam || []).forEach(function (f) { if (f.edited) prev[f.id] = f.prix; });
     devisSimpleFam = Object.keys(labels).filter(function (k) { return det[k] && (k === 'caisson' || prix[k] > 0 || (k !== 'plan' && det[k])); })
       .filter(function (k) { return k !== 'plan' || prix.plan > 0; })
@@ -2393,12 +2396,12 @@
   }
 
   async function openDevisSimplePdf() {
-    if (!devisSimpleFam || !devisSimpleFam.length) return showToast('Devis simplifié indisponible', 'err');
+    if (!devisSimpleFam || !devisSimpleFam.length) return showToast('Proposition indisponible', 'err');
     var btn = document.getElementById('btn-devis-pdf');
     // la fenêtre doit s'ouvrir tout de suite (clic), les images arrivent ensuite
     var w = window.open('', '_blank');
     if (!w) return showToast('Autorise les fenêtres pop-up pour créer le PDF', 'err');
-    w.document.write('<!doctype html><meta charset="utf-8"><title>Devis…</title><body style="font-family:sans-serif;padding:40px;font-size:18px">Préparation du devis…</body>');
+    w.document.write('<!doctype html><meta charset="utf-8"><title>Proposition…</title><body style="font-family:sans-serif;padding:40px;font-size:18px">Préparation de la proposition…</body>');
     btn.disabled = true; var old = btn.textContent; btn.textContent = 'Rendus en cours…';
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
@@ -2425,7 +2428,7 @@
     var cli = allClients.find(function (c) { return c.id === p.client_id; }) || {};
     var now = new Date(), valid = new Date(now.getTime() + 30 * 86400000);
     var fr = function (d) { return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }); };
-    var numDevis = 'DEV-' + now.getFullYear() + '-' + String(p.id || '').replace(/-/g, '').slice(0, 4).toUpperCase();
+    var numDevis = 'PROP-' + now.getFullYear() + '-' + String(p.id || '').replace(/-/g, '').slice(0, 4).toUpperCase();
     var det0 = devisSimpleDetails(), objet = det0.caisson;
     var rows = devisSimpleFam.map(function (f) {
       return '<tr><td class="d"><b>' + escHtml(f.label) + '</b><div>' + escHtml(f.detail) + '</div></td><td class="n">' + formatCurrency(f.prix) + '</td></tr>';
@@ -2433,7 +2436,7 @@
     var im = function (k, t) { return '<figure>' + (imgs[k] ? '<img src="' + imgs[k] + '">' : '<div class="ph">Rendu non disponible</div>') + '<figcaption>' + t + '</figcaption></figure>'; };
     var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
     var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 06 42 89 98 58';
-    var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">DEVIS</div><div>N° ' + numDevis + '</div><div>Émis le ' + fr(now) + '</div><div>Valable jusqu\'au ' + fr(valid) + '</div></div></div>'; };
+    var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + fr(now) + '</div></div></div>'; };
     var foot = function (n) { return '<div class="foot"><span>' + legal + '</span><span>' + n + ' / 2</span></div>'; };
     var html = '<!doctype html><meta charset="utf-8"><title>' + numDevis + ' – ' + escHtml(p.nom || '') + (cl ? ' – ' + escHtml(cl) : '') + '</title>' +
       '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"><style>' +
@@ -2457,16 +2460,17 @@
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
       '<div class="obj"><h4>Objet</h4><h2>' + escHtml(p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p></div>' +
       '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><p class="nc">Images non contractuelles.</p>' +
-      '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, det0.facades, det0.amenagement].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '<li>Livré prêt à monter, fixation murale prévue</li></ul></div>' + foot(1) + '</div>' +
+      '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, det0.finitions, det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' + foot(1) + '</div>' +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(Math.round(total * 20) / 100) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(Math.round(total * 120) / 100) + '</span></div></div>' +
       '<div class="cond"><h4>Conditions</h4><ul>' +
+      '<li><b>Proposition non ferme</b> : elle ne devient ferme et définitive qu\'après validation avec le client (dimensions, aménagement, finitions).</li>' +
       '<li><b>Livraison non comprise dans ce devis</b> : son coût sera confirmé dès communication du lieu de destination.</li>' +
       '<li><b>Poignées</b> de portes et de tiroirs non comprises dans le prix.</li>' +
-      '<li>Les images présentées dans ce devis sont <b>non contractuelles</b>.</li>' +
+      '<li>Les images présentées dans cette proposition sont <b>non contractuelles</b>.</li>' +
       '<li>Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.</li>' +
       '</ul></div>' +
-      '<div class="sig"><div><b>Pour Kōbō Design</b>Date et signature</div><div><b>Bon pour accord</b>Date, signature du client précédée de la mention « Bon pour accord »</div></div>' + foot(2) + '</div>';
+      '<div class="sig"><div><b>Pour Kōbō Design</b>Date et signature</div><div><b>Validation de la proposition</b>Date et signature du client</div></div>' + foot(2) + '</div>';
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
