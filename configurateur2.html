@@ -4398,7 +4398,7 @@ function buildTechSpec(els, CL, CH, CP){
     return {
       type:e.type, x_left_mm:xl, x_right_mm:xr,
       y_bottom_mm:ym, y_top_mm:ym+ep_mm,
-      thickness_mm:ep_mm, depth_mm:CP_mm-ep_mm,
+      thickness_mm:ep_mm, depth_mm:CP_mm-19,
       shelf_type:e.type==='shelf'?'fixe':'mobile'
     };
   });
@@ -4592,7 +4592,9 @@ function computeDevisQuantities(techSpec, matLabel){
   (techSpec.structural_panels||[]).forEach(function(p){
     var w = p.x_right_mm-p.x_left_mm, h = p.y_top_mm-p.y_bottom_mm;
     if(p.type==='fond'){ addPanel(q.panels_caisson_m2, STRUCT_MAT, w, h, 'fond', null, 'caisson'); return; }
-    addPanel(q.panels_caisson_m2, STRUCT_MAT, w, h, p.type, null, 'caisson');
+    // surface réelle du panneau : joue = profondeur × hauteur ; traverse = largeur × profondeur (l'épaisseur n'entre pas dans la surface)
+    var isJoue = (p.type === 'joue_gauche' || p.type === 'joue_droite');
+    addPanel(q.panels_caisson_m2, STRUCT_MAT, isJoue ? CP_mm : w, isJoue ? h : CP_mm, p.type, null, 'caisson');
     q.edge_banding_m += ((p.type==='joue_gauche'||p.type==='joue_droite') ? h : w) / 1000;
   });
   q.corner_brackets += 4; // 4 coins joues/traverses par caisson
@@ -4605,7 +4607,7 @@ function computeDevisQuantities(techSpec, matLabel){
   // Séparateurs verticaux (intercalaires) — comptés avec les étagères
   (techSpec.separators||[]).forEach(function(s, idx){
     var h = s.y_top_mm - s.y_bottom_mm;
-    addPanel(q.panels_etagere_m2, mat, (s.depth_mm || ((techSpec.overall_mm && techSpec.overall_mm.depth || 0) - (techSpec.panel_thickness_mm || 18))), h, 'separateur', {
+    addPanel(q.panels_etagere_m2, mat, (s.depth_mm || ((techSpec.overall_mm && techSpec.overall_mm.depth || 0) - 19)), h, 'separateur', {
       group: 'Intercalaire '+(idx+1)+(s.doubled?' (doublé)':''), vis: 0, tourillons: 0
     }, 'etagere');
     q.edge_banding_m += h/1000;
