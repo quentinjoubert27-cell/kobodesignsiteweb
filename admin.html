@@ -3951,7 +3951,11 @@
     });
     const shelves = (els||[]).filter(e => e.type==='shelf'||e.type==='shelf_simple').map(e => {
       const ym = ep_mm + Math.round(e.y_cm*10);
-      return { type:e.type, x_left_mm:ep_mm, x_right_mm:CL_mm-ep_mm, y_bottom_mm:ym, y_top_mm:ym+ep_mm, thickness_mm:ep_mm, depth_mm:CP_mm-ep_mm, shelf_type:e.type==='shelf'?'fixe':'mobile' };
+      // largeur réelle de l'étagère (elle peut ne couvrir qu'une partie du meuble : entre une joue et un intercalaire, etc.)
+      let xl = e.x_left_cm != null ? ep_mm + Math.round(e.x_left_cm*10) : ep_mm, xr = e.x_right_cm != null ? ep_mm + Math.round(e.x_right_cm*10) : CL_mm-ep_mm;
+      separators.forEach(sp => { if (Math.abs(xl-sp.x_center_mm) <= 3) xl = sp.x_center_mm + ep_mm/2; if (Math.abs(xr-sp.x_center_mm) <= 3) xr = sp.x_center_mm - ep_mm/2; });
+      xl = Math.max(xl, ep_mm); xr = Math.min(xr, CL_mm-ep_mm);
+      return { type:e.type, x_left_mm:xl, x_right_mm:xr, y_bottom_mm:ym, y_top_mm:ym+ep_mm, thickness_mm:ep_mm, depth_mm:CP_mm-ep_mm, shelf_type:e.type==='shelf'?'fixe':'mobile' };
     });
     const bars = (els||[]).filter(e => e.type==='barre').map(e => {
       const xl = e.x_left_cm!==undefined ? Math.round(e.x_left_cm*10) : 0;
