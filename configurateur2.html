@@ -2823,7 +2823,6 @@ function _rebuildEditBar(){
 
 function toggleCaissonEdit(){
   caissonEditMode=!caissonEditMode;
-  if(!caissonEditMode) autoDoorSupports();
   var btn=document.getElementById('btn-edit-cais');
   if(btn) btn.classList.toggle('active',caissonEditMode);
   wrap.classList.toggle('mode-edit',caissonEditMode);
@@ -4136,7 +4135,6 @@ function buildStepper(labels){
 function goStep(n){
   var total = currentPanels.length;
   if(n<1||n>total) return;
-  autoDoorSupports();
   step = n;
   // S.step used by Three.js: for SDB map panel index, else keep at 1
   if(currentFT==='sdb' || isSDBMode){
@@ -4949,7 +4947,7 @@ function _hingeLeftFor(els, Wcm, Hcm, key, fallback){
   try{
     var sig=els.length+'|'+Wcm+'|'+Hcm+'|'+els.map(function(e){return e.type+(e.key||e.x_cm||e.y_cm||'');}).join(',');
     if(_hingeCache.els!==els||_hingeCache.sig!==sig){
-      var m={}; _hingeInfo(dedupeEls(els),Wcm,Hcm).forEach(function(i){ m[i.d.key]=i.side; });
+      var m={}; _supportModel(dedupeEls(els),Wcm,Hcm).info.forEach(function(i){ if(i.best>=0.1) m[i.d.key]=i.side; });   // aucun appui d'aucun côté : on garde la règle de position
       _hingeCache={els:els,sig:sig,map:m};
     }
     var side=_hingeCache.map[key];
@@ -5025,21 +5023,6 @@ function _supFix(issues){
   var added=0;
   issues.forEach(function(is){ added+=_fixGaps(is.c.els,is.c.W,is.c.H,is).length; });
   return added;
-}
-// Ajout automatique (sans attendre l'envoi) des intercalaires qui manquent derrière les portes, avec un message discret
-function autoDoorSupports(){
-  try{
-    if(typeof caissonElements==='undefined') return;
-    var issues=_supIssues();
-    if(!issues.length) return;
-    var n=_supFix(issues);
-    if(!n) return;
-    buildCaisson();
-    var t=document.createElement('div');
-    t.textContent=n+' intercalaire(s) ajouté(s) automatiquement pour fixer les portes (charnières).';
-    t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 16px;border-radius:10px;font:500 13px/1.4 sans-serif;z-index:9999;max-width:90vw;text-align:center;';
-    document.body.appendChild(t); setTimeout(function(){ t.remove(); },5000);
-  }catch(e){ console.warn('autoDoorSupports',e); }
 }
 async function ensureDoorSupports(){
   // 1) doublons éventuels (même porte enregistrée plusieurs fois)

@@ -4,38 +4,94 @@
     {
       "name": "kobo-local",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "3333", "--directory", "/Users/quentinjoubert/Desktop/kobo-design"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3333",
+        "--directory",
+        "/Users/quentinjoubert/Desktop/kobo-design"
+      ],
       "port": 3333
-    }
-  ,
+    },
     {
       "name": "skarp-landing",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "3456", "--directory", "/Users/quentinjoubert/Desktop/skarp"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3456",
+        "--directory",
+        "/Users/quentinjoubert/Desktop/skarp"
+      ],
       "port": 3456
-    }
-  ,
+    },
+    {
+      "name": "po-tech",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3460",
+        "--directory",
+        "/Users/quentinjoubert/Desktop/po-tech-ingenierie"
+      ],
+      "port": 3460
+    },
     {
       "name": "halston",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "3457", "/Users/quentinjoubert/Desktop/halston-architecture"],
+      "runtimeArgs": [
+        "serve",
+        "-p",
+        "3457",
+        "/Users/quentinjoubert/Desktop/halston-architecture"
+      ],
       "port": 3457
-    }
-  ,
+    },
     {
       "name": "skarp-app",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "cwd": "../skarp-app"
-    }
-  ,
+    },
     {
       "name": "skarp-mobile-web",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--web", "--port", "8090"],
+      "runtimeArgs": [
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8090"
+      ],
       "port": 8090,
       "cwd": "../skarp-mobile"
+    },
+    {
+      "name": "horlogerie",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3005"
+      ],
+      "port": 3005,
+      "cwd": "../horlogerie-des-remparts"
+    },
+    {
+      "name": "kobo-rendu",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /private/tmp/claude-501/-Users-quentinjoubert-Desktop-kobo-design/33d7c5d4-bce0-45e6-be92-db1e15518f82/scratchpad/site && exec python3 ../serve.py"
+      ],
+      "port": 3391
     }
   ]
 }

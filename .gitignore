@@ -3,3 +3,4 @@ node_modules/
 migrate-demandes.js
 *.icloud
 .claude/worktrees/
+.env*
