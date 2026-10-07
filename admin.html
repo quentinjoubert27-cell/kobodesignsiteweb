@@ -1010,6 +1010,7 @@
           <h1 class="view-title">Tous les projets</h1>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="computeMissingMontants()" title="Calcule et enregistre le prix des projets qui n'ont pas encore de montant">💶 Calculer les montants manquants</button>
           <button class="btn btn-ghost" onclick="openAuditDoublons()" title="Cherche les portes/étagères enregistrées en double dans toutes les configurations">🔍 Contrôler les doublons</button>
           <button class="btn btn-primary" onclick="openModalNewProjet()">+ Nouveau projet</button>
         </div>
@@ -1297,6 +1298,15 @@
       <button class="btn btn-ghost" onclick="closeModal('modal-doublons')">Fermer</button>
       <button class="btn btn-primary" id="doublons-fix-all" style="display:none;" onclick="fixDoublons()">Corriger tous les doublons</button>
     </div>
+  </div>
+</div>
+
+<!-- Calcul des montants manquants -->
+<div class="modal-overlay" id="modal-montants">
+  <div class="modal" style="max-width:760px;">
+    <h2 class="modal-title">Montants manquants</h2>
+    <div id="montants-body" style="max-height:62vh;overflow:auto;font-size:13px;"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-montants')">Fermer</button></div>
   </div>
 </div>
 
@@ -3361,6 +3371,41 @@
     showToast('Fiche enregistrée');
   }
 
+
+
+  // ── CALCUL EN LOT DES MONTANTS MANQUANTS ─────────────────────────────────────────
+  async function computeMissingMontants() {
+    var body = document.getElementById('montants-body');
+    document.getElementById('modal-montants').classList.add('open');
+    body.innerHTML = '<div class="loading">Préparation…</div>';
+    if (!allProjets.length) await loadProjets();
+    if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
+    var todo = allProjets.filter(function (p) { return !(parseFloat(p.montant) > 0); });
+    if (!todo.length) { body.innerHTML = '<div class="empty" style="padding:20px 0;">✅ Tous les projets ont déjà un montant.</div>'; return; }
+    var saveId = currentProjetId, ok = [], none = [];
+    var holder = document.getElementById('pd-devis');
+    for (var i = 0; i < todo.length; i++) {
+      var p = todo[i];
+      body.innerHTML = '<div class="loading">Calcul ' + (i + 1) + ' / ' + todo.length + ' — ' + escHtml(p.nom || '') + '</div>';
+      currentProjetId = p.id; currentDevisQuantities = null;
+      try { await renderProjetDevis(p.id); } catch (e) {}
+      await new Promise(function (r) { setTimeout(r, 450); });   // laisse partir l'écriture du montant
+      var res = document.getElementById('devis-result');
+      if (res && res.textContent.trim()) ok.push(p);
+      else {
+        var msg = holder ? holder.textContent.trim().slice(0, 90) : '';
+        none.push({ p: p, why: /ancien format/.test(msg) ? 'ancienne configuration (pas de calcul automatique)' : /Aucune configuration/.test(msg) ? 'aucune configuration liée au projet' : /Aucune quantité/.test(msg) ? 'configuration vide / non calculable' : 'non calculable' });
+      }
+    }
+    currentProjetId = saveId;
+    if (holder) holder.innerHTML = '';
+    await loadProjets();
+    var nm = function (p) { return escHtml(p.nom || '') + ' <span style="color:rgba(26,26,26,.5);">— ' + escHtml(p.clients ? p.clients.prenom + ' ' + p.clients.nom : '') + '</span>'; };
+    body.innerHTML = '<p style="margin-bottom:10px;"><b>' + ok.length + '</b> montant(s) calculé(s) et enregistré(s), <b>' + none.length + '</b> sans calcul possible.</p>' +
+      (ok.length ? '<p style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.45);margin:10px 0 4px;">Calculés</p><ul style="list-style:none;line-height:1.7;">' + ok.map(function (p) { return '<li>' + nm(p) + '</li>'; }).join('') + '</ul>' : '') +
+      (none.length ? '<p style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.45);margin:12px 0 4px;">Sans calcul</p><ul style="list-style:none;line-height:1.7;">' + none.map(function (x) { return '<li>' + nm(x.p) + ' : <i>' + x.why + '</i></li>'; }).join('') + '</ul>' : '') +
+      '<p style="font-size:11px;color:rgba(26,26,26,.5);margin-top:12px;">Le prix utilise les tarifs actuels de « Matériaux &amp; Prix » ; les projets qui avaient déjà un montant ne sont pas touchés.</p>';
+  }
 
   // ── CONTRÔLE DES DOUBLONS (configurations enregistrées) ───────────────────────────
   var doublonsFlagged = [];
