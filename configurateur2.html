@@ -4857,6 +4857,11 @@ function _supIssues(){
       });
       return {x:e.x_cm,b:bot,t:top};
     });
+    // un bloc de tiroirs a forcément un panneau de chaque côté : ses côtés comptent comme appui
+    els.filter(function(e){return e.type==='tiroir'&&e.key;}).forEach(function(e){
+      var k=e.key.split('_').map(Number);
+      seps.push({x:k[3],b:k[0],t:k[2]}); seps.push({x:k[1],b:k[0],t:k[2]});
+    });
     var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(function(e){
       var k=e.key.split('_').map(Number); return {b:k[0],l:k[1],t:k[2],r:k[3]};
     });
