@@ -1760,7 +1760,7 @@ function buildCaisson(){
         // Charnière à l'extérieur : gauche si porte dans la moitié gauche, droite sinon
         var cabinetMidX = xcmToLocal(iW*50);
         var porCx = (porXleft + porXright) / 2;
-        var hingeLeft = porCx <= cabinetMidX;
+        var hingeLeft = _hingeLeftFor(caissonElements, Math.round(CL*100), Math.round(CH*100), el.key, porCx <= cabinetMidX);
         var pivot=new THREE.Group();
         if(hingeLeft){
           pivot.position.set(porXleft+jeu/2, porCy, fz);
@@ -1876,7 +1876,7 @@ function buildCaisson(){
         // Charnière à l'extérieur : gauche si porte dans la moitié gauche, droite sinon
         var cabinetMidX = xcmToLocal(iW*50);
         var porCx = (porXleft + porXright) / 2;
-        var hingeLeft = porCx <= cabinetMidX;
+        var hingeLeft = _hingeLeftFor(caissonElements, Math.round(CL*100), Math.round(CH*100), el.key, porCx <= cabinetMidX);
         var pivot=new THREE.Group();
         if(hingeLeft){
           pivot.position.set(porXleft+jeu/2, porCy, fz);
@@ -2045,7 +2045,7 @@ function buildCaisson2(){
       var porYtop   = (top>iH_cm2-0.5)   ?  CH    : ycmToLocal(top)   + ep/2;
       var pW=porXright-porXleft-jeu, pH=porYtop-porYbot-jeu;
       var pCy=(porYbot+porYtop)/2;
-      var hingeLeft=(porXleft+porXright)/2 <= 0;
+      var hingeLeft=_hingeLeftFor(caissonElements2, Math.round(CL2*100), Math.round(CH*100), el.key, (porXleft+porXright)/2 <= 0);
       var pivot=new THREE.Group();
       if(hingeLeft){ pivot.position.set(porXleft+jeu/2,pCy,fz2); if(isOpen) pivot.rotation.y=-Math.PI*0.25; }
       else          { pivot.position.set(porXright-jeu/2,pCy,fz2); if(isOpen) pivot.rotation.y=Math.PI*0.25; }
@@ -2200,7 +2200,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         var pyT=kTop>iHcm-0.5   ? H       :ycm(kTop)  +ep2/2;
         var porW=pxR-pxL-jeuP, porH=pyT-pyB-jeuP;
         var porCy=(pyB+pyT)/2;
-        var hingeLeft=xcm((kLeft+kRight)/2)<xcm(iWcm/2);
+        var hingeLeft=_hingeLeftFor(elems, Math.round(W*100), Math.round(H*100), el.key, xcm((kLeft+kRight)/2)<xcm(iWcm/2));
         var isOpen=!!openSt[el.key];
         var pivot=new THREE.Group();
         pivot.position.set(hingeLeft?pxL+jeuP/2:pxR-jeuP/2,porCy,fz);
@@ -4903,6 +4903,20 @@ function _supportModel(els, W, H){
   return {TOL:TOL, iW:iW, iH:iH, seps:seps, doors:doors, drawers:drawers, info:info, cover:cover};
 }
 function _hingeInfo(els, W, H){ return _supportModel(els,W,H).info.map(function(i){return {d:i.d, side:i.side, x:i.x};}); }
+
+// Côté des charnières dans la 3D : sur la joue ou sur un intercalaire (même règle que le calcul et le rendu), jamais dans le vide
+var _hingeCache={els:null,sig:'',map:{}};
+function _hingeLeftFor(els, Wcm, Hcm, key, fallback){
+  try{
+    var sig=els.length+'|'+Wcm+'|'+Hcm+'|'+els.map(function(e){return e.type+(e.key||e.x_cm||e.y_cm||'');}).join(',');
+    if(_hingeCache.els!==els||_hingeCache.sig!==sig){
+      var m={}; _hingeInfo(dedupeEls(els),Wcm,Hcm).forEach(function(i){ m[i.d.key]=i.side; });
+      _hingeCache={els:els,sig:sig,map:m};
+    }
+    var side=_hingeCache.map[key];
+    return side ? side==='L' : fallback;
+  }catch(e){ return fallback; }
+}
 
 // Anomalies d'appui d'un caisson : portes (charnières) ET tiroirs (un tiroir a besoin d'un panneau de chaque côté)
 function _supportIssues(els, W, H){
