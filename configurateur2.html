@@ -4337,82 +4337,10 @@ function buildRecap4(){
   });
 }
 
-// Compartiment d'un intercalaire : de l'étagère du dessous à l'étagère du dessus (en cm, repère intérieur)
-function _sepCompartment(els, e, iW, iH){
-  var bot=0, top=iH;
-  els.forEach(function(sh){
-    if(sh.type!=='shelf') return;
-    var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:iW;
-    if(sl<=e.x_cm&&sr>=e.x_cm){ if(sh.y_cm<e.y_cm&&sh.y_cm>bot) bot=sh.y_cm; if(sh.y_cm>e.y_cm&&sh.y_cm<top) top=sh.y_cm; }
-  });
-  return {bot:bot, top:top};
-}
-// Côté des charnières de chaque porte (règle : sur la joue ou sur un intercalaire, côté extérieur d'un groupe de portes)
-// els en cm (repère intérieur), W/H : dimensions extérieures du caisson en cm.
-function _hingeInfo(els, W, H){
-  var TOL=1.5, iW=W-3.6, iH=H-3.6;
-  var shelves=els.filter(function(e){return e.type==='shelf';});
-  var seps=els.filter(function(e){return e.type==='separator';}).map(function(e){
-    var bot=0, top=iH;
-    shelves.forEach(function(sh){
-      var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:iW;
-      if(sl<=e.x_cm&&sr>=e.x_cm){ if(sh.y_cm<e.y_cm&&sh.y_cm>bot) bot=sh.y_cm; if(sh.y_cm>e.y_cm&&sh.y_cm<top) top=sh.y_cm; }
-    });
-    return {x:e.x_cm,b:bot,t:top};
-  });
-  els.filter(function(e){return e.type==='tiroir'&&e.key;}).forEach(function(e){   // un bloc de tiroirs a un panneau de chaque côté
-    var k=e.key.split('_').map(Number); seps.push({x:k[3],b:k[0],t:k[2]}); seps.push({x:k[1],b:k[0],t:k[2]});
-  });
-  var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(function(e){
-    var k=e.key.split('_').map(Number); return {b:k[0],l:k[1],t:k[2],r:k[3]};
-  });
-  function cover(d,x){
-    if(x<=TOL||x>=iW-TOL) return 1;
-    var h=d.t-d.b; if(h<=0) return 1;
-    var segs=seps.filter(function(sp){return Math.abs(sp.x-x)<=TOL;}).map(function(sp){return [Math.max(d.b,sp.b-0.5),Math.min(d.t,sp.t+0.5)];})
-      .filter(function(g){return g[1]>g[0];}).sort(function(a,b){return a[0]-b[0];});
-    var tot=0, cur=-1e9;
-    segs.forEach(function(g){ var a=Math.max(g[0],cur); if(g[1]>a){ tot+=g[1]-a; cur=g[1]; } });
-    return Math.min(1,tot/h);
-  }
-  return doors.map(function(d){
-    function neigh(side){
-      return doors.some(function(o){
-        if(o===d) return false;
-        var adj=side==='L'?Math.abs(o.r-d.l)<=TOL:Math.abs(o.l-d.r)<=TOL;
-        return adj&&Math.min(o.t,d.t)-Math.max(o.b,d.b)>1;
-      });
-    }
-    var cl=cover(d,d.l), cr=cover(d,d.r), nl=neigh('L'), nr=neigh('R');
-    var side=(nl&&!nr)?'R':(nr&&!nl)?'L':(cr>cl?'R':'L');
-    return {d:d, side:side, x:side==='R'?d.r:d.l};
-  });
-}
-// Intercalaires à doubler : deux portes (une de chaque côté) pivotent sur le même intercalaire
-function _doubledSeparatorFlags(els, W, H){
-  var TOL=1.5, iH=H-3.6, iW=W-3.6;
-  var info=_hingeInfo(els,W,H);
-  var shelves=els.filter(function(e){return e.type==='shelf';});
-  return els.filter(function(e){return e.type==='separator'||e.type==='separator_simple';}).map(function(e){
-    var x=e.x_cm, bot=0, top=iH;
-    shelves.forEach(function(sh){
-      var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:iW;
-      if(sl<=x&&sr>=x){ if(sh.y_cm<e.y_cm&&sh.y_cm>bot) bot=sh.y_cm; if(sh.y_cm>e.y_cm&&sh.y_cm<top) top=sh.y_cm; }
-    });
-    var ov=function(i){ return Math.min(i.d.t,top)-Math.max(i.d.b,bot)>1; };
-    var left=info.some(function(i){return i.side==='R'&&Math.abs(i.d.r-x)<=TOL&&ov(i);});
-    var right=info.some(function(i){return i.side==='L'&&Math.abs(i.d.l-x)<=TOL&&ov(i);});
-    return left&&right;
-  });
-}
-function dedupeEls(els){
-  var seen={}, out=[];
-  (els||[]).forEach(function(e){
-    var k=[e.type,e.key,e.y_cm,e.x_cm,e.x_left_cm,e.x_right_cm].join('|');
-    if(seen[k]) return; seen[k]=1; out.push(e);
-  });
-  return out;
-}
+
+
+
+
 function buildTechSpec(els, CL, CH, CP){
   els=dedupeEls(els); // un clic répété pouvait enregistrer la même porte plusieurs fois
   var ep=EP, ep_mm=Math.round(ep*1000);
@@ -4910,6 +4838,113 @@ function startPriceBadgeLoop(){
 }
 
 
+// Compartiment d'un intercalaire — MÊME règle que le configurateur (getCompartment) :
+// seules comptent les étagères qui TRAVERSENT l'intercalaire (début < x < fin, deux moitiés d'une même étagère fusionnées) ;
+// une étagère qui s'arrête contre l'intercalaire ne le coupe pas.
+function _cpt(els, x, y, iW, iH){
+  var byY={};
+  els.forEach(function(e){
+    if(e.type!=='shelf') return;
+    var sl=e.x_left_cm!=null?e.x_left_cm:0, sr=e.x_right_cm!=null?e.x_right_cm:iW;
+    if(sl>x||sr<x) return;
+    if(!byY[e.y_cm]) byY[e.y_cm]={l:sl,r:sr}; else { byY[e.y_cm].l=Math.min(byY[e.y_cm].l,sl); byY[e.y_cm].r=Math.max(byY[e.y_cm].r,sr); }
+  });
+  var bot=0, top=iH;
+  Object.keys(byY).filter(function(k){return byY[k].l<x&&byY[k].r>x;}).map(Number).forEach(function(s){ if(s<y&&s>bot) bot=s; if(s>y&&s<top) top=s; });
+  return {bot:bot, top:top};
+}
+function _sepCompartment(els, e, iW, iH){ return _cpt(els, e.x_cm, e.y_cm, iW, iH); }
+
+// Éléments sans doublons : mêmes éléments, et intercalaires superposés (même position et même compartiment)
+function dedupeEls(els){
+  var seen={}, out=[];
+  (els||[]).forEach(function(e){
+    var k=[e.type,e.key,e.y_cm,e.x_cm,e.x_left_cm,e.x_right_cm].join('|');
+    if(seen[k]) return; seen[k]=1; out.push(e);
+  });
+  var seenSep={};
+  return out.filter(function(e){
+    if(e.type!=='separator') return true;
+    var c=_cpt(out,e.x_cm,e.y_cm,9999,9999), k=e.x_cm+'|'+c.bot+'|'+c.top;
+    if(seenSep[k]) return false; seenSep[k]=1; return true;
+  });
+}
+
+// Modèle d'appui d'un caisson (cm) : intercalaires avec leur hauteur réelle, portes, côté des charnières, tiroirs
+function _supportModel(els, W, H){
+  var TOL=1.5, iW=W-3.6, iH=H-3.6;
+  var seps=els.filter(function(e){return e.type==='separator';}).map(function(e){
+    var c=_cpt(els,e.x_cm,e.y_cm,iW,iH); return {x:e.x_cm,b:c.bot,t:c.top};
+  });
+  var parse=function(e){ var k=e.key.split('_').map(Number); return {key:e.key,b:k[0],l:k[1],t:k[2],r:k[3]}; };
+  var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(parse);
+  var drawers=els.filter(function(e){return e.type==='tiroir'&&e.key;}).map(parse);
+  function cover(d,x){   // part de la hauteur de d contre un appui situé en x (joue ou intercalaire)
+    if(x<=TOL||x>=iW-TOL) return 1;
+    var h=d.t-d.b; if(h<=0) return 1;
+    var segs=seps.filter(function(sp){return Math.abs(sp.x-x)<=TOL;}).map(function(sp){return [Math.max(d.b,sp.b-0.5),Math.min(d.t,sp.t+0.5)];})
+      .filter(function(g){return g[1]>g[0];}).sort(function(a,b){return a[0]-b[0];});
+    var tot=0, cur=-1e9;
+    segs.forEach(function(g){ var a=Math.max(g[0],cur); if(g[1]>a){ tot+=g[1]-a; cur=g[1]; } });
+    return Math.min(1,tot/h);
+  }
+  var info=doors.map(function(d){
+    function neigh(side){
+      return doors.some(function(o){
+        if(o===d) return false;
+        var adj=side==='L'?Math.abs(o.r-d.l)<=TOL:Math.abs(o.l-d.r)<=TOL;
+        return adj&&Math.min(o.t,d.t)-Math.max(o.b,d.b)>1;
+      });
+    }
+    var cl=cover(d,d.l), cr=cover(d,d.r), nl=neigh('L'), nr=neigh('R');
+    var side=(nl&&!nr)?'R':(nr&&!nl)?'L':(cr>cl?'R':'L');   // charnières côté extérieur du groupe, sinon côté le mieux appuyé
+    return {d:d, side:side, x:side==='R'?d.r:d.l, best:side==='R'?cr:cl};
+  });
+  return {TOL:TOL, iW:iW, iH:iH, seps:seps, doors:doors, drawers:drawers, info:info, cover:cover};
+}
+function _hingeInfo(els, W, H){ return _supportModel(els,W,H).info.map(function(i){return {d:i.d, side:i.side, x:i.x};}); }
+
+// Anomalies d'appui d'un caisson : portes (charnières) ET tiroirs (un tiroir a besoin d'un panneau de chaque côté)
+function _supportIssues(els, W, H){
+  var m=_supportModel(els,W,H), out=[];
+  m.info.forEach(function(i){
+    if(i.best<0.9) out.push({kind:'porte', key:i.d.key, d:i.d, x:i.x, couverture:i.best, cause:i.best<0.1?'aucun panneau pour fixer la porte':'panneau de fixation trop court ('+Math.round(i.best*100)+' % de la hauteur)'});
+  });
+  m.drawers.forEach(function(w){
+    var cl=m.cover(w,w.l), cr=m.cover(w,w.r), x=cl<=cr?w.l:w.r, best=Math.min(cl,cr);
+    if(best<0.9) out.push({kind:'tiroir', key:w.key, d:w, x:x, couverture:best, cause:best<0.1?'tiroir sans intercalaire sur le côté':'intercalaire du côté du tiroir trop court ('+Math.round(best*100)+' %)'});
+  });
+  return out;
+}
+// Ajoute les intercalaires manquants pour une anomalie ; chaque intercalaire = un compartiment (comme le configurateur)
+function _fixGaps(els, W, H, is){
+  var added=[], seen={};
+  for(var n=0;n<30;n++){
+    var m=_supportModel(els,W,H), d=is.d;
+    var segs=m.seps.filter(function(sp){return Math.abs(sp.x-is.x)<=m.TOL;}).map(function(sp){return [sp.b,sp.t];}).sort(function(a,b){return a[0]-b[0];});
+    var gap=null, cur=d.b;
+    for(var i=0;i<segs.length&&!gap;i++){ if(segs[i][0]>cur+0.5) gap=[cur,Math.min(segs[i][0],d.t)]; cur=Math.max(cur,segs[i][1]); }
+    if(!gap&&cur<d.t-0.5) gap=[cur,d.t];
+    if(!gap) break;
+    var ym=(gap[0]+gap[1])/2, c=_cpt(els,is.x,ym,m.iW,m.iH), y=Math.round((c.bot+c.top)/2*10)/10, k=is.x+'|'+y;
+    if(seen[k]) break; seen[k]=1;
+    els.push({type:'separator',x_cm:is.x,y_cm:y}); added.push({x:is.x,de:c.bot,a:c.top});
+  }
+  return added;
+}
+// Intercalaires à doubler : deux portes (une de chaque côté) pivotent sur le même intercalaire
+function _doubledSeparatorFlags(els, W, H){
+  var m=_supportModel(els,W,H), TOL=m.TOL;
+  return els.filter(function(e){return e.type==='separator'||e.type==='separator_simple';}).map(function(e){
+    var c=_cpt(els,e.x_cm,e.y_cm,m.iW,m.iH), x=e.x_cm;
+    var ov=function(i){ return Math.min(i.d.t,c.top)-Math.max(i.d.b,c.bot)>1; };
+    // façade fixée sur l'intercalaire : porte dont les charnières sont de ce côté, ou tiroir (fixé des deux côtés)
+    var left=m.info.some(function(i){return i.side==='R'&&Math.abs(i.d.r-x)<=TOL&&ov(i);}) || m.drawers.some(function(w){return Math.abs(w.r-x)<=TOL&&ov({d:w});});
+    var right=m.info.some(function(i){return i.side==='L'&&Math.abs(i.d.l-x)<=TOL&&ov(i);}) || m.drawers.some(function(w){return Math.abs(w.l-x)<=TOL&&ov({d:w});});
+    return left&&right;
+  });
+}
+
 // ── Contrôle des appuis : une porte doit tenir sur un intercalaire ou sur la joue du caisson ──────────
 // (même règle que l'admin Kōbō) — évite d'envoyer un meuble dont des portes « flotteraient ».
 function _supCaissons(){
@@ -4923,78 +4958,19 @@ function _supCaissons(){
   }
   return out;
 }
+
+
 function _supIssues(){
-  var issues=[], TOL=1.5;
+  var out=[];
   _supCaissons().forEach(function(c){
-    var els=c.els, iW=c.W-3.6, iH=c.H-3.6;
-    var shelves=els.filter(function(e){return e.type==='shelf';});
-    var seps=els.filter(function(e){return e.type==='separator';}).map(function(e){
-      var bot=0, top=iH;
-      shelves.forEach(function(sh){
-        var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:iW;
-        if(sl<=e.x_cm&&sr>=e.x_cm){ if(sh.y_cm<e.y_cm&&sh.y_cm>bot) bot=sh.y_cm; if(sh.y_cm>e.y_cm&&sh.y_cm<top) top=sh.y_cm; }
-      });
-      return {x:e.x_cm,b:bot,t:top};
-    });
-    // un bloc de tiroirs a forcément un panneau de chaque côté : ses côtés comptent comme appui
-    els.filter(function(e){return e.type==='tiroir'&&e.key;}).forEach(function(e){
-      var k=e.key.split('_').map(Number);
-      seps.push({x:k[3],b:k[0],t:k[2]}); seps.push({x:k[1],b:k[0],t:k[2]});
-    });
-    var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(function(e){
-      var k=e.key.split('_').map(Number); return {b:k[0],l:k[1],t:k[2],r:k[3]};
-    });
-    function cover(d,x){
-      if(x<=TOL||x>=iW-TOL) return 1;
-      var h=d.t-d.b; if(h<=0) return 1;
-      var segs=seps.filter(function(sp){return Math.abs(sp.x-x)<=TOL;}).map(function(sp){return [Math.max(d.b,sp.b-0.5),Math.min(d.t,sp.t+0.5)];})
-        .filter(function(g){return g[1]>g[0];}).sort(function(a,b){return a[0]-b[0];});
-      var tot=0, cur=-1e9;
-      segs.forEach(function(g){ var a=Math.max(g[0],cur); if(g[1]>a){ tot+=g[1]-a; cur=g[1]; } });
-      return Math.min(1,tot/h);
-    }
-    doors.forEach(function(d){
-      function neigh(side){
-        return doors.some(function(o){
-          if(o===d) return false;
-          var adj=side==='L'?Math.abs(o.r-d.l)<=TOL:Math.abs(o.l-d.r)<=TOL;
-          return adj&&Math.min(o.t,d.t)-Math.max(o.b,d.b)>1;
-        });
-      }
-      var cl=cover(d,d.l), cr=cover(d,d.r), nl=neigh('L'), nr=neigh('R');
-      var best=(nl&&!nr)?cr:(nr&&!nl)?cl:Math.max(cl,cr);
-      var x=(nl&&!nr)?d.r:(nr&&!nl)?d.l:(cr>cl?d.r:d.l);
-      if(best<0.9) issues.push({c:c, door:d, x:x, seps:seps, shelves:shelves, iW:iW, iH:iH});
-    });
+    _supportIssues(c.els,c.W,c.H).forEach(function(is){ is.c=c; out.push(is); });
   });
-  return issues;
+  return out;
 }
 // Ajoute les intercalaires manquants dans les caissons concernés ; retourne le nombre ajouté
 function _supFix(issues){
-  var added=0, seen={};
-  issues.forEach(function(is){
-    var d=is.door, x=is.x;
-    var segs=is.seps.filter(function(sp){return Math.abs(sp.x-x)<=1.5;}).map(function(sp){return [sp.b,sp.t];}).sort(function(a,b){return a[0]-b[0];});
-    var gaps=[], cur=d.b;
-    segs.forEach(function(g){ if(g[0]>cur+0.5) gaps.push([cur,Math.min(g[0],d.t)]); cur=Math.max(cur,g[1]); });
-    if(cur<d.t-0.5) gaps.push([cur,d.t]);
-    gaps.forEach(function(g){
-      // un intercalaire par compartiment (entre deux étagères) traversé par la partie non couverte
-      var ys=[];
-      is.shelves.forEach(function(sh){
-        var sl=sh.x_left_cm!=null?sh.x_left_cm:0, sr=sh.x_right_cm!=null?sh.x_right_cm:is.iW;
-        if(sl<=x+0.5&&sr>=x-0.5) ys.push(sh.y_cm);
-      });
-      var bounds=[0].concat(ys.sort(function(a,b){return a-b;})).concat([is.iH]);
-      for(var i=0;i<bounds.length-1;i++){
-        var lo=bounds[i], hi=bounds[i+1];
-        if(hi-lo<=1||Math.min(hi,g[1])-Math.max(lo,g[0])<=0.5) continue;
-        var y=Math.round((lo+hi)/2*10)/10, k=is.c.label+'|'+x+'|'+y;
-        if(seen[k]) continue; seen[k]=1;
-        is.c.els.push({type:'separator',x_cm:x,y_cm:y}); added++;
-      }
-    });
-  });
+  var added=0;
+  issues.forEach(function(is){ added+=_fixGaps(is.c.els,is.c.W,is.c.H,is).length; });
   return added;
 }
 async function ensureDoorSupports(){
