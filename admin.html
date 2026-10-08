@@ -1408,6 +1408,21 @@
 </div>
 
 <!-- Email groupé aux clients en attente -->
+<div class="modal-overlay" id="modal-envoi-prop">
+  <div class="modal" style="max-width:560px;">
+    <h2 class="modal-title">Envoyer la proposition au client</h2>
+    <p id="ep-dest" style="font-size:12.5px;color:rgba(26,26,26,.6);margin:-6px 0 12px;line-height:1.5;"></p>
+    <div class="field"><label>Message qui accompagne le PDF</label><textarea id="ep-message" rows="9" style="width:100%;padding:12px 14px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;line-height:1.6;"></textarea></div>
+    <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:6px 0 10px;"><input type="checkbox" id="ep-statut" checked/> Passer le projet au statut « Proposition envoyée »</label>
+    <p style="font-size:12px;color:rgba(26,26,26,.55);line-height:1.5;">Le PDF est fabriqué (environ 1 minute 30 pour les rendus 3D), envoyé par e-mail en pièce jointe, et ajouté dans l'espace client du projet. Vérifiez la proposition avant d'envoyer : l'envoi est définitif.</p>
+    <div id="ep-etat" style="font-size:13px;margin:6px 0;color:var(--accent);"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-envoi-prop')">Annuler</button>
+      <button class="btn btn-primary" id="ep-btn" onclick="envoyerProposition()">Envoyer la proposition</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-bulk">
   <div class="modal" style="max-width:600px;">
     <h2 class="modal-title">Email groupé</h2>
@@ -1497,6 +1512,7 @@
         <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);">Proposition (à envoyer au client)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" id="btn-devis-pdf" onclick="openDevisSimplePdf()">📄 Créer le PDF (images + proposition)</button>
+          <button class="btn btn-ghost btn-sm" id="btn-send-prop" onclick="openEnvoiProposition()" title="Envoie la proposition en PDF au client (e-mail + espace client)">✉️ Envoyer au client</button>
         </div>
       </div>
       <div id="pd-devis-simple" class="detail-panel" style="padding:14px 16px;margin:0;"><div class="empty" style="padding:6px 0;font-size:12px;">Chargement…</div></div>
@@ -2411,13 +2427,89 @@
     return j;
   }
 
-  async function openDevisSimplePdf() {
+  // ── Envoi de la proposition au client (PDF en pièce jointe + espace client) ─────────────────
+  function openEnvoiProposition() {
+    if (!currentProjetId) return;
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var cli = allClients.find(function (c) { return c.id === p.client_id; }) || {};
+    if (!cli.email) return showToast('Ce client n\'a pas d\'adresse e-mail', 'err');
+    document.getElementById('ep-dest').innerHTML = 'Destinataire : <b>' + escHtml((cli.prenom || '') + ' ' + (cli.nom || '')) + '</b> — ' + escHtml(cli.email) + '<br>Projet : ' + escHtml(p.nom || '');
+    document.getElementById('ep-message').value = 'Bonjour' + (cli.prenom ? ' ' + cli.prenom : '') + ',\n\nSuite à votre demande, vous trouverez ci-joint notre proposition pour votre projet sur mesure : le meuble en images, sa composition et notre prix.\n\nCette proposition est un premier chiffrage, elle n\'est pas ferme : nous l\'ajusterons ensemble (dimensions, aménagement, finitions) avant l\'établissement du devis définitif. Vous la retrouvez aussi dans votre espace client.\n\nN\'hésitez pas à nous appeler ou à répondre à ce message pour toute question.\n\nÀ très bientôt,\nL\'équipe Kōbō Design';
+    document.getElementById('ep-etat').textContent = '';
+    document.getElementById('ep-btn').disabled = false;
+    document.getElementById('modal-envoi-prop').classList.add('open');
+  }
+
+  function _loadScriptOnce(src) {
+    return new Promise(function (res, rej) {
+      if (document.querySelector('script[data-src="' + src + '"]')) return res();
+      var sc = document.createElement('script'); sc.src = src; sc.dataset.src = src; sc.onload = res; sc.onerror = function () { rej(new Error('bibliothèque PDF indisponible')); };
+      document.head.appendChild(sc);
+    });
+  }
+  async function _htmlToPdfBlob(html) {
+    await _loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
+    var fr = document.createElement('iframe');
+    fr.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;';
+    document.body.appendChild(fr);
+    try {
+      fr.contentDocument.open(); fr.contentDocument.write(html); fr.contentDocument.close();
+      await new Promise(function (r) { setTimeout(r, 2500); });                       // polices, logo
+      try { await fr.contentDocument.fonts.ready; } catch (e) {}
+      fr.contentDocument.querySelectorAll('.no-print, script').forEach(function (e) { e.remove(); });
+      return await html2pdf().set({ margin: 0, image: { type: 'jpeg', quality: 0.92 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css'], after: '.pg' } })
+        .from(fr.contentDocument.body).outputPdf('blob');
+    } finally { fr.remove(); }
+  }
+
+  async function envoyerProposition() {
+    var btn = document.getElementById('ep-btn'), etat = document.getElementById('ep-etat');
+    var message = (document.getElementById('ep-message').value || '').trim();
+    if (!message) return showToast('Écris un message', 'err');
+    var projetId = currentProjetId;
+    if (!confirm('Envoyer la proposition à ce client ? L\'envoi est définitif.')) return;
+    btn.disabled = true;
+    try {
+      etat.textContent = 'Fabrication du document (rendus 3D)…';
+      var res = await openDevisSimplePdf('html');
+      if (!res || !res.html) throw new Error('proposition impossible à fabriquer');
+      if (!res.hasImages && !confirm('Les images 3D n\'ont pas pu être fabriquées (assistant de rendus non lancé ?). Envoyer quand même la proposition sans images ?')) { btn.disabled = false; etat.textContent = ''; return; }
+      etat.textContent = 'Création du PDF…';
+      var blob = await _htmlToPdfBlob(res.html);
+      var p = allProjets.find(function (x) { return x.id === projetId; }) || {};
+      var nom = res.numero + '-' + String(p.nom || 'proposition').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.pdf';
+      var path = projetId + '/' + Date.now() + '_' + nom;
+      etat.textContent = 'Ajout dans l\'espace client…';
+      var up = await sb.storage.from('documents-client').upload(path, blob, { contentType: 'application/pdf', upsert: true });
+      if (up.error) throw new Error('upload : ' + up.error.message);
+      var ins = await sb.from('documents').insert([{ projet_id: projetId, nom: nom, type: 'Proposition', categorie: 'document', url: path, taille_kb: Math.round(blob.size / 1024), uploade_par: 'kobo' }]);
+      if (ins.error) throw new Error('enregistrement : ' + ins.error.message);
+      etat.textContent = 'Envoi de l\'e-mail…';
+      var sess = (await sb.auth.getSession()).data.session;
+      var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sess.access_token },
+        body: JSON.stringify({ action: 'document', projet_id: projetId, nom_fichier: nom, doc_path: path, taille_kb: Math.round(blob.size / 1024), message: message, proposition: true }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok) throw new Error('e-mail : ' + (j.error || r.status));
+      if (document.getElementById('ep-statut').checked) {
+        await sb.from('projets').update({ statut: 'Proposition envoyée' }).eq('id', projetId);
+      }
+      showToast('Proposition envoyée à ' + (j.attached ? 'et jointe au mail' : '') + ' le client', undefined);
+      closeModal('modal-envoi-prop');
+      await loadProjetDocs(); await loadProjets();
+    } catch (e) {
+      etat.textContent = 'Échec : ' + (e.message || e) + ' — rien n\'est perdu, vous pouvez réessayer.';
+      showToast('Envoi impossible : ' + (e.message || e), 'err');
+      btn.disabled = false;
+    }
+  }
+
+  async function openDevisSimplePdf(mode) {
     if (!devisSimpleFam || !devisSimpleFam.length) return showToast('Proposition indisponible', 'err');
     var btn = document.getElementById('btn-devis-pdf');
-    // la fenêtre doit s'ouvrir tout de suite (clic), les images arrivent ensuite
-    var w = window.open('', '_blank');
+    // mode 'html' : on ne fabrique que le document (pour l'envoyer au client), sans ouvrir de fenêtre
+    var w = mode === 'html' ? { document: { body: {}, write: function () {}, open: function () {}, close: function () {} } } : window.open('', '_blank');
     if (!w) return showToast('Autorise les fenêtres pop-up pour créer le PDF', 'err');
-    w.document.write('<!doctype html><meta charset="utf-8"><title>Proposition…</title><body style="font-family:sans-serif;padding:40px;font-size:18px">Préparation de la proposition…</body>');
+    if (mode !== 'html') w.document.write('<!doctype html><meta charset="utf-8"><title>Proposition…</title><body style="font-family:sans-serif;padding:40px;font-size:18px">Préparation de la proposition…</body>');
     btn.disabled = true; var old = btn.textContent; btn.textContent = 'Rendus en cours…';
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
@@ -2504,6 +2596,7 @@
       '<li>Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.</li>' +
       '</ul></div>' +
       foot(pv.length ? 3 : 2) + '</div>';
+    if (mode === 'html') return { html: html, hasImages: !!imgs.ferme, numero: numDevis };
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
