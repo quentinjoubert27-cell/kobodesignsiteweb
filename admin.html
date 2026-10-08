@@ -1031,6 +1031,13 @@
         <select id="pf-type" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
           <option value="">Pro et particuliers</option><option value="pro">Pro</option><option value="particulier">Particuliers</option>
         </select>
+        <select id="pf-meuble" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">Tous les meubles</option><option value="sdb">Salle de bain</option><option value="tv">Meuble TV / sur mesure</option>
+          <option value="dressing">Dressing</option><option value="biblio">Bibliothèque</option><option value="meuble">Mobilier</option><option value="aucun">Sans configuration</option>
+        </select>
+        <select id="pf-origine" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">Toutes les demandes</option><option value="configurateur">Via le configurateur</option><option value="formulaire">Via le formulaire</option>
+        </select>
         <select id="pf-montant" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
           <option value="">Avec ou sans montant</option><option value="avec">Avec montant</option><option value="sans">Sans montant</option>
         </select>
@@ -3919,10 +3926,22 @@
     const { data } = await sb.from('projets').select('*, clients(prenom, nom, email, type_client)').order('created_at', { ascending: false });
     allProjets = data || [];
     renderProjets();
+    // type de meuble et origine de la demande : d'après la configuration liée au projet (le formulaire de contact n'en crée pas)
+    try {
+      const [{ data: cs }, { data: cb }] = await Promise.all([
+        sb.from('configs_sdb').select('projet_id, type, created_at').order('created_at', { ascending: false }),
+        sb.from('configs_biblio').select('projet_id'),
+      ]);
+      const ft = {};
+      (cs || []).forEach(c => { if (c.projet_id && !ft[c.projet_id]) ft[c.projet_id] = c.type || 'sdb'; });
+      (cb || []).forEach(c => { if (c.projet_id && !ft[c.projet_id]) ft[c.projet_id] = 'biblio'; });
+      allProjets.forEach(p => { p._ft = ft[p.id] || null; });
+      renderProjets();
+    } catch (e) { console.warn('types de meubles', e); }
   }
 
   function resetProjetsFiltres() {
-    ['pf-q', 'pf-statut', 'pf-type', 'pf-montant', 'pf-date'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    ['pf-q', 'pf-statut', 'pf-type', 'pf-meuble', 'pf-origine', 'pf-montant', 'pf-date'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const t = document.getElementById('pf-tri'); if (t) t.value = 'recent';
     renderProjets();
   }
@@ -3932,10 +3951,13 @@
     if (!tbody) return;
     const val = id => (document.getElementById(id) || {}).value || '';
     const norm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const me = val('pf-meuble'), og = val('pf-origine');
     const q = norm(val('pf-q')), st = val('pf-statut'), ty = val('pf-type'), mo = val('pf-montant'), dt = parseInt(val('pf-date')) || 0, tri = val('pf-tri') || 'recent';
     let list = allProjets.filter(p => {
       if (st === '__actifs' ? p.statut === 'Terminé' : (st && p.statut !== st)) return false;
       if (ty) { const isPro = p.clients && /pro/i.test(p.clients.type_client || ''); if ((ty === 'pro') !== !!isPro) return false; }
+      if (me && (me === 'aucun' ? p._ft : p._ft !== me)) return false;
+      if (og && ((og === 'configurateur') !== !!p._ft)) return false;
       if (mo) { const has = parseFloat(p.montant) > 0; if ((mo === 'avec') !== has) return false; }
       if (dt && (Date.now() - new Date(p.created_at).getTime()) > dt * 86400000) return false;
       if (q) {
@@ -3954,7 +3976,7 @@
     if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun projet ne correspond à ces filtres.</td></tr>'; return; }
     tbody.innerHTML = list.map(p => `
       <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
-        <td style="font-weight:600;">${escHtml(p.nom)}</td>
+        <td style="font-weight:600;">${escHtml(p.nom)}<div style="font-size:10.5px;font-weight:500;color:rgba(26,26,26,.45);margin-top:2px;">${p._ft ? escHtml(TYPE_LABELS[p._ft] || 'Meuble') + ' · configurateur' : (p._ft === null ? 'Formulaire' : '')}</div></td>
         <td>${p.clients ? `<span style="display:inline-flex;align-items:center;gap:6px;">${escHtml(p.clients.prenom + ' ' + p.clients.nom)}${clientTypeBadge(p.clients)}</span>` : '—'}</td>
         <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span></td>
         <td style="font-weight:600;">${p.montant && montantVisible(p) ? formatCurrency(p.montant) : '—'}</td>
