@@ -1412,9 +1412,12 @@
   <div class="modal" style="max-width:560px;">
     <h2 class="modal-title">Envoyer la proposition au client</h2>
     <p id="ep-dest" style="font-size:12.5px;color:rgba(26,26,26,.6);margin:-6px 0 12px;line-height:1.5;"></p>
-    <div class="field"><label>Message qui accompagne le PDF</label><textarea id="ep-message" rows="9" style="width:100%;padding:12px 14px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;line-height:1.6;"></textarea></div>
+    <div class="field"><label>1 · Le PDF de la proposition (celui que vous venez de créer et enregistrer)</label>
+      <input type="file" id="ep-fichier" accept="application/pdf,.pdf" style="width:100%;padding:10px;border:1.5px dashed rgba(26,26,26,.25);border-radius:8px;font-size:13px;background:#fff;"/>
+      <div id="ep-fichier-info" style="font-size:12px;color:rgba(26,26,26,.55);margin-top:4px;">Cliquez sur « Créer le PDF », enregistrez-le (impression → Enregistrer au format PDF), puis choisissez ici ce fichier.</div></div>
+    <div class="field"><label>2 · Message qui accompagne le PDF</label><textarea id="ep-message" rows="9" style="width:100%;padding:12px 14px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;line-height:1.6;"></textarea></div>
     <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:6px 0 10px;"><input type="checkbox" id="ep-statut" checked/> Passer le projet au statut « Proposition envoyée »</label>
-    <p style="font-size:12px;color:rgba(26,26,26,.55);line-height:1.5;">Le PDF est fabriqué (environ 1 minute 30 pour les rendus 3D), envoyé par e-mail en pièce jointe, et ajouté dans l'espace client du projet. Vérifiez la proposition avant d'envoyer : l'envoi est définitif.</p>
+    <p style="font-size:12px;color:rgba(26,26,26,.55);line-height:1.5;">Le PDF choisi est envoyé tel quel par e-mail en pièce jointe, et ajouté dans l'espace client du projet. Vérifiez-le avant d'envoyer : l'envoi est définitif.</p>
     <div id="ep-etat" style="font-size:13px;margin:6px 0;color:var(--accent);"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-envoi-prop')">Annuler</button>
@@ -2436,6 +2439,7 @@
     document.getElementById('ep-dest').innerHTML = 'Destinataire : <b>' + escHtml((cli.prenom || '') + ' ' + (cli.nom || '')) + '</b> — ' + escHtml(cli.email) + '<br>Projet : ' + escHtml(p.nom || '');
     document.getElementById('ep-message').value = 'Bonjour' + (cli.prenom ? ' ' + cli.prenom : '') + ',\n\nSuite à votre demande, vous trouverez ci-joint notre proposition pour votre projet sur mesure : le meuble en images, sa composition et notre prix.\n\nCette proposition est un premier chiffrage, elle n\'est pas ferme : nous l\'ajusterons ensemble (dimensions, aménagement, finitions) avant l\'établissement du devis définitif. Vous la retrouvez aussi dans votre espace client.\n\nN\'hésitez pas à nous appeler ou à répondre à ce message pour toute question.\n\nÀ très bientôt,\nL\'équipe Kōbō Design';
     document.getElementById('ep-etat').textContent = '';
+    document.getElementById('ep-fichier').value = '';
     document.getElementById('ep-btn').disabled = false;
     document.getElementById('modal-envoi-prop').classList.add('open');
   }
@@ -2465,20 +2469,18 @@
   async function envoyerProposition() {
     var btn = document.getElementById('ep-btn'), etat = document.getElementById('ep-etat');
     var message = (document.getElementById('ep-message').value || '').trim();
-    if (!message) return showToast('Écris un message', 'err');
+    var file = (document.getElementById('ep-fichier').files || [])[0];
+    if (!file) return showToast('Choisissez d\'abord le PDF de la proposition', 'err');
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') return showToast('Le fichier doit être un PDF', 'err');
+    if (file.size > 14 * 1024 * 1024) return showToast('PDF trop lourd (max 14 Mo)', 'err');
+    if (!message) return showToast('Écrivez un message', 'err');
     var projetId = currentProjetId;
-    if (!confirm('Envoyer la proposition à ce client ? L\'envoi est définitif.')) return;
+    if (!confirm('Envoyer « ' + file.name + ' » à ce client ? L\'envoi est définitif.')) return;
     btn.disabled = true;
     try {
-      etat.textContent = 'Fabrication du document (rendus 3D)…';
-      var res = await openDevisSimplePdf('html');
-      if (!res || !res.html) throw new Error('proposition impossible à fabriquer');
-      if (!res.hasImages && !confirm('Les images 3D n\'ont pas pu être fabriquées (assistant de rendus non lancé ?). Envoyer quand même la proposition sans images ?')) { btn.disabled = false; etat.textContent = ''; return; }
-      etat.textContent = 'Création du PDF…';
-      var blob = await _htmlToPdfBlob(res.html);
-      var p = allProjets.find(function (x) { return x.id === projetId; }) || {};
-      var nom = res.numero + '-' + String(p.nom || 'proposition').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.pdf';
-      var path = projetId + '/' + Date.now() + '_' + nom;
+      var blob = file;
+      var nom = file.name;
+      var path = projetId + '/' + Date.now() + '_' + nom.replace(/[^a-zA-Z0-9._-]/g, '_');
       etat.textContent = 'Ajout dans l\'espace client…';
       var up = await sb.storage.from('documents-client').upload(path, blob, { contentType: 'application/pdf', upsert: true });
       if (up.error) throw new Error('upload : ' + up.error.message);
@@ -2493,7 +2495,7 @@
       if (document.getElementById('ep-statut').checked) {
         await sb.from('projets').update({ statut: 'Proposition envoyée' }).eq('id', projetId);
       }
-      showToast('Proposition envoyée à ' + (j.attached ? 'et jointe au mail' : '') + ' le client', undefined);
+      showToast('Proposition envoyée au client' + (j.attached ? ' (PDF joint au mail et ajouté à son espace)' : ' (PDF ajouté à son espace ; pièce jointe non incluse dans le mail)'));
       closeModal('modal-envoi-prop');
       await loadProjetDocs(); await loadProjets();
     } catch (e) {
