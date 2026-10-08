@@ -5134,9 +5134,11 @@ async function submitConfig(){
           meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },
           ...(isSDBMode ? {
-            plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100),
+            plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
                    matLabel:MATS_PLAN[S.matPlan].n, matId:S.matPlan },
             vasques:{ nb:S.nbVasques, W:Math.round(S.vasqueW*100), D:Math.round(S.vasqueD*100),
+                      pose:(vasqueEncastree?'encastree':'poser'),
+                      finition:((MATS_VASQUE[S_matVasque]||{}).n||''),
                       id:_vasqueSelected,
                       label:(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label,
                       vx:Math.round(S.vx*100)/100, vz:Math.round(S.vz*100)/100,
