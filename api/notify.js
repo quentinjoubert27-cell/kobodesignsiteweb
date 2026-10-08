@@ -352,6 +352,7 @@ module.exports = async function handler(req, res) {
     // ── ACTION : document ──────────────────────────────────────────
     if (action === 'document') {
       const { projet_id, nom_fichier, doc_path, taille_kb } = body;
+      const msgPerso = typeof body.message === 'string' ? body.message.trim().slice(0, 4000) : '';
       if (!projet_id) return res.status(400).json({ error: 'Paramètres manquants' });
       const { data: projet } = await sb.from('projets').select('nom, client_id').eq('id', projet_id).single();
       if (!projet) return res.status(404).json({ error: 'Projet introuvable' });
@@ -373,15 +374,16 @@ module.exports = async function handler(req, res) {
       await resend.emails.send({
         from: 'Kobo Design <contact@kobo-design.fr>',
         to: client.email,
-        subject: `Nouveau document disponible — ${esc(projet.nom)}`,
+        subject: msgPerso ? `Votre proposition Kobo Design — ${esc(projet.nom)}` : `Nouveau document disponible — ${esc(projet.nom)}`,
         html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1A1A1A;">
-          ${HEADER('Un document est disponible', '')}
+          ${HEADER(msgPerso ? 'Votre proposition' : 'Un document est disponible', '')}
           <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
-            <p style="font-size:14px;margin:0 0 20px">Bonjour ${esc(client.prenom || '')},</p>
+            ${msgPerso ? '' : `<p style="font-size:14px;margin:0 0 20px">Bonjour ${esc(client.prenom || '')},</p>`}
             ${PROJET_BADGE(projet.nom)}
-            <p style="font-size:14px;line-height:1.8;margin:0 0 24px;color:#333">
+            ${msgPerso ? `<p style="font-size:14px;line-height:1.8;margin:0 0 20px;color:#333;white-space:pre-wrap">${esc(msgPerso)}</p>
+            <p style="font-size:13px;line-height:1.7;margin:0 0 24px;color:#555">${attachments ? 'La proposition est jointe à ce message (PDF). ' : ''}Vous la retrouvez aussi dans votre espace client.</p>` : `<p style="font-size:14px;line-height:1.8;margin:0 0 24px;color:#333">
               Un nouveau document${nom_fichier ? ` (<strong>${esc(nom_fichier)}</strong>)` : ''} vient d'être ajouté à votre projet${attachments ? ', vous le trouverez en pièce jointe' : ''}. Vous pouvez aussi le consulter à tout moment depuis votre espace client.
-            </p>
+            </p>`}
             ${BTN('https://www.kobo-design.fr/espace-client2', 'Voir mon espace client →')}
           </div>${FOOTER}
         </div>`,
