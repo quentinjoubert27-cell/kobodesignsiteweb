@@ -305,7 +305,8 @@ module.exports = async function handler(req, res) {
       }
       const premierProjet = {};
       (projets || []).forEach(p => { if (!premierProjet[p.client_id]) premierProjet[p.client_id] = p.nom; });
-      const seen = new Set();
+      const exclus = new Set((Array.isArray(body.exclure) ? body.exclure : []).map(e => String(e).trim().toLowerCase()).filter(Boolean));
+      const seen = new Set(exclus);   // les adresses exclues sont traitées comme déjà vues
       const recipients = clients
         .filter(c => c.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.email))
         .filter(c => { const k = c.email.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
