@@ -2697,7 +2697,7 @@
       var cq = applyDevisOverrides(currentDevisQuantities), gg = currentTarifsGlobaux || {}, ctxc = collectDevisAutoContext();
       var cmpEl = document.getElementById('devis-compare');
       if (!cmpEl) { cmpEl = document.createElement('div'); cmpEl.id = 'devis-compare'; resultEl.parentNode.insertBefore(cmpEl, resultEl.nextSibling); }
-      cmpEl.innerHTML = renderComparatifHtml({ ancien: price.prix_vente, nouveau: computePrixTableur(cq, gg, ctxc.finitionM2, ctxc.finitionUnitM2) });
+      cmpEl.innerHTML = renderComparatifHtml({ ancien: price.prix_vente, ancienD: ancienDetail(cq, gg, ctxc.edgeBandingTotalMl, ctxc.finitionM2, ctxc.finitionUnitM2), nouveau: computePrixTableur(cq, gg, ctxc.finitionM2, ctxc.finitionUnitM2) });
     } catch (e) { console.warn('comparatif', e); }
     var _pj = allProjets.find(function (x) { return x.id === currentProjetId; });
     var figé = _pj && STATUTS_FERMES.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
@@ -2827,23 +2827,41 @@
       if (currentDevisOverrides.finition_m2 != null) fm2 = currentDevisOverrides.finition_m2;
       var old = computeDevisPriceAdmin(Object.assign({}, qo, { edge_banding_ml: edge }), g);
       var ancien = old ? Math.round((old.cost_revient + fm2 * unit) * (g.coefficient_revente || 2) * 100) / 100 : null;
-      return { ancien: ancien, nouveau: computePrixTableur(qo, g, fm2, unit) };
+      return { ancien: ancien, ancienD: ancienDetail(qo, g, edge, fm2, unit), nouveau: computePrixTableur(qo, g, fm2, unit) };
     } finally { currentDevisOverrides = saveOv; }
   }
 
+  // Décomposition de l'ancien calcul (mêmes chiffres que le total de la fiche)
+  function ancienDetail(q, g, edgeMl, finM2, finUnit) {
+    var pk = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_tiroir_caisse_m2', 'panels_plan_m2'];
+    var pan = pk.reduce(function (sum, k) { var b = q[k] || {}; return sum + Object.keys(b).reduce(function (t, m) { return t + b[m] * ((g.panel_m2 || {})[k + '|' + m] || 0); }, 0); }, 0) + (finM2 || 0) * (finUnit || 0);
+    var chant = (edgeMl || 0) * (g.edge_banding_ml || 0);
+    var autres = (q.screws || 0) * (g.screw_unit || 0) + (q.dowels || 0) * (g.dowel_unit || 0) + (q.hinges || 0) * (g.hinge_unit || 0) + (q.drawer_mechanisms || 0) * (g.drawer_mechanism_unit || 0) + (q.corner_brackets || 0) * (g.corner_bracket_unit || 0) + (q.bars_count || 0) * (g.bar_unit || 0);
+    return { panneaux: pan, chants: chant, autres: autres, cout: pan + chant + autres };
+  }
+
   function renderComparatifHtml(c) {
-    if (!c || !c.nouveau) return '';
-    var n = c.nouveau, eur = function (x) { return formatCurrency(x); };
-    var ecart = c.ancien ? Math.round((n.vente - c.ancien) / c.ancien * 1000) / 10 : null;
-    var L = { panneaux: 'Panneaux (m² × prix par matière)', decoupe_chant: 'Découpe + chant (' + n.ml + ' ml × 6 €)', usinages: 'Usinages (angles, charnières, coulisses)', quincaillerie: 'Quincaillerie (vis, tourillons, charnières)', kits_tiroirs: 'Kits tiroirs' };
-    return '<div style="margin-top:10px;padding:12px 14px;border:1.5px dashed rgba(26,26,26,.18);border-radius:10px;font-size:12px;">' +
-      '<div style="font-weight:700;margin-bottom:6px;">Comparatif : ancien calcul / règles du tableur <span style="font-weight:400;color:rgba(26,26,26,.5)">(information : ne modifie pas le montant)</span></div>' +
-      Object.keys(L).map(function (k) { return '<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>' + L[k] + '</span><span>' + eur(n.lignes[k] || 0) + '</span></div>'; }).join('') +
-      '<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(26,26,26,.1);margin-top:4px;"><span>Coût de revient (' + n.angles + ' angles)</span><b>' + eur(n.cout) + '</b></div>' +
-      '<div style="display:flex;justify-content:space-between;"><span>Vente HT — nouvelle règle (coef ' + n.coef + ')</span><b style="color:var(--accent)">' + eur(n.vente) + '</b></div>' +
-      '<div style="display:flex;justify-content:space-between;"><span>Vente HT — ancienne règle</span><b>' + (c.ancien != null ? eur(c.ancien) : '—') + '</b></div>' +
-      (ecart != null ? '<div style="display:flex;justify-content:space-between;"><span>Écart nouvelle / ancienne</span><b>' + (ecart > 0 ? '+' : '') + ecart + ' %</b></div>' : '') +
-      '<div style="margin-top:4px;color:rgba(26,26,26,.5);">Même résultat avec le coefficient du tableur (1,8) : ' + eur(n.vente_18) + '</div></div>';
+    if (!c || !c.nouveau || !c.ancienD) return '';
+    var n = c.nouveau, a = c.ancienD, eur = function (x) { return formatCurrency(x); };
+    var nQuinc = (n.lignes.usinages || 0) + (n.lignes.quincaillerie || 0) + (n.lignes.kits_tiroirs || 0);
+    var coef = n.coef;
+    var row = function (lib, av, nv, bold) {
+      var e = nv - av, sign = e > 0 ? '+' : '';
+      return '<tr style="' + (bold ? 'font-weight:700;border-top:1.5px solid rgba(26,26,26,.25);' : 'border-top:1px solid rgba(26,26,26,.07);') + '"><td style="padding:5px 4px;">' + lib + '</td><td style="padding:5px 4px;text-align:right;">' + eur(av) + '</td><td style="padding:5px 4px;text-align:right;">' + eur(nv) + '</td><td style="padding:5px 4px;text-align:right;color:' + (e > 0.5 ? '#b45309' : (e < -0.5 ? '#166534' : 'rgba(26,26,26,.4)')) + ';">' + (Math.abs(e) < 0.5 ? '—' : sign + eur(e)) + '</td></tr>';
+    };
+    var vOld = c.ancien, vNew = n.vente, ec = vOld ? Math.round((vNew - vOld) / vOld * 1000) / 10 : null;
+    var th = 'padding:4px;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:rgba(26,26,26,.5);';
+    return '<div style="margin-top:10px;padding:12px 14px;border:1.5px dashed rgba(26,26,26,.18);border-radius:10px;font-size:12.5px;">' +
+      '<div style="font-weight:700;">Comparatif de prix : ancien calcul / règles de votre tableur</div>' +
+      '<div style="color:rgba(26,26,26,.5);margin:2px 0 8px;">Ce qu\'il en coûte à fabriquer, poste par poste (avant le coefficient). Information : le montant du projet ne change pas.</div>' +
+      '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="' + th + 'text-align:left;">Poste (coût)</th><th style="' + th + 'text-align:right;">Ancien</th><th style="' + th + 'text-align:right;">Tableur</th><th style="' + th + 'text-align:right;">Écart</th></tr></thead><tbody>' +
+      row('Panneaux (surface × prix de la matière)', a.panneaux, n.lignes.panneaux) +
+      row('Chants' + ' / découpe + chant (' + n.ml + ' ml)', a.chants, n.lignes.decoupe_chant) +
+      row('Vis, tourillons, charnières, tiroirs, usinages (' + n.angles + ' angles)', a.autres, nQuinc) +
+      row('Coût de revient', a.cout, n.cout, true) +
+      '</tbody></table>' +
+      '<div style="display:flex;justify-content:space-between;margin-top:8px;"><span>× coefficient de vente ' + coef + ' = <b>prix de vente HT</b></span><span>ancien <b>' + eur(vOld) + '</b> → tableur <b style="color:var(--accent)">' + eur(vNew) + '</b>' + (ec != null ? ' (' + (ec > 0 ? '+' : '') + ec + ' %)' : '') + '</span></div>' +
+      '<div style="margin-top:4px;color:rgba(26,26,26,.5);">Avec le coefficient 1,8 de votre tableur, le prix de vente serait de ' + eur(n.vente_18) + '.</div></div>';
   }
 
   async function openComparatifPrix() {
