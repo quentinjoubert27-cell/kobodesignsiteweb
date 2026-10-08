@@ -2793,9 +2793,9 @@
     if (!q || !g) return null;
     var T = TARIFS_TABLEUR, ln = {};
     var cat = function (k) { var b = q[k] || {}; return Object.keys(b).reduce(function (sum, m) { return sum + b[m] * ((g.panel_m2 || {})[k + '|' + m] || 0); }, 0); };
-    ln.panneaux = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_tiroir_caisse_m2', 'panels_plan_m2'].reduce(function (s2, k) { return s2 + cat(k); }, 0)
+    ln.panneaux = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_plan_m2'].reduce(function (s2, k) { return s2 + cat(k); }, 0)
       + (finitionM2 || 0) * (finitionUnit || 0);
-    var ml = (q.decoupe_usinage_m || 0) + (q.decoupe_etagere_m || 0) + (q.decoupe_porte_m || 0) + (q.decoupe_tiroir_m || 0) + (q.decoupe_tiroir_caisse_m || 0);
+    var ml = (q.decoupe_usinage_m || 0) + (q.decoupe_etagere_m || 0) + (q.decoupe_porte_m || 0) + (q.decoupe_tiroir_m || 0);   // la caisse du tiroir est comprise dans le kit tiroir du tableur
     ln.decoupe_chant = ml * (T.decoupe_ml + T.chant_ml);
     var angles = q.junctions != null ? q.junctions : (q.screws || 0) / 4;
     ln.usinages = angles * T.angle_usinage + (q.drawers_count || 0) * T.coulisse_tiroir + (q.hinges || 0) * (T.usinage_charniere_porte + T.usinage_charniere_caisson);
@@ -2846,9 +2846,9 @@
     var T = TARIFS_TABLEUR, rows = [];
     var add = function (lib, grp, aq, ap, tq, tp, unit) { rows.push({ lib: lib, grp: grp, unit: unit, aq: aq, ap: ap, tq: tq, tp: tp }); };
     var cats = [['panels_caisson_m2', 'Caisson'], ['panels_etagere_m2', 'Étagères / intercalaires'], ['panels_porte_m2', 'Portes'], ['panels_tiroir_m2', 'Façades de tiroirs'], ['panels_tiroir_caisse_m2', 'Caisses de tiroirs'], ['panels_plan_m2', 'Plan de travail']];
-    cats.forEach(function (c) { var b = q[c[0]] || {}; Object.keys(b).forEach(function (m) { if (!(b[m] > 0)) return; var pu = (g.panel_m2 || {})[c[0] + '|' + m] || 0; add(c[1] + ' — ' + m, 'Panneaux', b[m], pu, b[m], pu, 'm²'); }); });
+    cats.forEach(function (c) { var b = q[c[0]] || {}; Object.keys(b).forEach(function (m) { if (!(b[m] > 0)) return; var pu = (g.panel_m2 || {})[c[0] + '|' + m] || 0; var inTab = c[0] !== 'panels_tiroir_caisse_m2'; add(c[1] + ' — ' + m + (inTab ? '' : ' (comprise dans le kit tiroir du tableur)'), 'Panneaux', b[m], pu, inTab ? b[m] : null, inTab ? pu : null, 'm²'); }); });
     if (finM2 > 0) add('Joues / dessus de finition', 'Panneaux', finM2, finUnit, finM2, finUnit, 'm²');
-    var ml = (q.decoupe_usinage_m || 0) + (q.decoupe_etagere_m || 0) + (q.decoupe_porte_m || 0) + (q.decoupe_tiroir_m || 0) + (q.decoupe_tiroir_caisse_m || 0);
+    var ml = (q.decoupe_usinage_m || 0) + (q.decoupe_etagere_m || 0) + (q.decoupe_porte_m || 0) + (q.decoupe_tiroir_m || 0);
     var ang = q.junctions != null ? q.junctions : (q.screws || 0) / 4, hg = q.hinges || 0, dr = q.drawers_count || 0;
     add('Chant plaqué', 'Chant et découpe', edgeMl, g.edge_banding_ml || 0, ml, T.chant_ml, 'ml');
     add('Découpe', 'Chant et découpe', null, null, ml, T.decoupe_ml, 'ml');
