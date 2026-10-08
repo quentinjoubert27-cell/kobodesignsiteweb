@@ -2789,7 +2789,7 @@
   // ═══ MÉTHODE « TABLEUR » (à part de l'ancien calcul) ═══════════════════════════════════════
   // Reproduit le tableur « Devis meuble » : pièces à dimensions extérieures, façades en recouvrement, un seul prix par type de matériau.
   // Déduit d'UN exemple (meuble 90×90×37 : 688,07 € HT) — chaque règle marquée « à confirmer » doit être validée sur d'autres meubles.
-  var TABLEUR = { E: 19, decoupe: 1.5, chant: 4.5, vis: 0.5, tourillon: 0.3, angleUsinage: 16, usinCharnierePorte: 2.5, usinCharniereCaisson: 1, coulisse: 10, kitTiroir: 90, charniere: 10 };
+  var TABLEUR = { E: 19, decoupe: 1.5, chant: 4.5, vis: 0.5, tourillon: 0.3, angleUsinage: 16, usinCharnierePorte: 2.5, usinCharniereCaisson: 1, coulisse: 10, kitTiroir: 90, charniere: 10, tringle: 20 };
   function tableurFromRc(rc, g) {
     var T = TABLEUR, E = T.E, m = rc.meuble || {}, warn = [];
     if (!(m.L && m.H && m.P)) return null;
@@ -2851,7 +2851,7 @@
       { lib: 'Vis (' + angles * 4 + ' × 0,50 €)', montant: angles * 4 * T.vis },
       { lib: 'Tourillons (' + angles * 4 + ' × 0,30 €)', montant: angles * 4 * T.tourillon },
       { lib: 'Charnières (' + nHinges + ') : comprises avec les usinages ci-dessus', montant: 0 },
-      { lib: 'Tringles (' + nBars + ' × ' + ((g && g.bar_unit) || 0) + ' € — prix à renseigner)', montant: nBars * ((g && g.bar_unit) || 0) },
+      { lib: 'Tringles (' + nBars + ' × 20 €, tout compris)', montant: nBars * T.tringle },
       { lib: 'Kits tiroirs (' + nDrawers + ' × 90 €)', montant: nDrawers * T.kitTiroir }
     ];
     var cout = bois + ml * (T.decoupe + T.chant) + lignes.reduce(function (a, l) { return a + l.montant; }, 0);
