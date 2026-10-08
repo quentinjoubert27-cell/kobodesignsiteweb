@@ -1015,6 +1015,7 @@
           <h1 class="view-title">Tous les projets</h1>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="openComparatifPrix()" title="Compare l'ancien calcul de prix et les règles du tableur Préchiffrage, projet par projet">📊 Comparatif des prix</button>
           <button class="btn btn-ghost" onclick="openAuditDoublons()" title="Cherche les portes/étagères enregistrées en double dans toutes les configurations">🔍 Contrôler les doublons</button>
           <button class="btn btn-primary" onclick="openModalNewProjet()">+ Nouveau projet</button>
         </div>
@@ -1405,6 +1406,15 @@
 </div>
 
 <!-- Email groupé aux clients en attente -->
+<div class="modal-overlay" id="modal-comparatif">
+  <div class="modal" style="max-width:860px;">
+    <h2 class="modal-title">Comparatif des prix : ancien calcul / règles du tableur</h2>
+    <p style="font-size:12.5px;color:rgba(26,26,26,.55);margin:-6px 0 12px;line-height:1.5;">Information uniquement : aucun montant n'est modifié. Les deux colonnes utilisent le coefficient de vente de l'admin ; cliquez sur un projet pour voir le détail.</p>
+    <div id="cmp-body"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-comparatif')">Fermer</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-bulk">
   <div class="modal" style="max-width:600px;">
     <h2 class="modal-title">Email groupé</h2>
@@ -2683,6 +2693,12 @@
     try { renderDevisSimple(); } catch (e) { console.warn('devis simplifié', e); }
     resultEl.innerHTML = 'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente : ' + price.prix_vente.toFixed(2) + ' €</span>';
+    try {
+      var cq = applyDevisOverrides(currentDevisQuantities), gg = currentTarifsGlobaux || {}, ctxc = collectDevisAutoContext();
+      var cmpEl = document.getElementById('devis-compare');
+      if (!cmpEl) { cmpEl = document.createElement('div'); cmpEl.id = 'devis-compare'; resultEl.parentNode.insertBefore(cmpEl, resultEl.nextSibling); }
+      cmpEl.innerHTML = renderComparatifHtml({ ancien: price.prix_vente, nouveau: computePrixTableur(cq, gg, ctxc.finitionM2, ctxc.finitionUnitM2) });
+    } catch (e) { console.warn('comparatif', e); }
     var _pj = allProjets.find(function (x) { return x.id === currentProjetId; });
     var figé = _pj && STATUTS_FERMES.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
     if (currentProjetId && !figé) {
@@ -2768,6 +2784,91 @@
     var win = window.open('', '_blank');
     if (!win) { showToast('Autorise les pop-ups pour exporter le PDF', 'err'); return; }
     win.document.open(); win.document.write(html); win.document.close();
+  }
+
+  // ── Règles du tableur « Préchiffrage meuble » (comparatif avec l'ancien calcul — ne modifie aucun montant) ──
+  var TARIFS_TABLEUR = { decoupe_ml: 1.5, chant_ml: 4.5, angle_usinage: 16, vis: 0.5, tourillon: 0.3, vis_par_angle: 4, tourillons_par_angle: 4,
+    charniere: 10, usinage_charniere_porte: 2.5, usinage_charniere_caisson: 1, coulisse_tiroir: 10, kit_tiroir: 90 };
+  function computePrixTableur(q, g, finitionM2, finitionUnit) {
+    if (!q || !g) return null;
+    var T = TARIFS_TABLEUR, ln = {};
+    var cat = function (k) { var b = q[k] || {}; return Object.keys(b).reduce(function (sum, m) { return sum + b[m] * ((g.panel_m2 || {})[k + '|' + m] || 0); }, 0); };
+    ln.panneaux = ['panels_caisson_m2', 'panels_etagere_m2', 'panels_porte_m2', 'panels_tiroir_m2', 'panels_tiroir_caisse_m2', 'panels_plan_m2'].reduce(function (s2, k) { return s2 + cat(k); }, 0)
+      + (finitionM2 || 0) * (finitionUnit || 0);
+    var ml = (q.decoupe_usinage_m || 0) + (q.decoupe_etagere_m || 0) + (q.decoupe_porte_m || 0) + (q.decoupe_tiroir_m || 0) + (q.decoupe_tiroir_caisse_m || 0);
+    ln.decoupe_chant = ml * (T.decoupe_ml + T.chant_ml);
+    var angles = q.junctions != null ? q.junctions : (q.screws || 0) / 4;
+    ln.usinages = angles * T.angle_usinage + (q.drawers_count || 0) * T.coulisse_tiroir + (q.hinges || 0) * (T.usinage_charniere_porte + T.usinage_charniere_caisson);
+    ln.quincaillerie = angles * (T.vis_par_angle * T.vis + T.tourillons_par_angle * T.tourillon) + (q.hinges || 0) * T.charniere + (q.bars_count || 0) * (g.bar_unit || 0);
+    ln.kits_tiroirs = (q.drawers_count || 0) * T.kit_tiroir;
+    var cost = Object.keys(ln).reduce(function (s2, k) { return s2 + ln[k]; }, 0), coef = g.coefficient_revente || 2;
+    Object.keys(ln).forEach(function (k) { ln[k] = Math.round(ln[k] * 100) / 100; });
+    return { lignes: ln, angles: angles, ml: Math.round(ml * 100) / 100, cout: Math.round(cost * 100) / 100, coef: coef,
+      vente: Math.round(cost * coef * 100) / 100, vente_18: Math.round(cost * 1.8 * 100) / 100 };
+  }
+
+  // Ancien et nouveau prix d'une config (sans ouvrir le projet)
+  function comparePrixFromSdb(sdb) {
+    var saveOv = currentDevisOverrides;
+    try {
+      var rc = sdb.raw_config || {};
+      currentDevisOverrides = Object.assign({}, rc.devis_overrides || {});
+      var q = buildDevisQuantitiesFromConfig(sdb), stored = rc.devis_quantities;
+      if (stored && Array.isArray(stored.finitions) && Array.isArray(q.finitions)) {
+        var vis = {}; stored.finitions.forEach(function (f) { vis[f.id] = f.visible; });
+        q.finitions.forEach(function (f) { if (vis[f.id] !== undefined) f.visible = !!vis[f.id]; });
+      }
+      var qo = applyDevisOverrides(q), g = currentTarifsGlobaux || {};
+      var fm2 = 0, fper = 0;
+      (q.finitions || []).forEach(function (f) { if (f.visible) { fm2 += f.m2 || 0; fper += f.perimeter_m || 0; } });
+      var key = qo.caisson_material ? 'finition_m2|' + qo.caisson_material : null;
+      var unit = (key && g.panel_m2 && g.panel_m2[key] != null) ? g.panel_m2[key] : 0;
+      var edge = currentDevisOverrides.edge_banding_ml != null ? currentDevisOverrides.edge_banding_ml : (q.edge_banding_ml || 0) + fper;
+      if (currentDevisOverrides.finition_m2 != null) fm2 = currentDevisOverrides.finition_m2;
+      var old = computeDevisPriceAdmin(Object.assign({}, qo, { edge_banding_ml: edge }), g);
+      var ancien = old ? Math.round((old.cost_revient + fm2 * unit) * (g.coefficient_revente || 2) * 100) / 100 : null;
+      return { ancien: ancien, nouveau: computePrixTableur(qo, g, fm2, unit) };
+    } finally { currentDevisOverrides = saveOv; }
+  }
+
+  function renderComparatifHtml(c) {
+    if (!c || !c.nouveau) return '';
+    var n = c.nouveau, eur = function (x) { return formatCurrency(x); };
+    var ecart = c.ancien ? Math.round((n.vente - c.ancien) / c.ancien * 1000) / 10 : null;
+    var L = { panneaux: 'Panneaux (m² × prix par matière)', decoupe_chant: 'Découpe + chant (' + n.ml + ' ml × 6 €)', usinages: 'Usinages (angles, charnières, coulisses)', quincaillerie: 'Quincaillerie (vis, tourillons, charnières)', kits_tiroirs: 'Kits tiroirs' };
+    return '<div style="margin-top:10px;padding:12px 14px;border:1.5px dashed rgba(26,26,26,.18);border-radius:10px;font-size:12px;">' +
+      '<div style="font-weight:700;margin-bottom:6px;">Comparatif : ancien calcul / règles du tableur <span style="font-weight:400;color:rgba(26,26,26,.5)">(information : ne modifie pas le montant)</span></div>' +
+      Object.keys(L).map(function (k) { return '<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>' + L[k] + '</span><span>' + eur(n.lignes[k] || 0) + '</span></div>'; }).join('') +
+      '<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(26,26,26,.1);margin-top:4px;"><span>Coût de revient (' + n.angles + ' angles)</span><b>' + eur(n.cout) + '</b></div>' +
+      '<div style="display:flex;justify-content:space-between;"><span>Vente HT — nouvelle règle (coef ' + n.coef + ')</span><b style="color:var(--accent)">' + eur(n.vente) + '</b></div>' +
+      '<div style="display:flex;justify-content:space-between;"><span>Vente HT — ancienne règle</span><b>' + (c.ancien != null ? eur(c.ancien) : '—') + '</b></div>' +
+      (ecart != null ? '<div style="display:flex;justify-content:space-between;"><span>Écart nouvelle / ancienne</span><b>' + (ecart > 0 ? '+' : '') + ecart + ' %</b></div>' : '') +
+      '<div style="margin-top:4px;color:rgba(26,26,26,.5);">Même résultat avec le coefficient du tableur (1,8) : ' + eur(n.vente_18) + '</div></div>';
+  }
+
+  async function openComparatifPrix() {
+    document.getElementById('modal-comparatif').classList.add('open');
+    var box = document.getElementById('cmp-body'); box.innerHTML = 'Calcul en cours…';
+    try {
+      if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
+      var [{ data: projets }, { data: configs }] = await Promise.all([
+        sb.from('projets').select('id, nom, statut, montant, clients(prenom, nom)'),
+        sb.from('configs_sdb').select('*').order('created_at', { ascending: false })]);
+      var latest = {}; (configs || []).forEach(function (c) { if (c.projet_id && !latest[c.projet_id]) latest[c.projet_id] = c; });
+      var rows = [], sa = 0, sn = 0;
+      (projets || []).forEach(function (p) {
+        var c = latest[p.id]; if (!c) return;
+        var r; try { r = comparePrixFromSdb(c); } catch (e) { return; }
+        if (!r || !r.nouveau || r.ancien == null) return;
+        rows.push({ p: p, a: r.ancien, n: r.nouveau.vente }); sa += r.ancien; sn += r.nouveau.vente;
+      });
+      rows.sort(function (x, y) { return Math.abs(y.n - y.a) - Math.abs(x.n - x.a); });
+      var th = 'text-align:left;padding:6px 8px;font-size:11px;color:rgba(26,26,26,.5);';
+      box.innerHTML = '<div style="font-size:12px;margin-bottom:8px;color:rgba(26,26,26,.6);">' + rows.length + ' projet(s) · total ancien <b>' + formatCurrency(sa) + '</b> · total nouveau <b>' + formatCurrency(sn) + '</b> (' + (sa ? (sn >= sa ? '+' : '') + Math.round((sn - sa) / sa * 1000) / 10 : 0) + ' %) · triés par plus gros écart</div>' +
+        '<div style="max-height:60vh;overflow:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr><th style="' + th + '">Projet</th><th style="' + th + '">Client</th><th style="' + th + '">Statut</th><th style="' + th + 'text-align:right;">Ancien</th><th style="' + th + 'text-align:right;">Nouveau</th><th style="' + th + 'text-align:right;">Écart</th></tr></thead><tbody>' +
+        rows.map(function (x) { var e = x.a ? Math.round((x.n - x.a) / x.a * 1000) / 10 : 0;
+          return '<tr onclick="closeModal(\'modal-comparatif\');openProjetDetail(\'' + x.p.id + '\',\'' + escHtml(x.p.nom) + '\')" style="cursor:pointer;border-top:1px solid rgba(26,26,26,.07);"><td style="padding:6px 8px;font-weight:600;">' + escHtml(x.p.nom) + '</td><td style="padding:6px 8px;">' + (x.p.clients ? escHtml(x.p.clients.prenom + ' ' + x.p.clients.nom) : '—') + '</td><td style="padding:6px 8px;">' + escHtml(x.p.statut) + '</td><td style="padding:6px 8px;text-align:right;">' + formatCurrency(x.a) + '</td><td style="padding:6px 8px;text-align:right;font-weight:700;">' + formatCurrency(x.n) + '</td><td style="padding:6px 8px;text-align:right;color:' + (e > 0 ? '#b45309' : '#166534') + ';">' + (e > 0 ? '+' : '') + e + ' %</td></tr>'; }).join('') + '</tbody></table></div>';
+    } catch (e) { box.textContent = 'Erreur : ' + e.message; }
   }
 
   function computeDevisPriceAdmin(q, tarifs) {
@@ -4523,7 +4624,7 @@
     var out = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
       edge_banding_m: 0, decoupe_usinage_m: 0, decoupe_etagere_m: 0, decoupe_porte_m: 0, decoupe_tiroir_m: 0, decoupe_tiroir_caisse_m: 0,
       screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 0,
-      doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, separators_doubled: 0, bars_count: 0, pieces: [] };
+      doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, separators_doubled: 0, bars_count: 0, junctions: 0, pieces: [] };
     function mergeBucket(outBucket, qBucket) {
       Object.keys(qBucket || {}).forEach(function (k) { outBucket[k] = (outBucket[k] || 0) + qBucket[k]; });
     }
@@ -4547,6 +4648,7 @@
       out.corner_brackets += q.corner_brackets || 0;
       out.doors_count += q.doors_count || 0;
       out.drawers_count += q.drawers_count || 0;
+      out.junctions += q.junctions || 0;
       out.shelves_count += q.shelves_count || 0;
       out.separators_count += q.separators_count || 0;
       out.separators_doubled += q.separators_doubled || 0;
@@ -4601,7 +4703,7 @@
   function computeDevisQuantitiesAdmin(techSpec, matLabel) {
     var q = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
       edge_banding_m: 0, decoupe_usinage_m: 0, decoupe_etagere_m: 0, decoupe_porte_m: 0, decoupe_tiroir_m: 0, decoupe_tiroir_caisse_m: 0,
-      screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, separators_doubled: 0, bars_count: 0, pieces: [] };
+      screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, separators_doubled: 0, bars_count: 0, junctions: 0, pieces: [] };
     var mat = matLabel || 'Non défini';
     // Caisson/étagère/caisse tiroir sont dans un matériau structurel générique (pas la finition
     // visible choisie par le client) : un seul prix, pas une liste de couleurs.
@@ -4617,6 +4719,7 @@
     var jointCP = fastenersForJoint(CP_mm / 10);
     // vis / tourillons : 4 vis + 3 tourillons à chaque angle ou intersection (chaque point compté une seule fois)
     var jInfo = countJunctions(techSpec), nJonctions = jInfo.total;
+    q.junctions = nJonctions;
     q.screws += nJonctions * 4; q.dowels += nJonctions * 3;
     // bucket: q.panels_caisson_m2 | q.panels_etagere_m2 | q.panels_porte_m2 | q.panels_tiroir_m2
     // extra (optionnel) : { group, vis, tourillons, charnieres, mecanisme_tiroir } — recap par pièce/élément
