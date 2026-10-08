@@ -2697,7 +2697,7 @@
       var cq = applyDevisOverrides(currentDevisQuantities), gg = currentTarifsGlobaux || {}, ctxc = collectDevisAutoContext();
       var cmpEl = document.getElementById('devis-compare');
       if (!cmpEl) { cmpEl = document.createElement('div'); cmpEl.id = 'devis-compare'; resultEl.parentNode.insertBefore(cmpEl, resultEl.nextSibling); }
-      cmpEl.innerHTML = renderComparatifHtml({ ancien: price.prix_vente, ancienD: ancienDetail(cq, gg, ctxc.edgeBandingTotalMl, ctxc.finitionM2, ctxc.finitionUnitM2), nouveau: computePrixTableur(cq, gg, ctxc.finitionM2, ctxc.finitionUnitM2) });
+      cmpEl.innerHTML = renderComparatifHtml({ ancien: price.prix_vente, lignes: lignesComparatif(cq, gg, ctxc.edgeBandingTotalMl, ctxc.finitionM2, ctxc.finitionUnitM2), nouveau: computePrixTableur(cq, gg, ctxc.finitionM2, ctxc.finitionUnitM2) });
     } catch (e) { console.warn('comparatif', e); }
     var _pj = allProjets.find(function (x) { return x.id === currentProjetId; });
     var figé = _pj && STATUTS_FERMES.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
@@ -2840,28 +2840,70 @@
     return { panneaux: pan, chants: chant, autres: autres, cout: pan + chant + autres };
   }
 
+  // Comparatif ligne par ligne : mêmes postes des deux côtés (quantité, prix unitaire, montant), « — » si le poste n'existe pas dans l'un des calculs
+  var _cmpRows = [], _cmpMeta = {};
+  function lignesComparatif(q, g, edgeMl, finM2, finUnit) {
+    var T = TARIFS_TABLEUR, rows = [];
+    var add = function (lib, grp, aq, ap, tq, tp, unit) { rows.push({ lib: lib, grp: grp, unit: unit, aq: aq, ap: ap, tq: tq, tp: tp }); };
+    var cats = [['panels_caisson_m2', 'Caisson'], ['panels_etagere_m2', 'Étagères / intercalaires'], ['panels_porte_m2', 'Portes'], ['panels_tiroir_m2', 'Façades de tiroirs'], ['panels_tiroir_caisse_m2', 'Caisses de tiroirs'], ['panels_plan_m2', 'Plan de travail']];
+    cats.forEach(function (c) { var b = q[c[0]] || {}; Object.keys(b).forEach(function (m) { if (!(b[m] > 0)) return; var pu = (g.panel_m2 || {})[c[0] + '|' + m] || 0; add(c[1] + ' — ' + m, 'Panneaux', b[m], pu, b[m], pu, 'm²'); }); });
+    if (finM2 > 0) add('Joues / dessus de finition', 'Panneaux', finM2, finUnit, finM2, finUnit, 'm²');
+    var ml = (q.decoupe_usinage_m || 0) + (q.decoupe_etagere_m || 0) + (q.decoupe_porte_m || 0) + (q.decoupe_tiroir_m || 0) + (q.decoupe_tiroir_caisse_m || 0);
+    var ang = q.junctions != null ? q.junctions : (q.screws || 0) / 4, hg = q.hinges || 0, dr = q.drawers_count || 0;
+    add('Chant plaqué', 'Chant et découpe', edgeMl, g.edge_banding_ml || 0, ml, T.chant_ml, 'ml');
+    add('Découpe', 'Chant et découpe', null, null, ml, T.decoupe_ml, 'ml');
+    add('Vis', 'Quincaillerie', q.screws || 0, g.screw_unit || 0, ang * T.vis_par_angle, T.vis, 'u');
+    add('Tourillons', 'Quincaillerie', q.dowels || 0, g.dowel_unit || 0, ang * T.tourillons_par_angle, T.tourillon, 'u');
+    add('Charnières', 'Quincaillerie', hg, g.hinge_unit || 0, hg, T.charniere, 'u');
+    add('Équerres d\'angle', 'Quincaillerie', q.corner_brackets || 0, g.corner_bracket_unit || 0, null, null, 'u');
+    add('Tringles', 'Quincaillerie', q.bars_count || 0, g.bar_unit || 0, q.bars_count || 0, g.bar_unit || 0, 'u');
+    add('Mécanisme / kit de tiroir', 'Tiroirs', q.drawer_mechanisms || 0, g.drawer_mechanism_unit || 0, dr, T.kit_tiroir, 'u');
+    add('Coulisses de tiroirs (usinage)', 'Usinages', null, null, dr, T.coulisse_tiroir, 'u');
+    add('Usinage des angles', 'Usinages', null, null, ang, T.angle_usinage, 'angle');
+    add('Usinage charnières côté porte', 'Usinages', null, null, hg, T.usinage_charniere_porte, 'u');
+    add('Usinage charnières côté caisson', 'Usinages', null, null, hg, T.usinage_charniere_caisson, 'u');
+    return rows.filter(function (r) { return (r.aq || r.tq) && ((r.aq || 0) * (r.ap || 0) > 0 || (r.tq || 0) * (r.tp || 0) > 0 || r.aq || r.tq); });
+  }
+
   function renderComparatifHtml(c) {
-    if (!c || !c.nouveau || !c.ancienD) return '';
-    var n = c.nouveau, a = c.ancienD, eur = function (x) { return formatCurrency(x); };
-    var nQuinc = (n.lignes.usinages || 0) + (n.lignes.quincaillerie || 0) + (n.lignes.kits_tiroirs || 0);
-    var coef = n.coef;
-    var row = function (lib, av, nv, bold) {
-      var e = nv - av, sign = e > 0 ? '+' : '';
-      return '<tr style="' + (bold ? 'font-weight:700;border-top:1.5px solid rgba(26,26,26,.25);' : 'border-top:1px solid rgba(26,26,26,.07);') + '"><td style="padding:5px 4px;">' + lib + '</td><td style="padding:5px 4px;text-align:right;">' + eur(av) + '</td><td style="padding:5px 4px;text-align:right;">' + eur(nv) + '</td><td style="padding:5px 4px;text-align:right;color:' + (e > 0.5 ? '#b45309' : (e < -0.5 ? '#166534' : 'rgba(26,26,26,.4)')) + ';">' + (Math.abs(e) < 0.5 ? '—' : sign + eur(e)) + '</td></tr>';
-    };
-    var vOld = c.ancien, vNew = n.vente, ec = vOld ? Math.round((vNew - vOld) / vOld * 1000) / 10 : null;
-    var th = 'padding:4px;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:rgba(26,26,26,.5);';
-    return '<div style="margin-top:10px;padding:12px 14px;border:1.5px dashed rgba(26,26,26,.18);border-radius:10px;font-size:12.5px;">' +
-      '<div style="font-weight:700;">Comparatif de prix : ancien calcul / règles de votre tableur</div>' +
-      '<div style="color:rgba(26,26,26,.5);margin:2px 0 8px;">Ce qu\'il en coûte à fabriquer, poste par poste (avant le coefficient). Information : le montant du projet ne change pas.</div>' +
-      '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="' + th + 'text-align:left;">Poste (coût)</th><th style="' + th + 'text-align:right;">Ancien</th><th style="' + th + 'text-align:right;">Tableur</th><th style="' + th + 'text-align:right;">Écart</th></tr></thead><tbody>' +
-      row('Panneaux (surface × prix de la matière)', a.panneaux, n.lignes.panneaux) +
-      row('Chants' + ' / découpe + chant (' + n.ml + ' ml)', a.chants, n.lignes.decoupe_chant) +
-      row('Vis, tourillons, charnières, tiroirs, usinages (' + n.angles + ' angles)', a.autres, nQuinc) +
-      row('Coût de revient', a.cout, n.cout, true) +
-      '</tbody></table>' +
-      '<div style="display:flex;justify-content:space-between;margin-top:8px;"><span>× coefficient de vente ' + coef + ' = <b>prix de vente HT</b></span><span>ancien <b>' + eur(vOld) + '</b> → tableur <b style="color:var(--accent)">' + eur(vNew) + '</b>' + (ec != null ? ' (' + (ec > 0 ? '+' : '') + ec + ' %)' : '') + '</span></div>' +
-      '<div style="margin-top:4px;color:rgba(26,26,26,.5);">Avec le coefficient 1,8 de votre tableur, le prix de vente serait de ' + eur(n.vente_18) + '.</div></div>';
+    if (!c || !c.nouveau || !c.lignes) return '';
+    var n = c.nouveau, eur = function (x) { return formatCurrency(x); };
+    var nb = function (x) { return x == null ? '—' : (Math.round(x * 100) / 100).toLocaleString('fr-FR'); };
+    var rows = c.lignes, grp = '', html = '', ta = 0, tt = 0;
+    var cs = 'padding:4px 6px;text-align:right;white-space:nowrap;', cl = 'padding:4px 6px;';
+    rows.forEach(function (r) {
+      var am = r.aq != null ? r.aq * r.ap : null, tm = r.tq != null ? r.tq * r.tp : null;
+      ta += am || 0; tt += tm || 0;
+      var e = (tm || 0) - (am || 0);
+      if (r.grp !== grp) { grp = r.grp; html += '<tr><td colspan="8" style="padding:8px 6px 2px;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#CD3E00;">' + escHtml(grp) + '</td></tr>'; }
+      html += '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="' + cl + '">' + escHtml(r.lib) + '</td>' +
+        '<td style="' + cs + 'color:rgba(26,26,26,.7);">' + nb(r.aq) + (r.aq != null ? ' ' + r.unit : '') + '</td><td style="' + cs + 'color:rgba(26,26,26,.7);">' + (r.ap != null ? nb(r.ap) + ' €' : '—') + '</td><td style="' + cs + 'font-weight:600;">' + (am != null ? eur(am) : '—') + '</td>' +
+        '<td style="' + cs + 'color:rgba(26,26,26,.7);border-left:1px solid rgba(26,26,26,.1);">' + nb(r.tq) + (r.tq != null ? ' ' + r.unit : '') + '</td><td style="' + cs + 'color:rgba(26,26,26,.7);">' + (r.tp != null ? nb(r.tp) + ' €' : '—') + '</td><td style="' + cs + 'font-weight:600;">' + (tm != null ? eur(tm) : '—') + '</td>' +
+        '<td style="' + cs + 'color:' + (e > 0.5 ? '#b45309' : (e < -0.5 ? '#166534' : 'rgba(26,26,26,.35)')) + ';">' + (Math.abs(e) < 0.5 ? '—' : (e > 0 ? '+' : '') + eur(e)) + '</td></tr>';
+    });
+    var coef = n.coef, vOld = ta * coef, vNew = tt * coef;
+    var th = 'padding:4px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(26,26,26,.5);text-align:right;';
+    _cmpRows = rows; _cmpMeta = { coef: coef, ta: ta, tt: tt };
+    return '<div style="margin-top:10px;padding:12px 14px;border:1.5px dashed rgba(26,26,26,.18);border-radius:10px;font-size:12px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:13px;">Comparatif ligne par ligne : ancien calcul / tableur</b><button class="btn btn-ghost btn-sm" onclick="downloadComparatifCsv()">Télécharger (Excel/CSV)</button></div>' +
+      '<div style="color:rgba(26,26,26,.5);margin:2px 0 6px;">Coûts de fabrication avant coefficient. Les prix unitaires de « Ancien » viennent de l\'admin (Matériaux &amp; Prix), ceux de « Tableur » de votre fichier. « — » : poste absent de ce calcul. Information : le montant du projet ne change pas.</div>' +
+      '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:640px;"><thead><tr><th></th><th colspan="3" style="' + th + 'text-align:center;">Ancien calcul</th><th colspan="3" style="' + th + 'text-align:center;border-left:1px solid rgba(26,26,26,.1);">Tableur</th><th></th></tr>' +
+      '<tr><th style="' + th + 'text-align:left;">Poste</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th><th style="' + th + 'border-left:1px solid rgba(26,26,26,.1);">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th><th style="' + th + '">Écart</th></tr></thead><tbody>' + html +
+      '<tr style="border-top:2px solid rgba(26,26,26,.3);font-weight:700;"><td style="' + cl + '">Coût de revient</td><td></td><td></td><td style="' + cs + '">' + eur(ta) + '</td><td style="border-left:1px solid rgba(26,26,26,.1);"></td><td></td><td style="' + cs + '">' + eur(tt) + '</td><td style="' + cs + '">' + (tt - ta > 0 ? '+' : '') + eur(tt - ta) + '</td></tr>' +
+      '<tr style="font-weight:700;"><td style="' + cl + '">× coefficient ' + coef + ' = prix de vente HT</td><td></td><td></td><td style="' + cs + '">' + eur(vOld) + '</td><td style="border-left:1px solid rgba(26,26,26,.1);"></td><td></td><td style="' + cs + 'color:var(--accent);">' + eur(vNew) + '</td><td style="' + cs + '">' + (ta ? (vNew >= vOld ? '+' : '') + Math.round((vNew - vOld) / vOld * 1000) / 10 + ' %' : '') + '</td></tr>' +
+      '</tbody></table></div><div style="margin-top:4px;color:rgba(26,26,26,.5);">Avec le coefficient 1,8 de votre tableur : ' + eur(tt * 1.8) + ' (tableur) / ' + eur(ta * 1.8) + ' (ancien).</div></div>';
+  }
+
+  function downloadComparatifCsv() {
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var f = function (x) { return x == null ? '' : String(Math.round(x * 100) / 100).replace('.', ','); };
+    var out = [['Groupe', 'Poste', 'Unité', 'Ancien qté', 'Ancien prix unit.', 'Ancien montant', 'Tableur qté', 'Tableur prix unit.', 'Tableur montant', 'Écart']];
+    _cmpRows.forEach(function (r) { var am = r.aq != null ? r.aq * r.ap : null, tm = r.tq != null ? r.tq * r.tp : null; out.push([r.grp, r.lib, r.unit, f(r.aq), f(r.ap), f(am), f(r.tq), f(r.tp), f(tm), f((tm || 0) - (am || 0))]); });
+    out.push(['', 'Coût de revient', '', '', '', f(_cmpMeta.ta), '', '', f(_cmpMeta.tt), f(_cmpMeta.tt - _cmpMeta.ta)]);
+    out.push(['', 'Prix de vente HT (coef ' + _cmpMeta.coef + ')', '', '', '', f(_cmpMeta.ta * _cmpMeta.coef), '', '', f(_cmpMeta.tt * _cmpMeta.coef), f((_cmpMeta.tt - _cmpMeta.ta) * _cmpMeta.coef)]);
+    var csv = '﻿' + out.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'comparatif-prix-' + String(p.nom || 'projet').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.csv'; a.click();
   }
 
   async function openComparatifPrix() {
