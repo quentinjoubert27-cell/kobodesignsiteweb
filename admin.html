@@ -2363,15 +2363,17 @@
     };
   }
 
-  // Plan de travail et vasque(s), chacun avec ses caractéristiques (salle de bain)
+  // Plan de travail et vasque(s), chacun avec sa texture et ses caractéristiques (salle de bain)
   function devisSimplePlanVasque() {
     var rc = currentProjetRc || {}, pl = rc.plan || {}, v = rc.vasques || {}, out = [];
     if (!pl.L) return out;
     var ep = pl.Ep_cm || (pl.Ep >= 1 ? pl.Ep : 0);
-    out.push({ titre: 'Plan de travail', texte: [pl.matLabel, Math.round(pl.L) + ' × ' + Math.round(pl.P) + ' cm', ep ? 'épaisseur ' + ep + ' cm' : 'épaisseur à confirmer'].filter(Boolean).join(' · ') });
+    out.push({ key: 'plan', titre: 'Plan de travail', texture: pl.matLabel || 'à confirmer',
+      specs: ['Dimensions : ' + Math.round(pl.L) + ' × ' + Math.round(pl.P) + ' cm', 'Épaisseur : ' + (ep ? ep + ' cm' : 'à confirmer')] });
     var nb = v.nb == null ? 1 : v.nb;
-    if (nb <= 0) out.push({ titre: 'Vasque', texte: 'Sans vasque' });
-    else out.push({ titre: nb > 1 ? 'Vasques (' + nb + ')' : 'Vasque', texte: [v.label || v.id, v.W && v.D ? v.W + ' × ' + v.D + ' cm' : '', v.pose === 'encastree' ? 'encastrée' : (v.pose === 'poser' ? 'à poser' : 'pose à confirmer'), v.finition ? 'finition ' + v.finition : ''].filter(Boolean).join(' · ') });
+    if (nb <= 0) out.push({ key: 'vasque', titre: 'Vasque', sans: true, texture: '', specs: ['Sans vasque'] });
+    else out.push({ key: 'vasque', titre: nb > 1 ? 'Vasques (' + nb + ')' : 'Vasque', texture: v.finition || pl.matLabel || 'à confirmer',
+      specs: ['Modèle : ' + (v.label || v.id || '—'), v.W && v.D ? 'Dimensions : ' + v.W + ' × ' + v.D + ' cm' : '', 'Pose : ' + (v.pose === 'encastree' ? 'encastrée' : (v.pose === 'poser' ? 'à poser' : 'à confirmer'))].filter(Boolean) });
     return out;
   }
 
@@ -2443,7 +2445,7 @@
       var pr = await fetch('http://127.0.0.1:8765/ping', { signal: ctl.signal }); clearTimeout(tm); ok = pr.ok;
     } catch (e) { ok = false; }
     if (!ok) return null;
-    w.document.body.innerHTML = '<p style="font-family:sans-serif;padding:40px;font-size:18px">Fabrication des rendus 3D (fermé / ouvert)… environ 40 secondes.</p>';
+    w.document.body.innerHTML = '<p style="font-family:sans-serif;padding:40px;font-size:18px">Fabrication des rendus 3D (fermé / ouvert, plus plan et vasque en salle de bain)… 40 secondes à 1 minute 30.</p>';
     var r = await fetch('http://127.0.0.1:8765/rendre', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: txt });
     var j = await r.json().catch(function () { return {}; });
     if (!r.ok) throw new Error((j && j.error) ? String(j.error).slice(0, 220) : 'rendu impossible (' + r.status + ')');
@@ -2462,10 +2464,10 @@
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
     var total = devisSimpleTotal();
-    var imgs = { ferme: '', ouvert: '' }, helperMsg = '', verif = null;
+    var imgs = { ferme: '', ouvert: '', plan: '', vasque: '' }, helperMsg = '', verif = null;
     try {
       var j = currentProjetRc ? await devisRendersFromHelper(currentProjetRc, w) : null;
-      if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; verif = j.verification || null; }
+      if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; verif = j.verification || null; }
       else helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
     } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
     if (!imgs.ferme) {  // repli : images déjà ajoutées dans les documents du projet
@@ -2503,7 +2505,8 @@
     var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
     var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 06 42 89 98 58';
     var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + fr(now) + '</div></div></div>'; };
-    var foot = function (n) { return '<div class="foot"><span>' + legal + '</span><span>' + n + ' / 2</span></div>'; };
+    var pv = devisSimplePlanVasque(), nbPages = pv.length ? 3 : 2;
+    var foot = function (n) { return '<div class="foot"><span>' + legal + '</span><span>' + n + ' / ' + nbPages + '</span></div>'; };
     var html = '<!doctype html><meta charset="utf-8"><title>' + numDevis + ' – ' + escHtml(p.nom || '') + (cl ? ' – ' + escHtml(cl) : '') + '</title>' +
       '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"><style>' +
       '@page{size:A4 portrait;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Poppins,sans-serif;color:#231a20;background:#fff;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
@@ -2521,11 +2524,12 @@
       '.cond{margin-top:9mm}.cond h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.cond ul{list-style:none;font-size:8.8pt;line-height:1.65;font-weight:300}.cond li::before{content:"– "}.cond li b{font-weight:600}' +
       '.sig{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:9mm}.sig div{border:.25mm solid #bbb;border-radius:2mm;height:30mm;padding:3mm 4mm;font-size:8.5pt;color:#555}.sig b{display:block;color:#231a20;font-weight:600;margin-bottom:1mm}' +
       '.foot span:last-child{white-space:nowrap}.compo{margin-top:8mm}.compo h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.compo ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300}.compo li::before{content:"– "}.foot{position:absolute;left:16mm;right:16mm;bottom:8mm;display:flex;justify-content:space-between;gap:6mm;font-size:6.8pt;color:#888;border-top:.25mm solid #ddd;padding-top:2mm;line-height:1.4}' +
+      '.pvs{display:grid;grid-template-columns:1fr;gap:9mm;margin-top:6mm}.pv img,.pv .ph{width:100%;aspect-ratio:1200/800;object-fit:cover;border-radius:1.5mm;display:block;background:#f4f1ee}.pv .ph{display:flex;align-items:center;justify-content:center;color:#999}.pv h3{font-size:12pt;font-weight:600;margin-top:3mm}.pv .tx{font-size:9.5pt;margin-top:1mm;color:#231a20}.pv ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300;color:#555;margin-top:1mm}.pv li::before{content:"– "}' +
       '@media print{.no-print{display:none!important}}</style>' + verifHtml +
       '<div class="pg">' + head() +
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 06 42 89 98 58<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
-      '<div class="obj"><h4>Objet</h4><h2>' + escHtml(p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p>' + devisSimplePlanVasque().map(function (x) { return '<p><b>' + escHtml(x.titre) + ' :</b> ' + escHtml(x.texte) + '</p>'; }).join('') + '</div>' +
+      '<div class="obj"><h4>Objet</h4><h2>' + escHtml(p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p>' + '</div>' +
       '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><p class="nc">Images non contractuelles.</p>' +
       '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, det0.finitions, det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' + foot(1) + '</div>' +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
@@ -2537,7 +2541,11 @@
       '<li>Les images présentées dans cette proposition sont <b>non contractuelles</b>.</li>' +
       '<li>Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.</li>' +
       '</ul></div>' +
-      foot(2) + '</div>';
+      foot(2) + '</div>' +
+      (pv.length ? '<div class="pg">' + head() + '<div class="obj"><h4>Salle de bain</h4><h2>Plan de travail et vasque</h2></div><div class="pvs">' + pv.map(function (x) {
+        var im2 = imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>');
+        return '<div class="pv">' + im2 + '<h3>' + escHtml(x.titre) + '</h3>' + (x.texture ? '<p class="tx"><b>Texture / finition :</b> ' + escHtml(x.texture) + '</p>' : '') + '<ul>' + x.specs.map(function (t) { return '<li>' + escHtml(t) + '</li>'; }).join('') + '</ul></div>';
+      }).join('') + '</div><p class="nc">Images non contractuelles.</p>' + foot(3) + '</div>' : '');
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
