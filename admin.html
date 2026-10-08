@@ -2800,6 +2800,10 @@
       var add = function (nom, l, w, qte, pu, note) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: '' }); };
       add('Montant', H, P, 2, puStruct);
       add('Traverse', L, P, 2, puStruct);
+      // joues de finition : sur chaque caisson, une au-dessus et une de chaque côté (gauche, droite), au prix des façades
+      add('Joue gauche', H, P, 1, puFacade);
+      add('Joue droite', H, P, 1, puFacade);
+      add('Joue dessus', L, P, 1, puFacade);
       var shelves = spec.shelves || [];
       var full = shelves.filter(function (sh) { return (sh.x_right_mm - sh.x_left_mm) >= (L - 2 * 18 - 4); });
       add('Étagères', L - 2 * E, P, full.length, puStruct);
