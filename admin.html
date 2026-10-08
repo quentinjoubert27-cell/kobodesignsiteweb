@@ -125,6 +125,7 @@
     .sbadge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
     .sb-etude { background: #fef3c7; color: #92400e; } .sb-etude::before { background: #f59e0b; }
     .sb-analyse { background: #e0e7ff; color: #3730a3; } .sb-analyse::before { background: #6366f1; }
+    .sb-prixvalide { background: #d1fae5; color: #065f46; } .sb-prixvalide::before { background: #10b981; }
     .sb-devis { background: #ffedd5; color: #9a3412; } .sb-devis::before { background: #f97316; }
     .sb-proposition { background: #ede9fe; color: #5b21b6; } .sb-proposition::before { background: #8b5cf6; }
     .sb-devisenvoye { background: #cffafe; color: #155e75; } .sb-devisenvoye::before { background: #06b6d4; }
@@ -819,6 +820,7 @@
       <div class="pipeline" id="dash-pipeline">
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">En étude</span><span class="pipeline-count" id="pip-etude">0</span></div><div class="pipeline-chips" id="pip-chips-etude"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Analyse en cours</span><span class="pipeline-count" id="pip-analyse">0</span></div><div class="pipeline-chips" id="pip-chips-analyse"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Prix validé</span><span class="pipeline-count" id="pip-prixvalide">0</span></div><div class="pipeline-chips" id="pip-chips-prixvalide"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Proposition envoyée</span><span class="pipeline-count" id="pip-proposition">0</span></div><div class="pipeline-chips" id="pip-chips-proposition"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis en cours</span><span class="pipeline-count" id="pip-devis">0</span></div><div class="pipeline-chips" id="pip-chips-devis"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis envoyé</span><span class="pipeline-count" id="pip-devisenvoye">0</span></div><div class="pipeline-chips" id="pip-chips-devisenvoye"></div></div>
@@ -1024,7 +1026,7 @@
         <select id="pf-statut" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
           <option value="">Tous les statuts</option>
           <option value="__actifs">En cours (hors terminés)</option>
-          <option value="En étude">En étude</option><option value="Analyse en cours">Analyse en cours</option><option value="Proposition envoyée">Proposition envoyée</option>
+          <option value="En étude">En étude</option><option value="Analyse en cours">Analyse en cours</option><option value="Prix validé">Prix validé</option><option value="Proposition envoyée">Proposition envoyée</option>
           <option value="Devis en cours">Devis en cours</option><option value="Devis envoyé">Devis envoyé</option><option value="Fabrication">Fabrication</option>
           <option value="Commandé">Commandé</option><option value="Livraison">Livraison</option><option value="Terminé">Terminé</option>
         </select>
@@ -1307,6 +1309,7 @@
         <select id="np-statut">
           <option value="En étude">En étude</option>
           <option value="Analyse en cours">Analyse en cours (interne)</option>
+          <option value="Prix validé">Prix validé (interne)</option>
           <option value="Proposition envoyée">Proposition envoyée</option>
           <option value="Proposition envoyée">Proposition envoyée</option>
         <option value="Devis en cours">Devis en cours</option>
@@ -1413,6 +1416,7 @@
       <div id="bulk-statuts" style="display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;">
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="En étude" checked/> En étude</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Analyse en cours" checked/> Analyse en cours</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Prix validé"/> Prix validé</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Proposition envoyée"/> Proposition envoyée</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Devis en cours" checked/> Devis en cours</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Devis envoyé"/> Devis envoyé</label>
@@ -1452,6 +1456,7 @@
       <select id="pd-statut" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
         <option value="En étude">En étude</option>
         <option value="Analyse en cours">Analyse en cours (interne, sans email)</option>
+        <option value="Prix validé">Prix validé (interne, sans email)</option>
         <option value="Devis en cours">Devis en cours</option>
         <option value="Devis envoyé">Devis envoyé</option>
         <option value="Fabrication">Fabrication</option>
@@ -2691,7 +2696,7 @@
     cais.forEach(function (c) {
       var L = c.L * 10, H = c.H * 10, P = c.P * 10, suf = c.label ? ' — ' + c.label : '';
       var spec = buildTechSpec(dedupeEls(c.els), c.L, c.H, c.P);
-      var add = function (nom, l, w, qte, pu, note) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: note || '' }); };
+      var add = function (nom, l, w, qte, pu, note) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: '' }); };
       add('Montant', H, P, 2, puStruct);
       add('Traverse', L, P, 2, puStruct);
       var shelves = spec.shelves || [];
@@ -2702,7 +2707,6 @@
         var hs = sp.y_top_mm - sp.y_bottom_mm, pleine = hs >= (H - 2 * 18 - 4);
         add('Intercalaire ' + (i + 1) + (sp.doubled ? ' (doublé)' : ''), pleine ? H - 2 * E : hs, P, 1, puStruct, 'dimensions à confirmer');
       });
-      if ((spec.separators || []).length) warn.push('Intercalaires : hauteur du compartiment (ou H − 2×19 si pleine hauteur) × profondeur complète ; un intercalaire doublé = 2 pièces. À confirmer sur un meuble avec intercalaires.');
       // façades en recouvrement : +19 mm sur chaque côté contre un montant / traverse, −1 mm de jeu côté porte voisine
       var doors = spec.doors || [], drawers = spec.drawers || [];
       var facades = doors.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm }; }).concat(drawers.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm, tiroir: true }; }));
@@ -2716,12 +2720,10 @@
         groups[k] = groups[k] || { nom: f.tiroir ? 'Façade de tiroir' : 'Façade', w: w, h: h, n: 0 }; groups[k].n++;
       });
       Object.keys(groups).forEach(function (k) { var gr = groups[k]; add(gr.nom, gr.h, gr.w, gr.n, puFacade); });
-      if (drawers.length) warn.push('Tiroirs : façade comptée à part (prix façade) + kit 90 € (qui comprend la caisse) + coulisse. Dimensions des façades de tiroirs à confirmer.');
       angles += countJunctions(spec).total;
       nDoors += doors.length; nDrawers += drawers.length; nBars += (spec.bars || []).length;
       doors.forEach(function (dd) { nHinges += hingesFor(dd.height_mm + 36); });
     });
-    if (cais.length > 1) warn.push('Meuble à ' + cais.length + ' caissons : chacun est calculé comme un caisson normal (2 montants et 2 traverses par caisson, y compris côte à côte).');
     var ml = 0, surf = 0, bois = 0;
     pieces.forEach(function (p) { p.surface = p.qte * p.l * p.w / 1e6; p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * (T.decoupe + T.chant); ml += p.ml; surf += p.surface; bois += p.bois; });
     var lignes = [
@@ -3198,7 +3200,7 @@
 
     // CA estimatif : tous les montants enregistrés, tous statuts confondus (HT)
     const renderCaEst = function (projetsCA) {
-      const ordre = ['En étude', 'Analyse en cours', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+      const ordre = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
       const par = {}; let total = 0, chiffres = 0, ventes = 0;
       (projetsCA || []).forEach(p => {
         const m = parseFloat(p.montant) || 0;
@@ -3256,8 +3258,8 @@
   }
 
   function buildPipeline(projets) {
-    const statuts = ['En étude', 'Analyse en cours', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
-    const keys = ['etude', 'analyse', 'proposition', 'devis', 'devisenvoye', 'fabrication', 'commande', 'livraison', 'termine'];
+    const statuts = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+    const keys = ['etude', 'analyse', 'prixvalide', 'proposition', 'devis', 'devisenvoye', 'fabrication', 'commande', 'livraison', 'termine'];
     statuts.forEach((s, i) => {
       const list = projets.filter(p => p.statut === s);
       document.getElementById('pip-' + keys[i]).textContent = list.length;
@@ -3947,7 +3949,7 @@
     return true;
   }
 
-  var STATUTS_AVANT_DEVIS = ['En étude', 'Analyse en cours', 'Proposition envoyée', 'Devis en cours'];
+  var STATUTS_AVANT_DEVIS = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'Devis en cours'];
   async function fixAppuiAll() {
     var list = (window._appuiList || []).filter(function (a) { return STATUTS_AVANT_DEVIS.indexOf(a.statut) >= 0; });
     if (!list.length) return showToast('Aucun projet concerné avant l\'envoi du devis', 'err');
@@ -5090,7 +5092,7 @@
       }
       await Promise.all([loadProjets(), loadDashboard()]);
       // Notifier le client du changement de statut (sauf « Analyse en cours » interne et « Proposition envoyée » : la proposition part avec son PDF)
-      if (statut === 'Analyse en cours' || statut === 'Proposition envoyée') return;
+      if (statut === 'Analyse en cours' || statut === 'Prix validé' || statut === 'Proposition envoyée') return;
       try {
         const { data: { session } } = await sb.auth.getSession();
         await fetch('/api/notify', {
@@ -5562,7 +5564,7 @@
 
   // ── HELPERS ───────────────────────────────────────────────────────
   function statusKey(s) {
-    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Proposition envoyée': 'proposition', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Prix validé': 'prixvalide', 'Proposition envoyée': 'proposition', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return m[s] || 'etude';
   }
 
@@ -5576,7 +5578,7 @@
   }
 
   // Le montant n'est affiché qu'une fois le devis envoyé (ou plus tard dans le suivi)
-  var STATUTS_MONTANT = ['Proposition envoyée', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];   // montant visible dès la proposition envoyée
+  var STATUTS_MONTANT = ['Prix validé', 'Proposition envoyée', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];   // montant visible dès la proposition envoyée
   var STATUTS_FERMES = ['Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];       // montant figé (devis ferme)
   function montantVisible(p) { return !!p && STATUTS_MONTANT.indexOf(p.statut) >= 0; }
 
