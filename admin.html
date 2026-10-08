@@ -2792,50 +2792,55 @@
   var TABLEUR = { E: 19, decoupe: 1.5, chant: 4.5, vis: 0.5, tourillon: 0.3, angleUsinage: 16, usinCharnierePorte: 2.5, usinCharniereCaisson: 1, coulisse: 10, kitTiroir: 90, charniere: 10 };
   function tableurFromRc(rc, g) {
     var T = TABLEUR, E = T.E, m = rc.meuble || {}, warn = [];
-    var L = (m.L || 0) * 10, H = (m.H || 0) * 10, P = (m.P || 0) * 10;
-    if (!L || !H || !P) return null;
-    var els = dedupeEls(rc.elements || []);
-    var spec = buildTechSpec(els, m.L, m.H, m.P);
-    if (rc.caisson2 || (rc.tvSide && (arrLen(rc.tvSide.left) || arrLen(rc.tvSide.right) || rc.tvSide.top))) warn.push('Caissons latéraux / d\'angle non pris en compte dans ce calcul (caisson principal seulement).');
+    if (!(m.L && m.H && m.P)) return null;
     var pm = (g && g.panel_m2) || {};
     var puStruct = pm['panels_caisson_m2|Caisson'] || 0;
     var puFacade = pm['finition_m2|' + (m.matLabel || '')] || pm['panels_porte_m2|' + (m.matLabel || '')] || puStruct;
-    var pieces = [];
-    var add = function (nom, l, w, qte, pu, note) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: note || '' }); };
-    add('Montant', H, P, 2, puStruct);
-    add('Traverse', L, P, 2, puStruct);
-    // étagères : pleine largeur entre les montants (L − 2×19), profondeur totale
-    var shelves = spec.shelves || [];
-    var full = shelves.filter(function (sh) { return (sh.x_right_mm - sh.x_left_mm) >= (L - 2 * 18 - 4); });
-    add('Étagères', L - 2 * E, P, full.length, puStruct);
-    shelves.filter(function (sh) { return full.indexOf(sh) < 0; }).forEach(function (sh, i) { add('Étagère partielle ' + (i + 1), sh.x_right_mm - sh.x_left_mm, P, 1, puStruct); });   // largeur réelle quand elle ne fait pas tout le meuble
-    // intercalaires : hauteur du compartiment × profondeur (doublé = 2 pièces)
-    (spec.separators || []).forEach(function (sp, i) {
-      var hs = sp.y_top_mm - sp.y_bottom_mm, pleine = hs >= (H - 2 * 18 - 4);
-      add('Intercalaire ' + (i + 1) + (sp.doubled ? ' (doublé)' : ''), pleine ? H - 2 * E : hs, P, 1, puStruct, 'dimensions à confirmer');
-    });
-    if ((spec.separators || []).length) warn.push('Intercalaires : hauteur du compartiment (ou H − 2×19 si pleine hauteur) × profondeur complète ; un intercalaire doublé = 2 pièces. À confirmer sur un meuble avec intercalaires.');
-    // façades en recouvrement : +19 mm sur chaque côté contre un montant / traverse, −1 mm de jeu côté porte voisine
-    var doors = spec.doors || [], drawers = spec.drawers || [];
-    var facades = doors.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm }; }).concat(drawers.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm, tiroir: true }; }));
+    var pieces = [], angles = 0, nHinges = 0, nDoors = 0, nDrawers = 0, nBars = 0;
+    var hingesFor = function (hmm) { return hmm <= 1000 ? 2 : hmm <= 1500 ? 3 : hmm <= 1900 ? 4 : 5; };   // règle de l'atelier
     var near = function (a, b) { return Math.abs(a - b) <= 8; };
-    var groups = {};
-    facades.forEach(function (f) {
-      var tl = near(f.x0, 18), tr = near(f.x1, L - 18), tb = near(f.y0, 18), tt = near(f.y0 + f.h, H - 18);
-      var neighL = !tl && facades.some(function (o) { return o !== f && near(o.x1, f.x0) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
-      var neighR = !tr && facades.some(function (o) { return o !== f && near(o.x0, f.x1) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
-      var w = (f.x1 - f.x0) + (tl ? E : 0) + (tr ? E : 0) - (neighL ? 1 : 0) - (neighR ? 1 : 0), h = f.h + (tb ? E : 0) + (tt ? E : 0);
-      var k = (f.tiroir ? 'Façade de tiroir' : 'Façade') + '|' + Math.round(w) + '|' + Math.round(h);
-      groups[k] = groups[k] || { nom: f.tiroir ? 'Façade de tiroir' : 'Façade', w: w, h: h, n: 0 }; groups[k].n++;
+    // liste des caissons : principal, angle, latéraux gauche/droite, dessus — tous calculés de la même façon
+    var tvArr = function (v) { return Array.isArray(v) ? v : (v ? [v] : []); };
+    var tv = rc.tvSide || {};
+    var cais = [{ label: '', els: rc.elements || [], L: m.L, H: m.H, P: m.P }];
+    if (rc.caisson2 && Array.isArray(rc.caisson2.elements)) cais.push({ label: "caisson d'angle", els: rc.caisson2.elements, L: rc.caisson2.L_cm || m.L, H: m.H, P: m.P });
+    tvArr(tv.left).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson gauche ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: m.P }); });
+    tvArr(tv.right).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson droit ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: m.P }); });
+    if (tv.top && tv.top.W_cm && tv.top.H_cm) cais.push({ label: 'caisson du dessus', els: tv.top.elements || [], L: tv.top.W_cm, H: tv.top.H_cm, P: m.P });
+    cais.forEach(function (c) {
+      var L = c.L * 10, H = c.H * 10, P = c.P * 10, suf = c.label ? ' — ' + c.label : '';
+      var spec = buildTechSpec(dedupeEls(c.els), c.L, c.H, c.P);
+      var add = function (nom, l, w, qte, pu, note) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: note || '' }); };
+      add('Montant', H, P, 2, puStruct);
+      add('Traverse', L, P, 2, puStruct);
+      var shelves = spec.shelves || [];
+      var full = shelves.filter(function (sh) { return (sh.x_right_mm - sh.x_left_mm) >= (L - 2 * 18 - 4); });
+      add('Étagères', L - 2 * E, P, full.length, puStruct);
+      shelves.filter(function (sh) { return full.indexOf(sh) < 0; }).forEach(function (sh, i) { add('Étagère partielle ' + (i + 1), sh.x_right_mm - sh.x_left_mm, P, 1, puStruct); });
+      (spec.separators || []).forEach(function (sp, i) {
+        var hs = sp.y_top_mm - sp.y_bottom_mm, pleine = hs >= (H - 2 * 18 - 4);
+        add('Intercalaire ' + (i + 1) + (sp.doubled ? ' (doublé)' : ''), pleine ? H - 2 * E : hs, P, 1, puStruct, 'dimensions à confirmer');
+      });
+      if ((spec.separators || []).length) warn.push('Intercalaires : hauteur du compartiment (ou H − 2×19 si pleine hauteur) × profondeur complète ; un intercalaire doublé = 2 pièces. À confirmer sur un meuble avec intercalaires.');
+      // façades en recouvrement : +19 mm sur chaque côté contre un montant / traverse, −1 mm de jeu côté porte voisine
+      var doors = spec.doors || [], drawers = spec.drawers || [];
+      var facades = doors.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm }; }).concat(drawers.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm, tiroir: true }; }));
+      var groups = {};
+      facades.forEach(function (f) {
+        var tl = near(f.x0, 18), tr = near(f.x1, L - 18), tb = near(f.y0, 18), tt = near(f.y0 + f.h, H - 18);
+        var neighL = !tl && facades.some(function (o) { return o !== f && near(o.x1, f.x0) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
+        var neighR = !tr && facades.some(function (o) { return o !== f && near(o.x0, f.x1) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
+        var w = (f.x1 - f.x0) + (tl ? E : 0) + (tr ? E : 0) - (neighL ? 1 : 0) - (neighR ? 1 : 0), h = f.h + (tb ? E : 0) + (tt ? E : 0);
+        var k = (f.tiroir ? 'Façade de tiroir' : 'Façade') + '|' + Math.round(w) + '|' + Math.round(h);
+        groups[k] = groups[k] || { nom: f.tiroir ? 'Façade de tiroir' : 'Façade', w: w, h: h, n: 0 }; groups[k].n++;
+      });
+      Object.keys(groups).forEach(function (k) { var gr = groups[k]; add(gr.nom, gr.h, gr.w, gr.n, puFacade); });
+      if (drawers.length) warn.push('Tiroirs : façade comptée à part (prix façade) + kit 90 € (qui comprend la caisse) + coulisse. Dimensions des façades de tiroirs à confirmer.');
+      angles += countJunctions(spec).total;
+      nDoors += doors.length; nDrawers += drawers.length; nBars += (spec.bars || []).length;
+      doors.forEach(function (dd) { nHinges += hingesFor(dd.height_mm + 36); });
     });
-    Object.keys(groups).forEach(function (k) { var gr = groups[k]; add(gr.nom, gr.h, gr.w, gr.n, puFacade); });
-    if (drawers.length) warn.push('Tiroirs : façade comptée à part (prix façade) + kit 90 € (qui comprend la caisse) + coulisse. Dimensions des façades de tiroirs à confirmer.');
-    var angles = countJunctions(spec).total;
-    var nDoors = doors.length, nDrawers = drawers.length;
-    // règle de l'atelier : hauteur ≤ 1000 mm → 2 charnières ; ≤ 1500 → 3 ; ≤ 1900 → 4 ; au-delà → 5
-    var hingesFor = function (hmm) { return hmm <= 1000 ? 2 : hmm <= 1500 ? 3 : hmm <= 1900 ? 4 : 5; };
-    var nHinges = 0; doors.forEach(function (dd) { nHinges += hingesFor(dd.height_mm + 36); });
-    var nBars = (spec.bars || []).length;
+    if (cais.length > 1) warn.push('Meuble à ' + cais.length + ' caissons : chacun est calculé comme un caisson normal (2 montants et 2 traverses par caisson, y compris côte à côte).');
     var ml = 0, surf = 0, bois = 0;
     pieces.forEach(function (p) { p.surface = p.qte * p.l * p.w / 1e6; p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * (T.decoupe + T.chant); ml += p.ml; surf += p.surface; bois += p.bois; });
     var lignes = [
