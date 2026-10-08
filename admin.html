@@ -2492,6 +2492,12 @@
         body: JSON.stringify({ action: 'document', projet_id: projetId, nom_fichier: nom, doc_path: path, taille_kb: Math.round(blob.size / 1024), message: message, proposition: true }) });
       var j = await r.json().catch(function () { return {}; });
       if (!r.ok) throw new Error('e-mail : ' + (j.error || r.status));
+      // trace dans l'historique du client : le mail tel qu'il est parti
+      var pj = allProjets.find(function (x) { return x.id === projetId; }) || {};
+      if (pj.client_id) {
+        var cl2 = allClients.find(function (c) { return c.id === pj.client_id; }) || {};
+        await logActivite(pj.client_id, 'email', 'Proposition envoyée par e-mail à ' + (cl2.email || '') + '\nObjet : Votre proposition Kobo Design — ' + (pj.nom || '') + '\nPièce jointe : ' + nom + (j.attached ? '' : ' (lien dans le mail uniquement)') + '\n\n' + message, { projet_id: projetId });
+      }
       if (document.getElementById('ep-statut').checked) {
         await sb.from('projets').update({ statut: 'Proposition envoyée' }).eq('id', projetId);
       }
