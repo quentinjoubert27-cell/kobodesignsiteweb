@@ -2363,6 +2363,18 @@
     };
   }
 
+  // Plan de travail et vasque(s), chacun avec ses caractéristiques (salle de bain)
+  function devisSimplePlanVasque() {
+    var rc = currentProjetRc || {}, pl = rc.plan || {}, v = rc.vasques || {}, out = [];
+    if (!pl.L) return out;
+    var ep = pl.Ep_cm || (pl.Ep >= 1 ? pl.Ep : 0);
+    out.push({ titre: 'Plan de travail', texte: [pl.matLabel, Math.round(pl.L) + ' × ' + Math.round(pl.P) + ' cm', ep ? 'épaisseur ' + ep + ' cm' : 'épaisseur à confirmer'].filter(Boolean).join(' · ') });
+    var nb = v.nb == null ? 1 : v.nb;
+    if (nb <= 0) out.push({ titre: 'Vasque', texte: 'Sans vasque' });
+    else out.push({ titre: nb > 1 ? 'Vasques (' + nb + ')' : 'Vasque', texte: [v.label || v.id, v.W && v.D ? v.W + ' × ' + v.D + ' cm' : '', v.pose === 'encastree' ? 'encastrée' : (v.pose === 'poser' ? 'à poser' : 'pose à confirmer'), v.finition ? 'finition ' + v.finition : ''].filter(Boolean).join(' · ') });
+    return out;
+  }
+
   function renderDevisSimple() {
     var el = document.getElementById('pd-devis-simple');
     if (!el) return;
@@ -2513,7 +2525,7 @@
       '<div class="pg">' + head() +
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 06 42 89 98 58<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
-      '<div class="obj"><h4>Objet</h4><h2>' + escHtml(p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p></div>' +
+      '<div class="obj"><h4>Objet</h4><h2>' + escHtml(p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p>' + devisSimplePlanVasque().map(function (x) { return '<p><b>' + escHtml(x.titre) + ' :</b> ' + escHtml(x.texte) + '</p>'; }).join('') + '</div>' +
       '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><p class="nc">Images non contractuelles.</p>' +
       '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, det0.finitions, det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' + foot(1) + '</div>' +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
