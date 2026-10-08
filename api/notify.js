@@ -371,6 +371,11 @@ module.exports = async function handler(req, res) {
         } catch (e) { console.warn('notify-document: echec telechargement piece jointe', e); }
       }
 
+      // lien direct vers le PDF (valable 7 jours) pour qu'il soit visible dans le corps du mail, pas seulement en pièce jointe
+      let pdfUrl = null;
+      if (msgPerso && doc_path) {
+        try { const { data: su } = await sb.storage.from('documents-client').createSignedUrl(doc_path, 7 * 24 * 3600); pdfUrl = su && su.signedUrl; } catch (e) { console.warn('notify-document: lien PDF', e); }
+      }
       await resend.emails.send({
         from: 'Kobo Design <contact@kobo-design.fr>',
         to: client.email,
@@ -380,6 +385,11 @@ module.exports = async function handler(req, res) {
           <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
             ${msgPerso ? '' : `<p style="font-size:14px;margin:0 0 20px">Bonjour ${esc(client.prenom || '')},</p>`}
             ${PROJET_BADGE(projet.nom)}
+            ${msgPerso && pdfUrl ? `<div style="background:#fff;border:2px solid #CD3E00;border-radius:10px;padding:18px 20px;margin:0 0 22px;text-align:center;">
+              <p style="font-size:13px;margin:0 0 12px;color:#333"><strong>Votre proposition est prête</strong>${attachments ? ' (également jointe à ce message)' : ''}</p>
+              <a href="${pdfUrl}" style="display:inline-block;background:#CD3E00;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 26px;border-radius:8px;">📄 Ouvrir la proposition (PDF)</a>
+              <p style="font-size:11px;margin:10px 0 0;color:#888">Lien valable 7 jours — ensuite, retrouvez-la dans votre espace client.</p>
+            </div>` : ''}
             ${msgPerso ? `<p style="font-size:14px;line-height:1.8;margin:0 0 20px;color:#333;white-space:pre-wrap">${esc(msgPerso)}</p>
             <p style="font-size:13px;line-height:1.7;margin:0 0 24px;color:#555">${attachments ? 'La proposition est jointe à ce message (PDF). ' : ''}Vous la retrouvez aussi dans votre espace client.</p>` : `<p style="font-size:14px;line-height:1.8;margin:0 0 24px;color:#333">
               Un nouveau document${nom_fichier ? ` (<strong>${esc(nom_fichier)}</strong>)` : ''} vient d'être ajouté à votre projet${attachments ? ', vous le trouverez en pièce jointe' : ''}. Vous pouvez aussi le consulter à tout moment depuis votre espace client.
