@@ -1015,7 +1015,6 @@
           <h1 class="view-title">Tous les projets</h1>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-ghost" onclick="openComparatifPrix()" title="Compare l'ancien calcul de prix et les règles du tableur Préchiffrage, projet par projet">📊 Comparatif des prix</button>
           <button class="btn btn-ghost" onclick="openAuditDoublons()" title="Cherche les portes/étagères enregistrées en double dans toutes les configurations">🔍 Contrôler les doublons</button>
           <button class="btn btn-primary" onclick="openModalNewProjet()">+ Nouveau projet</button>
         </div>
@@ -1406,15 +1405,6 @@
 </div>
 
 <!-- Email groupé aux clients en attente -->
-<div class="modal-overlay" id="modal-comparatif">
-  <div class="modal" style="max-width:860px;">
-    <h2 class="modal-title">Comparatif des prix : ancien calcul / règles du tableur</h2>
-    <p style="font-size:12.5px;color:rgba(26,26,26,.55);margin:-6px 0 12px;line-height:1.5;">Information uniquement : aucun montant n'est modifié. Les deux colonnes utilisent le coefficient de vente de l'admin ; cliquez sur un projet pour voir le détail.</p>
-    <div id="cmp-body"></div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-comparatif')">Fermer</button></div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modal-bulk">
   <div class="modal" style="max-width:600px;">
     <h2 class="modal-title">Email groupé</h2>
@@ -1778,44 +1768,24 @@
     }
 
     return `
-      ${singlePriceRow('Caisson', 'panels_caisson_m2|Caisson', 'm²')}
-      ${singlePriceRow('Caisse tiroir (fond/dos/côtés)', 'panels_tiroir_caisse_m2|Caisson', 'm²')}
-      ${matSection('Étagère / intercalaire', 'panels_etagere_m2', 'm²', MATS_CAIS_NAMES)}
-      ${matSection('Porte', 'panels_porte_m2', 'm²', MATS_CAIS_NAMES)}
-      ${matSection('Tiroir (façade)', 'panels_tiroir_m2', 'm²', MATS_CAIS_NAMES)}
-      ${matSection('Joues (finitions)', 'finition_m2', 'm²', MATS_CAIS_NAMES)}
+      <p style="font-size:12.5px;color:rgba(26,26,26,.55);margin:0 0 14px;line-height:1.6;">Prix des matériaux (€/m²) utilisés par le calcul « tableur ». Les prix de chant, découpe, vis, tourillons, charnières, tiroirs et usinages sont ceux du tableur (intégrés au calcul).</p>
+      ${singlePriceRow('Structure du meuble (montants, traverses, étagères, intercalaires)', 'panels_caisson_m2|Caisson', 'm²')}
+      ${matSection('Façades et joues visibles (portes, tiroirs, joues de finition)', 'finition_m2', 'm²', MATS_CAIS_NAMES)}
       ${matSection('Plan de travail', 'panels_plan_m2', 'm²', MATS_PLAN_NAMES)}
       <div class="detail-panel" style="padding:16px 20px;margin-top:8px;">
-        <p class="section-title" style="margin-bottom:8px;">Quincaillerie &amp; divers</p>
-        ${fixedRow('Chant plaqué', 'mp-chant', p.edge_banding_ml, '€/ml')}
-        ${fixedRow('Vis (assemblage caisson, usinage inclus)', 'mp-vis', p.screw_unit, '€/unité')}
-        ${fixedRow('Tourillons (usinage inclus)', 'mp-tourillon', p.dowel_unit, '€/unité')}
-        ${fixedRow('Charnières (pose + vis incluses)', 'mp-charniere', p.hinge_unit, '€/unité')}
-        ${fixedRow('Mécanismes tiroir (pose + vis incluses)', 'mp-tiroir', p.drawer_mechanism_unit, '€/unité')}
-        ${fixedRow("Équerres d'angle", 'mp-equerre', p.corner_bracket_unit, '€/unité')}
-        ${fixedRow('Tringle (penderie, pose incluse)', 'mp-tringle', p.bar_unit, '€/unité')}
-        ${fixedRow('Coefficient de revente (par défaut)', 'mp-coefficient', p.coefficient_revente ?? 2, '')}
+        ${fixedRow('Coefficient de vente', 'mp-coefficient', p.coefficient_revente ?? 2, '')}
       </div>
     `;
   }
 
   async function saveMateriauxPrix() {
-    var panelM2 = {};
+    var old = currentTarifsGlobaux || {};
+    var panelM2 = Object.assign({}, old.panel_m2 || {});
     document.querySelectorAll('.mp-panel-input').forEach(function(inp) {
       var v = parseFloat(inp.value);
-      if (!isNaN(v)) panelM2[inp.dataset.key] = v;
+      if (!isNaN(v)) panelM2[inp.dataset.key] = v; else delete panelM2[inp.dataset.key];
     });
-    var prices = {
-      panel_m2: panelM2,
-      edge_banding_ml: parseFloat(document.getElementById('mp-chant').value) || 0,
-      screw_unit: parseFloat(document.getElementById('mp-vis').value) || 0,
-      dowel_unit: parseFloat(document.getElementById('mp-tourillon').value) || 0,
-      hinge_unit: parseFloat(document.getElementById('mp-charniere').value) || 0,
-      drawer_mechanism_unit: parseFloat(document.getElementById('mp-tiroir').value) || 0,
-      corner_bracket_unit: parseFloat(document.getElementById('mp-equerre').value) || 0,
-      bar_unit: parseFloat(document.getElementById('mp-tringle').value) || 0,
-      coefficient_revente: parseFloat(document.getElementById('mp-coefficient').value) || 2,
-    };
+    var prices = Object.assign({}, old, { panel_m2: panelM2, coefficient_revente: parseFloat(document.getElementById('mp-coefficient').value) || 2 });
     try {
       const { error } = await sb.from('tarifs_globaux').upsert({ id: 1, prices: prices, updated_at: new Date().toISOString() });
       if (error) throw error;
@@ -2319,32 +2289,8 @@
   var devisSimpleFam = null; // [{id,label,detail,prix}] état courant (prix modifiables)
 
   function devisFamiliesCompute() {
-    var ctx = collectDevisAutoContext();
-    if (!ctx.q) return null;
-    var q = ctx.q, g = ctx.g || {}, pm = g.panel_m2 || {};
-    var cat = function (k) { var b = q[k] || {}; return Object.keys(b).reduce(function (sum, m) { return sum + b[m] * (pm[k + '|' + m] || 0); }, 0); };
-    var fin = (ctx.finitionM2 || 0) * (ctx.finitionUnitM2 || 0);
-    var u = function (qty, price) { return (qty || 0) * (price || 0); };
-    var cost = {
-      // caissons : traverses, montants (joues), fond et étagères / intercalaires, caisses de tiroirs
-      caisson: cat('panels_caisson_m2') + cat('panels_etagere_m2') + cat('panels_tiroir_caisse_m2'),
-      // finitions : façades (portes, tiroirs), joues et dessus/dessous de finition, chants plaqués
-      finitions: cat('panels_porte_m2') + cat('panels_tiroir_m2') + fin + u(ctx.edgeBandingTotalMl, g.edge_banding_ml),
-      // quincaillerie et accessoires : barres de penderie, vis, tourillons, mécanismes de tiroirs, charnières, équerres
-      quincaillerie: u(q.bars_count, g.bar_unit) + u(q.screws, g.screw_unit) + u(q.dowels, g.dowel_unit) + u(q.drawer_mechanisms, g.drawer_mechanism_unit) + u(q.hinges, g.hinge_unit) + u(q.corner_brackets, g.corner_bracket_unit),
-      plan: cat('panels_plan_m2')
-    };
-    var coef = g.coefficient_revente || 2;
-    var out = {};
-    Object.keys(cost).forEach(function (k) { out[k] = Math.round(cost[k] * coef * 100) / 100; });
-    // le total des familles doit être exactement le prix de vente du moteur (écart de centimes d'arrondi reporté sur la plus grosse famille)
     var pv = computeDevisAutoPrice();
-    if (pv && pv.prix_vente > 0) {
-      var sum = Object.keys(out).reduce(function (a, k) { return a + out[k]; }, 0);
-      var big = Object.keys(out).sort(function (a, b) { return out[b] - out[a]; })[0];
-      out[big] = Math.round((out[big] + (Math.round(pv.prix_vente * 100) / 100 - sum)) * 100) / 100;
-    }
-    return out;
+    return pv ? { total: pv.prix_vente } : null;
   }
 
   function devisSimpleDetails() {
@@ -2395,11 +2341,8 @@
     var det = devisSimpleDetails();
     var labels = { caisson: 'Caissons', finitions: 'Finitions', quincaillerie: 'Quincaillerie et accessoires', plan: 'Plan de travail' };
     var prev = {}; (devisSimpleFam || []).forEach(function (f) { if (f.edited) prev[f.id] = f.prix; });
-    var famCalc = Object.keys(labels).filter(function (k) { return det[k] && (k === 'caisson' || prix[k] > 0 || (k !== 'plan' && det[k])); })
-      .filter(function (k) { return k !== 'plan' || prix.plan > 0; })
-      .map(function (k) { return { id: k, label: labels[k], detail: det[k], prix: prix[k] }; });
     // Proposition : un seul prix final (le détail par poste n'apparaît que dans le devis)
-    var totalCalc = Math.round(famCalc.reduce(function (t, f) { return t + (f.prix || 0); }, 0) * 100) / 100;
+    var totalCalc = Math.round(prix.total * 100) / 100;
     devisSimpleFam = [{ id: 'total', label: 'Meuble sur mesure', detail: 'Fourniture et fabrication', prix: prev.total != null ? prev.total : totalCalc, edited: prev.total != null }];
     var row = 'display:grid;grid-template-columns:1.2fr 2fr 110px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
     el.innerHTML = devisSimpleFam.map(function (f) {
@@ -2672,15 +2615,12 @@
   }
 
   // Calcule le prix automatiquement à partir de la base de tarifs globale — pas de saisie possible ici.
+  // Prix du projet = méthode tableur (seule méthode de calcul)
   function computeDevisAutoPrice() {
-    var ctx = collectDevisAutoContext();
-    if (!ctx.q) return null;
-    var qForPrice = Object.assign({}, ctx.q, { edge_banding_ml: ctx.edgeBandingTotalMl });
-    var price = computeDevisPriceAdmin(qForPrice, ctx.g);
-    if (!price) return null;
-    price.cost_revient = Math.round((price.cost_revient + ctx.finitionM2 * ctx.finitionUnitM2) * 100) / 100;
-    price.prix_vente = Math.round(price.cost_revient * (ctx.g.coefficient_revente || 2) * 100) / 100;
-    return price;
+    if (!currentProjetRc) return null;
+    var r = tableurFromRc(currentProjetRc, currentTarifsGlobaux || {});
+    if (!r) return null;
+    return { cost_revient: Math.round(r.cout * 100) / 100, prix_vente: r.vente, missing_materials: [] };
   }
 
   // Recalcule et affiche le total, et met à jour le montant du projet en base — automatique,
@@ -2691,14 +2631,12 @@
     var price = computeDevisAutoPrice();
     if (!price) { resultEl.textContent = ''; return; }
     try { renderDevisSimple(); } catch (e) { console.warn('devis simplifié', e); }
-    resultEl.innerHTML = 'Coût de revient : ' + price.cost_revient.toFixed(2) + ' € · ' +
-      '<span style="color:var(--accent)">Prix de vente : ' + price.prix_vente.toFixed(2) + ' €</span>';
+    resultEl.innerHTML = 'Coût de fabrication : ' + price.cost_revient.toFixed(2) + ' € · ' +
+      '<span style="color:var(--accent)">Prix de vente HT : ' + price.prix_vente.toFixed(2) + ' €</span>';
     try {
-      var cq = applyDevisOverrides(currentDevisQuantities), gg = currentTarifsGlobaux || {}, ctxc = collectDevisAutoContext();
       var cmpEl = document.getElementById('devis-compare');
-      if (!cmpEl) { cmpEl = document.createElement('div'); cmpEl.id = 'devis-compare'; resultEl.parentNode.insertBefore(cmpEl, resultEl.nextSibling); }
-      cmpEl.innerHTML = renderTableurHtml(currentProjetRc, price.prix_vente);
-    } catch (e) { console.warn('comparatif', e); }
+      if (cmpEl) cmpEl.innerHTML = renderTableurHtml(currentProjetRc, null);
+    } catch (e) { console.warn('tableur', e); }
     var _pj = allProjets.find(function (x) { return x.id === currentProjetId; });
     var figé = _pj && STATUTS_FERMES.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
     if (currentProjetId && !figé) {
@@ -2712,75 +2650,18 @@
   // Génère une vue imprimable du devis (catégories, fixations, récap par pièce) et ouvre
   // la boîte d'impression du navigateur — l'utilisateur choisit "Enregistrer en PDF".
   function exportDevisPDF() {
-    var ctx = collectDevisAutoContext();
-    var q = ctx.q, g = ctx.g;
-    if (!q) { showToast('Aucun devis à exporter', 'err'); return; }
-    var price = computeDevisAutoPrice();
-    if (!price) { showToast('Prix non calculable', 'err'); return; }
-
+    var r = currentProjetRc ? tableurFromRc(currentProjetRc, currentTarifsGlobaux || {}) : null;
+    if (!r) { showToast('Prix non calculable', 'err'); return; }
     var projetNom = (document.getElementById('pd-title') || {}).textContent || 'Projet';
-    function trPdf(label, qty, pu) {
-      return `<tr><td>${escHtml(label)}</td><td>${escHtml(qty)}</td><td>${pu != null ? (parseFloat(pu)||0).toFixed(2) + ' €' : '—'}</td></tr>`;
-    }
-    function panelM2RowsPdf(bucketKey, label, showMat) {
-      var bucket = q[bucketKey] || {};
-      return Object.keys(bucket).map(function(mat) {
-        var priceKey = bucketKey + '|' + mat;
-        var rowLabel = showMat ? (label + ' — ' + mat) : label;
-        return trPdf(rowLabel, bucket[mat].toFixed(2) + ' m²', (g.panel_m2||{})[priceKey]);
-      }).join('');
-    }
-    var caissonRowsPdf = panelM2RowsPdf('panels_caisson_m2', 'Caisson', false);
-    var etagereRowsPdf = panelM2RowsPdf('panels_etagere_m2', 'Étagère / intercalaire', true);
-    var porteRowsPdf = panelM2RowsPdf('panels_porte_m2', 'Porte', true);
-    var tiroirRowsPdf = panelM2RowsPdf('panels_tiroir_m2', 'Tiroir (façade)', true);
-    var tiroirCaisseRowsPdf = panelM2RowsPdf('panels_tiroir_caisse_m2', 'Caisse tiroir (fond/dos/côtés)', false);
-    var planRowsPdf = panelM2RowsPdf('panels_plan_m2', 'Plan de travail', true);
-    var matRowsPdf = caissonRowsPdf + etagereRowsPdf + porteRowsPdf + tiroirRowsPdf + tiroirCaisseRowsPdf + planRowsPdf;
-    var otherRowsPdf = [
-      ['Équerres d\'angle', (q.corner_brackets||0) + ' unité(s)', g.corner_bracket_unit],
-      ['Chant plaqué', ctx.edgeBandingTotalMl.toFixed(2) + ' ml', g.edge_banding_ml],
-      ['Vis (assemblage caisson, usinage inclus)', (q.screws||0) + ' unité(s)', g.screw_unit],
-      ['Tourillons (usinage inclus)', (q.dowels||0) + ' unité(s)', g.dowel_unit],
-      ['Charnières (pose + vis incluses)', (q.hinges||0) + ' unité(s)', g.hinge_unit],
-      ['Mécanismes tiroir (pose + vis incluses)', (q.drawer_mechanisms||0) + ' unité(s)', g.drawer_mechanism_unit],
-      ['Tringles (penderie, pose incluse)', (q.bars_count||0) + ' unité(s)', g.bar_unit],
-    ].map(function(r){ return trPdf(r[0], r[1], r[2]); }).join('');
-    var finMatSuffix = q.caisson_material ? ' — ' + q.caisson_material : '';
-    var finitionRowsPdf = (Array.isArray(q.finitions) ? q.finitions : []).map(function(fin) {
-      var checked = ctx.finitionVisible[fin.id] != null ? ctx.finitionVisible[fin.id] : fin.visible;
-      var qtyTxt = (fin.m2||0).toFixed(2) + ' m²';
-      return `<tr><td>${escHtml(fin.label + finMatSuffix)}${checked ? '' : ' (non retenu)'}</td><td>${escHtml(qtyTxt)}</td><td>—</td></tr>`;
-    }).join('') + trPdf('Joues' + finMatSuffix, ctx.finitionM2.toFixed(2) + ' m²', ctx.finitionUnitM2);
-    var piecesRowsPdf = (q.pieces||[]).map(function(pc) {
-      var dims = (pc.w_mm != null && pc.h_mm != null) ? `${pc.w_mm} × ${pc.h_mm} mm` : '—';
-      var fasteners = [];
-      if (pc.vis) fasteners.push(pc.vis + ' vis');
-      if (pc.tourillons) fasteners.push(pc.tourillons + ' tourillon(s)');
-      if (pc.charnieres) fasteners.push(pc.charnieres + ' charnière(s)');
-      if (pc.mecanisme_tiroir) fasteners.push(pc.mecanisme_tiroir + ' mécanisme(s)');
-      return `<tr><td>${escHtml(pc.group || pc.type)}</td><td>${dims}</td><td>${fasteners.length ? escHtml(fasteners.join(', ')) : '—'}</td></tr>`;
-    }).join('');
-
-    var html = `<!doctype html><html><head><meta charset="utf-8"><title>Devis — ${escHtml(projetNom)}</title>
-      <style>
-        body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:32px;font-size:13px;}
-        h1{font-size:20px;margin:0 0 4px;} h2{font-size:14px;margin:24px 0 8px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px;}
-        table{width:100%;border-collapse:collapse;margin-bottom:8px;} td,th{padding:5px 8px;border-bottom:1px solid #ddd;text-align:left;}
-        .meta{color:#666;margin-bottom:16px;} .total{font-size:15px;font-weight:700;margin-top:16px;}
-        .total .accent{color:#CD3E00;}
-        @media print { button{display:none;} }
-      </style></head><body>
-      <h1>Devis — ${escHtml(projetNom)}</h1>
-      <div class="meta">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
-      <h2>Matériaux et panneaux</h2>
-      <table><thead><tr><th>Élément</th><th>Quantité</th><th>Prix unitaire</th></tr></thead><tbody>${matRowsPdf}${otherRowsPdf}</tbody></table>
-      ${finitionRowsPdf ? `<h2>Finitions</h2><table><thead><tr><th>Élément</th><th>Quantité</th><th>Prix unitaire</th></tr></thead><tbody>${finitionRowsPdf}</tbody></table>` : ''}
-      ${piecesRowsPdf ? `<h2>Récapitulatif par pièce/élément</h2><table><thead><tr><th>Élément</th><th>Dimensions</th><th>Fixations</th></tr></thead><tbody>${piecesRowsPdf}</tbody></table>` : ''}
-      <div class="total">Coût de revient : ${price.cost_revient.toFixed(2)} € · <span class="accent">Prix de vente : ${price.prix_vente.toFixed(2)} €</span></div>
-      <script>window.onload = function(){ window.print(); };<\/script>
-      </body></html>`;
-
+    var coef = r.coef, fx = function (x) { return (x * coef).toFixed(2) + ' €'; }, f2 = function (x) { return (Math.round(x * 100) / 100).toLocaleString('fr-FR'); };
+    var rows = r.pieces.map(function (p) { return '<tr><td>' + escHtml(p.nom) + '</td><td>' + p.l + ' × ' + p.w + ' mm</td><td>' + p.qte + '</td><td>' + f2(p.surface) + ' m²</td><td>' + fx(p.bois + p.chantDecoupe) + '</td></tr>'; }).join('');
+    var rows2 = r.lignes.filter(function (l) { return l.montant > 0; }).map(function (l) { return '<tr><td colspan="4">' + escHtml(l.lib) + '</td><td>' + fx(l.montant) + '</td></tr>'; }).join('');
+    var html = '<!doctype html><html><head><meta charset="utf-8"><title>Devis — ' + escHtml(projetNom) + '</title><style>body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:32px;font-size:13px;}h1{font-size:20px;margin:0 0 4px;}h2{font-size:14px;margin:22px 0 8px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px;}table{width:100%;border-collapse:collapse;margin-bottom:8px;}td,th{padding:5px 8px;border-bottom:1px solid #ddd;text-align:left;}td:last-child,th:last-child{text-align:right;white-space:nowrap;}.meta{color:#666;margin-bottom:16px;}.total{font-size:15px;font-weight:700;margin-top:16px;text-align:right;}@media print{button{display:none;}}</style></head><body>' +
+      '<h1>Devis — ' + escHtml(projetNom) + '</h1><div class="meta">Édité le ' + new Date().toLocaleDateString('fr-FR') + ' · prix HT, par poste (coefficient ' + coef + ' compris)</div>' +
+      '<h2>Pièces (panneaux, découpe et chant)</h2><table><thead><tr><th>Pièce</th><th>Dimensions</th><th>Qté</th><th>Surface</th><th>Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<h2>Usinages et quincaillerie</h2><table><tbody>' + rows2 + '</tbody></table>' +
+      '<div class="total">Total HT : ' + r.vente.toFixed(2) + ' € · TVA 20 % : ' + (r.vente * 0.2).toFixed(2) + ' € · Total TTC : ' + (r.vente * 1.2).toFixed(2) + ' €</div>' +
+      '<script>window.onload=function(){window.print();};<\/script></body></html>';
     var win = window.open('', '_blank');
     if (!win) { showToast('Autorise les pop-ups pour exporter le PDF', 'err'); return; }
     win.document.open(); win.document.write(html); win.document.close();
@@ -2871,13 +2752,12 @@
     var rows = r.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:4px 6px;">' + escHtml(p.nom) + (p.note ? ' <i style="color:#b45309;">(' + escHtml(p.note) + ')</i>' : '') + '</td><td style="' + td + '">' + p.l + '</td><td style="' + td + '">' + p.w + '</td><td style="' + td + '">' + p.qte + '</td><td style="' + td + '">' + f2(p.surface) + ' m²</td><td style="' + td + '">' + f2(p.pu) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(p.bois) + '</td><td style="' + td + '">' + f2(p.ml) + ' ml</td><td style="' + td + 'font-weight:600;">' + eur(p.chantDecoupe) + '</td></tr>'; }).join('');
     var ecart = prixAncien ? Math.round((r.vente - prixAncien) / prixAncien * 1000) / 10 : null;
     return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(205,62,0,.35);border-radius:10px;font-size:12px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:13px;">Méthode « tableur » (calcul à part, ne modifie pas le montant)</b><button class="btn btn-ghost btn-sm" onclick="downloadTableurCsv()">Télécharger (CSV)</button></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:13px;">Calcul du prix (méthode tableur)</b><button class="btn btn-ghost btn-sm" onclick="downloadTableurCsv()">Télécharger (CSV)</button></div>' +
       '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe/chant</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + eur(r.ml * (TABLEUR.decoupe + TABLEUR.chant)) + '</td></tr></tbody></table></div>' +
       '<div style="margin-top:6px;">' + r.lignes.map(function (l) { return '<div style="display:flex;justify-content:space-between;padding:1px 0;"><span>' + escHtml(l.lib) + '</span><span>' + eur(l.montant) + '</span></div>'; }).join('') + '</div>' +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
       '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
-      '<div style="display:flex;justify-content:space-between;margin-top:6px;padding:6px 8px;background:rgba(26,26,26,.04);border-radius:6px;"><span>Ancien calcul de l\'admin : <b>' + (prixAncien != null ? eur(prixAncien) : '—') + '</b></span><span>Écart tableur / ancien : <b>' + (ecart != null ? (ecart > 0 ? '+' : '') + ecart + ' %' : '—') + '</b></span></div>' +
       (r.warn.length ? '<div style="margin-top:6px;color:#b45309;">⚠ ' + r.warn.map(escHtml).join('<br>⚠ ') + '</div>' : '') + '</div>';
   }
   function downloadTableurCsv() {
@@ -3259,29 +3139,11 @@
   // ── DASHBOARD ─────────────────────────────────────────────────────
   // Prix de vente d'une config sans ouvrir le projet (mêmes règles que la fiche : quantités, corrections manuelles, finitions visibles)
   function computePrixVenteFromSdb(sdb) {
-    var saveOv = currentDevisOverrides;
-    try {
-      var rc = sdb.raw_config || {};
-      currentDevisOverrides = Object.assign({}, rc.devis_overrides || {});
-      var q = buildDevisQuantitiesFromConfig(sdb);
-      var stored = rc.devis_quantities;
-      if (stored && Array.isArray(stored.finitions) && Array.isArray(q.finitions)) {
-        var vis = {}; stored.finitions.forEach(function (f) { vis[f.id] = f.visible; });
-        q.finitions.forEach(function (f) { if (vis[f.id] !== undefined) f.visible = !!vis[f.id]; });
-      }
-      var qo = applyDevisOverrides(q), g = currentTarifsGlobaux || {}, ov = currentDevisOverrides;
-      var fm2 = 0, fper = 0;
-      (q.finitions || []).forEach(function (f) { if (f.visible) { fm2 += f.m2 || 0; fper += f.perimeter_m || 0; } });
-      var edge = (q.edge_banding_ml || 0) + fper;
-      if (ov.edge_banding_ml != null) edge = ov.edge_banding_ml;
-      if (ov.finition_m2 != null) fm2 = ov.finition_m2;
-      var key = qo.caisson_material ? 'finition_m2|' + qo.caisson_material : null;
-      var unit = (key && g.panel_m2 && g.panel_m2[key] != null) ? g.panel_m2[key] : 0;
-      var price = computeDevisPriceAdmin(Object.assign({}, qo, { edge_banding_ml: edge }), g);
-      if (!price) return null;
-      var cost = Math.round((price.cost_revient + fm2 * unit) * 100) / 100;
-      return Math.round(cost * (g.coefficient_revente || 2) * 100) / 100;
-    } finally { currentDevisOverrides = saveOv; }
+    var rc = Object.assign({}, sdb.raw_config || {});
+    if (!rc.meuble) rc.meuble = { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
+    if (!rc.elements) rc.elements = sdb.elements || [];
+    var r = tableurFromRc(rc, currentTarifsGlobaux || {});
+    return r ? r.vente : null;
   }
 
   // Calcule et enregistre le montant de tous les projets non fermes, sans ouvrir chaque fiche. Renvoie true si quelque chose a changé.
@@ -4778,8 +4640,11 @@
         q.finitions.forEach(function (f) { if (visFin[f.id] !== undefined) f.visible = !!visFin[f.id]; });
       }
       currentDevisQuantities = q;
-      el.innerHTML = renderDevisPriceForm(q);
-      recomputeFinitionPanels();
+      if (!rc.meuble) rc.meuble = { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
+      if (!rc.elements) rc.elements = sdb.elements || [];
+      el.innerHTML = '<div id="devis-result" style="font-size:14px;font-weight:600;margin-bottom:4px;"></div><div id="devis-compare"></div>' +
+        '<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger le détail en PDF</button></div>';
+      updateDevisAutoTotal();
     } catch (err) {
       console.error('renderProjetDevis error:', err);
       el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;color:#c2410c;">Erreur lors du calcul du devis : ' + escHtml(err.message || String(err)) + '</div>';
