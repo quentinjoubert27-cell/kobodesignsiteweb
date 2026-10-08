@@ -2524,7 +2524,7 @@
       '.cond{margin-top:9mm}.cond h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.cond ul{list-style:none;font-size:8.8pt;line-height:1.65;font-weight:300}.cond li::before{content:"– "}.cond li b{font-weight:600}' +
       '.sig{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:9mm}.sig div{border:.25mm solid #bbb;border-radius:2mm;height:30mm;padding:3mm 4mm;font-size:8.5pt;color:#555}.sig b{display:block;color:#231a20;font-weight:600;margin-bottom:1mm}' +
       '.foot span:last-child{white-space:nowrap}.compo{margin-top:8mm}.compo h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.compo ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300}.compo li::before{content:"– "}.foot{position:absolute;left:16mm;right:16mm;bottom:8mm;display:flex;justify-content:space-between;gap:6mm;font-size:6.8pt;color:#888;border-top:.25mm solid #ddd;padding-top:2mm;line-height:1.4}' +
-      '.pvs{display:grid;grid-template-columns:1fr;gap:9mm;margin-top:6mm}.pv img,.pv .ph{width:100%;aspect-ratio:1200/800;object-fit:cover;border-radius:1.5mm;display:block;background:#f4f1ee}.pv .ph{display:flex;align-items:center;justify-content:center;color:#999}.pv h3{font-size:12pt;font-weight:600;margin-top:3mm}.pv .tx{font-size:9.5pt;margin-top:1mm;color:#231a20}.pv ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300;color:#555;margin-top:1mm}.pv li::before{content:"– "}' +
+      '.pvs{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:8mm}.pv img,.pv .ph{width:100%;aspect-ratio:1200/800;object-fit:cover;border-radius:1.5mm;display:block;background:#f4f1ee}.pv .ph{display:flex;align-items:center;justify-content:center;color:#999}.pv h3{font-size:12pt;font-weight:600;margin-top:3mm}.pv .tx{font-size:9.5pt;margin-top:1mm;color:#231a20}.pv ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300;color:#555;margin-top:1mm}.pv li::before{content:"– "}' +
       '@media print{.no-print{display:none!important}}</style>' + verifHtml +
       '<div class="pg">' + head() +
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 06 42 89 98 58<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
@@ -2532,6 +2532,10 @@
       '<div class="obj"><h4>Objet</h4><h2>' + escHtml(p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p>' + '</div>' +
       '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><p class="nc">Images non contractuelles.</p>' +
       '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, det0.finitions, det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' + foot(1) + '</div>' +
+      (pv.length ? '<div class="pg">' + head() + '<div class="obj"><h4>Salle de bain</h4><h2>Plan de travail et vasque</h2></div><div class="pvs">' + pv.map(function (x) {
+        var im2 = imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>');
+        return '<div class="pv">' + im2 + '<h3>' + escHtml(x.titre) + '</h3>' + (x.texture ? '<p class="tx"><b>Texture / finition :</b> ' + escHtml(x.texture) + '</p>' : '') + '<ul>' + x.specs.map(function (t) { return '<li>' + escHtml(t) + '</li>'; }).join('') + '</ul></div>';
+      }).join('') + '</div><p class="nc">Images non contractuelles.</p>' + foot(2) + '</div>' : '') +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(Math.round(total * 20) / 100) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(Math.round(total * 120) / 100) + '</span></div></div>' +
       '<div class="cond"><h4>Conditions</h4><ul>' +
@@ -2541,11 +2545,7 @@
       '<li>Les images présentées dans cette proposition sont <b>non contractuelles</b>.</li>' +
       '<li>Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.</li>' +
       '</ul></div>' +
-      foot(2) + '</div>' +
-      (pv.length ? '<div class="pg">' + head() + '<div class="obj"><h4>Salle de bain</h4><h2>Plan de travail et vasque</h2></div><div class="pvs">' + pv.map(function (x) {
-        var im2 = imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>');
-        return '<div class="pv">' + im2 + '<h3>' + escHtml(x.titre) + '</h3>' + (x.texture ? '<p class="tx"><b>Texture / finition :</b> ' + escHtml(x.texture) + '</p>' : '') + '<ul>' + x.specs.map(function (t) { return '<li>' + escHtml(t) + '</li>'; }).join('') + '</ul></div>';
-      }).join('') + '</div><p class="nc">Images non contractuelles.</p>' + foot(3) + '</div>' : '');
+      foot(pv.length ? 3 : 2) + '</div>';
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
