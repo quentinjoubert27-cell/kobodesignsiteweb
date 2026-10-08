@@ -1019,6 +1019,30 @@
           <button class="btn btn-primary" onclick="openModalNewProjet()">+ Nouveau projet</button>
         </div>
       </div>
+      <div id="projets-filtres" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+        <input type="search" id="pf-q" placeholder="Rechercher (projet, client, e-mail, dimensions…)" oninput="renderProjets()" style="flex:1 1 240px;min-width:200px;padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;"/>
+        <select id="pf-statut" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">Tous les statuts</option>
+          <option value="__actifs">En cours (hors terminés)</option>
+          <option value="En étude">En étude</option><option value="Analyse en cours">Analyse en cours</option><option value="Proposition envoyée">Proposition envoyée</option>
+          <option value="Devis en cours">Devis en cours</option><option value="Devis envoyé">Devis envoyé</option><option value="Fabrication">Fabrication</option>
+          <option value="Commandé">Commandé</option><option value="Livraison">Livraison</option><option value="Terminé">Terminé</option>
+        </select>
+        <select id="pf-type" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">Pro et particuliers</option><option value="pro">Pro</option><option value="particulier">Particuliers</option>
+        </select>
+        <select id="pf-montant" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">Avec ou sans montant</option><option value="avec">Avec montant</option><option value="sans">Sans montant</option>
+        </select>
+        <select id="pf-date" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">Toutes les dates</option><option value="7">7 derniers jours</option><option value="30">30 derniers jours</option><option value="90">3 derniers mois</option>
+        </select>
+        <select id="pf-tri" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
+          <option value="recent">Plus récents</option><option value="ancien">Plus anciens</option><option value="montant">Montant décroissant</option><option value="client">Client A → Z</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="resetProjetsFiltres()">Réinitialiser</button>
+        <span id="pf-count" style="font-size:12px;color:rgba(26,26,26,.5);"></span>
+      </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Projet</th><th>Client</th><th>Statut</th><th>Montant</th><th>Créé le</th><th></th></tr></thead>
@@ -3892,11 +3916,43 @@
 
   // ── PROJETS ───────────────────────────────────────────────────────
   async function loadProjets() {
-    const { data } = await sb.from('projets').select('*, clients(prenom, nom, type_client)').order('created_at', { ascending: false });
+    const { data } = await sb.from('projets').select('*, clients(prenom, nom, email, type_client)').order('created_at', { ascending: false });
     allProjets = data || [];
+    renderProjets();
+  }
+
+  function resetProjetsFiltres() {
+    ['pf-q', 'pf-statut', 'pf-type', 'pf-montant', 'pf-date'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    const t = document.getElementById('pf-tri'); if (t) t.value = 'recent';
+    renderProjets();
+  }
+
+  function renderProjets() {
     const tbody = document.getElementById('projets-table');
+    if (!tbody) return;
+    const val = id => (document.getElementById(id) || {}).value || '';
+    const norm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const q = norm(val('pf-q')), st = val('pf-statut'), ty = val('pf-type'), mo = val('pf-montant'), dt = parseInt(val('pf-date')) || 0, tri = val('pf-tri') || 'recent';
+    let list = allProjets.filter(p => {
+      if (st === '__actifs' ? p.statut === 'Terminé' : (st && p.statut !== st)) return false;
+      if (ty) { const isPro = p.clients && /pro/i.test(p.clients.type_client || ''); if ((ty === 'pro') !== !!isPro) return false; }
+      if (mo) { const has = parseFloat(p.montant) > 0; if ((mo === 'avec') !== has) return false; }
+      if (dt && (Date.now() - new Date(p.created_at).getTime()) > dt * 86400000) return false;
+      if (q) {
+        const hay = norm([p.nom, p.statut, p.description, p.clients && (p.clients.prenom + ' ' + p.clients.nom + ' ' + (p.clients.email || ''))].join(' '));
+        if (!q.split(/\s+/).every(w => hay.includes(w))) return false;
+      }
+      return true;
+    });
+    const nomClient = p => p.clients ? (p.clients.nom + ' ' + p.clients.prenom).toLowerCase() : '';
+    list.sort((a, b) => tri === 'ancien' ? new Date(a.created_at) - new Date(b.created_at)
+      : tri === 'montant' ? (parseFloat(b.montant) || 0) - (parseFloat(a.montant) || 0)
+      : tri === 'client' ? nomClient(a).localeCompare(nomClient(b))
+      : new Date(b.created_at) - new Date(a.created_at));
+    const cnt = document.getElementById('pf-count'); if (cnt) cnt.textContent = list.length + ' / ' + allProjets.length + ' projet' + (allProjets.length > 1 ? 's' : '');
     if (!allProjets.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun projet.</td></tr>'; return; }
-    tbody.innerHTML = allProjets.map(p => `
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun projet ne correspond à ces filtres.</td></tr>'; return; }
+    tbody.innerHTML = list.map(p => `
       <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
         <td style="font-weight:600;">${escHtml(p.nom)}</td>
         <td>${p.clients ? `<span style="display:inline-flex;align-items:center;gap:6px;">${escHtml(p.clients.prenom + ' ' + p.clients.nom)}${clientTypeBadge(p.clients)}</span>` : '—'}</td>
