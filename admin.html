@@ -2580,7 +2580,7 @@
       'table{width:100%;border-collapse:collapse;margin-top:8mm}th{font-size:7.5pt;letter-spacing:.12em;text-transform:uppercase;color:#777;text-align:left;font-weight:600;padding:2mm 0;border-bottom:.4mm solid #231a20}th.n{text-align:right}' +
       'td{padding:4mm 0;border-bottom:.25mm solid #e3e3e3;vertical-align:top}td.d b{font-weight:600;font-size:10.5pt}td.d div{font-weight:300;color:#666;font-size:9pt;margin-top:.8mm}td.n{text-align:right;white-space:nowrap;font-size:10.5pt}' +
       '.tot{margin-top:5mm;margin-left:auto;width:78mm;font-size:10pt}.tot div{display:flex;justify-content:space-between;padding:1.6mm 0}.tot .ttc{border-top:.4mm solid #231a20;margin-top:1mm;padding-top:3mm;font-size:13pt;font-weight:600}' +
-      '.cond{margin-top:9mm}.cond h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.cond ul{list-style:none;font-size:8.8pt;line-height:1.65;font-weight:300}.cond li::before{content:"– "}.cond li b{font-weight:600}' +
+      '.promo{margin-top:5mm;margin-left:auto;width:78mm;padding:2.5mm 3mm;border:.3mm solid #d96c2c;border-radius:1.5mm;background:#fff5ee;font-size:8.8pt;line-height:1.5;color:#231a20}.cond{margin-top:9mm}.cond h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.cond ul{list-style:none;font-size:8.8pt;line-height:1.65;font-weight:300}.cond li::before{content:"– "}.cond li b{font-weight:600}' +
       '.sig{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:9mm}.sig div{border:.25mm solid #bbb;border-radius:2mm;height:30mm;padding:3mm 4mm;font-size:8.5pt;color:#555}.sig b{display:block;color:#231a20;font-weight:600;margin-bottom:1mm}' +
       '.foot span:last-child{white-space:nowrap}.compo{margin-top:8mm}.compo h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:2mm}.compo ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300}.compo li::before{content:"– "}.foot{position:absolute;left:16mm;right:16mm;bottom:8mm;display:flex;justify-content:space-between;gap:6mm;font-size:6.8pt;color:#888;border-top:.25mm solid #ddd;padding-top:2mm;line-height:1.4}' +
       '.pvs{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:8mm}.pv img,.pv .ph{width:100%;aspect-ratio:1200/800;object-fit:cover;border-radius:1.5mm;display:block;background:#f4f1ee}.pv .ph{display:flex;align-items:center;justify-content:center;color:#999}.pv h3{font-size:12pt;font-weight:600;margin-top:3mm}.pv .tx{font-size:9.5pt;margin-top:1mm;color:#231a20}.pv ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300;color:#555;margin-top:1mm}.pv li::before{content:"– "}' +
@@ -2597,11 +2597,13 @@
       }).join('') + '</div><p class="nc">Images non contractuelles.</p>' + foot(2) + '</div>' : '') +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(Math.round(total * 20) / 100) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(Math.round(total * 120) / 100) + '</span></div></div>' +
+      '<div class="promo"><b>Offre concours :</b> pour toute commande passée avant le 20/02/2027 (fin du concours), profitez de <b>10 % de remise</b>.</div>' +
       '<div class="cond"><h4>Conditions</h4><ul>' +
       '<li><b>Proposition non ferme</b> : elle ne devient ferme et définitive qu\'après validation avec le client (dimensions, aménagement, finitions).</li>' +
       '<li><b>Livraison non comprise dans ce devis</b> : son coût sera confirmé dès communication du lieu de destination.</li>' +
       '<li><b>Poignées</b> de portes et de tiroirs non comprises dans le prix.</li>' +
       '<li>Les images présentées dans cette proposition sont <b>non contractuelles</b>.</li>' +
+      '<li><b>Matériaux « bois »</b> : il s\'agit de décors <b>aspect bois</b> (panneaux décorés) et non de bois massif ; par exemple, le décor « Chêne » est un aspect chêne, pas du chêne massif.</li>' +
       '<li>Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.</li>' +
       '</ul></div>' +
       foot(pv.length ? 3 : 2) + '</div>';
