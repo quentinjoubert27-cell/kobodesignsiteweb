@@ -2945,7 +2945,7 @@
       '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe/chant</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
       '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
-      '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + '</div>' +
+      '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + (portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
       '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
       (r.warn.length ? '<div style="margin-top:6px;color:#b45309;">⚠ ' + r.warn.map(escHtml).join('<br>⚠ ') + '</div>' : '') + '</div>';
@@ -4152,6 +4152,49 @@ function dedupeEls(els){
     if (r.error) { showToast('Erreur : ' + r.error.message, 'err'); return false; }
     if (!silent) { showToast(plan.added.length + ' intercalaire(s) ajouté(s)'); if (currentProjetId) { loadProjetConfig(); renderProjetDevis(currentProjetId); } }
     return true;
+  }
+
+  // ── Fusion de portes superposées (ex. 4 portes alors que le client voulait 2 portes pleine hauteur) ──
+  function fusionPortesPlan(els) {
+    var list = (els || []).map(function (e) { return Object.assign({}, e); }), merged = 0;
+    var P = function (e) { var k = e.key.split('_').map(Number); return { b: k[0], l: k[1], t: k[2], r: k[3] }; };
+    var again = true;
+    while (again) {
+      again = false;
+      var doors = list.filter(function (e) { return e.type === 'porte' && e.key; });
+      for (var i = 0; i < doors.length && !again; i++) for (var j = 0; j < doors.length && !again; j++) {
+        if (i === j) continue;
+        var a = P(doors[i]), b = P(doors[j]);
+        if (a.l === b.l && a.r === b.r && Math.abs(a.t - b.b) <= 0.5 && a.b < b.b) {   // a est sous b, côte à côte verticalement
+          var nk = [a.b, a.l, b.t, a.r].join('_');
+          list = list.filter(function (e) { return e !== doors[i] && e !== doors[j]; });
+          list.push({ key: nk, type: 'porte' }); merged++; again = true;
+        }
+      }
+    }
+    return { els: list, merged: merged };
+  }
+  function portesFusionnables(rc) { return !!rc && Array.isArray(rc.elements) && fusionPortesPlan(rc.elements).merged > 0; }
+  async function fusionnerPortes() {
+    if (!currentProjetSdbId) return;
+    const { data: c, error } = await sb.from('configs_sdb').select('id, raw_config, elements, nb_tablettes, nb_separateurs, nb_portes, nb_tiroirs').eq('id', currentProjetSdbId).maybeSingle();
+    if (error || !c) return showToast('Configuration introuvable', 'err');
+    var rc = JSON.parse(JSON.stringify(c.raw_config || {}));
+    var base = Array.isArray(rc.elements) ? rc.elements : (Array.isArray(c.elements) ? c.elements : []);
+    var plan = fusionPortesPlan(base);
+    if (!plan.merged) return showToast('Aucune porte superposée à fusionner', 'err');
+    var avant = base.filter(function (e) { return e.type === 'porte'; }).length, apres = plan.els.filter(function (e) { return e.type === 'porte'; }).length;
+    if (!confirm('Fusionner les portes superposées : ' + avant + ' portes → ' + apres + ' portes (chacune sur toute la hauteur) ?\n\nLe meuble et son prix changent. Une sauvegarde de la configuration est faite avant.')) return;
+    rc.elements = plan.els; delete rc.devis_quantities; delete rc.tableur_overrides;
+    var n = configCountsFromRc(rc);
+    var bk = await sb.from('configs_sdb_sauvegardes').insert([{ config_id: String(c.id), raw_config: c.raw_config, elements: c.elements, nb_tablettes: c.nb_tablettes, nb_separateurs: c.nb_separateurs, nb_portes: c.nb_portes, nb_tiroirs: c.nb_tiroirs }]);
+    if (bk.error) return alert('Sauvegarde impossible, correction annulée.\n\n' + bk.error.message);
+    var upd = { raw_config: rc, nb_tablettes: n.tablettes, nb_separateurs: n.separateurs, nb_portes: n.portes, nb_tiroirs: n.tiroirs, elements: plan.els };
+    var r = await sb.from('configs_sdb').update(upd).eq('id', c.id);
+    if (r.error) { delete upd.elements; r = await sb.from('configs_sdb').update(upd).eq('id', c.id); }
+    if (r.error) return showToast('Erreur : ' + r.error.message, 'err');
+    showToast('Portes fusionnées : ' + avant + ' → ' + apres);
+    if (currentProjetId) { loadProjetConfig(); renderProjetDevis(currentProjetId); }
   }
 
   var STATUTS_AVANT_DEVIS = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'Devis en cours'];
