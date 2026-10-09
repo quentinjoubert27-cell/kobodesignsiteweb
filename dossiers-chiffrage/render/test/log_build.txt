@@ -1,0 +1,8 @@
+OK  /Users/quentinjoubert/Desktop/kobo-design/dossiers-chiffrage/render/test/tv-340-visuels/img_demande.png
+OK  /Users/quentinjoubert/Desktop/kobo-design/dossiers-chiffrage/render/test/tv-340-visuels/img_ambiance.png
+OK  /Users/quentinjoubert/Desktop/kobo-design/dossiers-chiffrage/render/test/tv-340-visuels/img_cotes.png
+
+Rendus : 116 s
+Dossier : /Users/quentinjoubert/Desktop/dossier-test-kobo.pdf  (119 s au total)
+python3 build_dossier.py render/test/tv-340.json --client "Test" --sortie   290.63s user 34.29s system 273% cpu 1:59.01 total
+FINI

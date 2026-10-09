@@ -1,0 +1,48 @@
+{
+ "client": "Test",
+ "titre": "Meuble sur mesure",
+ "demande_bullets": [
+  "– Meuble sur mesure à portes et tiroirs",
+  "– 4 caissons, 6 portes, 4 tiroirs",
+  "– H 2000 × L 3400 × P 400 mm",
+  "– Noyer, décor Lorenzo Walnut"
+ ],
+ "demande_par": [
+  "Une esquisse vous est proposée ci-après.",
+  "Elle répond à ce programme, avec des",
+  "portes encastrées, des tiroirs, des",
+  "étagères et quatre tringles de penderie,",
+  "une plinthe de 80 mm sur pieds réglables",
+  "et une fixation murale."
+ ],
+ "esq_titre": "Meuble à portes et tiroirs",
+ "esq_b1": "– 4 caissons côte à côte, 4 compartiments",
+ "esq_b2": "– H 2000 × L 3400 × P 400 mm",
+ "esq_note": "hauteur totale plinthe comprise : 2080 mm",
+ "esq_b3": "– Noyer, décor Lorenzo Walnut",
+ "esq_b4": "– 6 portes, 4 tiroirs, plinthe 80 mm sur pieds réglables",
+ "esq_par": [
+  "Six portes encastrées et 4 tiroirs, sans",
+  "poignée imposée. Le meuble est fixé au mur",
+  "contre le basculement."
+ ],
+ "prix": "[prix]",
+ "confirmer": [
+  [
+   "1. Poignées ou ouverture par pression pour les dix",
+   "façades."
+  ],
+  [
+   "2. Hauteur totale : 2080 mm plinthe comprise, ou 2000 mm",
+   "plinthe incluse (caisson réduit de 80 mm)."
+  ],
+  [
+   "3. Nature du mur, pour le choix des chevilles de fixation."
+  ]
+ ],
+ "confirmer_note": [
+  "Ces trois points nous permettent de",
+  "finaliser le dessin avant",
+  "fabrication."
+ ]
+}

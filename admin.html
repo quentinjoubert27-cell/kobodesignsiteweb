@@ -3989,7 +3989,7 @@
     });
     var seenSep={};
     return out.filter(function(e){
-      if(e.type!=='separator') return true;
+      if(e.type!=='separator' && e.type!=='separator_simple') return true;
       var c=_cpt(out,e.x_cm,e.y_cm,9999,9999), k=e.x_cm+'|'+c.bot+'|'+c.top;
       if(seenSep[k]) return false; seenSep[k]=1; return true;
     });
