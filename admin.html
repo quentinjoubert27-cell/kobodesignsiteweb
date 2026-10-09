@@ -1435,6 +1435,30 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-manuel" style="z-index:2000;">
+  <div class="modal" style="max-width:640px;max-height:90vh;overflow:auto;">
+    <h2 class="modal-title">Proposition (saisie manuelle)</h2>
+    <p style="font-size:12.5px;color:rgba(26,26,26,.6);margin:-6px 0 12px;line-height:1.5;">Pour les demandes reçues par le formulaire. Renseignez le meuble : le prix est calculé avec la même méthode que les configurations, puis chaque ligne reste modifiable dans le tableau. Les images (rendus faits à la main) sont facultatives.</p>
+    <div class="field"><label>Titre du meuble</label><input type="text" id="man-titre" placeholder="Ex. Dressing sur mesure — chambre parentale"/></div>
+    <div class="field"><label>Description (facultatif, apparaît sous le titre)</label><textarea id="man-texte" rows="3" style="width:100%;padding:10px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;"></textarea></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+      <div class="field"><label>Largeur (cm)</label><input type="number" id="man-L"/></div><div class="field"><label>Hauteur (cm)</label><input type="number" id="man-H"/></div>
+      <div class="field"><label>Profondeur (cm)</label><input type="number" id="man-P"/></div><div class="field"><label>Caissons</label><input type="number" id="man-nbCaissons" min="1"/></div>
+    </div>
+    <p style="font-size:11.5px;color:rgba(26,26,26,.5);margin:-4px 0 8px;">Les dimensions sont celles d'un caisson ; s'il y en a plusieurs, ils sont identiques.</p>
+    <div class="field"><label>Matière / décor</label><select id="man-mat"></select></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div class="field"><label>Étagères (total)</label><input type="number" id="man-nbEtageres" min="0"/></div><div class="field"><label>Intercalaires (total)</label><input type="number" id="man-nbIntercalaires" min="0"/></div>
+      <div class="field"><label>Tringles</label><input type="number" id="man-nbTringles" min="0"/></div>
+      <div class="field"><label>Portes</label><input type="number" id="man-nbPortes" min="0"/></div><div class="field"><label>Tiroirs</label><input type="number" id="man-nbTiroirs" min="0"/></div>
+      <div class="field"><label>Angles (vide = auto)</label><input type="number" id="man-angles" min="0"/></div>
+    </div>
+    <div class="field"><label>Image : meuble fermé (facultatif)</label><input type="file" accept="image/*" onchange="manImgPick(this,'ferme')"/><span id="man-img-ferme" style="font-size:12px;color:#166534;"></span></div>
+    <div class="field"><label>Image : portes et tiroirs ouverts (facultatif)</label><input type="file" accept="image/*" onchange="manImgPick(this,'ouvert')"/><span id="man-img-ouvert" style="font-size:12px;color:#166534;"></span></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-manuel')">Annuler</button><button class="btn btn-primary" onclick="enregistrerManuel()">Enregistrer</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-bulk">
   <div class="modal" style="max-width:600px;">
     <h2 class="modal-title">Email groupé</h2>
@@ -2332,8 +2356,8 @@
     var m = rc.meuble || {};
     function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
     var left = arr(rc.tvSide && rc.tvSide.left), right = arr(rc.tvSide && rc.tvSide.right);
-    var nCais = 1 + (rc.caisson2 ? 1 : 0) + left.length + right.length + (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm ? 1 : 0);
-    var W = (m.L || 0) + left.concat(right).reduce(function (s, r) { return s + (r.W_cm || 0); }, 0) + (rc.caisson2 ? (rc.caisson2.L_cm || 0) : 0);
+    var nCais = rc.manuel ? Math.max(1, parseInt(rc.manuel.nbCaissons) || 1) : 1 + (rc.caisson2 ? 1 : 0) + left.length + right.length + (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm ? 1 : 0);
+    var W = rc.manuel ? (m.L || 0) * nCais : (m.L || 0) + left.concat(right).reduce(function (s, r) { return s + (r.W_cm || 0); }, 0) + (rc.caisson2 ? (rc.caisson2.L_cm || 0) : 0);
     var H = Math.max.apply(null, [m.H || 0].concat(left.concat(right).map(function (r) { return r.H_cm || 0; })));
     var plur = function (n, w) { return n + ' ' + w + (n > 1 ? 's' : ''); };
     var fac = [], quinc = [], amen = [];
@@ -2570,11 +2594,14 @@
     var total = devisSimpleTotal();
     var imgs = { ferme: '', ouvert: '', plan: '', vasque: '' }, helperMsg = '', verif = null;
     try {
-      var j = currentProjetRc ? await devisRendersFromHelper(currentProjetRc, w) : null;
+      var isManuel = !!(currentProjetRc && currentProjetRc.manuel);
+      var j = (currentProjetRc && !isManuel) ? await devisRendersFromHelper(currentProjetRc, w) : null;
+      if (isManuel) { imgs.ferme = (currentManuel.images || {}).ferme || ''; imgs.ouvert = (currentManuel.images || {}).ouvert || ''; }
       if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; verif = j.verification || null; }
-      else helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
+      else if (!isManuel) helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
     } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
-    if (!imgs.ferme) {  // repli : images déjà ajoutées dans les documents du projet
+    var estManuel = !!(currentProjetRc && currentProjetRc.manuel);
+    if (!imgs.ferme && !estManuel) {  // repli : images déjà ajoutées dans les documents du projet
       var { data: docs } = await sb.from('documents').select('nom, url').eq('projet_id', currentProjetId);
       for (var d of (docs || [])) {
         var n = (d.nom || '').toLowerCase();
@@ -2634,8 +2661,8 @@
       '<div class="pg">' + head() +
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 06 42 89 98 58<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
-      '<div class="obj"><h4>Objet</h4><h2>' + escHtml(p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p>' + '</div>' +
-      '<div class="imgs">' + im('ferme', 'Meuble fermé') + im('ouvert', 'Portes et tiroirs ouverts') + '</div><p class="nc">Images non contractuelles.</p>' +
+      '<div class="obj"><h4>Objet</h4><h2>' + escHtml((estManuel && currentManuel.titre) || p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p>' + (estManuel && currentManuel.texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(currentManuel.texte) + '</p>' : '') + '</div>' +
+      ((estManuel && !imgs.ferme && !imgs.ouvert) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
       '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, (function () { var qq = currentDevisQuantities || {}, n1 = qq.doors_count || 0, n2 = qq.drawers_count || 0; var t = []; if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : '')); return t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir'; })(), det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' + foot(1) + '</div>' +
       (pv.length ? '<div class="pg">' + head() + '<div class="obj"><h4>Salle de bain</h4><h2>Plan de travail et vasque</h2></div><div class="pvs">' + pv.map(function (x) {
         var im2 = imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>');
@@ -2828,6 +2855,7 @@
   // Déduit d'UN exemple (meuble 90×90×37 : 688,07 € HT) — chaque règle marquée « à confirmer » doit être validée sur d'autres meubles.
   var TABLEUR = { E: 19, decoupe: 1.5, chant: 4.5, vis: 0.5, tourillon: 0.3, angleUsinage: 10, usinCharnierePorte: 2.5, usinCharniereCaisson: 1, coulisse: 10, kitTiroir: 75, charniere: 10, tringle: 20 };
   function tableurFromRc(rc, g) {
+    if (rc && rc.manuel) return tableurManuelFromRc(rc, g);
     var T = TABLEUR, E = T.E, m = rc.meuble || {}, warn = [];
     if (!(m.L && m.H && m.P)) return null;
     var pm = (g && g.panel_m2) || {};
@@ -2915,8 +2943,133 @@
   }
   function arrLen(a) { return Array.isArray(a) ? a.length : (a ? 1 : 0); }
 
+  // ═══ PROPOSITION MANUELLE (demandes arrivées par le formulaire : pas de configuration 3D) ═══════════════════
+  var currentManuel = null;
+  function manuelRc(m) { return { meuble: { L: m.L, H: m.H, P: m.P, matLabel: m.matLabel }, manuel: m, tableur_overrides: m.overrides || {} }; }
+  async function loadManuel(projetId) {
+    try {
+      var r = await sb.storage.from('documents-client').download(projetId + '/_proposition_manuelle.json');
+      if (r.error || !r.data) return null;
+      return JSON.parse(await r.data.text());
+    } catch (e) { return null; }
+  }
+  async function saveManuel() {
+    if (!currentManuel || !currentProjetId) return false;
+    var blob = new Blob([JSON.stringify(currentManuel)], { type: 'application/json' });
+    var r = await sb.storage.from('documents-client').upload(currentProjetId + '/_proposition_manuelle.json', blob, { contentType: 'application/json', upsert: true });
+    if (r.error) { showToast('Enregistrement impossible : ' + r.error.message, 'err'); return false; }
+    return true;
+  }
+  // même méthode de calcul que le tableur, à partir de pièces générées depuis les nombres saisis
+  function tableurManuelFromRc(rc, g) {
+    var T = TABLEUR, E = T.E, m = rc.manuel, warn = [];
+    var n = Math.max(1, parseInt(m.nbCaissons) || 1), L = (m.L || 0) * 10, H = (m.H || 0) * 10, P = (m.P || 0) * 10;
+    if (!(L && H && P)) return null;
+    var pm = (g && g.panel_m2) || {};
+    var puStruct = pm['structure_m2|' + (m.matLabel || '')] > 0 ? pm['structure_m2|' + (m.matLabel || '')] : (pm['panels_caisson_m2|Caisson'] || 0);
+    var puFacade = pm['finition_m2|' + (m.matLabel || '')] || pm['panels_porte_m2|' + (m.matLabel || '')] || puStruct;
+    var nP = parseInt(m.nbPortes) || 0, nT = parseInt(m.nbTiroirs) || 0, nE = parseInt(m.nbEtageres) || 0, nI = parseInt(m.nbIntercalaires) || 0, nB = parseInt(m.nbTringles) || 0;
+    var pieces = [];
+    var add = function (nom, l, w, qte, pu, sansChant) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: '', sansChant: !!sansChant, joue: /^Joue/.test(nom) }); };
+    add('Montant', H, P, 2 * n, puStruct); add('Traverse', L, P, 2 * n, puStruct); add('Fond', L, H, n, puStruct, true);
+    add('Joue gauche', H, P, n, puFacade); add('Joue droite', H, P, n, puFacade); add('Joue dessus', L, P, n, puFacade);
+    add('Étagères', L - 2 * E, P, nE, puStruct); add('Intercalaires', H - 2 * E, P, nI, puStruct);
+    if (nP) add('Façade de porte', H - 2, (L * n) / nP - 2, nP, puFacade);
+    if (nT) add('Façade de tiroir', (L * n) / Math.min(2, n * 2) - 2, 200, nT, puFacade);
+    var hingesFor = function (hmm) { return hmm <= 1000 ? 2 : hmm <= 1500 ? 3 : hmm <= 1900 ? 4 : 5; };
+    var nHinges = nP * hingesFor(H);
+    var angles = m.angles != null && m.angles !== '' ? parseInt(m.angles) : n * (4 + 2 * nE + 2 * nI);
+    var ov = rc.tableur_overrides || {};
+    pieces.forEach(function (p) { p.key = p.nom + '|' + p.l + 'x' + p.w; p.qte0 = p.qte; p.pu0 = p.pu; p.l0 = p.l; p.w0 = p.w; var o = ov[p.key]; if (o) { if (o.q != null) p.qte = o.q; if (o.pu != null) p.pu = o.pu; if (o.l != null) p.l = o.l; if (o.w != null) p.w = o.w; } p.modif = !!(o && (o.q != null || o.pu != null || o.l != null || o.w != null || o.ml != null || o.cml != null)); });
+    var ml = 0, cml = 0, surf = 0, bois = 0, decChant = 0;
+    pieces.forEach(function (p) {
+      p.surface = p.qte * p.l * p.w / 1e6;
+      p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.ml0 = p.ml;
+      p.cml = p.sansChant ? 0 : (p.joue ? p.qte * 2 * Math.max(p.l, p.w) / 1000 : p.ml); p.cml0 = p.cml;
+      var oo = ov[p.key]; if (oo) { if (oo.ml != null) p.ml = oo.ml; if (oo.cml != null) p.cml = oo.cml; }
+      p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * T.decoupe + p.cml * T.chant;
+      ml += p.ml; cml += p.cml; decChant += p.chantDecoupe; surf += p.surface; bois += p.bois;
+    });
+    var lignes = [
+      { id: 'angles', lib: 'Usinage des angles', qte: angles, pu: T.angleUsinage },
+      { id: 'usin_porte', lib: 'Usinage charnières côté porte', qte: nHinges, pu: T.usinCharnierePorte },
+      { id: 'usin_caisson', lib: 'Usinage charnières côté caisson', qte: nHinges, pu: T.usinCharniereCaisson },
+      { id: 'coulisses', lib: 'Coulisses de tiroirs', qte: nT, pu: T.coulisse },
+      { id: 'vis', lib: 'Vis', qte: angles * 4, pu: T.vis },
+      { id: 'tourillons', lib: 'Tourillons', qte: angles * 4, pu: T.tourillon },
+      { id: 'charnieres', lib: 'Charnières (pièces)', qte: nHinges, pu: T.charniere },
+      { id: 'tringles', lib: 'Tringles (tout compris)', qte: nB, pu: T.tringle },
+      { id: 'kits', lib: 'Kits tiroirs', qte: nT, pu: T.kitTiroir }
+    ].concat((m.extras || []).map(function (x, i) { return { id: 'x' + i, lib: x.nom || 'Ligne libre', qte: parseFloat(x.qte) || 0, pu: parseFloat(x.pu) || 0 }; }));
+    lignes.forEach(function (l) { l.key = 'l:' + l.id; l.qte0 = l.qte; l.pu0 = l.pu; var o = ov[l.key]; if (o) { if (o.q != null) l.qte = o.q; if (o.pu != null) l.pu = o.pu; } l.modif = !!(o && (o.q != null || o.pu != null)); l.montant = l.qte * l.pu; });
+    var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0);
+    var coef = (g && g.coefficient_revente) || 2;
+    return { pieces: pieces, lignes: lignes, angles: angles, hinges: nHinges, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn };
+  }
+  function manuelQuantites(m, r) {
+    return { doors_count: parseInt(m.nbPortes) || 0, drawers_count: parseInt(m.nbTiroirs) || 0, shelves_count: parseInt(m.nbEtageres) || 0, separators_count: parseInt(m.nbIntercalaires) || 0, separators_doubled: 0,
+      bars_count: parseInt(m.nbTringles) || 0, hinges: r ? r.hinges : 0, drawer_mechanisms: parseInt(m.nbTiroirs) || 0, caisson_material: m.matLabel, finitions: [], pieces: [] };
+  }
+
+  var _manImgs = {};
+  function _compressImage(file, cb) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var mx = 1500, k = Math.min(1, mx / Math.max(im.width, im.height)), c = document.createElement('canvas');
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        cb(c.toDataURL('image/jpeg', 0.86));
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  }
+  function manImgPick(inp, key) {
+    var f = inp.files && inp.files[0]; if (!f) return;
+    _compressImage(f, function (url) { _manImgs[key] = url; document.getElementById('man-img-' + key).textContent = '✓ image prête (' + Math.round(url.length / 1400) + ' Ko)'; });
+  }
+  function openManuelEditor() {
+    var m = currentManuel || { titre: '', texte: '', L: '', H: '', P: '', matLabel: 'Chêne', nbCaissons: 1, nbEtageres: 0, nbIntercalaires: 0, nbPortes: 0, nbTiroirs: 0, nbTringles: 0, angles: '', images: {}, overrides: {}, extras: [] };
+    _manImgs = { ferme: (m.images || {}).ferme || '', ouvert: (m.images || {}).ouvert || '' };
+    var set = function (id, v) { document.getElementById(id).value = v == null ? '' : v; };
+    set('man-titre', m.titre); set('man-texte', m.texte); set('man-L', m.L); set('man-H', m.H); set('man-P', m.P);
+    set('man-nbCaissons', m.nbCaissons); set('man-nbEtageres', m.nbEtageres); set('man-nbIntercalaires', m.nbIntercalaires);
+    set('man-nbPortes', m.nbPortes); set('man-nbTiroirs', m.nbTiroirs); set('man-nbTringles', m.nbTringles); set('man-angles', m.angles);
+    var sel = document.getElementById('man-mat');
+    sel.innerHTML = MATS_CAIS_NAMES.map(function (x) { return '<option' + (x === m.matLabel ? ' selected' : '') + '>' + escHtml(x) + '</option>'; }).join('');
+    document.getElementById('man-img-ferme').textContent = _manImgs.ferme ? '✓ image déjà enregistrée' : '';
+    document.getElementById('man-img-ouvert').textContent = _manImgs.ouvert ? '✓ image déjà enregistrée' : '';
+    document.getElementById('modal-manuel').classList.add('open');
+  }
+  async function enregistrerManuel() {
+    var g = function (id) { return document.getElementById(id).value; }, num = function (id) { return parseFloat(g(id)) || 0; };
+    var m = Object.assign({ overrides: {}, extras: [] }, currentManuel || {}, {
+      titre: g('man-titre').trim(), texte: g('man-texte').trim(), L: num('man-L'), H: num('man-H'), P: num('man-P'), matLabel: g('man-mat'),
+      nbCaissons: parseInt(g('man-nbCaissons')) || 1, nbEtageres: parseInt(g('man-nbEtageres')) || 0, nbIntercalaires: parseInt(g('man-nbIntercalaires')) || 0,
+      nbPortes: parseInt(g('man-nbPortes')) || 0, nbTiroirs: parseInt(g('man-nbTiroirs')) || 0, nbTringles: parseInt(g('man-nbTringles')) || 0,
+      angles: g('man-angles').trim() === '' ? '' : (parseInt(g('man-angles')) || 0), images: { ferme: _manImgs.ferme || '', ouvert: _manImgs.ouvert || '' }
+    });
+    if (!(m.L > 0 && m.H > 0 && m.P > 0)) return showToast('Renseignez la largeur, la hauteur et la profondeur', 'err');
+    currentManuel = m;
+    if (!(await saveManuel())) return;
+    closeModal('modal-manuel');
+    showToast('Proposition enregistrée');
+    renderProjetDevis(currentProjetId);
+  }
+  async function ajouterLigneManuelle() {
+    if (!currentManuel) return;
+    var nom = prompt('Nom de la ligne (par exemple « Poignées » ou « Pose »)'); if (!nom) return;
+    var qte = parseFloat((prompt('Quantité', '1') || '').replace(',', '.')); if (!(qte > 0)) return;
+    var pu = parseFloat((prompt('Prix unitaire de fabrication (€, avant coefficient)', '0') || '').replace(',', '.')); if (!(pu >= 0)) return;
+    currentManuel.extras = (currentManuel.extras || []).concat([{ nom: nom, qte: qte, pu: pu }]);
+    await saveManuel(); renderProjetDevis(currentProjetId);
+  }
+
   var _tabSaveTimer = null;
   async function _saveTableurOverrides(ov) {
+    if (currentManuel) { currentManuel.overrides = ov; await saveManuel(); return; }
     if (!currentProjetSdbId) return;
     var { data, error } = await sb.from('configs_sdb').select('raw_config').eq('id', currentProjetSdbId).maybeSingle();
     if (error || !data) return showToast('Enregistrement impossible', 'err');
@@ -2962,7 +3115,7 @@
       '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe</th><th style="' + th + '">Chant</th><th style="' + th + '">Découpe + chant</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + f2(r.cml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
       '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
-      '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + '<button class="btn btn-ghost btn-sm" onclick="ouvrirEditeurElements()" title="Avancé : remplacer la liste des éléments du meuble (sauvegarde faite avant)">Modifier les éléments (avancé)</button>' + (portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
+      '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + (rc && rc.manuel ? '<button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">Modifier la proposition</button><button class="btn btn-ghost btn-sm" onclick="ajouterLigneManuelle()">Ajouter une ligne</button>' : '<button class="btn btn-ghost btn-sm" onclick="ouvrirEditeurElements()" title="Avancé : remplacer la liste des éléments du meuble (sauvegarde faite avant)">Modifier les éléments (avancé)</button>') + (rc && !rc.manuel && portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
       '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
       (r.warn.length ? '<div style="margin-top:6px;color:#b45309;">⚠ ' + r.warn.map(escHtml).join('<br>⚠ ') + '</div>' : '') + '</div>';
@@ -4922,9 +5075,23 @@ function dedupeEls(els){
         return;
       }
       if (!sdb) {
-        el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune configuration liée à ce projet.</div>';
+        currentManuel = await loadManuel(projetId);
+        if (!currentManuel) {
+          currentProjetRc = null; currentProjetSdbId = null; currentDevisQuantities = null;
+          el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune configuration liée à ce projet (demande reçue par le formulaire).</div>' +
+            '<div style="margin-top:8px;"><button class="btn btn-primary btn-sm" onclick="openManuelEditor()">✍️ Créer une proposition (saisie manuelle)</button></div>';
+          return;
+        }
+        // proposition saisie à la main : mêmes calculs et même document, images ajoutées à la main
+        const rcM = manuelRc(currentManuel);
+        currentProjetRc = rcM; currentProjetSdbId = null; currentDevisOverrides = {};
+        currentDevisQuantities = manuelQuantites(currentManuel, tableurManuelFromRc(rcM, currentTarifsGlobaux || {}));
+        el.innerHTML = '<div id="devis-result" style="font-size:14px;font-weight:600;margin-bottom:4px;"></div><div id="devis-compare"></div>' +
+          '<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger le détail en PDF</button></div>';
+        updateDevisAutoTotal();
         return;
       }
+      currentManuel = null;
 
       const rc = sdb.raw_config || {};
       currentProjetRc = rc; currentProjetSdbId = sdb.id;
