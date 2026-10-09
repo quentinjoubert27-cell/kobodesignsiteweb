@@ -1793,15 +1793,15 @@
 
     return `
       <p style="font-size:12.5px;color:rgba(26,26,26,.55);margin:0 0 14px;line-height:1.6;">Prix des matériaux (€/m²) utilisés par le calcul « tableur ». Les prix de chant, découpe, vis, tourillons, charnières, tiroirs et usinages sont ceux du tableur (intégrés au calcul).</p>
-      ${singlePriceRow('Structure du meuble (prix de base : montants, traverses, étagères, intercalaires, fond)', 'panels_caisson_m2|Caisson', 'm²')}
+      ${singlePriceRow('Caisson : prix par défaut (utilisé quand la matière n\'a pas de prix ci-dessous)', 'panels_caisson_m2|Caisson', 'm²')}
       <details style="margin-bottom:14px;" open>
-        <summary style="cursor:pointer;font-weight:600;font-size:14px;padding:10px 0;">Prix au m² par élément <span style="font-weight:400;color:rgba(26,26,26,.45);">(laisser vide = prix de base ci-dessus ; les joues suivent le prix des façades)</span></summary>
-        <div style="padding:4px 4px 8px;">${['montant:Montants (côtés)', 'traverse:Traverses (dessus / dessous)', 'etagere:Étagères', 'intercalaire:Intercalaires', 'fond:Fond du meuble (prix par défaut)', 'joue:Joues (dessus et côtés)'].map(function (x) {
+        <summary style="cursor:pointer;font-weight:600;font-size:14px;padding:10px 0;">Prix au m² par élément <span style="font-weight:400;color:rgba(26,26,26,.45);">(facultatif : laisser vide = prix de la matière, sinon prix par défaut ; les joues suivent le prix des façades)</span></summary>
+        <div style="padding:4px 4px 8px;">${['montant:Montants (côtés)', 'traverse:Traverses (dessus / dessous)', 'etagere:Étagères', 'intercalaire:Intercalaires', 'fond:Fond du meuble', 'joue:Joues (dessus et côtés)'].map(function (x) {
           var k = x.split(':')[0], lab = x.split(':')[1], v = (p.tableur_m2 || {})[k];
           return `<div style="${rowStyle}"><span style="font-size:13px;">${escHtml(lab)}</span><input type="number" step="0.01" class="mp-tab-input" data-el="${k}" value="${v != null ? v : ''}" placeholder="€/m²" style="${inputStyle}"/></div>`;
         }).join('')}</div>
       </details>
-      ${matSection('Fond du meuble (selon la matière choisie)', 'fond_m2', 'm²', MATS_CAIS_NAMES)}
+      ${matSection('Caisson : structure selon la matière (montants, traverses, étagères, intercalaires, fond)', 'structure_m2', 'm²', MATS_CAIS_NAMES)}
       ${matSection('Façades et joues visibles (portes, tiroirs, joues de finition)', 'finition_m2', 'm²', MATS_CAIS_NAMES)}
       ${matSection('Plan de travail', 'panels_plan_m2', 'm²', MATS_PLAN_NAMES)}
       <div class="detail-panel" style="padding:16px 20px;margin-top:8px;">
@@ -2791,7 +2791,8 @@
     var T = TABLEUR, E = T.E, m = rc.meuble || {}, warn = [];
     if (!(m.L && m.H && m.P)) return null;
     var pm = (g && g.panel_m2) || {};
-    var puStruct = pm['panels_caisson_m2|Caisson'] || 0;
+    // structure du caisson (montants, traverses, étagères, intercalaires, fond) : prix de la matière choisie, sinon prix par défaut
+    var puStruct = pm['structure_m2|' + (m.matLabel || '')] > 0 ? pm['structure_m2|' + (m.matLabel || '')] : (pm['panels_caisson_m2|Caisson'] || 0);
     var puFacade = pm['finition_m2|' + (m.matLabel || '')] || pm['panels_porte_m2|' + (m.matLabel || '')] || puStruct;
     // prix au m² réglables par type de pièce (Matériaux & Prix) ; à défaut : prix de structure, ou prix des façades pour les joues
     var pe = (g && g.tableur_m2) || {};
@@ -2813,7 +2814,7 @@
       var add = function (nom, l, w, qte, pu, note, sansChant) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: '', sansChant: !!sansChant }); };
       add('Montant', H, P, 2, puEl('montant', puStruct));
       add('Traverse', L, P, 2, puEl('traverse', puStruct));
-      add('Fond', L, H, 1, pm['fond_m2|' + (m.matLabel || '')] > 0 ? pm['fond_m2|' + (m.matLabel || '')] : puEl('fond', puStruct), '', true);   // fond du caisson : découpe seulement, pas de chant
+      add('Fond', L, H, 1, puEl('fond', puStruct), '', true);   // fond du caisson : découpe seulement, pas de chant
       // joues de finition : sur chaque caisson, une au-dessus et une de chaque côté (gauche, droite), au prix des façades
       add('Joue gauche', H, P, 1, puEl('joue', puFacade));
       add('Joue droite', H, P, 1, puEl('joue', puFacade));
