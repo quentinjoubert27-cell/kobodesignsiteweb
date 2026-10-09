@@ -1,0 +1,61 @@
+{
+  "plan": {},
+  "meuble": {"H": 200, "L": 120, "P": 40, "matId": 1, "matLabel": "Noyer"},
+  "tvSide": {
+    "top": null,
+    "left": [
+      {"H_cm": 200, "W_cm": 50, "elements": [
+        {"type": "shelf", "y_cm": 166, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"type": "shelf", "y_cm": 135, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"type": "shelf", "y_cm": 54, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"type": "shelf", "y_cm": 75, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"type": "shelf", "y_cm": 95, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"key": "75_0_95_46", "type": "tiroir"},
+        {"key": "54_0_75_46", "type": "tiroir"},
+        {"key": "0_0_54_46", "type": "porte"}
+      ]}
+    ],
+    "right": [
+      {"H_cm": 200, "W_cm": 50, "elements": [
+        {"type": "shelf", "y_cm": 167, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"type": "shelf", "y_cm": 136, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"type": "shelf", "y_cm": 57, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"type": "shelf", "y_cm": 76, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"type": "shelf", "y_cm": 96, "x_left_cm": 0, "x_right_cm": 46.4},
+        {"key": "76_0_96_46", "type": "tiroir"},
+        {"key": "57_0_76_46", "type": "tiroir"},
+        {"key": "0_0_57_46", "type": "porte"}
+      ]},
+      {"H_cm": 200, "W_cm": 120, "elements": [
+        {"type": "barre", "y_cm": 183, "x_left_cm": 0, "x_right_cm": 116.4},
+        {"type": "barre", "y_cm": 81, "x_left_cm": 0, "x_right_cm": 116.4},
+        {"key": "0_0_196_58", "type": "porte"},
+        {"key": "0_58_196_116", "type": "porte"}
+      ]}
+    ]
+  },
+  "vasques": {},
+  "furniture_type": "tv",
+  "technical_spec": {
+    "panel_thickness_mm": 18,
+    "overall_mm": {"width": 1200, "height": 2000, "depth": 400},
+    "structural_panels": [
+      {"type": "joue_gauche", "x_left_mm": 0, "x_right_mm": 18, "y_bottom_mm": 0, "y_top_mm": 2000},
+      {"type": "joue_droite", "x_left_mm": 1182, "x_right_mm": 1200, "y_bottom_mm": 0, "y_top_mm": 2000},
+      {"type": "traverse_haute", "x_left_mm": 18, "x_right_mm": 1182, "y_bottom_mm": 1982, "y_top_mm": 2000},
+      {"type": "traverse_basse", "x_left_mm": 18, "x_right_mm": 1182, "y_bottom_mm": 0, "y_top_mm": 18},
+      {"type": "fond", "x_left_mm": 0, "x_right_mm": 1200, "y_bottom_mm": 0, "y_top_mm": 2000}
+    ],
+    "separators": [],
+    "shelves": [],
+    "bars": [
+      {"type": "barre", "x_left_mm": 18, "x_right_mm": 1182, "length_mm": 1164, "y_center_mm": 1868, "diameter_mm": 28},
+      {"type": "barre", "x_left_mm": 18, "x_right_mm": 1182, "length_mm": 1164, "y_center_mm": 828, "diameter_mm": 28}
+    ],
+    "drawers": [],
+    "doors": [
+      {"x_left_mm": 18, "x_right_mm": 598, "y_bottom_mm": 18, "height_mm": 1960, "door_thickness_mm": 18},
+      {"x_left_mm": 598, "x_right_mm": 1178, "y_bottom_mm": 18, "height_mm": 1960, "door_thickness_mm": 18}
+    ]
+  }
+}

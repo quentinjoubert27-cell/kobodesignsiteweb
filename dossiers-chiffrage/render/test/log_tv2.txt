@@ -1,0 +1,5 @@
+OK  /Users/quentinjoubert/Desktop/kobo-design/dossiers-chiffrage/render/test/out_tv2/img_demande.png
+OK  /Users/quentinjoubert/Desktop/kobo-design/dossiers-chiffrage/render/test/out_tv2/img_ambiance.png
+OK  /Users/quentinjoubert/Desktop/kobo-design/dossiers-chiffrage/render/test/out_tv2/img_cotes.png
+python3 make_visuals.py test/tv-340.json test/out_tv2  526.43s user 69.81s system 259% cpu 3:50.13 total
+FINI
