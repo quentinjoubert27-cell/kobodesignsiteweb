@@ -2851,7 +2851,7 @@
     cais.forEach(function (c) {
       var L = c.L * 10, H = c.H * 10, P = c.P * 10, suf = c.label ? ' — ' + c.label : '';
       var spec = buildTechSpec(dedupeEls(c.els), c.L, c.H, c.P);
-      var add = function (nom, l, w, qte, pu, note, sansChant) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: '', sansChant: !!sansChant }); };
+      var add = function (nom, l, w, qte, pu, note, sansChant) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: '', sansChant: !!sansChant, joue: /^Joue/.test(nom) }); };
       add('Montant', H, P, 2, puEl('montant', puStruct));
       add('Traverse', L, P, 2, puEl('traverse', puStruct));
       add('Fond', L, H, 1, puEl('fond', puStruct), '', true);   // fond du caisson : découpe seulement, pas de chant
@@ -2886,9 +2886,17 @@
     });
     // corrections manuelles du projet (quantité et prix modifiés dans la fiche)
     var ov = rc.tableur_overrides || {};
-    pieces.forEach(function (p) { p.key = p.nom + '|' + p.l + 'x' + p.w; p.qte0 = p.qte; p.pu0 = p.pu; p.l0 = p.l; p.w0 = p.w; var o = ov[p.key]; if (o) { if (o.q != null) p.qte = o.q; if (o.pu != null) p.pu = o.pu; if (o.l != null) p.l = o.l; if (o.w != null) p.w = o.w; } p.modif = !!(o && (o.q != null || o.pu != null || o.l != null || o.w != null || o.ml != null)); });
-    var ml = 0, surf = 0, bois = 0, decChant = 0;
-    pieces.forEach(function (p) { p.surface = p.qte * p.l * p.w / 1e6; p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.ml0 = p.ml; var oo = ov[p.key]; if (oo && oo.ml != null) p.ml = oo.ml; p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * (T.decoupe + (p.sansChant ? 0 : T.chant)); ml += p.ml; decChant += p.chantDecoupe; surf += p.surface; bois += p.bois; });
+    pieces.forEach(function (p) { p.key = p.nom + '|' + p.l + 'x' + p.w; p.qte0 = p.qte; p.pu0 = p.pu; p.l0 = p.l; p.w0 = p.w; var o = ov[p.key]; if (o) { if (o.q != null) p.qte = o.q; if (o.pu != null) p.pu = o.pu; if (o.l != null) p.l = o.l; if (o.w != null) p.w = o.w; } p.modif = !!(o && (o.q != null || o.pu != null || o.l != null || o.w != null || o.ml != null || o.cml != null)); });
+    var ml = 0, cml = 0, surf = 0, bois = 0, decChant = 0;
+    // découpe : tout le périmètre ; chant : tout le périmètre (4 côtés, façades comprises), sauf les joues (2 × la plus grande dimension) et le fond (aucun)
+    pieces.forEach(function (p) {
+      p.surface = p.qte * p.l * p.w / 1e6;
+      p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.ml0 = p.ml;
+      p.cml = p.sansChant ? 0 : (p.joue ? p.qte * 2 * Math.max(p.l, p.w) / 1000 : p.ml); p.cml0 = p.cml;
+      var oo = ov[p.key]; if (oo) { if (oo.ml != null) p.ml = oo.ml; if (oo.cml != null) p.cml = oo.cml; }
+      p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * T.decoupe + p.cml * T.chant;
+      ml += p.ml; cml += p.cml; decChant += p.chantDecoupe; surf += p.surface; bois += p.bois;
+    });
     var lignes = [
       { id: 'angles', lib: 'Usinage des angles', qte: angles, pu: T.angleUsinage },
       { id: 'usin_porte', lib: 'Usinage charnières côté porte', qte: nHinges, pu: T.usinCharnierePorte },
@@ -2903,7 +2911,7 @@
     lignes.forEach(function (l) { l.key = 'l:' + l.id; l.qte0 = l.qte; l.pu0 = l.pu; var o = ov[l.key]; if (o) { if (o.q != null) l.qte = o.q; if (o.pu != null) l.pu = o.pu; } l.modif = !!(o && (o.q != null || o.pu != null)); l.montant = l.qte * l.pu; });
     var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0);
     var coef = (g && g.coefficient_revente) || 2;
-    return { pieces: pieces, lignes: lignes, angles: angles, ml: ml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
+    return { pieces: pieces, lignes: lignes, angles: angles, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
   }
   function arrLen(a) { return Array.isArray(a) ? a.length : (a ? 1 : 0); }
 
@@ -2924,7 +2932,7 @@
     var base = (_tabRes.pieces.concat(_tabRes.lignes)).find(function (x) { return x.key === key; });
     if (!base) return;
     var o = Object.assign({}, ov[key] || {});
-    var b0 = f === 'q' ? base.qte0 : f === 'pu' ? base.pu0 : f === 'l' ? base.l0 : f === 'w' ? base.w0 : base.ml0;
+    var b0 = f === 'q' ? base.qte0 : f === 'pu' ? base.pu0 : f === 'l' ? base.l0 : f === 'w' ? base.w0 : f === 'ml' ? base.ml0 : base.cml0;
     if (!isFinite(v) || v < 0 || Math.abs(v - b0) < 1e-9) delete o[f]; else o[f] = v;
     if (Object.keys(o).length) ov[key] = o; else delete ov[key];
     currentProjetRc.tableur_overrides = ov;
@@ -2946,13 +2954,13 @@
     var eur = function (x) { return formatCurrency(x); }, f2 = function (x) { return (Math.round(x * 100) / 100).toLocaleString('fr-FR'); };
     var td = 'padding:4px 6px;text-align:right;white-space:nowrap;', th = 'padding:4px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(26,26,26,.5);text-align:right;';
     var inp = function (key, field, val, w, modif) { return '<input type="number" step="any" min="0" value="' + (Math.round(val * 1000) / 1000) + '" data-k="' + escHtml(key) + '" data-f="' + field + '" onchange="tableurOv(this)" style="width:' + w + 'px;padding:3px 5px;border:1.5px solid ' + (modif ? '#CD3E00' : 'rgba(26,26,26,.15)') + ';border-radius:5px;font:inherit;text-align:right;"/>'; };
-    var rows = r.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:4px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + inp(p.key, 'l', p.l, 62, p.l !== p.l0) + '</td><td style="' + td + '">' + inp(p.key, 'w', p.w, 62, p.w !== p.w0) + '</td><td style="' + td + '">' + inp(p.key, 'q', p.qte, 56, p.qte !== p.qte0) + '</td><td style="' + td + '">' + f2(p.surface) + ' m²</td><td style="' + td + '">' + inp(p.key, 'pu', p.pu, 64, p.pu !== p.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(p.bois) + '</td><td style="' + td + '">' + inp(p.key, 'ml', p.ml, 64, Math.abs(p.ml - p.ml0) > 1e-6) + ' ml</td><td style="' + td + 'font-weight:600;">' + eur(p.chantDecoupe) + '</td></tr>'; }).join('');
+    var rows = r.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:4px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + inp(p.key, 'l', p.l, 62, p.l !== p.l0) + '</td><td style="' + td + '">' + inp(p.key, 'w', p.w, 62, p.w !== p.w0) + '</td><td style="' + td + '">' + inp(p.key, 'q', p.qte, 56, p.qte !== p.qte0) + '</td><td style="' + td + '">' + f2(p.surface) + ' m²</td><td style="' + td + '">' + inp(p.key, 'pu', p.pu, 64, p.pu !== p.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(p.bois) + '</td><td style="' + td + '">' + inp(p.key, 'ml', p.ml, 58, Math.abs(p.ml - p.ml0) > 1e-6) + ' ml</td><td style="' + td + '">' + inp(p.key, 'cml', p.cml, 58, Math.abs(p.cml - p.cml0) > 1e-6) + ' ml</td><td style="' + td + 'font-weight:600;">' + eur(p.chantDecoupe) + '</td></tr>'; }).join('');
     var nbModif = r.pieces.filter(function (p) { return p.modif; }).length + r.lignes.filter(function (l) { return l.modif; }).length;
     var ecart = prixAncien ? Math.round((r.vente - prixAncien) / prixAncien * 1000) / 10 : null;
     return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(205,62,0,.35);border-radius:10px;font-size:12px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:13px;">Calcul du prix (méthode tableur)</b><button class="btn btn-ghost btn-sm" onclick="downloadTableurCsv()">Télécharger (CSV)</button></div>' +
-      '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe/chant</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + rows +
-      '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
+      '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe</th><th style="' + th + '">Chant</th><th style="' + th + '">Découpe + chant</th></tr></thead><tbody>' + rows +
+      '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + f2(r.cml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
       '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
       '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + '<button class="btn btn-ghost btn-sm" onclick="ouvrirEditeurElements()" title="Avancé : remplacer la liste des éléments du meuble (sauvegarde faite avant)">Modifier les éléments (avancé)</button>' + (portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
@@ -2961,8 +2969,8 @@
   }
   function downloadTableurCsv() {
     if (!_tabRes) return;
-    var f = function (x) { return String(Math.round(x * 100) / 100).replace('.', ','); }, out = [['Pièce', 'Longueur mm', 'Largeur mm', 'Qté', 'Surface m²', 'Prix m²', 'Bois €', 'ml découpe+chant', 'Découpe+chant €']];
-    _tabRes.pieces.forEach(function (p) { out.push([p.nom, p.l, p.w, p.qte, f(p.surface), f(p.pu), f(p.bois), f(p.ml), f(p.chantDecoupe)]); });
+    var f = function (x) { return String(Math.round(x * 100) / 100).replace('.', ','); }, out = [['Pièce', 'Longueur mm', 'Largeur mm', 'Qté', 'Surface m²', 'Prix m²', 'Bois €', 'ml découpe', 'ml chant', 'Découpe+chant €']];
+    _tabRes.pieces.forEach(function (p) { out.push([p.nom, p.l, p.w, p.qte, f(p.surface), f(p.pu), f(p.bois), f(p.ml), f(p.cml), f(p.chantDecoupe)]); });
     _tabRes.lignes.forEach(function (l) { out.push([l.lib + ' (qté ' + l.qte + ' × ' + f(l.pu) + ' €)', '', '', '', '', '', '', '', f(l.montant)]); });
     out.push(['Total fabrication', '', '', '', '', '', '', '', f(_tabRes.cout)], ['Vente HT (coef ' + _tabRes.coef + ')', '', '', '', '', '', '', '', f(_tabRes.vente)]);
     var csv = '﻿' + out.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
