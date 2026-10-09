@@ -2837,7 +2837,7 @@
     });
     // corrections manuelles du projet (quantité et prix modifiés dans la fiche)
     var ov = rc.tableur_overrides || {};
-    pieces.forEach(function (p) { p.key = p.nom + '|' + p.l + 'x' + p.w; p.qte0 = p.qte; p.pu0 = p.pu; var o = ov[p.key]; if (o) { if (o.q != null) p.qte = o.q; if (o.pu != null) p.pu = o.pu; } p.modif = !!(o && (o.q != null || o.pu != null)); });
+    pieces.forEach(function (p) { p.key = p.nom + '|' + p.l + 'x' + p.w; p.qte0 = p.qte; p.pu0 = p.pu; p.l0 = p.l; p.w0 = p.w; var o = ov[p.key]; if (o) { if (o.q != null) p.qte = o.q; if (o.pu != null) p.pu = o.pu; if (o.l != null) p.l = o.l; if (o.w != null) p.w = o.w; } p.modif = !!(o && (o.q != null || o.pu != null || o.l != null || o.w != null)); });
     var ml = 0, surf = 0, bois = 0, decChant = 0;
     pieces.forEach(function (p) { p.surface = p.qte * p.l * p.w / 1e6; p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * (T.decoupe + (p.sansChant ? 0 : T.chant)); ml += p.ml; decChant += p.chantDecoupe; surf += p.surface; bois += p.bois; });
     var lignes = [
@@ -2875,7 +2875,7 @@
     var base = (_tabRes.pieces.concat(_tabRes.lignes)).find(function (x) { return x.key === key; });
     if (!base) return;
     var o = Object.assign({}, ov[key] || {});
-    var b0 = f === 'q' ? base.qte0 : base.pu0;
+    var b0 = f === 'q' ? base.qte0 : f === 'pu' ? base.pu0 : f === 'l' ? base.l0 : base.w0;
     if (!isFinite(v) || v < 0 || Math.abs(v - b0) < 1e-9) delete o[f]; else o[f] = v;
     if (Object.keys(o).length) ov[key] = o; else delete ov[key];
     currentProjetRc.tableur_overrides = ov;
@@ -2897,7 +2897,7 @@
     var eur = function (x) { return formatCurrency(x); }, f2 = function (x) { return (Math.round(x * 100) / 100).toLocaleString('fr-FR'); };
     var td = 'padding:4px 6px;text-align:right;white-space:nowrap;', th = 'padding:4px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(26,26,26,.5);text-align:right;';
     var inp = function (key, field, val, w, modif) { return '<input type="number" step="any" min="0" value="' + (Math.round(val * 1000) / 1000) + '" data-k="' + escHtml(key) + '" data-f="' + field + '" onchange="tableurOv(this)" style="width:' + w + 'px;padding:3px 5px;border:1.5px solid ' + (modif ? '#CD3E00' : 'rgba(26,26,26,.15)') + ';border-radius:5px;font:inherit;text-align:right;"/>'; };
-    var rows = r.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:4px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + p.l + '</td><td style="' + td + '">' + p.w + '</td><td style="' + td + '">' + inp(p.key, 'q', p.qte, 56, p.qte !== p.qte0) + '</td><td style="' + td + '">' + f2(p.surface) + ' m²</td><td style="' + td + '">' + inp(p.key, 'pu', p.pu, 64, p.pu !== p.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(p.bois) + '</td><td style="' + td + '">' + f2(p.ml) + ' ml</td><td style="' + td + 'font-weight:600;">' + eur(p.chantDecoupe) + '</td></tr>'; }).join('');
+    var rows = r.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:4px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + inp(p.key, 'l', p.l, 62, p.l !== p.l0) + '</td><td style="' + td + '">' + inp(p.key, 'w', p.w, 62, p.w !== p.w0) + '</td><td style="' + td + '">' + inp(p.key, 'q', p.qte, 56, p.qte !== p.qte0) + '</td><td style="' + td + '">' + f2(p.surface) + ' m²</td><td style="' + td + '">' + inp(p.key, 'pu', p.pu, 64, p.pu !== p.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(p.bois) + '</td><td style="' + td + '">' + f2(p.ml) + ' ml</td><td style="' + td + 'font-weight:600;">' + eur(p.chantDecoupe) + '</td></tr>'; }).join('');
     var nbModif = r.pieces.filter(function (p) { return p.modif; }).length + r.lignes.filter(function (l) { return l.modif; }).length;
     var ecart = prixAncien ? Math.round((r.vente - prixAncien) / prixAncien * 1000) / 10 : null;
     return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(205,62,0,.35);border-radius:10px;font-size:12px;">' +
@@ -2905,7 +2905,7 @@
       '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe/chant</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
       '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
-      '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + '</div>' +
+      '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + '</div>' +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
       '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
       (r.warn.length ? '<div style="margin-top:6px;color:#b45309;">⚠ ' + r.warn.map(escHtml).join('<br>⚠ ') + '</div>' : '') + '</div>';
