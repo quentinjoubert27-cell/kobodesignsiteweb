@@ -1793,7 +1793,14 @@
 
     return `
       <p style="font-size:12.5px;color:rgba(26,26,26,.55);margin:0 0 14px;line-height:1.6;">Prix des matériaux (€/m²) utilisés par le calcul « tableur ». Les prix de chant, découpe, vis, tourillons, charnières, tiroirs et usinages sont ceux du tableur (intégrés au calcul).</p>
-      ${singlePriceRow('Structure du meuble (montants, traverses, étagères, intercalaires)', 'panels_caisson_m2|Caisson', 'm²')}
+      ${singlePriceRow('Structure du meuble (prix de base : montants, traverses, étagères, intercalaires, fond)', 'panels_caisson_m2|Caisson', 'm²')}
+      <details style="margin-bottom:14px;" open>
+        <summary style="cursor:pointer;font-weight:600;font-size:14px;padding:10px 0;">Prix au m² par élément <span style="font-weight:400;color:rgba(26,26,26,.45);">(laisser vide = prix de base ci-dessus ; les joues suivent le prix des façades)</span></summary>
+        <div style="padding:4px 4px 8px;">${['montant:Montants (côtés)', 'traverse:Traverses (dessus / dessous)', 'etagere:Étagères', 'intercalaire:Intercalaires', 'fond:Fond du meuble', 'joue:Joues (dessus et côtés)'].map(function (x) {
+          var k = x.split(':')[0], lab = x.split(':')[1], v = (p.tableur_m2 || {})[k];
+          return `<div style="${rowStyle}"><span style="font-size:13px;">${escHtml(lab)}</span><input type="number" step="0.01" class="mp-tab-input" data-el="${k}" value="${v != null ? v : ''}" placeholder="€/m²" style="${inputStyle}"/></div>`;
+        }).join('')}</div>
+      </details>
       ${matSection('Façades et joues visibles (portes, tiroirs, joues de finition)', 'finition_m2', 'm²', MATS_CAIS_NAMES)}
       ${matSection('Plan de travail', 'panels_plan_m2', 'm²', MATS_PLAN_NAMES)}
       <div class="detail-panel" style="padding:16px 20px;margin-top:8px;">
@@ -1809,7 +1816,9 @@
       var v = parseFloat(inp.value);
       if (!isNaN(v)) panelM2[inp.dataset.key] = v; else delete panelM2[inp.dataset.key];
     });
-    var prices = Object.assign({}, old, { panel_m2: panelM2, coefficient_revente: parseFloat(document.getElementById('mp-coefficient').value) || 2 });
+    var tab = {};
+    document.querySelectorAll('.mp-tab-input').forEach(function (inp) { var v = parseFloat(inp.value); if (!isNaN(v) && v > 0) tab[inp.dataset.el] = v; });
+    var prices = Object.assign({}, old, { tableur_m2: tab, panel_m2: panelM2, coefficient_revente: parseFloat(document.getElementById('mp-coefficient').value) || 2 });
     try {
       const { error } = await sb.from('tarifs_globaux').upsert({ id: 1, prices: prices, updated_at: new Date().toISOString() });
       if (error) throw error;
@@ -2783,6 +2792,9 @@
     var pm = (g && g.panel_m2) || {};
     var puStruct = pm['panels_caisson_m2|Caisson'] || 0;
     var puFacade = pm['finition_m2|' + (m.matLabel || '')] || pm['panels_porte_m2|' + (m.matLabel || '')] || puStruct;
+    // prix au m² réglables par type de pièce (Matériaux & Prix) ; à défaut : prix de structure, ou prix des façades pour les joues
+    var pe = (g && g.tableur_m2) || {};
+    var puEl = function (k, def) { return pe[k] > 0 ? pe[k] : def; };
     var pieces = [], angles = 0, nHinges = 0, nDoors = 0, nDrawers = 0, nBars = 0;
     var hingesFor = function (hmm) { return hmm <= 1000 ? 2 : hmm <= 1500 ? 3 : hmm <= 1900 ? 4 : 5; };   // règle de l'atelier
     var near = function (a, b) { return Math.abs(a - b) <= 8; };
@@ -2797,20 +2809,21 @@
     cais.forEach(function (c) {
       var L = c.L * 10, H = c.H * 10, P = c.P * 10, suf = c.label ? ' — ' + c.label : '';
       var spec = buildTechSpec(dedupeEls(c.els), c.L, c.H, c.P);
-      var add = function (nom, l, w, qte, pu, note) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: '' }); };
-      add('Montant', H, P, 2, puStruct);
-      add('Traverse', L, P, 2, puStruct);
+      var add = function (nom, l, w, qte, pu, note, sansChant) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, pu: pu, note: '', sansChant: !!sansChant }); };
+      add('Montant', H, P, 2, puEl('montant', puStruct));
+      add('Traverse', L, P, 2, puEl('traverse', puStruct));
+      add('Fond', L, H, 1, puEl('fond', puStruct), '', true);   // fond du caisson : découpe seulement, pas de chant
       // joues de finition : sur chaque caisson, une au-dessus et une de chaque côté (gauche, droite), au prix des façades
-      add('Joue gauche', H, P, 1, puFacade);
-      add('Joue droite', H, P, 1, puFacade);
-      add('Joue dessus', L, P, 1, puFacade);
+      add('Joue gauche', H, P, 1, puEl('joue', puFacade));
+      add('Joue droite', H, P, 1, puEl('joue', puFacade));
+      add('Joue dessus', L, P, 1, puEl('joue', puFacade));
       var shelves = spec.shelves || [];
       var full = shelves.filter(function (sh) { return (sh.x_right_mm - sh.x_left_mm) >= (L - 2 * 18 - 4); });
-      add('Étagères', L - 2 * E, P, full.length, puStruct);
-      shelves.filter(function (sh) { return full.indexOf(sh) < 0; }).forEach(function (sh, i) { add('Étagère partielle ' + (i + 1), sh.x_right_mm - sh.x_left_mm, P, 1, puStruct); });
+      add('Étagères', L - 2 * E, P, full.length, puEl('etagere', puStruct));
+      shelves.filter(function (sh) { return full.indexOf(sh) < 0; }).forEach(function (sh, i) { add('Étagère partielle ' + (i + 1), sh.x_right_mm - sh.x_left_mm, P, 1, puEl('etagere', puStruct)); });
       (spec.separators || []).forEach(function (sp, i) {
         var hs = sp.y_top_mm - sp.y_bottom_mm, pleine = hs >= (H - 2 * 18 - 4);
-        add('Intercalaire ' + (i + 1) + (sp.doubled ? ' (doublé)' : ''), pleine ? H - 2 * E : hs, P, 1, puStruct, 'dimensions à confirmer');
+        add('Intercalaire ' + (i + 1) + (sp.doubled ? ' (doublé)' : ''), pleine ? H - 2 * E : hs, P, 1, puEl('intercalaire', puStruct));
       });
       // façades en recouvrement : +19 mm sur chaque côté contre un montant / traverse, −1 mm de jeu côté porte voisine
       var doors = spec.doors || [], drawers = spec.drawers || [];
@@ -2829,8 +2842,8 @@
       nDoors += doors.length; nDrawers += drawers.length; nBars += (spec.bars || []).length;
       doors.forEach(function (dd) { nHinges += hingesFor(dd.height_mm + 36); });
     });
-    var ml = 0, surf = 0, bois = 0;
-    pieces.forEach(function (p) { p.surface = p.qte * p.l * p.w / 1e6; p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * (T.decoupe + T.chant); ml += p.ml; surf += p.surface; bois += p.bois; });
+    var ml = 0, surf = 0, bois = 0, decChant = 0;
+    pieces.forEach(function (p) { p.surface = p.qte * p.l * p.w / 1e6; p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * (T.decoupe + (p.sansChant ? 0 : T.chant)); ml += p.ml; decChant += p.chantDecoupe; surf += p.surface; bois += p.bois; });
     var lignes = [
       { lib: 'Usinage des angles (' + angles + ' × 10 €)', montant: angles * T.angleUsinage },
       { lib: 'Usinage charnières côté porte (' + nHinges + ' × 2,5 €)', montant: nHinges * T.usinCharnierePorte },
@@ -2842,9 +2855,9 @@
       { lib: 'Tringles (' + nBars + ' × 20 €, tout compris)', montant: nBars * T.tringle },
       { lib: 'Kits tiroirs (' + nDrawers + ' × 90 €)', montant: nDrawers * T.kitTiroir }
     ];
-    var cout = bois + ml * (T.decoupe + T.chant) + lignes.reduce(function (a, l) { return a + l.montant; }, 0);
+    var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0);
     var coef = (g && g.coefficient_revente) || 2;
-    return { pieces: pieces, lignes: lignes, angles: angles, ml: ml, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
+    return { pieces: pieces, lignes: lignes, angles: angles, ml: ml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
   }
   function arrLen(a) { return Array.isArray(a) ? a.length : (a ? 1 : 0); }
 
@@ -2861,7 +2874,7 @@
     return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(205,62,0,.35);border-radius:10px;font-size:12px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:13px;">Calcul du prix (méthode tableur)</b><button class="btn btn-ghost btn-sm" onclick="downloadTableurCsv()">Télécharger (CSV)</button></div>' +
       '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe/chant</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + rows +
-      '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + eur(r.ml * (TABLEUR.decoupe + TABLEUR.chant)) + '</td></tr></tbody></table></div>' +
+      '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
       '<div style="margin-top:6px;">' + r.lignes.map(function (l) { return '<div style="display:flex;justify-content:space-between;padding:1px 0;"><span>' + escHtml(l.lib) + '</span><span>' + eur(l.montant) + '</span></div>'; }).join('') + '</div>' +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
       '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
