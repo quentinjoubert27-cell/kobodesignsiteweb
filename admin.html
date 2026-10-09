@@ -2877,9 +2877,9 @@
     });
     // corrections manuelles du projet (quantité et prix modifiés dans la fiche)
     var ov = rc.tableur_overrides || {};
-    pieces.forEach(function (p) { p.key = p.nom + '|' + p.l + 'x' + p.w; p.qte0 = p.qte; p.pu0 = p.pu; p.l0 = p.l; p.w0 = p.w; var o = ov[p.key]; if (o) { if (o.q != null) p.qte = o.q; if (o.pu != null) p.pu = o.pu; if (o.l != null) p.l = o.l; if (o.w != null) p.w = o.w; } p.modif = !!(o && (o.q != null || o.pu != null || o.l != null || o.w != null)); });
+    pieces.forEach(function (p) { p.key = p.nom + '|' + p.l + 'x' + p.w; p.qte0 = p.qte; p.pu0 = p.pu; p.l0 = p.l; p.w0 = p.w; var o = ov[p.key]; if (o) { if (o.q != null) p.qte = o.q; if (o.pu != null) p.pu = o.pu; if (o.l != null) p.l = o.l; if (o.w != null) p.w = o.w; } p.modif = !!(o && (o.q != null || o.pu != null || o.l != null || o.w != null || o.ml != null)); });
     var ml = 0, surf = 0, bois = 0, decChant = 0;
-    pieces.forEach(function (p) { p.surface = p.qte * p.l * p.w / 1e6; p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * (T.decoupe + (p.sansChant ? 0 : T.chant)); ml += p.ml; decChant += p.chantDecoupe; surf += p.surface; bois += p.bois; });
+    pieces.forEach(function (p) { p.surface = p.qte * p.l * p.w / 1e6; p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.ml0 = p.ml; var oo = ov[p.key]; if (oo && oo.ml != null) p.ml = oo.ml; p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * (T.decoupe + (p.sansChant ? 0 : T.chant)); ml += p.ml; decChant += p.chantDecoupe; surf += p.surface; bois += p.bois; });
     var lignes = [
       { id: 'angles', lib: 'Usinage des angles', qte: angles, pu: T.angleUsinage },
       { id: 'usin_porte', lib: 'Usinage charnières côté porte', qte: nHinges, pu: T.usinCharnierePorte },
@@ -2915,7 +2915,7 @@
     var base = (_tabRes.pieces.concat(_tabRes.lignes)).find(function (x) { return x.key === key; });
     if (!base) return;
     var o = Object.assign({}, ov[key] || {});
-    var b0 = f === 'q' ? base.qte0 : f === 'pu' ? base.pu0 : f === 'l' ? base.l0 : base.w0;
+    var b0 = f === 'q' ? base.qte0 : f === 'pu' ? base.pu0 : f === 'l' ? base.l0 : f === 'w' ? base.w0 : base.ml0;
     if (!isFinite(v) || v < 0 || Math.abs(v - b0) < 1e-9) delete o[f]; else o[f] = v;
     if (Object.keys(o).length) ov[key] = o; else delete ov[key];
     currentProjetRc.tableur_overrides = ov;
@@ -2937,7 +2937,7 @@
     var eur = function (x) { return formatCurrency(x); }, f2 = function (x) { return (Math.round(x * 100) / 100).toLocaleString('fr-FR'); };
     var td = 'padding:4px 6px;text-align:right;white-space:nowrap;', th = 'padding:4px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(26,26,26,.5);text-align:right;';
     var inp = function (key, field, val, w, modif) { return '<input type="number" step="any" min="0" value="' + (Math.round(val * 1000) / 1000) + '" data-k="' + escHtml(key) + '" data-f="' + field + '" onchange="tableurOv(this)" style="width:' + w + 'px;padding:3px 5px;border:1.5px solid ' + (modif ? '#CD3E00' : 'rgba(26,26,26,.15)') + ';border-radius:5px;font:inherit;text-align:right;"/>'; };
-    var rows = r.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:4px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + inp(p.key, 'l', p.l, 62, p.l !== p.l0) + '</td><td style="' + td + '">' + inp(p.key, 'w', p.w, 62, p.w !== p.w0) + '</td><td style="' + td + '">' + inp(p.key, 'q', p.qte, 56, p.qte !== p.qte0) + '</td><td style="' + td + '">' + f2(p.surface) + ' m²</td><td style="' + td + '">' + inp(p.key, 'pu', p.pu, 64, p.pu !== p.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(p.bois) + '</td><td style="' + td + '">' + f2(p.ml) + ' ml</td><td style="' + td + 'font-weight:600;">' + eur(p.chantDecoupe) + '</td></tr>'; }).join('');
+    var rows = r.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:4px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + inp(p.key, 'l', p.l, 62, p.l !== p.l0) + '</td><td style="' + td + '">' + inp(p.key, 'w', p.w, 62, p.w !== p.w0) + '</td><td style="' + td + '">' + inp(p.key, 'q', p.qte, 56, p.qte !== p.qte0) + '</td><td style="' + td + '">' + f2(p.surface) + ' m²</td><td style="' + td + '">' + inp(p.key, 'pu', p.pu, 64, p.pu !== p.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(p.bois) + '</td><td style="' + td + '">' + inp(p.key, 'ml', p.ml, 64, Math.abs(p.ml - p.ml0) > 1e-6) + ' ml</td><td style="' + td + 'font-weight:600;">' + eur(p.chantDecoupe) + '</td></tr>'; }).join('');
     var nbModif = r.pieces.filter(function (p) { return p.modif; }).length + r.lignes.filter(function (l) { return l.modif; }).length;
     var ecart = prixAncien ? Math.round((r.vente - prixAncien) / prixAncien * 1000) / 10 : null;
     return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(205,62,0,.35);border-radius:10px;font-size:12px;">' +
