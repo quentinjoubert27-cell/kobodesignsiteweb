@@ -1,0 +1,12 @@
+dossier;code;destinataire;texte;action
+meuble-tv-190x243;A1;client;Aucune niche ni élément TV, façade entièrement fermée (seul un passe-câble Ø60 est prévu);Demander taille et position de l'écran, appareils à loger, besoin d'une niche ouverte
+meuble-tv-190x243;A2;client;Compartiment de 1800 mm (col. droite, y 18-1818) sans aménagement;Demander l'usage souhaité
+meuble-tv-190x243;A6;client;10 portes sans poignée ni système d'ouverture;Poignées ou ouverture par pression à choisir
+meuble-tv-190x243;A8;client;matId 0 (« Chêne ») absent du tableau des décors;Décor à confirmer avec le client puis référence fournisseur
+meuble-tv-190x243;A3;interne;Étagères E1 (931), E2 (915), E3 (931) de portée > 900 mm sans appui central;Vérifier la flèche si chargées ; sinon renfort ou 25 mm
+meuble-tv-190x243;A4;interne;Fond 8 + étagère 512 + porte 18 = 538 mm > 530 mm hors-tout;Cohérent seulement si fond en feuillure ; sinon P hors-tout = 538 mm
+meuble-tv-190x243;A5;interne;H/P = 2430/530 = 4,58 (4,74 plinthe comprise);Fixation murale indispensable, déjà prévue
+meuble-tv-190x243;A7;interne;Écarts elements/technical_spec : portes droites à 1878 au lieu de 1882 (4 mm), portes hautes à 2408 au lieu de 2412 (4 mm), étagère basse pleine largeur dans technical_spec mais col. gauche seule dans elements;technical_spec retenu pour les cotes ; étagères reprises d'elements (voir fiche §1)
+meuble-tv-190x243;INC;interne;technical_spec incohérent : séparateur et étagère haute en double, étagères pleine largeur traversant un séparateur pleine hauteur, zone bay_2 de largeur nulle, coordinates_frame « interior » alors que les valeurs sont hors-tout;Corriger l'export du configurateur ; nomenclature établie sur l'interprétation physique
+meuble-tv-190x243;INC;interne;La règle d'ouverture §5 donne G,G,D,D : les portes 488-958 et 958-1418 auraient leurs charnières côté x = 488 / 1418, où aucun panneau ne les porte;Ouverture retenue en paires G/D par colonne, à valider
+meuble-tv-190x243;INC;interne;Hauteur hors-tout 2510 mm ; diagonale de la joue 2487 mm (+ 80 de pieds au redressement);Vérifier hauteur sous plafond et montage debout sur place

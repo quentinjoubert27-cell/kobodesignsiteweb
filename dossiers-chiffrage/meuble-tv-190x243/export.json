@@ -1,0 +1,71 @@
+{
+ "technical_spec": {
+  "overall_mm": {
+   "width": 1900,
+   "height": 2430,
+   "depth": 530
+  },
+  "doors": [
+   {
+    "x_left_mm": 958,
+    "x_right_mm": 1418,
+    "y_bottom_mm": 18,
+    "height_mm": 1800
+   },
+   {
+    "x_left_mm": 1418,
+    "x_right_mm": 1878,
+    "y_bottom_mm": 18,
+    "height_mm": 1800
+   },
+   {
+    "x_left_mm": 958,
+    "x_right_mm": 1418,
+    "y_bottom_mm": 1818,
+    "height_mm": 590
+   },
+   {
+    "x_left_mm": 1418,
+    "x_right_mm": 1878,
+    "y_bottom_mm": 1818,
+    "height_mm": 590
+   },
+   {
+    "x_left_mm": 18,
+    "x_right_mm": 488,
+    "y_bottom_mm": 1818,
+    "height_mm": 590
+   },
+   {
+    "x_left_mm": 488,
+    "x_right_mm": 958,
+    "y_bottom_mm": 1818,
+    "height_mm": 590
+   },
+   {
+    "x_left_mm": 18,
+    "x_right_mm": 488,
+    "y_bottom_mm": 898,
+    "height_mm": 920
+   },
+   {
+    "x_left_mm": 488,
+    "x_right_mm": 958,
+    "y_bottom_mm": 898,
+    "height_mm": 920
+   },
+   {
+    "x_left_mm": 18,
+    "x_right_mm": 488,
+    "y_bottom_mm": 18,
+    "height_mm": 880
+   },
+   {
+    "x_left_mm": 488,
+    "x_right_mm": 958,
+    "y_bottom_mm": 18,
+    "height_mm": 880
+   }
+  ]
+ }
+}

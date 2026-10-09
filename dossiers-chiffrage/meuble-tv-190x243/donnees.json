@@ -1,0 +1,73 @@
+{
+  "titre_couverture": "Meuble TV sur mesure",
+  "client": "[client]",
+  "sous_titre": "Proposition d'aménagement",
+  "demande_bullets": [
+    "Meuble TV sur mesure, toute hauteur",
+    "2 colonnes, 5 compartiments, 10 portes",
+    "Caisson 2430 × 1900 × 530 mm (H × L × P)",
+    "Finition chêne, décor à confirmer"
+  ],
+  "demande_paragraphe": [
+    "Un meuble TV toute hauteur, de 1,90 m de",
+    "large, entièrement fermé par des portes,",
+    "avec un passe-câble pour les branchements",
+    "et une finition chêne."
+  ],
+  "img_demande": "img_demande.png",
+  "esquisses": [
+    {
+      "etiquette": "ESQUISSE 1",
+      "esquisse_titre": "Deux colonnes, dix portes",
+      "esquisse_bullet_1": "Colonne gauche : 3 niveaux, 6 portes",
+      "esquisse_bullet_2": "Colonne droite : 2 niveaux, 4 portes",
+      "esquisse_note": "Hauteur totale plinthe comprise : 2510 mm",
+      "esquisse_bullets_3": [
+        "Plinthe de 80 mm sur pieds réglables",
+        "Fixation murale anti-basculement prévue"
+      ],
+      "esquisse_paragraphe": [
+        "<b>Dix portes battantes</b> sur toute la façade",
+        "Trois étagères fixes, une cloison centrale",
+        "Un passe-câble pour les branchements",
+        "Finition chêne sur toutes les faces vues"
+      ],
+      "prix": "[prix]",
+      "img_ambiance": "img_ambiance.png",
+      "img_cotes": ""
+    },
+    {
+      "etiquette": "ESQUISSE 2",
+      "esquisse_titre": "Variante plinthe comprise",
+      "esquisse_bullet_1": "Hauteur totale ramenée à 2430 mm",
+      "esquisse_bullet_2": "Caisson de 2350 mm, portes basses réduites",
+      "esquisse_note": "Hauteur totale plinthe comprise : 2430 mm",
+      "esquisse_bullets_3": [
+        "Plinthe de 80 mm sur pieds réglables",
+        "Fixation murale anti-basculement prévue"
+      ],
+      "esquisse_paragraphe": [
+        "<b>Dix portes battantes</b> sur toute la façade",
+        "Portes basses raccourcies de 80 mm",
+        "Même aménagement, même finition",
+        "Un passe-câble pour les branchements"
+      ],
+      "prix": "[prix]",
+      "img_ambiance": "img_ambiance.png",
+      "img_cotes": ""
+    }
+  ],
+  "confirmer_items": [
+    "Le meuble est fermé sur toute sa façade : où placer\nl'écran, et quels appareils faut-il loger ?",
+    "La colonne droite offre un volume de 1800 mm de haut\nsans étagère : quel usage prévoyez-vous ?",
+    "Ouverture des portes : poignées (modèle à choisir)\nou ouverture par simple pression ?",
+    "Finition chêne : pouvez-vous nous confirmer\nle décor souhaité ?",
+    "Passe-câble : à quel endroit le souhaitez-vous\n(derrière l'écran, en bas du meuble…) ?",
+    "Hauteur totale : 2510 mm plinthe comprise. Quelle est\nvotre hauteur sous plafond ? Variante à 2430 mm possible.",
+    "Nature du mur derrière le meuble (béton, brique,\nplaque de plâtre…) pour la fixation ?"
+  ],
+  "confirmer_note": "Vos réponses nous permettront de finaliser l'offre chiffrée.",
+  "conditions_premiere_phrase": "La fixation murale du meuble est prévue.",
+  "conditions": "[texte du modèle repris tel quel]",
+  "titre_pdf": "Meuble TV sur mesure – [client]"
+}

@@ -506,8 +506,11 @@ def configure_render(scene, w, h, samples, scale):
     except Exception as e:
         print("GPU indisponible, rendu CPU :", e)
     print("PÉRIPHÉRIQUE DE RENDU :", cy.device)
-    cy.samples = samples; cy.use_denoising = True; cy.use_adaptive_sampling = True; cy.adaptive_threshold = 0.02
+    cy.samples = samples; cy.use_denoising = (os.environ.get('KOBO_NODENOISE') != '1'); cy.use_adaptive_sampling = True; cy.adaptive_threshold = 0.02
     try: cy.denoiser = "OPENIMAGEDENOISE"
+    except Exception: pass
+    try:   # débruitage allégé : le plus gros poste de temps du rendu
+        cy.denoising_input_passes = "RGB"; cy.denoising_prefilter = "FAST"
     except Exception: pass
     cy.max_bounces = 6
     scene.render.resolution_x = int(w * scale); scene.render.resolution_y = int(h * scale)
@@ -636,7 +639,7 @@ def render_parts(opt, cfg, out):
         o = add_box("plan", -L / 2, L / 2, -P / 2, P / 2, 0.0, ep, pm, "h", rnd)
         _studio(scene, max(L, P))
         cam = make_camera(scene, (0, 0, 0), (0, 0, 0), lens=45)
-        configure_render(scene, 1200, 800, min(opt["samples"], 14), opt["scale"])
+        configure_render(scene, 960, 640, min(opt["samples"], 14), opt["scale"])
         fit_camera(scene, cam, [o], (0, 0, ep / 2), 0.62, (0.55, -1.0, 0.75), fill_w=0.70)
         scene.render.filepath = os.path.join(out, "rendu-plan.png")
         bpy.ops.render.render(write_still=True)
@@ -673,7 +676,7 @@ def render_parts(opt, cfg, out):
             hz = max(v.z for v in [ob.matrix_world @ Vector(c) for ob in meshes for c in ob.bound_box]) / 2
             _studio(scene, max(VW, VD))
             cam = make_camera(scene, (0, 0, 0), (0, 0, 0), lens=45)
-            configure_render(scene, 1200, 800, min(opt["samples"], 14), opt["scale"])
+            configure_render(scene, 960, 640, min(opt["samples"], 14), opt["scale"])
             fit_camera(scene, cam, meshes, (0, 0, hz), 0.62, (0.5, -1.0, 0.85), fill_w=0.70)
             scene.render.filepath = os.path.join(out, "rendu-vasque.png")
             bpy.ops.render.render(write_still=True)

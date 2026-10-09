@@ -29,7 +29,7 @@ def rendre(cfg_text):
         js = Path(tmp) / "meuble.json"
         js.write_text(cfg_text, encoding="utf-8")
         has_plan = bool((json.loads(cfg_text).get("plan") or {}).get("L"))
-        r = subprocess.run([BLENDER, "-b", "-P", str(HERE / "render" / "render_meuble.py"), "--", str(js), tmp, "--only", "pair,parts" if has_plan else "pair", "--samples", "32"],
+        r = subprocess.run([BLENDER, "-b", "-P", str(HERE / "render" / "render_meuble.py"), "--", str(js), tmp, "--only", "pair,parts" if has_plan else "pair", "--samples", "16"],
                            capture_output=True, text=True, timeout=300)
         out = {}
         for k, f in (("ferme", "rendu-ferme.png"), ("ouvert", "rendu-ouvert.png")):
