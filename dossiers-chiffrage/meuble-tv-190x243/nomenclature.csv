@@ -1,0 +1,29 @@
+dossier;repere;designation;quantite;longueur_mm;largeur_mm;epaisseur_mm;sens_decor;chant_abs_ml;remarque
+meuble-tv-190x243;J1;Joue gauche;1;2430;530;18;vertical;2,96;chant avant + dessus
+meuble-tv-190x243;J2;Joue droite;1;2430;530;18;vertical;2,96;chant avant + dessus
+meuble-tv-190x243;T1;Traverse haute;1;1864;530;18;horizontal;1,864;chant avant
+meuble-tv-190x243;T2;Traverse basse;1;1864;530;18;horizontal;1,864;chant avant
+meuble-tv-190x243;S1;Séparateur central pleine hauteur;1;2394;512;18;vertical;2,394;profondeur 512 supposée (non fournie) ; doublon technical_spec supprimé
+meuble-tv-190x243;E1;Étagère fixe haute col. gauche;1;931;512;18;horizontal;0,931;y 1818-1836 ; portée 931 > 900 (A3)
+meuble-tv-190x243;E2;Étagère fixe haute col. droite;1;915;512;18;horizontal;0,915;y 1818-1836 ; portée 915 > 900 (A3)
+meuble-tv-190x243;E3;Étagère fixe basse col. gauche;1;931;512;18;horizontal;0,931;y 898-916 ; portée 931 > 900 (A3) ; technical_spec la donne pleine largeur (A7)
+meuble-tv-190x243;F1;Fond;1;2430;1900;8;vertical;0;applique par défaut ; feuillure à trancher (A4)
+meuble-tv-190x243;PO1;Portes basses col. gauche;2;880;470;18;vertical;2,70;ouvertures G / D ; 2 charnières chacune
+meuble-tv-190x243;PO2;Portes milieu col. gauche;2;920;470;18;vertical;2,78;ouvertures G / D ; 2 charnières chacune
+meuble-tv-190x243;PO3;Portes hautes col. gauche;2;590;470;18;vertical;2,12;ouvertures G / D ; 2 charnières chacune
+meuble-tv-190x243;PO4;Portes basses col. droite;2;1800;460;18;vertical;4,52;ouvertures G / D ; 4 charnières chacune
+meuble-tv-190x243;PO5;Portes hautes col. droite;2;590;460;18;vertical;2,10;ouvertures G / D ; 2 charnières chacune
+meuble-tv-190x243;PL1;Plinthe;1;1900;80;18;horizontal;2,06;façade seule, retrait 30, sans retours
+meuble-tv-190x243;Q01;Charnières;24;;;;;;2 par porte ≤ 1000 mm, 4 par porte de 1800 mm ; à valider avec l'abaque
+meuble-tv-190x243;Q02;Embases de charnière;24;;;;;;1 par charnière ; 4 paires dos à dos sur le séparateur (voir fiche)
+meuble-tv-190x243;Q03;Excentriques;24;;;;;;12 jonctions × 2
+meuble-tv-190x243;Q04;Tourillons Ø8 × 30;24;;;;;;12 jonctions × 2
+meuble-tv-190x243;Q05;Caches d'excentrique;24;;;;;;1 par excentrique
+meuble-tv-190x243;Q06;Fixations du fond;100;;;;;;13831 mm / 150 = 92,2 → 100
+meuble-tv-190x243;Q07;Pieds réglables ≈ 80 mm;12;;;;;;4 angles + 4 intermédiaires avant + 4 arrière ; ≥ 40 kg/pied
+meuble-tv-190x243;Q08;Clips de plinthe;6;;;;;;1 par pied avant
+meuble-tv-190x243;Q09;Équerres anti-basculement;2;;;;;;partie haute
+meuble-tv-190x243;Q10;Vis + chevilles murales;4;;;;;;2 par équerre ; type selon le mur
+meuble-tv-190x243;Q11;Vis équerre / meuble;4;;;;;;2 par équerre
+meuble-tv-190x243;Q12;Poignées ou poussoirs;10;;;;;;1 par porte ; modèle à choisir (A6)
+meuble-tv-190x243;Q13;Passe-câble Ø60;1;;;;;;cableHoles r = 3 cm ; panneau et position à confirmer
