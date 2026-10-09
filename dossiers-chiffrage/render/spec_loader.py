@@ -28,6 +28,25 @@ def dedupe_elements(elements):
         k = (e.get("type"), e.get("key"), e.get("y_cm"), e.get("x_cm"), e.get("x_left_cm"), e.get("x_right_cm"))
         if k in seen: continue
         seen.add(k); out.append(e)
+    # façades superposées (même hauteur, l'une englobe l'autre) : la plus large est réduite à la part non couverte
+    def _k(e):
+        v = [float(x) for x in e["key"].split("_")]
+        return v
+    facs = [e for e in out if e.get("type") in ("porte", "tiroir") and e.get("key")]
+    fixed = []
+    for e in out:
+        if e in facs:
+            b, l, t, r = _k(e)
+            for g in facs:
+                if g is e: continue
+                gb, gl, gt, gr = _k(g)
+                if gb == b and gt == t and gl >= l and gr <= r and (gr - gl) < (r - l):
+                    if gl == l: l = gr
+                    elif gr == r: r = gl
+            fmt = lambda v: str(int(v)) if float(v).is_integer() else str(v)
+            e = dict(e, key="_".join(fmt(v) for v in (b, l, t, r)))
+        fixed.append(e)
+    out = fixed
     # intercalaires superposés (même position, même compartiment)
     seen_sep, res = set(), []
     for e in out:

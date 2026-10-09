@@ -4910,12 +4910,29 @@ function _cpt(els, x, y, iW, iH){
 function _sepCompartment(els, e, iW, iH){ return _cpt(els, e.x_cm, e.y_cm, iW, iH); }
 
 // Éléments sans doublons : mêmes éléments, et intercalaires superposés (même position et même compartiment)
+function splitOverlapFacades(els){
+  // deux façades superposées (même hauteur, l'une englobant l'autre) : la plus large est réduite à la part non couverte (une de chaque côté)
+  var P=function(e){ var k=e.key.split('_').map(Number); return {b:k[0],l:k[1],t:k[2],r:k[3]}; };
+  var fac=els.filter(function(e){ return (e.type==='porte'||e.type==='tiroir')&&e.key; });
+  return els.map(function(e){
+    if(!((e.type==='porte'||e.type==='tiroir')&&e.key)) return e;
+    var f=P(e), ch=false;
+    fac.forEach(function(g){
+      if(g===e) return; var q=P(g);
+      if(q.b===f.b&&q.t===f.t&&q.l>=f.l&&q.r<=f.r&&(q.r-q.l)<(f.r-f.l)){
+        if(q.l===f.l){ f.l=q.r; ch=true; } else if(q.r===f.r){ f.r=q.l; ch=true; }
+      }
+    });
+    return ch ? Object.assign({},e,{key:[f.b,f.l,f.t,f.r].join('_')}) : e;
+  });
+}
 function dedupeEls(els){
   var seen={}, out=[];
   (els||[]).forEach(function(e){
     var k=[e.type,e.key,e.y_cm,e.x_cm,e.x_left_cm,e.x_right_cm].join('|');
     if(seen[k]) return; seen[k]=1; out.push(e);
   });
+  out=splitOverlapFacades(out);
   var seenSep={};
   return out.filter(function(e){
     if(e.type!=='separator' && e.type!=='separator_simple') return true;
