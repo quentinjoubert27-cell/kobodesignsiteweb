@@ -1,0 +1,100 @@
+[
+ {
+  "type": "shelf",
+  "y_cm": 88,
+  "x_left_cm": 0,
+  "x_right_cm": 58
+ },
+ {
+  "type": "shelf",
+  "y_cm": 88,
+  "x_left_cm": 58,
+  "x_right_cm": 116.4
+ },
+ {
+  "type": "shelf",
+  "y_cm": 68,
+  "x_left_cm": 0,
+  "x_right_cm": 58
+ },
+ {
+  "type": "shelf",
+  "y_cm": 43,
+  "x_left_cm": 0,
+  "x_right_cm": 58
+ },
+ {
+  "type": "shelf",
+  "y_cm": 22,
+  "x_left_cm": 0,
+  "x_right_cm": 58
+ },
+ {
+  "type": "shelf",
+  "y_cm": 60,
+  "x_left_cm": 58,
+  "x_right_cm": 116.4
+ },
+ {
+  "type": "shelf",
+  "y_cm": 39,
+  "x_left_cm": 58,
+  "x_right_cm": 116.4
+ },
+ {
+  "type": "shelf",
+  "y_cm": 18,
+  "x_left_cm": 58,
+  "x_right_cm": 116.4
+ },
+ {
+  "type": "separator",
+  "x_cm": 58,
+  "y_cm": 44
+ },
+ {
+  "type": "separator",
+  "x_cm": 58,
+  "y_cm": 153.7
+ },
+ {
+  "key": "0_0_22_58",
+  "type": "tiroir"
+ },
+ {
+  "key": "22_0_43_58",
+  "type": "tiroir"
+ },
+ {
+  "key": "43_0_68_58",
+  "type": "tiroir"
+ },
+ {
+  "key": "68_0_88_58",
+  "type": "tiroir"
+ },
+ {
+  "key": "0_58_18_116",
+  "type": "tiroir"
+ },
+ {
+  "key": "18_58_39_116",
+  "type": "tiroir"
+ },
+ {
+  "key": "39_58_60_116",
+  "type": "tiroir"
+ },
+ {
+  "key": "60_58_88_116",
+  "type": "tiroir"
+ },
+ {
+  "key": "88_0_216_58",
+  "type": "porte"
+ },
+ {
+  "key": "88_58_216_116",
+  "type": "porte"
+ }
+]

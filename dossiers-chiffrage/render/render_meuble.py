@@ -30,10 +30,11 @@ DECORS = {
     "terracotta": "textures/caisson/terracotta.jpg", "jaune pâle": "textures/caisson/jaunepal.jpg",
     "crème": "textures/caisson/creme.png", "gris perle": "textures/caisson/boisgrisperle.jpg",
     "gris ardoise": "img/GRISARDOISE.jpg", "brun rosé": "img/BRUNROSE.jpg",
+    "blanc gris": "textures/mineral/blanc_gris.jpg", "blanc multicolore": "textures/mineral/blanc_multicouleurs.jpg", "noir": "textures/mineral/noir.jpg",
 }
 FLAT_COLORS = {"blanc": (0.80, 0.79, 0.77)}
 # décors clairs : la scène est trop lumineuse pour eux (meuble blanc sur mur clair = image blanche) -> exposition réduite
-LIGHT_DECORS = {"blanc", "bois blanc", "frêne blanchi", "frene blanchi", "crème", "creme", "jaune pâle", "jaune pale", "bois gris perle", "gris perle"}
+LIGHT_DECORS = {"blanc gris", "blanc multicolore", "blanc", "bois blanc", "frêne blanchi", "frene blanchi", "crème", "creme", "jaune pâle", "jaune pale", "bois gris perle", "gris perle"}
 
 
 def parse_args():
