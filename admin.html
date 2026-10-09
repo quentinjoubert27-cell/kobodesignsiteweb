@@ -1455,7 +1455,7 @@
     </div>
     <div class="field"><label>Image : meuble fermé (facultatif)</label><input type="file" accept="image/*" onchange="manImgPick(this,'ferme')"/><span id="man-img-ferme" style="font-size:12px;color:#166534;"></span></div>
     <div class="field"><label>Image : portes et tiroirs ouverts (facultatif)</label><input type="file" accept="image/*" onchange="manImgPick(this,'ouvert')"/><span id="man-img-ouvert" style="font-size:12px;color:#166534;"></span></div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-manuel')">Annuler</button><button class="btn btn-primary" onclick="enregistrerManuel()">Enregistrer</button></div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="man-suppr" style="color:#b91c1c;margin-right:auto;" onclick="supprimerManuel()">Supprimer</button><button class="btn btn-ghost" onclick="closeModal('modal-manuel')">Annuler</button><button class="btn btn-primary" onclick="enregistrerManuel()">Enregistrer</button></div>
   </div>
 </div>
 
@@ -3041,6 +3041,7 @@
     sel.innerHTML = MATS_CAIS_NAMES.map(function (x) { return '<option' + (x === m.matLabel ? ' selected' : '') + '>' + escHtml(x) + '</option>'; }).join('');
     document.getElementById('man-img-ferme').textContent = _manImgs.ferme ? '✓ image déjà enregistrée' : '';
     document.getElementById('man-img-ouvert').textContent = _manImgs.ouvert ? '✓ image déjà enregistrée' : '';
+    document.getElementById('man-suppr').style.display = currentManuel ? '' : 'none';
     document.getElementById('modal-manuel').classList.add('open');
   }
   async function enregistrerManuel() {
@@ -3056,6 +3057,16 @@
     if (!(await saveManuel())) return;
     closeModal('modal-manuel');
     showToast('Proposition enregistrée');
+    renderProjetDevis(currentProjetId);
+  }
+  async function supprimerManuel() {
+    if (!currentProjetId || !currentManuel) return;
+    if (!confirm('Supprimer cette proposition saisie à la main (meuble, prix et lignes modifiées) ?\n\nLe projet et le client ne sont pas touchés. Vous pourrez en créer une nouvelle.')) return;
+    var r = await sb.storage.from('documents-client').remove([currentProjetId + '/_proposition_manuelle.json']);
+    if (r.error) return showToast('Suppression impossible : ' + r.error.message, 'err');
+    currentManuel = null; currentProjetRc = null; currentDevisQuantities = null;
+    closeModal('modal-manuel');
+    showToast('Proposition supprimée');
     renderProjetDevis(currentProjetId);
   }
   async function ajouterLigneManuelle() {
@@ -3115,7 +3126,7 @@
       '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe</th><th style="' + th + '">Chant</th><th style="' + th + '">Découpe + chant</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + f2(r.cml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
       '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
-      '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + (rc && rc.manuel ? '<button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">Modifier la proposition</button><button class="btn btn-ghost btn-sm" onclick="ajouterLigneManuelle()">Ajouter une ligne</button>' : '<button class="btn btn-ghost btn-sm" onclick="ouvrirEditeurElements()" title="Avancé : remplacer la liste des éléments du meuble (sauvegarde faite avant)">Modifier les éléments (avancé)</button>') + (rc && !rc.manuel && portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
+      '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + (rc && rc.manuel ? '<button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">Modifier la proposition</button><button class="btn btn-ghost btn-sm" onclick="ajouterLigneManuelle()">Ajouter une ligne</button><button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="supprimerManuel()">Supprimer la proposition</button>' : '<button class="btn btn-ghost btn-sm" onclick="ouvrirEditeurElements()" title="Avancé : remplacer la liste des éléments du meuble (sauvegarde faite avant)">Modifier les éléments (avancé)</button>') + (rc && !rc.manuel && portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
       '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
       (r.warn.length ? '<div style="margin-top:6px;color:#b45309;">⚠ ' + r.warn.map(escHtml).join('<br>⚠ ') + '</div>' : '') + '</div>';
