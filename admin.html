@@ -2950,7 +2950,8 @@
     try {
       var r = await sb.storage.from('documents-client').download(projetId + '/_proposition_manuelle.json');
       if (r.error || !r.data) return null;
-      return JSON.parse(await r.data.text());
+      var j = JSON.parse(await r.data.text());
+      return (j && !j.supprime) ? j : null;   // une proposition supprimée est marquée comme telle
     } catch (e) { return null; }
   }
   async function saveManuel() {
@@ -3062,8 +3063,11 @@
   async function supprimerManuel() {
     if (!currentProjetId || !currentManuel) return;
     if (!confirm('Supprimer cette proposition saisie à la main (meuble, prix et lignes modifiées) ?\n\nLe projet et le client ne sont pas touchés. Vous pourrez en créer une nouvelle.')) return;
-    var r = await sb.storage.from('documents-client').remove([currentProjetId + '/_proposition_manuelle.json']);
-    if (r.error) return showToast('Suppression impossible : ' + r.error.message, 'err');
+    var chemin = currentProjetId + '/_proposition_manuelle.json';
+    // on neutralise d'abord le contenu (toujours permis, comme l'enregistrement), puis on tente de supprimer le fichier
+    var up = await sb.storage.from('documents-client').upload(chemin, new Blob([JSON.stringify({ supprime: true })], { type: 'application/json' }), { contentType: 'application/json', upsert: true });
+    if (up.error) return showToast('Suppression impossible : ' + up.error.message, 'err');
+    try { await sb.storage.from('documents-client').remove([chemin]); } catch (e) {}
     currentManuel = null; currentProjetRc = null; currentDevisQuantities = null;
     closeModal('modal-manuel');
     showToast('Proposition supprimée');
