@@ -142,6 +142,37 @@ module.exports = async function handler(req, res) {
     </div>`;
     const GOOGLE_REVIEW_URL = 'https://www.google.com/search?q=Kobo+design+Avis&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_5cT2chRByBSV9iD2hU40JkOKKmVHHKGSvfjfMsxMcmu1NdXPSwbTeFlQ1kOFZi3-ArTvNOGp7P8oiv8CNC1XSHGbgNI';
 
+    // ── ACTION : attach-config (l'équipe modélise un meuble pour un projet reçu par le formulaire) ──
+    if (action === 'attach-config') {
+      const { projet_id } = body;
+      const cfg = body.config || {};
+      if (!projet_id) return res.status(400).json({ error: 'Projet manquant' });
+      const { data: projet } = await sb.from('projets').select('id, nom, client_id').eq('id', projet_id).single();
+      if (!projet) return res.status(404).json({ error: 'Projet introuvable' });
+      const { data: client } = await sb.from('clients').select('prenom, nom, email, telephone, code_postal').eq('id', projet.client_id).single();
+      if (!client || !client.email) return res.status(404).json({ error: 'Client introuvable' });
+      const furniture_type = String(body.furniture_type || cfg.furniture_type || 'tv').slice(0, 20);
+      const meuble = cfg.meuble || {}, plan = cfg.plan || {}, vasques = cfg.vasques || {}, counts = cfg.counts || {};
+      const elements = Array.isArray(cfg.elements) ? cfg.elements : [];
+      const { data: ins, error: insErr } = await sb.from('configs_sdb').insert([{
+        prenom: client.prenom || client.nom || 'Client', email: client.email,
+        ...(client.telephone ? { telephone: client.telephone } : {}), ...(client.code_postal ? { code_postal: client.code_postal } : {}),
+        decouverte: 'Modélisé par l\'équipe', projet_id: projet.id,
+        type: furniture_type,
+        meuble_l: meuble.L || 0, meuble_h: meuble.H || 0, meuble_p: meuble.P || 0, meuble_mat: meuble.matLabel || '',
+        plan_l: plan.L || 0, plan_p: plan.P || 0, plan_ep: plan.Ep || 0, plan_mat: plan.matLabel || '',
+        nb_vasques: vasques.nb != null ? vasques.nb : (furniture_type === 'sdb' ? 1 : 0),
+        vasque_w: vasques.W || 0, vasque_d: vasques.D || 0, vasque_label: String(vasques.label || vasques.id || '').slice(0, 40),
+        nb_tablettes: counts.shelf || 0, nb_separateurs: counts.separator || 0, nb_portes: counts.porte || 0, nb_tiroirs: counts.tiroir || 0,
+        elements, thumbnail: String(body.thumbnail || '').slice(0, 500000) || null,
+        raw_config: { furniture_type, meuble, plan, vasques, elements,
+          ...(cfg.caisson2 ? { caisson2: cfg.caisson2 } : {}), ...(cfg.tvSide ? { tvSide: cfg.tvSide } : {}),
+          ...(Array.isArray(cfg.cableHoles) && cfg.cableHoles.length ? { cableHoles: cfg.cableHoles } : {}) },
+      }]).select('id').single();
+      if (insErr) return res.status(500).json({ error: insErr.message });
+      return res.status(200).json({ success: true, configId: ins.id });
+    }
+
     // ── ACTION : rappels-digest (à la demande depuis l'admin) ──────
     if (action === 'rappels-digest') {
       const out = await sendRappelsDigest(sb, resend, RAPPELS_TO());
