@@ -5074,6 +5074,23 @@ async function ensureDoorSupports(){
   return true;
 }
 
+var ADMIN_PROJET = new URLSearchParams(location.search).get('admin_projet');   // modélisation par l'équipe pour un projet existant
+async function getAdminToken(){
+  try{
+    var c=supabase.createClient('https://auzcbtipzqxmllkzdxls.supabase.co','sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U');
+    var r=await c.auth.getSession(); return r&&r.data&&r.data.session?r.data.session.access_token:null;
+  }catch(e){ return null; }
+}
+(function(){
+  if(!ADMIN_PROJET) return;
+  document.addEventListener('DOMContentLoaded',function(){
+    var nom=new URLSearchParams(location.search).get('nom')||'';
+    var b=document.createElement('div');
+    b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#CD3E00;color:#fff;padding:8px 14px;font:600 13px/1.4 sans-serif;text-align:center;';
+    b.textContent='Mode équipe — modélisation du meuble pour le projet'+(nom?' « '+nom+' »':'')+'. À la fin, « Envoyer » enregistre le meuble sur le projet (aucun e-mail au client).';
+    document.body.appendChild(b);
+  });
+})();
 async function submitConfig(){
   var prenom, nom, email, telephone;
   if (_cfgSession) {
@@ -5098,6 +5115,7 @@ async function submitConfig(){
   var societe     = (document.getElementById('cfgSociete').value||'').trim();
   var siret       = (document.getElementById('cfgSiret').value||'').trim();
   var decouverte  = (document.getElementById('cfgDecouverte').value||'').trim();
+  if(ADMIN_PROJET){ prenom=prenom||'Client'; nom=nom||'Client'; email=email||'client@kobo-design.fr'; telephone=telephone||'0'; codePostal=codePostal||'33000'; decouverte=decouverte||'Modélisé par l\'équipe'; }
   if(!prenom||!nom||!email){ errEl.textContent='Prénom, nom et email obligatoires.'; errEl.style.display='block'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Email invalide.'; errEl.style.display='block'; return; }
   if(!telephone && !_cfgSession){ errEl.textContent='Numéro de téléphone obligatoire.'; errEl.style.display='block'; return; }
@@ -5139,10 +5157,12 @@ async function submitConfig(){
     var thumbSrc=renderer.domElement.toDataURL('image/jpeg',0.75);
 
     // 1. Envoyer la configuration (email interne Kobo)
-    var resp=await fetch('/api/sdb-config',{
+    var _adminTok=ADMIN_PROJET ? await getAdminToken() : null;
+    if(ADMIN_PROJET && !_adminTok) throw new Error('Connectez-vous d\'abord à l\'admin (même navigateur).');
+    var resp=await fetch(ADMIN_PROJET?'/api/notify':'/api/sdb-config',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
+      headers:ADMIN_PROJET?{'Content-Type':'application/json','Authorization':'Bearer '+_adminTok}:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign(ADMIN_PROJET?{action:'attach-config',projet_id:ADMIN_PROJET}:{}, {
         prenom:prenom, email:email, telephone:telephone, code_postal:codePostal, decouverte:decouverte, message:message, botcheck:bot,
         furniture_type: submitFT,
         thumbnail: thumbSrc,
@@ -5176,10 +5196,16 @@ async function submitConfig(){
           devis_quantities: computeFullDevisQuantities(),
           counts:counts
         }
-      })
+      }))
     });
     var data=await resp.json();
     if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
+    if(ADMIN_PROJET){
+      document.getElementById('cfgFormWrap').style.display='none';
+      document.getElementById('cfgSuccess').innerHTML='<span class="cfg-ok-icon">✓</span>Meuble enregistré sur le projet.<br><span style="font-weight:400;color:var(--text2)">Aucun e-mail n\'a été envoyé au client.</span><br><a href="/admin" style="color:var(--accent);font-weight:700">← Retour à l\'admin</a>';
+      document.getElementById('cfgSuccess').style.display='block';
+      return;
+    }
 
     // 2. Créer le compte client + projet automatiquement
     var regResp = await fetch('/api/auto-register',{

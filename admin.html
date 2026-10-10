@@ -3060,6 +3060,11 @@
     showToast('Proposition enregistrée');
     renderProjetDevis(currentProjetId);
   }
+  function modeliserDansConfigurateur() {
+    if (!currentProjetId) return;
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    window.open('/configurateur2?admin_projet=' + encodeURIComponent(currentProjetId) + '&nom=' + encodeURIComponent(p.nom || ''), '_blank');
+  }
   async function supprimerManuel() {
     if (!currentProjetId || !currentManuel) return;
     if (!confirm('Supprimer cette proposition saisie à la main (meuble, prix et lignes modifiées) ?\n\nLe projet et le client ne sont pas touchés. Vous pourrez en créer une nouvelle.')) return;
@@ -5094,7 +5099,7 @@ function dedupeEls(els){
         if (!currentManuel) {
           currentProjetRc = null; currentProjetSdbId = null; currentDevisQuantities = null;
           el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune configuration liée à ce projet (demande reçue par le formulaire).</div>' +
-            '<div style="margin-top:8px;"><button class="btn btn-primary btn-sm" onclick="openManuelEditor()">✍️ Créer une proposition (saisie manuelle)</button></div>';
+            '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="modeliserDansConfigurateur()">🧱 Modéliser dans le configurateur</button><button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">✍️ Créer une proposition (saisie manuelle)</button></div>';
           return;
         }
         // proposition saisie à la main : mêmes calculs et même document, images ajoutées à la main
