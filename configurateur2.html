@@ -3877,15 +3877,27 @@ function renderCaissonWidths(){
       +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div></div>'; }).join('')
     + (function(){ var T=Math.round(S.CLtot*100), sum=rows.reduce(function(a,r){return a+r.W;},0), rest=T-sum;
         return '<div style="margin-top:8px">Longueur totale : <b>'+T+' cm</b> · caissons : <b>'+sum+' cm</b>'
-          +(rest>0?'<div style="color:var(--accent);margin-top:2px">Reste '+rest+' cm à répartir (le meuble fera '+sum+' cm)</div>':'<div style="margin-top:2px">Un caisson ne peut pas dépasser la longueur totale.</div>')+'</div>'; })();
+          +(rest>0?'<div style="color:var(--accent);margin-top:2px">Reste '+rest+' cm à répartir (le meuble fera '+sum+' cm)</div>':'<div style="margin-top:2px">Les caissons voisins se réduisent si la longueur totale est atteinte.</div>')+'</div>'; })();
 }
 function setCaissonDim(side,idx,dim,v){
   v=Math.round(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:dim==='P'?120:280,v));
   if(dim==='W'){
-    // la somme des caissons ne dépasse pas la longueur totale choisie
-    var cur=side==='main'?Math.round(S.CL*100):((side==='left'?tvSideLeft:tvSideRight)[idx]||{W:0}).W;
-    var maxW=Math.round(S.CLtot*100)-(_sumW()-cur);
-    if(v>maxW) v=Math.max(20,Math.min(cur,maxW)>=20?maxW:cur);
+    // la somme des caissons ne dépasse pas la longueur totale : l'excédent est pris sur les caissons voisins (à droite d'abord, puis à gauche), 20 cm minimum chacun
+    var refs=[]; for(var q=tvSideLeft.length-1;q>=0;q--) refs.push({side:'left',idx:q,r:tvSideLeft[q]});
+    refs.push({side:'main',idx:0}); tvSideRight.forEach(function(r,q){ refs.push({side:'right',idx:q,r:r}); });
+    var wOf=function(x){ return x.side==='main'?Math.round(S.CL*100):x.r.W; };
+    var k=refs.findIndex(function(x){return x.side===side&&x.idx===idx;});
+    if(k>=0){
+      var cur=wOf(refs[k]), need=(v-cur)-(Math.round(S.CLtot*100)-_sumW());
+      var order=[]; for(var a=k+1;a<refs.length;a++) order.push(refs[a]); for(var b=k-1;b>=0;b--) order.push(refs[b]);
+      order.forEach(function(x){
+        if(need<=0) return;
+        var take=Math.min(wOf(x)-20,need); if(take<=0) return;
+        if(x.side==='main'){ S.CL=(Math.round(S.CL*100)-take)/100; caissonElements=[]; } else { x.r.W-=take; x.r.elems=[]; x.r.openState={}; }
+        need-=take;
+      });
+      if(need>0) v-=need;
+    }
   }
   if(side==='main'){
     if(dim==='W') S.CL=v/100; else if(dim==='P'){ S.CairsonP=v/100; var ip=document.getElementById('inp-CP'); if(ip) ip.value=v; } else { S.CH=v/100; var ih=document.getElementById('inp-CH'); if(ih) ih.value=v; }
