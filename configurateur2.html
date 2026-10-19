@@ -5074,6 +5074,27 @@ async function ensureDoorSupports(){
   return true;
 }
 
+// Export JSON : chaque montant secondaire (separator / separator_simple) reçoit ses délimitations verticales explicites
+// (en cm) : y_bottom_cm / y_top_cm (repère intérieur du caisson, depuis le dessus de la traverse basse),
+// z_start_cm / z_end_cm (depuis le bas du meuble) et les éléments d'appui bas / haut. Le montant s'arrête ainsi exactement
+// au contact de l'étagère ou de la traverse qui l'encadre, au lieu d'être déduit « pleine hauteur » par les logiciels qui lisent le JSON.
+function exportElementsWithBounds(els, Wcm, Hcm){
+  var EPc=Math.round(EP*1000)/10;            // épaisseur de panneau en cm (1,8)
+  var iW=Wcm-2*EPc, iH=Hcm-2*EPc;
+  var out=(els||[]).map(function(e){
+    if(e.type!=='separator' && e.type!=='separator_simple') return e;
+    var c=_cpt(els, e.x_cm, e.y_cm, iW, iH);
+    var yb = c.bot>0 ? c.bot+EPc : 0;         // au-dessus de l'étagère du dessous (épaisseur comprise)
+    var yt = c.top<iH-0.01 ? c.top : iH;      // sous l'étagère du dessus
+    var r=function(v){ return Math.round(v*10)/10; };
+    return Object.assign({}, e, {
+      y_bottom_cm:r(yb), y_top_cm:r(yt), z_start_cm:r(yb+EPc), z_end_cm:r(yt+EPc),
+      support_bas: c.bot>0 ? {type:'etagere', y_cm:c.bot} : {type:'traverse_basse'},
+      support_haut: c.top<iH-0.01 ? {type:'etagere', y_cm:c.top} : {type:'traverse_haute'}
+    });
+  });
+  return out;
+}
 var ADMIN_PROJET = new URLSearchParams(location.search).get('admin_projet');   // modélisation par l'équipe pour un projet existant
 async function getAdminToken(){
   try{
@@ -5181,16 +5202,16 @@ async function submitConfig(){
                       vx:Math.round(S.vx*100)/100, vz:Math.round(S.vz*100)/100,
                       vx2:Math.round(S.vx2*100)/100, vz2:Math.round(S.vz2*100)/100 },
           } : {}),
-          elements:caissonElements,
+          elements:exportElementsWithBounds(caissonElements, S.CL*100, S.CH*100),
           technical_spec: buildTechSpec(caissonElements, S.CL, S.CH, caissonCP()),
           caisson2: hasAngle ? { L_cm: Math.round(S.CL2*100), elements: caissonElements2, technical_spec: buildTechSpec(caissonElements2, S.CL2, S.CH, caissonCP()) } : undefined,
           tvSide: (currentFT==='tv') ? {
             // left/right : tableaux (illimités), du plus proche du principal au plus éloigné.
             // Ancien format (avant les caissons illimités) : un seul objet par côté — admin.html
             // sait encore lire les deux formats pour les anciennes configs déjà en base.
-            left:  tvSideLeft.map(function(r){ return { W_cm:r.W, H_cm:r.H, elements:r.elems }; }),
-            right: tvSideRight.map(function(r){ return { W_cm:r.W, H_cm:r.H, elements:r.elems }; }),
-            top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:tvTopElems } : null,
+            left:  tvSideLeft.map(function(r){ return { W_cm:r.W, H_cm:r.H, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            right: tvSideRight.map(function(r){ return { W_cm:r.W, H_cm:r.H, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:exportElementsWithBounds(tvTopElems, S_tvSide.topW, S_tvSide.topH) } : null,
           } : undefined,
           cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
           devis_quantities: computeFullDevisQuantities(),
