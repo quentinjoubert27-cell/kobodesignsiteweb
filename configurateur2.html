@@ -877,7 +877,7 @@ window.addEventListener('scroll', function(){
           </div>
 
           <div class="dim-row">
-            <span class="dim-lbl">Longueur</span>
+            <span class="dim-lbl">Longueur totale</span>
             <div class="dim-ctrl">
               <button class="dim-step" onclick="stepDim('inp-CL',setCL,-1)">−</button>
               <input class="dim-inp" type="number" id="inp-CL" min="40" max="220" value="120" oninput="setCL(+this.value)" onblur="clampDim(this,setCL)">
@@ -904,6 +904,18 @@ window.addEventListener('scroll', function(){
               <button class="dim-step" onclick="stepDim('inp-CP',setCP,+1)">+</button>
             </div>
           </div>
+          <!-- ── CAISSONS LATÉRAUX (illimités de chaque côté) ── -->
+          <div>
+            <div class="sec" style="margin-top:18px">Caissons</div>
+            <div class="facade-row" style="margin-bottom:10px;flex-wrap:wrap;gap:5px">
+              <button class="facade-btn" onclick="addTvSide('left')">+ Ajouter à gauche</button>
+              <button class="facade-btn" onclick="addTvSide('right')">+ Ajouter à droite</button>
+            </div>
+            <div id="split-info" style="display:none;margin-top:14px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)"></div>
+            <div id="tv-left-list" style="display:none"></div>
+            <div id="tv-right-list" style="display:none"></div>
+          </div>
+
           <div class="sec" style="margin-top:18px">Murs</div>
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="chk-murG" onchange="setMur('G',this.checked)"> Meuble collé à un mur à gauche</label>
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="chk-murD" onchange="setMur('D',this.checked)"> Meuble collé à un mur à droite</label>
@@ -921,18 +933,6 @@ window.addEventListener('scroll', function(){
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- ── CAISSONS LATÉRAUX (illimités de chaque côté) ── -->
-          <div>
-            <div class="sec" style="margin-top:18px">Caissons</div>
-            <div class="facade-row" style="margin-bottom:10px;flex-wrap:wrap;gap:5px">
-              <button class="facade-btn" onclick="addTvSide('left')">+ Ajouter à gauche</button>
-              <button class="facade-btn" onclick="addTvSide('right')">+ Ajouter à droite</button>
-            </div>
-            <div id="split-info" style="display:none;margin-top:14px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)"></div>
-            <div id="tv-left-list" style="display:none"></div>
-            <div id="tv-right-list" style="display:none"></div>
           </div>
 
           <!-- ── TOGGLE SALLE DE BAIN ── -->
