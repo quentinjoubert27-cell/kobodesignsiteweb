@@ -2879,9 +2879,9 @@
     var tv = rc.tvSide || {};
     var cais = [{ label: '', els: rc.elements || [], L: m.L, H: m.H, P: m.P }];
     if (rc.caisson2 && Array.isArray(rc.caisson2.elements)) cais.push({ label: "caisson d'angle", els: rc.caisson2.elements, L: rc.caisson2.L_cm || m.L, H: m.H, P: m.P });
-    tvArr(tv.left).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson gauche ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: m.P }); });
-    tvArr(tv.right).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson droit ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: m.P }); });
-    if (tv.top && tv.top.W_cm && tv.top.H_cm) cais.push({ label: 'caisson du dessus', els: tv.top.elements || [], L: tv.top.W_cm, H: tv.top.H_cm, P: m.P });
+    tvArr(tv.left).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson gauche ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: c.P_cm || m.P }); });
+    tvArr(tv.right).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson droit ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: c.P_cm || m.P }); });
+    if (tv.top && tv.top.W_cm && tv.top.H_cm) cais.push({ label: 'caisson du dessus', els: tv.top.elements || [], L: tv.top.W_cm, H: tv.top.H_cm, P: tv.top.P_cm || m.P });
     // pièces : surfaces calculées comme app.py (feuille de débit) ; tiroirs : façade seule (le kit comprend le reste) ; joues gauche, droite, dessus
     var appRes = methodeAppFromRc(rc, g, null, { joues: ['gauche', 'droite', 'dessus'], sansTiroirs: true });
     if (appRes) {
@@ -3141,7 +3141,7 @@
     var pieces = [], add = function (nom, l, w, qte, chants, cat) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom, l: Math.round(l * 10) / 10, w: Math.round(w * 10) / 10, qte: qte, ch: chants, cat: cat || 'struct' }); };
     var CH = { all: 'all', trav: 'trav', none: 'none', etag: 'etag', joue: 'joue' };
     var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true }];
-    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? 'caisson gauche ' : side === 'right' ? 'caisson droit ' : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: m.P * 10, main: false }); }); });
+    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? 'caisson gauche ' : side === 'right' ? 'caisson droit ' : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false }); }); });
     if (rc.caisson2) notes.push("Caisson d'angle : app.py ne l'importe pas, il n'est pas compté.");
     var multiDiv = false;
     // caissons aux extrémités : si le meuble est collé à un mur de ce côté, la joue extérieure ne se voit pas, elle n'est pas comptée
