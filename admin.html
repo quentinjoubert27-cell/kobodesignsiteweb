@@ -3170,10 +3170,12 @@
       // tiroirs et portes (coordonnées dans l'intérieur utile, +épaisseur du montant)
       var shift = function (a, b) { var l = a, r = b; if (l >= -2 && r <= interior + 2) { l += t; r += t; } return [Math.max(0, Math.min(L, l)), Math.max(l, Math.min(L, r))]; };
       var drw = els.filter(isDrawer).map(function (e) { var g2 = kg(e.key); if (!g2) return null; var x = shift(g2.l, g2.r), yb = g2.b; if (yb >= 0 && yb <= H - 2 * t + 2) yb += t; return { l: x[0], r: x[1], b: yb, t: yb + (g2.t - g2.b), h: g2.t - g2.b }; }).filter(Boolean);
-      // montant doublé quand des tiroirs sont de part et d'autre (se chevauchant en hauteur)
+      // montant doublé quand des tiroirs ou des portes sont de part et d'autre (se chevauchant en hauteur)
+      var dr2 = els.filter(isDoor).map(function (e) { var g2 = kg(e.key); if (!g2) return null; var x = shift(g2.l, g2.r), yb = g2.b; if (yb >= 0 && yb <= H - 2 * t + 2) yb += t; return { l: x[0], r: x[1], b: yb, t: yb + (g2.t - g2.b) }; }).filter(Boolean);
+      var fac = drw.concat(dr2);
       var final = [];
       divs.sort(function (a, b) { return a - b; }).forEach(function (cx) {
-        var left = drw.filter(function (d) { return d.l < cx && Math.abs(d.r - cx) <= t + Math.max(2, t * 0.5); }), right = drw.filter(function (d) { return d.r > cx && Math.abs(d.l - cx) <= t + Math.max(2, t * 0.5); });
+        var left = fac.filter(function (d) { return d.l < cx && Math.abs(d.r - cx) <= t + Math.max(2, t * 0.5); }), right = fac.filter(function (d) { return d.r > cx && Math.abs(d.l - cx) <= t + Math.max(2, t * 0.5); });
         var dbl = left.some(function (a) { return right.some(function (b) { return Math.min(a.t, b.t) - Math.max(a.b, b.b) > Math.max(2, t * 0.5); }); });
         if (dbl) { final.push(cx - t / 2, cx + t / 2); } else final.push(cx);
       });
