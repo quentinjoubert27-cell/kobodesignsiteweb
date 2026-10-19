@@ -1518,7 +1518,7 @@ floorBiblio.rotation.x=-Math.PI/2; floorBiblio.receiveShadow=true; floorBiblio.v
 /* ── Murs latéraux (le meuble est collé contre) ── */
 var murLat={};
 ['G','D'].forEach(function(k){
-  var m=new THREE.Mesh(new THREE.PlaneGeometry(4,100), new THREE.MeshStandardMaterial({color:0xEFEADF,roughness:0.92,metalness:0.0,side:THREE.DoubleSide}));
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(60,100), new THREE.MeshStandardMaterial({color:0xEFEADF,roughness:0.92,metalness:0.0,side:THREE.DoubleSide}));
   m.rotation.y = k==='G' ? Math.PI/2 : -Math.PI/2; m.receiveShadow=true; m.visible=false; scene.add(m); murLat[k]=m;
 });
 function updateSideWalls(){
@@ -1529,7 +1529,7 @@ function updateSideWalls(){
     var on=!!S['mur'+k], m=murLat[k];
     m.visible=on && BIBLIO_MODE;
     if(!on) return;
-    m.position.set(k==='G' ? bb.min.x-0.002 : bb.max.x+0.002, 0, WALL_BIBLIO_Z+2);
+    m.position.set(k==='G' ? bb.min.x-0.002 : bb.max.x+0.002, 0, WALL_BIBLIO_Z+30);
   });
 }
 
