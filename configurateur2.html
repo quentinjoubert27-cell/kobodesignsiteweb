@@ -5641,7 +5641,11 @@ function updateCotes(){
 function onResize(){ var w=wrap.clientWidth,h=wrap.clientHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 window.addEventListener('resize',onResize); onResize();
 
-function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); updateCotes(); }
+function loop(){ requestAnimationFrame(loop); controls.update();
+  // la caméra ne passe pas de l'autre côté d'un mur latéral
+  if(murLat.G.visible && camera.position.x<murLat.G.position.x+0.12) camera.position.x=murLat.G.position.x+0.12;
+  if(murLat.D.visible && camera.position.x>murLat.D.position.x-0.12) camera.position.x=murLat.D.position.x-0.12;
+  renderer.render(scene,camera); updateCotes(); }
 loop();
 
 // ═══════════════════════════════════════════════════════
