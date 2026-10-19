@@ -2354,7 +2354,7 @@ function addTvSide(side){
   var list = side==='left' ? tvSideLeft : tvSideRight;
   var rec = makeTvRecord(60, Math.round(S.CH*100));
   list.push(rec);
-  if(AUTO_SPLIT) _recomputeTotal();
+  if(AUTO_SPLIT) _recomputeTotal(rec.W);
   activeCaisson = (side==='left'?'L':'R') + (list.length-1);
   buildCaisson();
   renderTvSideList();
@@ -2362,8 +2362,8 @@ function addTvSide(side){
 }
 function removeTvSide(side, idx){
   var list = side==='left' ? tvSideLeft : tvSideRight;
-  list.splice(idx,1);
-  _recomputeTotal();
+  var _rm=list.splice(idx,1)[0];
+  _recomputeTotal(-(_rm?_rm.W:0));
   activeCaisson = 1; // retour au principal, plus simple que de recalculer un id encore valide
   buildCaisson();
   renderTvSideList();
@@ -3849,10 +3849,12 @@ function _syncCaissonSplit(){
   if(typeof renderTvSideList==='function') renderTvSideList();
 }
 // Liste unifiée des caissons (de gauche à droite) : longueur (80 cm max) et hauteur modifiables pour chacun
-function _recomputeTotal(){
-  S.CLtot=(Math.round(S.CL*100)+tvSideLeft.concat(tvSideRight).reduce(function(a,r){return a+r.W;},0))/100;
+function _sumW(){ return Math.round(S.CL*100)+tvSideLeft.concat(tvSideRight).reduce(function(a,r){return a+r.W;},0); }
+// La longueur totale est un plafond : la somme des caissons ne peut pas la dépasser. Ajouter / retirer un caisson la fait varier de sa largeur.
+function _recomputeTotal(delta){
+  if(delta) S.CLtot=Math.round(S.CLtot*100+delta)/100;
   var inp=document.getElementById('inp-CL'); if(inp) inp.value=Math.round(S.CLtot*100);
-  S.L=S.CLtot+S.depassG+S.depassD;
+  S.L=_sumW()/100+S.depassG+S.depassD;
   var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
 }
 function renderCaissonWidths(){
@@ -3873,10 +3875,18 @@ function renderCaissonWidths(){
       +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
       +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',280)+'</div>'
       +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div></div>'; }).join('')
-    + '<div style="margin-top:8px">Longueur totale : <b>'+Math.round(S.CLtot*100)+' cm</b></div>';
+    + (function(){ var T=Math.round(S.CLtot*100), sum=rows.reduce(function(a,r){return a+r.W;},0), rest=T-sum;
+        return '<div style="margin-top:8px">Longueur totale : <b>'+T+' cm</b> · caissons : <b>'+sum+' cm</b>'
+          +(rest>0?'<div style="color:var(--accent);margin-top:2px">Reste '+rest+' cm à répartir (le meuble fera '+sum+' cm)</div>':'<div style="margin-top:2px">Un caisson ne peut pas dépasser la longueur totale.</div>')+'</div>'; })();
 }
 function setCaissonDim(side,idx,dim,v){
   v=Math.round(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:dim==='P'?120:280,v));
+  if(dim==='W'){
+    // la somme des caissons ne dépasse pas la longueur totale choisie
+    var cur=side==='main'?Math.round(S.CL*100):((side==='left'?tvSideLeft:tvSideRight)[idx]||{W:0}).W;
+    var maxW=Math.round(S.CLtot*100)-(_sumW()-cur);
+    if(v>maxW) v=Math.max(20,Math.min(cur,maxW)>=20?maxW:cur);
+  }
   if(side==='main'){
     if(dim==='W') S.CL=v/100; else if(dim==='P'){ S.CairsonP=v/100; var ip=document.getElementById('inp-CP'); if(ip) ip.value=v; } else { S.CH=v/100; var ih=document.getElementById('inp-CH'); if(ih) ih.value=v; }
     caissonElements=[];
