@@ -3138,14 +3138,14 @@
       if (!c.label || /gauche|droit/.test(c.label)) rowW += L;
       var spec = buildTechSpec(dedupeEls(c.els), c.L, c.H, c.P);
       var add = function (nom, l, w, qte, avec, sans, pu) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, surface: qte * l * w / 1e6, avec: avec * qte / 1000, sans: sans * qte / 1000, pu: pu }); };
-      add('Traverse bas', Lt, W, 1, 2 * Lt, 2 * W, puStruct); add('Traverse haut', Lt, W, 1, 2 * Lt, 2 * W, puStruct);
-      add('Montant gauche', H, W, 1, 2 * (H + W), 0, puStruct); add('Montant droit', H, W, 1, 2 * (H + W), 0, puStruct);
+      add('Traverse Bas', Lt, W, 1, 2 * Lt, 2 * W, puStruct); add('Traverse Haut', Lt, W, 1, 2 * Lt, 2 * W, puStruct);
+      add('Montant Gauche', H, W, 1, 2 * (H + W), 0, puStruct); add('Montant Droit', H, W, 1, 2 * (H + W), 0, puStruct);
       add('Fond', H - 38, Math.max(0, L - 38), 1, 0, 2 * ((H - 38) + (L - 38)), puStruct);
-      add('Joue gauche', H, W, 1, 2 * H + W, W, puFacade); add('Joue droite', H, W, 1, 2 * H + W, W, puFacade);
-      add('Joue dessus', Lt, W, 1, 2 * Lt + W, W, puFacade); add('Joue dessous', Lt, W, 1, 2 * Lt + W, W, puFacade);
+      add('Joue Gauche', H, W, 1, 2 * H + W, W, puFacade); add('Joue Droite', H, W, 1, 2 * H + W, W, puFacade);
+      add('Joue Dessus', Lt, W, 1, 2 * Lt + W, W, puFacade); add('Joue Dessous', Lt, W, 1, 2 * Lt + W, W, puFacade);
       var shelves = spec.shelves || [], full = shelves.filter(function (sh) { return (sh.x_right_mm - sh.x_left_mm) >= (L - 2 * 18 - 4); });
-      add('Étagères', Lt, W - 19, full.length, Lt, Lt + 2 * (W - 19), puStruct);
-      shelves.filter(function (sh) { return full.indexOf(sh) < 0; }).forEach(function (sh, i) { var lw = sh.x_right_mm - sh.x_left_mm; add('Étagère partielle ' + (i + 1), lw, W - 19, 1, lw, lw + 2 * (W - 19), puStruct); });
+      add('Etagère', Lt, W - 19, full.length, Lt, Lt + 2 * (W - 19), puStruct);
+      shelves.filter(function (sh) { return full.indexOf(sh) < 0; }).forEach(function (sh, i) { var lw = sh.x_right_mm - sh.x_left_mm; add('Etagère ' + (i + 1), lw, W - 19, 1, lw, lw + 2 * (W - 19), puStruct); });
       (spec.separators || []).forEach(function (sp, i) { var hs = sp.y_top_mm - sp.y_bottom_mm, hh = hs >= (H - 2 * 18 - 4) ? H - 2 * E : hs; add('Montant secondaire ' + (i + 1) + (sp.doubled ? ' (doublé)' : ''), hh, W, 1, 2 * (hh + W), 0, puStruct); });
       var doors = spec.doors || [], drawers = spec.drawers || [];
       var facades = doors.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm }; }).concat(drawers.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm, tiroir: true }; }));
@@ -3154,38 +3154,30 @@
         var nL = !tl && facades.some(function (o) { return o !== f && near(o.x1, f.x0) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
         var nR = !tr && facades.some(function (o) { return o !== f && near(o.x0, f.x1) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
         var w = (f.x1 - f.x0) + (tl ? E : 0) + (tr ? E : 0) - (nL ? 1 : 0) - (nR ? 1 : 0), h = f.h + (tb ? E : 0) + (tt ? E : 0) - 2;   // hauteur : −2 mm de jeu de plus (H − 2 × jeu)
-        add(f.tiroir ? 'Façade de tiroir' : 'Porte', h, w, 1, 2 * (h + w), 0, puFacade);
+        add(f.tiroir ? 'Façade tiroir' : 'Porte', h, w, 1, 2 * (h + w), 0, puFacade);
         if (f.tiroir) { var Zt = f.x1 - f.x0; add('Dos de tiroir', 116, Math.max(0, Zt - 2 * jeu - 40), 1, 0, 2 * (116 + Math.max(0, Zt - 2 * jeu - 40)), puStruct); add('Fond de tiroir', Math.max(0, Zt - 2 * jeu - 49), W - 20 - 8, 1, 0, 2 * (Math.max(0, Zt - 2 * jeu - 49) + (W - 20 - 8)), puStruct); }
       });
     });
     // plinthe : une seule pour la rangée de caissons posés au sol (somme des largeurs − montants extrêmes + 100), chant avant seul
     var Lp = rowW - 2 * E + 100; if (Lp > 0) pieces.push({ nom: 'Plinthe', l: Math.round(Lp), w: 80, qte: 1, surface: Lp * 80 / 1e6, avec: Lp / 1000, sans: (Lp + 160) / 1000, pu: puFacade });
     var surf = 0, avec = 0, sans = 0, bois = 0;
-    pieces.forEach(function (p) { p.bois = p.surface * p.pu; surf += p.surface; avec += p.avec; sans += p.sans; bois += p.bois; });
-    var decChant = avec * T.chant + (avec + sans) * T.decoupe;
-    var lignes = tab ? tab.lignes.reduce(function (a, l) { return a + l.montant; }, 0) : 0;   // usinages, quincaillerie, tiroirs : mêmes lignes que la méthode tableur
-    var cout = bois + decChant + lignes, coef = (g && g.coefficient_revente) || 2;
-    return { pieces: pieces, surface: surf, avec: avec, sans: sans, bois: bois, decChant: decChant, lignes: lignes, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100 };
+    pieces.forEach(function (p) { surf += p.surface; avec += p.avec; sans += p.sans; });
+    return { pieces: pieces, surface: surf, avec: avec, sans: sans };
   }
   function renderMethodeAppHtml(rc, tab) {
     var g = currentTarifsGlobaux || {}, a = null;
     try { a = methodeAppFromRc(rc || {}, g, tab); } catch (e) { return ''; }
-    if (!a || !tab) return '';
-    var eur = function (x) { return formatCurrency(x); }, f2 = function (x) { return (Math.round(x * 1000) / 1000).toLocaleString('fr-FR'); };
+    if (!a) return '';
+    var f3 = function (x) { return (Math.round(x * 1000) / 1000).toLocaleString('fr-FR'); };
     var td = 'padding:3px 6px;text-align:right;white-space:nowrap;', th = 'padding:3px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(26,26,26,.5);text-align:right;';
-    var cmp = function (lib, t, ap, unit, money) {
-      var e = ap - t; return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + lib + '</td><td style="' + td + '">' + (money ? eur(t) : f2(t) + ' ' + unit) + '</td><td style="' + td + '">' + (money ? eur(ap) : f2(ap) + ' ' + unit) + '</td><td style="' + td + 'color:' + (Math.abs(e) < 0.0005 ? 'rgba(26,26,26,.35)' : (e > 0 ? '#b45309' : '#166534')) + ';">' + (Math.abs(e) < 0.0005 ? '—' : (e > 0 ? '+' : '') + (money ? eur(e) : f2(e) + ' ' + unit)) + '</td></tr>';
-    };
-    var rows = a.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + p.l + '</td><td style="' + td + '">' + p.w + '</td><td style="' + td + '">' + p.qte + '</td><td style="' + td + '">' + f2(p.surface) + '</td><td style="' + td + '">' + f2(p.avec) + '</td><td style="' + td + '">' + f2(p.sans) + '</td><td style="' + td + 'font-weight:600;">' + eur(p.bois) + '</td></tr>'; }).join('');
+    var rows = a.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + p.l + '</td><td style="' + td + '">' + p.w + '</td><td style="' + td + '">' + p.qte + '</td><td style="' + td + '">' + f3(p.surface) + '</td><td style="' + td + '">' + f3(p.avec) + '</td><td style="' + td + '">' + f3(p.sans) + '</td></tr>'; }).join('');
+    var memo = tab ? '<div style="margin-top:6px;color:rgba(26,26,26,.55);">Pour mémoire, méthode tableur : surface ' + f3(tab.surface) + ' m² · chant ' + f3(tab.cml) + ' ml · périmètre de découpe ' + f3(tab.ml) + ' ml.</div>' : '';
     return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(26,26,26,.25);border-radius:10px;font-size:12px;">' +
-      '<b style="font-size:13px;">Méthode « débit » (règles du document app.py) — pour comparer</b>' +
-      '<div style="color:rgba(26,26,26,.55);margin:2px 0 8px;">Mêmes prix que la méthode tableur. Seules changent les pièces, leurs dimensions et leurs chants. Information : ne modifie pas le montant du projet.</div>' +
-      '<table style="width:100%;border-collapse:collapse;margin-bottom:8px;"><thead><tr><th style="' + th + 'text-align:left;">Comparatif</th><th style="' + th + '">Tableur</th><th style="' + th + '">Débit (app.py)</th><th style="' + th + '">Écart</th></tr></thead><tbody>' +
-      cmp('Surface de panneaux', tab.surface, a.surface, 'm²') + cmp('Chant (tranches avec chant)', tab.cml, a.avec, 'ml') + cmp('Découpe (tout le périmètre)', tab.ml, a.avec + a.sans, 'ml') +
-      cmp('Panneaux (bois)', tab.bois, a.bois, '', true) + cmp('Découpe + chant', tab.decChant, a.decChant, '', true) + cmp('Usinages, quincaillerie, tiroirs', a.lignes, a.lignes, '', true) +
-      cmp('Total fabrication', tab.cout, a.cout, '', true) + cmp('Vente HT (coefficient ' + tab.coef + ')', tab.vente, a.vente, '', true) + '</tbody></table>' +
-      '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:620px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface m²</th><th style="' + th + '">Tranches avec chant (ml)</th><th style="' + th + '">Tranches sans chant (ml)</th><th style="' + th + '">Bois</th></tr></thead><tbody>' + rows +
-      '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:3px 6px;">Total</td><td colspan="3"></td><td style="' + td + '">' + f2(a.surface) + '</td><td style="' + td + '">' + f2(a.avec) + '</td><td style="' + td + '">' + f2(a.sans) + '</td><td style="' + td + '">' + eur(a.bois) + '</td></tr></tbody></table></div></div>';
+      '<b style="font-size:13px;">Calcul app.py — métriques de la scène</b>' +
+      '<div style="color:rgba(26,26,26,.55);margin:2px 0 8px;">Surface totale des panneaux, tranches avec chant et tranches sans chant, selon les règles et les intitulés d\'app.py. Aucun prix : information seulement.</div>' +
+      '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:620px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Longueur (mm)</th><th style="' + th + '">Largeur (mm)</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface (m²)</th><th style="' + th + '">Tranches AVEC chant (ml)</th><th style="' + th + '">Tranches SANS chant (ml)</th></tr></thead><tbody>' + rows +
+      '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:3px 6px;">Total</td><td colspan="3"></td><td style="' + td + '">' + f3(a.surface) + '</td><td style="' + td + '">' + f3(a.avec) + '</td><td style="' + td + '">' + f3(a.sans) + '</td></tr></tbody></table></div>' +
+      '<div style="margin-top:6px;font-weight:600;">Surface totale : ' + f3(a.surface) + ' m² · Tranches AVEC chant : ' + f3(a.avec) + ' ml · Tranches SANS chant : ' + f3(a.sans) + ' ml</div>' + memo + '</div>';
   }
 
   var _tabRes = null;
