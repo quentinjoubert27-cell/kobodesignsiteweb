@@ -3120,49 +3120,88 @@
 
   // ═══ MÉTHODE « DÉBIT » (règles du document app.py) — pour comparer avec la méthode tableur ═══════════════════
   // Surface = 1 face par pièce ; tranches AVEC chant / SANS chant par pièce ; joues dessus + dessous ; plinthe ; dos et fond de tiroir.
+  // Reproduit ce que fait app.py quand il IMPORTE le JSON du configurateur (state_manager.py) puis calcule la feuille de débit (calculate_all_project_parts)
   function methodeAppFromRc(rc, g, tab) {
-    var T = TABLEUR, E = 19, jeu = 2, m = rc.meuble || {};
+    var m = rc.meuble || {};
     if (!(m.L && m.H && m.P) || rc.manuel) return null;
-    var pm = (g && g.panel_m2) || {};
-    var puStruct = pm['structure_m2|' + (m.matLabel || '')] > 0 ? pm['structure_m2|' + (m.matLabel || '')] : (pm['panels_caisson_m2|Caisson'] || 0);
-    var puFacade = pm['finition_m2|' + (m.matLabel || '')] || pm['panels_porte_m2|' + (m.matLabel || '')] || puStruct;
-    var tvArr = function (v) { return Array.isArray(v) ? v : (v ? [v] : []); }, tv = rc.tvSide || {};
-    var cais = [{ label: '', els: rc.elements || [], L: m.L, H: m.H, P: m.P }];
-    if (rc.caisson2 && Array.isArray(rc.caisson2.elements)) cais.push({ label: "caisson d'angle", els: rc.caisson2.elements, L: rc.caisson2.L_cm || m.L, H: m.H, P: m.P });
-    tvArr(tv.left).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson gauche ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: m.P }); });
-    tvArr(tv.right).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson droit ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: m.P }); });
-    if (tv.top && tv.top.W_cm && tv.top.H_cm) cais.push({ label: 'caisson du dessus', els: tv.top.elements || [], L: tv.top.W_cm, H: tv.top.H_cm, P: m.P });
-    var pieces = [], near = function (a, b) { return Math.abs(a - b) <= 8; }, rowW = 0;
-    cais.forEach(function (c) {
-      var L = c.L * 10, H = c.H * 10, W = c.P * 10, Lt = Math.max(0, L - 2 * E), suf = c.label ? ' — ' + c.label : '';
-      if (!c.label || /gauche|droit/.test(c.label)) rowW += L;
-      var spec = buildTechSpec(dedupeEls(c.els), c.L, c.H, c.P);
-      var add = function (nom, l, w, qte, avec, sans, pu) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom + suf, l: Math.round(l), w: Math.round(w), qte: qte, surface: qte * l * w / 1e6, avec: avec * qte / 1000, sans: sans * qte / 1000, pu: pu }); };
-      add('Traverse Bas', Lt, W, 1, 2 * Lt, 2 * W, puStruct); add('Traverse Haut', Lt, W, 1, 2 * Lt, 2 * W, puStruct);
-      add('Montant Gauche', H, W, 1, 2 * (H + W), 0, puStruct); add('Montant Droit', H, W, 1, 2 * (H + W), 0, puStruct);
-      add('Fond', H - 38, Math.max(0, L - 38), 1, 0, 2 * ((H - 38) + (L - 38)), puStruct);
-      add('Joue Gauche', H, W, 1, 2 * H + W, W, puFacade); add('Joue Droite', H, W, 1, 2 * H + W, W, puFacade);
-      add('Joue Dessus', Lt, W, 1, 2 * Lt + W, W, puFacade); add('Joue Dessous', Lt, W, 1, 2 * Lt + W, W, puFacade);
-      var shelves = spec.shelves || [], full = shelves.filter(function (sh) { return (sh.x_right_mm - sh.x_left_mm) >= (L - 2 * 18 - 4); });
-      add('Etagère', Lt, W - 19, full.length, Lt, Lt + 2 * (W - 19), puStruct);
-      shelves.filter(function (sh) { return full.indexOf(sh) < 0; }).forEach(function (sh, i) { var lw = sh.x_right_mm - sh.x_left_mm; add('Etagère ' + (i + 1), lw, W - 19, 1, lw, lw + 2 * (W - 19), puStruct); });
-      (spec.separators || []).forEach(function (sp, i) { var hs = sp.y_top_mm - sp.y_bottom_mm, hh = hs >= (H - 2 * 18 - 4) ? H - 2 * E : hs; add('Montant secondaire ' + (i + 1) + (sp.doubled ? ' (doublé)' : ''), hh, W, 1, 2 * (hh + W), 0, puStruct); });
-      var doors = spec.doors || [], drawers = spec.drawers || [];
-      var facades = doors.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm }; }).concat(drawers.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm, tiroir: true }; }));
-      facades.forEach(function (f) {
-        var tl = near(f.x0, 18), tr = near(f.x1, L - 18), tb = near(f.y0, 18), tt = near(f.y0 + f.h, H - 18);
-        var nL = !tl && facades.some(function (o) { return o !== f && near(o.x1, f.x0) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
-        var nR = !tr && facades.some(function (o) { return o !== f && near(o.x0, f.x1) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
-        var w = (f.x1 - f.x0) + (tl ? E : 0) + (tr ? E : 0) - (nL ? 1 : 0) - (nR ? 1 : 0), h = f.h + (tb ? E : 0) + (tt ? E : 0) - 2;   // hauteur : −2 mm de jeu de plus (H − 2 × jeu)
-        add(f.tiroir ? 'Façade tiroir' : 'Porte', h, w, 1, 2 * (h + w), 0, puFacade);
-        if (f.tiroir) { var Zt = f.x1 - f.x0; add('Dos de tiroir', 116, Math.max(0, Zt - 2 * jeu - 40), 1, 0, 2 * (116 + Math.max(0, Zt - 2 * jeu - 40)), puStruct); add('Fond de tiroir', Math.max(0, Zt - 2 * jeu - 49), W - 20 - 8, 1, 0, 2 * (Math.max(0, Zt - 2 * jeu - 49) + (W - 20 - 8)), puStruct); }
+    var notes = [], tvArr = function (v) { return Array.isArray(v) ? v : (v ? [v] : []); }, tv = rc.tvSide || {};
+    var kg = function (k) { var p = String(k || '').replace(/,/g, '.').split('_').filter(function (x) { return x !== ''; }).map(Number); if (p.length !== 4 || p.some(isNaN)) return null; return { b: Math.min(p[0], p[2]) * 10, t: Math.max(p[0], p[2]) * 10, l: Math.min(p[1], p[3]) * 10, r: Math.max(p[1], p[3]) * 10 }; };
+    var norm = function (t) { return String(t || '').toLowerCase().replace(/[éèê]/g, 'e').replace(/[-\s]/g, '_'); };
+    var isShelf = function (e) { return ['shelf', 'shelf_simple', 'shelf_fixed', 'etagere', 'etagere_simple', 'etagere_fixe'].indexOf(norm(e.type)) >= 0; };
+    var isDrawer = function (e) { return ['drawer', 'drawer_simple', 'tiroir', 'tiroir_simple', 'drawer_front', 'tiroir_face'].indexOf(norm(e.type)) >= 0; };
+    var isDoor = function (e) { return ['door', 'door_single', 'porte', 'porte_simple', 'single_door', '1_battant', 'un_battant', 'door_double', 'porte_double', 'double_door', '2_battants', 'deux_battants'].indexOf(norm(e.type)) >= 0; };
+    var isSep = function (e) { return ['separator', 'separateur'].indexOf(norm(e.type)) >= 0; };   // « separator_simple » n'est pas reconnu par l'import
+    // épaisseur déduite des étagères : (largeur du meuble − fin de l'étagère) / 2 ; 18 mm sinon
+    var cand = []; (rc.elements || []).filter(isShelf).forEach(function (e) { var xl = e.x_left_cm != null ? e.x_left_cm : 0, xr = e.x_right_cm != null ? e.x_right_cm : m.L; if (Math.abs(xl) > 0.2) return; var t = (m.L - xr) / 2 * 10; if (t >= 12 && t <= 30) cand.push(t); });
+    var t = cand.length ? Math.round(cand.reduce(function (a, b) { return a + b; }, 0) / cand.length * 10) / 10 : 18;
+    var pieces = [], add = function (nom, l, w, qte, chants) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom, l: Math.round(l * 10) / 10, w: Math.round(w * 10) / 10, qte: qte, ch: chants }); };
+    var CH = { all: 'all', trav: 'trav', none: 'none', etag: 'etag' };
+    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true }];
+    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? 'caisson gauche ' : side === 'right' ? 'caisson droit ' : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: m.P * 10, main: false }); }); });
+    if (rc.caisson2) notes.push("Caisson d'angle : app.py ne l'importe pas, il n'est pas compté.");
+    var multiDiv = false;
+    cais.forEach(function (c, ci) {
+      var L = c.L, H = c.H, P = c.P, suf = c.label ? ' (' + c.label + ')' : ' (C' + ci + ')', Lt = Math.max(0, L - 2 * t), interior = Math.max(0, L - 2 * t);
+      add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut' + suf, Lt, P, 1, CH.trav);
+      add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
+      add('Fond' + suf, H - 38, Math.max(0, L - 38), 1, CH.none);
+      var els = dedupeEls(c.els || []);
+      // étagères : une pièce par élément « shelf » du JSON, longueur = traverse, largeur = profondeur − 19 ; chant avant seul
+      var nShelf = els.filter(isShelf).length;
+      add('Etagère Fixe' + suf, Lt, P - 19, nShelf, CH.etag);
+      if (!c.main) return;   // caissons latéraux : app.py n'importe que leurs étagères
+      // montants secondaires : séparateurs « separator » (pleine hauteur) + montants déduits des bornes X des portes, tiroirs et étagères
+      var toLeft = function (xmm) { var x = xmm; if (x >= 0 && x <= interior + 2) x += t; return Math.max(t, Math.min(L - t - t, x)); };
+      var divs = [];
+      els.filter(isSep).forEach(function (e) { var cx = toLeft((e.x_cm || 0) * 10) + t / 2; if (!divs.some(function (d) { return Math.abs(d - cx) <= 1; })) divs.push(cx); });
+      var cands = [];
+      els.forEach(function (e) {
+        var xs = []; var g2 = kg(e.key);
+        if (g2) { xs.push(g2.l, g2.r); } else { if (e.x_left_cm != null) xs.push(e.x_left_cm * 10); if (e.x_right_cm != null) xs.push(e.x_right_cm * 10); }
+        xs.forEach(function (xr) { if (xr <= 1 || xr >= interior - 1) return; var lx = toLeft(xr), tol = Math.max(2, t * 0.5); if (lx <= t + tol || lx >= L - t - t - tol) return; cands.push(lx); });
+      });
+      var uniq = []; cands.sort(function (a, b) { return a - b; }).forEach(function (x) { if (!uniq.length || Math.abs(uniq[uniq.length - 1] - x) > Math.max(2, t + 2)) uniq.push(x); });
+      uniq.forEach(function (lx) { var cx = lx + t / 2; if (!divs.some(function (d) { return Math.abs(d - cx) <= Math.max(2, t + 2); })) divs.push(cx); });
+      // tiroirs et portes (coordonnées dans l'intérieur utile, +épaisseur du montant)
+      var shift = function (a, b) { var l = a, r = b; if (l >= -2 && r <= interior + 2) { l += t; r += t; } return [Math.max(0, Math.min(L, l)), Math.max(l, Math.min(L, r))]; };
+      var drw = els.filter(isDrawer).map(function (e) { var g2 = kg(e.key); if (!g2) return null; var x = shift(g2.l, g2.r), yb = g2.b; if (yb >= 0 && yb <= H - 2 * t + 2) yb += t; return { l: x[0], r: x[1], b: yb, t: yb + (g2.t - g2.b), h: g2.t - g2.b }; }).filter(Boolean);
+      // montant doublé quand des tiroirs sont de part et d'autre (se chevauchant en hauteur)
+      var final = [];
+      divs.sort(function (a, b) { return a - b; }).forEach(function (cx) {
+        var left = drw.filter(function (d) { return d.l < cx && Math.abs(d.r - cx) <= t + Math.max(2, t * 0.5); }), right = drw.filter(function (d) { return d.r > cx && Math.abs(d.l - cx) <= t + Math.max(2, t * 0.5); });
+        var dbl = left.some(function (a) { return right.some(function (b) { return Math.min(a.t, b.t) - Math.max(a.b, b.b) > Math.max(2, t * 0.5); }); });
+        if (dbl) { final.push(cx - t / 2, cx + t / 2); } else final.push(cx);
+      });
+      var dedup = []; final.sort(function (a, b) { return a - b; }).forEach(function (x) { if (!dedup.some(function (y) { return Math.abs(y - x) <= Math.max(1, t * 0.25); })) dedup.push(x); });
+      dedup.forEach(function (cx, di) { add('Montant Secondaire ' + (di + 1) + suf, H - 2 * t, P, 1, CH.all); });
+      if (dedup.length && els.filter(isDoor).length) notes.push('Montants secondaires : app.py en déduit un à chaque frontière entre deux portes ou tiroirs côte à côte, sur toute la hauteur.');
+      // zones en X entre montants (largeur utile d'un tiroir)
+      var cuts = dedup.slice().sort(function (a, b) { return a - b; }), zones = [], xmin = t;
+      cuts.forEach(function (cx) { zones.push([xmin, cx - t / 2]); xmin = cx + t / 2; }); zones.push([xmin, L - t]);
+      // portes : une pièce par porte (hauteur et largeur du JSON), pleine largeur = double battant (2 vantaux)
+      els.filter(isDoor).forEach(function (e, di) {
+        var g2 = kg(e.key); if (!g2) return; var x = shift(g2.l, g2.r), h = g2.t - g2.b, wTot = x[1] - x[0];
+        var full = Math.abs(x[0] - t) <= Math.max(2, t * 0.5) && Math.abs(x[1] - (L - t)) <= Math.max(2, t * 0.5), dbl = full || /double|2_battants|deux_battants/.test(norm(e.type));
+        add('Porte Import ' + (di + 1) + suf, h, dbl ? wTot / 2 : wTot, dbl ? 2 : 1, CH.all);
+      });
+      // tiroirs : façade (hauteur du JSON × largeur du caisson − 4), dos et fond selon la zone (Tandembox K)
+      drw.forEach(function (d, k) {
+        var best = null, bs = 0; zones.forEach(function (z) { var ov = Math.max(0, Math.min(d.r, z[1]) - Math.max(d.l, z[0])); if (ov > bs) { bs = ov; best = z; } });
+        var zw = best ? best[1] - best[0] : L - 2 * t, face = zw - 4;
+        add('Façade Tiroir ' + (k + 1) + suf, d.h, Math.max(0, L - 4), 1, CH.all);
+        add('Tiroir Dos ' + (k + 1) + suf, 116, Math.max(0, face - 40), 1, CH.none);
+        add('Tiroir Fond ' + (k + 1) + suf, Math.max(0, face - 49), P - (20 + t), 1, CH.none);
       });
     });
-    // plinthe : une seule pour la rangée de caissons posés au sol (somme des largeurs − montants extrêmes + 100), chant avant seul
-    var Lp = rowW - 2 * E + 100; if (Lp > 0) pieces.push({ nom: 'Plinthe', l: Math.round(Lp), w: 80, qte: 1, surface: Lp * 80 / 1e6, avec: Lp / 1000, sans: (Lp + 160) / 1000, pu: puFacade });
-    var surf = 0, avec = 0, sans = 0, bois = 0;
-    pieces.forEach(function (p) { surf += p.surface; avec += p.avec; sans += p.sans; });
-    return { pieces: pieces, surface: surf, avec: avec, sans: sans };
+    pieces.forEach(function (p) {
+      var l = p.l, w = p.w, q = p.qte;
+      p.surface = q * l * w / 1e6;
+      var avec = p.ch === 'all' ? 2 * (l + w) : p.ch === 'trav' ? 2 * l : p.ch === 'etag' ? l : 0;
+      p.avec = q * avec / 1000; p.sans = q * (2 * (l + w) - avec) / 1000;
+    });
+    var surf = 0, avec = 0, sans = 0; pieces.forEach(function (p) { surf += p.surface; avec += p.avec; sans += p.sans; });
+    var notesU = notes.filter(function (x, i, a) { return a.indexOf(x) === i; });
+    return { pieces: pieces, surface: surf, avec: avec, sans: sans, epaisseur: t, notes: notesU };
   }
   function renderMethodeAppHtml(rc, tab) {
     var g = currentTarifsGlobaux || {}, a = null;
@@ -3174,10 +3213,11 @@
     var memo = tab ? '<div style="margin-top:6px;color:rgba(26,26,26,.55);">Pour mémoire, méthode tableur : surface ' + f3(tab.surface) + ' m² · chant ' + f3(tab.cml) + ' ml · périmètre de découpe ' + f3(tab.ml) + ' ml.</div>' : '';
     return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(26,26,26,.25);border-radius:10px;font-size:12px;">' +
       '<b style="font-size:13px;">Calcul app.py — métriques de la scène</b>' +
-      '<div style="color:rgba(26,26,26,.55);margin:2px 0 8px;">Surface totale des panneaux, tranches avec chant et tranches sans chant, selon les règles et les intitulés d\'app.py. Aucun prix : information seulement.</div>' +
+      '<div style="color:rgba(26,26,26,.55);margin:2px 0 8px;">Surface totale des panneaux, tranches avec chant et tranches sans chant : le meuble est lu comme app.py lit le JSON du configurateur, puis calculé avec sa feuille de débit. Aucun prix : information seulement.</div>' +
       '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:620px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Longueur (mm)</th><th style="' + th + '">Largeur (mm)</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface (m²)</th><th style="' + th + '">Tranches AVEC chant (ml)</th><th style="' + th + '">Tranches SANS chant (ml)</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:3px 6px;">Total</td><td colspan="3"></td><td style="' + td + '">' + f3(a.surface) + '</td><td style="' + td + '">' + f3(a.avec) + '</td><td style="' + td + '">' + f3(a.sans) + '</td></tr></tbody></table></div>' +
-      '<div style="margin-top:6px;font-weight:600;">Surface totale : ' + f3(a.surface) + ' m² · Tranches AVEC chant : ' + f3(a.avec) + ' ml · Tranches SANS chant : ' + f3(a.sans) + ' ml</div>' + memo + '</div>';
+      '<div style="margin-top:6px;font-weight:600;">Surface totale : ' + f3(a.surface) + ' m² · Tranches AVEC chant : ' + f3(a.avec) + ' ml · Tranches SANS chant : ' + f3(a.sans) + ' ml</div>' +
+      '<div style="margin-top:4px;color:rgba(26,26,26,.55);">Épaisseur de panneau déduite du JSON comme le fait app.py : ' + f3(a.epaisseur) + ' mm.' + (a.notes && a.notes.length ? '<br>⚠ ' + a.notes.map(escHtml).join('<br>⚠ ') : '') + '</div>' + memo + '</div>';
   }
 
   var _tabRes = null;
