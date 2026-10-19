@@ -1433,7 +1433,7 @@ var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
 // Chaque caisson latéral gauche/droite est un "record" autonome regroupant ses données + son état 3D,
 // ce qui permet d'en avoir un nombre illimité de chaque côté (au lieu d'un seul avant).
 function makeTvRecord(W_cm, H_cm){
-  return { W:W_cm, H:H_cm, elems:[], openState:{}, meshes:[], hp:null, guides:null, ghost:null, grp:null };
+  return { W:W_cm, H:H_cm, P:Math.round(S.CairsonP*100), elems:[], openState:{}, meshes:[], hp:null, guides:null, ghost:null, grp:null };
 }
 var tvSideLeft = [];   // [{W,H,elems,openState,meshes,hp,guides,ghost,grp}, ...] — index 0 = collé au principal
 var tvSideRight = [];  // idem, côté droit
@@ -2159,11 +2159,13 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
     defs.push({ W:S_tvSide.topW/100, H:S_tvSide.topH/100, px:S_tvSide.topX, py:mainCH+S_tvSide.topY, isTop:true });
   }
 
+  var CPmain=CP;
   defs.forEach(function(d){
+    var CP=(d.record&&d.record.P)?d.record.P/100:CPmain;   // profondeur propre au caisson, fond aligné sur celui du principal
     var W=d.W, H=d.H, ep2=ep, iWc=W-2*ep2, iHc=H-2*ep2;
     var fz=CP/2-0.001;
 
-    var g=new THREE.Group(); g.position.set(d.px,d.py,0);
+    var g=new THREE.Group(); g.position.set(d.px,d.py,(CP-CPmain)/2);
     if(d.isTop) tvTopGrp=g; else d.record.grp=g;
 
     // ── Structure ──
@@ -3856,9 +3858,9 @@ function _recomputeTotal(){
 function renderCaissonWidths(){
   var info=document.getElementById('split-info'); if(!info) return;
   var rows=[];
-  for(var i=tvSideLeft.length-1;i>=0;i--) rows.push({side:'left',idx:i,W:tvSideLeft[i].W,H:tvSideLeft[i].H});
-  rows.push({side:'main',idx:0,W:Math.round(S.CL*100),H:Math.round(S.CH*100)});
-  tvSideRight.forEach(function(r,i){ rows.push({side:'right',idx:i,W:r.W,H:r.H}); });
+  for(var i=tvSideLeft.length-1;i>=0;i--) rows.push({side:'left',idx:i,W:tvSideLeft[i].W,H:tvSideLeft[i].H,P:tvSideLeft[i].P});
+  rows.push({side:'main',idx:0,W:Math.round(S.CL*100),H:Math.round(S.CH*100),P:Math.round(S.CairsonP*100)});
+  tvSideRight.forEach(function(r,i){ rows.push({side:'right',idx:i,W:r.W,H:r.H,P:r.P}); });
   if(rows.length<2){ info.style.display='none'; return; }
   info.style.display='';
   var f=function(r,dim,max){ return '<div class="dim-ctrl"><button class="dim-step" onclick="setCaissonDim(\''+r.side+'\','+r.idx+',\''+dim+'\','+(r[dim]-1)+')">−</button>'
@@ -3869,13 +3871,14 @@ function renderCaissonWidths(){
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">Caisson '+(n+1)+'</span>'
       +(r.side!=='main'?'<button onclick="removeTvSide(\''+r.side+'\','+r.idx+')" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button>':'')+'</div>'
       +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
-      +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',280)+'</div></div>'; }).join('')
+      +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',280)+'</div>'
+      +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div></div>'; }).join('')
     + '<div style="margin-top:8px">Longueur totale : <b>'+Math.round(S.CLtot*100)+' cm</b></div>';
 }
 function setCaissonDim(side,idx,dim,v){
-  v=Math.round(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:280,v));
+  v=Math.round(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:dim==='P'?120:280,v));
   if(side==='main'){
-    if(dim==='W') S.CL=v/100; else { S.CH=v/100; var ih=document.getElementById('inp-CH'); if(ih) ih.value=v; }
+    if(dim==='W') S.CL=v/100; else if(dim==='P'){ S.CairsonP=v/100; var ip=document.getElementById('inp-CP'); if(ip) ip.value=v; } else { S.CH=v/100; var ih=document.getElementById('inp-CH'); if(ih) ih.value=v; }
     caissonElements=[];
   } else {
     var r=(side==='left'?tvSideLeft:tvSideRight)[idx]; if(!r) return;
@@ -3893,7 +3896,7 @@ function setCL(v){
   _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
 function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _syncCaissonSplit(); _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
-function setCP(v){ v=Math.round(v); S.CairsonP=v/100; var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
+function setCP(v){ v=Math.round(v); S.CairsonP=v/100; tvSideLeft.concat(tvSideRight).forEach(function(r){ r.P=v; }); var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
 function _updatePlanL(){
   S.L = S.CLtot + S.depassG + S.depassD;
   var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
@@ -4409,8 +4412,8 @@ function buildRecap4(){
     if(S.nbVasques===0) rows.push(['Vasque', 'Sans vasque']); else rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
   }
   if(MULTI()){
-    tvSideLeft.forEach(function(r,i){ rows.push(['Caisson gauche '+(i+1), r.W+' × '+r.H+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
-    tvSideRight.forEach(function(r,i){ rows.push(['Caisson droit '+(i+1), r.W+' × '+r.H+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
+    tvSideLeft.forEach(function(r,i){ rows.push(['Caisson gauche '+(i+1), r.W+' × '+r.H+' × '+r.P+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
+    tvSideRight.forEach(function(r,i){ rows.push(['Caisson droit '+(i+1), r.W+' × '+r.H+' × '+r.P+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
     if(S_tvSide.topActive)   rows.push(['Caisson haut',   S_tvSide.topW+' × '+S_tvSide.topH+' cm, '+tvTopElems.length+' élément'+(tvTopElems.length!==1?'s':'')]);
   }
   var elemLabels={shelf:'Étagère',shelf_simple:'Liseré horiz.',separator:'Intercalaire',separator_simple:'Liseré vert.',porte:'Porte',tiroir:'Tiroir',barre:'Tringle'};
@@ -4813,8 +4816,8 @@ function computeFullDevisQuantities(){
     list.push(computeDevisQuantities(buildTechSpec(caissonElements2, S.CL2, S.CH, caissonCP()), matLabel));
   }
   if(MULTI()){
-    tvSideLeft.forEach(function(r){ list.push(computeDevisQuantities(buildTechSpec(r.elems, r.W/100, r.H/100, caissonCP()), matLabel)); });
-    tvSideRight.forEach(function(r){ list.push(computeDevisQuantities(buildTechSpec(r.elems, r.W/100, r.H/100, caissonCP()), matLabel)); });
+    tvSideLeft.forEach(function(r){ list.push(computeDevisQuantities(buildTechSpec(r.elems, r.W/100, r.H/100, (r.P||S.CairsonP*100)/100), matLabel)); });
+    tvSideRight.forEach(function(r){ list.push(computeDevisQuantities(buildTechSpec(r.elems, r.W/100, r.H/100, (r.P||S.CairsonP*100)/100), matLabel)); });
     if(S_tvSide.topActive) list.push(computeDevisQuantities(buildTechSpec(tvTopElems, S_tvSide.topW/100, S_tvSide.topH/100, caissonCP()), matLabel));
   }
 
@@ -5297,8 +5300,8 @@ async function submitConfig(){
             // left/right : tableaux (illimités), du plus proche du principal au plus éloigné.
             // Ancien format (avant les caissons illimités) : un seul objet par côté — admin.html
             // sait encore lire les deux formats pour les anciennes configs déjà en base.
-            left:  tvSideLeft.map(function(r){ return { W_cm:r.W, H_cm:r.H, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
-            right: tvSideRight.map(function(r){ return { W_cm:r.W, H_cm:r.H, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            left:  tvSideLeft.map(function(r){ return { W_cm:r.W, H_cm:r.H, P_cm:r.P, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            right: tvSideRight.map(function(r){ return { W_cm:r.W, H_cm:r.H, P_cm:r.P, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
             top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:exportElementsWithBounds(tvTopElems, S_tvSide.topW, S_tvSide.topH) } : null,
           } : undefined,
           cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
