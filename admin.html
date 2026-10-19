@@ -3144,12 +3144,16 @@
     ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? 'caisson gauche ' : side === 'right' ? 'caisson droit ' : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: m.P * 10, main: false }); }); });
     if (rc.caisson2) notes.push("Caisson d'angle : app.py ne l'importe pas, il n'est pas compté.");
     var multiDiv = false;
+    // caissons aux extrémités : si le meuble est collé à un mur de ce côté, la joue extérieure ne se voit pas, elle n'est pas comptée
+    var outerG = 0, outerD = 0;
+    cais.forEach(function (c, i) { if (/^caisson gauche/.test(c.label || '')) outerG = i; if (/^caisson droit/.test(c.label || '')) outerD = i; });
+    if (m.mur_gauche || m.mur_droit) notes.push('Meuble collé à un mur : ' + [m.mur_gauche ? 'joue gauche' : '', m.mur_droit ? 'joue droite' : ''].filter(Boolean).join(' et ') + ' non comptée(s).');
     cais.forEach(function (c, ci) {
       var L = c.L, H = c.H, P = c.P, suf = c.label ? ' (' + c.label + ')' : ' (C' + ci + ')', Lt = Math.max(0, L - 2 * t), interior = Math.max(0, L - 2 * t);
       add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut' + suf, Lt, P, 1, CH.trav);
       add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
       add('Fond' + suf, H - 38, Math.max(0, L - 38), 1, CH.none);
-      (opts.joues || []).forEach(function (jk) { var base = (jk === 'gauche' || jk === 'droite'); add('Joue ' + jk.charAt(0).toUpperCase() + jk.slice(1) + suf, base ? H : Lt, P, 1, CH.joue, 'facade'); });
+      (opts.joues || []).filter(function (jk) { return !((jk === 'gauche' && ci === outerG && m.mur_gauche) || (jk === 'droite' && ci === outerD && m.mur_droit)); }).forEach(function (jk) { var base = (jk === 'gauche' || jk === 'droite'); add('Joue ' + jk.charAt(0).toUpperCase() + jk.slice(1) + suf, base ? H : Lt, P, 1, CH.joue, 'facade'); });
       var els = dedupeEls(c.els || []);
       // étagères : une pièce par élément « shelf » du JSON, longueur = traverse, largeur = profondeur − 19 ; chant avant seul
       // étagères partielles : largeur réelle (règle du tableur conservée), profondeur − 19 comme app.py ; pleine largeur = traverse
