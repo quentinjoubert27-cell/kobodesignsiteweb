@@ -2883,7 +2883,7 @@
     tvArr(tv.right).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson droit ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: m.P }); });
     if (tv.top && tv.top.W_cm && tv.top.H_cm) cais.push({ label: 'caisson du dessus', els: tv.top.elements || [], L: tv.top.W_cm, H: tv.top.H_cm, P: m.P });
     // pièces : surfaces calculées comme app.py (feuille de débit) ; tiroirs : façade seule (le kit comprend le reste) ; joues gauche, droite, dessus
-    var appRes = methodeAppFromRc(rc, g, null, { joues: ['gauche', 'droite', 'dessus'], tiroirFacadeSeule: true });
+    var appRes = methodeAppFromRc(rc, g, null, { joues: ['gauche', 'droite', 'dessus'], sansTiroirs: true });
     if (appRes) {
       appRes.pieces.forEach(function (p) {
         var cat = p.cat === 'facade';
@@ -2900,6 +2900,19 @@
       angles += countJunctions(spec).total;
       nDoors += doors.length; nDrawers += drawers.length; nBars += (spec.bars || []).length;
       doors.forEach(function (dd) { nHinges += hingesApp(dd.height_mm); });
+      // tiroirs : règle du tableur (façade en recouvrement : +19 mm contre un montant / traverse, −1 mm de jeu côté façade voisine) ; le kit comprend le reste
+      var L = c.L * 10, H = c.H * 10, E2 = 19, suf = c.label ? ' (' + c.label + ')' : ' (C' + cais.indexOf(c) + ')';
+      var nr = function (a, b) { return Math.abs(a - b) <= 8; };
+      var fac = doors.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm }; }).concat(drawers.map(function (d) { return { x0: d.x_left_mm, x1: d.x_right_mm, y0: d.y_bottom_mm, h: d.height_mm, tiroir: true }; }));
+      var grp = {};
+      fac.filter(function (f) { return f.tiroir; }).forEach(function (f) {
+        var tl = nr(f.x0, 18), tr = nr(f.x1, L - 18), tb = nr(f.y0, 18), tt = nr(f.y0 + f.h, H - 18);
+        var nL = !tl && fac.some(function (o) { return o !== f && nr(o.x1, f.x0) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
+        var nRr = !tr && fac.some(function (o) { return o !== f && nr(o.x0, f.x1) && Math.min(o.y0 + o.h, f.y0 + f.h) - Math.max(o.y0, f.y0) > 1; });
+        var w = (f.x1 - f.x0) + (tl ? E2 : 0) + (tr ? E2 : 0) - (nL ? 1 : 0) - (nRr ? 1 : 0), h = f.h + (tb ? E2 : 0) + (tt ? E2 : 0);
+        var k = Math.round(w) + '|' + Math.round(h); grp[k] = grp[k] || { w: w, h: h, n: 0 }; grp[k].n++;
+      });
+      Object.keys(grp).forEach(function (k) { var gr = grp[k]; pieces.push({ nom: 'Façade de tiroir' + suf, l: Math.round(gr.h), w: Math.round(gr.w), qte: gr.n, pu: puFacade, note: '', ch: 'all' }); });
     });
     // corrections manuelles du projet (quantité et prix modifiés dans la fiche)
     var ov = rc.tableur_overrides || {};
@@ -3177,7 +3190,7 @@
         add('Porte Import ' + (di + 1) + suf, h, dbl ? wTot / 2 : wTot, dbl ? 2 : 1, CH.all, 'facade');
       });
       // tiroirs : façade (hauteur du JSON × largeur du caisson − 4), dos et fond selon la zone (Tandembox K)
-      drw.forEach(function (d, k) {
+      if (!opts.sansTiroirs) drw.forEach(function (d, k) {
         var best = null, bs = 0; zones.forEach(function (z) { var ov = Math.max(0, Math.min(d.r, z[1]) - Math.max(d.l, z[0])); if (ov > bs) { bs = ov; best = z; } });
         var zw = best ? best[1] - best[0] : L - 2 * t, face = zw - 4;
         add('Façade Tiroir ' + (k + 1) + suf, d.h, Math.max(0, L - 4), 1, CH.all, 'facade');
