@@ -3152,7 +3152,12 @@
       (opts.joues || []).forEach(function (jk) { var base = (jk === 'gauche' || jk === 'droite'); add('Joue ' + jk.charAt(0).toUpperCase() + jk.slice(1) + suf, base ? H : Lt, P, 1, CH.joue, 'facade'); });
       var els = dedupeEls(c.els || []);
       // étagères : une pièce par élément « shelf » du JSON, longueur = traverse, largeur = profondeur − 19 ; chant avant seul
-      var nShelf = els.filter(isShelf).length;
+      // étagères partielles : largeur réelle (règle du tableur conservée), profondeur − 19 comme app.py ; pleine largeur = traverse
+      var shSpec = buildTechSpec(els, L / 10, H / 10, P / 10).shelves || [], nShelf = 0;
+      shSpec.forEach(function (sh) {
+        var w = sh.x_right_mm - sh.x_left_mm;
+        if (w >= (L - 2 * 18 - 4)) nShelf++; else add('Etagère partielle' + suf, w, P - 19, 1, CH.etag);
+      });
       add('Etagère Fixe' + suf, Lt, P - 19, nShelf, CH.etag);
       if (!c.main) return;   // caissons latéraux : app.py n'importe que leurs étagères
       // montants secondaires : séparateurs « separator » (pleine hauteur) + montants déduits des bornes X des portes, tiroirs et étagères
@@ -3180,8 +3185,12 @@
         if (dbl) { final.push(cx - t / 2, cx + t / 2); } else final.push(cx);
       });
       var dedup = []; final.sort(function (a, b) { return a - b; }).forEach(function (x) { if (!dedup.some(function (y) { return Math.abs(y - x) <= Math.max(1, t * 0.25); })) dedup.push(x); });
-      dedup.forEach(function (cx, di) { add('Montant Secondaire ' + (di + 1) + suf, H - 2 * t, P, 1, CH.all); });
-      if (dedup.length && els.filter(isDoor).length) notes.push('Montants secondaires : app.py en déduit un à chaque frontière entre deux portes ou tiroirs côte à côte, sur toute la hauteur.');
+      // montants secondaires : bornés au compartiment (traverse/étagère basse → étagère/traverse haute), doublés quand une porte ou un tiroir est de chaque côté
+      var specSp = (buildTechSpec(els, L / 10, H / 10, P / 10).separators || []);
+      specSp.forEach(function (sp, di) {
+        var hs = sp.y_top_mm - sp.y_bottom_mm, pleine = hs >= (H - 2 * 18 - 4);
+        add('Montant Secondaire ' + (di + 1) + (sp.doubled ? ' (doublé)' : '') + suf, pleine ? H - 2 * t : hs, P, 1, CH.all);
+      });
       // zones en X entre montants (largeur utile d'un tiroir)
       var cuts = dedup.slice().sort(function (a, b) { return a - b; }), zones = [], xmin = t;
       cuts.forEach(function (cx) { zones.push([xmin, cx - t / 2]); xmin = cx + t / 2; }); zones.push([xmin, L - t]);
