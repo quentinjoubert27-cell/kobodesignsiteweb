@@ -3835,9 +3835,32 @@ function _syncCaissonSplit(){
   tvSideLeft=[];
   tvSideRight=w.slice(1).map(function(x){ return makeTvRecord(x, Math.round(S.CH*100)); });
   activeCaisson=1;
-  var info=document.getElementById('split-info');
-  if(info){ if(n>1){ info.style.display=''; info.innerHTML='<b>'+n+' caissons</b> de '+w.filter(function(x,i,a){return a.indexOf(x)===i;}).join(' / ')+' cm (longueur maximale d\'un caisson : '+CAISSON_MAX_CM+' cm). Chaque caisson se compose dans l\'étape suivante.'; } else info.style.display='none'; }
+  renderCaissonWidths();
   if(typeof renderTvSideList==='function') renderTvSideList();
+}
+// Largeur de chaque caisson modifiable (80 cm max) : le total est la somme des caissons
+function renderCaissonWidths(){
+  var info=document.getElementById('split-info'); if(!info) return;
+  var ws=[Math.round(S.CL*100)].concat(tvSideRight.map(function(r){return r.W;}));
+  if(ws.length<2){ info.style.display='none'; return; }
+  info.style.display='';
+  info.innerHTML='<div style="font-weight:700;color:var(--text);margin-bottom:6px">'+ws.length+' caissons (longueur maximale : '+CAISSON_MAX_CM+' cm chacun)</div>'
+    + ws.map(function(w,i){ return '<div class="dim-row" style="margin:4px 0"><span class="dim-lbl">Caisson '+(i+1)+'</span><div class="dim-ctrl">'
+      +'<button class="dim-step" onclick="setCaissonW('+i+','+(w-1)+')">−</button>'
+      +'<input class="dim-inp" type="number" min="20" max="'+CAISSON_MAX_CM+'" value="'+w+'" onchange="setCaissonW('+i+',+this.value)">'
+      +'<span class="dim-unit">cm</span>'
+      +'<button class="dim-step" onclick="setCaissonW('+i+','+(w+1)+')">+</button></div></div>'; }).join('')
+    + '<div style="margin-top:6px">Total : <b>'+ws.reduce(function(a,b){return a+b;},0)+' cm</b></div>';
+}
+function setCaissonW(i,v){
+  v=Math.max(20,Math.min(CAISSON_MAX_CM,Math.round(v)||0));
+  if(i===0){ S.CL=v/100; caissonElements=[]; }
+  else { var r=tvSideRight[i-1]; if(!r) return; r.W=v; r.elems=[]; r.openState={}; }
+  S.CLtot=(Math.round(S.CL*100)+tvSideRight.reduce(function(a,r){return a+r.W;},0))/100;
+  var inp=document.getElementById('inp-CL'); if(inp) inp.value=Math.round(S.CLtot*100);
+  S.L=S.CLtot+S.depassG+S.depassD;
+  var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
+  updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
 function setCL(v){
   v=Math.round(v); S.CLtot=v/100;
