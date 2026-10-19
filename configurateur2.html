@@ -904,6 +904,9 @@ window.addEventListener('scroll', function(){
               <button class="dim-step" onclick="stepDim('inp-CP',setCP,+1)">+</button>
             </div>
           </div>
+          <div class="sec" style="margin-top:18px">Murs</div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="chk-murG" onchange="setMur('G',this.checked)"> Meuble collé à un mur à gauche</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="chk-murD" onchange="setMur('D',this.checked)"> Meuble collé à un mur à droite</label>
           <div class="angle-only" style="display:none">
             <div class="sec" style="margin-top:18px">Caisson d'angle</div>
             <button class="reset-btn" id="btn-angle" onclick="toggleAngle()">+ Ajouter un angle</button>
@@ -1350,6 +1353,7 @@ var S = {
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
   depassG:0.10, depassD:0.10, // dépassement gauche/droite (m)
+  murG:false, murD:false,     // meuble collé à un mur à gauche / à droite
   // Vasque
   vx:0, vz:0, vx2:0, vz2:0, nbVasques:1,
   vasqueW:0.50, vasqueD:0.35, vasqueRx:0.256, vasqueRz:0.181,
@@ -1509,6 +1513,24 @@ var floorBiblio=new THREE.Mesh(
   new THREE.MeshStandardMaterial({color:0xD5CFC4,roughness:0.88,metalness:0.0})
 );
 floorBiblio.rotation.x=-Math.PI/2; floorBiblio.receiveShadow=true; floorBiblio.visible=false; scene.add(floorBiblio);
+
+/* ── Murs latéraux (le meuble est collé contre) ── */
+var murLat={};
+['G','D'].forEach(function(k){
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(4,100), new THREE.MeshStandardMaterial({color:0xEFEADF,roughness:0.92,metalness:0.0,side:THREE.DoubleSide}));
+  m.rotation.y = k==='G' ? Math.PI/2 : -Math.PI/2; m.receiveShadow=true; m.visible=false; scene.add(m); murLat[k]=m;
+});
+function updateSideWalls(){
+  if(!caissonGrp) return;
+  caissonGrp.updateMatrixWorld(true);
+  var bb=new THREE.Box3().setFromObject(caissonGrp);
+  ['G','D'].forEach(function(k){
+    var on=!!S['mur'+k], m=murLat[k];
+    m.visible=on && BIBLIO_MODE;
+    if(!on) return;
+    m.position.set(k==='G' ? bb.min.x-0.002 : bb.max.x+0.002, 0, WALL_BIBLIO_Z+2);
+  });
+}
 
 var controls=new THREE.OrbitControls(camera,cvs);
 controls.enableDamping=true; controls.dampingFactor=0.1;
@@ -2414,6 +2436,14 @@ function normalizeCaisson(){
     caissonGrp.position.set(-center.x*ns,-center.y*ns,-center.z*ns);
   }
   caissonGrp.rotation.set(0, 0, 0);
+  updateSideWalls();
+}
+function setMur(k,on){
+  S['mur'+k]=!!on;
+  var c=document.getElementById('chk-mur'+k); if(c) c.checked=!!on;
+  // plan de travail : pas de dépassement du côté du mur (le plan vient contre le mur)
+  if(isSDBMode){ if(on){ if(k==='G') setDepassG(0); else setDepassD(0); } else { if(k==='G') setDepassG(10); else setDepassD(10); } }
+  updateSideWalls();
 }
 
 function _project3DtoScreen(v3){
@@ -4314,6 +4344,7 @@ function buildRecap4(){
   var rows=[
     ['Type de meuble', cfg?cfg.label:'—'],
     ['Dimensions', Math.round(S.CL*100)+' × '+Math.round(S.CH*100)+' × '+Math.round(S.CairsonP*100)+' cm'],
+    ['Murs', (S.murG&&S.murD)?'Collé à un mur à gauche et à droite':S.murG?'Collé à un mur à gauche':S.murD?'Collé à un mur à droite':'Aucun mur latéral'],
     ['Matière', MATS_CAIS[S.matCais].n],
   ];
   if(currentFT==='sdb'){
@@ -5190,7 +5221,7 @@ async function submitConfig(){
         config:{
           furniture_type: submitFT,
           meuble:{ L:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
-                   matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais },
+                   matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
                    matLabel:MATS_PLAN[S.matPlan].n, matId:S.matPlan },
