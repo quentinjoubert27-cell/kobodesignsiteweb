@@ -3156,7 +3156,7 @@
       (opts.joues || []).filter(function (jk) { if (/^caisson du dessus/.test(c.label || '')) return true;   // le caisson posé dessus garde ses joues visibles
         if (jk === 'gauche') return ci === outerG && !m.mur_gauche;   // seule la joue extérieure se voit : gauche sur le caisson le plus à gauche
         if (jk === 'droite') return ci === outerD && !m.mur_droit;    // droite sur le caisson le plus à droite
-        return true; }).forEach(function (jk) { var base = (jk === 'gauche' || jk === 'droite'); add('Joue ' + jk.charAt(0).toUpperCase() + jk.slice(1) + suf, base ? H : Lt, P, 1, CH.joue, 'facade'); });
+        return true; }).forEach(function (jk) { var base = (jk === 'gauche' || jk === 'droite'); add('Joue ' + jk.charAt(0).toUpperCase() + jk.slice(1) + suf, base ? H : L, P, 1, CH.joue, 'facade'); });
       var els = dedupeEls(c.els || []);
       // étagères : une pièce par élément « shelf » du JSON, longueur = traverse, largeur = profondeur − 19 ; chant avant seul
       // étagères partielles : largeur réelle (règle du tableur conservée), profondeur − 19 comme app.py ; pleine largeur = traverse
