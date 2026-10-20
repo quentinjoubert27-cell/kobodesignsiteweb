@@ -2357,6 +2357,7 @@ function addTvSide(side){
   if(AUTO_SPLIT) _recomputeTotal(rec.W);
   activeCaisson = (side==='left'?'L':'R') + (list.length-1);
   buildCaisson();
+  if(planMesh) buildPlan();
   renderTvSideList();
   if(caissonEditMode) _rebuildEditBar();
 }
@@ -2366,6 +2367,7 @@ function removeTvSide(side, idx){
   _recomputeTotal(-(_rm?_rm.W:0));
   activeCaisson = 1; // retour au principal, plus simple que de recalculer un id encore valide
   buildCaisson();
+  if(planMesh) buildPlan();
   renderTvSideList();
   if(caissonEditMode) _rebuildEditBar();
 }
@@ -5741,7 +5743,8 @@ function _repositionPlanOnCaisson(){
   var rightW = tvSideRight.reduce(function(s,r){return s+r.W/100;},0);
   var centerX = (rightW - leftW) / 2;
   planMesh.scale.setScalar(ns);
-  planMesh.position.x = -centerX * ns;
+  // le plan est centré sur l'ensemble des caissons (pas sur le principal), décalé du dépassement gauche/droite
+  planMesh.position.x = caissonGrp.position.x + (centerX + (S.depassD - S.depassG) / 2) * ns;
   planMesh.position.y = FLOOR_BIBLIO_Y;
   planMesh.position.z = WALL_BIBLIO_Z + S.CairsonP * ns / 2;
 }
