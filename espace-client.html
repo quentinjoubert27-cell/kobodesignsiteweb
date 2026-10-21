@@ -1015,6 +1015,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (atBottom) list.scrollTop = list.scrollHeight;
   }
 
+  // l'équipe reçoit un mail quand un client écrit (sans ce mail, rien ne garde la trace du message)
+  async function prevenirEquipe(contenu) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session || !session.access_token) return;
+      fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'client-message', contenu }) }).catch(() => {});
+    } catch (e) {}
+  }
   async function sendMessage() {
     const input = document.getElementById('msg-input');
     const contenu = input.value.trim();
@@ -1029,6 +1038,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       lu: false
     }]);
     btn.disabled = false;
+    if (!error) prevenirEquipe(contenu);
     if (!error) await fetchAndRender();
     else { input.value = contenu; showToast('Erreur envoi', 'error'); }
   }
