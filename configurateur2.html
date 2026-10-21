@@ -3837,7 +3837,7 @@ function clampDim(inp,fn){
 }
 function _clearCaissonEls(){ caissonElements=[]; caissonElements2=[]; updateElementsList(); }
 // Longueur maximale d'un caisson : au-delà, le meuble est automatiquement découpé en plusieurs caissons de même largeur
-var CAISSON_MAX_CM = 80, AUTO_SPLIT = true;
+var CAISSON_MAX_CM = 120, AUTO_SPLIT = true;
 function MULTI(){ return currentFT==='tv' || tvSideLeft.length>0 || tvSideRight.length>0; }
 function _syncCaissonSplit(){
   if(!AUTO_SPLIT){ S.CL=S.CLtot; return; }   // aperçu d'une configuration existante : les caissons viennent de la config
@@ -3850,7 +3850,7 @@ function _syncCaissonSplit(){
   renderCaissonWidths();
   if(typeof renderTvSideList==='function') renderTvSideList();
 }
-// Liste unifiée des caissons (de gauche à droite) : longueur (80 cm max) et hauteur modifiables pour chacun
+// Liste unifiée des caissons (de gauche à droite) : longueur (120 cm max) et hauteur modifiables pour chacun
 function _sumW(){ return Math.round(S.CL*100)+tvSideLeft.concat(tvSideRight).reduce(function(a,r){return a+r.W;},0); }
 // La longueur totale est un plafond : la somme des caissons ne peut pas la dépasser. Ajouter / retirer un caisson la fait varier de sa largeur.
 function _recomputeTotal(delta){
