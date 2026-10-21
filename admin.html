@@ -1538,6 +1538,7 @@
         <input type="date" id="pd-date-livraison"/>
       </div>
     </div>
+    <details id="pd-journal-wrap" style="margin:-6px 0 16px;font-size:12px;"><summary style="cursor:pointer;font-weight:700;color:rgba(26,26,26,.6);">Journal des prix (qui a modifié quoi, et quand)</summary><div id="pd-journal-prix" style="margin-top:8px;"></div></details>
 
     <!-- Configuration d'origine -->
     <div id="pd-config" style="display:none;margin-bottom:16px;">
@@ -2409,11 +2410,11 @@
     var prev = {}; (devisSimpleFam || []).forEach(function (f) { if (f.edited) prev[f.id] = f.prix; });
     // Proposition : un seul prix final (le détail par poste n'apparaît que dans le devis)
     var totalCalc = Math.round(prix.total * 100) / 100;
-    devisSimpleFam = [{ id: 'total', label: 'Meuble sur mesure', detail: 'Fourniture et fabrication', prix: prev.total != null ? prev.total : totalCalc, edited: prev.total != null }];
+    devisSimpleFam = [{ id: 'total', label: 'Meuble sur mesure', detail: 'Fourniture et fabrication', prix: prev.total != null ? prev.total : totalCalc, edited: prev.total != null, calcPrix: totalCalc, loggedPrix: prev.total != null ? prev.total : null }];
     var row = 'display:grid;grid-template-columns:1.2fr 2fr 110px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
     el.innerHTML = devisSimpleFam.map(function (f) {
       return '<div style="' + row + '"><div style="font-size:13px;font-weight:700;">' + escHtml(f.label) + '</div><div style="font-size:12px;color:rgba(26,26,26,.6);">' + escHtml(f.detail) + '</div>' +
-        '<div style="display:flex;align-items:center;gap:4px;"><input type="number" step="0.01" min="0" value="' + f.prix + '" data-fam="' + f.id + '" oninput="devisSimpleEdit(this)" style="width:84px;padding:7px 8px;border:1.5px solid rgba(26,26,26,.14);border-radius:7px;font-family:var(--font);font-size:13px;text-align:right;"/> €</div></div>';
+        '<div style="display:flex;align-items:center;gap:4px;"><input type="number" step="0.01" min="0" value="' + f.prix + '" data-fam="' + f.id + '" oninput="devisSimpleEdit(this)" onchange="devisSimpleLog(this)" style="width:84px;padding:7px 8px;border:1.5px solid rgba(26,26,26,.14);border-radius:7px;font-family:var(--font);font-size:13px;text-align:right;"/> €</div></div>';
     }).join('') + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.5);">Total HT</div><div id="pd-devis-simple-total" style="font-size:18px;font-weight:800;color:var(--accent);"></div></div>' +
       '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(26,26,26,.6);padding-top:4px;"><div>TVA 20 %</div><div id="pd-devis-simple-tva"></div></div>' +
       '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:4px;"><div>Total TTC</div><div id="pd-devis-simple-ttc"></div></div>' +
@@ -2538,7 +2539,7 @@
       var pj = allProjets.find(function (x) { return x.id === projetId; }) || {};
       if (pj.client_id) {
         var cl2 = allClients.find(function (c) { return c.id === pj.client_id; }) || {};
-        await logActivite(pj.client_id, 'email', 'Proposition envoyée par e-mail à ' + (cl2.email || '') + '\nObjet : Votre proposition Kobo Design — ' + (pj.nom || '') + '\nPièce jointe : ' + nom + (j.attached ? '' : ' (lien dans le mail uniquement)') + '\n\n' + message, { projet_id: projetId });
+        await logActivite(pj.client_id, 'email', 'Proposition envoyée par e-mail à ' + (cl2.email || '') + (devisSimpleFam && devisSimpleFam[0] ? ' — prix : ' + formatCurrency(devisSimpleFam[0].prix) + ' HT' : '') + '\nObjet : Votre proposition Kobo Design — ' + (pj.nom || '') + '\nPièce jointe : ' + nom + (j.attached ? '' : ' (lien dans le mail uniquement)') + '\n\n' + message, { projet_id: projetId });
       }
       if (document.getElementById('ep-statut').checked) {
         await sb.from('projets').update({ statut: 'Proposition envoyée' }).eq('id', projetId);
@@ -3098,16 +3099,55 @@
     await saveManuel(); renderProjetDevis(currentProjetId);
   }
 
+  // ── Journal des prix : chaque modification manuelle (total de la proposition, cases du tableau, montant du projet) est datée et signée ──
+  async function logPrix(texte) {
+    var pr = allProjets.find(function (x) { return x.id === currentProjetId; });
+    if (!pr || !pr.client_id || !texte) return;
+    await logActivite(pr.client_id, 'prix', texte, { projet_id: currentProjetId });
+    loadPrixJournal();
+  }
+  async function loadPrixJournal() {
+    var el = document.getElementById('pd-journal-prix'); if (!el || !currentProjetId) return;
+    var r = await sb.from('crm_activites').select('created_at, auteur, contenu').eq('projet_id', currentProjetId).eq('type', 'prix').order('created_at', { ascending: false }).limit(40);
+    var rows = (r && r.data) || [];
+    el.innerHTML = rows.length ? rows.map(function (a) {
+      var d = new Date(a.created_at);
+      return '<div style="padding:6px 0;border-bottom:1px solid rgba(26,26,26,.08);"><b>' + d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</b> · ' + escHtml(NOMS_EQUIPE[a.auteur] || a.auteur || '—') + '<div style="color:rgba(26,26,26,.7);white-space:pre-wrap;">' + escHtml(a.contenu) + '</div></div>';
+    }).join('') : '<div style="color:rgba(26,26,26,.45);">Aucune modification manuelle enregistrée.</div>';
+  }
+  function diffOverridesTexte(oldOv, newOv) {
+    var champs = { q: 'quantité', pu: 'prix unitaire', l: 'longueur', w: 'largeur', ml: 'découpe (ml)', cml: 'chant (ml)' }, lines = [];
+    var keys = {}; Object.keys(oldOv || {}).concat(Object.keys(newOv || {})).forEach(function (k) { keys[k] = 1; });
+    Object.keys(keys).forEach(function (k) {
+      var a = (oldOv || {})[k] || {}, b = (newOv || {})[k] || {}, nom = k.indexOf('l:') === 0 ? k.slice(2) : k.split('|')[0];
+      Object.keys(champs).forEach(function (f) {
+        if (a[f] === b[f]) return;
+        lines.push('« ' + nom + ' » ' + champs[f] + ' : ' + (a[f] == null ? 'calculé' : a[f]) + ' → ' + (b[f] == null ? 'calculé' : b[f]));
+      });
+    });
+    return lines;
+  }
+  function devisSimpleLog(inp) {
+    var f = (devisSimpleFam || []).find(function (x) { return x.id === inp.dataset.fam; });
+    if (!f) return;
+    var avant = f.loggedPrix != null ? f.loggedPrix : f.calcPrix, apres = f.prix;
+    if (avant == null || Math.abs(avant - apres) < 0.005) return;
+    f.loggedPrix = apres;
+    logPrix('Prix de la proposition modifié à la main : ' + formatCurrency(avant) + ' → ' + formatCurrency(apres) + (f.calcPrix != null ? ' (prix calculé : ' + formatCurrency(f.calcPrix) + ')' : ''));
+  }
+
   var _tabSaveTimer = null;
   async function _saveTableurOverrides(ov) {
-    if (currentManuel) { currentManuel.overrides = ov; await saveManuel(); return; }
+    if (currentManuel) { var oldM = currentManuel.overrides || {}; currentManuel.overrides = ov; await saveManuel(); var dm = diffOverridesTexte(oldM, ov); if (dm.length) logPrix('Tableau de calcul modifié :\n' + dm.slice(0, 8).join('\n')); return; }
     if (!currentProjetSdbId) return;
     var { data, error } = await sb.from('configs_sdb').select('raw_config').eq('id', currentProjetSdbId).maybeSingle();
     if (error || !data) return showToast('Enregistrement impossible', 'err');
     var rcDb = Object.assign({}, data.raw_config || {});
+    var oldOv = rcDb.tableur_overrides || {};
     if (Object.keys(ov).length) rcDb.tableur_overrides = ov; else delete rcDb.tableur_overrides;
     var up = await sb.from('configs_sdb').update({ raw_config: rcDb }).eq('id', currentProjetSdbId);
     if (up.error) showToast('Enregistrement impossible : ' + up.error.message, 'err');
+    else { var dd = diffOverridesTexte(oldOv, ov); if (dd.length) logPrix('Tableau de calcul modifié :\n' + dd.slice(0, 8).join('\n')); }
   }
   function tableurOv(inp) {
     if (!currentProjetRc || !_tabRes) return;
@@ -3955,6 +3995,7 @@
     rdv:      { l: 'Rendez-vous',     i: '📅', c: '#c2410c' },
     visite:   { l: 'Visite / mesures', i: '📐', c: '#166534' },
     statut:   { l: 'Statut',          i: '🔄', c: '#94a3b8' },
+    prix:     { l: 'Prix modifié',    i: '💶', c: '#CD3E00' },
     rappel:   { l: 'Rappel',          i: '🔔', c: '#CD3E00' },
     projet:   { l: 'Projet',          i: '📁', c: '#94a3b8' },
     document: { l: 'Document',        i: '📄', c: '#94a3b8' },
@@ -3988,7 +4029,7 @@
         auteur: adminUser && adminUser.email, auto: !!opts.auto,
       }]);
       if (error) return false;
-      crmLastContact[clientId] = (type === 'statut') ? crmLastContact[clientId] : new Date().toISOString();
+      crmLastContact[clientId] = (type === 'statut' || type === 'prix') ? crmLastContact[clientId] : new Date().toISOString();
       return true;
     } catch (e) { return false; }
   }
@@ -5091,7 +5132,7 @@ function dedupeEls(els){
     }
     if (projet) {
       document.getElementById('pd-statut').value = projet.statut || 'En étude';
-      var _as = document.getElementById('pd-assigne'); if (_as) _as.value = projet.assigne_a || ''; var _an = document.getElementById('pd-assigne-note'); if (_an) _an.value = '';
+      loadPrixJournal(); var _as = document.getElementById('pd-assigne'); if (_as) _as.value = projet.assigne_a || ''; var _an = document.getElementById('pd-assigne-note'); if (_an) _an.value = '';
       document.getElementById('pd-montant').value = montantVisible(projet) ? (projet.montant || '') : '';
       document.getElementById('pd-montant').placeholder = montantVisible(projet) ? '0' : 'visible après envoi du devis';
       document.getElementById('pd-date-livraison').value = projet.date_livraison ? projet.date_livraison.split('T')[0] : '';
@@ -5729,9 +5770,11 @@ function dedupeEls(els){
     if (date_livraison !== undefined) updateObj.date_livraison = date_livraison;
 
     const prevProjet = allProjets.find(x => x.id === currentProjetId) || {};
+    const montantAvant = prevProjet.montant;
     const { error } = await sb.from('projets').update(updateObj).eq('id', currentProjetId);
     if (!error) {
       showToast('Projet mis à jour');
+      if (montant !== null && Math.abs((parseFloat(montantAvant) || 0) - montant) > 0.004) logPrix('Montant du projet modifié : ' + (montantAvant != null ? formatCurrency(montantAvant) : '—') + ' → ' + formatCurrency(montant));
       if (prevProjet.client_id && prevProjet.statut !== statut) {
         logActivite(prevProjet.client_id, 'statut', 'Statut du projet « ' + (prevProjet.nom || '') + ' » : ' + (prevProjet.statut || '—') + ' → ' + statut, { projet_id: currentProjetId, auto: true });
       }
