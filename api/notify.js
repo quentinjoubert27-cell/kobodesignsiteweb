@@ -241,7 +241,7 @@ module.exports = async function handler(req, res) {
             <div style="background:#fff;border-radius:8px;padding:20px 24px;border-left:3px solid #CD3E00;margin-bottom:24px;">
               <p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${esc(contenu)}</p>
             </div>
-            ${accesLien ? `<p style="font-size:13px;line-height:1.7;margin:0 0 16px;color:#333">Pour lire vos messages et nous répondre, créez votre mot de passe en un clic (votre espace client est prêt) :</p>${BTN(accesLien, 'Créer mon mot de passe →')}<p style="font-size:11px;color:#999;margin:14px 0 0;">Ce lien est valable 24h. Ensuite : <a href="https://www.kobo-design.fr/espace-client2" style="color:#CD3E00">kobo-design.fr/espace-client2</a>.</p>` : BTN('https://www.kobo-design.fr/espace-client2', 'Voir le message')}
+            ${accesLien ? `<p style="font-size:13px;line-height:1.7;margin:0 0 16px;color:#333">Votre espace client est prêt : créez votre mot de passe en un clic pour lire vos messages et nous répondre.</p>${BTN(accesLien, 'Créer mon mot de passe →')}<div style="height:10px"></div>${BTN('https://www.kobo-design.fr/espace-client2', 'Voir le message')}<p style="font-size:11px;color:#999;margin:14px 0 0;">Le lien « Créer mon mot de passe » est valable 24h.</p>` : BTN('https://www.kobo-design.fr/espace-client2', 'Voir le message')}
           </div>
           ${FOOTER}
         </div>`,
