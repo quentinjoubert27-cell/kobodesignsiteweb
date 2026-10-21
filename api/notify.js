@@ -142,6 +142,28 @@ module.exports = async function handler(req, res) {
     </div>`;
     const GOOGLE_REVIEW_URL = 'https://www.google.com/search?q=Kobo+design+Avis&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_5cT2chRByBSV9iD2hU40JkOKKmVHHKGSvfjfMsxMcmu1NdXPSwbTeFlQ1kOFZi3-ArTvNOGp7P8oiv8CNC1XSHGbgNI';
 
+    // Accès à l'espace client : lien « créer mon mot de passe » (24 h) pour un compte jamais activé, sinon null
+    const accesLienPour = async (cid, mail) => {
+      try {
+        const { data: au } = await sb.auth.admin.getUserById(cid);
+        if (!(au && au.user && au.user.user_metadata && au.user.user_metadata.needs_password === true)) return null;
+        const { data: ld } = await sb.auth.admin.generateLink({ type: 'magiclink', email: mail, options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' } });
+        const th = ld && ld.properties && ld.properties.hashed_token;
+        return th ? 'https://www.kobo-design.fr/espace-client2?token_hash=' + th + '&type=magiclink&new=1' : null;
+      } catch (e) { console.warn('accesLienPour', e.message); return null; }
+    };
+    // Bloc d'accès pour un document / une proposition : deux boutons si le compte n'a pas de mot de passe, un seul sinon
+    const ACCES_DOC = (lien, intro) => lien
+      ? `<div style="background:#fff;border-radius:10px;padding:18px 20px;margin:0 0 4px;">
+          <p style="font-size:13px;line-height:1.7;margin:0 0 14px;color:#333">${intro}</p>
+          <p style="font-size:12px;margin:0 0 6px;color:#555"><strong>Vous n'avez pas encore créé votre mot de passe ?</strong> Cliquez ici :</p>
+          ${BTN(lien, 'Créer mon mot de passe →')}
+          <p style="font-size:12px;margin:16px 0 6px;color:#555"><strong>Vous avez déjà votre mot de passe ?</strong> Cliquez là :</p>
+          ${BTN('https://www.kobo-design.fr/espace-client2', 'Accéder à mon espace →')}
+          <p style="font-size:11px;color:#999;margin:14px 0 0;">Le lien « Créer mon mot de passe » est valable 24h.</p>
+        </div>`
+      : BTN('https://www.kobo-design.fr/espace-client2', 'Voir mon espace client →');
+
     // ── ACTION : assigner (un projet est confié à un membre de l'équipe : mail à cette personne, jamais au client) ──
     if (action === 'assigner') {
       const { projet_id, assigne_a, note } = body;
@@ -221,15 +243,7 @@ module.exports = async function handler(req, res) {
       const { data: client } = await sb.from('clients').select('email, prenom').eq('id', client_id).single();
       if (!client?.email) return res.status(404).json({ error: 'Client introuvable' });
       // Compte sans mot de passe (créé par un formulaire, jamais activé) : le mail contient son accès pour créer son mot de passe
-      let accesLien = null;
-      try {
-        const { data: au } = await sb.auth.admin.getUserById(client_id);
-        if (au && au.user && au.user.user_metadata && au.user.user_metadata.needs_password === true) {
-          const { data: ld } = await sb.auth.admin.generateLink({ type: 'magiclink', email: client.email, options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' } });
-          const th = ld && ld.properties && ld.properties.hashed_token;
-          accesLien = th ? 'https://www.kobo-design.fr/espace-client2?token_hash=' + th + '&type=magiclink&new=1' : null;
-        }
-      } catch (e) { console.warn('message: lien d\'accès', e.message); }
+      const accesLien = await accesLienPour(client_id, client.email);
       await resend.emails.send({
         from: 'Kobo Design <contact@kobo-design.fr>',
         to: client.email,
@@ -452,6 +466,7 @@ module.exports = async function handler(req, res) {
       if (msgPerso && doc_path) {
         try { const { data: su } = await sb.storage.from('documents-client').createSignedUrl(doc_path, 7 * 24 * 3600); pdfUrl = su && su.signedUrl; } catch (e) { console.warn('notify-document: lien PDF', e); }
       }
+      const accesDoc = await accesLienPour(projet.client_id, client.email);
       await resend.emails.send({
         from: 'Kobo Design <contact@kobo-design.fr>',
         to: client.email,
@@ -470,7 +485,7 @@ module.exports = async function handler(req, res) {
             <p style="font-size:13px;line-height:1.7;margin:0 0 24px;color:#555">${attachments ? 'La proposition est jointe à ce message (PDF). ' : ''}Vous la retrouvez aussi dans votre espace client.</p>` : `<p style="font-size:14px;line-height:1.8;margin:0 0 24px;color:#333">
               Un nouveau document${nom_fichier ? ` (<strong>${esc(nom_fichier)}</strong>)` : ''} vient d'être ajouté à votre projet${attachments ? ', vous le trouverez en pièce jointe' : ''}. Vous pouvez aussi le consulter à tout moment depuis votre espace client.
             </p>`}
-            ${BTN('https://www.kobo-design.fr/espace-client2', 'Voir mon espace client →')}
+            ${ACCES_DOC(accesDoc, 'Cette ' + (msgPerso ? 'proposition' : 'pièce') + ' est aussi disponible dans votre espace client, avec le suivi de votre projet et vos messages.')}
           </div>${FOOTER}
         </div>`,
         ...(attachments ? { attachments } : {}),
