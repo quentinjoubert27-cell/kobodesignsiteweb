@@ -3166,7 +3166,7 @@
         if (w >= (L - 2 * 18 - 4)) nShelf++; else add('Etagère partielle' + suf, w, P - 19, 1, CH.etag);
       });
       add('Etagère Fixe' + suf, Lt, P - 19, nShelf, CH.etag);
-      if (!c.main) return;   // caissons latéraux : app.py n'importe que leurs étagères
+      // chaque caisson (principal ou ajouté / découpé automatiquement) est un caisson complet : portes et montants secondaires comptés comme pour le principal
       // montants secondaires : séparateurs « separator » (pleine hauteur) + montants déduits des bornes X des portes, tiroirs et étagères
       var toLeft = function (xmm) { var x = xmm; if (x >= 0 && x <= interior + 2) x += t; return Math.max(t, Math.min(L - t - t, x)); };
       var divs = [];
