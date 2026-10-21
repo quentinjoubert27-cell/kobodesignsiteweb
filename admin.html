@@ -1440,6 +1440,7 @@
   <div class="modal" style="max-width:640px;max-height:90vh;overflow:auto;">
     <h2 class="modal-title">Proposition (saisie manuelle)</h2>
     <p style="font-size:12.5px;color:rgba(26,26,26,.6);margin:-6px 0 12px;line-height:1.5;">Pour les demandes reçues par le formulaire. Renseignez le meuble : le prix est calculé avec la même méthode que les configurations, puis chaque ligne reste modifiable dans le tableau. Les images (rendus faits à la main) sont facultatives.</p>
+    <div class="field" style="background:#fff5ee;border:1.5px solid #d96c2c;border-radius:10px;padding:10px 12px;"><label>Prix de vente HT (€) — saisi par vous</label><input type="number" id="man-prix" min="0" step="0.01" placeholder="Ex. 1450"/><span style="font-size:11.5px;color:rgba(26,26,26,.6);">Si vous renseignez un prix, c'est ce prix qui figure sur la proposition : rien n'est calculé. Laissez vide pour utiliser le calcul automatique (il faut alors les dimensions et les éléments ci-dessous).</span></div>
     <div class="field"><label>Titre du meuble</label><input type="text" id="man-titre" placeholder="Ex. Dressing sur mesure — chambre parentale"/></div>
     <div class="field"><label>Description (facultatif, apparaît sous le titre)</label><textarea id="man-texte" rows="3" style="width:100%;padding:10px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;"></textarea></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
@@ -2379,7 +2380,7 @@
     if (q.drawer_mechanisms) quinc.push('mécanismes de tiroirs');
     if (q.hinges) quinc.push(plur(q.hinges, 'charnière'));
     return {
-      caisson: plur(nCais, 'caisson') + ' — ' + Math.round(W) + ' × ' + Math.round(H) + ' × ' + Math.round(m.P || 0) + ' cm, ' + (m.matLabel || 'décor à confirmer') + ' : traverses, montants et étagères' + (amen.length ? ' (' + amen.join(', ') + ')' : ''),
+      caisson: (!(W > 0 && H > 0 && m.P > 0) ? (rc.manuel && rc.manuel.titre ? rc.manuel.titre : 'Meuble sur mesure') + ' — ' + (m.matLabel || 'décor à confirmer') : plur(nCais, 'caisson') + ' — ' + Math.round(W) + ' × ' + Math.round(H) + ' × ' + Math.round(m.P || 0) + ' cm, ' + (m.matLabel || 'décor à confirmer') + ' : traverses, montants et étagères') + (amen.length ? ' (' + amen.join(', ') + ')' : ''),
       finitions: 'Façades' + (fac.length ? ' (' + fac.join(', ') + ')' : '') + ', joues, dessus et dessous éventuels',
       quincaillerie: quinc.join(', ').replace(/^./, function (c) { return c.toUpperCase(); }),
       plan: 'Plan de travail'
@@ -2810,6 +2811,7 @@
   // Prix du projet = méthode tableur (seule méthode de calcul)
   function computeDevisAutoPrice() {
     if (!currentProjetRc) return null;
+    if (currentProjetRc.manuel && parseFloat(currentProjetRc.manuel.prix_ht) > 0) return { cost_revient: 0, prix_vente: Math.round(parseFloat(currentProjetRc.manuel.prix_ht) * 100) / 100, missing_materials: [], fixe: true };   // prix saisi à la main : aucun calcul
     var r = tableurFromRc(currentProjetRc, currentTarifsGlobaux || {});
     if (!r) return null;
     return { cost_revient: Math.round(r.cout * 100) / 100, prix_vente: r.vente, missing_materials: [] };
@@ -2823,11 +2825,13 @@
     var price = computeDevisAutoPrice();
     if (!price) { resultEl.textContent = ''; return; }
     try { renderDevisSimple(); } catch (e) { console.warn('devis simplifié', e); }
-    resultEl.innerHTML = 'Coût de fabrication : ' + price.cost_revient.toFixed(2) + ' € · ' +
+    if (price.fixe) resultEl.innerHTML = '<span style="color:var(--accent)">Prix saisi à la main : ' + price.prix_vente.toFixed(2) + ' € HT</span> <span style="font-weight:400;font-size:12px;color:rgba(26,26,26,.55);">(aucun calcul automatique)</span>';
+    else resultEl.innerHTML = 'Coût de fabrication : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente HT : ' + price.prix_vente.toFixed(2) + ' €</span>';
     try {
       var cmpEl = document.getElementById('devis-compare');
-      if (cmpEl) cmpEl.innerHTML = renderTableurHtml(currentProjetRc, null) + renderMethodeAppHtml(currentProjetRc, _tabRes);
+      if (cmpEl && price.fixe) cmpEl.innerHTML = '';
+      else if (cmpEl) cmpEl.innerHTML = renderTableurHtml(currentProjetRc, null) + renderMethodeAppHtml(currentProjetRc, _tabRes);
     } catch (e) { console.warn('tableur', e); }
     var _pj = allProjets.find(function (x) { return x.id === currentProjetId; });
     var figé = _pj && STATUTS_FERMES.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
@@ -2842,8 +2846,8 @@
   // Génère une vue imprimable du devis (catégories, fixations, récap par pièce) et ouvre
   // la boîte d'impression du navigateur — l'utilisateur choisit "Enregistrer en PDF".
   function exportDevisPDF() {
-    var r = currentProjetRc ? tableurFromRc(currentProjetRc, currentTarifsGlobaux || {}) : null;
-    if (!r) { showToast('Prix non calculable', 'err'); return; }
+    var r = currentProjetRc && !(currentProjetRc.manuel && parseFloat(currentProjetRc.manuel.prix_ht) > 0) ? tableurFromRc(currentProjetRc, currentTarifsGlobaux || {}) : null;
+    if (!r) { showToast('Prix saisi à la main : pas de détail de calcul', 'err'); return; }
     var projetNom = (document.getElementById('pd-title') || {}).textContent || 'Projet';
     var coef = r.coef, fx = function (x) { return (x * coef).toFixed(2) + ' €'; }, f2 = function (x) { return (Math.round(x * 100) / 100).toLocaleString('fr-FR'); };
     var rows = r.pieces.map(function (p) { return '<tr><td>' + escHtml(p.nom) + '</td><td>' + p.l + ' × ' + p.w + ' mm</td><td>' + p.qte + '</td><td>' + f2(p.surface) + ' m²</td><td>' + fx(p.bois + p.chantDecoupe) + '</td></tr>'; }).join('');
@@ -3047,7 +3051,7 @@
     var m = currentManuel || { titre: '', texte: '', L: '', H: '', P: '', matLabel: 'Chêne', nbCaissons: 1, nbEtageres: 0, nbIntercalaires: 0, nbPortes: 0, nbTiroirs: 0, nbTringles: 0, angles: '', images: {}, overrides: {}, extras: [] };
     _manImgs = { ferme: (m.images || {}).ferme || '', ouvert: (m.images || {}).ouvert || '' };
     var set = function (id, v) { document.getElementById(id).value = v == null ? '' : v; };
-    set('man-titre', m.titre); set('man-texte', m.texte); set('man-L', m.L); set('man-H', m.H); set('man-P', m.P);
+    set('man-prix', m.prix_ht); set('man-titre', m.titre); set('man-texte', m.texte); set('man-L', m.L); set('man-H', m.H); set('man-P', m.P);
     set('man-nbCaissons', m.nbCaissons); set('man-nbEtageres', m.nbEtageres); set('man-nbIntercalaires', m.nbIntercalaires);
     set('man-nbPortes', m.nbPortes); set('man-nbTiroirs', m.nbTiroirs); set('man-nbTringles', m.nbTringles); set('man-angles', m.angles);
     var sel = document.getElementById('man-mat');
@@ -3060,14 +3064,17 @@
   async function enregistrerManuel() {
     var g = function (id) { return document.getElementById(id).value; }, num = function (id) { return parseFloat(g(id)) || 0; };
     var m = Object.assign({ overrides: {}, extras: [] }, currentManuel || {}, {
+      prix_ht: num('man-prix') > 0 ? Math.round(num('man-prix') * 100) / 100 : 0,
       titre: g('man-titre').trim(), texte: g('man-texte').trim(), L: num('man-L'), H: num('man-H'), P: num('man-P'), matLabel: g('man-mat'),
       nbCaissons: parseInt(g('man-nbCaissons')) || 1, nbEtageres: parseInt(g('man-nbEtageres')) || 0, nbIntercalaires: parseInt(g('man-nbIntercalaires')) || 0,
       nbPortes: parseInt(g('man-nbPortes')) || 0, nbTiroirs: parseInt(g('man-nbTiroirs')) || 0, nbTringles: parseInt(g('man-nbTringles')) || 0,
       angles: g('man-angles').trim() === '' ? '' : (parseInt(g('man-angles')) || 0), images: { ferme: _manImgs.ferme || '', ouvert: _manImgs.ouvert || '' }
     });
-    if (!(m.L > 0 && m.H > 0 && m.P > 0)) return showToast('Renseignez la largeur, la hauteur et la profondeur', 'err');
+    if (!(m.prix_ht > 0) && !(m.L > 0 && m.H > 0 && m.P > 0)) return showToast('Renseignez le prix, ou la largeur, la hauteur et la profondeur', 'err');
+    var prixAvant = currentManuel ? (currentManuel.prix_ht || 0) : 0;
     currentManuel = m;
     if (!(await saveManuel())) return;
+    if (Math.abs(prixAvant - m.prix_ht) > 0.004) logPrix('Prix de la proposition saisi à la main : ' + (prixAvant ? formatCurrency(prixAvant) : '—') + ' → ' + (m.prix_ht ? formatCurrency(m.prix_ht) + ' HT' : 'calcul automatique'));
     closeModal('modal-manuel');
     showToast('Proposition enregistrée');
     renderProjetDevis(currentProjetId);
