@@ -5292,7 +5292,9 @@ function dedupeEls(els){
         currentProjetRc = rcM; currentProjetSdbId = null; currentDevisOverrides = {};
         currentDevisQuantities = manuelQuantites(currentManuel, tableurManuelFromRc(rcM, currentTarifsGlobaux || {}));
         el.innerHTML = '<div id="devis-result" style="font-size:14px;font-weight:600;margin-bottom:4px;"></div><div id="devis-compare"></div>' +
-          '<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger le détail en PDF</button></div>';
+          '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">Modifier la proposition</button>' +
+          (parseFloat(currentManuel.prix_ht) > 0 ? '' : '<button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger le détail en PDF</button>') +
+          '<button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="supprimerManuel()">🗑 Supprimer cette proposition</button></div>';
         updateDevisAutoTotal();
         return;
       }
