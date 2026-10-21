@@ -122,7 +122,9 @@ module.exports = async function handler(req, res) {
     const token = (req.headers['authorization'] || '').replace('Bearer ', '');
     const { data: { user }, error: authErr } = await sb.auth.getUser(token);
     const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr,armelle@symetry.fr').split(',').map(e => e.trim());
-    if (authErr || !user || !ADMIN_EMAILS.includes(user.email)) return res.status(401).json({ error: 'Non autorisé' });
+    if (authErr || !user) return res.status(401).json({ error: 'Non autorisé' });
+    // seule l'action « client-message » (un client prévient l'équipe d'un message qu'il vient d'envoyer) est ouverte aux comptes clients
+    if (!ADMIN_EMAILS.includes(user.email) && !(req.body && req.body.action === 'client-message')) return res.status(401).json({ error: 'Non autorisé' });
     const resend = new Resend(process.env.RESEND_API_KEY);
     const body = req.body || {};
     const action = body.action;
@@ -163,6 +165,46 @@ module.exports = async function handler(req, res) {
           <p style="font-size:11px;color:#999;margin:14px 0 0;">Le lien « Créer mon mot de passe » est valable 24h.</p>
         </div>`
       : BTN('https://www.kobo-design.fr/espace-client2', libelleSimple || 'Voir mon espace client →');
+
+    // ── ACTION : client-message (un client écrit dans la messagerie : l'équipe reçoit un mail, ce qui garde aussi une trace) ──
+    if (action === 'client-message') {
+      const contenu = typeof body.contenu === 'string' ? body.contenu.trim().slice(0, 4000) : '';
+      if (!contenu) return res.status(400).json({ error: 'Message vide' });
+      // le message doit exister, envoyé à l'instant par ce client : pas de mail pour un texte inventé
+      const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data: recents } = await sb.from('messages_general').select('contenu').eq('client_id', user.id).eq('expediteur', 'client').gte('created_at', since).order('created_at', { ascending: false }).limit(10);
+      const { data: recentsP } = await sb.from('messages').select('contenu, projet_id').eq('expediteur', 'client').gte('created_at', since).order('created_at', { ascending: false }).limit(30);
+      const okG = (recents || []).some(m => String(m.contenu).trim() === contenu);
+      let okProj = null;
+      if (!okG && recentsP && recentsP.length) {
+        const { data: mesProjets } = await sb.from('projets').select('id, nom').eq('client_id', user.id);
+        const ids = (mesProjets || []).map(x => x.id);
+        const hit = recentsP.find(m => ids.includes(m.projet_id) && String(m.contenu).trim() === contenu);
+        if (hit) okProj = (mesProjets || []).find(x => x.id === hit.projet_id);
+      }
+      if (!okG && !okProj) return res.status(400).json({ error: 'Message introuvable' });
+      const { data: client } = await sb.from('clients').select('prenom, nom, email, telephone').eq('id', user.id).maybeSingle();
+      const { data: projets } = await sb.from('projets').select('nom, assigne_a, statut, created_at').eq('client_id', user.id).order('created_at', { ascending: false });
+      const pr = okProj ? (projets || []).find(x => x.nom === okProj.nom) : (projets || [])[0];
+      const dest = new Set((process.env.CONTACT_EMAIL ? process.env.CONTACT_EMAIL.split(',') : ADMIN_EMAILS).map(x => x.trim()).filter(Boolean));
+      (projets || []).forEach(x => { if (x.assigne_a && ADMIN_EMAILS.includes(x.assigne_a)) dest.add(x.assigne_a); });
+      const cl = client ? ((client.prenom || '') + ' ' + (client.nom || '')).trim() : (user.email || 'Client');
+      await resend.emails.send({
+        from: 'Kobo Design <contact@kobo-design.fr>',
+        to: Array.from(dest),
+        ...(client && client.email ? { reply_to: client.email } : {}),
+        subject: 'Nouveau message de ' + cl + (pr ? ' — ' + pr.nom : ''),
+        html: `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#1A1A1A;">
+          ${HEADER('Nouveau message client', esc(cl))}
+          <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
+            ${pr ? PROJET_BADGE(pr.nom) : ''}
+            <div style="background:#fff;border-radius:8px;padding:20px 24px;border-left:3px solid #CD3E00;margin-bottom:20px;"><p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${esc(contenu)}</p></div>
+            <p style="font-size:13px;color:#555;margin:0 0 20px">${esc(cl)}${client && client.telephone ? ' · ' + esc(client.telephone) : ''}${client && client.email ? ' · ' + esc(client.email) : ''}</p>
+            ${BTN('https://www.kobo-design.fr/admin', 'Répondre dans l\'admin')}
+          </div>${FOOTER}</div>`,
+      });
+      return res.status(200).json({ ok: true });
+    }
 
     // ── ACTION : assigner (un projet est confié à un membre de l'équipe : mail à cette personne, jamais au client) ──
     if (action === 'assigner') {
