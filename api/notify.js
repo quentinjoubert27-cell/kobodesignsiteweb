@@ -153,7 +153,7 @@ module.exports = async function handler(req, res) {
       } catch (e) { console.warn('accesLienPour', e.message); return null; }
     };
     // Bloc d'accès pour un document / une proposition : deux boutons si le compte n'a pas de mot de passe, un seul sinon
-    const ACCES_DOC = (lien, intro) => lien
+    const ACCES_DOC = (lien, intro, libelleSimple) => lien
       ? `<div style="background:#fff;border-radius:10px;padding:18px 20px;margin:0 0 4px;">
           <p style="font-size:13px;line-height:1.7;margin:0 0 14px;color:#333">${intro}</p>
           <p style="font-size:12px;margin:0 0 6px;color:#555"><strong>Vous n'avez pas encore créé votre mot de passe ?</strong> Cliquez ici :</p>
@@ -162,7 +162,7 @@ module.exports = async function handler(req, res) {
           ${BTN('https://www.kobo-design.fr/espace-client2', 'Accéder à mon espace →')}
           <p style="font-size:11px;color:#999;margin:14px 0 0;">Le lien « Créer mon mot de passe » est valable 24h.</p>
         </div>`
-      : BTN('https://www.kobo-design.fr/espace-client2', 'Voir mon espace client →');
+      : BTN('https://www.kobo-design.fr/espace-client2', libelleSimple || 'Voir mon espace client →');
 
     // ── ACTION : assigner (un projet est confié à un membre de l'équipe : mail à cette personne, jamais au client) ──
     if (action === 'assigner') {
@@ -255,7 +255,7 @@ module.exports = async function handler(req, res) {
             <div style="background:#fff;border-radius:8px;padding:20px 24px;border-left:3px solid #CD3E00;margin-bottom:24px;">
               <p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${esc(contenu)}</p>
             </div>
-            ${accesLien ? `<p style="font-size:13px;line-height:1.7;margin:0 0 16px;color:#333">Votre espace client est prêt : créez votre mot de passe en un clic pour lire vos messages et nous répondre.</p>${BTN(accesLien, 'Créer mon mot de passe →')}<div style="height:10px"></div>${BTN('https://www.kobo-design.fr/espace-client2', 'Voir le message')}<p style="font-size:11px;color:#999;margin:14px 0 0;">Le lien « Créer mon mot de passe » est valable 24h.</p>` : BTN('https://www.kobo-design.fr/espace-client2', 'Voir le message')}
+            ${ACCES_DOC(accesLien, 'Votre espace client est prêt : vous pouvez y lire vos messages et nous répondre.', 'Voir le message')}
           </div>
           ${FOOTER}
         </div>`,
