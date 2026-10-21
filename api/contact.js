@@ -55,6 +55,7 @@ module.exports = async function handler(req, res) {
       }]);
 
     // 2. Créer compte Auth + client + projet dans l'admin
+    let isNewAccount = false, accessLink = null;   // lien d'accès à l'espace client, comme pour le configurateur
     try {
       let userId = null;
 
@@ -83,6 +84,7 @@ module.exports = async function handler(req, res) {
           });
           if (createErr) throw new Error('createUser: ' + createErr.message);
           userId = newUser.user.id;
+          isNewAccount = true;
         }
       }
 
@@ -116,6 +118,15 @@ module.exports = async function handler(req, res) {
         statut: 'En étude',
       }).select('id').single();
       if (projetErr) throw new Error('insert projet: ' + projetErr.message);
+
+      // Lien d'accès (même chemin que le configurateur : lien magique, création du mot de passe pour un nouveau compte)
+      try {
+        const { data: linkData } = await supabase.auth.admin.generateLink({ type: 'magiclink', email, options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' } });
+        const tokenHash = linkData?.properties?.hashed_token;
+        accessLink = tokenHash
+          ? `https://www.kobo-design.fr/espace-client2?token_hash=${tokenHash}&type=magiclink${isNewAccount ? '&new=1' : ''}`
+          : 'https://www.kobo-design.fr/espace-client2';
+      } catch (linkErr) { console.warn('[contact] lien d\'accès:', linkErr.message); }
 
       if (newProjet?.id) {
         await supabase.from('messages').insert([{
@@ -192,7 +203,7 @@ module.exports = async function handler(req, res) {
     await resend.emails.send({
       from: 'Kobo Design <contact@kobo-design.fr>',
       to: email,
-      subject: `Nous avons bien reçu votre demande, ${esc(prenom)} !`,
+      subject: isNewAccount ? `Votre demande est bien reçue et votre espace client est prêt, ${esc(prenom)} !` : `Nous avons bien reçu votre demande, ${esc(prenom)} !`,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A1A;">
           <div style="background:#1A1A1A;padding:24px 32px;border-radius:8px 8px 0 0;">
@@ -209,6 +220,9 @@ module.exports = async function handler(req, res) {
               <p style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#CD3E00;margin:0 0 6px;">Votre message</p>
               <p style="font-size:13px;line-height:1.6;margin:0;color:#555;white-space:pre-wrap;">${esc(message)}</p>
             </div>
+            ${accessLink ? `<p style="font-size:14px;line-height:1.7;margin:0 0 16px;">${isNewAccount ? 'Nous avons créé votre espace client : vous pouvez y suivre l\'avancement de votre projet, consulter vos documents et nous écrire directement.' : 'Votre demande a été ajoutée à votre espace client.'}</p>
+            <a href="${accessLink}" style="display:inline-block;background:#CD3E00;color:#fff;padding:14px 28px;border-radius:8px;font-weight:700;font-size:13px;letter-spacing:.08em;text-decoration:none;margin-bottom:8px;">${isNewAccount ? 'Créer mon mot de passe →' : 'Accéder à mon espace →'}</a>
+            <p style="font-size:11px;color:#999;margin:0 0 24px;">Ce lien est valable 24h. Ensuite, rendez-vous sur <a href="https://www.kobo-design.fr/espace-client2" style="color:#CD3E00">kobo-design.fr/espace-client2</a>.</p>` : ''}
             <p style="font-size:13px;color:#888;margin:0;">Une question ? Répondez directement à cet email ou appelez-nous.<br>À très bientôt,<br><strong>L'équipe Kobo Design</strong></p>
           </div>
           <p style="text-align:center;font-size:11px;color:#999;margin-top:16px;">Kobo Design · 76 Rue Mandron · 33000 Bordeaux</p>
