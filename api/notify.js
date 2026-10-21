@@ -1,5 +1,5 @@
 // api/notify.js — Endpoint unifié pour toutes les notifications email client
-// actions : message | statut | document | email-libre | bulk-email | rappels-digest (+ GET rappels-tick pour le planificateur)
+// actions : message | statut | assigner | document | email-libre | bulk-email | rappels-digest (+ GET rappels-tick pour le planificateur)
 // ── Rappels clients : récap du matin et point « pas encore rappelés » de fin de journée ──
 const escH = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 function parisNow() {
@@ -141,6 +141,41 @@ module.exports = async function handler(req, res) {
       <p style="font-size:14px;font-weight:700;margin:0;color:#1A1A1A">${esc(nom)}</p>
     </div>`;
     const GOOGLE_REVIEW_URL = 'https://www.google.com/search?q=Kobo+design+Avis&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_5cT2chRByBSV9iD2hU40JkOKKmVHHKGSvfjfMsxMcmu1NdXPSwbTeFlQ1kOFZi3-ArTvNOGp7P8oiv8CNC1XSHGbgNI';
+
+    // ── ACTION : assigner (un projet est confié à un membre de l'équipe : mail à cette personne, jamais au client) ──
+    if (action === 'assigner') {
+      const { projet_id, assigne_a, note } = body;
+      if (!projet_id) return res.status(400).json({ error: 'Projet manquant' });
+      const dest = assigne_a ? String(assigne_a).trim() : null;
+      if (dest && !ADMIN_EMAILS.includes(dest)) return res.status(400).json({ error: 'Cette adresse ne fait pas partie de l\'équipe' });
+      const { data: projet } = await sb.from('projets').select('*').eq('id', projet_id).single();
+      if (!projet) return res.status(404).json({ error: 'Projet introuvable' });
+      const upd = { assigne_a: dest, updated_at: new Date().toISOString() };
+      if (dest && !projet.statut) upd.statut = 'En étude';
+      const { error: upErr } = await sb.from('projets').update(upd).eq('id', projet_id);
+      if (upErr) return res.status(500).json({ error: upErr.message, colonne_manquante: /assigne_a/.test(upErr.message || '') });
+      // pas de mail si on retire l'assignation, ou si la personne se l'attribue elle-même
+      if (!dest || dest === user.email || dest === projet.assigne_a) return res.status(200).json({ ok: true, mail: false });
+      const { data: client } = await sb.from('clients').select('prenom, nom, email, telephone').eq('id', projet.client_id).maybeSingle();
+      const NOMS = { 'quentin.joubert@icloud.com': 'Quentin', 'pascal@symetry.fr': 'Pascal', 'lena@symetry.fr': 'Léna', 'mathilde@symetry.fr': 'Mathilde', 'armelle@symetry.fr': 'Armelle' };
+      const par = NOMS[user.email] || user.email;
+      const cl = client ? ((client.prenom || '') + ' ' + (client.nom || '')).trim() : '';
+      await resend.emails.send({
+        from: 'Kobo Design <contact@kobo-design.fr>',
+        to: dest,
+        subject: 'Projet à étudier : ' + (projet.nom || '') + (cl ? ' (' + cl + ')' : ''),
+        html: `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#1A1A1A;">
+          ${HEADER('Un projet t\'est confié pour étude', 'Confié par ' + esc(par))}
+          <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
+            ${PROJET_BADGE(projet.nom)}
+            ${cl ? `<p style="font-size:14px;margin:0 0 14px"><strong>Client :</strong> ${esc(cl)}${client && client.telephone ? ' · ' + esc(client.telephone) : ''}${client && client.email ? ' · ' + esc(client.email) : ''}</p>` : ''}
+            ${note ? `<div style="background:#fff;border-radius:8px;padding:16px 20px;border-left:3px solid #CD3E00;margin-bottom:20px;"><p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${esc(note)}</p></div>` : ''}
+            <p style="font-size:13px;color:#555;margin:0 0 22px">Le client n'a reçu aucun mail : cette demande est interne.</p>
+            ${BTN('https://www.kobo-design.fr/admin', 'Ouvrir le projet dans l\'admin')}
+          </div>${FOOTER}</div>`,
+      });
+      return res.status(200).json({ ok: true, mail: true });
+    }
 
     // ── ACTION : attach-config (l'équipe modélise un meuble pour un projet reçu par le formulaire) ──
     if (action === 'attach-config') {
