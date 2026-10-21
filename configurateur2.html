@@ -5328,6 +5328,21 @@ async function submitConfig(){
             right: tvSideRight.map(function(r){ return { W_cm:r.W, H_cm:r.H, P_cm:r.P, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
             top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:exportElementsWithBounds(tvTopElems, S_tvSide.topW, S_tvSide.topH) } : null,
           } : undefined,
+          // liste COMPLÈTE de tous les caissons, de gauche à droite (principal compris) : chacun avec ses cotes, ses éléments bornés et son technical_spec
+          caissons: (function(){
+            var rows=[], x=0, add=function(role,W,H,P,els,noPos){
+              rows.push({ id:'C'+(rows.length+1), role:role, x_start_cm: noPos?null:x, L_cm:W, H_cm:H, P_cm:P,
+                elements:exportElementsWithBounds(els, W, H), technical_spec: buildTechSpec(els, W/100, H/100, P/100) });
+              if(!noPos) x+=W;
+            };
+            for(var li=tvSideLeft.length-1; li>=0; li--){ var rl=tvSideLeft[li]; add('gauche', rl.W, rl.H, rl.P||Math.round(S.CairsonP*100), rl.elems); }
+            add('principal', Math.round(S.CL*100), Math.round(S.CH*100), Math.round(S.CairsonP*100), caissonElements);
+            tvSideRight.forEach(function(rr){ add('droite', rr.W, rr.H, rr.P||Math.round(S.CairsonP*100), rr.elems); });
+            if(hasAngle) add('angle', Math.round(S.CL2*100), Math.round(S.CH*100), Math.round(S.CairsonP*100), caissonElements2, true);
+            if(S_tvSide.topActive) add('dessus', S_tvSide.topW, S_tvSide.topH, Math.round(S.CairsonP*100), tvTopElems, true);
+            return rows;
+          })(),
+          longueur_totale_cm: tvSideLeft.concat(tvSideRight).reduce(function(a,r){return a+r.W;}, Math.round(S.CL*100)),
           cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
           devis_quantities: computeFullDevisQuantities(),
           counts:counts

@@ -1030,6 +1030,7 @@
           <option value="Devis en cours">Devis en cours</option><option value="Devis envoyé">Devis envoyé</option><option value="Fabrication">Fabrication</option>
           <option value="Commandé">Commandé</option><option value="Livraison">Livraison</option><option value="Terminé">Terminé</option>
         </select>
+        <select id="pf-assigne" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;"><option value="">Toute l'équipe</option><option value="__moi">Mes projets</option><option value="__aucun">Non assignés</option><option value="quentin.joubert@icloud.com">Quentin</option><option value="pascal@symetry.fr">Pascal</option><option value="lena@symetry.fr">Léna</option><option value="mathilde@symetry.fr">Mathilde</option><option value="armelle@symetry.fr">Armelle</option></select>
         <select id="pf-type" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
           <option value="">Pro et particuliers</option><option value="pro">Pro</option><option value="particulier">Particuliers</option>
         </select>
@@ -1517,6 +1518,13 @@
       </select>
       <button class="btn btn-primary btn-sm" onclick="updateProjetStatut()">Mettre à jour</button>
       <button class="btn btn-danger btn-sm" onclick="deleteProjet()">Supprimer</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;padding:10px 12px;background:rgba(26,26,26,.03);border-radius:8px;">
+      <span style="font-size:12px;font-weight:700;">Étude confiée à</span>
+      <select id="pd-assigne" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;"><option value="">Personne</option><option value="quentin.joubert@icloud.com">Quentin</option><option value="pascal@symetry.fr">Pascal</option><option value="lena@symetry.fr">Léna</option><option value="mathilde@symetry.fr">Mathilde</option><option value="armelle@symetry.fr">Armelle</option></select>
+      <input id="pd-assigne-note" placeholder="Message pour la personne (facultatif)" style="flex:1 1 200px;min-width:160px;padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
+      <button class="btn btn-primary btn-sm" onclick="assignerProjet()">Confier</button>
+      <span style="flex-basis:100%;font-size:11px;color:rgba(26,26,26,.5);">La personne reçoit un e-mail. Le client n'en reçoit aucun.</span>
     </div>
 
     <!-- Montant + Date livraison -->
@@ -4698,10 +4706,11 @@ function dedupeEls(els){
     if (!tbody) return;
     const val = id => (document.getElementById(id) || {}).value || '';
     const norm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const me = val('pf-meuble'), og = val('pf-origine');
+    const me = val('pf-meuble'), og = val('pf-origine'), as_ = val('pf-assigne');
     const q = norm(val('pf-q')), st = val('pf-statut'), ty = val('pf-type'), mo = val('pf-montant'), dt = parseInt(val('pf-date')) || 0, tri = val('pf-tri') || 'recent';
     let list = allProjets.filter(p => {
       if (st === '__actifs' ? p.statut === 'Terminé' : (st && p.statut !== st)) return false;
+      if (as_) { const a = p.assigne_a || ''; if (as_ === '__aucun' ? a : as_ === '__moi' ? a !== (adminUser && adminUser.email) : a !== as_) return false; }
       if (ty) { const isPro = p.clients && /pro/i.test(p.clients.type_client || ''); if ((ty === 'pro') !== !!isPro) return false; }
       if (me && (me === 'aucun' ? p._ft : p._ft !== me)) return false;
       if (og && ((og === 'configurateur') !== !!p._ft)) return false;
@@ -4725,7 +4734,7 @@ function dedupeEls(els){
       <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
         <td style="font-weight:600;">${escHtml(p.nom)}<div style="font-size:10.5px;font-weight:500;color:rgba(26,26,26,.45);margin-top:2px;">${p._ft ? escHtml(TYPE_LABELS[p._ft] || 'Meuble') + ' · configurateur' : (p._ft === null ? 'Formulaire' : '')}</div></td>
         <td>${p.clients ? `<span style="display:inline-flex;align-items:center;gap:6px;">${escHtml(p.clients.prenom + ' ' + p.clients.nom)}${clientTypeBadge(p.clients)}</span>` : '—'}</td>
-        <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span></td>
+        <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span>${p.assigne_a ? `<div style="font-size:10.5px;font-weight:600;color:rgba(26,26,26,.55);margin-top:3px;">→ ${escHtml(NOMS_EQUIPE[p.assigne_a] || p.assigne_a)}</div>` : ''}</td>
         <td style="font-weight:600;">${p.montant && montantVisible(p) ? formatCurrency(p.montant) : '—'}</td>
         <td style="font-size:11px;color:rgba(26,26,26,.4);">${new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openProjetDetail('${p.id}','${escHtml(p.nom)}')">Ouvrir</button></td>
@@ -5082,6 +5091,7 @@ function dedupeEls(els){
     }
     if (projet) {
       document.getElementById('pd-statut').value = projet.statut || 'En étude';
+      var _as = document.getElementById('pd-assigne'); if (_as) _as.value = projet.assigne_a || ''; var _an = document.getElementById('pd-assigne-note'); if (_an) _an.value = '';
       document.getElementById('pd-montant').value = montantVisible(projet) ? (projet.montant || '') : '';
       document.getElementById('pd-montant').placeholder = montantVisible(projet) ? '0' : 'visible après envoi du devis';
       document.getElementById('pd-date-livraison').value = projet.date_livraison ? projet.date_livraison.split('T')[0] : '';
@@ -5471,10 +5481,36 @@ function dedupeEls(els){
     }).join('');
   }
 
+  var NOMS_EQUIPE = { 'quentin.joubert@icloud.com': 'Quentin', 'pascal@symetry.fr': 'Pascal', 'lena@symetry.fr': 'Léna', 'mathilde@symetry.fr': 'Mathilde', 'armelle@symetry.fr': 'Armelle' };
+  async function assignerProjet() {
+    if (!currentProjetId) return;
+    var dest = document.getElementById('pd-assigne').value, note = (document.getElementById('pd-assigne-note').value || '').trim();
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'assigner', projet_id: currentProjetId, assigne_a: dest || null, note: note }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok) return showToast(j.colonne_manquante ? "Colonne manquante : exécute docs/supabase-projets-assigne.sql dans Supabase" : (j.error || 'Assignation impossible'), 'err');
+      var pr = allProjets.find(function (x) { return x.id === currentProjetId; }); if (pr) pr.assigne_a = dest || null;
+      if (pr && pr.client_id) logActivite(pr.client_id, 'statut', 'Étude du projet « ' + (pr.nom || '') + ' » confiée à ' + (dest ? NOMS_EQUIPE[dest] || dest : 'personne'), { projet_id: currentProjetId, auto: true });
+      showToast(!dest ? 'Assignation retirée' : (j.mail ? NOMS_EQUIPE[dest] + ' a reçu un e-mail (le client n\'en reçoit pas)' : 'Assigné à ' + NOMS_EQUIPE[dest]));
+      renderProjets();
+    } catch (e) { showToast('Assignation impossible : ' + (e.message || e), 'err'); }
+  }
+
   async function loadProjetMsgs() {
     await sb.from('messages').update({ lu: true }).eq('projet_id', currentProjetId).eq('expediteur', 'client');
     const { data: msgs } = await sb.from('messages').select('*').eq('projet_id', currentProjetId).order('created_at', { ascending: true });
-    renderMsgThread('pd-msgs', msgs || []);
+    // la messagerie générale du client est rattachée à ses projets : on l'affiche ici, dans l'ordre chronologique
+    const pr = allProjets.find(x => x.id === currentProjetId);
+    let gen = [];
+    if (pr && pr.client_id) {
+      await sb.from('messages_general').update({ lu: true }).eq('client_id', pr.client_id).eq('expediteur', 'client');
+      const r = await sb.from('messages_general').select('*').eq('client_id', pr.client_id).order('created_at', { ascending: true });
+      gen = (r.data || []).map(m => Object.assign({}, m, { general: true }));
+    }
+    const all = (msgs || []).concat(gen).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    renderMsgThread('pd-msgs', all);
     loadUnreadCount();
   }
 
@@ -5484,7 +5520,7 @@ function dedupeEls(els){
     el.innerHTML = msgs.map(m => `
       <div class="msg msg--${m.expediteur}">
         <div class="msg__bubble">${escHtml(m.contenu)}</div>
-        <div class="msg__meta">${m.expediteur === 'client' ? 'Client' : 'Kobo Design'} · ${new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
+        <div class="msg__meta">${m.expediteur === 'client' ? 'Client' : 'Kobo Design'} · ${new Date(m.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} ${new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${m.general ? ' · <i>messagerie générale</i>' : ''}</div>
       </div>`).join('');
     el.scrollTop = el.scrollHeight;
   }
