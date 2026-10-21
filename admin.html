@@ -5779,8 +5779,8 @@ function dedupeEls(els){
         logActivite(prevProjet.client_id, 'statut', 'Statut du projet « ' + (prevProjet.nom || '') + ' » : ' + (prevProjet.statut || '—') + ' → ' + statut, { projet_id: currentProjetId, auto: true });
       }
       await Promise.all([loadProjets(), loadDashboard()]);
-      // Notifier le client du changement de statut (sauf « Analyse en cours » interne et « Proposition envoyée » : la proposition part avec son PDF)
-      if (statut === 'Analyse en cours' || statut === 'Prix validé' || statut === 'Proposition envoyée') return;
+      // Notifier le client du changement de statut (sauf « Terminé », « Analyse en cours » interne et « Proposition envoyée » : la proposition part avec son PDF)
+      if (statut === 'Analyse en cours' || statut === 'Prix validé' || statut === 'Proposition envoyée' || statut === 'Terminé') return;
       try {
         const { data: { session } } = await sb.auth.getSession();
         await fetch('/api/notify', {
