@@ -220,6 +220,16 @@ module.exports = async function handler(req, res) {
       if (!client_id || !contenu) return res.status(400).json({ error: 'Paramètres manquants' });
       const { data: client } = await sb.from('clients').select('email, prenom').eq('id', client_id).single();
       if (!client?.email) return res.status(404).json({ error: 'Client introuvable' });
+      // Compte sans mot de passe (créé par un formulaire, jamais activé) : le mail contient son accès pour créer son mot de passe
+      let accesLien = null;
+      try {
+        const { data: au } = await sb.auth.admin.getUserById(client_id);
+        if (au && au.user && au.user.user_metadata && au.user.user_metadata.needs_password === true) {
+          const { data: ld } = await sb.auth.admin.generateLink({ type: 'magiclink', email: client.email, options: { redirectTo: 'https://www.kobo-design.fr/espace-client2' } });
+          const th = ld && ld.properties && ld.properties.hashed_token;
+          accesLien = th ? 'https://www.kobo-design.fr/espace-client2?token_hash=' + th + '&type=magiclink&new=1' : null;
+        }
+      } catch (e) { console.warn('message: lien d\'accès', e.message); }
       await resend.emails.send({
         from: 'Kobo Design <contact@kobo-design.fr>',
         to: client.email,
@@ -231,7 +241,7 @@ module.exports = async function handler(req, res) {
             <div style="background:#fff;border-radius:8px;padding:20px 24px;border-left:3px solid #CD3E00;margin-bottom:24px;">
               <p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${esc(contenu)}</p>
             </div>
-            ${BTN('https://www.kobo-design.fr/espace-client2', 'Voir le message')}
+            ${accesLien ? `<p style="font-size:13px;line-height:1.7;margin:0 0 16px;color:#333">Pour lire vos messages et nous répondre, créez votre mot de passe en un clic (votre espace client est prêt) :</p>${BTN(accesLien, 'Créer mon mot de passe →')}<p style="font-size:11px;color:#999;margin:14px 0 0;">Ce lien est valable 24h. Ensuite : <a href="https://www.kobo-design.fr/espace-client2" style="color:#CD3E00">kobo-design.fr/espace-client2</a>.</p>` : BTN('https://www.kobo-design.fr/espace-client2', 'Voir le message')}
           </div>
           ${FOOTER}
         </div>`,
