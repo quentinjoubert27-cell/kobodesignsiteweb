@@ -1870,7 +1870,7 @@
       if (error) throw error;
       currentTarifsGlobaux = prices;
       showToast('Prix enregistrés !');
-      try { autoRecalcMontants(true); } catch (e) {}   // nouveaux tarifs : on recalcule les montants tout de suite
+      try { autoRecalcMontants(true); } catch (e) {}   // nouveaux tarifs : on recalcule les montants tout de suite (comme à chaque ouverture du tableau de bord)
     } catch (err) {
       console.error('saveMateriauxPrix error:', err);
       showToast('Erreur d\'enregistrement : ' + (err.message || String(err)), 'err');
@@ -3799,7 +3799,7 @@
   // Calcule et enregistre le montant de tous les projets non fermes, sans ouvrir chaque fiche. Renvoie true si quelque chose a changé.
   // colonnes des configurations sans l'image d'aperçu (la plus lourde) : pour les listes et les calculs
   var CFG_SDB_LISTE = 'id,created_at,prenom,email,message,type,decouverte,projet_id,telephone,code_postal,meuble_l,meuble_h,meuble_p,meuble_mat,plan_l,plan_p,plan_ep,plan_mat,nb_vasques,vasque_w,vasque_d,vasque_label,nb_tablettes,nb_separateurs,nb_portes,nb_tiroirs';
-  // pour le calcul des montants : seulement les morceaux du JSON utiles au prix (pas la liste technique des caissons)
+  // pour le calcul des montants (refait à chaque ouverture du tableau de bord) : seulement les morceaux du JSON utiles au prix, sans l'image d'aperçu ni la liste technique des caissons
   var CFG_SDB_PRIX = 'id,projet_id,decouverte,created_at,meuble_l,meuble_h,meuble_p,meuble_mat,elements,rc_meuble:raw_config->meuble,rc_elements:raw_config->elements,rc_tvSide:raw_config->tvSide,rc_caisson2:raw_config->caisson2,rc_plan:raw_config->plan,rc_vasques:raw_config->vasques,rc_ov:raw_config->tableur_overrides,rc_ft:raw_config->furniture_type';
   function cfgPrixRow(c) {
     var rc = {};
@@ -3810,8 +3810,6 @@
   }
   async function autoRecalcMontants(force) {
     try {
-      // une fois par heure au plus (le recalcul relit toutes les configurations)
-      try { var _t = parseInt(localStorage.getItem('kobo_recalc_ts') || '0', 10); if (!force && Date.now() - _t < 3600000) return false; } catch (e) {}
       if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
       if (!currentTarifsGlobaux) return false;
       var [{ data: projets }, { data: configsRaw }] = await Promise.all([
@@ -3819,7 +3817,7 @@
         sb.from('configs_sdb').select(CFG_SDB_PRIX).order('created_at', { ascending: false })
       ]);
       var configs = (configsRaw || []).map(cfgPrixRow);
-      try { localStorage.setItem('kobo_recalc_ts', String(Date.now())); } catch (e) {}
+
       var latest = {}, equipe = {};
       (configs || []).forEach(function (c) {
         if (!c.projet_id) return;
