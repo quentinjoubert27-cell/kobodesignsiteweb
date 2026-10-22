@@ -131,15 +131,26 @@ def load_spec(path):
     # caissons : [(x_origine_mm, spec)] ; le principal part de 0, les latéraux se collent de part et d'autre
     cais = [(0, spec)]
     side = cfg.get("tvSide") or {}
+    # caissons empilés (niveau > 0) : posés sur leur colonne, à la hauteur y_cm ; les autres sont des colonnes côte à côte
+    left_cols = [r for r in (side.get("left") or []) if not r.get("niveau")]
+    col_x = {len(left_cols): 0}
     off = 0
-    for r in side.get("left") or []:
+    for r in left_cols:
         W = round(r["W_cm"] * 10); off += W
         cais.append((-off, spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))))
+        if r.get("col") is not None: col_x[r["col"]] = -off
     off = Lmain
-    for r in side.get("right") or []:
+    for r in [r for r in (side.get("right") or []) if not r.get("niveau")]:
         W = round(r["W_cm"] * 10)
         cais.append((off, spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))))
+        if r.get("col") is not None: col_x[r["col"]] = off
         off += W
+    for r in (side.get("left") or []) + (side.get("right") or []):
+        if not r.get("niveau") or r.get("col") not in col_x: continue
+        W = round(r["W_cm"] * 10)
+        sp = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
+        sp["_oy_mm"] = round(float(r.get("y_cm", 0)) * 10)
+        cais.append((col_x[r["col"]], sp))
     if side.get("top"):
         print("Avertissement : caisson « dessus » (tvSide.top) non dessiné.")
     xmin = min(x for x, _ in cais)
@@ -174,7 +185,8 @@ def count_raw(cfg):
         v = side.get(k) or []
         for r in (v if isinstance(v, list) else [v]):
             if r and r.get("W_cm"):
-                lists.append(r.get("elements") or []); widths.append(r["W_cm"] * 10)
+                lists.append(r.get("elements") or [])
+                if not r.get("niveau"): widths.append(r["W_cm"] * 10)   # un caisson empilé n'allonge pas le meuble
     for l in lists:
         c = tally(l)
         for k in c: tot[k] += c[k]

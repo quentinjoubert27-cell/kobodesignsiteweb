@@ -358,8 +358,10 @@ def build_furniture(cfg, opt, open_state=False):
     rnd = random.Random(7)
     objs = []
 
+    oyc = [0]   # hauteur du bas du caisson en cours (caisson empilé sur un autre)
+
     def box(nm, ox, xl, xr, yb, yt, d0, d1, grain, mt=None):
-        o = add_box(nm, (ox + xl) * mm, (ox + xr) * mm, d0 * mm, d1 * mm, yb * mm + z_off, yt * mm + z_off, mt or wood, grain, rnd)
+        o = add_box(nm, (ox + xl) * mm, (ox + xr) * mm, d0 * mm, d1 * mm, (yb + oyc[0]) * mm + z_off, (yt + oyc[0]) * mm + z_off, mt or wood, grain, rnd)
         if o: objs.append(o)
         return o
 
@@ -371,10 +373,11 @@ def build_furniture(cfg, opt, open_state=False):
         while y + 26 <= yt - fr - 6:
             parts.append((xl + fr, xr - fr, y, y + 26)); y += 34
         for pi_, (a, b, c0, c1) in enumerate(parts):
-            o = add_box("porte" if pi_ == 0 else "lame", (ox + a) * mm, (ox + b) * mm, 0, th * mm, c0 * mm + z_off, c1 * mm + z_off, mt, "h", rnd, pivot=pivot, rot_z=rot)
+            o = add_box("porte" if pi_ == 0 else "lame", (ox + a) * mm, (ox + b) * mm, 0, th * mm, (c0 + oyc[0]) * mm + z_off, (c1 + oyc[0]) * mm + z_off, mt, "h", rnd, pivot=pivot, rot_z=rot)
             if o: objs.append(o)
 
     for ox, spec in cfg["_caissons"]:
+        oyc[0] = spec.get("_oy_mm", 0)
         W = spec["overall_mm"]["width"]; H = spec["overall_mm"]["height"]
         B = lambda nm, xl, xr, yb, yt, d0, d1, grain, mt=None: box(nm, ox, xl, xr, yb, yt, d0, d1, grain, mt)
         for p in spec.get("structural_panels", []):
@@ -393,7 +396,7 @@ def build_furniture(cfg, opt, open_state=False):
             sm_ = blanc if (rd.get("interieur") == "blanc" and any(a <= cx_ <= b for a, b in door_bays)) else None   # derrière une porte : étagère blanche
             B("shelf", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], s_["y_top_mm"], 12, min(D - 8, 12 + s_.get("depth_mm", D - ep)), "h", sm_)
         for b_ in spec.get("bars", []):
-            o = add_cyl("tringle", (ox + b_["x_left_mm"]) * mm, (ox + b_["x_right_mm"]) * mm, 0.5 * D * mm, b_["y_center_mm"] * mm + z_off, b_.get("diameter_mm", 28) * mm / 2, metal)
+            o = add_cyl("tringle", (ox + b_["x_left_mm"]) * mm, (ox + b_["x_right_mm"]) * mm, 0.5 * D * mm, (b_["y_center_mm"] + oyc[0]) * mm + z_off, b_.get("diameter_mm", 28) * mm / 2, metal)
             objs.append(o)
         # façades encastrées, affleurant la face avant du caisson (jeu de 2 mm entre éléments)
         sides = hinge_sides(spec, ep) if open_state else []
@@ -429,7 +432,7 @@ def build_furniture(cfg, opt, open_state=False):
                 rot = math.radians(-angle_for(di) if left else angle_for(di))
                 if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm, pivot=(px, 0), rot=rot)
                 else:
-                    o = add_box("porte", (ox + xl) * mm, (ox + xr) * mm, 0, th * mm, yb * mm + z_off, yt * mm + z_off, dm, "v", rnd,
+                    o = add_box("porte", (ox + xl) * mm, (ox + xr) * mm, 0, th * mm, (yb + oyc[0]) * mm + z_off, (yt + oyc[0]) * mm + z_off, dm, "v", rnd,
                                 pivot=(px, 0), rot_z=rot)
                     if o: objs.append(o)
         for d in spec.get("drawers", []):
@@ -449,7 +452,7 @@ def build_furniture(cfg, opt, open_state=False):
             B("tiroir_cote_d", c1 - 12, c1, hb, hb + ht_, y0, y1, "h", inside)
             B("tiroir_dos", c0, c1, hb, hb + ht_, y1 - 12, y1, "h", inside)
     Wtot = max(ox + sp["overall_mm"]["width"] for ox, sp in cfg["_caissons"])
-    Htot = max(sp["overall_mm"]["height"] for _, sp in cfg["_caissons"])
+    Htot = max(sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"])
     # plinthe continue : panneau de façade en retrait (≈ 30 mm), sans retour latéral, sur pieds
     if plinth > 0:
         objs.append(add_box("plinthe", ep * mm, (Wtot - ep) * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
