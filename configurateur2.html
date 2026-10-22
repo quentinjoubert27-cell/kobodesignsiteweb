@@ -1347,7 +1347,7 @@ window.addEventListener('scroll', function(){
 var S = {
   step:1,
   // Meuble
-  CL:1.20, CLtot:1.20, CH:0.45, CairsonP:0.36, matCais:0,
+  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, CairsonP:0.36, matCais:0,
   CL2:1.20,
   caissonOffset:0,
   sdbBaseH:10, caissonYOff:0.10,
@@ -1432,8 +1432,9 @@ var bTouchRotating = false, bTouchLastX = 0, bTouchLastY = 0;
 // 'R0'/'R1'/... = caissons droite, 'T' = caisson du dessus (toujours unique, UI retirée mais code inerte conservé)
 // Chaque caisson latéral gauche/droite est un "record" autonome regroupant ses données + son état 3D,
 // ce qui permet d'en avoir un nombre illimité de chaque côté (au lieu d'un seul avant).
+var _tvUid=0;
 function makeTvRecord(W_cm, H_cm){
-  return { W:W_cm, H:H_cm, P:Math.round(S.CairsonP*100), elems:[], openState:{}, meshes:[], hp:null, guides:null, ghost:null, grp:null };
+  return { uid:'u'+(++_tvUid), Htot:H_cm, stack:null, below:null, W:W_cm, H:H_cm, P:Math.round(S.CairsonP*100), elems:[], openState:{}, meshes:[], hp:null, guides:null, ghost:null, grp:null };
 }
 var tvSideLeft = [];   // [{W,H,elems,openState,meshes,hp,guides,ghost,grp}, ...] — index 0 = collé au principal
 var tvSideRight = [];  // idem, côté droit
@@ -2142,19 +2143,38 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
   // pour un caisson latéral gauche/droite ; le dessus garde ses variables dédiées (tvTop*).
   // Empilement cumulé : le caisson gauche d'index i se colle au bord du précédent (ou du principal si i=0).
   var matBarreTV=new THREE.MeshStandardMaterial({color:0xC8C8C8,roughness:0.10,metalness:0.90});
-  var defs=[];
+  var defs=[], posOf={};   // posOf : colonne -> {px, top} pour poser les caissons empilés au-dessus
+  posOf['M']={px:0, top:mainCH};
   var offL=mainCL/2;
   tvSideLeft.forEach(function(r){
+    if(r.stack) return;
     var W=r.W/100, H=r.H/100;
     defs.push({ W:W, H:H, px:-(offL+W/2), py:0, record:r });
+    posOf[r.uid]={px:-(offL+W/2), top:H};
     offL+=W;
   });
   var offR=mainCL/2;
   tvSideRight.forEach(function(r){
+    if(r.stack) return;
     var W=r.W/100, H=r.H/100;
     defs.push({ W:W, H:H, px:(offR+W/2), py:0, record:r });
+    posOf[r.uid]={px:(offR+W/2), top:H};
     offR+=W;
   });
+  // caissons empilés (hauteur au-delà de la limite d'un caisson) : posés sur celui du dessous, même colonne
+  (function(){
+    var pend=tvSideLeft.concat(tvSideRight).filter(function(r){return r.stack;}), guard=0;
+    while(pend.length && guard++<50){
+      pend=pend.filter(function(r){
+        var key=r.below==='M'?'M':r.below.uid, base=posOf[key];
+        if(!base) return true;
+        var H=r.H/100;
+        defs.push({ W:r.W/100, H:H, px:base.px, py:base.top, record:r });
+        posOf[r.uid]={px:base.px, top:base.top+H};
+        return false;
+      });
+    }
+  })();
   if(S_tvSide.topActive){
     defs.push({ W:S_tvSide.topW/100, H:S_tvSide.topH/100, px:S_tvSide.topX, py:mainCH+S_tvSide.topY, isTop:true });
   }
@@ -2352,10 +2372,10 @@ function setCL2(v){
 // unique comme avant), removeTvSide en retire un précis.
 function addTvSide(side){
   var list = side==='left' ? tvSideLeft : tvSideRight;
-  var rec = makeTvRecord(60, Math.round(S.CH*100));
+  var rec = makeTvRecord(60, Math.round(S.CHtot*100));
   list.push(rec);
-  if(AUTO_SPLIT) _recomputeTotal(rec.W);
-  activeCaisson = (side==='left'?'L':'R') + (list.length-1);
+  if(AUTO_SPLIT){ _recomputeTotal(rec.W); _syncStack(); }
+  activeCaisson = (side==='left'?'L':'R') + (list.indexOf(rec));
   buildCaisson();
   if(planMesh) buildPlan();
   renderTvSideList();
@@ -2364,7 +2384,10 @@ function addTvSide(side){
 function removeTvSide(side, idx){
   var list = side==='left' ? tvSideLeft : tvSideRight;
   var _rm=list.splice(idx,1)[0];
+  // ses caissons empilés partent avec lui
+  if(_rm){ tvSideLeft=tvSideLeft.filter(function(r){ return !(r.stack && _belowChainHas(r,_rm)); }); tvSideRight=tvSideRight.filter(function(r){ return !(r.stack && _belowChainHas(r,_rm)); }); }
   _recomputeTotal(-(_rm?_rm.W:0));
+  if(AUTO_SPLIT) _syncStack();
   activeCaisson = 1; // retour au principal, plus simple que de recalculer un id encore valide
   buildCaisson();
   if(planMesh) buildPlan();
@@ -2758,8 +2781,8 @@ function _rebuildEditBar(){
     if(MULTI()){
       var _tv=currentFT==='tv';
       cBtns.push({id:1,lbl:_tv?'Centre':'Caisson 1'});
-      tvSideLeft.forEach(function(r,i){ cBtns.push({id:'L'+i,lbl:'Gauche '+(i+1)}); });
-      tvSideRight.forEach(function(r,i){ cBtns.push({id:'R'+i,lbl:_tv?'Droite '+(i+1):'Caisson '+(i+2)}); });
+      tvSideLeft.forEach(function(r,i){ cBtns.push({id:'L'+i,lbl:r.stack?'Haut '+(i+1):'Gauche '+(i+1)}); });
+      tvSideRight.forEach(function(r,i){ cBtns.push({id:'R'+i,lbl:r.stack?'Haut '+(i+1):(_tv?'Droite '+(i+1):'Caisson '+(i+2))}); });
       if(S_tvSide.topActive)   cBtns.push({id:'T',lbl:'Dessus'});
     }
     if(cBtns.length>1){
@@ -3799,8 +3822,8 @@ cvs.addEventListener('pointermove',function(e){
         {v:-(mainCL/2+topW/2), lbl:'ext-gauche'},
         {v: (mainCL/2-topW/2), lbl:'ext-droit'},
       ];
-      var totalLeftW=tvSideLeft.reduce(function(s,r){return s+r.W/100;},0);
-      var totalRightW=tvSideRight.reduce(function(s,r){return s+r.W/100;},0);
+      var totalLeftW=tvSideLeft.filter(function(r){return !r.stack;}).reduce(function(s,r){return s+r.W/100;},0);
+      var totalRightW=tvSideRight.filter(function(r){return !r.stack;}).reduce(function(s,r){return s+r.W/100;},0);
       if(tvSideLeft.length)  snapsX.push({v:-(mainCL/2+totalLeftW/2), lbl:'centre-gauche'});
       if(tvSideRight.length) snapsX.push({v: (mainCL/2+totalRightW/2), lbl:'centre-droite'});
       snapsX.forEach(function(s){ if(Math.abs(newX-s.v)<thresh){ newX=s.v; snapX=s.v; } });
@@ -3938,6 +3961,48 @@ function clampDim(inp,fn){
   inp.value=v; fn(v);
 }
 function _clearCaissonEls(){ caissonElements=[]; caissonElements2=[]; updateElementsList(); }
+// Hauteur maximale d'un caisson : au-delà, un caisson supplémentaire se pose au-dessus avec la hauteur restante (300 = 280 + 20)
+var CAISSON_MAX_H = 280, CAISSON_MAX_TOTAL_H = 560;
+function _recH(r){ return r==='M' ? Math.round(S.CH*100) : r.H; }
+function _yBottomOf(r){ if(!r.stack) return 0; var b=r.below; return _yBottomOf(b==='M'?{stack:null}:b)+_recH(b); }
+function _colRoot(r){ var b=r, g=0; while(b && b!=='M' && b.stack && g++<50) b=b.below; return b; }
+// colonnes de gauche à droite : [{root:'M'|record}] ; les caissons empilés sont rattachés à leur colonne
+function _columnsLR(){
+  var cols=[]; for(var i=tvSideLeft.length-1;i>=0;i--){ if(!tvSideLeft[i].stack) cols.push(tvSideLeft[i]); }
+  cols.push('M'); tvSideRight.forEach(function(r){ if(!r.stack) cols.push(r); });
+  return cols;
+}
+function _stackOf(root){ return tvSideLeft.concat(tvSideRight).filter(function(r){ return r.stack && _colRoot(r)===root; }).sort(function(a,b){ return a.stack.lvl-b.stack.lvl; }); }
+function _belowChainHas(r,target){ var b=r.below, g=0; while(b && b!=='M' && g++<50){ if(b===target) return true; b=b.below; } return false; }
+function _levelHeights(Hcm){
+  if(currentFT==='sdb') return [Hcm];
+  var out=[], rem=Hcm;
+  while(rem>0){ var h=Math.min(rem,CAISSON_MAX_H); out.push(h); rem-=h; }
+  return out.length?out:[Hcm];
+}
+function _syncStack(){
+  var all=tvSideLeft.concat(tvSideRight), keep={};
+  all.forEach(function(r){ if(r.stack) keep[(r.below==='M'?'M':r.below.uid)+'|'+r.stack.lvl]=r; });
+  tvSideLeft=tvSideLeft.filter(function(r){return !r.stack;});
+  tvSideRight=tvSideRight.filter(function(r){return !r.stack;});
+  var newStack=[];
+  var chain=function(colKey, base, W, P, levels, target){
+    var below=base;
+    for(var l=1;l<levels.length;l++){
+      var k=colKey+'|'+l, r=keep[k];
+      if(!r||r.W!==W||r.H!==levels[l]||r.P!==P){ var nr=makeTvRecord(W,levels[l]); if(r){ nr.uid=r.uid; } r=nr; }
+      r.W=W; r.H=levels[l]; r.Htot=levels[l]; r.P=P; r.stack={lvl:l}; r.below=below;
+      newStack.push({rec:r,target:target}); below=r;
+    }
+  };
+  // colonne principale
+  var lv=_levelHeights(Math.round(S.CHtot*100));
+  S.CH=lv[0]/100;
+  chain('M','M',Math.round(S.CL*100),Math.round(S.CairsonP*100),lv,'R');
+  tvSideLeft.forEach(function(r){ var l2=_levelHeights(r.Htot||r.H); r.H=l2[0]; chain(r.uid,r,r.W,r.P||Math.round(S.CairsonP*100),l2,'L'); });
+  tvSideRight.forEach(function(r){ var l2=_levelHeights(r.Htot||r.H); r.H=l2[0]; chain(r.uid,r,r.W,r.P||Math.round(S.CairsonP*100),l2,'R'); });
+  newStack.forEach(function(x){ (x.target==='L'?tvSideLeft:tvSideRight).push(x.rec); });
+}
 // Longueur maximale d'un caisson : au-delà, le meuble est automatiquement découpé en plusieurs caissons de même largeur
 var CAISSON_MAX_CM = 120, AUTO_SPLIT = true;
 function MULTI(){ return currentFT==='tv' || tvSideLeft.length>0 || tvSideRight.length>0; }
@@ -3947,13 +4012,14 @@ function _syncCaissonSplit(){
   for(var i=0;i<n;i++) w.push(base+(i<rem?1:0));
   S.CL=w[0]/100;
   tvSideLeft=[];
-  tvSideRight=w.slice(1).map(function(x){ return makeTvRecord(x, Math.round(S.CH*100)); });
+  tvSideRight=w.slice(1).map(function(x){ return makeTvRecord(x, Math.round(S.CHtot*100)); });
+  _syncStack();
   activeCaisson=1;
   renderCaissonWidths();
   if(typeof renderTvSideList==='function') renderTvSideList();
 }
 // Liste unifiée des caissons (de gauche à droite) : longueur (120 cm max) et hauteur modifiables pour chacun
-function _sumW(){ return Math.round(S.CL*100)+tvSideLeft.concat(tvSideRight).reduce(function(a,r){return a+r.W;},0); }
+function _sumW(){ return Math.round(S.CL*100)+tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W;},0); }
 // La longueur totale est un plafond : la somme des caissons ne peut pas la dépasser. Ajouter / retirer un caisson la fait varier de sa largeur.
 function _recomputeTotal(delta){
   if(delta) S.CLtot=Math.round(S.CLtot*100+delta)/100;
@@ -3964,9 +4030,10 @@ function _recomputeTotal(delta){
 function renderCaissonWidths(){
   var info=document.getElementById('split-info'); if(!info) return;
   var rows=[];
-  for(var i=tvSideLeft.length-1;i>=0;i--) rows.push({side:'left',idx:i,W:tvSideLeft[i].W,H:tvSideLeft[i].H,P:tvSideLeft[i].P});
-  rows.push({side:'main',idx:0,W:Math.round(S.CL*100),H:Math.round(S.CH*100),P:Math.round(S.CairsonP*100)});
-  tvSideRight.forEach(function(r,i){ rows.push({side:'right',idx:i,W:r.W,H:r.H,P:r.P}); });
+  var nlev=function(h){ return _levelHeights(h).length; };
+  for(var i=tvSideLeft.length-1;i>=0;i--){ var rl=tvSideLeft[i]; if(rl.stack) continue; rows.push({side:'left',idx:i,W:rl.W,H:rl.Htot||rl.H,P:rl.P,lev:_levelHeights(rl.Htot||rl.H)}); }
+  rows.push({side:'main',idx:0,W:Math.round(S.CL*100),H:Math.round(S.CHtot*100),P:Math.round(S.CairsonP*100),lev:_levelHeights(Math.round(S.CHtot*100))});
+  tvSideRight.forEach(function(r,i){ if(r.stack) return; rows.push({side:'right',idx:i,W:r.W,H:r.Htot||r.H,P:r.P,lev:_levelHeights(r.Htot||r.H)}); });
   if(rows.length<2){ info.style.display='none'; return; }
   info.style.display='';
   var f=function(r,dim,max){ return '<div class="dim-ctrl"><button class="dim-step" onclick="setCaissonDim(\''+r.side+'\','+r.idx+',\''+dim+'\','+(r[dim]-1)+')">−</button>'
@@ -3977,14 +4044,15 @@ function renderCaissonWidths(){
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">Caisson '+(n+1)+'</span>'
       +(r.side!=='main'?'<button onclick="removeTvSide(\''+r.side+'\','+r.idx+')" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button>':'')+'</div>'
       +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
-      +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',280)+'</div>'
+      +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',currentFT==='sdb'?280:CAISSON_MAX_TOTAL_H)+'</div>'
+      +(r.lev.length>1?'<div style="font-size:11px;color:var(--text2);margin:-2px 0 4px">'+r.lev.length+' caissons superposés : '+r.lev.join(' + ')+' cm</div>':'')
       +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div></div>'; }).join('')
     + (function(){ var T=Math.round(S.CLtot*100), sum=rows.reduce(function(a,r){return a+r.W;},0), rest=T-sum;
         return '<div style="margin-top:8px">Longueur totale : <b>'+T+' cm</b> · caissons : <b>'+sum+' cm</b>'
           +(rest>0?'<div style="color:var(--accent);margin-top:2px">Reste '+rest+' cm à répartir (le meuble fera '+sum+' cm)</div>':'<div style="margin-top:2px">Les caissons voisins se réduisent si la longueur totale est atteinte.</div>')+'</div>'; })();
 }
 function setCaissonDim(side,idx,dim,v){
-  v=Math.round(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:dim==='P'?120:280,v));
+  v=Math.round(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:dim==='P'?120:(currentFT==='sdb'?280:CAISSON_MAX_TOTAL_H),v));
   if(dim==='W'){
     // la somme des caissons ne dépasse pas la longueur totale : l'excédent est pris sur les caissons voisins (à droite d'abord, puis à gauche), 20 cm minimum chacun
     var refs=[]; for(var q=tvSideLeft.length-1;q>=0;q--) refs.push({side:'left',idx:q,r:tvSideLeft[q]});
@@ -4004,12 +4072,13 @@ function setCaissonDim(side,idx,dim,v){
     }
   }
   if(side==='main'){
-    if(dim==='W') S.CL=v/100; else if(dim==='P'){ S.CairsonP=v/100; var ip=document.getElementById('inp-CP'); if(ip) ip.value=v; } else { S.CH=v/100; var ih=document.getElementById('inp-CH'); if(ih) ih.value=v; }
+    if(dim==='W') S.CL=v/100; else if(dim==='P'){ S.CairsonP=v/100; var ip=document.getElementById('inp-CP'); if(ip) ip.value=v; } else { S.CHtot=v/100; S.CH=v/100; var ih=document.getElementById('inp-CH'); if(ih) ih.value=v; }
     caissonElements=[];
   } else {
     var r=(side==='left'?tvSideLeft:tvSideRight)[idx]; if(!r) return;
-    r[dim]=v; r.elems=[]; r.openState={};
+    r[dim]=v; if(dim==='H') r.Htot=v; r.elems=[]; r.openState={};
   }
+  if(dim==='H') _syncStack();
   _recomputeTotal(); updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
 function setCL(v){
@@ -4021,7 +4090,7 @@ function setCL(v){
   if(S.nbVasques===2 && S.CLtot<1.20 && S.L<1.20) setNbVasques(1);
   _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
-function setCH(v){ v=Math.round(v); S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _syncCaissonSplit(); _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
+function setCH(v){ v=Math.round(v); S.CHtot=v/100; S.CH=v/100; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _syncCaissonSplit(); _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
 function setCP(v){ v=Math.round(v); S.CairsonP=v/100; tvSideLeft.concat(tvSideRight).forEach(function(r){ r.P=v; }); var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
 function _updatePlanL(){
   S.L = S.CLtot + S.depassG + S.depassD;
@@ -4287,7 +4356,7 @@ function selectFurnitureType(ft){
   var inpCL=document.getElementById('inp-CL');
   if(inpCL){ inpCL.min=cfg.dimL[0]; inpCL.max=cfg.dimL[1]; setCL(cfg.dimL[2]); }
   var inpCH=document.getElementById('inp-CH');
-  if(inpCH){ inpCH.min=cfg.dimH[0]; inpCH.max=cfg.dimH[1]; setCH(cfg.dimH[2]); }
+  if(inpCH){ inpCH.min=cfg.dimH[0]; inpCH.max=(ft==='sdb')?cfg.dimH[1]:Math.max(cfg.dimH[1],CAISSON_MAX_TOTAL_H); setCH(cfg.dimH[2]); }
   var inpCP=document.getElementById('inp-CP');
   if(inpCP){ inpCP.min=cfg.dimP[0]; inpCP.max=cfg.dimP[1]; setCP(cfg.dimP[2]); }
 
@@ -4497,7 +4566,7 @@ function buildRecapStr(){
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
   var cfg=currentFT&&FT_CONFIGS[currentFT];
   var s='• Type : '+(cfg?cfg.label:'—')+'\n'
-       +'• Meuble : '+Math.round(S.CLtot*100)+'L × '+Math.round(S.CH*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n';
+       +'• Meuble : '+Math.round(S.CLtot*100)+'L × '+Math.round(S.CHtot*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n';
   if(currentFT==='sdb'){
     s+='• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n';
     s+='• Vasque : '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+', '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n';
@@ -4509,7 +4578,7 @@ function buildRecap(){
   var counts={shelf:0,separator:0,porte:0,tiroir:0};
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
   var rows=[
-    ['Meuble', Math.round(S.CLtot*100)+'×'+Math.round(S.CH*100)+'×'+Math.round(S.CairsonP*100)+' cm, '+MATS_CAIS[S.matCais].n],
+    ['Meuble', Math.round(S.CLtot*100)+'×'+Math.round(S.CHtot*100)+'×'+Math.round(S.CairsonP*100)+' cm, '+MATS_CAIS[S.matCais].n],
     ['Plan',   Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n],
     ['Vasque', (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+', '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
     ['Tablettes',  counts.shelf+' tablette'+(counts.shelf!==1?'s':'')],
@@ -4529,7 +4598,7 @@ function buildRecap4(){
 
   var rows=[
     ['Type de meuble', cfg?cfg.label:'—'],
-    ['Dimensions', Math.round(S.CLtot*100)+' × '+Math.round(S.CH*100)+' × '+Math.round(S.CairsonP*100)+' cm'],
+    ['Dimensions', Math.round(S.CLtot*100)+' × '+Math.round(S.CHtot*100)+' × '+Math.round(S.CairsonP*100)+' cm'],
     ['Murs', (S.murG&&S.murD)?'Collé à un mur à gauche et à droite':S.murG?'Collé à un mur à gauche':S.murD?'Collé à un mur à droite':'Aucun mur latéral'],
     ['Matière', MATS_CAIS[S.matCais].n],
   ];
@@ -4538,8 +4607,8 @@ function buildRecap4(){
     if(S.nbVasques===0) rows.push(['Vasque', 'Sans vasque']); else rows.push(['Vasque'+(S.nbVasques>1?'s':''), S.nbVasques+'× '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label]);
   }
   if(MULTI()){
-    tvSideLeft.forEach(function(r,i){ rows.push(['Caisson gauche '+(i+1), r.W+' × '+r.H+' × '+r.P+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
-    tvSideRight.forEach(function(r,i){ rows.push(['Caisson droit '+(i+1), r.W+' × '+r.H+' × '+r.P+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
+    tvSideLeft.forEach(function(r,i){ rows.push([(r.stack?'Caisson haut ':'Caisson gauche ')+(i+1), r.W+' × '+r.H+' × '+r.P+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
+    tvSideRight.forEach(function(r,i){ rows.push([(r.stack?'Caisson haut ':'Caisson droit ')+(i+1), r.W+' × '+r.H+' × '+r.P+' cm, '+r.elems.length+' élément'+(r.elems.length!==1?'s':'')]); });
     if(S_tvSide.topActive)   rows.push(['Caisson haut',   S_tvSide.topW+' × '+S_tvSide.topH+' cm, '+tvTopElems.length+' élément'+(tvTopElems.length!==1?'s':'')]);
   }
   var elemLabels={shelf:'Étagère',shelf_simple:'Liseré horiz.',separator:'Intercalaire',separator_simple:'Liseré vert.',porte:'Porte',tiroir:'Tiroir',barre:'Tringle'};
@@ -4984,9 +5053,9 @@ function computeFullDevisQuantities(){
   // reçoit automatiquement une finition — pas de choix à faire côté client, l'admin peut décocher si besoin.
   {
     var row=[];
-    if(MULTI()) for(var li=tvSideLeft.length-1; li>=0; li--) row.push({label:'caisson gauche '+(li+1), H:tvSideLeft[li].H/100, W:tvSideLeft[li].W/100});
+    if(MULTI()) for(var li=tvSideLeft.length-1; li>=0; li--){ if(tvSideLeft[li].stack) continue; row.push({label:'caisson gauche '+(li+1), H:tvSideLeft[li].H/100, W:tvSideLeft[li].W/100}); }
     row.push({label:'caisson principal', H:S.CH, W:S.CL});
-    if(MULTI()) tvSideRight.forEach(function(r,ri){ row.push({label:'caisson droit '+(ri+1), H:r.H/100, W:r.W/100}); });
+    if(MULTI()) tvSideRight.forEach(function(r,ri){ if(r.stack) return; row.push({label:'caisson droit '+(ri+1), H:r.H/100, W:r.W/100}); });
 
     row.forEach(function(entry,i){
       addFin('dessus_'+i, 'Dessus — '+entry.label, entry.W, CPm, true);
@@ -5260,8 +5329,8 @@ function _supCaissons(){
   out.push({label:'Caisson principal', W:Math.round(S.CL*100), H:Math.round(S.CH*100), els:caissonElements});
   if(hasAngle) out.push({label:"Caisson d'angle", W:Math.round(S.CL2*100), H:Math.round(S.CH*100), els:caissonElements2});
   if(MULTI()){
-    tvSideLeft.forEach(function(r,i){ out.push({label:'Caisson gauche '+(i+1), W:r.W, H:r.H, els:r.elems}); });
-    tvSideRight.forEach(function(r,i){ out.push({label:'Caisson droit '+(i+1), W:r.W, H:r.H, els:r.elems}); });
+    tvSideLeft.forEach(function(r,i){ out.push({label:(r.stack?'Caisson haut ':'Caisson gauche ')+(i+1), W:r.W, H:r.H, els:r.elems}); });
+    tvSideRight.forEach(function(r,i){ out.push({label:(r.stack?'Caisson haut ':'Caisson droit ')+(i+1), W:r.W, H:r.H, els:r.elems}); });
     if(S_tvSide.topActive) out.push({label:'Caisson du dessus', W:S_tvSide.topW, H:S_tvSide.topH, els:tvTopElems});
   }
   return out;
@@ -5381,11 +5450,11 @@ async function submitConfig(){
   var submitFT = isSDBMode ? 'sdb' : currentFT;
   var ftLabels={biblio:'Bibliothèque',tv:'Meuble',dressing:'Dressing',sdb:'Meuble salle de bain'};
   var ftLabel = ftLabels[submitFT] || submitFT;
-  var projetNom = ftLabel + ' sur mesure, ' + Math.round(S.CLtot*100) + 'x' + Math.round(S.CH*100) + ' cm';
+  var projetNom = ftLabel + ' sur mesure, ' + Math.round(S.CLtot*100) + 'x' + Math.round(S.CHtot*100) + ' cm';
   var tvSideDesc = [];
   if(MULTI()){
-    tvSideLeft.forEach(function(r,i){ tvSideDesc.push('Caisson gauche '+(i+1)+' : '+r.W+'×'+r.H+' cm ('+r.elems.length+' él.)'); });
-    tvSideRight.forEach(function(r,i){ tvSideDesc.push('Caisson droit '+(i+1)+' : '+r.W+'×'+r.H+' cm ('+r.elems.length+' él.)'); });
+    tvSideLeft.forEach(function(r,i){ tvSideDesc.push((r.stack?'Caisson haut ':'Caisson gauche ')+(i+1)+' : '+r.W+'×'+r.H+' cm ('+r.elems.length+' él.)'); });
+    tvSideRight.forEach(function(r,i){ tvSideDesc.push((r.stack?'Caisson haut ':'Caisson droit ')+(i+1)+' : '+r.W+'×'+r.H+' cm ('+r.elems.length+' él.)'); });
     if(S_tvSide.topActive)   tvSideDesc.push('Caisson haut : '+S_tvSide.topW+'×'+S_tvSide.topH+' cm ('+tvTopElems.length+' él.)');
   }
   var projetDesc = [
@@ -5413,7 +5482,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100),
+          meuble:{ L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
@@ -5433,25 +5502,29 @@ async function submitConfig(){
             // left/right : tableaux (illimités), du plus proche du principal au plus éloigné.
             // Ancien format (avant les caissons illimités) : un seul objet par côté — admin.html
             // sait encore lire les deux formats pour les anciennes configs déjà en base.
-            left:  tvSideLeft.map(function(r){ return { W_cm:r.W, H_cm:r.H, P_cm:r.P, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
-            right: tvSideRight.map(function(r){ return { W_cm:r.W, H_cm:r.H, P_cm:r.P, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            // left/right : les caissons empilés (niveau > 0) y figurent aussi, avec leur colonne (col), leur niveau et la hauteur de leur bas (y_cm)
+            left:  tvSideLeft.map(function(r){ return { W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            right: tvSideRight.map(function(r){ return { W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
             top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:exportElementsWithBounds(tvTopElems, S_tvSide.topW, S_tvSide.topH) } : null,
           } : undefined,
           // liste COMPLÈTE de tous les caissons, de gauche à droite (principal compris) : chacun avec ses cotes, ses éléments bornés et son technical_spec
           caissons: (function(){
-            var rows=[], x=0, add=function(role,W,H,P,els,noPos){
-              rows.push({ id:'C'+(rows.length+1), role:role, x_start_cm: noPos?null:x, L_cm:W, H_cm:H, P_cm:P,
-                elements:exportElementsWithBounds(els, W, H), technical_spec: buildTechSpec(els, W/100, H/100, P/100) });
-              if(!noPos) x+=W;
+            var rows=[], x=0, add=function(role,W,H,P,els,noPos,extra){
+              rows.push(Object.assign({ id:'C'+(rows.length+1), role:role, x_start_cm: noPos?null:x, L_cm:W, H_cm:H, P_cm:P,
+                elements:exportElementsWithBounds(els, W, H), technical_spec: buildTechSpec(els, W/100, H/100, P/100) }, extra||{}));
             };
-            for(var li=tvSideLeft.length-1; li>=0; li--){ var rl=tvSideLeft[li]; add('gauche', rl.W, rl.H, rl.P||Math.round(S.CairsonP*100), rl.elems); }
-            add('principal', Math.round(S.CL*100), Math.round(S.CH*100), Math.round(S.CairsonP*100), caissonElements);
-            tvSideRight.forEach(function(rr){ add('droite', rr.W, rr.H, rr.P||Math.round(S.CairsonP*100), rr.elems); });
+            _columnsLR().forEach(function(root,ci){
+              var base = root==='M' ? { W:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100), els:caissonElements } : { W:root.W, H:root.H, P:root.P||Math.round(S.CairsonP*100), els:root.elems };
+              add(root==='M'?'principal':(ci<_columnsLR().indexOf('M')?'gauche':'droite'), base.W, base.H, base.P, base.els, false, {col:ci, niveau:0, y_start_cm:0});
+              _stackOf(root).forEach(function(r){ add('haut', r.W, r.H, r.P||base.P, r.elems, false, {col:ci, niveau:r.stack.lvl, y_start_cm:_yBottomOf(r), x_start_cm:x}); });
+              x+=base.W;
+            });
             if(hasAngle) add('angle', Math.round(S.CL2*100), Math.round(S.CH*100), Math.round(S.CairsonP*100), caissonElements2, true);
             if(S_tvSide.topActive) add('dessus', S_tvSide.topW, S_tvSide.topH, Math.round(S.CairsonP*100), tvTopElems, true);
             return rows;
           })(),
-          longueur_totale_cm: tvSideLeft.concat(tvSideRight).reduce(function(a,r){return a+r.W;}, Math.round(S.CL*100)),
+          longueur_totale_cm: tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W;}, Math.round(S.CL*100)),
+          hauteur_totale_cm: Math.round(S.CHtot*100),
           cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
           devis_quantities: computeFullDevisQuantities(),
           counts:counts
@@ -5724,6 +5797,7 @@ function updateCotes(){
 
     var offL=CL/2;
     tvSideLeft.forEach(function(r){
+      if(r.stack) return;
       var lW=r.W/100, lH=r.H/100;
       var LBL=pp(-(offL+lW),0), LTL=pp(-(offL+lW),lH), LTR=pp(-offL,lH);
       hDim(LTL,LTR,Math.round(lW*100)+' cm',-20);
@@ -5732,6 +5806,7 @@ function updateCotes(){
     });
     var offR=CL/2;
     tvSideRight.forEach(function(r){
+      if(r.stack) return;
       var rW=r.W/100, rH=r.H/100;
       var RBR=pp(offR+rW,0), RTL=pp(offR,rH), RTR=pp(offR+rW,rH);
       hDim(RTL,RTR,Math.round(rW*100)+' cm',-20);
@@ -5863,8 +5938,8 @@ function _repositionPlanOnCaisson(){
   var ns = currentNS || 1;
   // Les caissons latéraux sont enfants de caissonGrp → ils décalent le centre X dans normalizeCaisson.
   // Le caisson central (local X=0) est décalé en world par -center.x*ns où center.x=(rightW-leftW)/2
-  var leftW  = tvSideLeft.reduce(function(s,r){return s+r.W/100;},0);
-  var rightW = tvSideRight.reduce(function(s,r){return s+r.W/100;},0);
+  var leftW  = tvSideLeft.filter(function(r){return !r.stack;}).reduce(function(s,r){return s+r.W/100;},0);
+  var rightW = tvSideRight.filter(function(r){return !r.stack;}).reduce(function(s,r){return s+r.W/100;},0);
   var centerX = (rightW - leftW) / 2;
   planMesh.scale.setScalar(ns);
   // le plan est centré sur l'ensemble des caissons (pas sur le principal), décalé du dépassement gauche/droite
@@ -5892,17 +5967,35 @@ function appliquerConfig(cfg, opts){
     if(Array.isArray(cfg.elements)){ caissonElements=cfg.elements; buildCaisson(); }
     // caissons latéraux (gauche / droite), caisson d'angle et passages de câbles : restaurés comme dans la config d'origine
     if(cfg.tvSide){
+      var _entries=[], _colMap={}, _stacked=[];
       ['left','right'].forEach(function(side){
         (Array.isArray(cfg.tvSide[side])?cfg.tvSide[side]:(cfg.tvSide[side]?[cfg.tvSide[side]]:[])).forEach(function(r){
           if(!r||!r.W_cm) return;
+          if(r.niveau>0){ _stacked.push({side:side,r:r}); return; }     // caissons empilés : recréés après leurs colonnes
           addTvSide(side);
           var list=side==='left'?tvSideLeft:tvSideRight, rec=list[list.length-1];
-          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.P=Math.round(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[];
+          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.Htot=rec.H; rec.P=Math.round(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[];
+          if(r.col!=null) _colMap[r.col]=rec;
         });
       });
+      if(_stacked.length){
+        var _leftN=(Array.isArray(cfg.tvSide.left)?cfg.tvSide.left:[]).filter(function(r){return r&&r.W_cm&&!(r.niveau>0);}).length;
+        _colMap[_leftN]='M';
+        _stacked.sort(function(a,b){return a.r.niveau-b.r.niveau;});
+        var _last={};
+        _stacked.forEach(function(x){
+          var root=_colMap[x.r.col]; if(root===undefined) return;
+          var below=_last[x.r.col]||root, rec=makeTvRecord(Math.round(x.r.W_cm),Math.round(x.r.H_cm));
+          rec.P=Math.round(x.r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.stack={lvl:x.r.niveau}; rec.below=below;
+          (x.side==='left'?tvSideLeft:tvSideRight).push(rec); _last[x.r.col]=rec;
+          if(root==='M') S.CHtot=Math.round((S.CHtot*100+rec.H))/100; else root.Htot=(root.Htot||root.H)+rec.H;
+        });
+      }
       activeCaisson=1; buildCaisson(); if(typeof renderTvSideList==='function') renderTvSideList();
-      S.CLtot=S.CL+tvSideLeft.concat(tvSideRight).reduce(function(a,r){return a+r.W/100;},0);
+      S.CLtot=S.CL+tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W/100;},0);
       var _ic=document.getElementById('inp-CL'); if(_ic) _ic.value=Math.round(S.CLtot*100);
+      var _ih=document.getElementById('inp-CH'); if(_ih) _ih.value=Math.round(S.CHtot*100);
+      buildCaisson();
     }
     if(cfg.caisson2&&Array.isArray(cfg.caisson2.elements)){
       if(!hasAngle) toggleAngle();

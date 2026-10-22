@@ -2378,8 +2378,8 @@
     function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
     var left = arr(rc.tvSide && rc.tvSide.left), right = arr(rc.tvSide && rc.tvSide.right);
     var nCais = rc.manuel ? Math.max(1, parseInt(rc.manuel.nbCaissons) || 1) : 1 + (rc.caisson2 ? 1 : 0) + left.length + right.length + (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm ? 1 : 0);
-    var W = rc.manuel ? (m.L || 0) * nCais : (m.L || 0) + left.concat(right).reduce(function (s, r) { return s + (r.W_cm || 0); }, 0) + (rc.caisson2 ? (rc.caisson2.L_cm || 0) : 0);
-    var H = Math.max.apply(null, [m.H || 0].concat(left.concat(right).map(function (r) { return r.H_cm || 0; })));
+    var W = rc.manuel ? (m.L || 0) * nCais : (m.L || 0) + left.concat(right).filter(function (r) { return !(r.niveau > 0); }).reduce(function (s, r) { return s + (r.W_cm || 0); }, 0) + (rc.caisson2 ? (rc.caisson2.L_cm || 0) : 0);
+    var H = m.H_total || Math.max.apply(null, [m.H || 0].concat(left.concat(right).map(function (r) { return r.H_cm || 0; })));
     var plur = function (n, w) { return n + ' ' + w + (n > 1 ? 's' : ''); };
     var fac = [], quinc = [], amen = [];
     if (q.doors_count) fac.push(plur(q.doors_count, 'porte'));
@@ -3264,8 +3264,13 @@
     var t = cand.length ? Math.round(cand.reduce(function (a, b) { return a + b; }, 0) / cand.length * 10) / 10 : 18;
     var pieces = [], add = function (nom, l, w, qte, chants, cat) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom, l: Math.round(l * 10) / 10, w: Math.round(w * 10) / 10, qte: qte, ch: chants, cat: cat || 'struct' }); };
     var CH = { all: 'all', trav: 'trav', none: 'none', etag: 'etag', joue: 'joue' };
-    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true }];
-    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? 'caisson gauche ' : side === 'right' ? 'caisson droit ' : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false }); }); });
+    // colonne du caisson principal : nombre de colonnes à sa gauche (les caissons empilés, niveau > 0, ne sont pas des colonnes)
+    var _leftCols = tvArr(tv.left).filter(function (c) { return c && c.W_cm && !(c.niveau > 0); }).length;
+    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0 }];
+    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0 }); }); });
+    // caissons empilés : colonne et niveau connus -> joues extérieures sur toute la hauteur, joue dessus seulement tout en haut
+    var _nbCol = 0, _maxNiv = {}, _hasCols = cais.every(function (c) { return /^caisson du dessus/.test(c.label || '') || c.col != null; });
+    if (_hasCols) { cais.forEach(function (c) { if (c.col != null) { _nbCol = Math.max(_nbCol, c.col + 1); _maxNiv[c.col] = Math.max(_maxNiv[c.col] || 0, c.niveau || 0); } }); }
     if (rc.caisson2) notes.push("Caisson d'angle : app.py ne l'importe pas, il n'est pas compté.");
     var multiDiv = false;
     // caissons aux extrémités : si le meuble est collé à un mur de ce côté, la joue extérieure ne se voit pas, elle n'est pas comptée
@@ -3278,6 +3283,13 @@
       add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
       add('Fond' + suf, H - 38, Math.max(0, L - 38), 1, CH.none);
       (opts.joues || []).filter(function (jk) { if (/^caisson du dessus/.test(c.label || '')) return true;   // le caisson posé dessus garde ses joues visibles
+        if (_hasCols) {
+          // règle par colonne : gauche sur la colonne la plus à gauche, droite sur la plus à droite (à chaque niveau), dessus sur le caisson tout en haut de chaque colonne
+          if (jk === 'gauche') return c.col === 0 && !m.mur_gauche;
+          if (jk === 'droite') return c.col === _nbCol - 1 && !m.mur_droit;
+          if (jk === 'dessus') return (c.niveau || 0) === _maxNiv[c.col];
+          return true;
+        }
         if (jk === 'gauche') return ci === outerG && !m.mur_gauche;   // seule la joue extérieure se voit : gauche sur le caisson le plus à gauche
         if (jk === 'droite') return ci === outerD && !m.mur_droit;    // droite sur le caisson le plus à droite
         return true; }).forEach(function (jk) { var base = (jk === 'gauche' || jk === 'droite'); add('Joue ' + jk.charAt(0).toUpperCase() + jk.slice(1) + suf, base ? H : L, P, 1, CH.joue, 'facade'); });
