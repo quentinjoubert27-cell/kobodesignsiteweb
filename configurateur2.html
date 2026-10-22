@@ -3456,6 +3456,7 @@ function hideDelToast(){
   if(t) t.classList.remove('show');
 }
 function deleteElementAt(i){
+  _editingEl=-1;
   pushUndo();
   var els=getActiveEls();
   if(i<0||i>=els.length) return;
@@ -3463,6 +3464,55 @@ function deleteElementAt(i){
   setActiveEls(els);
   buildCaisson();
   showDelToast();
+}
+// ── Équipe : saisie manuelle de la position des éléments (réservé aux comptes admin) ──
+var IS_TEAM = false, _editingEl = -1;
+(async function(){
+  try{
+    var admins=['quentin.joubert@icloud.com','pascal@symetry.fr','lena@symetry.fr','mathilde@symetry.fr','armelle@symetry.fr'];
+    var c=supabase.createClient('https://auzcbtipzqxmllkzdxls.supabase.co','sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U');
+    var r=await c.auth.getSession(), em=r&&r.data&&r.data.session&&r.data.session.user&&r.data.session.user.email;
+    if(em && admins.indexOf(em)>=0){ IS_TEAM=true; if(typeof updateElementsList==='function') updateElementsList(); }
+  }catch(e){}
+})();
+function _elFields(el){
+  if(el.type==='shelf'||el.type==='shelf_simple'||el.type==='barre') return [['y_cm','Hauteur (cm)'],['x_left_cm','De x (cm)'],['x_right_cm','À x (cm)']];
+  if(el.type==='separator'||el.type==='separator_simple') return [['x_cm','Position x (cm)'],['y_cm','Hauteur repère (cm)']];
+  if(el.type==='porte'||el.type==='tiroir') return [['k0','Bas (cm)'],['k1','Gauche (cm)'],['k2','Haut (cm)'],['k3','Droite (cm)']];
+  return [];
+}
+function _elValue(el,f){
+  if(f.charAt(0)==='k'&&f.length===2){ var p=String(el.key||'').split('_').map(Number); var v=p[+f.charAt(1)]; return isFinite(v)?v:0; }
+  var x=el[f]; return x==null?0:Math.round(x*10)/10;
+}
+function _elementEditorHtml(el,i){
+  var fl=_elFields(el); if(!fl.length) return '';
+  return '<div class="el-list-item" style="display:block;background:rgba(205,62,0,.07);margin-top:-2px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#CD3E00;margin-bottom:6px">Position exacte (équipe)</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+    +fl.map(function(f){ return '<label style="font-size:11px;color:#555">'+f[1]+'<input type="number" step="0.1" data-ef="'+f[0]+'" value="'+_elValue(el,f[0])+'" style="width:100%;padding:6px 8px;border:1.5px solid rgba(26,26,26,.15);border-radius:6px;font-size:13px"></label>'; }).join('')
+    +'</div><div style="display:flex;gap:6px;margin-top:8px"><button onclick="applyElementPos('+i+')" style="flex:1;padding:8px;border:none;border-radius:6px;background:#CD3E00;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Appliquer</button>'
+    +'<button onclick="editElementPos(-1)" style="padding:8px 12px;border:1.5px solid rgba(26,26,26,.15);border-radius:6px;background:#fff;font-size:12px;cursor:pointer">Annuler</button></div></div>';
+}
+function editElementPos(i){ if(!IS_TEAM) return; _editingEl=(_editingEl===i)?-1:i; updateElementsList(); }
+function applyElementPos(i){
+  if(!IS_TEAM) return;
+  var els=getActiveEls(); var el=els[i]; if(!el) return;
+  var box=document.querySelectorAll('.elements-placed-list [data-ef]'), vals={};
+  box.forEach(function(inp){ var v=parseFloat(String(inp.value).replace(',','.')); if(isFinite(v)) vals[inp.dataset.ef]=v; });
+  var iW=(getActiveCL()-2*EP)*100, iH=(getActiveCH()-2*EP)*100;
+  var cl=function(v,max){ return Math.max(0,Math.min(max,v)); };
+  pushUndo();
+  var ne=Object.assign({},el);
+  if(el.type==='porte'||el.type==='tiroir'){
+    var p=String(el.key||'0_0_0_0').split('_').map(Number);
+    ['k0','k1','k2','k3'].forEach(function(f,j){ if(vals[f]!=null) p[j]=vals[f]; });
+    p[0]=cl(p[0],iH); p[2]=cl(p[2],iH); p[1]=cl(p[1],iW); p[3]=cl(p[3],iW);
+    ne.key=p.map(function(x){return Math.round(x*10)/10;}).join('_');
+  } else {
+    _elFields(el).forEach(function(f){ if(vals[f[0]]!=null) ne[f[0]]=Math.round((f[0].indexOf('x')===0||f[0]==='x_cm'?cl(vals[f[0]],iW):cl(vals[f[0]],iH))*10)/10; });
+  }
+  els[i]=ne; setActiveEls(els); _editingEl=-1; buildCaisson();
 }
 function updateElementsList(){
   // La bulle d'aide "Toucher le meuble = poser" ne sert qu'au tout début, avant le
@@ -3489,8 +3539,10 @@ function updateElementsList(){
       else { name=el.type; }
       html+='<div class="el-list-item">'
         +'<div><div class="el-list-name">'+name+'</div><div class="el-list-type">'+sub+'</div></div>'
+        +(IS_TEAM?'<button class="el-list-del" style="margin-left:auto;margin-right:6px;font-size:15px" onclick="editElementPos('+i+')" aria-label="Modifier la position (équipe)" title="Équipe : saisir la position">✎</button>':'')
         +'<button class="el-list-del" onclick="deleteElementAt('+i+')" aria-label="Supprimer cet élément">×</button>'
         +'</div>';
+      if(IS_TEAM && _editingEl===i) html+=_elementEditorHtml(el,i);
     });
   }
   containers.forEach(function(c){ c.innerHTML=html; });
