@@ -3519,6 +3519,8 @@ function _hingeInfoForKey(els,key){
   try{ var inf=_supportModel(dedupeEls(els),getActiveCL()*100,getActiveCH()*100).info; for(var i=0;i<inf.length;i++){ if(inf[i].d.key===key) return inf[i]; } }catch(e){}
   return null;
 }
+var _hingeEdit=false;
+function toggleHingeEdit(){ _hingeEdit=!_hingeEdit; updateElementsList(); }
 function cycleHinge(i){
   var els=getActiveEls(), el=els[i]; if(!el||el.type!=='porte') return;
   pushUndo();
@@ -3551,7 +3553,7 @@ function updateElementsList(){
       else if(el.type==='tiroir'){ name='Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else { name=el.type; }
       var hingeBtn='';
-      if(el.type==='porte'){
+      if(el.type==='porte' && _hingeEdit){
         var _hi=_hingeInfoForKey(els,el.key), eff=_hi?_hi.side:null, mode=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
         hingeBtn='<button class="el-list-del" style="width:auto;padding:0 10px;margin-left:auto;margin-right:6px;font-size:11px;border-radius:14px" onclick="cycleHinge('+i+')" title="Choisir de quel côté la porte est fixée (charnières)">Charnières '+(eff==='R'?'à droite':'à gauche')+(mode?'':' (auto)')+'</button>';
       }
@@ -3562,6 +3564,12 @@ function updateElementsList(){
         +'</div>';
       if(IS_TEAM && _editingEl===i) html+=_elementEditorHtml(el,i);
     });
+    // mention discrète, une seule fois sous la liste : le sens d'ouverture des portes est automatique mais modifiable
+    if(els.some(function(e){return e.type==='porte';})){
+      html+='<p style="font-size:11px;line-height:1.5;color:var(--text2);margin:8px 2px 0">'
+        +(_hingeEdit?'Touchez le bouton d\'une porte pour changer le côté des charnières. ':'Les portes s\'ouvrent automatiquement du bon côté. ')
+        +'<a href="#" onclick="toggleHingeEdit();return false" style="color:var(--accent);text-decoration:underline">'+(_hingeEdit?'Terminé':'Changer le sens d\'ouverture')+'</a></p>';
+    }
   }
   containers.forEach(function(c){ c.innerHTML=html; });
 }
