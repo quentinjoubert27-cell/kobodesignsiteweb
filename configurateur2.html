@@ -4630,7 +4630,11 @@ function buildTechSpec(els, CL, CH, CP){
   // Règle atelier : deux portes sur le même intercalaire -> l'intercalaire est doublé (deuxième panneau)
   (function(){
     var flags=_doubledSeparatorFlags(dedupeEls(els||[]), CL*100, CH*100), extra=[];
-    separators.forEach(function(s,i){ if(flags[i]) extra.push(Object.assign({}, s, {doubled:true})); });
+    separators.forEach(function(s,i){
+      if(!flags[i]) return;
+      var pair=separators.some(function(o,j){ return j!==i && !o.doubled && Math.abs(o.x_center_mm-s.x_center_mm)<=20 && Math.min(o.y_top_mm,s.y_top_mm)-Math.max(o.y_bottom_mm,s.y_bottom_mm)>1; });
+      if(!pair) extra.push(Object.assign({}, s, {doubled:true}));
+    });
     extra.forEach(function(s){ separators.push(s); });
   })();
   return {
@@ -5190,9 +5194,9 @@ function _doubledSeparatorFlags(els, W, H){
   return els.filter(function(e){return e.type==='separator'||e.type==='separator_simple';}).map(function(e){
     var c=_cpt(els,e.x_cm,e.y_cm,m.iW,m.iH), x=e.x_cm;
     var ov=function(i){ return Math.min(i.d.t,c.top)-Math.max(i.d.b,c.bot)>1; };
-    // façade contre l'intercalaire : une porte ou un tiroir qui touche l'intercalaire de ce côté (quel que soit le côté de ses charnières)
-    var left=m.doors.some(function(d){return Math.abs(d.r-x)<=TOL&&ov({d:d});}) || m.drawers.some(function(w){return Math.abs(w.r-x)<=TOL&&ov({d:w});});
-    var right=m.doors.some(function(d){return Math.abs(d.l-x)<=TOL&&ov({d:d});}) || m.drawers.some(function(w){return Math.abs(w.l-x)<=TOL&&ov({d:w});});
+    // panneau en plus seulement si quelque chose est FIXÉ des deux côtés : un tiroir, ou une porte dont les charnières sont sur cet intercalaire
+    var left=m.info.some(function(i){return Math.abs(i.d.r-x)<=TOL&&i.side==='R'&&ov({d:i.d});}) || m.drawers.some(function(w){return Math.abs(w.r-x)<=TOL&&ov({d:w});});
+    var right=m.info.some(function(i){return Math.abs(i.d.l-x)<=TOL&&i.side==='L'&&ov({d:i.d});}) || m.drawers.some(function(w){return Math.abs(w.l-x)<=TOL&&ov({d:w});});
     return left&&right;
   });
 }
