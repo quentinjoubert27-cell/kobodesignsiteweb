@@ -1504,6 +1504,13 @@
     <!-- Client -->
     <div id="pd-client-info" style="display:none;margin-bottom:14px;"></div>
 
+    <!-- Descriptif : ce que le client souhaite -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:6px;">Descriptif du projet (ce que le client souhaite)</div>
+      <textarea id="pd-description" rows="4" placeholder="Ce que la personne veut : meuble, dimensions, matières, contraintes…" style="width:100%;padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;line-height:1.5;"></textarea>
+      <div style="margin-top:6px;"><button class="btn btn-ghost btn-sm" onclick="saveDescription()">Enregistrer le descriptif</button></div>
+    </div>
+
     <!-- Statut + actions -->
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
       <select id="pd-statut" style="padding:7px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:7px;font-family:var(--font);font-size:12px;">
@@ -1613,6 +1620,10 @@
         <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
           <input type="radio" name="doc-origine" value="client" style="margin-top:3px;accent-color:var(--accent);"/>
           <span><strong>Pièce reçue du client</strong><br><span style="font-size:12px;color:rgba(26,26,26,.5);">🔕 Ajoutée à son projet sans aucun email (un document qu'il vous a envoyé)</span></span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+          <input type="radio" name="doc-origine" value="interne" style="margin-top:3px;accent-color:var(--accent);"/>
+          <span><strong>Photo ou fichier du projet</strong><br><span style="font-size:12px;color:rgba(26,26,26,.5);">🔕 Ajouté par l'équipe au projet (photo de référence, relevé…), sans aucun email au client</span></span>
         </label>
       </div>
       <button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="uploadFile()">Envoyer le document</button>
@@ -5203,6 +5214,7 @@ function dedupeEls(els){
     }
     if (projet) {
       document.getElementById('pd-statut').value = projet.statut || 'En étude';
+      var _dsc = document.getElementById('pd-description'); if (_dsc) _dsc.value = projet.description || '';
       loadPrixJournal(); var _as = document.getElementById('pd-assigne'); if (_as) _as.value = projet.assigne_a || ''; var _an = document.getElementById('pd-assigne-note'); if (_an) _an.value = '';
       document.getElementById('pd-montant').value = montantVisible(projet) ? (projet.montant || '') : '';
       document.getElementById('pd-montant').placeholder = montantVisible(projet) ? '0' : 'visible après envoi du devis';
@@ -5602,6 +5614,14 @@ function dedupeEls(els){
   }
 
   var NOMS_EQUIPE = { 'quentin.joubert@icloud.com': 'Quentin', 'pascal@symetry.fr': 'Pascal', 'lena@symetry.fr': 'Léna', 'mathilde@symetry.fr': 'Mathilde', 'armelle@symetry.fr': 'Armelle' };
+  async function saveDescription() {
+    if (!currentProjetId) return;
+    var v = (document.getElementById('pd-description').value || '').trim();
+    const { error } = await sb.from('projets').update({ description: v || null, updated_at: new Date().toISOString() }).eq('id', currentProjetId);
+    if (error) return showToast('Enregistrement impossible : ' + error.message, 'err');
+    var pr = allProjets.find(function (x) { return x.id === currentProjetId; }); if (pr) pr.description = v || null;
+    showToast('Descriptif enregistré');
+  }
   async function assignerProjet() {
     if (!currentProjetId) return;
     var dest = document.getElementById('pd-assigne').value, note = (document.getElementById('pd-assigne-note').value || '').trim();
@@ -6009,7 +6029,8 @@ function dedupeEls(els){
     if (!currentProjetId) return showToast('Aucun projet sélectionné', 'err');
     const type = document.getElementById('doc-type-select').value;
     const categorie = document.getElementById('doc-categorie-select').value;
-    const deDuClient = (document.querySelector('input[name="doc-origine"]:checked') || {}).value === 'client';
+    const origineDoc = (document.querySelector('input[name="doc-origine"]:checked') || {}).value;
+    const deDuClient = origineDoc === 'client', silencieux = deDuClient || origineDoc === 'interne';
     const path = `${currentProjetId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 
     const pw = document.getElementById('upload-progress-wrap');
@@ -6044,7 +6065,7 @@ function dedupeEls(els){
     await loadProjetDocs();
     await loadDashboard();
     // Document pour le client : toujours notifié par email. Pièce reçue du client : aucun email.
-    if (deDuClient) { showToast('Pièce du client ajoutée (aucun email envoyé)'); return; }
+    if (silencieux) { showToast(deDuClient ? 'Pièce du client ajoutée (aucun email envoyé)' : 'Fichier ajouté au projet (aucun email envoyé)'); return; }
     try {
       const { data: { session } } = await sb.auth.getSession();
       await fetch('/api/notify', {
