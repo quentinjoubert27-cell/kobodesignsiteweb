@@ -2829,8 +2829,8 @@ function _rebuildEditBar(){
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     }
-    if(isTV){
-      // Bouton ouvrir/fermer toutes les portes
+    {
+      // Bouton ouvrir/fermer toutes les portes (toujours affiché, pour tous les types de meuble)
       var allEls=[caissonElements,caissonElements2,tvTopElems]
         .concat(tvSideLeft.map(function(r){return r.elems;}))
         .concat(tvSideRight.map(function(r){return r.elems;}));
@@ -2838,13 +2838,14 @@ function _rebuildEditBar(){
         .concat(tvSideLeft.map(function(r){return r.openState;}))
         .concat(tvSideRight.map(function(r){return r.openState;}));
       var hasAny=allEls.some(function(els){ return els.some(function(e){ return e.type==='porte'||e.type==='tiroir'; }); });
-      if(hasAny){
+      {
         var allOpen=allEls.every(function(els){ return els.filter(function(e){ return e.type==='porte'||e.type==='tiroir'; }).every(function(e){ return allOs.some(function(os){ return os[e.key]; }); }); });
         var openBtn=document.createElement('button');
         openBtn.className='reset-btn';
         openBtn.style.marginTop='10px';
-        openBtn.textContent=allOpen?'Fermer toutes les portes':'Ouvrir toutes les portes';
-        openBtn.onclick=toggleAllDoorsTv;
+        openBtn.textContent=hasAny&&allOpen?'Fermer toutes les portes':'Ouvrir toutes les portes';
+        if(hasAny){ openBtn.onclick=toggleAllDoorsTv; }
+        else { openBtn.style.opacity='.5'; openBtn.title='Ajoutez une porte ou un tiroir pour pouvoir les ouvrir'; openBtn.onclick=function(){}; }
         btns.appendChild(openBtn);
       }
     }
@@ -3553,7 +3554,7 @@ function updateElementsList(){
       else if(el.type==='tiroir'){ name='Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else { name=el.type; }
       var hingeBtn='';
-      if(el.type==='porte' && _hingeEdit){
+      if(el.type==='porte'){
         var _hi=_hingeInfoForKey(els,el.key), eff=_hi?_hi.side:null, mode=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
         hingeBtn='<button class="el-list-del" style="width:auto;padding:0 10px;margin-left:auto;margin-right:6px;font-size:11px;border-radius:14px" onclick="cycleHinge('+i+')" title="Choisir de quel côté la porte est fixée (charnières)">Charnières '+(eff==='R'?'à droite':'à gauche')+(mode?'':' (auto)')+'</button>';
       }
@@ -3564,11 +3565,9 @@ function updateElementsList(){
         +'</div>';
       if(IS_TEAM && _editingEl===i) html+=_elementEditorHtml(el,i);
     });
-    // mention discrète, une seule fois sous la liste : le sens d'ouverture des portes est automatique mais modifiable
+    // mention discrète sous la liste : le sens d'ouverture de chaque porte est modifiable avec son bouton
     if(els.some(function(e){return e.type==='porte';})){
-      html+='<p style="font-size:11px;line-height:1.5;color:var(--text2);margin:8px 2px 0">'
-        +(_hingeEdit?'Touchez le bouton d\'une porte pour changer le côté des charnières. ':'Les portes s\'ouvrent automatiquement du bon côté. ')
-        +'<a href="#" onclick="toggleHingeEdit();return false" style="color:var(--accent);text-decoration:underline">'+(_hingeEdit?'Terminé':'Changer le sens d\'ouverture')+'</a></p>';
+      html+='<p style="font-size:11px;line-height:1.5;color:var(--text2);margin:8px 2px 0">Le bouton « Charnières » de chaque porte permet de changer son sens d\'ouverture.</p>';
     }
   }
   containers.forEach(function(c){ c.innerHTML=html; });
