@@ -2933,7 +2933,7 @@
       (appRes.notes || []).forEach(function (n) { warn.push(n); });
     }
     // décomptes pour l'usinage et la quincaillerie (angles, tiroirs, tringles) ; charnières : règle d'app.py (machining_logic.get_hinge_y_positions)
-    var hingesApp = function (hmm) { return hmm > 200 ? 3 : hmm > 100 ? 2 : 1; };
+    var hingesApp = function (hmm) { return hmm > 400 ? 3 : hmm > 100 ? 2 : 1; };   // 2 charnières jusqu'à 40 cm de hauteur de porte
     cais.forEach(function (c) {
       var spec = buildTechSpec(dedupeEls(c.els), c.L, c.H, c.P);
       var doors = spec.doors || [], drawers = spec.drawers || [];
@@ -5564,7 +5564,7 @@ function dedupeEls(els){
       var w = d.x_right_mm - d.x_left_mm, h = d.height_mm;
       // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
       // >200mm -> 3 charnières, 100-200mm -> 2, sinon 1
-      var nCharnieres = (h > 200) ? 3 : (h > 100) ? 2 : 1;
+      var nCharnieres = (h > 400) ? 3 : (h > 100) ? 2 : 1;   // 2 charnières jusqu'à 40 cm de hauteur
       addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group: 'Porte ' + (idx + 1), charnieres: nCharnieres }, 'porte');
       q.edge_banding_m += 2 * (w + h) / 1000;
       q.doors_count++;

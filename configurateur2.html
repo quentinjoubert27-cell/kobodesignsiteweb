@@ -1659,7 +1659,7 @@ function getFacadeFor(comp,bay){
 // ═══════════════════════════════════════════════════════
 function addDoorHinges(pm,porW,porH,hingeLeft){
   var matH=new THREE.MeshStandardMaterial({color:0xA6A6A6,roughness:0.18,metalness:0.90});
-  var nH=porH>0.70?3:2;
+  var nH=porH>0.40?3:(porH>0.10?2:1);   // même règle que le calcul : 2 charnières jusqu'à 40 cm
   var edgeX=hingeLeft?-porW/2:porW/2;
   var inset=0.022; // 22 mm du bord (standard charnière encastrée)
   var zBack=-0.012; // face arrière porte — visible uniquement depuis l'intérieur
@@ -4874,8 +4874,8 @@ function computeDevisQuantities(techSpec, matLabel){
   (techSpec.doors||[]).forEach(function(d, idx){
     var w = d.x_right_mm-d.x_left_mm, h = d.height_mm;
     // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
-    // >200mm -> 3 charnières, 100-200mm -> 2, sinon 1
-    var nCharnieres = (h>200) ? 3 : (h>100) ? 2 : 1;
+    // règle atelier : plus de 400 mm de hauteur -> 3 charnières, de 100 à 400 mm -> 2, sinon 1
+    var nCharnieres = (h>400) ? 3 : (h>100) ? 2 : 1;
     addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group:'Porte '+(idx+1), charnieres: nCharnieres }, 'porte');
     q.edge_banding_m += 2*(w+h)/1000; // 4 côtés visibles
     q.doors_count++;
