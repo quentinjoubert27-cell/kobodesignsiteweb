@@ -3298,6 +3298,7 @@
     var notesU = notes.filter(function (x, i, a) { return a.indexOf(x) === i; });
     return { pieces: pieces, surface: surf, avec: avec, sans: sans, epaisseur: t, notes: notesU };
   }
+  var _appDetailsOpen = false;
   function renderMethodeAppHtml(rc, tab) {
     var g = currentTarifsGlobaux || {}, a = null;
     try { a = methodeAppFromRc(rc || {}, g, tab); } catch (e) { return ''; }
@@ -3306,13 +3307,13 @@
     var td = 'padding:3px 6px;text-align:right;white-space:nowrap;', th = 'padding:3px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(26,26,26,.5);text-align:right;';
     var rows = a.pieces.map(function (p) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(p.nom) + '</td><td style="' + td + '">' + p.l + '</td><td style="' + td + '">' + p.w + '</td><td style="' + td + '">' + p.qte + '</td><td style="' + td + '">' + f3(p.surface) + '</td><td style="' + td + '">' + f3(p.avec) + '</td><td style="' + td + '">' + f3(p.sans) + '</td></tr>'; }).join('');
     var memo = tab ? '<div style="margin-top:6px;color:rgba(26,26,26,.55);">Pour mémoire, méthode tableur : surface ' + f3(tab.surface) + ' m² · chant ' + f3(tab.cml) + ' ml · périmètre de découpe ' + f3(tab.ml) + ' ml.</div>' : '';
-    return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(26,26,26,.25);border-radius:10px;font-size:12px;">' +
-      '<b style="font-size:13px;">Calcul app.py — métriques de la scène</b>' +
+    return '<details ' + (_appDetailsOpen ? 'open ' : '') + 'ontoggle="_appDetailsOpen=this.open" style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(26,26,26,.25);border-radius:10px;font-size:12px;">' +
+      '<summary style="cursor:pointer;font-weight:700;font-size:13px;">Calcul app.py — métriques de la scène <span style="font-weight:400;color:rgba(26,26,26,.5);">(cliquer pour déplier)</span></summary>' +
       '<div style="color:rgba(26,26,26,.55);margin:2px 0 8px;">Surface totale des panneaux, tranches avec chant et tranches sans chant : le meuble est lu comme app.py lit le JSON du configurateur, puis calculé avec sa feuille de débit. Aucun prix : information seulement.</div>' +
       '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:620px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Longueur (mm)</th><th style="' + th + '">Largeur (mm)</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface (m²)</th><th style="' + th + '">Tranches AVEC chant (ml)</th><th style="' + th + '">Tranches SANS chant (ml)</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:3px 6px;">Total</td><td colspan="3"></td><td style="' + td + '">' + f3(a.surface) + '</td><td style="' + td + '">' + f3(a.avec) + '</td><td style="' + td + '">' + f3(a.sans) + '</td></tr></tbody></table></div>' +
       '<div style="margin-top:6px;font-weight:600;">Surface totale : ' + f3(a.surface) + ' m² · Tranches AVEC chant : ' + f3(a.avec) + ' ml · Tranches SANS chant : ' + f3(a.sans) + ' ml</div>' +
-      '<div style="margin-top:4px;color:rgba(26,26,26,.55);">Épaisseur de panneau déduite du JSON comme le fait app.py : ' + f3(a.epaisseur) + ' mm.' + (a.notes && a.notes.length ? '<br>⚠ ' + a.notes.map(escHtml).join('<br>⚠ ') : '') + '</div>' + memo + '</div>';
+      '<div style="margin-top:4px;color:rgba(26,26,26,.55);">Épaisseur de panneau déduite du JSON comme le fait app.py : ' + f3(a.epaisseur) + ' mm.' + (a.notes && a.notes.length ? '<br>⚠ ' + a.notes.map(escHtml).join('<br>⚠ ') : '') + '</div>' + memo + '</details>';
   }
 
   var _tabRes = null;
