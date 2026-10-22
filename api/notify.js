@@ -253,7 +253,10 @@ module.exports = async function handler(req, res) {
       const furniture_type = String(body.furniture_type || cfg.furniture_type || 'tv').slice(0, 20);
       const meuble = cfg.meuble || {}, plan = cfg.plan || {}, vasques = cfg.vasques || {}, counts = cfg.counts || {};
       const elements = Array.isArray(cfg.elements) ? cfg.elements : [];
-      const { data: ins, error: insErr } = await sb.from('configs_sdb').insert([{
+      // un seul modèle d'équipe par projet : s'il existe déjà, il est remplacé (modification), sinon il est créé
+      const { data: existant } = await sb.from('configs_sdb').select('id, decouverte').eq('projet_id', projet.id).order('created_at', { ascending: false });
+      const modeleEquipe = (existant || []).find(x => x.decouverte === 'Modélisé par l\'équipe');
+      const rowData = {
         prenom: client.prenom || client.nom || 'Client', email: client.email,
         ...(client.telephone ? { telephone: client.telephone } : {}), ...(client.code_postal ? { code_postal: client.code_postal } : {}),
         decouverte: 'Modélisé par l\'équipe', projet_id: projet.id,
@@ -266,10 +269,33 @@ module.exports = async function handler(req, res) {
         elements, thumbnail: String(body.thumbnail || '').slice(0, 500000) || null,
         raw_config: { furniture_type, meuble, plan, vasques, elements,
           ...(cfg.caisson2 ? { caisson2: cfg.caisson2 } : {}), ...(cfg.tvSide ? { tvSide: cfg.tvSide } : {}),
-          ...(Array.isArray(cfg.cableHoles) && cfg.cableHoles.length ? { cableHoles: cfg.cableHoles } : {}) },
-      }]).select('id').single();
-      if (insErr) return res.status(500).json({ error: insErr.message });
-      return res.status(200).json({ success: true, configId: ins.id });
+          ...(Array.isArray(cfg.cableHoles) && cfg.cableHoles.length ? { cableHoles: cfg.cableHoles } : {}),
+          ...(Array.isArray(cfg.caissons) ? { caissons: cfg.caissons, longueur_totale_cm: cfg.longueur_totale_cm } : {}),
+          ...(cfg.technical_spec ? { technical_spec: cfg.technical_spec } : {}) },
+      };
+      let configId, dbErr;
+      if (modeleEquipe) {
+        const up = await sb.from('configs_sdb').update(rowData).eq('id', modeleEquipe.id).select('id').single();
+        configId = up.data && up.data.id; dbErr = up.error;
+      } else {
+        const ins = await sb.from('configs_sdb').insert([rowData]).select('id').single();
+        configId = ins.data && ins.data.id; dbErr = ins.error;
+      }
+      if (dbErr) return res.status(500).json({ error: dbErr.message });
+      return res.status(200).json({ success: true, configId, remplace: !!modeleEquipe });
+    }
+
+    // ── ACTION : delete-config (efface le modèle fait par l'équipe pour un projet, pour tout recommencer) ──
+    if (action === 'delete-config') {
+      const { projet_id } = body;
+      if (!projet_id) return res.status(400).json({ error: 'Projet manquant' });
+      // seuls les modèles faits par l'équipe sont effaçables : jamais la configuration envoyée par un client
+      const { data: lignes } = await sb.from('configs_sdb').select('id, decouverte').eq('projet_id', projet_id);
+      const ids = (lignes || []).filter(x => x.decouverte === 'Modélisé par l\'équipe').map(x => x.id);
+      if (!ids.length) return res.status(404).json({ error: 'Aucun modèle d\'équipe à effacer pour ce projet' });
+      const { error: delErr } = await sb.from('configs_sdb').delete().in('id', ids);
+      if (delErr) return res.status(500).json({ error: delErr.message });
+      return res.status(200).json({ ok: true, supprimes: ids.length });
     }
 
     // ── ACTION : rappels-digest (à la demande depuis l'admin) ──────

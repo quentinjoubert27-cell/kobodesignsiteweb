@@ -3079,10 +3079,25 @@
     showToast('Proposition enregistrée');
     renderProjetDevis(currentProjetId);
   }
-  function modeliserDansConfigurateur() {
+  function modeliserDansConfigurateur(edit) {
     if (!currentProjetId) return;
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
-    window.open('/configurateur2?admin_projet=' + encodeURIComponent(currentProjetId) + '&nom=' + encodeURIComponent(p.nom || ''), '_blank');
+    window.open('/configurateur2?admin_projet=' + encodeURIComponent(currentProjetId) + '&nom=' + encodeURIComponent(p.nom || '') + (edit === true ? '&edit=1' : ''), '_blank');
+  }
+  async function effacerModele() {
+    if (!currentProjetId) return;
+    if (!confirm('Effacer le meuble modélisé pour ce projet ?\n\nLe modèle (dimensions, éléments, prix calculé) est supprimé définitivement pour pouvoir tout recommencer. Le projet et le client ne sont pas touchés.')) return;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'delete-config', projet_id: currentProjetId }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok) return showToast(j.error || 'Suppression impossible', 'err');
+      var pr = allProjets.find(function (x) { return x.id === currentProjetId; });
+      if (pr && pr.client_id) logActivite(pr.client_id, 'note', 'Modèle du meuble effacé pour le projet « ' + (pr.nom || '') + ' » (à refaire)', { projet_id: currentProjetId, auto: true });
+      showToast('Modèle effacé : vous pouvez le refaire');
+      await loadProjetConfig(); renderProjetDevis(currentProjetId);
+    } catch (e) { showToast('Suppression impossible : ' + (e.message || e), 'err'); }
   }
   async function supprimerManuel() {
     if (!currentProjetId || !currentManuel) return;
@@ -5656,6 +5671,10 @@ function dedupeEls(els){
       }
     }
 
+    // modèle fait par l'équipe : on peut le retoucher, ou l'effacer pour tout recommencer (jamais la configuration d'un client)
+    if (!isBiblio && c.decouverte === 'Modélisé par l\'équipe') {
+      html += `</div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="modeliserDansConfigurateur(true)">✏️ Modifier le modèle</button><button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="effacerModele()">🗑 Effacer et recommencer</button></div><div>`;
+    }
     html += `</div></div>`;
 
     if (c.thumbnail && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(c.thumbnail)) {
