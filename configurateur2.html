@@ -3520,13 +3520,34 @@ function _hingeInfoForKey(els,key){
   try{ var inf=_supportModel(dedupeEls(els),getActiveCL()*100,getActiveCH()*100).info; for(var i=0;i<inf.length;i++){ if(inf[i].d.key===key) return inf[i]; } }catch(e){}
   return null;
 }
-var _hingeEdit=false;
+var _hingeEdit=false, _hingeMsg={key:null,msg:''}, _hingeMsgTimer=null;
 function toggleHingeEdit(){ _hingeEdit=!_hingeEdit; updateElementsList(); }
+// appui possible pour les charnières d'une porte : part de la hauteur appuyée sur une joue ou un intercalaire, à gauche (L) et à droite (R)
+function _hingeSupport(els,key){
+  try{
+    var m=_supportModel(dedupeEls(els),getActiveCL()*100,getActiveCH()*100);
+    for(var i=0;i<m.info.length;i++){ var d=m.info[i].d; if(d.key===key) return {L:m.cover(d,d.l), R:m.cover(d,d.r)}; }
+  }catch(e){}
+  return null;
+}
+function _hingeFlash(key,msg){
+  _hingeMsg={key:key,msg:msg}; updateElementsList();
+  clearTimeout(_hingeMsgTimer); _hingeMsgTimer=setTimeout(function(){ _hingeMsg={key:null,msg:''}; updateElementsList(); },4000);
+}
 function cycleHinge(i){
   var els=getActiveEls(), el=els[i]; if(!el||el.type!=='porte') return;
+  var sup=_hingeSupport(els,el.key);
+  if(sup&&sup.L<0.1&&sup.R<0.1){ _hingeFlash(el.key,'Impossible d\'accrocher cette porte ici : elle ne repose sur aucun montant.'); return; }
+  var cur=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
+  var order=['','L','R'], next=cur;
+  for(var n=0;n<3;n++){
+    next=order[(order.indexOf(next)+1)%3];
+    if(next===''||!sup||sup[next]>=0.1) break;
+    _hingeFlash(el.key,'Impossible d\'accrocher la porte de ce côté : elle ne repose sur aucun montant.');
+  }
+  if(next===cur) return;
   pushUndo();
-  var ne=Object.assign({},el), cur=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
-  var next=cur===''?'L':(cur==='L'?'R':'');
+  var ne=Object.assign({},el);
   if(next) ne.hinge=next; else delete ne.hinge;
   els[i]=ne; setActiveEls(els); buildCaisson();
 }
@@ -3553,16 +3574,20 @@ function updateElementsList(){
       else if(el.type==='porte'){ name='Porte'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else if(el.type==='tiroir'){ name='Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else { name=el.type; }
-      var hingeBtn='';
+      var hingeBtn='', hingeAlert='';
       if(el.type==='porte'){
         var _hi=_hingeInfoForKey(els,el.key), eff=_hi?_hi.side:null, mode=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
-        hingeBtn='<button class="el-list-del" style="width:auto;padding:0 10px;margin-left:auto;margin-right:6px;font-size:11px;border-radius:14px" onclick="cycleHinge('+i+')" title="Choisir de quel côté la porte est fixée (charnières)">Charnières '+(eff==='R'?'à droite':'à gauche')+(mode?'':' (auto)')+'</button>';
+        var _sup=_hingeSupport(els,el.key), _blocked=_sup&&_sup.L<0.1&&_sup.R<0.1;
+        hingeBtn='<button class="el-list-del" style="width:auto;padding:0 10px;margin-left:auto;margin-right:6px;font-size:11px;border-radius:14px'+(_blocked?';opacity:.45;cursor:not-allowed':'')+'" onclick="cycleHinge('+i+')" title="'+(_blocked?'Impossible : aucun montant pour fixer cette porte':'Choisir de quel côté la porte est fixée (charnières)')+'">Charnières '+(eff==='R'?'à droite':'à gauche')+(mode?'':' (auto)')+'</button>';
+        if(_blocked) hingeAlert='Impossible d\'accrocher cette porte ici : elle ne repose sur aucun montant.';
+        else if(_hingeMsg.key===el.key) hingeAlert=_hingeMsg.msg;
       }
       html+='<div class="el-list-item">'
         +'<div><div class="el-list-name">'+name+'</div><div class="el-list-type">'+sub+'</div></div>'+hingeBtn
         +(IS_TEAM?'<button class="el-list-del" style="'+(el.type==='porte'?'':'margin-left:auto;')+'margin-right:6px;font-size:15px" onclick="editElementPos('+i+')" aria-label="Modifier la position (équipe)" title="Équipe : saisir la position">✎</button>':'')
         +'<button class="el-list-del" onclick="deleteElementAt('+i+')" aria-label="Supprimer cet élément">×</button>'
         +'</div>';
+      if(hingeAlert) html+='<div style="font-size:11px;line-height:1.4;color:#b91c1c;background:rgba(185,28,28,.07);border-radius:8px;padding:6px 10px;margin:-2px 0 6px">⚠ '+hingeAlert+'</div>';
       if(IS_TEAM && _editingEl===i) html+=_elementEditorHtml(el,i);
     });
     // mention discrète sous la liste : le sens d'ouverture de chaque porte est modifiable avec son bouton
