@@ -3514,6 +3514,19 @@ function applyElementPos(i){
   }
   els[i]=ne; setActiveEls(els); _editingEl=-1; buildCaisson();
 }
+// ── Sens d'ouverture des portes : le client choisit de quel côté elles sont fixées (auto -> gauche -> droite -> auto) ──
+function _hingeInfoForKey(els,key){
+  try{ var inf=_supportModel(dedupeEls(els),getActiveCL()*100,getActiveCH()*100).info; for(var i=0;i<inf.length;i++){ if(inf[i].d.key===key) return inf[i]; } }catch(e){}
+  return null;
+}
+function cycleHinge(i){
+  var els=getActiveEls(), el=els[i]; if(!el||el.type!=='porte') return;
+  pushUndo();
+  var ne=Object.assign({},el), cur=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
+  var next=cur===''?'L':(cur==='L'?'R':'');
+  if(next) ne.hinge=next; else delete ne.hinge;
+  els[i]=ne; setActiveEls(els); buildCaisson();
+}
 function updateElementsList(){
   // La bulle d'aide "Toucher le meuble = poser" ne sert qu'au tout début, avant le
   // premier élément posé — une fois le meuble en cours d'aménagement, elle n'apporte
@@ -3537,9 +3550,14 @@ function updateElementsList(){
       else if(el.type==='porte'){ name='Porte'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else if(el.type==='tiroir'){ name='Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else { name=el.type; }
+      var hingeBtn='';
+      if(el.type==='porte'){
+        var _hi=_hingeInfoForKey(els,el.key), eff=_hi?_hi.side:null, mode=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
+        hingeBtn='<button class="el-list-del" style="width:auto;padding:0 10px;margin-left:auto;margin-right:6px;font-size:11px;border-radius:14px" onclick="cycleHinge('+i+')" title="Choisir de quel côté la porte est fixée (charnières)">Charnières '+(eff==='R'?'à droite':'à gauche')+(mode?'':' (auto)')+'</button>';
+      }
       html+='<div class="el-list-item">'
-        +'<div><div class="el-list-name">'+name+'</div><div class="el-list-type">'+sub+'</div></div>'
-        +(IS_TEAM?'<button class="el-list-del" style="margin-left:auto;margin-right:6px;font-size:15px" onclick="editElementPos('+i+')" aria-label="Modifier la position (équipe)" title="Équipe : saisir la position">✎</button>':'')
+        +'<div><div class="el-list-name">'+name+'</div><div class="el-list-type">'+sub+'</div></div>'+hingeBtn
+        +(IS_TEAM?'<button class="el-list-del" style="'+(el.type==='porte'?'':'margin-left:auto;')+'margin-right:6px;font-size:15px" onclick="editElementPos('+i+')" aria-label="Modifier la position (équipe)" title="Équipe : saisir la position">✎</button>':'')
         +'<button class="el-list-del" onclick="deleteElementAt('+i+')" aria-label="Supprimer cet élément">×</button>'
         +'</div>';
       if(IS_TEAM && _editingEl===i) html+=_elementEditorHtml(el,i);
@@ -4599,6 +4617,8 @@ function buildTechSpec(els, CL, CH, CP){
 
   // ── Tiroirs & Portes ─────────────────────────────────────
   var drawers=[], doors=[];
+  // sens d'ouverture : choisi par le client (champ « hinge »), sinon déduit (charnières sur un appui)
+  var _hm={}; try{ _supportModel(els,CL*100,CH*100).info.forEach(function(i){ _hm[i.d.key]=i.side; }); }catch(err){}
   (els||[]).forEach(function(e){
     if(e.type!=='tiroir'&&e.type!=='porte') return;
     var parts=e.key.split('_').map(Number);
@@ -4620,7 +4640,7 @@ function buildTechSpec(els, CL, CH, CP){
         y_bottom_mm:y_bot, height_mm:y_top-y_bot,
         door_thickness_mm:ep_mm,
         door_gap_mm:2, door_type:w>400?'double':'single', is_double_leaf:w>400,
-        door_opening:'left', door_model:'standard', fileur_width_mm:0,
+        door_opening:(_hm[e.key]==='R'?'right':'left'), hinge_explicit:(e.hinge==='L'||e.hinge==='R'), door_model:'standard', fileur_width_mm:0,
         hinge_mode:'default', custom_hinge_positions_mm:[]
       });
     }
@@ -5118,7 +5138,7 @@ function _supportModel(els, W, H){
   var seps=els.filter(function(e){return e.type==='separator';}).map(function(e){
     var c=_cpt(els,e.x_cm,e.y_cm,iW,iH); return {x:e.x_cm,b:c.bot,t:c.top};
   });
-  var parse=function(e){ var k=e.key.split('_').map(Number); return {key:e.key,b:k[0],l:k[1],t:k[2],r:k[3]}; };
+  var parse=function(e){ var k=e.key.split('_').map(Number); return {key:e.key,b:k[0],l:k[1],t:k[2],r:k[3],hinge:(e.hinge==='L'||e.hinge==='R')?e.hinge:null}; };
   var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(parse);
   var drawers=els.filter(function(e){return e.type==='tiroir'&&e.key;}).map(parse);
   function cover(d,x){   // part de la hauteur de d contre un appui situé en x (joue ou intercalaire)
@@ -5139,7 +5159,7 @@ function _supportModel(els, W, H){
       });
     }
     var cl=cover(d,d.l), cr=cover(d,d.r), nl=neigh('L'), nr=neigh('R');
-    var side=(nl&&!nr)?'R':(nr&&!nl)?'L':(cr>cl?'R':'L');   // charnières côté extérieur du groupe, sinon côté le mieux appuyé
+    var side=d.hinge?d.hinge:((nl&&!nr)?'R':(nr&&!nl)?'L':(cr>cl?'R':'L'));   // sens choisi par le client (hinge), sinon charnières côté extérieur du groupe, sinon côté le mieux appuyé
     return {d:d, side:side, x:side==='R'?d.r:d.l, best:side==='R'?cr:cl};
   });
   return {TOL:TOL, iW:iW, iH:iH, seps:seps, doors:doors, drawers:drawers, info:info, cover:cover};
@@ -5150,9 +5170,9 @@ function _hingeInfo(els, W, H){ return _supportModel(els,W,H).info.map(function(
 var _hingeCache={els:null,sig:'',map:{}};
 function _hingeLeftFor(els, Wcm, Hcm, key, fallback){
   try{
-    var sig=els.length+'|'+Wcm+'|'+Hcm+'|'+els.map(function(e){return e.type+(e.key||e.x_cm||e.y_cm||'');}).join(',');
+    var sig=els.length+'|'+Wcm+'|'+Hcm+'|'+els.map(function(e){return e.type+(e.key||e.x_cm||e.y_cm||'')+(e.hinge||'');}).join(',');
     if(_hingeCache.els!==els||_hingeCache.sig!==sig){
-      var m={}; _supportModel(dedupeEls(els),Wcm,Hcm).info.forEach(function(i){ if(i.best>=0.1) m[i.d.key]=i.side; });   // aucun appui d'aucun côté : on garde la règle de position
+      var m={}; _supportModel(dedupeEls(els),Wcm,Hcm).info.forEach(function(i){ if(i.best>=0.1||i.d.hinge) m[i.d.key]=i.side; });   // aucun appui d'aucun côté : on garde la règle de position
       _hingeCache={els:els,sig:sig,map:m};
     }
     var side=_hingeCache.map[key];
