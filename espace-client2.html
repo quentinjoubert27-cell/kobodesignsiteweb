@@ -1132,7 +1132,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       .subscribe((status) => {
         // Fallback polling si realtime indisponible
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          if (!msgPolling) msgPolling = setInterval(fetchAndRender, 5000);
+          if (!msgPolling) msgPolling = setInterval(function(){ if(document.visibilityState==='visible') fetchAndRender(); }, 20000);
         } else if (status === 'SUBSCRIBED') {
           if (msgPolling) { clearInterval(msgPolling); msgPolling = null; }
         }
@@ -1140,7 +1140,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     // Polling de sécurité toutes les 5s
     if (msgPolling) clearInterval(msgPolling);
-    msgPolling = setInterval(fetchAndRender, 5000);
+    msgPolling = setInterval(function(){ if(document.visibilityState==='visible') fetchAndRender(); }, 20000);
   }
 
   function renderMessages(msgs) {

@@ -1870,6 +1870,7 @@
       if (error) throw error;
       currentTarifsGlobaux = prices;
       showToast('Prix enregistrés !');
+      try { autoRecalcMontants(true); } catch (e) {}   // nouveaux tarifs : on recalcule les montants tout de suite
     } catch (err) {
       console.error('saveMateriauxPrix error:', err);
       showToast('Erreur d\'enregistrement : ' + (err.message || String(err)), 'err');
@@ -3796,14 +3797,29 @@
   }
 
   // Calcule et enregistre le montant de tous les projets non fermes, sans ouvrir chaque fiche. Renvoie true si quelque chose a changé.
-  async function autoRecalcMontants() {
+  // colonnes des configurations sans l'image d'aperçu (la plus lourde) : pour les listes et les calculs
+  var CFG_SDB_LISTE = 'id,created_at,prenom,email,message,type,decouverte,projet_id,telephone,code_postal,meuble_l,meuble_h,meuble_p,meuble_mat,plan_l,plan_p,plan_ep,plan_mat,nb_vasques,vasque_w,vasque_d,vasque_label,nb_tablettes,nb_separateurs,nb_portes,nb_tiroirs';
+  // pour le calcul des montants : seulement les morceaux du JSON utiles au prix (pas la liste technique des caissons)
+  var CFG_SDB_PRIX = 'id,projet_id,decouverte,created_at,meuble_l,meuble_h,meuble_p,meuble_mat,elements,rc_meuble:raw_config->meuble,rc_elements:raw_config->elements,rc_tvSide:raw_config->tvSide,rc_caisson2:raw_config->caisson2,rc_plan:raw_config->plan,rc_vasques:raw_config->vasques,rc_ov:raw_config->tableur_overrides,rc_ft:raw_config->furniture_type';
+  function cfgPrixRow(c) {
+    var rc = {};
+    if (c.rc_ft != null) rc.furniture_type = c.rc_ft; if (c.rc_meuble != null) rc.meuble = c.rc_meuble; if (c.rc_elements != null) rc.elements = c.rc_elements;
+    if (c.rc_tvSide != null) rc.tvSide = c.rc_tvSide; if (c.rc_caisson2 != null) rc.caisson2 = c.rc_caisson2; if (c.rc_plan != null) rc.plan = c.rc_plan;
+    if (c.rc_vasques != null) rc.vasques = c.rc_vasques; if (c.rc_ov != null) rc.tableur_overrides = c.rc_ov;
+    return Object.assign({}, c, { raw_config: rc });
+  }
+  async function autoRecalcMontants(force) {
     try {
+      // une fois par heure au plus (le recalcul relit toutes les configurations)
+      try { var _t = parseInt(localStorage.getItem('kobo_recalc_ts') || '0', 10); if (!force && Date.now() - _t < 3600000) return false; } catch (e) {}
       if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
       if (!currentTarifsGlobaux) return false;
-      var [{ data: projets }, { data: configs }] = await Promise.all([
+      var [{ data: projets }, { data: configsRaw }] = await Promise.all([
         sb.from('projets').select('id, statut, montant'),
-        sb.from('configs_sdb').select('*').order('created_at', { ascending: false })
+        sb.from('configs_sdb').select(CFG_SDB_PRIX).order('created_at', { ascending: false })
       ]);
+      var configs = (configsRaw || []).map(cfgPrixRow);
+      try { localStorage.setItem('kobo_recalc_ts', String(Date.now())); } catch (e) {}
       var latest = {}, equipe = {};
       (configs || []).forEach(function (c) {
         if (!c.projet_id) return;
@@ -4915,7 +4931,7 @@ function dedupeEls(els){
 
     const [{ data: biblio }, { data: sdb }] = await Promise.all([
       sb.from('configs_biblio').select('*').order('created_at', { ascending: false }),
-      sb.from('configs_sdb').select('*').order('created_at', { ascending: false }),
+      sb.from('configs_sdb').select(CFG_SDB_LISTE).order('created_at', { ascending: false }),
     ]);
 
     const biblioTagged = (biblio || []).map(c => ({ ...c, _type: 'biblio' }));
@@ -5084,8 +5100,12 @@ function dedupeEls(els){
     return cfg;
   }
 
-  function openConfigDetail(encoded) {
-    const c = JSON.parse(decodeURIComponent(encoded));
+  async function openConfigDetail(encoded) {
+    let c = JSON.parse(decodeURIComponent(encoded));
+    // la liste ne porte pas l'image d'aperçu ni le JSON complet : on les charge à l'ouverture
+    if (c._type !== 'biblio' && c.id && c.thumbnail === undefined) {
+      try { const { data: full } = await sb.from('configs_sdb').select('*').eq('id', c.id).maybeSingle(); if (full) c = Object.assign({}, c, full, { _type: c._type }); } catch (e) {}
+    }
     const isBiblio = c._type === 'biblio';
     const date = c.created_at ? new Date(c.created_at).toLocaleString('fr-FR') : '—';
 
@@ -5380,7 +5400,7 @@ function dedupeEls(els){
     try {
       currentProjetMeubles = [];
       const [{ data: sdbAll }, { data: biblio }] = await Promise.all([
-        sb.from('configs_sdb').select('*').eq('projet_id', projetId).order('created_at', { ascending: true }),
+        sb.from('configs_sdb').select(CFG_SDB_LISTE + ',elements,raw_config').eq('projet_id', projetId).order('created_at', { ascending: true }),
         sb.from('configs_biblio').select('*').eq('projet_id', projetId).limit(1).maybeSingle(),
       ]);
       // meubles du projet : tous les modèles faits par l'équipe ; sinon la configuration la plus récente (cas habituel d'un client)
@@ -6194,14 +6214,14 @@ function dedupeEls(els){
       }, () => fetchAdminThread())
       .subscribe((status) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          if (!adminMsgPolling) adminMsgPolling = setInterval(fetchAdminThread, 5000);
+          if (!adminMsgPolling) adminMsgPolling = setInterval(function () { if (document.visibilityState === 'visible') fetchAdminThread(); }, 15000);
         } else if (status === 'SUBSCRIBED') {
           if (adminMsgPolling) { clearInterval(adminMsgPolling); adminMsgPolling = null; }
         }
       });
 
     if (adminMsgPolling) clearInterval(adminMsgPolling);
-    adminMsgPolling = setInterval(fetchAdminThread, 5000);
+    adminMsgPolling = setInterval(function () { if (document.visibilityState === 'visible') fetchAdminThread(); }, 15000);
   }
 
   async function sendReply() {
