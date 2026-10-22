@@ -2656,7 +2656,7 @@
       if (!okAll) showToast('Attention : le rendu 3D ne correspond pas entièrement au JSON (détail en haut de la page du PDF)', 'err');
     }
     var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
-    var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 06 42 89 98 58';
+    var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 05 56 04 01 81';
     var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + fr(now) + '</div></div></div>'; };
     var pv = multi ? [] : devisSimplePlanVasque(), nbPages = pv.length ? 4 : 3;
     var foot = function (n) { return '<div class="foot"><span>' + legal + '</span><span>' + n + ' / ' + nbPages + '</span></div>'; };
@@ -2681,7 +2681,7 @@
       '.pvs{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:8mm}.pv img,.pv .ph{width:100%;aspect-ratio:1200/800;object-fit:cover;border-radius:1.5mm;display:block;background:#f4f1ee}.pv .ph{display:flex;align-items:center;justify-content:center;color:#999}.pv h3{font-size:12pt;font-weight:600;margin-top:3mm}.pv .tx{font-size:9.5pt;margin-top:1mm;color:#231a20}.pv ul{list-style:none;font-size:9pt;line-height:1.7;font-weight:300;color:#555;margin-top:1mm}.pv li::before{content:"– "}' +
       '@media print{.no-print{display:none!important}}</style>' + verifHtml +
       '<div class="pg">' + head() +
-      '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 06 42 89 98 58<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
+      '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 05 56 04 01 81<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
       '<div class="obj"><h4>Objet</h4><h2>' + escHtml((estManuel && currentManuel.titre) || p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(multi ? currentProjetMeubles.length + ' meubles sur mesure' : objet) + '</p>' + (estManuel && currentManuel.texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(currentManuel.texte) + '</p>' : '') + '</div>' +
       ((multi || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
