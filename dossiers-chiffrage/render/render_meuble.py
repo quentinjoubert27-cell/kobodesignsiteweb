@@ -229,6 +229,8 @@ def hinge_sides(spec, ep):
 
     out = []
     for d in doors:
+        if d.get("hinge_explicit"):   # sens d'ouverture choisi par le client
+            out.append("R" if d.get("door_opening") == "right" else "L"); continue
         cl, cr = cover(d, d["x_left_mm"]), cover(d, d["x_right_mm"])
         nl, nr = neigh(d, "L"), neigh(d, "R")
         if nl and not nr: side = "R"
@@ -349,7 +351,9 @@ def build_furniture(cfg, opt, open_state=False):
         wood = mat_wood("decor", None, FLAT_COLORS[key], 0.6)
     else:
         wood = mat_wood("decor", os.path.join(REPO, "img/BOISCHENE.jpg"))
-    inside = mat_plain("interieur", (0.55, 0.53, 0.50), 0.85)
+    rd = cfg.get("rendu") or {}          # options facultatives : portes blanches / à lames, intérieur blanc, plateau épais
+    inside = mat_plain("interieur", (0.86, 0.85, 0.83) if rd.get("interieur") == "blanc" else (0.55, 0.53, 0.50), 0.7 if rd.get("interieur") == "blanc" else 0.85)
+    blanc = mat_wood("blanc", None, (0.88, 0.87, 0.85), 0.5)
     metal = mat_plain("metal", (0.60, 0.60, 0.62), 0.25)
     rnd = random.Random(7)
     objs = []
@@ -358,6 +362,17 @@ def build_furniture(cfg, opt, open_state=False):
         o = add_box(nm, (ox + xl) * mm, (ox + xr) * mm, d0 * mm, d1 * mm, yb * mm + z_off, yt * mm + z_off, mt or wood, grain, rnd)
         if o: objs.append(o)
         return o
+
+    def louvre(ox, xl, xr, yb, yt, th, mt, pivot=None, rot=0.0):
+        """Porte à lames : cadre (montants et traverses de 55 mm) et lames horizontales espacées."""
+        fr = 55
+        parts = [(xl, xl + fr, yb, yt), (xr - fr, xr, yb, yt), (xl + fr, xr - fr, yb, yb + fr), (xl + fr, xr - fr, yt - fr, yt)]
+        y = yb + fr + 8
+        while y + 26 <= yt - fr - 6:
+            parts.append((xl + fr, xr - fr, y, y + 26)); y += 34
+        for pi_, (a, b, c0, c1) in enumerate(parts):
+            o = add_box("porte" if pi_ == 0 else "lame", (ox + a) * mm, (ox + b) * mm, 0, th * mm, c0 * mm + z_off, c1 * mm + z_off, mt, "h", rnd, pivot=pivot, rot_z=rot)
+            if o: objs.append(o)
 
     for ox, spec in cfg["_caissons"]:
         W = spec["overall_mm"]["width"]; H = spec["overall_mm"]["height"]
@@ -372,8 +387,11 @@ def build_furniture(cfg, opt, open_state=False):
                 B(t, p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], 0, D, "h")
         for s_ in spec.get("separators", []):
             B("sep", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], s_["y_top_mm"], 0, D - 8, "v")
+        door_bays = [(d["x_left_mm"], d["x_right_mm"]) for d in spec.get("doors", [])]
         for s_ in spec.get("shelves", []):
-            B("shelf", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], s_["y_top_mm"], 12, min(D - 8, 12 + s_.get("depth_mm", D - ep)), "h")
+            cx_ = (s_["x_left_mm"] + s_["x_right_mm"]) / 2
+            sm_ = blanc if (rd.get("interieur") == "blanc" and any(a <= cx_ <= b for a, b in door_bays)) else None   # derrière une porte : étagère blanche
+            B("shelf", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], s_["y_top_mm"], 12, min(D - 8, 12 + s_.get("depth_mm", D - ep)), "h", sm_)
         for b_ in spec.get("bars", []):
             o = add_cyl("tringle", (ox + b_["x_left_mm"]) * mm, (ox + b_["x_right_mm"]) * mm, 0.5 * D * mm, b_["y_center_mm"] * mm + z_off, b_.get("diameter_mm", 28) * mm / 2, metal)
             objs.append(o)
@@ -395,18 +413,25 @@ def build_furniture(cfg, opt, open_state=False):
                 if ov > 10: return 80
             return 98
 
+        order_x = sorted(range(len(dlist)), key=lambda i: dlist[i]["x_left_mm"])
         for di, d in enumerate(spec.get("doors", [])):
             th = d.get("door_thickness_mm", ep)
             xl, xr = d["x_left_mm"] + 1, d["x_right_mm"] - 1
             yb, yt = d["y_bottom_mm"] + 1, d["y_bottom_mm"] + d["height_mm"] - 1
+            st = (rd.get("portes") or {}).get(str(order_x.index(di)), {})      # style de la porte, de gauche à droite
+            dm = blanc if st.get("decor") == "blanc" else wood
             if not open_state:
-                B("porte", xl, xr, yb, yt, 0, th, "v")
+                if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm)
+                else: B("porte", xl, xr, yb, yt, 0, th, "v", dm)
             else:  # charnières sur une joue ou un intercalaire (jamais dans le vide)
                 left = sides[di] == "L"
                 px = (ox + (xl if left else xr)) * mm
-                o = add_box("porte", (ox + xl) * mm, (ox + xr) * mm, 0, th * mm, yb * mm + z_off, yt * mm + z_off, wood, "v", rnd,
-                            pivot=(px, 0), rot_z=math.radians(-angle_for(di) if left else angle_for(di)))
-                if o: objs.append(o)
+                rot = math.radians(-angle_for(di) if left else angle_for(di))
+                if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm, pivot=(px, 0), rot=rot)
+                else:
+                    o = add_box("porte", (ox + xl) * mm, (ox + xr) * mm, 0, th * mm, yb * mm + z_off, yt * mm + z_off, dm, "v", rnd,
+                                pivot=(px, 0), rot_z=rot)
+                    if o: objs.append(o)
         for d in spec.get("drawers", []):
             th = d.get("drawer_face_thickness_mm", ep)
             xl, xr = d["x_left_mm"] + 1, d["x_right_mm"] - 1
@@ -428,7 +453,12 @@ def build_furniture(cfg, opt, open_state=False):
     # plinthe continue : panneau de façade en retrait (≈ 30 mm), sans retour latéral, sur pieds
     if plinth > 0:
         objs.append(add_box("plinthe", ep * mm, (Wtot - ep) * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
-    top_h = (Htot + plinth) * mm   # le plan et la vasque ne sont pas dessinés avec le meuble : ils ont leurs propres images (render_parts)
+    top_h = (Htot + plinth) * mm
+    if rd.get("plateau"):   # plateau épais en chêne, léger débord
+        pt = float(rd["plateau"]) if not isinstance(rd["plateau"], bool) else 40.0
+        objs.append(add_box("plateau", -12 * mm, (Wtot + 12) * mm, -15 * mm, D * mm, top_h, top_h + pt * mm, wood, "h", rnd))
+        top_h += pt * mm
+    # le plan et la vasque ne sont pas dessinés avec le meuble : ils ont leurs propres images (render_parts)
     return objs, dict(W=Wtot * mm, H=top_h, D=D * mm, plinth=plinth, caissons=cfg["_caissons"])
 
 

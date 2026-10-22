@@ -4466,7 +4466,7 @@ function dedupeEls(els){
     var seps=els.filter(function(e){return e.type==='separator';}).map(function(e){
       var c=_cpt(els,e.x_cm,e.y_cm,iW,iH); return {x:e.x_cm,b:c.bot,t:c.top};
     });
-    var parse=function(e){ var k=e.key.split('_').map(Number); return {key:e.key,b:k[0],l:k[1],t:k[2],r:k[3]}; };
+    var parse=function(e){ var k=e.key.split('_').map(Number); return {key:e.key,b:k[0],l:k[1],t:k[2],r:k[3],hinge:(e.hinge==='L'||e.hinge==='R')?e.hinge:null}; };
     var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(parse);
     var drawers=els.filter(function(e){return e.type==='tiroir'&&e.key;}).map(parse);
     function cover(d,x){   // part de la hauteur de d contre un appui situé en x (joue ou intercalaire)
@@ -4487,7 +4487,7 @@ function dedupeEls(els){
         });
       }
       var cl=cover(d,d.l), cr=cover(d,d.r), nl=neigh('L'), nr=neigh('R');
-      var side=(nl&&!nr)?'R':(nr&&!nl)?'L':(cr>cl?'R':'L');   // charnières côté extérieur du groupe, sinon côté le mieux appuyé
+      var side=d.hinge?d.hinge:((nl&&!nr)?'R':(nr&&!nl)?'L':(cr>cl?'R':'L'));   // sens choisi par le client (hinge), sinon charnières côté extérieur du groupe, sinon côté le mieux appuyé
       return {d:d, side:side, x:side==='R'?d.r:d.l, best:side==='R'?cr:cl};
     });
     return {TOL:TOL, iW:iW, iH:iH, seps:seps, doors:doors, drawers:drawers, info:info, cover:cover};
@@ -5011,6 +5011,8 @@ function dedupeEls(els){
       return { type:'barre', x_left_mm:ep_mm+xl, x_right_mm:ep_mm+xr, length_mm:xr-xl, y_center_mm:ep_mm+Math.round(e.y_cm*10), diameter_mm:28 };
     });
     const drawers = [], doors = [];
+    // sens d'ouverture : choisi par le client (champ « hinge »), sinon déduit (charnières sur un appui)
+    const _hm = (function () { var m = {}; try { _supportModel(dedupeEls(els||[]), CL_cm, CH_cm).info.forEach(function (i) { m[i.d.key] = i.side; }); } catch (err) {} return m; })();
     (els||[]).forEach(e => {
       if (e.type!=='tiroir' && e.type!=='porte') return;
       const [bot,left,top,right] = e.key.split('_').map(Number);
@@ -5020,7 +5022,7 @@ function dedupeEls(els){
         drawers.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, drawer_face_thickness_mm:ep_mm, drawer_gap_mm:2, drawer_system:'blum', drawer_tech_type:'softclose', drawer_handle_type:'sans', applique_mode:false });
       } else {
         const w = x_r-x_l;
-        doors.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, door_thickness_mm:ep_mm, door_gap_mm:2, door_type:w>400?'double':'single', is_double_leaf:w>400, door_opening:'left', door_model:'standard', fileur_width_mm:0, hinge_mode:'default', custom_hinge_positions_mm:[] });
+        doors.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, door_thickness_mm:ep_mm, door_gap_mm:2, door_type:w>400?'double':'single', is_double_leaf:w>400, door_opening:(_hm[e.key]==='R'?'right':'left'), hinge_explicit:(e.hinge==='L'||e.hinge==='R'), door_model:'standard', fileur_width_mm:0, hinge_mode:'default', custom_hinge_positions_mm:[] });
       }
     });
 
