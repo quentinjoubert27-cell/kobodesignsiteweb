@@ -3269,11 +3269,20 @@
     var CH = { all: 'all', trav: 'trav', none: 'none', etag: 'etag', joue: 'joue' };
     // colonne du caisson principal : nombre de colonnes à sa gauche (les caissons empilés, niveau > 0, ne sont pas des colonnes)
     var _leftCols = tvArr(tv.left).filter(function (c) { return c && c.W_cm && !(c.niveau > 0); }).length;
-    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0 }];
-    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0 }); }); });
+    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0, ycm: 0 }];
+    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0, ycm: c.y_cm || 0 }); }); });
     tvArr(tv.espaces).forEach(function (e, i) { if (e && e.pont && e.pont.W_cm && e.pont.H_cm) cais.push({ label: 'pont ' + (i + 1), els: e.pont.elements || [], L: e.pont.W_cm * 10, H: e.pont.H_cm * 10, P: (e.pont.P_cm || m.P) * 10, main: false, col: -1, niveau: 0, pont: true }); });
     // caissons empilés : colonne et niveau connus -> joues extérieures sur toute la hauteur, joue dessus seulement tout en haut
     var _nbCol = 0, _maxNiv = {}, _hasCols = cais.every(function (c) { return /^caisson du dessus/.test(c.label || '') || c.col != null; });
+    // espaces libres en hauteur dans une colonne : le dessus du caisson du dessous et le dessous de celui du dessus se voient
+    (function () {
+      var byCol = {};
+      cais.forEach(function (c) { if (c.col != null && c.col >= 0) (byCol[c.col] = byCol[c.col] || []).push(c); });
+      Object.keys(byCol).forEach(function (k) {
+        var a = byCol[k].sort(function (x, y) { return (x.niveau || 0) - (y.niveau || 0); });
+        a.forEach(function (c, i) { var nx = a[i + 1]; if (nx && (nx.ycm || 0) * 10 > (c.ycm || 0) * 10 + c.H + 5) { c.gapAbove = true; nx.gapBelow = true; } });
+      });
+    })();
     if (_hasCols) { cais.forEach(function (c) { if (c.col != null) { _nbCol = Math.max(_nbCol, c.col + 1); _maxNiv[c.col] = Math.max(_maxNiv[c.col] || 0, c.niveau || 0); } }); }
     if (rc.caisson2) notes.push("Caisson d'angle : app.py ne l'importe pas, il n'est pas compté.");
     var multiDiv = false;
@@ -3287,13 +3296,13 @@
       add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
       add('Fond' + suf, H - 38, Math.max(0, L - 38), 1, CH.none);
       (opts.joues || []).filter(function (jk) { if (c.pont) return jk === 'dessus' || jk === 'dessous';   // pont : collé aux caissons voisins, seuls le dessus et le dessous se voient
-        if (jk === 'dessous') return false;
+        if (jk === 'dessous') return !!c.gapBelow;   // dessous visible : caisson suspendu au-dessus d'un espace libre
         if (/^caisson du dessus/.test(c.label || '')) return true;   // le caisson posé dessus garde ses joues visibles
         if (_hasCols) {
           // règle par colonne : gauche sur la colonne la plus à gauche, droite sur la plus à droite (à chaque niveau), dessus sur le caisson tout en haut de chaque colonne
           if (jk === 'gauche') return c.col === 0 && !m.mur_gauche;
           if (jk === 'droite') return c.col === _nbCol - 1 && !m.mur_droit;
-          if (jk === 'dessus') return (c.niveau || 0) === _maxNiv[c.col];
+          if (jk === 'dessus') return (c.niveau || 0) === _maxNiv[c.col] || !!c.gapAbove;
           return true;
         }
         if (jk === 'gauche') return ci === outerG && !m.mur_gauche;   // seule la joue extérieure se voit : gauche sur le caisson le plus à gauche
