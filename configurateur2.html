@@ -5765,17 +5765,17 @@ function _repositionPlanOnCaisson(){
 }
 
 // ── Chargement depuis ?c= (aperçu admin) ──────────────
-(function(){
+function appliquerConfig(cfg, opts){
+  opts=opts||{};
   try{
-    var param=new URLSearchParams(location.search).get('c');
-    if(!param) return;
-    var cfg=JSON.parse(decodeURIComponent(escape(atob(param))));
     var ft=cfg.ft||'sdb';
     selectFurnitureType(ft);
     AUTO_SPLIT=false;
     if(cfg.L) setCL(Math.round(cfg.L));
     if(cfg.H) setCH(Math.round(cfg.H));
     if(cfg.P) setCP(Math.round(cfg.P));
+    if(cfg.mur_gauche) setMur('G',true);
+    if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
       var mi=-1; for(var _i=0;_i<MATS_CAIS.length;_i++){ if(MATS_CAIS[_i].n===cfg.matLabel){mi=_i;break;} }
       if(mi>=0) setMatCais(mi);
@@ -5788,7 +5788,7 @@ function _repositionPlanOnCaisson(){
           if(!r||!r.W_cm) return;
           addTvSide(side);
           var list=side==='left'?tvSideLeft:tvSideRight, rec=list[list.length-1];
-          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.elems=Array.isArray(r.elements)?r.elements:[];
+          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.P=Math.round(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[];
         });
       });
       activeCaisson=1; buildCaisson(); if(typeof renderTvSideList==='function') renderTvSideList();
@@ -5820,11 +5820,39 @@ function _repositionPlanOnCaisson(){
       }
       goStep(3);
     }
+    if(opts.badge){
     var badge=document.createElement('div');
     badge.style.cssText='position:fixed;top:70px;right:16px;background:#1A1A1A;color:#FFFAF0;padding:6px 14px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;z-index:9999;pointer-events:none';
     badge.textContent='Aperçu admin';
     document.body.appendChild(badge);
+    }
+  }catch(e){ console.warn('Configuration invalide',e); }
+}
+// aperçu admin : ?c= (configuration encodée dans l'adresse)
+(function(){
+  try{
+    var param=new URLSearchParams(location.search).get('c');
+    if(!param) return;
+    appliquerConfig(JSON.parse(decodeURIComponent(escape(atob(param)))), {badge:true});
   }catch(e){ console.warn('Param ?c= invalide',e); }
+})();
+// mode équipe, modification : ?admin_projet=…&edit=1 recharge le modèle déjà enregistré sur le projet pour le retoucher
+(function(){
+  if(!ADMIN_PROJET || new URLSearchParams(location.search).get('edit')!=='1') return;
+  (async function(){
+    try{
+      var tok=await getAdminToken();
+      if(!tok) throw new Error('Connectez-vous d\'abord à l\'admin (même navigateur).');
+      var r=await fetch('https://auzcbtipzqxmllkzdxls.supabase.co/rest/v1/configs_sdb?projet_id=eq.'+encodeURIComponent(ADMIN_PROJET)+'&decouverte=eq.'+encodeURIComponent('Modélisé par l\'équipe')+'&select=raw_config&order=created_at.desc&limit=1',
+        {headers:{apikey:'sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U',Authorization:'Bearer '+tok}});
+      var rows=await r.json();
+      var raw=rows&&rows[0]&&rows[0].raw_config;
+      if(!raw) throw new Error('Aucun modèle enregistré sur ce projet : modélisez-le d\'abord.');
+      var m=raw.meuble||{};
+      appliquerConfig({ ft:raw.furniture_type||'tv', L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
+        elements:raw.elements, tvSide:raw.tvSide, caisson2:raw.caisson2, cableHoles:raw.cableHoles, plan:raw.plan, vasques:raw.vasques }, {badge:false});
+    }catch(e){ alert('Impossible de recharger le modèle : '+(e.message||e)); }
+  })();
 })();
 </script>
 <script>!function(){if(window._kbNoTrack)return;var k="kb_tracked_"+location.pathname;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");var vid=document.cookie.match(/kb_vid=([^;]+)/);if(!vid){var u=(Math.random().toString(36)+Math.random().toString(36)).replace(/[^a-z0-9]/g,"").slice(0,16);document.cookie="kb_vid="+u+";max-age=31536000;path=/;SameSite=Lax";vid=[null,u];}fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:location.pathname,referrer:document.referrer||null,language:navigator.language||null,screen:screen.width+"x"+screen.height,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||null,visitor_id:vid[1]})}).catch(function(){});}();</script>
