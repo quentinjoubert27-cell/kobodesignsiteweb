@@ -3962,7 +3962,7 @@ function clampDim(inp,fn){
   inp.value=v; fn(v);
 }
 function _clearCaissonEls(){ caissonElements=[]; caissonElements2=[]; updateElementsList(); }
-// Hauteur maximale d'un caisson : au-delà, un caisson supplémentaire se pose au-dessus avec la hauteur restante (300 = 280 + 20)
+// Hauteur maximale d'un caisson : au-delà, un caisson supplémentaire se pose au-dessus et la hauteur se coupe en parts égales (300 = 150 + 150)
 var CAISSON_MAX_H = 280, CAISSON_MAX_TOTAL_H = 560;
 function _recH(r){ return r==='M' ? Math.round(S.CH*100) : r.H; }
 function _yBottomOf(r){ if(!r.stack) return 0; var b=r.below; return _yBottomOf(b==='M'?{stack:null}:b)+_recH(b); }
@@ -3974,7 +3974,7 @@ function _columnsLR(){
   return cols;
 }
 function _stackOf(root){ return tvSideLeft.concat(tvSideRight).filter(function(r){ return r.stack && _colRoot(r)===root; }).sort(function(a,b){ return a.stack.lvl-b.stack.lvl; }); }
-// hauteurs des niveaux d'une colonne : réglées à la main (lv) si elles totalisent bien la hauteur de la colonne, sinon répartition automatique (280 puis le reste)
+// hauteurs des niveaux d'une colonne : réglées à la main (lv) si elles totalisent bien la hauteur de la colonne, sinon parts égales
 function _colLevels(root){
   var tot=root==='M'?Math.round(S.CHtot*100):(root.Htot||root.H), lv=root==='M'?S.lvM:root.lv, auto=_levelHeights(tot);
   if(lv && lv.length===auto.length && lv.reduce(function(a,b){return a+b;},0)===tot && lv.every(function(h){return h>=20&&h<=CAISSON_MAX_H;})) return lv.slice();
@@ -3982,10 +3982,11 @@ function _colLevels(root){
 }
 function _belowChainHas(r,target){ var b=r.below, g=0; while(b && b!=='M' && g++<50){ if(b===target) return true; b=b.below; } return false; }
 function _levelHeights(Hcm){
-  if(currentFT==='sdb') return [Hcm];
-  var out=[], rem=Hcm;
-  while(rem>0){ var h=Math.min(rem,CAISSON_MAX_H); out.push(h); rem-=h; }
-  return out.length?out:[Hcm];
+  if(currentFT==='sdb' || Hcm<=CAISSON_MAX_H) return [Hcm];
+  // au-delà de la limite, le meuble se coupe en parts égales (300 = 150 + 150), comme pour la longueur
+  var n=Math.ceil(Hcm/CAISSON_MAX_H), base=Math.floor(Hcm/n), rem=Hcm-base*n, out=[];
+  for(var i=0;i<n;i++) out.push(base+(i<rem?1:0));
+  return out;
 }
 function _syncStack(){
   var all=tvSideLeft.concat(tvSideRight), keep={};
