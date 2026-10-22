@@ -253,9 +253,12 @@ module.exports = async function handler(req, res) {
       const furniture_type = String(body.furniture_type || cfg.furniture_type || 'tv').slice(0, 20);
       const meuble = cfg.meuble || {}, plan = cfg.plan || {}, vasques = cfg.vasques || {}, counts = cfg.counts || {};
       const elements = Array.isArray(cfg.elements) ? cfg.elements : [];
-      // un seul modèle d'équipe par projet : s'il existe déjà, il est remplacé (modification), sinon il est créé
-      const { data: existant } = await sb.from('configs_sdb').select('id, decouverte').eq('projet_id', projet.id).order('created_at', { ascending: false });
-      const modeleEquipe = (existant || []).find(x => x.decouverte === 'Modélisé par l\'équipe');
+      // plusieurs meubles par projet : « config_id » modifie un meuble précis, sans « config_id » on en crée un nouveau
+      const { data: existant } = await sb.from('configs_sdb').select('id, decouverte').eq('projet_id', projet.id).order('created_at', { ascending: true });
+      const modelesEquipe = (existant || []).filter(x => x.decouverte === 'Modélisé par l\'équipe');
+      const modeleEquipe = body.config_id ? modelesEquipe.find(x => String(x.id) === String(body.config_id)) : null;
+      if (body.config_id && !modeleEquipe) return res.status(404).json({ error: 'Ce meuble n\'existe plus sur le projet' });
+      const libelle = String(body.libelle || cfg.libelle || '').slice(0, 60) || ('Meuble ' + ((modeleEquipe ? modelesEquipe.findIndex(x => x.id === modeleEquipe.id) : modelesEquipe.length) + 1));
       const rowData = {
         prenom: client.prenom || client.nom || 'Client', email: client.email,
         ...(client.telephone ? { telephone: client.telephone } : {}), ...(client.code_postal ? { code_postal: client.code_postal } : {}),
@@ -267,7 +270,7 @@ module.exports = async function handler(req, res) {
         vasque_w: vasques.W || 0, vasque_d: vasques.D || 0, vasque_label: String(vasques.label || vasques.id || '').slice(0, 40),
         nb_tablettes: counts.shelf || 0, nb_separateurs: counts.separator || 0, nb_portes: counts.porte || 0, nb_tiroirs: counts.tiroir || 0,
         elements, thumbnail: String(body.thumbnail || '').slice(0, 500000) || null,
-        raw_config: { furniture_type, meuble, plan, vasques, elements,
+        raw_config: { furniture_type, libelle, meuble, plan, vasques, elements,
           ...(cfg.caisson2 ? { caisson2: cfg.caisson2 } : {}), ...(cfg.tvSide ? { tvSide: cfg.tvSide } : {}),
           ...(Array.isArray(cfg.cableHoles) && cfg.cableHoles.length ? { cableHoles: cfg.cableHoles } : {}),
           ...(Array.isArray(cfg.caissons) ? { caissons: cfg.caissons, longueur_totale_cm: cfg.longueur_totale_cm } : {}),
@@ -287,11 +290,14 @@ module.exports = async function handler(req, res) {
 
     // ── ACTION : delete-config (efface le modèle fait par l'équipe pour un projet, pour tout recommencer) ──
     if (action === 'delete-config') {
-      const { projet_id } = body;
+      const { projet_id, config_id } = body;
       if (!projet_id) return res.status(400).json({ error: 'Projet manquant' });
       // seuls les modèles faits par l'équipe sont effaçables : jamais la configuration envoyée par un client
       const { data: lignes } = await sb.from('configs_sdb').select('id, decouverte').eq('projet_id', projet_id);
-      const ids = (lignes || []).filter(x => x.decouverte === 'Modélisé par l\'équipe').map(x => x.id);
+      let equipe = (lignes || []).filter(x => x.decouverte === 'Modélisé par l\'équipe');
+      if (config_id) equipe = equipe.filter(x => String(x.id) === String(config_id));
+      else if (equipe.length > 1) return res.status(400).json({ error: 'Plusieurs meubles sur ce projet : précisez lequel effacer' });
+      const ids = equipe.map(x => x.id);
       if (!ids.length) return res.status(404).json({ error: 'Aucun modèle d\'équipe à effacer pour ce projet' });
       const { error: delErr } = await sb.from('configs_sdb').delete().in('id', ids);
       if (delErr) return res.status(500).json({ error: delErr.message });

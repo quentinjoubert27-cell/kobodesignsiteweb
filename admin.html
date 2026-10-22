@@ -2361,8 +2361,8 @@
     return pv ? { total: pv.prix_vente } : null;
   }
 
-  function devisSimpleDetails() {
-    var rc = currentProjetRc || {}, q = currentDevisQuantities || {};
+  function devisSimpleDetails(rcIn, qIn) {
+    var rc = rcIn || currentProjetRc || {}, q = qIn || currentDevisQuantities || {};
     var m = rc.meuble || {};
     function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
     var left = arr(rc.tvSide && rc.tvSide.left), right = arr(rc.tvSide && rc.tvSide.right);
@@ -2602,16 +2602,17 @@
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
     var total = devisSimpleTotal();
+    var multi = currentProjetMeubles.length > 1 && !(currentProjetRc && currentProjetRc.manuel);   // plusieurs meubles : descriptif seulement, sans rendus
     var imgs = { ferme: '', ouvert: '', plan: '', vasque: '' }, helperMsg = '', verif = null;
     try {
       var isManuel = !!(currentProjetRc && currentProjetRc.manuel);
-      var j = (currentProjetRc && !isManuel) ? await devisRendersFromHelper(currentProjetRc, w) : null;
+      var j = (currentProjetRc && !isManuel && !multi) ? await devisRendersFromHelper(currentProjetRc, w) : null;
       if (isManuel) { imgs.ferme = (currentManuel.images || {}).ferme || ''; imgs.ouvert = (currentManuel.images || {}).ouvert || ''; }
       if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; verif = j.verification || null; }
-      else if (!isManuel) helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
+      else if (!isManuel && !multi) helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
     } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
     var estManuel = !!(currentProjetRc && currentProjetRc.manuel);
-    if (!imgs.ferme && !estManuel) {  // repli : images déjà ajoutées dans les documents du projet
+    if (!imgs.ferme && !estManuel && !multi) {  // repli : images déjà ajoutées dans les documents du projet
       var { data: docs } = await sb.from('documents').select('nom, url').eq('projet_id', currentProjetId);
       for (var d of (docs || [])) {
         var n = (d.nom || '').toLowerCase();
@@ -2646,7 +2647,7 @@
     var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
     var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 06 42 89 98 58';
     var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + fr(now) + '</div></div></div>'; };
-    var pv = devisSimplePlanVasque(), nbPages = pv.length ? 4 : 3;
+    var pv = multi ? [] : devisSimplePlanVasque(), nbPages = pv.length ? 4 : 3;
     var foot = function (n) { return '<div class="foot"><span>' + legal + '</span><span>' + n + ' / ' + nbPages + '</span></div>'; };
     var html = '<!doctype html><meta charset="utf-8"><title>' + numDevis + ' – ' + escHtml(p.nom || '') + (cl ? ' – ' + escHtml(cl) : '') + '</title>' +
       '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"><style>' +
@@ -2671,9 +2672,15 @@
       '<div class="pg">' + head() +
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 06 42 89 98 58<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
-      '<div class="obj"><h4>Objet</h4><h2>' + escHtml((estManuel && currentManuel.titre) || p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(objet) + '</p>' + (estManuel && currentManuel.texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(currentManuel.texte) + '</p>' : '') + '</div>' +
-      ((estManuel && !imgs.ferme && !imgs.ouvert) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
-      '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, (function () { var qq = currentDevisQuantities || {}, n1 = qq.doors_count || 0, n2 = qq.drawers_count || 0; var t = []; if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : '')); return t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir'; })(), det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' + foot(1) + '</div>' +
+      '<div class="obj"><h4>Objet</h4><h2>' + escHtml((estManuel && currentManuel.titre) || p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(multi ? currentProjetMeubles.length + ' meubles sur mesure' : objet) + '</p>' + (estManuel && currentManuel.texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(currentManuel.texte) + '</p>' : '') + '</div>' +
+      ((multi || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
+      (multi ? '<div class="compo"><h4>Composition des meubles</h4><ul style="list-style:none;">' + currentProjetMeubles.map(function (m, mi) {
+        var rcm = rcFromSdb(m), qm = null; try { qm = buildDevisQuantitiesFromConfig(m); } catch (e) { qm = {}; }
+        var dm = devisSimpleDetails(rcm, qm), n1 = qm.doors_count || 0, n2 = qm.drawers_count || 0, t = [];
+        if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : ''));
+        return '<li style="margin-bottom:3mm;"><b>' + escHtml(libelleMeuble(m, mi)) + '</b><br>' + escHtml(dm.caisson) + '<br>' + escHtml(t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir') + '<br>' + escHtml(dm.quincaillerie) + '</li>';
+      }).join('') + '</ul></div>' : '') +
+      (multi ? '' : '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, (function () { var qq = currentDevisQuantities || {}, n1 = qq.doors_count || 0, n2 = qq.drawers_count || 0; var t = []; if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : '')); return t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir'; })(), det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>') + foot(1) + '</div>' +
       (pv.length ? '<div class="pg">' + head() + '<div class="obj"><h4>Salle de bain</h4><h2>Plan de travail et vasque</h2></div><div class="pvs">' + pv.map(function (x) {
         var im2 = imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>');
         return '<div class="pv">' + im2 + '<h3>' + escHtml(x.titre) + '</h3>' + (x.texture ? '<p class="tx"><b>Texture / finition :</b> ' + escHtml(x.texture) + '</p>' : '') + '<ul>' + x.specs.map(function (t) { return '<li>' + escHtml(t) + '</li>'; }).join('') + '</ul></div>';
@@ -2812,6 +2819,14 @@
   function computeDevisAutoPrice() {
     if (!currentProjetRc) return null;
     if (currentProjetRc.manuel && parseFloat(currentProjetRc.manuel.prix_ht) > 0) return { cost_revient: 0, prix_vente: Math.round(parseFloat(currentProjetRc.manuel.prix_ht) * 100) / 100, missing_materials: [], fixe: true };   // prix saisi à la main : aucun calcul
+    if (currentProjetMeubles.length > 1 && !currentProjetRc.manuel) {   // plusieurs meubles : le prix du projet est la somme des meubles
+      var cout = 0, vente = 0, parts = [];
+      currentProjetMeubles.forEach(function (m) {
+        var rr = null; try { rr = tableurFromRc(rcFromSdb(m), currentTarifsGlobaux || {}); } catch (e) {}
+        if (rr) { cout += rr.cout; vente += rr.vente; parts.push(rr.vente); }
+      });
+      return { cost_revient: Math.round(cout * 100) / 100, prix_vente: Math.round(vente * 100) / 100, missing_materials: [], multi: currentProjetMeubles.length, parts: parts };
+    }
     var r = tableurFromRc(currentProjetRc, currentTarifsGlobaux || {});
     if (!r) return null;
     return { cost_revient: Math.round(r.cout * 100) / 100, prix_vente: r.vente, missing_materials: [] };
@@ -2826,6 +2841,7 @@
     if (!price) { resultEl.textContent = ''; return; }
     try { renderDevisSimple(); } catch (e) { console.warn('devis simplifié', e); }
     if (price.fixe) resultEl.innerHTML = '<span style="color:var(--accent)">Prix saisi à la main : ' + price.prix_vente.toFixed(2) + ' € HT</span> <span style="font-weight:400;font-size:12px;color:rgba(26,26,26,.55);">(aucun calcul automatique)</span>';
+    else if (price.multi) resultEl.innerHTML = 'Total des ' + price.multi + ' meubles — coût : ' + price.cost_revient.toFixed(2) + ' € · <span style="color:var(--accent)">Prix de vente HT du projet : ' + price.prix_vente.toFixed(2) + ' €</span>';
     else resultEl.innerHTML = 'Coût de fabrication : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente HT : ' + price.prix_vente.toFixed(2) + ' €</span>';
     try {
@@ -3079,23 +3095,48 @@
     showToast('Proposition enregistrée');
     renderProjetDevis(currentProjetId);
   }
-  function modeliserDansConfigurateur(edit) {
+  // ── Plusieurs meubles par projet : chaque meuble modélisé par l'équipe est une configuration à part ──
+  var currentProjetMeubles = [], _meubleIdx = {};
+  function equipeModele(c) { return c && c.decouverte === 'Modélisé par l\'équipe'; }
+  function rcFromSdb(sdb) {
+    var rc = sdb.raw_config || (sdb.raw_config = {});
+    if (!rc.meuble) rc.meuble = { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
+    if (!rc.elements) rc.elements = sdb.elements || [];
+    return rc;
+  }
+  function libelleMeuble(m, i) { return (m.raw_config && m.raw_config.libelle) || ('Meuble ' + (i + 1)); }
+  function choisirMeuble(i) { _meubleIdx[currentProjetId] = i; renderProjetDevis(currentProjetId); }
+  function meubleBarHtml(projetId, idx) {
+    var ms = currentProjetMeubles;
+    if (!ms.length || !equipeModele(ms[0])) return '';
+    var btn = function (i) {
+      var rc = rcFromSdb(ms[i]), r = null; try { r = tableurFromRc(rc, currentTarifsGlobaux || {}); } catch (e) {}
+      return '<button class="btn btn-sm ' + (i === idx ? 'btn-primary' : 'btn-ghost') + '" onclick="choisirMeuble(' + i + ')">' + escHtml(libelleMeuble(ms[i], i)) + '<span style="font-weight:400;font-size:10.5px;margin-left:6px;opacity:.8;">' + (rc.meuble ? Math.round(rc.meuble.L) + '×' + Math.round(rc.meuble.H) : '') + (r ? ' · ' + formatCurrency(r.vente) : '') + '</span></button>';
+    };
+    return '<div style="margin-bottom:12px;padding:10px 12px;background:rgba(26,26,26,.03);border-radius:8px;"><div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.5);margin-bottom:8px;">Meubles du projet (' + ms.length + ')</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' + ms.map(function (m, i) { return btn(i); }).join('') +
+      '<button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur()">+ Ajouter un meuble</button></div>' +
+      '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur(true,\'' + ms[idx].id + '\')">✏️ Modifier ce meuble</button>' +
+      '<button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="effacerModele(\'' + ms[idx].id + '\')">🗑 Effacer ce meuble</button></div></div>';
+  }
+  function modeliserDansConfigurateur(edit, configId) {
     if (!currentProjetId) return;
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
-    window.open('/configurateur2?admin_projet=' + encodeURIComponent(currentProjetId) + '&nom=' + encodeURIComponent(p.nom || '') + (edit === true ? '&edit=1' : ''), '_blank');
+    window.open('/configurateur2?admin_projet=' + encodeURIComponent(currentProjetId) + '&nom=' + encodeURIComponent(p.nom || '') + (edit === true ? '&edit=1' + (configId ? '&config=' + encodeURIComponent(configId) : '') : ''), '_blank');
   }
-  async function effacerModele() {
+  async function effacerModele(configId) {
     if (!currentProjetId) return;
-    if (!confirm('Effacer le meuble modélisé pour ce projet ?\n\nLe modèle (dimensions, éléments, prix calculé) est supprimé définitivement pour pouvoir tout recommencer. Le projet et le client ne sont pas touchés.')) return;
+    if (!confirm('Effacer ce meuble modélisé ?\n\nLe modèle (dimensions, éléments, prix calculé) est supprimé définitivement pour pouvoir tout recommencer. Le projet et le client ne sont pas touchés.')) return;
     try {
       const { data: { session } } = await sb.auth.getSession();
       var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ action: 'delete-config', projet_id: currentProjetId }) });
+        body: JSON.stringify({ action: 'delete-config', projet_id: currentProjetId, config_id: configId || undefined }) });
       var j = await r.json().catch(function () { return {}; });
       if (!r.ok) return showToast(j.error || 'Suppression impossible', 'err');
       var pr = allProjets.find(function (x) { return x.id === currentProjetId; });
       if (pr && pr.client_id) logActivite(pr.client_id, 'note', 'Modèle du meuble effacé pour le projet « ' + (pr.nom || '') + ' » (à refaire)', { projet_id: currentProjetId, auto: true });
-      showToast('Modèle effacé : vous pouvez le refaire');
+      showToast('Meuble effacé');
+      _meubleIdx[currentProjetId] = 0;
       await loadProjetConfig(); renderProjetDevis(currentProjetId);
     } catch (e) { showToast('Suppression impossible : ' + (e.message || e), 'err'); }
   }
@@ -3733,14 +3774,21 @@
         sb.from('projets').select('id, statut, montant'),
         sb.from('configs_sdb').select('*').order('created_at', { ascending: false })
       ]);
-      var latest = {};
-      (configs || []).forEach(function (c) { if (c.projet_id && !latest[c.projet_id]) latest[c.projet_id] = c; });
+      var latest = {}, equipe = {};
+      (configs || []).forEach(function (c) {
+        if (!c.projet_id) return;
+        if (!latest[c.projet_id]) latest[c.projet_id] = c;
+        if (equipeModele(c)) (equipe[c.projet_id] = equipe[c.projet_id] || []).push(c);
+      });
       var changed = false;
       for (var i = 0; i < (projets || []).length; i++) {
         var p = projets[i], c = latest[p.id];
         if (!c || STATUTS_FERMES.indexOf(p.statut) >= 0) continue;
         var prix;
-        try { prix = computePrixVenteFromSdb(c); } catch (e) { console.warn('auto-montant', p.id, e); continue; }
+        try {
+          // plusieurs meubles modélisés par l'équipe : prix du projet = somme ; sinon la configuration la plus récente
+          prix = equipe[p.id] ? equipe[p.id].reduce(function (t, m) { return t + (computePrixVenteFromSdb(m) || 0); }, 0) : computePrixVenteFromSdb(c);
+        } catch (e) { console.warn('auto-montant', p.id, e); continue; }
         if (!(prix > 0) || Math.abs(prix - (parseFloat(p.montant) || 0)) < 0.005) continue;
         var r = await sb.from('projets').update({ montant: prix }).eq('id', p.id);
         if (!r.error) changed = true;
@@ -5286,10 +5334,16 @@ function dedupeEls(els){
     el.innerHTML = 'Chargement…';
     if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
     try {
-      const [{ data: sdb }, { data: biblio }] = await Promise.all([
-        sb.from('configs_sdb').select('*').eq('projet_id', projetId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      currentProjetMeubles = [];
+      const [{ data: sdbAll }, { data: biblio }] = await Promise.all([
+        sb.from('configs_sdb').select('*').eq('projet_id', projetId).order('created_at', { ascending: true }),
         sb.from('configs_biblio').select('*').eq('projet_id', projetId).limit(1).maybeSingle(),
       ]);
+      // meubles du projet : tous les modèles faits par l'équipe ; sinon la configuration la plus récente (cas habituel d'un client)
+      const _team = (sdbAll || []).filter(equipeModele);
+      currentProjetMeubles = _team.length ? _team : (sdbAll || []).slice(-1);
+      const _idx = Math.max(0, Math.min(_meubleIdx[projetId] || 0, currentProjetMeubles.length - 1));
+      const sdb = currentProjetMeubles[_idx] || null;
 
       if (biblio && !sdb) {
         el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;">Configuration bibliothèque (ancien format) — pas de calcul de prix automatique disponible pour ce type.</div>';
@@ -5329,7 +5383,7 @@ function dedupeEls(els){
       currentDevisQuantities = q;
       if (!rc.meuble) rc.meuble = { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
       if (!rc.elements) rc.elements = sdb.elements || [];
-      el.innerHTML = '<div id="devis-result" style="font-size:14px;font-weight:600;margin-bottom:4px;"></div><div id="devis-compare"></div>' +
+      el.innerHTML = meubleBarHtml(projetId, _idx) + '<div id="devis-result" style="font-size:14px;font-weight:600;margin-bottom:4px;"></div><div id="devis-compare"></div>' +
         '<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="exportDevisPDF()">Télécharger le détail en PDF</button></div>';
       updateDevisAutoTotal();
     } catch (err) {
@@ -5600,7 +5654,7 @@ function dedupeEls(els){
     // 1. Cherche par projet_id (liens récents)
     let [{ data: biblio }, { data: sdb }] = await Promise.all([
       sb.from('configs_biblio').select('*').eq('projet_id', currentProjetId).limit(1).maybeSingle(),
-      sb.from('configs_sdb').select('*').eq('projet_id', currentProjetId).limit(1).maybeSingle(),
+      sb.from('configs_sdb').select('*').eq('projet_id', currentProjetId).order('created_at', { ascending: true }).limit(1).maybeSingle(),
     ]);
 
     // 2. Fallback par email du client (anciens projets sans projet_id)
@@ -5672,10 +5726,6 @@ function dedupeEls(els){
       }
     }
 
-    // modèle fait par l'équipe : on peut le retoucher, ou l'effacer pour tout recommencer (jamais la configuration d'un client)
-    if (!isBiblio && c.decouverte === 'Modélisé par l\'équipe') {
-      html += `</div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="modeliserDansConfigurateur(true)">✏️ Modifier le modèle</button><button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="effacerModele()">🗑 Effacer et recommencer</button></div><div>`;
-    }
     html += `</div></div>`;
 
     if (c.thumbnail && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(c.thumbnail)) {
