@@ -5262,6 +5262,7 @@ function exportElementsWithBounds(els, Wcm, Hcm){
   });
   return out;
 }
+var CONFIG_ID = new URLSearchParams(location.search).get('config');   // meuble précis à retoucher (plusieurs meubles par projet)
 var ADMIN_PROJET = new URLSearchParams(location.search).get('admin_projet');   // modélisation par l'équipe pour un projet existant
 async function getAdminToken(){
   try{
@@ -5275,7 +5276,7 @@ async function getAdminToken(){
     var nom=new URLSearchParams(location.search).get('nom')||'';
     var b=document.createElement('div');
     b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#CD3E00;color:#fff;padding:8px 14px;font:600 13px/1.4 sans-serif;text-align:center;';
-    b.textContent='Mode équipe — modélisation du meuble pour le projet'+(nom?' « '+nom+' »':'')+'. À la fin, « Envoyer » enregistre le meuble sur le projet (aucun e-mail au client).';
+    b.textContent='Mode équipe — '+(new URLSearchParams(location.search).get('edit')==='1'?'modification du meuble':'nouveau meuble')+' pour le projet'+(nom?' « '+nom+' »':'')+'. À la fin, « Envoyer » enregistre le meuble sur le projet (aucun e-mail au client).';
     document.body.appendChild(b);
   });
 })();
@@ -5350,7 +5351,7 @@ async function submitConfig(){
     var resp=await fetch(ADMIN_PROJET?'/api/notify':'/api/sdb-config',{
       method:'POST',
       headers:ADMIN_PROJET?{'Content-Type':'application/json','Authorization':'Bearer '+_adminTok}:{'Content-Type':'application/json'},
-      body:JSON.stringify(Object.assign(ADMIN_PROJET?{action:'attach-config',projet_id:ADMIN_PROJET}:{}, {
+      body:JSON.stringify(Object.assign(ADMIN_PROJET?{action:'attach-config',projet_id:ADMIN_PROJET,config_id:CONFIG_ID||undefined}:{}, {
         prenom:prenom, email:email, telephone:telephone, code_postal:codePostal, decouverte:decouverte, message:message, botcheck:bot,
         furniture_type: submitFT,
         thumbnail: thumbSrc,
@@ -5895,7 +5896,7 @@ function appliquerConfig(cfg, opts){
     try{
       var tok=await getAdminToken();
       if(!tok) throw new Error('Connectez-vous d\'abord à l\'admin (même navigateur).');
-      var r=await fetch('https://auzcbtipzqxmllkzdxls.supabase.co/rest/v1/configs_sdb?projet_id=eq.'+encodeURIComponent(ADMIN_PROJET)+'&decouverte=eq.'+encodeURIComponent('Modélisé par l\'équipe')+'&select=raw_config&order=created_at.desc&limit=1',
+      var r=await fetch('https://auzcbtipzqxmllkzdxls.supabase.co/rest/v1/configs_sdb?'+(CONFIG_ID?('id=eq.'+encodeURIComponent(CONFIG_ID)):('projet_id=eq.'+encodeURIComponent(ADMIN_PROJET)+'&decouverte=eq.'+encodeURIComponent('Modélisé par l\'équipe')+'&order=created_at.asc'))+'&select=raw_config&limit=1',
         {headers:{apikey:'sb_publishable_0W_N1-tbpRX_GWZRbPdgew_rkHrVT6U',Authorization:'Bearer '+tok}});
       var rows=await r.json();
       var raw=rows&&rows[0]&&rows[0].raw_config;
