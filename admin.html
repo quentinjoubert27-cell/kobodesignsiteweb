@@ -2613,17 +2613,19 @@
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
     var total = devisSimpleTotal();
-    var multi = currentProjetMeubles.length > 1 && !(currentProjetRc && currentProjetRc.manuel);   // plusieurs meubles : descriptif seulement, sans rendus
+    var multi = currentProjetMeubles.length > 1 && !(currentProjetRc && currentProjetRc.manuel);   // plusieurs meubles : descriptif de chaque meuble
+    // meuble modélisé par l'équipe (un ou plusieurs) : proposition sans rendus, descriptif seulement
+    var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !(currentProjetRc && currentProjetRc.manuel));
     var imgs = { ferme: '', ouvert: '', plan: '', vasque: '' }, helperMsg = '', verif = null;
     try {
       var isManuel = !!(currentProjetRc && currentProjetRc.manuel);
-      var j = (currentProjetRc && !isManuel && !multi) ? await devisRendersFromHelper(currentProjetRc, w) : null;
+      var j = (currentProjetRc && !isManuel && !sansRendus) ? await devisRendersFromHelper(currentProjetRc, w) : null;
       if (isManuel) { imgs.ferme = (currentManuel.images || {}).ferme || ''; imgs.ouvert = (currentManuel.images || {}).ouvert || ''; }
       if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; verif = j.verification || null; }
-      else if (!isManuel && !multi) helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
+      else if (!isManuel && !sansRendus) helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
     } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
     var estManuel = !!(currentProjetRc && currentProjetRc.manuel);
-    if (!imgs.ferme && !estManuel && !multi) {  // repli : images déjà ajoutées dans les documents du projet
+    if (!imgs.ferme && !estManuel && !sansRendus) {  // repli : images déjà ajoutées dans les documents du projet
       var { data: docs } = await sb.from('documents').select('nom, url').eq('projet_id', currentProjetId);
       for (var d of (docs || [])) {
         var n = (d.nom || '').toLowerCase();
@@ -2658,7 +2660,7 @@
     var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
     var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 05 56 04 01 81';
     var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + fr(now) + '</div></div></div>'; };
-    var pv = multi ? [] : devisSimplePlanVasque(), nbPages = pv.length ? 4 : 3;
+    var pv = sansRendus ? [] : devisSimplePlanVasque(), nbPages = pv.length ? 4 : 3;
     var foot = function (n) { return '<div class="foot"><span>' + legal + '</span><span>' + n + ' / ' + nbPages + '</span></div>'; };
     var html = '<!doctype html><meta charset="utf-8"><title>' + numDevis + ' – ' + escHtml(p.nom || '') + (cl ? ' – ' + escHtml(cl) : '') + '</title>' +
       '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"><style>' +
@@ -2684,7 +2686,7 @@
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 05 56 04 01 81<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
       '<div class="obj"><h4>Objet</h4><h2>' + escHtml((estManuel && currentManuel.titre) || p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(multi ? currentProjetMeubles.length + ' meubles sur mesure' : objet) + '</p>' + (estManuel && currentManuel.texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(currentManuel.texte) + '</p>' : '') + '</div>' +
-      ((multi || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
+      ((sansRendus || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
       (multi ? '<div class="compo"><h4>Composition des meubles</h4><ul style="list-style:none;">' + currentProjetMeubles.map(function (m, mi) {
         var rcm = rcFromSdb(m), qm = null; try { qm = buildDevisQuantitiesFromConfig(m); } catch (e) { qm = {}; }
         var dm = devisSimpleDetails(rcm, qm), n1 = qm.doors_count || 0, n2 = qm.drawers_count || 0, t = [];
