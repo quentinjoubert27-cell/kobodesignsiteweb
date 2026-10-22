@@ -4041,12 +4041,12 @@ function renderCaissonWidths(){
   for(var i=tvSideLeft.length-1;i>=0;i--){ var rl=tvSideLeft[i]; if(rl.stack) continue; rows.push({side:'left',idx:i,W:rl.W,H:rl.Htot||rl.H,P:rl.P,lev:_colLevels(rl)}); }
   rows.push({side:'main',idx:0,W:Math.round(S.CL*100),H:Math.round(S.CHtot*100),P:Math.round(S.CairsonP*100),lev:_colLevels('M')});
   tvSideRight.forEach(function(r,i){ if(r.stack) return; rows.push({side:'right',idx:i,W:r.W,H:r.Htot||r.H,P:r.P,lev:_colLevels(r)}); });
-  if(rows.length<2){ info.style.display='none'; return; }
+  if(rows.length<2 && rows[0].lev.length<2){ info.style.display='none'; return; }   // une seule colonne sur un seul niveau : rien à lister
   info.style.display='';
   var f=function(r,dim,max){ return '<div class="dim-ctrl"><button class="dim-step" onclick="setCaissonDim(\''+r.side+'\','+r.idx+',\''+dim+'\','+(r[dim]-1)+')">−</button>'
     +'<input class="dim-inp" type="number" min="20" max="'+max+'" value="'+r[dim]+'" onchange="setCaissonDim(\''+r.side+'\','+r.idx+',\''+dim+'\',+this.value)">'
     +'<span class="dim-unit">cm</span><button class="dim-step" onclick="setCaissonDim(\''+r.side+'\','+r.idx+',\''+dim+'\','+(r[dim]+1)+')">+</button></div>'; };
-  info.innerHTML='<div style="font-weight:700;color:var(--text);margin-bottom:6px">'+rows.length+' caissons · longueur maximale d\'un caisson : '+CAISSON_MAX_CM+' cm</div>'
+  info.innerHTML='<div style="font-weight:700;color:var(--text);margin-bottom:6px">'+rows.reduce(function(a,r){return a+r.lev.length;},0)+' caissons · longueur maximale d\'un caisson : '+CAISSON_MAX_CM+' cm, hauteur maximale : '+CAISSON_MAX_H+' cm</div>'
     + rows.map(function(r,n){ return '<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">Caisson '+(n+1)+'</span>'
       +(r.side!=='main'?'<button onclick="removeTvSide(\''+r.side+'\','+r.idx+')" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button>':'')+'</div>'
