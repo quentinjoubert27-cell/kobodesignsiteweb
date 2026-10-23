@@ -4146,7 +4146,12 @@ function renderCaissonWidths(){
       }
     }
   });
-  html+='<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">Longueur totale du meuble (à titre indicatif) : <b>'+_sumW()+' cm</b></div>';
+  var maxH=0, maxP=0; cols.forEach(function(c){ maxH=Math.max(maxH,c.lev.reduce(function(x,y){return x+y;},0)+c.gaps.reduce(function(x,y){return x+y;},0)); maxP=Math.max(maxP,c.P||0); });
+  tvGaps.forEach(function(g){ if(g.bridge) maxH=Math.max(maxH,(g.bridge.y||0)+g.bridge.H); });
+  html+='<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Récapitulatif du meuble</div>'
+    +'<div class="dim-row" style="margin:0"><span class="dim-lbl">Longueur totale</span><b>'+_sumW()+' cm</b></div>'
+    +'<div class="dim-row" style="margin:0"><span class="dim-lbl">Hauteur maximale</span><b>'+maxH+' cm</b></div>'
+    +'<div class="dim-row" style="margin:0"><span class="dim-lbl">Profondeur maximale</span><b>'+maxP+' cm</b></div></div>';
   info.innerHTML=html;
 }
 // abscisse (cm, depuis le bord gauche de l'ensemble) du côté gauche d'un caisson ou d'un pont
