@@ -3273,7 +3273,7 @@
     ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0, ycm: c.y_cm || 0 }); }); });
     tvArr(tv.espaces).forEach(function (e, i) { if (e && e.pont && e.pont.W_cm && e.pont.H_cm) cais.push({ label: 'pont ' + (i + 1), els: e.pont.elements || [], L: e.pont.W_cm * 10, H: e.pont.H_cm * 10, P: (e.pont.P_cm || m.P) * 10, main: false, col: -1, niveau: 0, pont: true }); });
     // caissons empilés : colonne et niveau connus -> joues extérieures sur toute la hauteur, joue dessus seulement tout en haut
-    var _gapSide = {}; tvArr(tv.espaces).forEach(function (e) { if (e && !e.pont && e.apres_col != null && e.apres_col >= 0) _gapSide[e.apres_col + '|d'] = true; });   // clé 'n|d' : un espace libre à droite de la colonne n
+    var _gapAt = {}; tvArr(tv.espaces).forEach(function (e) { if (e && e.apres_col != null && e.apres_col >= 0) _gapAt[e.apres_col] = e; });   // espace libre à droite de la colonne n
     var _nbCol = 0, _maxNiv = {}, _hasCols = cais.every(function (c) { return /^caisson du dessus/.test(c.label || '') || c.col != null; });
     // espaces libres en hauteur dans une colonne : le dessus du caisson du dessous et le dessous de celui du dessus se voient
     (function () {
@@ -3286,6 +3286,18 @@
       });
     })();
     if (_hasCols) { cais.forEach(function (c) { if (c.col != null) { _nbCol = Math.max(_nbCol, c.col + 1); _maxNiv[c.col] = Math.max(_maxNiv[c.col] || 0, c.niveau || 0); } }); }
+    // un côté se voit (joue comptée) s'il n'est pas entièrement caché : extrémité du meuble (hors mur), espace libre (sauf la bande d'un pont collé), ou partie non couverte par le caisson voisin (plus bas ou plus haut)
+    var _sideVisible = function (c, jk) {
+      var left = jk === 'gauche', nc = c.col + (left ? -1 : 1), a = (c.ycm || 0) * 10, b = a + c.H;
+      if (nc < 0 || nc > _nbCol - 1) return left ? !m.mur_gauche : !m.mur_droit;
+      var cover = [], gp = _gapAt[left ? nc : c.col];
+      if (gp) { if (gp.pont && gp.pont.H_cm) cover.push([(gp.pont.y_cm || 0) * 10, (gp.pont.y_cm || 0) * 10 + gp.pont.H_cm * 10]); }
+      else cais.forEach(function (o) { if (o.col === nc && !o.pont) cover.push([(o.ycm || 0) * 10, (o.ycm || 0) * 10 + o.H]); });
+      cover.sort(function (x, y) { return x[0] - y[0]; });
+      var pos = a, free = 0; cover.forEach(function (iv) { if (iv[0] > pos) free += Math.min(iv[0], b) - pos; pos = Math.max(pos, iv[1]); });
+      if (pos < b) free += b - pos;
+      return free > 5;
+    };
     if (rc.caisson2) notes.push("Caisson d'angle : app.py ne l'importe pas, il n'est pas compté.");
     var multiDiv = false;
     // caissons aux extrémités : si le meuble est collé à un mur de ce côté, la joue extérieure ne se voit pas, elle n'est pas comptée
@@ -3302,8 +3314,7 @@
         if (/^caisson du dessus/.test(c.label || '')) return true;   // le caisson posé dessus garde ses joues visibles
         if (_hasCols) {
           // règle par colonne : gauche sur la colonne la plus à gauche, droite sur la plus à droite (à chaque niveau), dessus sur le caisson tout en haut de chaque colonne
-          if (jk === 'gauche') return (c.col === 0 && !m.mur_gauche) || !!_gapSide[c.col - 1 + '|d'];   // joue aussi du côté d'un espace libre (sans pont)
-          if (jk === 'droite') return (c.col === _nbCol - 1 && !m.mur_droit) || !!_gapSide[c.col + '|d'];
+          if (jk === 'gauche' || jk === 'droite') return _sideVisible(c, jk);
           if (jk === 'dessus') return (c.niveau || 0) === _maxNiv[c.col] || !!c.gapAbove;
           return true;
         }

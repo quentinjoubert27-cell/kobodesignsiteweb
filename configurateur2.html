@@ -2390,7 +2390,7 @@ function setCL2(v){
 // unique comme avant), removeTvSide en retire un précis.
 function addTvSide(side){
   var list = side==='left' ? tvSideLeft : tvSideRight;
-  var rec = makeTvRecord(60, Math.round(S.CHtot*100));
+  var rec = makeTvRecord(60, _colLevels('M')[0]);   // même hauteur que le caisson 1 (et non la hauteur totale d'une colonne empilée)
   list.push(rec);
   if(AUTO_SPLIT){ _recomputeTotal(rec.W); _syncStack(); }
   activeCaisson = (side==='left'?'L':'R') + (list.indexOf(rec));
