@@ -3287,7 +3287,9 @@
     })();
     if (_hasCols) { cais.forEach(function (c) { if (c.col != null) { _nbCol = Math.max(_nbCol, c.col + 1); _maxNiv[c.col] = Math.max(_maxNiv[c.col] || 0, c.niveau || 0); } }); }
     // un côté se voit (joue comptée) s'il n'est pas entièrement caché : extrémité du meuble (hors mur), espace libre (sauf la bande d'un pont collé), ou partie non couverte par le caisson voisin (plus bas ou plus haut)
+    var left0 = function (c, jk) { return jk === 'gauche' ? (c.col === 0 && !m.mur_gauche) : (c.col === _nbCol - 1 && !m.mur_droit); };
     var _sideVisible = function (c, jk) {
+      if (!(m.version_calcul >= 2)) return left0(c, jk);   // configurations enregistrées avant la règle des côtés visibles : calcul inchangé
       var left = jk === 'gauche', nc = c.col + (left ? -1 : 1), a = (c.ycm || 0) * 10, b = a + c.H;
       if (nc < 0 || nc > _nbCol - 1) return left ? !m.mur_gauche : !m.mur_droit;
       var cover = [], gp = _gapAt[left ? nc : c.col];

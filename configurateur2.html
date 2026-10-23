@@ -5690,7 +5690,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:2, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
