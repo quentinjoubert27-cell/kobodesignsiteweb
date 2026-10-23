@@ -2038,6 +2038,23 @@
     return null;
   }
   const DEPARTEMENTS = {'01':'Ain','02':'Aisne','03':'Allier','04':'Alpes-de-Haute-Provence','05':'Hautes-Alpes','06':'Alpes-Maritimes','07':'Ardèche','08':'Ardennes','09':'Ariège','10':'Aube','11':'Aude','12':'Aveyron','13':'Bouches-du-Rhône','14':'Calvados','15':'Cantal','16':'Charente','17':'Charente-Maritime','18':'Cher','19':'Corrèze','2A':'Corse-du-Sud','2B':'Haute-Corse','21':'Côte-d\'Or','22':'Côtes-d\'Armor','23':'Creuse','24':'Dordogne','25':'Doubs','26':'Drôme','27':'Eure','28':'Eure-et-Loir','29':'Finistère','30':'Gard','31':'Haute-Garonne','32':'Gers','33':'Gironde','34':'Hérault','35':'Ille-et-Vilaine','36':'Indre','37':'Indre-et-Loire','38':'Isère','39':'Jura','40':'Landes','41':'Loir-et-Cher','42':'Loire','43':'Haute-Loire','44':'Loire-Atlantique','45':'Loiret','46':'Lot','47':'Lot-et-Garonne','48':'Lozère','49':'Maine-et-Loire','50':'Manche','51':'Marne','52':'Haute-Marne','53':'Mayenne','54':'Meurthe-et-Moselle','55':'Meuse','56':'Morbihan','57':'Moselle','58':'Nièvre','59':'Nord','60':'Oise','61':'Orne','62':'Pas-de-Calais','63':'Puy-de-Dôme','64':'Pyrénées-Atlantiques','65':'Hautes-Pyrénées','66':'Pyrénées-Orientales','67':'Bas-Rhin','68':'Haut-Rhin','69':'Rhône','70':'Haute-Saône','71':'Saône-et-Loire','72':'Sarthe','73':'Savoie','74':'Haute-Savoie','75':'Paris','76':'Seine-Maritime','77':'Seine-et-Marne','78':'Yvelines','79':'Deux-Sèvres','80':'Somme','81':'Tarn','82':'Tarn-et-Garonne','83':'Var','84':'Vaucluse','85':'Vendée','86':'Vienne','87':'Haute-Vienne','88':'Vosges','89':'Yonne','90':'Territoire de Belfort','91':'Essonne','92':'Hauts-de-Seine','93':'Seine-Saint-Denis','94':'Val-de-Marne','95':'Val-d\'Oise','971':'Guadeloupe','972':'Martinique','973':'Guyane','974':'La Réunion','976':'Mayotte'};
+  const REGION_DEPTS = {
+    'Auvergne-Rhône-Alpes': ['01','03','07','15','26','38','42','43','63','69','73','74'],
+    'Bourgogne-Franche-Comté': ['21','25','39','58','70','71','89','90'],
+    'Bretagne': ['22','29','35','56'],
+    'Centre-Val de Loire': ['18','28','36','37','41','45'],
+    'Corse': ['2A','2B'],
+    'Grand Est': ['08','10','51','52','54','55','57','67','68','88'],
+    'Hauts-de-France': ['02','59','60','62','80'],
+    'Île-de-France': ['75','77','78','91','92','93','94','95'],
+    'Normandie': ['14','27','50','61','76'],
+    'Nouvelle-Aquitaine': ['16','17','19','23','24','33','40','47','64','79','86','87'],
+    'Occitanie': ['09','11','12','30','31','32','34','46','48','65','66','81','82'],
+    'Pays de la Loire': ['44','49','53','72','85'],
+    "Provence-Alpes-Côte d'Azur": ['04','05','06','13','83','84'],
+    'Outre-mer': ['971','972','973','974','976']
+  };
+  function _regionOf(dept) { for (const r in REGION_DEPTS) if (REGION_DEPTS[r].indexOf(dept) >= 0) return r; return ''; }
   function _deptOf(cp) {
     if (/^97[1-6]/.test(cp)) return cp.slice(0, 3);
     if (cp.slice(0, 2) === '20') return parseInt(cp, 10) < 20200 ? '2A' : '2B';
@@ -2100,6 +2117,30 @@
         wsC.getCell('A4').value = 'Image de la carte indisponible (' + (e.message || e) + ')';
       }
 
+      // 1 bis. Tous les clients, avec leurs coordonnées (filtrable par région, département, ville, statut… pour cibler les rappels)
+      const wsT = wb.addWorksheet('Tous les clients');
+      wsT.columns = [{ header: 'Prénom', width: 16 }, { header: 'Nom', width: 20 }, { header: 'Email', width: 34 }, { header: 'Téléphone', width: 16 },
+        { header: 'Code postal', width: 12 }, { header: 'Ville', width: 24 }, { header: 'Dép.', width: 7 }, { header: 'Département', width: 22 }, { header: 'Région', width: 26 },
+        { header: 'Nb projets', width: 11 }, { header: 'Dernier projet', width: 30 }, { header: 'Statut', width: 18 }, { header: 'Montant (€ HT)', width: 14 },
+        { header: 'Client depuis', width: 14 }, { header: 'Dernière activité', width: 16 }, { header: 'À rappeler', width: 12 }, { header: 'Notes', width: 30 }];
+      const dFr = v => { if (!v) return ''; const x = new Date(v); return isNaN(x) ? '' : x; };
+      const lignes = d.people.map(p => {
+        const cp = String(p.cp || '').replace(/\s/g, '');
+        const okCp = /^\d{5}$/.test(cp), dep = okCp ? _deptOf(cp) : '';
+        const pj = (p.projets || []).slice().sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')));
+        const last = pj[0];
+        return { p, cp: okCp ? cp : (p.cp || ''), ville: okCp ? ((d.geos[cp] || {}).ville || '') : '', dep, depNom: DEPARTEMENTS[dep] || '', region: _regionOf(dep), pj, last };
+      }).sort((a, b) => (a.region || 'zzz').localeCompare(b.region || 'zzz') || a.dep.localeCompare(b.dep) || a.ville.localeCompare(b.ville) || (a.p.nomFamille || a.p.nom).localeCompare(b.p.nomFamille || b.p.nom));
+      lignes.forEach(x => {
+        const row = wsT.addRow([x.p.prenom || (x.p.nomFamille || x.p.nom === x.p.email ? '' : x.p.nom), x.p.nomFamille, x.p.email, x.p.tel, x.cp, x.ville, x.dep, x.depNom, x.region,
+          x.pj.length, x.last ? (x.last.nom || '') : '', x.last ? (x.last.statut || '') : '', x.last && x.last.montant != null ? Number(x.last.montant) : '',
+          dFr(x.p.depuis), x.last ? dFr(x.last.updated_at || x.last.created_at) : '', '', '']);
+        row.getCell(14).numFmt = 'dd/mm/yyyy'; row.getCell(15).numFmt = 'dd/mm/yyyy'; row.getCell(13).numFmt = '#,##0.00';
+      });
+      head(wsT);
+      wsT.views = [{ state: 'frozen', ySplit: 1 }];
+      wsT.autoFilter = { from: { row: 1, column: 1 }, to: { row: Math.max(1, lignes.length + 1), column: 17 } };
+
       // 2. Départements
       const wsD = wb.addWorksheet('Départements');
       wsD.columns = [{ header: '#', width: 5 }, { header: 'Dép.', width: 7 }, { header: 'Département', width: 28 }, { header: 'Clients', width: 10 }, { header: 'Villes', width: 70 }];
@@ -2157,7 +2198,7 @@
       clients.forEach(c => {
         const k = norm(c.email) || c.id;
         idToKey[c.id] = k;
-        people[k] = { nom: ((c.prenom || '') + ' ' + (c.nom || '')).trim() || c.email || 'Client', email: c.email || '', cp: c.code_postal || '' };
+        people[k] = { nom: ((c.prenom || '') + ' ' + (c.nom || '')).trim() || c.email || 'Client', prenom: c.prenom || '', nomFamille: c.nom || '', email: c.email || '', tel: c.telephone || '', cp: c.code_postal || '', depuis: c.created_at || '', projets: [] };
       });
       // Clients sans code postal sur leur fiche : on le récupère là où il a été saisi
       for (const t of ['configs_sdb', 'demandes']) {
@@ -2168,6 +2209,21 @@
           });
         } catch (e) {}
       }
+      // téléphone absent de la fiche : on le reprend d'un formulaire envoyé avec le même e-mail
+      for (const t of ['configs_sdb', 'demandes']) {
+        try {
+          (await fetchAll(t, 'email, telephone')).forEach(r => {
+            const k = norm(r.email);
+            if (people[k] && !people[k].tel && r.telephone) people[k].tel = r.telephone;
+          });
+        } catch (e) {}
+      }
+      try {
+        (await fetchAll('projets', 'client_id, nom, statut, montant, created_at, updated_at')).forEach(pr => {
+          const k = idToKey[pr.client_id];
+          if (k && people[k]) people[k].projets.push(pr);
+        });
+      } catch (e) {}
       try {
         (await fetchAll('projets', 'client_id, description')).forEach(pr => {
           const k = idToKey[pr.client_id];
@@ -2213,7 +2269,7 @@
         e.villes[v] = (e.villes[v] || 0) + byCP[cp].length;
       });
       const rows = Object.values(depts).sort((a, b) => b.n - a.n || a.d.localeCompare(b.d));
-      _carteData = { rows, byCP, geos, sansList, total: Object.keys(people).length, placed };
+      _carteData = { rows, byCP, geos, sansList, total: Object.keys(people).length, placed, people: Object.values(people) };
       const th = 'text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.4);border-bottom:1.5px solid rgba(26,26,26,.15);';
       const td = 'padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(26,26,26,.07);vertical-align:top;';
       list.innerHTML = '<table style="width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;"><thead><tr>'
