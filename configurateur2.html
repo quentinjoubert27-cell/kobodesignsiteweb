@@ -895,7 +895,7 @@ window.addEventListener('scroll', function(){
               <button class="dim-step" onclick="stepDim('inp-CH',setCH,+1)">+</button>
             </div>
           </div>
-          <div class="dim-row">
+          <div class="dim-row" id="row-CP">
             <span class="dim-lbl">Profondeur</span>
             <div class="dim-ctrl">
               <button class="dim-step" onclick="stepDim('inp-CP',setCP,-1)">−</button>
@@ -906,12 +906,12 @@ window.addEventListener('scroll', function(){
           </div>
           <!-- ── CAISSONS LATÉRAUX (illimités de chaque côté) ── -->
           <div>
-            <div class="sec" style="margin-top:18px">Caissons</div>
-            <div class="facade-row" style="margin-bottom:10px;flex-wrap:wrap;gap:5px">
+            <div class="sec" id="sec-caissons" style="margin-top:18px">Caissons</div>
+            <div id="split-info" style="display:none;margin-top:14px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)"></div>
+            <div class="facade-row" style="margin-top:14px;flex-wrap:wrap;gap:5px">
               <button class="facade-btn" onclick="addTvSide('left')">+ Ajouter à gauche</button>
               <button class="facade-btn" onclick="addTvSide('right')">+ Ajouter à droite</button>
             </div>
-            <div id="split-info" style="display:none;margin-top:14px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)"></div>
             <div id="tv-left-list" style="display:none"></div>
             <div id="tv-right-list" style="display:none"></div>
           </div>
@@ -4074,15 +4074,11 @@ function renderCaissonWidths(){
   cols.push({key:'M',side:'main',idx:0,W:Math.round(S.CL*100),P:Math.round(S.CairsonP*100),lev:_colLevels('M'),libre:_isLibre('M'),gaps:_colGaps('M')});
   tvSideRight.forEach(function(r,i){ if(r.stack) return; cols.push({key:r.uid,side:'right',idx:i,W:r.W,P:r.P,lev:_colLevels(r),libre:_isLibre(r),gaps:_colGaps(r)}); });
   var total=cols.reduce(function(a,c){return a+c.lev.length;},0)+tvGaps.filter(function(g){return g.bridge;}).length;
-  if(currentFT!=='sdb'){ var ih0=document.getElementById('inp-CH'); if(ih0) ih0.value=_colLevels('M')[0]; }   // le champ du haut montre la hauteur du caisson 1 seul
-  var sd0=document.getElementById('sec-dim'); if(sd0&&currentFT!=='sdb') sd0.textContent='Caisson '+(tvSideLeft.filter(function(r){return !r.stack;}).length+1);
-  if(total<2 && !tvGaps.length && cols.length<2){
-    // un seul caisson : pas de liste, seulement la possibilité d'en ajouter un au-dessus (pas en salle de bain)
-    if(currentFT==='sdb'){ info.style.display='none'; return; }
-    info.style.display='';
-    info.innerHTML='<div style="text-align:center"><a href="#" onclick="addLevelAbove(\'main\',0);return false" style="font-size:12px;color:var(--accent);text-decoration:underline">+ Ajouter un caisson au-dessus</a></div>';
-    return;
-  }
+  // hors salle de bain : tous les caissons (le 1er compris) sont présentés dans la liste, de la même façon
+  var plain=(currentFT!=='sdb'); info.style.cssText=plain?'margin-top:0;font-size:12px;color:var(--text2)':'margin-top:14px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)';
+  var sc=document.getElementById('sec-caissons'); if(sc) sc.style.display=plain?'none':'';
+  ['sec-dim','row-CL','row-CH','row-CP'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=(currentFT==='sdb')?'':'none'; });
+  if(currentFT==='sdb' && total<2 && !tvGaps.length && cols.length<2){ info.style.display='none'; return; }
   info.style.display='';
   var f=function(r,dim,max){
     var set = dim==='H' ? (r.libre ? 'setLevelFree(\''+r.side+'\','+r.idx+','+r.k+',' : (r.n>1 ? 'setLevelH(\''+r.side+'\','+r.idx+','+r.k+',' : 'setCaissonDim(\''+r.side+'\','+r.idx+',\'H\',')) : 'setCaissonDim(\''+r.side+'\','+r.idx+',\''+dim+'\',';
@@ -4099,7 +4095,7 @@ function renderCaissonWidths(){
     return '';
   };
   var box='margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px';
-  var n=0, html='<div style="font-weight:700;color:var(--text);margin-bottom:6px">'+total+' caisson'+(total>1?'s':'')+' · maximum par caisson : '+CAISSON_MAX_CM+' cm de long, '+CAISSON_MAX_H+' cm de haut</div>';
+  var n=0, html='<div style="color:var(--text2);margin-bottom:2px">Maximum par caisson : '+CAISSON_MAX_CM+' cm de long, '+CAISSON_MAX_H+' cm de haut</div>';
   cols.forEach(function(c,ci){
     c.lev.forEach(function(h,k){
       if(k>0){
@@ -4113,12 +4109,17 @@ function renderCaissonWidths(){
         }
       }
       var r={side:c.side,idx:c.idx,k:k,n:c.lev.length,W:c.W,H:h,P:c.P,libre:c.libre}; n++;
-      if(currentFT!=='sdb' && c.side==='main' && k===0){ var sd=document.getElementById('sec-dim'); if(sd) sd.textContent='Caisson '+n; return; }   // réglé dans le bloc du haut
-      html+='<div style="'+box+'">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">Caisson '+n+(r.n>1?(r.k===0?' · en bas':(r.k===r.n-1?' · au-dessus':' · niveau '+(r.k+1))):'')+'</span>'+rmBtn(r)+'</div>'
-        +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
-        +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',(r.n>1||r.libre)?CAISSON_MAX_H:(currentFT==='sdb'?280:CAISSON_MAX_TOTAL_H))+'</div>'
-        +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div></div>';
+      var ttl='Caisson '+n+(r.n>1?(r.k===0?' · en bas':(r.k===r.n-1?' · au-dessus':' · niveau '+(r.k+1))):'');
+      var Hmax=(r.n>1||r.libre)?CAISSON_MAX_H:(currentFT==='sdb'?280:CAISSON_MAX_TOTAL_H);
+      if(currentFT==='sdb'){
+        html+='<div style="'+box+'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">'+ttl+'</span>'+rmBtn(r)+'</div>'
+          +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div><div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',Hmax)+'</div><div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div></div>';
+      } else {
+        html+='<div class="sec" style="margin-top:'+(n>1?18:4)+'px;display:flex;justify-content:space-between;align-items:center"><span>'+ttl+'</span>'+rmBtn(r)+'</div>'
+          +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
+          +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',Hmax)+'</div>'
+          +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div>';
+      }
     });
     if(currentFT!=='sdb') html+='<div style="text-align:center;margin:6px 0 0"><a href="#" onclick="addLevelAbove(\''+c.side+'\','+c.idx+');return false" style="font-size:11px;color:var(--accent);text-decoration:underline">+ Ajouter un caisson au-dessus'+(cols.length>1?' (colonne '+(ci+1)+')':'')+'</a></div>';
     if(ci<cols.length-1){
