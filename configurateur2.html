@@ -912,6 +912,7 @@ window.addEventListener('scroll', function(){
               <button class="facade-btn" onclick="addTvSide('left')">+ Ajouter à gauche</button>
               <button class="facade-btn" onclick="addTvSide('right')">+ Ajouter à droite</button>
             </div>
+            <div id="recap-meuble"></div>
             <div id="tv-left-list" style="display:none"></div>
             <div id="tv-right-list" style="display:none"></div>
           </div>
@@ -4121,7 +4122,7 @@ function renderCaissonWidths(){
           +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div>';
       }
     });
-    if(currentFT!=='sdb') html+='<div style="text-align:center;margin:6px 0 0"><a href="#" onclick="addLevelAbove(\''+c.side+'\','+c.idx+');return false" style="font-size:11px;color:var(--accent);text-decoration:underline">+ Ajouter un caisson au-dessus'+(cols.length>1?' (colonne '+(ci+1)+')':'')+'</a></div>';
+    if(currentFT!=='sdb') html+='<div style="text-align:center;margin:6px 0 0"><a href="#" onclick="addLevelAbove(\''+c.side+'\','+c.idx+');return false" style="font-size:11px;color:var(--accent);text-decoration:underline">+ Ajouter un caisson au-dessus'+(total>1?' (caisson '+n+')':'')+'</a></div>';
     if(ci<cols.length-1){
       var g=_gapAfter(c.key);
       if(!g){
@@ -4148,10 +4149,11 @@ function renderCaissonWidths(){
   });
   var maxH=0, maxP=0; cols.forEach(function(c){ maxH=Math.max(maxH,c.lev.reduce(function(x,y){return x+y;},0)+c.gaps.reduce(function(x,y){return x+y;},0)); maxP=Math.max(maxP,c.P||0); });
   tvGaps.forEach(function(g){ if(g.bridge) maxH=Math.max(maxH,(g.bridge.y||0)+g.bridge.H); });
-  html+='<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Récapitulatif du meuble</div>'
+  var recap='<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Récapitulatif du meuble</div>'
     +'<div class="dim-row" style="margin:0"><span class="dim-lbl">Longueur totale</span><b>'+_sumW()+' cm</b></div>'
     +'<div class="dim-row" style="margin:0"><span class="dim-lbl">Hauteur maximale</span><b>'+maxH+' cm</b></div>'
     +'<div class="dim-row" style="margin:0"><span class="dim-lbl">Profondeur maximale</span><b>'+maxP+' cm</b></div></div>';
+  var rcEl=document.getElementById('recap-meuble'); if(rcEl){ rcEl.innerHTML=(currentFT==='sdb')?'':recap; }
   info.innerHTML=html;
 }
 // abscisse (cm, depuis le bord gauche de l'ensemble) du côté gauche d'un caisson ou d'un pont
