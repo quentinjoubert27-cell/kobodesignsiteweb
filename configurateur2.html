@@ -855,7 +855,7 @@ window.addEventListener('scroll', function(){
 
         <!-- ── ONGLET FORMULAIRE ── -->
         <div class="sb-tab-panel on" id="sbt-formulaire">
-          <div class="sec" style="margin-top:0">Dimensions</div>
+          <div class="sec" id="sec-dim" style="margin-top:0">Dimensions</div>
 
           <!-- Hauteur du bas — SDB uniquement -->
           <div id="sdb-bas-row" style="display:none">
@@ -876,8 +876,8 @@ window.addEventListener('scroll', function(){
             </div>
           </div>
 
-          <div class="dim-row">
-            <span class="dim-lbl">Longueur totale</span>
+          <div class="dim-row" id="row-CL">
+            <span class="dim-lbl">Longueur</span>
             <div class="dim-ctrl">
               <button class="dim-step" onclick="stepDim('inp-CL',setCL,-1)">−</button>
               <input class="dim-inp" type="number" id="inp-CL" min="40" max="220" value="120" oninput="setCL(+this.value)" onblur="clampDim(this,setCL)">
@@ -4062,8 +4062,8 @@ function _syncCaissonSplit(){
 function _sumW(){ return Math.round(S.CL*100)+tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W;},0)+_gapsW(); }
 // La longueur totale est un plafond : la somme des caissons ne peut pas la dépasser. Ajouter / retirer un caisson la fait varier de sa largeur.
 function _recomputeTotal(delta){
-  if(delta) S.CLtot=Math.round(S.CLtot*100+delta)/100;
-  var inp=document.getElementById('inp-CL'); if(inp) inp.value=Math.round(S.CLtot*100);
+  S.CLtot=_sumW()/100;   // le total n'est qu'une indication : il suit les caissons
+  var inp=document.getElementById('inp-CL'); if(inp) inp.value=Math.round(currentFT==='sdb'?S.CLtot*100:S.CL*100);
   S.L=_sumW()/100+S.depassG+S.depassD;
   var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
 }
@@ -4074,6 +4074,8 @@ function renderCaissonWidths(){
   cols.push({key:'M',side:'main',idx:0,W:Math.round(S.CL*100),P:Math.round(S.CairsonP*100),lev:_colLevels('M'),libre:_isLibre('M'),gaps:_colGaps('M')});
   tvSideRight.forEach(function(r,i){ if(r.stack) return; cols.push({key:r.uid,side:'right',idx:i,W:r.W,P:r.P,lev:_colLevels(r),libre:_isLibre(r),gaps:_colGaps(r)}); });
   var total=cols.reduce(function(a,c){return a+c.lev.length;},0)+tvGaps.filter(function(g){return g.bridge;}).length;
+  if(currentFT!=='sdb'){ var ih0=document.getElementById('inp-CH'); if(ih0) ih0.value=_colLevels('M')[0]; }   // le champ du haut montre la hauteur du caisson 1 seul
+  var sd0=document.getElementById('sec-dim'); if(sd0&&currentFT!=='sdb') sd0.textContent='Caisson '+(tvSideLeft.filter(function(r){return !r.stack;}).length+1);
   if(total<2 && !tvGaps.length && cols.length<2){
     // un seul caisson : pas de liste, seulement la possibilité d'en ajouter un au-dessus (pas en salle de bain)
     if(currentFT==='sdb'){ info.style.display='none'; return; }
@@ -4111,6 +4113,7 @@ function renderCaissonWidths(){
         }
       }
       var r={side:c.side,idx:c.idx,k:k,n:c.lev.length,W:c.W,H:h,P:c.P,libre:c.libre}; n++;
+      if(currentFT!=='sdb' && c.side==='main' && k===0){ var sd=document.getElementById('sec-dim'); if(sd) sd.textContent='Caisson '+n; return; }   // réglé dans le bloc du haut
       html+='<div style="'+box+'">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">Caisson '+n+(r.n>1?(r.k===0?' · en bas':(r.k===r.n-1?' · au-dessus':' · niveau '+(r.k+1))):'')+'</span>'+rmBtn(r)+'</div>'
         +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
@@ -4142,9 +4145,7 @@ function renderCaissonWidths(){
       }
     }
   });
-  var colsW=cols.reduce(function(a,c){return a+c.W;},0), gapsW=_gapsW(), T=Math.round(S.CLtot*100), sum=colsW+gapsW, rest=T-sum;
-  html+='<div style="margin-top:8px">Longueur totale : <b>'+T+' cm</b> · caissons'+(gapsW?' et espaces':'')+' : <b>'+sum+' cm</b>'
-    +(rest>0?'<div style="color:var(--accent);margin-top:2px">Reste '+rest+' cm à répartir (le meuble fera '+sum+' cm)</div>':'<div style="margin-top:2px">Les caissons voisins se réduisent si la longueur totale est atteinte.</div>')+'</div>';
+  html+='<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">Longueur totale du meuble (à titre indicatif) : <b>'+_sumW()+' cm</b></div>';
   info.innerHTML=html;
 }
 // abscisse (cm, depuis le bord gauche de l'ensemble) du côté gauche d'un caisson ou d'un pont
@@ -4254,22 +4255,7 @@ function setLevelH(side,idx,k,v){
 function setCaissonDim(side,idx,dim,v){
   v=Math.round(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:dim==='P'?120:(currentFT==='sdb'?280:CAISSON_MAX_TOTAL_H),v));
   if(dim==='W'){
-    // la somme des caissons ne dépasse pas la longueur totale : l'excédent est pris sur les caissons voisins (à droite d'abord, puis à gauche), 20 cm minimum chacun
-    var refs=[]; for(var q=tvSideLeft.length-1;q>=0;q--) refs.push({side:'left',idx:q,r:tvSideLeft[q]});
-    refs.push({side:'main',idx:0}); tvSideRight.forEach(function(r,q){ refs.push({side:'right',idx:q,r:r}); });
-    var wOf=function(x){ return x.side==='main'?Math.round(S.CL*100):x.r.W; };
-    var k=refs.findIndex(function(x){return x.side===side&&x.idx===idx;});
-    if(k>=0){
-      var cur=wOf(refs[k]), need=(v-cur)-(Math.round(S.CLtot*100)-_sumW());
-      var order=[]; for(var a=k+1;a<refs.length;a++) order.push(refs[a]); for(var b=k-1;b>=0;b--) order.push(refs[b]);
-      order.forEach(function(x){
-        if(need<=0) return;
-        var take=Math.min(wOf(x)-20,need); if(take<=0) return;
-        if(x.side==='main'){ S.CL=(Math.round(S.CL*100)-take)/100; caissonElements=[]; } else { x.r.W-=take; x.r.elems=[]; x.r.openState={}; }
-        need-=take;
-      });
-      if(need>0) v-=need;
-    }
+    // chaque caisson a sa propre longueur : la longueur totale n'est qu'une indication
   }
   if(side==='main'){
     if(dim==='W') S.CL=v/100; else if(dim==='P'){ S.CairsonP=v/100; var ip=document.getElementById('inp-CP'); if(ip) ip.value=v; } else { S.CHtot=v/100; S.CH=v/100; S.lvM=null; S.lgM=null; S.libreM=false; var ih=document.getElementById('inp-CH'); if(ih) ih.value=v; }
@@ -4281,7 +4267,7 @@ function setCaissonDim(side,idx,dim,v){
   if(dim==='H') _syncStack();
   _recomputeTotal(); updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
-function setCL(v){
+function _setCLauto(v){
   v=Math.round(v); S.CLtot=v/100;
   var inp=document.getElementById('inp-CL'); if(inp) inp.value=v;
   _syncCaissonSplit();
@@ -4290,8 +4276,16 @@ function setCL(v){
   if(S.nbVasques===2 && S.CLtot<1.20 && S.L<1.20) setNbVasques(1);
   _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
-function setCH(v){ v=Math.round(v); S.CHtot=v/100; S.CH=v/100; S.lvM=null; S.lgM=null; S.libreM=false; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _syncCaissonSplit(); _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
-function setCP(v){ v=Math.round(v); S.CairsonP=v/100; tvSideLeft.concat(tvSideRight).forEach(function(r){ r.P=v; }); var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
+function _setCHauto(v){ v=Math.round(v); S.CHtot=v/100; S.CH=v/100; S.lvM=null; S.lgM=null; S.libreM=false; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _syncCaissonSplit(); _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
+// Réglage du « Caisson 1 » (hors salle de bain) : ne touche que ce caisson, la taille globale du meuble n'est plus une contrainte
+function setCL(v){ if(currentFT==='sdb') return _setCLauto(v); setCaissonDim('main',0,'W',v); }
+function setCH(v){
+  if(currentFT==='sdb') return _setCHauto(v);
+  var lv=_colLevels('M');
+  if(_isLibre('M')) setLevelFree('main',0,0,v); else if(lv.length>1) setLevelH('main',0,0,v); else setCaissonDim('main',0,'H',v);
+}
+function setCP(v){ if(currentFT==='sdb') return _setCPauto(v); setCaissonDim('main',0,'P',v); }
+function _setCPauto(v){ v=Math.round(v); S.CairsonP=v/100; tvSideLeft.concat(tvSideRight).forEach(function(r){ r.P=v; }); var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
 function _updatePlanL(){
   S.L = S.CLtot + S.depassG + S.depassD;
   var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
@@ -4317,7 +4311,7 @@ function setEp(v){
   v=Math.round(v); S.Ep=v/100;
   var inp=document.getElementById('inp-Ep'); if(inp) inp.value=v;
   buildPlan();
-  if(currentFT==='sdb'){ setCH(_sdbComputeCH()); _updateSdbInfo(); }
+  if(currentFT==='sdb'){ _setCHauto(_sdbComputeCH()); _updateSdbInfo(); }
 }
 function _sdbComputeCH(){
   // CH auto = 85cm - bas - épaisseur plan (toujours 85cm au plan de travail)
@@ -4336,7 +4330,7 @@ function setSdbBaseH(v){
   v=Math.round(v); S.sdbBaseH=v; S.caissonYOff=v/100;
   var sl=document.getElementById('sl-sdb-bas'); if(sl) sl.value=v;
   var lbl=document.getElementById('v-sdb-bas'); if(lbl) lbl.textContent=v;
-  setCH(_sdbComputeCH());
+  _setCHauto(_sdbComputeCH());
   _updateSdbInfo();
 }
 function setCaissonOffset(v){
@@ -4554,11 +4548,15 @@ function selectFurnitureType(ft){
 
   // Adapt dimension inputs
   var inpCL=document.getElementById('inp-CL');
-  if(inpCL){ inpCL.min=cfg.dimL[0]; inpCL.max=cfg.dimL[1]; setCL(cfg.dimL[2]); }
+  if(inpCL){ inpCL.min=cfg.dimL[0]; inpCL.max=cfg.dimL[1]; _setCLauto(cfg.dimL[2]); }
   var inpCH=document.getElementById('inp-CH');
-  if(inpCH){ inpCH.min=cfg.dimH[0]; inpCH.max=(ft==='sdb')?cfg.dimH[1]:Math.max(cfg.dimH[1],CAISSON_MAX_TOTAL_H); setCH(cfg.dimH[2]); }
+  if(inpCH){ inpCH.min=cfg.dimH[0]; inpCH.max=(ft==='sdb')?cfg.dimH[1]:Math.max(cfg.dimH[1],CAISSON_MAX_TOTAL_H); _setCHauto(cfg.dimH[2]); }
   var inpCP=document.getElementById('inp-CP');
-  if(inpCP){ inpCP.min=cfg.dimP[0]; inpCP.max=cfg.dimP[1]; setCP(cfg.dimP[2]); }
+  if(inpCP){ inpCP.min=cfg.dimP[0]; inpCP.max=cfg.dimP[1]; _setCPauto(cfg.dimP[2]); }
+  // hors salle de bain : ces trois champs règlent le « Caisson 1 » seulement (les autres se règlent dans la liste des caissons)
+  var secD=document.getElementById('sec-dim'); if(secD) secD.textContent=(ft==='sdb')?'Dimensions':'Caisson 1';
+  if(ft!=='sdb'){ if(inpCL){ inpCL.min=20; inpCL.max=CAISSON_MAX_CM; } if(inpCP){ inpCP.min=20; inpCP.max=120; } }
+  var lblCL=document.querySelector('#row-CL .dim-lbl'); if(lblCL) lblCL.textContent='Longueur';
 
   // SDB : curseur bas du meuble
   if(ft==='sdb'){
@@ -4566,7 +4564,7 @@ function selectFurnitureType(ft){
     S.sdbBaseH=10; S.caissonYOff=0.10;
     var sl=document.getElementById('sl-sdb-bas'); if(sl) sl.value=10;
     var lbl=document.getElementById('v-sdb-bas'); if(lbl) lbl.textContent='10';
-    setCH(_sdbComputeCH());
+    _setCHauto(_sdbComputeCH());
     _updateSdbInfo();
   } else {
     S.sdbBaseH=0; S.caissonYOff=0;
@@ -6159,9 +6157,9 @@ function appliquerConfig(cfg, opts){
     var ft=cfg.ft||'sdb';
     selectFurnitureType(ft);
     AUTO_SPLIT=false;
-    if(cfg.L) setCL(Math.round(cfg.L));
-    if(cfg.H) setCH(Math.round(cfg.H));
-    if(cfg.P) setCP(Math.round(cfg.P));
+    if(cfg.L) _setCLauto(Math.round(cfg.L));
+    if(cfg.H) _setCHauto(Math.round(cfg.H));
+    if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
