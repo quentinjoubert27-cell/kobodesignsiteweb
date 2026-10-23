@@ -4062,10 +4062,12 @@ function _syncCaissonSplit(){
 // Liste unifiée des caissons (de gauche à droite) : longueur (120 cm max) et hauteur modifiables pour chacun
 function _sumW(){ return Math.round(S.CL*100)+tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W;},0)+_gapsW(); }
 // La longueur totale est un plafond : la somme des caissons ne peut pas la dépasser. Ajouter / retirer un caisson la fait varier de sa largeur.
+// largeur du meuble que recouvre le plan de travail : avec la case « Meuble salle de bain » cochée, c'est le caisson de départ seul ; en mode salle de bain d'origine, tout le meuble
+function _planBase(){ return (isSDBMode && currentFT!=='sdb') ? S.CL : S.CLtot; }
 function _recomputeTotal(delta){
   S.CLtot=_sumW()/100;   // le total n'est qu'une indication : il suit les caissons
   var inp=document.getElementById('inp-CL'); if(inp) inp.value=Math.round(currentFT==='sdb'?S.CLtot*100:S.CL*100);
-  S.L=_sumW()/100+S.depassG+S.depassD;
+  S.L=_planBase()+S.depassG+S.depassD;
   var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
 }
 function renderCaissonWidths(){
@@ -4279,9 +4281,9 @@ function _setCLauto(v){
   v=Math.round(v); S.CLtot=v/100;
   var inp=document.getElementById('inp-CL'); if(inp) inp.value=v;
   _syncCaissonSplit();
-  S.L=S.CLtot+S.depassG+S.depassD;
+  S.L=_planBase()+S.depassG+S.depassD;
   var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
-  if(S.nbVasques===2 && S.CLtot<1.20 && S.L<1.20) setNbVasques(1);
+  if(S.nbVasques===2 && _planBase()<1.20 && S.L<1.20) setNbVasques(1);
   _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
 function _setCHauto(v){ v=Math.round(v); S.CHtot=v/100; S.CH=v/100; S.lvM=null; S.lgM=null; S.libreM=false; var inp=document.getElementById('inp-CH'); if(inp) inp.value=v; _syncCaissonSplit(); _clearCaissonEls(); buildCaisson(); if(planMesh) buildPlan(); }
@@ -4295,10 +4297,10 @@ function setCH(v){
 function setCP(v){ if(currentFT==='sdb') return _setCPauto(v); setCaissonDim('main',0,'P',v); }
 function _setCPauto(v){ v=Math.round(v); S.CairsonP=v/100; tvSideLeft.concat(tvSideRight).forEach(function(r){ r.P=v; }); var inp=document.getElementById('inp-CP'); if(inp) inp.value=v; _clearCaissonEls(); buildCaisson(); }
 function _updatePlanL(){
-  S.L = S.CLtot + S.depassG + S.depassD;
+  S.L = _planBase() + S.depassG + S.depassD;
   var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
   S.vx=clampVasque(S.vx,'x'); S.vz=clampVasque(S.vz,'z');
-  if(S.nbVasques===2 && S.CLtot<1.20 && S.L<1.20) setNbVasques(1);
+  if(S.nbVasques===2 && _planBase()<1.20 && S.L<1.20) setNbVasques(1);
   positionVasque(); buildPlan(); updatePosInfo(); checkAlerts();
 }
 function setDepassG(v){
@@ -4359,8 +4361,8 @@ function _applyOffsetForCurrent(){
   if(inp) inp.value=Math.round(offset*1000)/10;
 }
 function setNbVasques(n){
-  if(n===2 && S.CLtot<1.20 && S.L<1.20){
-    alert('Le meuble et le plan de travail doivent faire au moins 120 cm pour ajouter une 2ème vasque (meuble : '+Math.round(S.CLtot*100)+' cm, plan : '+Math.round(S.L*100)+' cm).');
+  if(n===2 && _planBase()<1.20 && S.L<1.20){
+    alert('Le meuble et le plan de travail doivent faire au moins 120 cm pour ajouter une 2ème vasque (meuble : '+Math.round(_planBase()*100)+' cm, plan : '+Math.round(S.L*100)+' cm).');
     return;
   }
   S.nbVasques=n;
@@ -4682,7 +4684,7 @@ function goStep(n){
   if(n===1) buildCaisson();
   if(currentFT==='sdb'){
     if(n===3){
-      S.depassG=0.10; S.depassD=0.10; S.L=S.CLtot+S.depassG+S.depassD;
+      S.depassG=0.10; S.depassD=0.10; S.L=_planBase()+S.depassG+S.depassD;
       var inpDG=document.getElementById('inp-DG'); if(inpDG) inpDG.value=10;
       var inpDD=document.getElementById('inp-DD'); if(inpDD) inpDD.value=10;
       var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=Math.round(S.P*100);
@@ -4739,7 +4741,7 @@ function checkAlerts(){
   // Alerte plan vs meuble
   var wPlan=document.getElementById('warn-plan');
   if(wPlan){
-    var meubleL=Math.round(S.CLtot*100), planL=Math.round(S.L*100);
+    var meubleL=Math.round(_planBase()*100), planL=Math.round(S.L*100);
     if(meubleL>planL){
       wPlan.textContent='⚠ Le meuble ('+meubleL+' cm) est plus large que le plan de travail ('+planL+' cm).';
       wPlan.classList.add('show');
@@ -6124,10 +6126,10 @@ function toggleSDBMode(on){
     buildStepper(['Structure','Aménagement','Plan de travail','Vasque','Envoyer']);
     // Caler les dimensions du plan sur le caisson central
     S.depassG = 0; S.depassD = 0;
-    S.L = S.CLtot;
+    S.L = _planBase();
     S.P = caissonCP();
     var ltot = document.getElementById('v-L-total');
-    if(ltot) ltot.textContent = Math.round(S.CLtot*100) + ' cm';
+    if(ltot) ltot.textContent = Math.round(S.L*100) + ' cm';
     // Ne jamais forcer S.CH/S.Ep ici : on respecte la hauteur et l'épaisseur déjà
     // réglées par le client (à la première coche comme aux suivantes).
     buildPlan();
@@ -6153,7 +6155,9 @@ function _repositionPlanOnCaisson(){
   var centerX = (rightW - leftW) / 2;
   planMesh.scale.setScalar(ns);
   // le plan est centré sur l'ensemble des caissons (pas sur le principal), décalé du dépassement gauche/droite
-  planMesh.position.x = caissonGrp.position.x + (centerX + (S.depassD - S.depassG) / 2) * ns;
+  // avec la case « Meuble salle de bain » (hors mode sdb d'origine) le plan recouvre le caisson de départ seul ; sinon il est centré sur l'ensemble
+  var _cx = (isSDBMode && currentFT!=='sdb') ? 0 : centerX;
+  planMesh.position.x = caissonGrp.position.x + (_cx + (S.depassD - S.depassG) / 2) * ns;
   planMesh.position.y = FLOOR_BIBLIO_Y;
   planMesh.position.z = WALL_BIBLIO_Z + S.CairsonP * ns / 2;
 }
