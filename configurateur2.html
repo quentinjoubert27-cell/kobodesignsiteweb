@@ -5728,7 +5728,7 @@ async function submitConfig(){
             return rows;
           })(),
           longueur_totale_cm: _sumW(),
-          hauteur_totale_cm: Math.round(S.CHtot*100),
+          hauteur_totale_cm: Math.max.apply(null, _columnsLR().map(function(r){ return _colTotal(r); }).concat([Math.round(S.CHtot*100)])),
           cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
           devis_quantities: computeFullDevisQuantities(),
           counts:counts
