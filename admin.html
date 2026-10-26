@@ -5949,16 +5949,24 @@ function dedupeEls(els){
     var pr = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var slug = function (v) { return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'projet'; };
     var base = 'A-TRAITER__' + slug(pr.nom) + '__';
-    var dl = function (blob, nom) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); };
+    var nomDoc = base + (d.nom || 'document').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]+/g, '-');
+    var dl = function (blob, nom) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom; a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); URL.revokeObjectURL(a.href); }, 8000); };
+    var cl = (pr.clients || {});
+    var fiche = { projet_id: currentProjetId, projet_nom: pr.nom || '', client: [cl.prenom, cl.nom].filter(Boolean).join(' '), description: pr.description || '', statut: pr.statut || '',
+      document: { nom: d.nom, type: d.type, id: d.id, fichier_telecharge: nomDoc }, date: new Date().toISOString(),
+      consigne: 'Reproduire le meuble de ce document (photo ou plan) en JSON de modèle (caissons du configurateur ou formes libres), puis l\'importer dans le projet avec « Importer un modèle (JSON) ».' };
+    var attente = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
     try {
-      var rep = await fetch(d.signedUrl); if (!rep.ok) throw new Error('document indisponible');
-      dl(await rep.blob(), base + (d.nom || 'document').replace(/[\\/:*?"<>|]+/g, '-'));
-      var cl = (pr.clients || {});
-      var fiche = { projet_id: currentProjetId, projet_nom: pr.nom || '', client: [cl.prenom, cl.nom].filter(Boolean).join(' '), description: pr.description || '', statut: pr.statut || '',
-        document: { nom: d.nom, type: d.type, id: d.id }, date: new Date().toISOString(),
-        consigne: 'Reproduire le meuble de ce document (photo ou plan) en JSON de modèle (caissons du configurateur ou formes libres), puis l\'importer dans le projet avec « Importer un modèle (JSON) ».' };
-      dl(new Blob([JSON.stringify(fiche, null, 1)], { type: 'application/json' }), base + 'fiche.json');
-      showToast('Téléchargé : cherche les fichiers « A-TRAITER__ » dans tes Téléchargements, puis dis-le à Claude');
+      // le document est récupéré, puis intégré à la fiche (un seul fichier suffit à Claude) ; le document seul est aussi téléchargé en plus
+      var blobDoc = null;
+      try { var rep = await fetch(d.signedUrl); if (!rep.ok) throw new Error('HTTP ' + rep.status); blobDoc = await rep.blob(); } catch (e) { showToast('Le document n\'a pas pu être récupéré (' + (e.message || e) + ') : utilise « Télécharger » puis envoie-le à Claude', 'err'); }
+      if (blobDoc && blobDoc.size <= 12 * 1024 * 1024) {
+        fiche.document.contenu_base64 = await new Promise(function (ok, ko) { var fr = new FileReader(); fr.onload = function () { ok(String(fr.result).split(',')[1] || ''); }; fr.onerror = ko; fr.readAsDataURL(blobDoc); });
+        fiche.document.mime = blobDoc.type || '';
+      }
+      dl(new Blob([JSON.stringify(fiche, null, 1)], { type: 'application/json' }), base + 'fiche.json');   // fiche + document intégré
+      if (blobDoc) { await attente(700); dl(blobDoc, nomDoc); }                                          // le document seul, en plus
+      if (blobDoc) showToast('Téléchargé : « ' + base + 'fiche.json » (fiche + document) et le document seul. Si Safari demande d\'autoriser plusieurs téléchargements, accepte, puis dis-le à Claude');
     } catch (e) { showToast('Téléchargement impossible : ' + (e.message || e), 'err'); }
   }
   async function loadProjetDocs() {
