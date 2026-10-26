@@ -911,8 +911,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
   }
 
-  // Statut interne "Analyse en cours" : le client voit "En étude"
-  function statutClient(s) { return (s === 'Analyse en cours' || s === 'Prix validé') ? 'En étude' : s; }
+  // Statuts internes : « Analyse en cours » / « Prix validé » : le client voit "En étude" ; « En attente de réponse client » : il voit "Proposition envoyée"
+  function statutClient(s) { return (s === 'Analyse en cours' || s === 'Prix validé') ? 'En étude' : (s === 'En attente de réponse client' ? 'Proposition envoyée' : s); }
 
   function statusClass(s) {
     const map = { 'En étude': 'etude', 'Proposition envoyée': 'proposition', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };

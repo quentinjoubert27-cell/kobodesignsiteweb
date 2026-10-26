@@ -97,7 +97,7 @@
     .stat__trend.neutral { color: rgba(26,26,26,.3); }
 
     /* Kanban pipeline */
-    .pipeline { display: grid; grid-template-columns: repeat(9, 1fr); gap: 12px; margin-bottom: 32px; }
+    .pipeline { display: grid; grid-template-columns: repeat(11, 1fr); gap: 8px; margin-bottom: 32px; }
     .pipeline-col { background: var(--white); border: 1px solid rgba(26,26,26,.08); border-radius: 12px; padding: 16px; }
     .pipeline-col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .pipeline-col-title { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: rgba(26,26,26,.4); }
@@ -128,6 +128,7 @@
     .sb-prixvalide { background: #d1fae5; color: #065f46; } .sb-prixvalide::before { background: #10b981; }
     .sb-devis { background: #ffedd5; color: #9a3412; } .sb-devis::before { background: #f97316; }
     .sb-proposition { background: #ede9fe; color: #5b21b6; } .sb-proposition::before { background: #8b5cf6; }
+    .sb-attente { background: #fef9c3; color: #854d0e; } .sb-attente::before { background: #eab308; }
     .sb-devisenvoye { background: #cffafe; color: #155e75; } .sb-devisenvoye::before { background: #06b6d4; }
     .sb-fabrication { background: #dbeafe; color: #1e40af; } .sb-fabrication::before { background: #3b82f6; }
     .sb-commande { background: #ede9fe; color: #5b21b6; } .sb-commande::before { background: #7c3aed; }
@@ -822,6 +823,7 @@
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Analyse en cours</span><span class="pipeline-count" id="pip-analyse">0</span></div><div class="pipeline-chips" id="pip-chips-analyse"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Prix validé</span><span class="pipeline-count" id="pip-prixvalide">0</span></div><div class="pipeline-chips" id="pip-chips-prixvalide"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Proposition envoyée</span><span class="pipeline-count" id="pip-proposition">0</span></div><div class="pipeline-chips" id="pip-chips-proposition"></div></div>
+        <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">En attente de réponse</span><span class="pipeline-count" id="pip-attente">0</span></div><div class="pipeline-chips" id="pip-chips-attente"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis en cours</span><span class="pipeline-count" id="pip-devis">0</span></div><div class="pipeline-chips" id="pip-chips-devis"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Devis envoyé</span><span class="pipeline-count" id="pip-devisenvoye">0</span></div><div class="pipeline-chips" id="pip-chips-devisenvoye"></div></div>
         <div class="pipeline-col"><div class="pipeline-col-head"><span class="pipeline-col-title">Fabrication</span><span class="pipeline-count" id="pip-fabrication">0</span></div><div class="pipeline-chips" id="pip-chips-fabrication"></div></div>
@@ -1026,7 +1028,7 @@
         <select id="pf-statut" onchange="renderProjets()" style="padding:10px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;background:#fff;">
           <option value="">Tous les statuts</option>
           <option value="__actifs">En cours (hors terminés)</option>
-          <option value="En étude">En étude</option><option value="Analyse en cours">Analyse en cours</option><option value="Prix validé">Prix validé</option><option value="Proposition envoyée">Proposition envoyée</option>
+          <option value="En étude">En étude</option><option value="Analyse en cours">Analyse en cours</option><option value="Prix validé">Prix validé</option><option value="Proposition envoyée">Proposition envoyée</option><option value="En attente de réponse client">En attente de réponse client</option>
           <option value="Devis en cours">Devis en cours</option><option value="Devis envoyé">Devis envoyé</option><option value="Fabrication">Fabrication</option>
           <option value="Commandé">Commandé</option><option value="Livraison">Livraison</option><option value="Terminé">Terminé</option>
         </select>
@@ -1471,6 +1473,7 @@
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Analyse en cours" checked/> Analyse en cours</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Prix validé"/> Prix validé</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Proposition envoyée"/> Proposition envoyée</label>
+        <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="En attente de réponse client"/> En attente de réponse client</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Devis en cours" checked/> Devis en cours</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Devis envoyé"/> Devis envoyé</label>
         <label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" value="Fabrication"/> Fabrication</label>
@@ -1517,6 +1520,7 @@
         <option value="En étude">En étude</option>
         <option value="Analyse en cours">Analyse en cours (interne, sans email)</option>
         <option value="Prix validé">Prix validé (interne, sans email)</option>
+        <option value="En attente de réponse client">En attente de réponse client (sans email)</option>
         <option value="Devis en cours">Devis en cours</option>
         <option value="Devis envoyé">Devis envoyé</option>
         <option value="Fabrication">Fabrication</option>
@@ -4025,7 +4029,7 @@
 
     // CA estimatif : tous les montants enregistrés, tous statuts confondus (HT)
     const renderCaEst = function (projetsCA) {
-      const ordre = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+      const ordre = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'En attente de réponse client', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
       const par = {}; let total = 0, chiffres = 0, ventes = 0;
       (projetsCA || []).forEach(p => {
         const m = parseFloat(p.montant) || 0;
@@ -4083,8 +4087,8 @@
   }
 
   function buildPipeline(projets) {
-    const statuts = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
-    const keys = ['etude', 'analyse', 'prixvalide', 'proposition', 'devis', 'devisenvoye', 'fabrication', 'commande', 'livraison', 'termine'];
+    const statuts = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'En attente de réponse client', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+    const keys = ['etude', 'analyse', 'prixvalide', 'proposition', 'attente', 'devis', 'devisenvoye', 'fabrication', 'commande', 'livraison', 'termine'];
     statuts.forEach((s, i) => {
       const list = projets.filter(p => p.statut === s);
       document.getElementById('pip-' + keys[i]).textContent = list.length;
@@ -4867,7 +4871,7 @@ function dedupeEls(els){
     if (currentProjetId) { loadProjetConfig(); renderProjetDevis(currentProjetId); }
   }
 
-  var STATUTS_AVANT_DEVIS = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'Devis en cours'];
+  var STATUTS_AVANT_DEVIS = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'En attente de réponse client', 'Devis en cours'];
   async function fixAppuiAll() {
     var list = (window._appuiList || []).filter(function (a) { return STATUTS_AVANT_DEVIS.indexOf(a.statut) >= 0; });
     if (!list.length) return showToast('Aucun projet concerné avant l\'envoi du devis', 'err');
@@ -6088,8 +6092,8 @@ function dedupeEls(els){
         logActivite(prevProjet.client_id, 'statut', 'Statut du projet « ' + (prevProjet.nom || '') + ' » : ' + (prevProjet.statut || '—') + ' → ' + statut, { projet_id: currentProjetId, auto: true });
       }
       await Promise.all([loadProjets(), loadDashboard()]);
-      // Notifier le client du changement de statut (sauf « Terminé », « Analyse en cours » interne et « Proposition envoyée » : la proposition part avec son PDF)
-      if (statut === 'Analyse en cours' || statut === 'Prix validé' || statut === 'Proposition envoyée' || statut === 'Terminé') return;
+      // Notifier le client du changement de statut (sauf « Terminé », « Analyse en cours » interne, « En attente de réponse client » et « Proposition envoyée » : la proposition part avec son PDF)
+      if (statut === 'Analyse en cours' || statut === 'Prix validé' || statut === 'Proposition envoyée' || statut === 'En attente de réponse client' || statut === 'Terminé') return;
       try {
         const { data: { session } } = await sb.auth.getSession();
         await fetch('/api/notify', {
@@ -6562,7 +6566,7 @@ function dedupeEls(els){
 
   // ── HELPERS ───────────────────────────────────────────────────────
   function statusKey(s) {
-    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Prix validé': 'prixvalide', 'Proposition envoyée': 'proposition', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
+    const m = { 'En étude': 'etude', 'Analyse en cours': 'analyse', 'Prix validé': 'prixvalide', 'Proposition envoyée': 'proposition', 'En attente de réponse client': 'attente', 'Devis en cours': 'devis', 'Devis envoyé': 'devisenvoye', 'Fabrication': 'fabrication', 'Commandé': 'commande', 'Livraison': 'livraison', 'Terminé': 'termine' };
     return m[s] || 'etude';
   }
 
@@ -6576,7 +6580,7 @@ function dedupeEls(els){
   }
 
   // Le montant n'est affiché qu'une fois le devis envoyé (ou plus tard dans le suivi)
-  var STATUTS_MONTANT = ['Prix validé', 'Proposition envoyée', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];   // montant visible dès la proposition envoyée
+  var STATUTS_MONTANT = ['Prix validé', 'Proposition envoyée', 'En attente de réponse client', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];   // montant visible dès la proposition envoyée
   var STATUTS_FERMES = ['Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];       // montant figé (devis ferme)
   function montantVisible(p) { return !!p && STATUTS_MONTANT.indexOf(p.statut) >= 0; }
 
