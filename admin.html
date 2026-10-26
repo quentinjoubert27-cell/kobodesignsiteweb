@@ -5886,14 +5886,16 @@ function dedupeEls(els){
       sb.from('configs_sdb').select('*').eq('projet_id', currentProjetId).order('created_at', { ascending: true }).limit(1).maybeSingle(),
     ]);
 
-    // 2. Fallback par email du client (anciens projets sans projet_id)
+    // 2. Fallback par email du client, réservé aux anciens projets : seulement les configurations jamais rattachées à un projet,
+    //    et seulement si ce client n'a qu'un projet. Chaque projet a sa fiche : on ne montre jamais la configuration d'un autre projet.
     if (!biblio && !sdb) {
       const projet = allProjets.find(p => p.id === currentProjetId);
       const client = projet ? allClients.find(c => c.id === projet.client_id) : null;
-      if (client?.email) {
+      const seulProjet = projet && allProjets.filter(p => p.client_id === projet.client_id).length === 1;
+      if (client?.email && seulProjet) {
         const [{ data: b2 }, { data: s2 }] = await Promise.all([
-          sb.from('configs_biblio').select('*').eq('email', client.email).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-          sb.from('configs_sdb').select('*').eq('email', client.email).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+          sb.from('configs_biblio').select('*').eq('email', client.email).is('projet_id', null).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+          sb.from('configs_sdb').select('*').eq('email', client.email).is('projet_id', null).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         ]);
         biblio = b2; sdb = s2;
       }
@@ -5905,7 +5907,7 @@ function dedupeEls(els){
       sdb.nb_tablettes = n.tablettes; sdb.nb_separateurs = n.separateurs; sdb.nb_portes = n.portes; sdb.nb_tiroirs = n.tiroirs;
     }
     if (!c) {
-      content.innerHTML = '<div class="empty" style="padding:16px 0;">Aucune configuration liée à ce projet (ni par projet, ni par email du client).</div>';
+      content.innerHTML = '<div class="empty" style="padding:16px 0;">Aucune configuration liée à ce projet.</div>';
       wrap.style.display = 'block';
       return;
     }
