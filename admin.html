@@ -180,6 +180,17 @@
     .msg--kobo .msg__bubble, .msg--admin .msg__bubble { background: var(--accent); color: #fff; border-radius: 12px 12px 2px 12px; }
     .msg__meta { font-size: 10px; color: rgba(26,26,26,.35); margin-top: 4px; }
     .msg--kobo .msg__meta, .msg--admin .msg__meta { text-align: right; }
+    .ia-rep { margin-top: 12px; }
+    .ia-panel { margin-top: 8px; padding: 10px 12px; background: #fff7f0; border: 1px solid #f1cdb5; border-radius: 10px; }
+    .ia-quest { font-size: 12px; line-height: 1.5; margin-bottom: 8px; color: #5b3a24; }
+    .ia-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .ia-chips button { font: 600 11px var(--font); padding: 5px 10px; border: 1px solid #e0b79a; border-radius: 100px; background: #fff; color: #8a3d12; cursor: pointer; }
+    .ia-chips button:hover { background: #ffe9d9; }
+    .ia-ligne { display: flex; gap: 8px; }
+    .ia-ligne input { flex: 1; padding: 8px 11px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font: 13px var(--font); background: #fff; }
+    .ia-ligne input:focus { outline: none; border-color: var(--accent); }
+    .ia-etat { font-size: 12px; line-height: 1.5; margin-top: 8px; color: rgba(26,26,26,.65); }
+    .ia-etat .ia-q { color: #9a3412; font-weight: 600; } .ia-etat .ia-err { color: #b91c1c; font-weight: 600; } .ia-etat ul { margin: 4px 0 0 16px; padding: 0; }
     .msg-compose { display: flex; gap: 10px; margin-top: 12px; }
     .msg-compose textarea { flex: 1; padding: 10px 13px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--bg); resize: none; height: 42px; }
     .msg-compose textarea:focus { outline: none; border-color: var(--accent); }
@@ -1003,6 +1014,7 @@
         <div class="detail-panel">
           <h3>Messagerie</h3>
           <div class="msg-thread" id="cd-msg-thread"></div>
+          <div class="ia-rep" id="ia-cd"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('cd')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('cd','oui')">Oui</button><button type="button" onclick="iaRepondre('cd','non')">Non</button><button type="button" onclick="iaRepondre('cd','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('cd','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('cd','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('cd');}"></div><div class="ia-etat"></div></div></div>
           <div class="msg-compose" style="margin-top:12px;">
             <textarea id="cd-msg-reply" placeholder="Répondre au client… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromClientDetail();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
             <button class="btn btn-primary btn-sm" onclick="sendReplyFromClientDetail()">Envoyer</button>
@@ -1097,6 +1109,7 @@
             <h3 style="margin:0;" id="msg-thread-title">—</h3>
           </div>
           <div class="msg-thread" id="msg-thread"></div>
+          <div class="ia-rep" id="ia-msg"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('msg')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('msg','oui')">Oui</button><button type="button" onclick="iaRepondre('msg','non')">Non</button><button type="button" onclick="iaRepondre('msg','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('msg','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('msg','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('msg');}"></div><div class="ia-etat"></div></div></div>
           <div class="msg-compose">
             <textarea id="msg-reply" placeholder="Répondre… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
             <button class="btn btn-primary btn-sm" onclick="sendReply()">Envoyer</button>
@@ -1643,6 +1656,7 @@
     <!-- Messages -->
     <h3 style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:14px;">Messages avec le client</h3>
     <div class="msg-thread" id="pd-msgs"></div>
+    <div class="ia-rep" id="ia-pd"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('pd')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('pd','oui')">Oui</button><button type="button" onclick="iaRepondre('pd','non')">Non</button><button type="button" onclick="iaRepondre('pd','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('pd','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('pd','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('pd');}"></div><div class="ia-etat"></div></div></div>
     <div class="msg-compose" style="margin-top:12px;">
       <textarea id="pd-reply" placeholder="Répondre au client… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromDetail();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
       <button class="btn btn-primary btn-sm" onclick="sendReplyFromDetail()">Envoyer</button>
@@ -4248,6 +4262,68 @@
     if (tab === 'configurations') loadClientConfigs(currentClientId);
   }
 
+  // ── Aide à la réponse (sans IA, gratuite) : un clic (Oui / Non / supplément / je vérifie / délai) + une précision facultative,
+  //    et le message est composé à partir de la question du client. C'est un brouillon : il arrive dans la zone de réponse, rien n'est envoyé. ──
+  var IA_ZONES = {
+    pd: { ta: 'pd-reply', fil: 'pd-msgs', client: function () { var p = allProjets.find(function (x) { return x.id === currentProjetId; }); return p && p.clients ? p.clients : (p ? allClients.find(function (c) { return c.id === p.client_id; }) : null); } },
+    cd: { ta: 'cd-msg-reply', fil: 'cd-msg-thread', client: function () { return allClients.find(function (c) { return c.id === currentClientId; }); } },
+    msg: { ta: 'msg-reply', fil: 'msg-thread', client: function () { return allClients.find(function (c) { return c.id === activeMsgClientId; }); } }
+  };
+  // sujets reconnus dans la question du client (mots-clés → tournure)
+  var IA_SUJETS = [
+    [/\bport(e|es)\b|battant/i, 'les portes'], [/tiroir/i, 'les tiroirs'], [/étagère|etagere|tablette/i, 'les étagères'], [/poignée|poignee|bouton/i, 'les poignées'],
+    [/couleur|teinte|finition|décor|decor|essence|chêne|chene|noyer/i, 'la finition'], [/délai|delai|livraison|livrer|quand|combien de temps/i, 'les délais'],
+    [/prix|coût|cout|tarif|supplément|supplement|budget|devis/i, 'le prix'], [/dimension|largeur|hauteur|profondeur|taille|mesure|cm\b/i, 'les dimensions'],
+    [/pose|installation|montage|monter/i, 'la pose'], [/acompte|paiement|payer|facture|virement/i, 'le paiement'], [/plan de travail|vasque|éclairage|eclairage|led/i, 'cette option']
+  ];
+  function iaOuvrir(z) {
+    var p = document.querySelector('#ia-' + z + ' .ia-panel'); if (!p) return;
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    if (p.style.display === 'block') { iaQuestion(z); var i = p.querySelector('.ia-consigne'); if (i) i.focus(); }
+  }
+  function iaDerniereQuestion(z) {   // dernier message du client dans le fil affiché
+    var fil = document.getElementById(IA_ZONES[z].fil); if (!fil) return '';
+    var b = fil.querySelectorAll('.msg--client .msg__bubble'); return b.length ? (b[b.length - 1].textContent || '').trim() : '';
+  }
+  function iaSujet(q) { for (var i = 0; i < IA_SUJETS.length; i++) if (IA_SUJETS[i][0].test(q)) return IA_SUJETS[i][1]; return ''; }
+  function iaQuestion(z) {
+    var el = document.querySelector('#ia-' + z + ' .ia-quest'), q = iaDerniereQuestion(z);
+    el.innerHTML = q ? '<b>Question du client :</b> « ' + escHtml(q.length > 160 ? q.slice(0, 160) + '…' : q.replace(/\s+/g, ' ')) + ' »' + (iaSujet(q) ? ' <span style="color:rgba(26,26,26,.5)">(sujet : ' + escHtml(iaSujet(q)) + ')</span>' : '') : '<span style="color:rgba(26,26,26,.5)">Aucun message du client dans ce fil.</span>';
+  }
+  // « oui », « non, trop profond », « oui 40 € par porte », « je vérifie », « délai » : le premier mot choisit le type de réponse, le reste est la précision
+  function iaDepuisTexte(z) {
+    var inp = document.querySelector('#ia-' + z + ' .ia-consigne'), t = (inp.value || '').trim(), etat = document.querySelector('#ia-' + z + ' .ia-etat');
+    var mode = null;
+    if (/^oui\b/i.test(t)) { t = t.replace(/^oui\b[\s,;:.\-–]*/i, ''); mode = /\d/.test(t) ? 'supplement' : 'oui'; }
+    else if (/^non\b/i.test(t)) { t = t.replace(/^non\b[\s,;:.\-–]*/i, ''); mode = 'non'; }
+    else if (/^(je v[ée]rifie|v[ée]rif|on regarde|je regarde)/i.test(t)) { t = t.replace(/^(je v[ée]rifie|v[ée]rif\w*|on regarde|je regarde)[\s,;:.\-–]*/i, ''); mode = 'verif'; }
+    else if (/^d[ée]lai/i.test(t)) { t = t.replace(/^d[ée]lais?[\s,;:.\-–]*/i, ''); mode = 'delai'; }
+    if (!mode) { etat.innerHTML = '<span class="ia-err">Commence par « oui », « non », « je vérifie » ou « délai » (ex. : « oui 40 € par porte »), ou clique sur une réponse rapide.</span>'; return; }
+    inp.value = t; iaRepondre(z, mode);
+  }
+  function iaRepondre(z, mode) {
+    var Z = IA_ZONES[z], root = document.getElementById('ia-' + z); if (!Z || !root) return;
+    var etat = root.querySelector('.ia-etat'), inp = root.querySelector('.ia-consigne'), ta = document.getElementById(Z.ta);
+    var cl = Z.client() || {}, prenom = (cl.prenom || '').trim(), q = iaDerniereQuestion(z), sujet = iaSujet(q);
+    var prec = (inp.value || '').trim().replace(/^(oui|non)\b[\s,;:.\-–]*/i, '').replace(/[.\s]+$/, ''), maj = function (s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; };
+    var pour = sujet ? ' concernant ' + sujet : '', phrase = function (t) { return t ? maj(t) + '.' : ''; };
+    var corps, verif = [];
+    if (mode === 'oui') corps = ['Merci pour votre message. Oui, c\'est tout à fait possible' + pour + '.', phrase(prec)];
+    else if (mode === 'non') corps = ['Merci pour votre message. Malheureusement, ce n\'est pas possible' + pour + '.', prec ? phrase(/^(car|parce|en raison|pour)\b/i.test(prec) ? prec : 'Raison : ' + prec) : ''];
+    else if (mode === 'supplement') {
+      if (!/\d/.test(prec)) { etat.innerHTML = '<span class="ia-err">Indique le montant dans le champ « Précision » (ex. : 40 € par porte), puis reclique sur « Oui, avec supplément ».</span>'; inp.focus(); return; }
+      var mm = prec.match(/(\d+(?:[.,]\d+)?)\s*(?:€|euros?)?\s*(HT|TTC)?\s*(.*)$/i), montant = mm ? mm[1].replace('.', ',') + ' € ' + (mm[2] ? mm[2].toUpperCase() : 'HT') + (mm[3] ? ' ' + mm[3].trim() : '') : prec;   // « 40 € par porte » → « 40 € HT par porte »
+      corps = ['Merci pour votre message. Oui, c\'est possible' + pour + '.', 'Cela représente un supplément de ' + montant + '.', 'Nous vous renverrons la proposition mise à jour dès votre accord.'];
+      verif.push('Le montant annoncé : ' + prec);
+    }
+    else if (mode === 'verif') corps = ['Merci pour votre message. Nous vérifions' + (sujet ? ' ' + (sujet.replace(/^les /, 'les ').replace(/^le /, 'le ')) : ' ce point') + ' de notre côté et nous revenons vers vous très rapidement.', phrase(prec)];
+    else if (mode === 'delai') corps = ['Merci pour votre message. Notre délai de fabrication est de 3 semaines à réception de l\'acompte, le solde étant à régler avant l\'envoi.', phrase(prec)];
+    else return;
+    var msg = (prenom ? 'Bonjour ' + prenom + ',' : 'Bonjour,') + '\n\n' + corps.filter(Boolean).join(' ') + '\n\nN\'hésitez pas si vous avez d\'autres questions.\n\nL\'équipe Kōbō Design';
+    if ((ta.value || '').trim() && !confirm('La zone de réponse contient déjà un texte.\n\nLe remplacer par ce brouillon ?')) return;
+    ta.value = msg; autoGrow(ta); ta.focus();
+    etat.innerHTML = '✓ Brouillon placé dans la zone de réponse : relis-le, modifie-le si besoin, puis envoie. Rien n\'est parti chez le client.' + (verif.length ? '<ul><li>' + verif.map(escHtml).join('</li><li>') + '</li></ul>' : '');
+  }
   function autoGrow(el) { if (!el.value) { el.style.height = ''; return; } el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 180) + 'px'; }   // la zone de saisie grandit avec le texte (6 lignes max)
   async function sendReplyFromClientDetail() {
     const input = document.getElementById('cd-msg-reply');
