@@ -149,7 +149,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .msg { max-width: 75%; }
     .msg--client { align-self: flex-end; }
     .msg--kobo { align-self: flex-start; }
-    .msg__bubble { padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 300; line-height: 1.6; }
+    .msg__bubble { padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 300; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
     .msg--client .msg__bubble { background: var(--accent); color: var(--white); border-radius: 12px 12px 2px 12px; }
     .msg--kobo .msg__bubble { background: var(--mid); border-radius: 12px 12px 12px 2px; }
     .msg__meta { font-size: 10px; color: rgba(26,26,26,.35); margin-top: 4px; }
@@ -654,7 +654,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="empty" style="padding:32px;text-align:center;"><p>Chargement…</p></div>
         </div>
         <div class="msg-input-wrap">
-          <textarea class="msg-input" id="msg-input" placeholder="Votre message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+          <textarea class="msg-input" id="msg-input" placeholder="Votre message…" title="Entrée : envoyer · Maj + Entrée : retour à la ligne" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!window.matchMedia('(pointer: coarse)').matches){event.preventDefault();sendMessage();}" oninput="autoGrowMsg(this)"></textarea>
           <button class="msg-send" onclick="sendMessage()">Envoyer</button>
         </div>
       </div>
@@ -1167,11 +1167,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         body: JSON.stringify({ action: 'client-message', contenu }) }).catch(() => {});
     } catch (e) {}
   }
+  function autoGrowMsg(el) { if (!el.value) { el.style.height = ''; return; } el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }   // la zone de saisie grandit avec le texte
   async function sendMessage() {
     const input = document.getElementById('msg-input');
     const contenu = input.value.trim();
     if (!contenu || !currentUser) return;
-    input.value = '';
+    input.value = ''; autoGrowMsg(input);
     const btn = document.querySelector('.msg-send');
     btn.disabled = true;
     const { error } = await sb.from('messages_general').insert([{
