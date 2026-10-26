@@ -1004,7 +1004,7 @@
           <h3>Messagerie</h3>
           <div class="msg-thread" id="cd-msg-thread"></div>
           <div class="msg-compose" style="margin-top:12px;">
-            <textarea id="cd-msg-reply" placeholder="Répondre au client… (Ctrl+Entrée pour envoyer)" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();sendReplyFromClientDetail();}" oninput="autoGrow(this)" title="Entrée : retour à la ligne · Ctrl/Cmd + Entrée : envoyer"></textarea>
+            <textarea id="cd-msg-reply" placeholder="Répondre au client… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromClientDetail();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
             <button class="btn btn-primary btn-sm" onclick="sendReplyFromClientDetail()">Envoyer</button>
           </div>
         </div>
@@ -1098,7 +1098,7 @@
           </div>
           <div class="msg-thread" id="msg-thread"></div>
           <div class="msg-compose">
-            <textarea id="msg-reply" placeholder="Répondre… (Ctrl+Entrée pour envoyer)" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();sendReply();}" oninput="autoGrow(this)" title="Entrée : retour à la ligne · Ctrl/Cmd + Entrée : envoyer"></textarea>
+            <textarea id="msg-reply" placeholder="Répondre… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
             <button class="btn btn-primary btn-sm" onclick="sendReply()">Envoyer</button>
           </div>
         </div>
@@ -1644,7 +1644,7 @@
     <h3 style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:14px;">Messages avec le client</h3>
     <div class="msg-thread" id="pd-msgs"></div>
     <div class="msg-compose" style="margin-top:12px;">
-      <textarea id="pd-reply" placeholder="Répondre au client… (Ctrl+Entrée pour envoyer)" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();sendReplyFromDetail();}" oninput="autoGrow(this)" title="Entrée : retour à la ligne · Ctrl/Cmd + Entrée : envoyer"></textarea>
+      <textarea id="pd-reply" placeholder="Répondre au client… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromDetail();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
       <button class="btn btn-primary btn-sm" onclick="sendReplyFromDetail()">Envoyer</button>
     </div>
   </div>
