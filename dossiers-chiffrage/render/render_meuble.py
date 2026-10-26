@@ -53,6 +53,7 @@ def parse_args():
 # ───────────────────────────── lecture du JSON ─────────────────────────────
 sys.path.insert(0, HERE)
 from spec_loader import spec_from_elements, load_spec, count_raw, non_dessines
+import formes as formes_mod
 
 
 def decor_name(cfg, opt):
@@ -187,6 +188,42 @@ def add_box(name, x0, x1, y0, y1, z0, z1, mat, grain="v", rnd=None, pivot=None, 
         ob.location = (pivot[0], pivot[1], 0); ob.rotation_euler = (0, 0, rot_z)
     ob.data.materials.append(mat)
     # chanfrein très fin pour accrocher la lumière sur les arêtes
+    bv = ob.modifiers.new("bevel", "BEVEL"); bv.width = 0.0008; bv.segments = 1
+    return ob
+
+
+def add_prism(name, pts, vec, mat, grain="v", rnd=None):
+    """Volume obtenu en extrudant un contour plan (points 3D en mètres) le long de `vec` (mètres). Sert aux formes libres."""
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    bot = [bm.verts.new(p) for p in pts]
+    top = [bm.verts.new((p[0] + vec[0], p[1] + vec[1], p[2] + vec[2])) for p in pts]
+    n = len(pts)
+    bm.faces.new(bot)
+    bm.faces.new(list(reversed(top)))
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new([bot[i], bot[j], top[j], top[i]])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    uv = bm.loops.layers.uv.new("UV")
+    ox, oy = (rnd or random).random(), (rnd or random).random()
+    tile = 0.55
+    for f in bm.faces:
+        nn = f.normal
+        ax = max(range(3), key=lambda i: abs(nn[i]))
+        plane = [i for i in range(3) if i != ax]
+        g = 2 if grain == "v" else 0
+        if g in plane:
+            ua, va = g, [i for i in plane if i != g][0]
+        else:
+            ua, va = plane[0], plane[1]
+        for l in f.loops:
+            c = l.vert.co
+            l[uv].uv = (c[ua] / tile + ox, c[va] / tile + oy)
+    bm.to_mesh(me); bm.free()
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.collection.objects.link(ob)
+    ob.data.materials.append(mat)
     bv = ob.modifiers.new("bevel", "BEVEL"); bv.width = 0.0008; bv.segments = 1
     return ob
 
@@ -335,12 +372,49 @@ def add_sdb_top(cfg, objs, W, H_top, D, rnd):
 
 
 
+def arc_pts(cx, cy, rad, a0, a1, n=18):
+    return [(cx + rad * math.cos(math.radians(a0 + (a1 - a0) * i / n)), cy + rad * math.sin(math.radians(a0 + (a1 - a0) * i / n))) for i in range(n + 1)]
+
+
+def bout_spec(spec, W, D, ep):
+    """Bout arrondi ouvert d'un caisson d'extrémité (réglage réservé à l'équipe) : rayon (mm), angle (degrés) et côté, ou None."""
+    b = spec.get("_bout")
+    if not b or not b.get("cote"): return None
+    r = min(float(b.get("mm") or 0) or float(D), D - 1.0, W - 2.0 * ep)
+    deg = max(20.0, min(90.0, float(b.get("deg") or 90)))
+    return {"r": r, "deg": deg, "side": -1 if b["cote"] == "gauche" else 1} if r >= 2 * ep else None
+
+
+def bout_front_path(W, r, deg, front_y, inset=0.0):
+    """Chemin (x, y) du bord avant d'un bout arrondi côté droit : arc de rayon r - inset sur `deg` degrés à partir du côté,
+    puis droite tangente jusqu'à la ligne y = front_y. Retourne la liste de points, du côté vers la façade."""
+    R = r - inset
+    th = math.radians(deg)
+    pts = arc_pts(W - r, r, R, 0, -deg)
+    xe, ye = pts[-1]
+    if deg < 90 - 1e-3:
+        ln = (ye - front_y) / math.cos(th)
+        pts.append((xe - ln * math.sin(th), front_y))
+    return pts
+
+
+def bout_plan(W, D, bo, x0, y_back):
+    """Contour (x, y) d'une pièce horizontale dont le coin avant extérieur est arrondi, façade au ras (y = 0) ; côté arrondi ouvert.
+    x0 = bord non arrondi, y_back = fond de la pièce, y en mm depuis la façade."""
+    side = bo["side"]
+    xr = x0 if side > 0 else W - x0                    # on construit côté droit, puis on retourne pour un bout à gauche
+    pts = [(xr, y_back), (W, y_back), (W, bo["r"])] + bout_front_path(W, bo["r"], bo["deg"], 0.0)[1:] + [(xr, 0.0)]
+    return [(x if side > 0 else W - x, y) for x, y in pts]
+
+
 def build_furniture(cfg, opt, open_state=False):
     mm = 0.001
     spec0 = cfg["_spec"]
     ep = spec0.get("panel_thickness_mm", 18)
     D = spec0["overall_mm"]["depth"]
     plinth = opt["plinthe"]
+    fseules = bool((cfg.get("meuble") or {}).get("formes_seules"))
+    if fseules and "plinthe" not in (cfg.get("rendu") or {}) and not opt.get("_plinthe_explicite"): plinth = 0   # formes libres : pas de plinthe sauf demande
     z_off = plinth * mm
     name = decor_name(cfg, opt)
     key = name.strip().lower()
@@ -380,8 +454,20 @@ def build_furniture(cfg, opt, open_state=False):
         oyc[0] = spec.get("_oy_mm", 0)
         W = spec["overall_mm"]["width"]; H = spec["overall_mm"]["height"]
         B = lambda nm, xl, xr, yb, yt, d0, d1, grain, mt=None: box(nm, ox, xl, xr, yb, yt, d0, d1, grain, mt)
+        bo = bout_spec(spec, W, D, ep)
+        if bo:   # bout arrondi ouvert : plateaux et étagères au contour arrondi, pas de paroi, étagères ouvertes seulement
+            spec = dict(spec); spec["doors"] = []; spec["drawers"] = []
+            def prism(nm, pts2, zb, zt, grain, mt=None):
+                p3 = [((ox + x) * mm, y * mm, (zb + oyc[0]) * mm + z_off) for x, y in pts2]
+                o = add_prism(nm, p3, (0, 0, (zt - zb) * mm), mt or wood, grain, rnd)
+                if o: objs.append(o)
+            xs0 = ep if bo["side"] > 0 else W - ep          # bord intérieur du côté droit (non arrondi)
+            prism("traverse_basse", bout_plan(W, D, bo, xs0, D), 0, ep, "h")
+            prism("traverse_haute", bout_plan(W, D, bo, xs0, D), H - ep, H, "h")
         for p in spec.get("structural_panels", []):
             t = p["type"]
+            if bo and (t in ("traverse_haute", "traverse_basse") or t == ("joue_droite" if bo["side"] > 0 else "joue_gauche")):
+                continue
             if t == "fond":
                 B("fond", p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], D - 8, D, "v", inside)
             elif t.startswith("joue"):
@@ -394,7 +480,12 @@ def build_furniture(cfg, opt, open_state=False):
         for s_ in spec.get("shelves", []):
             cx_ = (s_["x_left_mm"] + s_["x_right_mm"]) / 2
             sm_ = blanc if (rd.get("interieur") == "blanc" and any(a <= cx_ <= b for a, b in door_bays)) else None   # derrière une porte : étagère blanche
-            B("shelf", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], s_["y_top_mm"], 12, min(D - 8, 12 + s_.get("depth_mm", D - ep)), "h", sm_)
+            atteint = bo and ((bo["side"] > 0 and s_["x_right_mm"] >= W - ep - 2) or (bo["side"] < 0 and s_["x_left_mm"] <= ep + 2))
+            if atteint:
+                x0 = s_["x_left_mm"] if bo["side"] > 0 else s_["x_right_mm"]
+                prism("shelf", bout_plan(W, D, bo, x0, min(D - 8, 12 + s_.get("depth_mm", D - ep))), s_["y_bottom_mm"], s_["y_top_mm"], "h", sm_)
+            else:
+                B("shelf", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], s_["y_top_mm"], 12, min(D - 8, 12 + s_.get("depth_mm", D - ep)), "h", sm_)
         for b_ in spec.get("bars", []):
             o = add_cyl("tringle", (ox + b_["x_left_mm"]) * mm, (ox + b_["x_right_mm"]) * mm, 0.5 * D * mm, (b_["y_center_mm"] + oyc[0]) * mm + z_off, b_.get("diameter_mm", 28) * mm / 2, metal)
             objs.append(o)
@@ -451,11 +542,48 @@ def build_furniture(cfg, opt, open_state=False):
             B("tiroir_cote_g", c0, c0 + 12, hb, hb + ht_, y0, y1, "h", inside)
             B("tiroir_cote_d", c1 - 12, c1, hb, hb + ht_, y0, y1, "h", inside)
             B("tiroir_dos", c0, c1, hb, hb + ht_, y1 - 12, y1, "h", inside)
-    Wtot = max(ox + sp["overall_mm"]["width"] for ox, sp in cfg["_caissons"])
-    Htot = max(sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"])
+    # formes libres (plaques et rubans) : dessinées telles quelles, calées contre la gauche et la façade
+    fp = formes_mod.toutes_pieces(cfg)
+    mats_decor = {}
+    def mat_piece(dn):
+        k_ = str(dn).strip().lower()
+        if k_ not in mats_decor:
+            if DECORS.get(k_): mats_decor[k_] = mat_wood("decor_" + k_, os.path.join(REPO, DECORS[k_]))
+            elif k_ in FLAT_COLORS: mats_decor[k_] = mat_wood("decor_" + k_, None, FLAT_COLORS[k_], 0.6)
+            else: mats_decor[k_] = wood
+        return mats_decor[k_]
+    if fp:
+        lo, hi = formes_mod.bbox(fp)
+        for pc in fp:
+            if pc.get("visible") is False: continue
+            pts, v = formes_mod.vecteur_extrusion(pc)
+            P3 = [((q[0] - lo[0]) * mm, (q[1] - lo[1]) * mm, q[2] * mm + z_off) for q in pts]
+            o = add_prism("forme|" + pc.get("nom", "pièce"), P3, (v[0] * mm, v[1] * mm, v[2] * mm), mat_piece(pc.get("decor")) if pc.get("decor") else wood, "v" if pc.get("cat") != "struct" or pc["type"] == "ruban" else "h", rnd)
+            if o: objs.append(o)
+    Wtot = max([ox + sp["overall_mm"]["width"] for ox, sp in cfg["_caissons"]] + ([hi[0] - lo[0]] if fp else []))
+    Htot = max([sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"]] + ([hi[2]] if fp else []))
     # plinthe continue : panneau de façade en retrait (≈ 30 mm), sans retour latéral, sur pieds
     if plinth > 0:
-        objs.append(add_box("plinthe", ep * mm, (Wtot - ep) * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
+        # bout arrondi à une extrémité : la plinthe s'arrête au début de la courbe et la suit (arc + droite tangente), en retrait de 30 mm
+        ext = {1: None, -1: None}
+        for ox_, sp_ in cfg["_caissons"]:
+            b_ = bout_spec(sp_, sp_["overall_mm"]["width"], D, ep)
+            if not b_: continue
+            if b_["side"] > 0 and ox_ + sp_["overall_mm"]["width"] >= Wtot - 1: ext[1] = b_
+            if b_["side"] < 0 and ox_ <= 1: ext[-1] = b_
+        pl = {}
+        for sd_, b_ in ext.items():
+            if not b_ or b_["r"] - 30 - ep <= 0: continue
+            path = bout_front_path(Wtot, b_["r"], b_["deg"], 30.0, inset=30.0)
+            pl[sd_] = (path, path[-1][0])                      # chemin (côté droit) et abscisse où la plinthe droite se raccorde
+        x_a = (Wtot - pl[-1][1]) if -1 in pl else ep
+        x_b = pl[1][1] if 1 in pl else Wtot - ep
+        objs.append(add_box("plinthe", x_a * mm, x_b * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
+        for sd_, (path, _) in pl.items():
+            ch = path if sd_ > 0 else [(Wtot - x, y) for x, y in path]
+            poly = formes_mod.contour_ruban({"chemin": [list(q) for q in ch], "ep": ep, "sens": -1 if sd_ > 0 else 1})
+            o = add_prism("plinthe", [(x * mm, y * mm, 0.0) for x, y in poly], (0, 0, plinth * mm), wood, "h", rnd)
+            if o: objs.append(o)
     top_h = (Htot + plinth) * mm
     if rd.get("plateau"):   # plateau épais en chêne, léger débord
         pt = float(rd["plateau"]) if not isinstance(rd["plateau"], bool) else 40.0
@@ -615,13 +743,26 @@ def verifier(cfg, objs, out):
     for o in objs:
         base = o.name.split(".")[0]
         built[base] += 1
-        if base.startswith("joue"):
+        if base.startswith("joue") or base in ("traverse_haute", "traverse_basse"):
             pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
             xs += [p.x for p in pts]
     got = {"porte": built["porte"], "tiroir": built["tiroir"], "etagere": built["shelf"], "intercalaire": built["sep"], "tringle": built["tringle"],
-           "caissons": built["joue_gauche"] or built["joue_g"], "largeur_mm": round((max(xs) - min(xs)) * 1000) if xs else 0}
+           "caissons": built["traverse_haute"] or built["joue_gauche"] or built["joue_g"], "largeur_mm": round((max(xs) - min(xs)) * 1000) if xs else 0}
     want = count_raw(cfg)
     lignes, ok = [], True
+    fp = formes_mod.toutes_pieces(cfg)
+    if fp:   # formes libres : chaque pièce du JSON doit exister dans la 3D, et l'encombrement doit correspondre
+        dess = [o for o in objs if o.name.startswith("forme|")]
+        lo, hi = formes_mod.bbox(fp)
+        pts = [o.matrix_world @ Vector(c) for o in dess for c in o.bound_box]
+        dim = (round((max(p.x for p in pts) - min(p.x for p in pts)) * 1000), round((max(p.y for p in pts) - min(p.y for p in pts)) * 1000), round((max(p.z for p in pts) - min(p.z for p in pts)) * 1000)) if pts else (0, 0, 0)
+        att = (round(hi[0] - lo[0]), round(hi[1] - lo[1]), round(hi[2] - lo[2]))
+        for lib, w_, g_, tol in (("pièces en formes libres", len([q for q in fp if q.get("visible") is not False]), len(dess), 0), ("largeur (mm)", att[0], dim[0], 2), ("profondeur (mm)", att[1], dim[1], 2), ("hauteur (mm)", att[2], dim[2], 2)):
+            bon = abs(w_ - g_) <= tol; ok = ok and bon
+            lignes.append({"element": lib, "json": w_, "dessine": g_, "ok": bon})
+        if (cfg.get("meuble") or {}).get("formes_seules"):
+            json.dump({"ok": ok, "lignes": lignes, "non_dessine": non_dessines(cfg)}, open(os.path.join(out, "verification.json"), "w"), ensure_ascii=False)
+            return
     labels = {"porte": "portes", "tiroir": "tiroirs", "etagere": "étagères", "intercalaire": "intercalaires", "tringle": "tringles", "caissons": "caissons", "largeur_mm": "largeur totale (mm)"}
     for k in ("caissons", "largeur_mm", "porte", "tiroir", "etagere", "intercalaire", "tringle"):
         w, g = want[k], got[k]

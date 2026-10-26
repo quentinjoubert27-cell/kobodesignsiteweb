@@ -2905,6 +2905,14 @@
 
   // Recalcule et affiche le total, et met à jour le montant du projet en base — automatique,
   // déclenché au chargement de la fiche et à chaque case "face visible" cochée/décochée.
+  // arrondi (bout arrondi, panneau cintré) dans la configuration : son prix (cintrage, usinage des courbes) n'est pas compté
+  function _aArrondi(rc) {
+    if (!rc) return false;
+    var m = rc.meuble || {}, tv = rc.tvSide || {}, ar = function (v) { return Array.isArray(v) ? v : (v ? [v] : []); };
+    if (m.bout) return true;
+    if (ar(tv.left).concat(ar(tv.right)).some(function (c) { return c && c.bout; })) return true;
+    return (rc.formes_libres || []).some(function (f) { return (f.pieces || []).some(function (p) { return p.cintre; }); });
+  }
   function updateDevisAutoTotal() {
     var resultEl = document.getElementById('devis-result');
     if (!resultEl) return;
@@ -2915,6 +2923,10 @@
     else if (price.multi) resultEl.innerHTML = 'Total des ' + price.multi + ' meubles — coût : ' + price.cost_revient.toFixed(2) + ' € · <span style="color:var(--accent)">Prix de vente HT du projet : ' + price.prix_vente.toFixed(2) + ' €</span>';
     else resultEl.innerHTML = 'Coût de fabrication : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente HT : ' + price.prix_vente.toFixed(2) + ' €</span>';
+    try {
+      var _liste = (currentProjetMeubles && currentProjetMeubles.length > 1 && !currentProjetRc.manuel) ? currentProjetMeubles.map(function (m) { return rcFromSdb(m); }) : [currentProjetRc];
+      if (!price.fixe && _liste.some(_aArrondi)) resultEl.innerHTML += '<div style="margin-top:8px;padding:9px 12px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.45;">⚠ Meuble avec arrondi : le prix de l\'arrondi (cintrage, usinage des courbes) n\'est PAS pris en compte dans ce montant. Seules les surfaces et les chants sont comptés : ajoute ce supplément à la main avant d\'envoyer la proposition.</div>';
+    } catch (e) { console.warn('alerte arrondi', e); }
     try {
       var cmpEl = document.getElementById('devis-compare');
       if (cmpEl && price.fixe) cmpEl.innerHTML = '';
@@ -2955,6 +2967,37 @@
   // Déduit d'UN exemple (meuble 90×90×37 : 688,07 € HT) — chaque règle marquée « à confirmer » doit être validée sur d'autres meubles.
   var TABLEUR = { E: 19, decoupe: 1.5, chant: 4.5, vis: 0.5, tourillon: 0.3, angleUsinage: 10, usinCharnierePorte: 2.5, usinCharniereCaisson: 1, coulisse: 10, kitTiroir: 75, charniere: 10, tringle: 20 };
   // Tranches AVEC chant d'une pièce (règles de débit app.py)
+  // ── Formes libres (plaques découpées et panneaux cintrés) : surface, périmètre et chant d'une pièce, comme render/formes.py ──
+  function formesPieces(rc) {
+    var res = [];
+    var sub = function (a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; };
+    var cross = function (a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; };
+    (rc.formes_libres || []).forEach(function (f, fi) {
+      (f.pieces || []).forEach(function (pc) {
+        if (pc.prix === false) return;   // pièce décorative (ex. lames d'un cache) : comprise dans une autre pièce chiffrée
+        var surf, perim, chant, l, w, ep = pc.ep || 19;
+        if (pc.type === 'ruban') {
+          var ch = pc.chemin || [], L = 0, i;
+          for (i = 0; i < ch.length - 1; i++) L += Math.hypot(ch[i + 1][0] - ch[i][0], ch[i + 1][1] - ch[i][1]);
+          var h = Math.abs(pc.a - pc.de); surf = L * h; perim = 2 * (L + h);
+          var sel = pc.chants === undefined ? 'tous' : pc.chants, ar = [L, h, L, h];
+          chant = sel === 'tous' ? perim : (sel === 'aucun' ? 0 : sel.reduce(function (a, k) { return a + (ar[k] || 0); }, 0));
+          l = Math.max(L, h); w = Math.min(L, h);
+        } else {
+          var pts = pc.points || [], sx = 0, sy = 0, sz = 0, segs = [], j;
+          for (j = 0; j < pts.length; j++) { var c = cross(pts[j], pts[(j + 1) % pts.length]); sx += c[0]; sy += c[1]; sz += c[2]; var d = sub(pts[(j + 1) % pts.length], pts[j]); segs.push(Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2])); }
+          surf = Math.sqrt(sx * sx + sy * sy + sz * sz) / 2; perim = segs.reduce(function (a, b) { return a + b; }, 0);
+          var s2 = pc.chants === undefined ? 'tous' : pc.chants;
+          chant = s2 === 'tous' ? perim : (s2 === 'aucun' ? 0 : s2.reduce(function (a, k) { return a + (segs[k] || 0); }, 0));
+          var xs = pts.map(function (q) { return q[0]; }), ys = pts.map(function (q) { return q[1]; }), zs = pts.map(function (q) { return q[2]; });
+          var ext = [Math.max.apply(null, xs) - Math.min.apply(null, xs), Math.max.apply(null, ys) - Math.min.apply(null, ys), Math.max.apply(null, zs) - Math.min.apply(null, zs)].sort(function (a, b) { return b - a; });
+          l = ext[0]; w = l > 0 ? surf / l : 0;
+        }
+        res.push({ nom: (pc.nom || 'Pièce') + ' (' + (f.nom || 'forme ' + (fi + 1)) + ')', cat: pc.cat || 'struct', cintre: !!pc.cintre, ep: ep, l: Math.round(l), w: Math.round(w), surfM2: surf / 1e6, perimM: perim / 1000, chantM: chant / 1000 });
+      });
+    });
+    return res;
+  }
   function chantMlDebit(p) {
     var q = p.qte, l = p.l, w = p.w, mm;
     switch (p.ch) { case 'trav': mm = 2 * l; break; case 'joue': mm = 2 * l + w; break; case 'etag': mm = l; break; case 'none': mm = 0; break; default: mm = 2 * (l + w); }
@@ -2983,16 +3026,25 @@
     tvArr(tv.right).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: 'caisson droit ' + (i + 1), els: c.elements || [], L: c.W_cm, H: c.H_cm, P: c.P_cm || m.P }); });
     if (tv.top && tv.top.W_cm && tv.top.H_cm) cais.push({ label: 'caisson du dessus', els: tv.top.elements || [], L: tv.top.W_cm, H: tv.top.H_cm, P: tv.top.P_cm || m.P });
     tvArr(tv.espaces).forEach(function (e, i) { if (e && e.pont && e.pont.W_cm && e.pont.H_cm) cais.push({ label: 'pont ' + (i + 1), els: e.pont.elements || [], L: e.pont.W_cm, H: e.pont.H_cm, P: e.pont.P_cm || m.P }); });
+    if (m.formes_seules) cais.shift();   // meuble fait uniquement de formes libres : pas de caisson droit principal
     // pièces : surfaces calculées comme app.py (feuille de débit) ; tiroirs : façade seule (le kit comprend le reste) ; joues gauche, droite, dessus
     var appRes = methodeAppFromRc(rc, g, null, { joues: ['gauche', 'droite', 'dessus', 'dessous'], sansTiroirs: true });
     if (appRes) {
       appRes.pieces.forEach(function (p) {
         var cat = p.cat === 'facade';
         var pu = /^Joue/.test(p.nom) ? puEl('joue', puFacade) : (cat ? puFacade : (/^Fond/.test(p.nom) ? puEl('fond', puStruct) : /^Traverse/.test(p.nom) ? puEl('traverse', puStruct) : /^Montant (Gauche|Droit)/.test(p.nom) ? puEl('montant', puStruct) : /^Etag/.test(p.nom) ? puEl('etagere', puStruct) : puEl('intercalaire', puStruct)));
-        pieces.push({ nom: p.nom, l: Math.round(p.l), w: Math.round(p.w), qte: p.qte, pu: pu, note: '', ch: p.ch });
+        pieces.push({ nom: p.nom, l: Math.round(p.l), w: Math.round(p.w), qte: p.qte, pu: pu, note: p.forme ? 'cintré' : '', ch: p.ch, forme: p.forme, surfM2: p.surfM2, perimM: p.perimM, chantM: p.chantM });
       });
       (appRes.notes || []).forEach(function (n) { warn.push(n); });
     }
+    // formes libres : pièces plates découpées et panneaux cintrés (surface réelle, périmètre et chant réels)
+    formesPieces(rc).forEach(function (fp) {
+      var pu = fp.cat === 'facade' ? puFacade : (/^Fond/.test(fp.nom) ? puEl('fond', puStruct) : puStruct);
+      pieces.push({ nom: fp.nom, l: fp.l, w: fp.w, qte: 1, pu: pu, note: fp.cintre ? 'cintré' : '', ch: 'all', forme: true, surfM2: fp.surfM2, perimM: fp.perimM, chantM: fp.chantM });
+    });
+    var qc = rc.quincaillerie || {};   // décomptes saisis pour les formes libres (tiroirs, charnières, angles d'assemblage, tringles)
+    angles += qc.angles || 0; nDrawers += qc.tiroirs || 0; nHinges += qc.charnieres || 0; nDoors += qc.portes || 0; nBars += qc.tringles || 0;
+    if ((rc.formes_libres || []).length) warn.push('Formes libres : chiffrage au m² réel et chant réel. ATTENTION : le prix du cintrage et de l\'usinage des courbes n\'est PAS pris en compte.');
     // décomptes pour l'usinage et la quincaillerie (angles, tiroirs, tringles) ; charnières : règle d'app.py (machining_logic.get_hinge_y_positions)
     var hingesApp = function (hmm) { return hmm > 400 ? 3 : hmm > 100 ? 2 : 1; };   // 2 charnières jusqu'à 40 cm de hauteur de porte
     cais.forEach(function (c) {
@@ -3021,9 +3073,9 @@
     var ml = 0, cml = 0, surf = 0, bois = 0, decChant = 0;
     // découpe : tout le périmètre ; chant : tout le périmètre (4 côtés, façades comprises), sauf les joues (2 × la plus grande dimension) et le fond (aucun)
     pieces.forEach(function (p) {
-      p.surface = p.qte * p.l * p.w / 1e6;
-      p.ml = p.qte * (p.l + p.w) * 2 / 1000; p.ml0 = p.ml;
-      p.cml = chantMlDebit(p); p.cml0 = p.cml;
+      p.surface = p.forme ? p.qte * p.surfM2 : p.qte * p.l * p.w / 1e6;
+      p.ml = p.forme ? p.qte * p.perimM : p.qte * (p.l + p.w) * 2 / 1000; p.ml0 = p.ml;
+      p.cml = p.forme ? p.qte * p.chantM : chantMlDebit(p); p.cml0 = p.cml;
       var oo = ov[p.key]; if (oo) { if (oo.ml != null) p.ml = oo.ml; if (oo.cml != null) p.cml = oo.cml; }
       p.bois = p.surface * p.pu; p.chantDecoupe = p.ml * T.decoupe + p.cml * T.chant;
       ml += p.ml; cml += p.cml; decChant += p.chantDecoupe; surf += p.surface; bois += p.bois;
@@ -3325,9 +3377,10 @@
     var CH = { all: 'all', trav: 'trav', none: 'none', etag: 'etag', joue: 'joue' };
     // colonne du caisson principal : nombre de colonnes à sa gauche (les caissons empilés, niveau > 0, ne sont pas des colonnes)
     var _leftCols = tvArr(tv.left).filter(function (c) { return c && c.W_cm && !(c.niveau > 0); }).length;
-    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0, ycm: 0 }];
-    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0, ycm: c.y_cm || 0 }); }); });
+    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0, ycm: 0, bout: m.bout }];
+    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0, ycm: c.y_cm || 0, bout: c.bout }); }); });
     tvArr(tv.espaces).forEach(function (e, i) { if (e && e.pont && e.pont.W_cm && e.pont.H_cm) cais.push({ label: 'pont ' + (i + 1), els: e.pont.elements || [], L: e.pont.W_cm * 10, H: e.pont.H_cm * 10, P: (e.pont.P_cm || m.P) * 10, main: false, col: -1, niveau: 0, pont: true }); });
+    if (m.formes_seules) cais.shift();   // meuble fait uniquement de formes libres : pas de caisson droit principal
     // caissons empilés : colonne et niveau connus -> joues extérieures sur toute la hauteur, joue dessus seulement tout en haut
     var _gapAt = {}; tvArr(tv.espaces).forEach(function (e) { if (e && e.apres_col != null && e.apres_col >= 0) _gapAt[e.apres_col] = e; });   // espace libre à droite de la colonne n
     var _nbCol = 0, _maxNiv = {}, _hasCols = cais.every(function (c) { return /^caisson du dessus/.test(c.label || '') || c.col != null; });
@@ -3364,8 +3417,31 @@
     if (m.mur_gauche || m.mur_droit) notes.push('Meuble collé à un mur : ' + [m.mur_gauche ? 'joue gauche' : '', m.mur_droit ? 'joue droite' : ''].filter(Boolean).join(' et ') + ' non comptée(s).');
     cais.forEach(function (c, ci) {
       var L = c.L, H = c.H, P = c.P, suf = c.label ? ' (' + c.label + ')' : ' (C' + ci + ')', Lt = Math.max(0, L - 2 * t), interior = Math.max(0, L - 2 * t);
-      add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut' + suf, Lt, P, 1, CH.trav);
-      add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
+      // bout arrondi ouvert (réservé à l'équipe) : le coin avant extérieur d'un caisson d'extrémité est un arc (rayon, angle) prolongé d'une droite jusqu'à la façade ; plateaux et étagères suivent ce contour, pas de paroi
+      var bo = null;
+      if (c.bout && c.bout.cote && !c.pont) { var rb = Math.min(c.bout.mm > 0 ? c.bout.mm : P, P - 1, L - 2 * t); if (rb >= 2 * t) bo = { r: rb, cote: c.bout.cote, deg: Math.max(20, Math.min(90, c.bout.deg > 0 ? c.bout.deg : 90)) }; }
+      var boutGeom = function (Lp, Pd, r, deg) {   // contour en plan : surface, périmètre, bord avant (avec la courbe), côté droit ouvert
+        var th = deg * Math.PI / 180, cx = Lp - r, cz = Pd - r, pts = [[0, 0], [Lp, 0], [Lp, cz]], i;
+        for (i = 1; i <= 40; i++) { var a2 = th * i / 40; pts.push([cx + r * Math.cos(a2), cz + r * Math.sin(a2)]); }
+        var xE = cx + r * Math.cos(th), zE = cz + r * Math.sin(th), tang = 0;
+        if (th < Math.PI / 2 - 1e-3) { tang = (Pd - zE) / Math.cos(th); pts.push([xE - tang * Math.sin(th), Pd]); }
+        pts.push([0, Pd]);
+        var A = 0, Pm = 0;
+        for (i = 0; i < pts.length; i++) { var q = pts[(i + 1) % pts.length]; A += pts[i][0] * q[1] - q[0] * pts[i][1]; Pm += Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1]); }
+        var xF = th < Math.PI / 2 - 1e-3 ? xE - tang * Math.sin(th) : cx;
+        return { surf: Math.abs(A) / 2, perim: Pm, front: xF + tang + r * th, side: Pd - r };
+      };
+      if (bo) {
+        var Lp = L - t, gP = boutGeom(Lp, P, bo.r, bo.deg), gS = boutGeom(Lp, P - 8, bo.r, bo.deg);   // plateaux : profondeur totale ; étagères : devant le fond
+        ['Traverse Bas', 'Traverse Haut'].forEach(function (nm) {
+          pieces.push({ nom: nm + ' (bout arrondi)' + suf, l: Math.round(Lp), w: Math.round(gP.surf / Lp), qte: 1, ch: 'all', cat: 'struct', forme: true, surfM2: gP.surf / 1e6, perimM: gP.perim / 1000, chantM: (gP.front + gP.side + Lp) / 1000, cintre: true });   // chant : bord avant courbe + côté ouvert + bord arrière
+        });
+        add(bo.cote === 'gauche' ? 'Montant Droit' + suf : 'Montant Gauche' + suf, H, P, 1, CH.all);   // seul le côté non arrondi est un montant
+        notes.push('Bout arrondi ouvert ' + suf.trim() + ' : rayon ' + Math.round(bo.r / 10) + ' cm, angle ' + bo.deg + '°, côté ' + bo.cote + ' ; plateaux et étagères chiffrés à leur surface réelle. ATTENTION : le prix de l\'arrondi (cintrage, usinage des courbes) n\'est PAS pris en compte.');
+      } else {
+        add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut' + suf, Lt, P, 1, CH.trav);
+        add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
+      }
       add('Fond' + suf, H - 38, Math.max(0, L - 38), 1, CH.none);
       (opts.joues || []).filter(function (jk) { if (c.pont) return jk === 'dessus' || jk === 'dessous';   // pont : collé aux caissons voisins, seuls le dessus et le dessous se voient
         if (jk === 'dessous') return !!c.gapBelow;   // dessous visible : caisson suspendu au-dessus d'un espace libre
@@ -3387,7 +3463,9 @@
         var w = sh.x_right_mm - sh.x_left_mm;
         if (w >= (L - 2 * 18 - 4)) nShelf++; else add('Etagère partielle' + suf, w, P - 19, 1, CH.etag);
       });
-      add('Etagère Fixe' + suf, Lt, P - 19, nShelf, CH.etag);
+      if (bo && nShelf > 0) {   // étagères pleine largeur : jusqu'au côté ouvert, bord avant suivant la courbe
+        pieces.push({ nom: 'Etagère Fixe (bout arrondi)' + suf, l: Math.round(L - t), w: Math.round(gS.surf / (L - t)), qte: nShelf, ch: 'all', cat: 'struct', forme: true, surfM2: gS.surf / 1e6, perimM: gS.perim / 1000, chantM: (gS.front + gS.side) / 1000, cintre: true });
+      } else add('Etagère Fixe' + suf, Lt, P - 19, nShelf, CH.etag);
       // chaque caisson (principal ou ajouté / découpé automatiquement) est un caisson complet : portes et montants secondaires comptés comme pour le principal
       // montants secondaires : séparateurs « separator » (pleine hauteur) + montants déduits des bornes X des portes, tiroirs et étagères
       var toLeft = function (xmm) { var x = xmm; if (x >= 0 && x <= interior + 2) x += t; return Math.max(t, Math.min(L - t - t, x)); };
@@ -5305,6 +5383,7 @@ function dedupeEls(els){
           H: rcMeuble.H || c.meuble_h,
           P: rcMeuble.P || c.meuble_p,
           matLabel: rcMeuble.matLabel || c.meuble_mat,
+          ...(rcMeuble.bout ? { boutM: rcMeuble.bout } : {}),
           elements: rc.elements || c.elements || [],
           // meuble complet : caissons latéraux, angle et passages de câbles
           ...(rc.tvSide ? { tvSide: rc.tvSide } : {}), ...(rc.caisson2 ? { caisson2: rc.caisson2 } : {}), ...(rc.cableHoles ? { cableHoles: rc.cableHoles } : {}),

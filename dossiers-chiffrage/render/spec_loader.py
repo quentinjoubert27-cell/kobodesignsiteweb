@@ -108,6 +108,13 @@ def spec_from_elements(W, H, D, ep, elements):
 
 def load_spec(path):
     cfg = json.load(open(path, encoding="utf-8"))
+    if (cfg.get("meuble") or {}).get("formes_seules"):   # meuble fait uniquement de formes libres (plaques / rubans) : pas de caisson droit
+        import formes
+        lo, hi = formes.bbox(formes.toutes_pieces(cfg))
+        cfg["_spec"] = {"overall_mm": {"width": round(hi[0] - lo[0]), "height": round(hi[2]), "depth": round(hi[1] - lo[1])},
+                        "panel_thickness_mm": (cfg["meuble"].get("epaisseur_mm") or formes.EP), "structural_panels": [], "separators": [], "shelves": [], "doors": [], "drawers": [], "bars": []}
+        cfg["_caissons"] = []
+        return cfg
     spec = cfg.get("technical_spec")
     if not spec and cfg.get("type") == "biblio":  # ancien export bibliothèque (cm)
         L, H, P = cfg["L_cm"] * 10, cfg["H_cm"] * 10, cfg["P_cm"] * 10
@@ -132,6 +139,8 @@ def load_spec(path):
     cais = [(0, spec)]
     side = cfg.get("tvSide") or {}
     # caissons empilés (niveau > 0) : posés sur leur colonne, à la hauteur y_cm ; les autres sont des colonnes côte à côte
+    spec["_oy_mm"] = round(float((cfg.get("meuble") or {}).get("y_start_cm") or 0) * 10)   # caisson principal suspendu
+    if (cfg.get("meuble") or {}).get("bout"): spec["_bout"] = cfg["meuble"]["bout"]   # bout arrondi (réservé à l'équipe)
     mx = (cfg.get("meuble") or {}).get("x_start_cm")   # abscisse du caisson principal quand le JSON donne les positions (espaces libres)
     def absx(r, fallback):
         return round((r["x_cm"] - mx) * 10) if (mx is not None and r.get("x_cm") is not None) else fallback
@@ -141,13 +150,19 @@ def load_spec(path):
     for r in left_cols:
         W = round(r["W_cm"] * 10); off += W
         x = absx(r, -off)
-        cais.append((x, spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))))
+        sp0 = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
+        sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
+        if r.get("bout"): sp0["_bout"] = r["bout"]
+        cais.append((x, sp0))
         if r.get("col") is not None: col_x[r["col"]] = x
     off = Lmain
     for r in [r for r in (side.get("right") or []) if not r.get("niveau")]:
         W = round(r["W_cm"] * 10)
         x = absx(r, off)
-        cais.append((x, spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))))
+        sp0 = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
+        sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
+        if r.get("bout"): sp0["_bout"] = r["bout"]
+        cais.append((x, sp0))
         if r.get("col") is not None: col_x[r["col"]] = x
         off += W
     for r in (side.get("left") or []) + (side.get("right") or []):
@@ -155,6 +170,7 @@ def load_spec(path):
         W = round(r["W_cm"] * 10)
         sp = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
         sp["_oy_mm"] = round(float(r.get("y_cm", 0)) * 10)
+        if r.get("bout"): sp["_bout"] = r["bout"]
         cais.append((col_x[r["col"]], sp))
     # ponts : caissons suspendus au-dessus d'un espace libre
     for e in (side.get("espaces") or []):
