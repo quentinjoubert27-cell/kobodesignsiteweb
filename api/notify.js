@@ -274,7 +274,11 @@ module.exports = async function handler(req, res) {
           ...(cfg.caisson2 ? { caisson2: cfg.caisson2 } : {}), ...(cfg.tvSide ? { tvSide: cfg.tvSide } : {}),
           ...(Array.isArray(cfg.cableHoles) && cfg.cableHoles.length ? { cableHoles: cfg.cableHoles } : {}),
           ...(Array.isArray(cfg.caissons) ? { caissons: cfg.caissons, longueur_totale_cm: cfg.longueur_totale_cm } : {}),
-          ...(cfg.technical_spec ? { technical_spec: cfg.technical_spec } : {}) },
+          ...(cfg.technical_spec ? { technical_spec: cfg.technical_spec } : {}),
+          // modèle importé par l'équipe (meuble en formes libres : plaques et rubans) : pièces et décomptes de quincaillerie
+          ...(Array.isArray(cfg.formes_libres) && cfg.formes_libres.length ? { formes_libres: cfg.formes_libres } : {}),
+          ...(cfg.quincaillerie && typeof cfg.quincaillerie === 'object' ? { quincaillerie: cfg.quincaillerie } : {}),
+          ...(cfg.nom_modele ? { nom_modele: String(cfg.nom_modele).slice(0, 80) } : {}) },
       };
       let configId, dbErr;
       if (modeleEquipe) {

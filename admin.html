@@ -3257,9 +3257,38 @@
     };
     return '<div style="margin-bottom:12px;padding:10px 12px;background:rgba(26,26,26,.03);border-radius:8px;"><div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(26,26,26,.5);margin-bottom:8px;">Meubles du projet (' + ms.length + ')</div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' + ms.map(function (m, i) { return btn(i); }).join('') +
-      '<button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur()">+ Ajouter un meuble</button></div>' +
+      '<button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur()">+ Ajouter un meuble</button><button class="btn btn-ghost btn-sm" onclick="importerModele()">⬆ Importer un modèle (JSON)</button></div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur(true,\'' + ms[idx].id + '\')">✏️ Modifier ce meuble</button>' +
       '<button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="effacerModele(\'' + ms[idx].id + '\')">🗑 Effacer ce meuble</button></div></div>';
+  }
+  // ── Importer un modèle (JSON préparé avec Claude à partir d'une photo ou d'un plan) : il devient un meuble du projet, chiffré comme les autres ──
+  function importerModele() {
+    if (!currentProjetId) return;
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.onchange = async function () {
+      var f = inp.files && inp.files[0]; if (!f) return;
+      var cfg; try { cfg = JSON.parse(await f.text()); } catch (e) { return showToast('Fichier illisible : ce n\'est pas un JSON valide', 'err'); }
+      var cfgIn = cfg.config && !cfg.meuble ? cfg.config : cfg;   // accepte l'export complet ou la configuration seule
+      var m = cfgIn.meuble || {};
+      if (!(m.L > 0 && m.H > 0 && m.P > 0)) return showToast('JSON non reconnu : dimensions du meuble (L, H, P) manquantes', 'err');
+      var nbF = (cfgIn.formes_libres || []).reduce(function (s, x) { return s + ((x.pieces || []).length); }, 0), nbC = (cfgIn.caissons || []).length;
+      if (!nbF && !nbC && !(cfgIn.elements || []).length && !cfgIn.tvSide) return showToast('JSON vide : ni caissons, ni pièces', 'err');
+      var resume = (cfgIn.nom_modele ? cfgIn.nom_modele + '\n' : '') + m.L + ' × ' + m.H + ' × ' + m.P + ' cm · ' + (nbF ? nbF + ' pièces en formes libres' : nbC + ' caisson(s)');
+      if (!confirm('Importer ce modèle comme nouveau meuble du projet ?\n\n' + resume + '\n\nLe prix se calcule ensuite comme pour les autres meubles.')) return;
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ action: 'attach-config', projet_id: currentProjetId, furniture_type: cfgIn.furniture_type || 'tv', libelle: cfgIn.nom_modele || undefined, config: cfgIn }) });
+        var j = await r.json().catch(function () { return {}; });
+        if (!r.ok || !j.success) return showToast(j.error || 'Import impossible', 'err');
+        var pr = allProjets.find(function (x) { return x.id === currentProjetId; });
+        if (pr && pr.client_id) logActivite(pr.client_id, 'note', 'Modèle importé pour le projet « ' + (pr.nom || '') + ' » (' + resume.replace(/\n/g, ' · ') + ')', { projet_id: currentProjetId, auto: true });
+        showToast('Modèle importé');
+        _meubleIdx[currentProjetId] = Math.max(0, (currentProjetMeubles || []).length);
+        await loadProjetConfig(); renderProjetDevis(currentProjetId);
+      } catch (e) { showToast('Import impossible : ' + (e.message || e), 'err'); }
+    };
+    inp.click();
   }
   function modeliserDansConfigurateur(edit, configId) {
     if (!currentProjetId) return;
@@ -5698,7 +5727,7 @@ function dedupeEls(els){
         if (!currentManuel) {
           currentProjetRc = null; currentProjetSdbId = null; currentDevisQuantities = null;
           el.innerHTML = '<div class="empty" style="padding:10px 0;font-size:12px;">Aucune configuration liée à ce projet (demande reçue par le formulaire).</div>' +
-            '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="modeliserDansConfigurateur()">🧱 Modéliser dans le configurateur</button><button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">✍️ Créer une proposition (saisie manuelle)</button></div>';
+            '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="modeliserDansConfigurateur()">🧱 Modéliser dans le configurateur</button><button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">✍️ Créer une proposition (saisie manuelle)</button><button class="btn btn-ghost btn-sm" onclick="importerModele()">⬆ Importer un modèle (JSON)</button></div>';
           return;
         }
         // proposition saisie à la main : mêmes calculs et même document, images ajoutées à la main
@@ -5913,6 +5942,25 @@ function dedupeEls(els){
     return q;
   }
 
+  // Télécharge le document (photo, plan, PDF) et une fiche du projet, avec des noms « A-TRAITER__… » faciles à retrouver dans les Téléchargements
+  var _docsProjet = {};
+  async function envoyerPourClaude(docId) {
+    var d = _docsProjet[docId]; if (!d) return showToast('Document introuvable', 'err');
+    var pr = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var slug = function (v) { return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'projet'; };
+    var base = 'A-TRAITER__' + slug(pr.nom) + '__';
+    var dl = function (blob, nom) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); };
+    try {
+      var rep = await fetch(d.signedUrl); if (!rep.ok) throw new Error('document indisponible');
+      dl(await rep.blob(), base + (d.nom || 'document').replace(/[\\/:*?"<>|]+/g, '-'));
+      var cl = (pr.clients || {});
+      var fiche = { projet_id: currentProjetId, projet_nom: pr.nom || '', client: [cl.prenom, cl.nom].filter(Boolean).join(' '), description: pr.description || '', statut: pr.statut || '',
+        document: { nom: d.nom, type: d.type, id: d.id }, date: new Date().toISOString(),
+        consigne: 'Reproduire le meuble de ce document (photo ou plan) en JSON de modèle (caissons du configurateur ou formes libres), puis l\'importer dans le projet avec « Importer un modèle (JSON) ».' };
+      dl(new Blob([JSON.stringify(fiche, null, 1)], { type: 'application/json' }), base + 'fiche.json');
+      showToast('Téléchargé : cherche les fichiers « A-TRAITER__ » dans tes Téléchargements, puis dis-le à Claude');
+    } catch (e) { showToast('Téléchargement impossible : ' + (e.message || e), 'err'); }
+  }
   async function loadProjetDocs() {
     const { data: docs } = await sb.from('documents').select('*').eq('projet_id', currentProjetId).order('created_at', { ascending: false });
     const container = document.getElementById('pd-docs');
@@ -5926,6 +5974,7 @@ function dedupeEls(els){
       }
       return { ...d, signedUrl };
     }));
+    _docsProjet = {}; docsWithUrls.forEach(function (d) { _docsProjet[d.id] = d; });
 
     container.innerHTML = docsWithUrls.map(d => {
       const catClass = d.categorie === 'notice' ? 'cat-notice' : 'cat-document';
@@ -5940,6 +5989,7 @@ function dedupeEls(els){
             <div class="doc-meta">${d.type} · ${d.uploade_par === 'client' ? 'Envoyé par le client' : 'Kobo Design'} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}${d.taille_kb ? ' · ' + formatSize(d.taille_kb) : ''}</div>
           </div>
           <a href="${d.signedUrl}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
+          <button class="btn btn-ghost btn-sm" title="Télécharge ce document et une fiche du projet, nommés A-TRAITER__… pour que Claude les traite" onclick="envoyerPourClaude('${d.id}')">→ Claude</button>
           <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}','${d.url}')">Supprimer</button>
         </div>`;
     }).join('');
