@@ -182,6 +182,7 @@
     .msg--kobo .msg__meta, .msg--admin .msg__meta { text-align: right; }
     .ia-rep { margin-top: 12px; }
     .ia-panel { margin-top: 8px; padding: 10px 12px; background: #fff7f0; border: 1px solid #f1cdb5; border-radius: 10px; }
+    .ia-mode { font-size: 11.5px; line-height: 1.5; margin-bottom: 6px; color: #8a3d12; }
     .ia-quest { font-size: 12px; line-height: 1.5; margin-bottom: 8px; color: #5b3a24; }
     .ia-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
     .ia-chips button { font: 600 11px var(--font); padding: 5px 10px; border: 1px solid #e0b79a; border-radius: 100px; background: #fff; color: #8a3d12; cursor: pointer; }
@@ -1014,7 +1015,7 @@
         <div class="detail-panel">
           <h3>Messagerie</h3>
           <div class="msg-thread" id="cd-msg-thread"></div>
-          <div class="ia-rep" id="ia-cd"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('cd')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('cd','oui')">Oui</button><button type="button" onclick="iaRepondre('cd','non')">Non</button><button type="button" onclick="iaRepondre('cd','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('cd','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('cd','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('cd');}"></div><div class="ia-etat"></div></div></div>
+          <div class="ia-rep" id="ia-cd"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('cd')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-mode"></div><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('cd','oui')">Oui</button><button type="button" onclick="iaRepondre('cd','non')">Non</button><button type="button" onclick="iaRepondre('cd','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('cd','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('cd','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('cd');}"><button class="btn btn-primary btn-sm ia-go" style="display:none" onclick="iaRedigerIA('cd')">Rédiger avec l'IA</button></div><div class="ia-etat"></div></div></div>
           <div class="msg-compose" style="margin-top:12px;">
             <textarea id="cd-msg-reply" placeholder="Répondre au client… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromClientDetail();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
             <button class="btn btn-primary btn-sm" onclick="sendReplyFromClientDetail()">Envoyer</button>
@@ -1109,7 +1110,7 @@
             <h3 style="margin:0;" id="msg-thread-title">—</h3>
           </div>
           <div class="msg-thread" id="msg-thread"></div>
-          <div class="ia-rep" id="ia-msg"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('msg')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('msg','oui')">Oui</button><button type="button" onclick="iaRepondre('msg','non')">Non</button><button type="button" onclick="iaRepondre('msg','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('msg','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('msg','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('msg');}"></div><div class="ia-etat"></div></div></div>
+          <div class="ia-rep" id="ia-msg"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('msg')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-mode"></div><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('msg','oui')">Oui</button><button type="button" onclick="iaRepondre('msg','non')">Non</button><button type="button" onclick="iaRepondre('msg','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('msg','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('msg','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('msg');}"><button class="btn btn-primary btn-sm ia-go" style="display:none" onclick="iaRedigerIA('msg')">Rédiger avec l'IA</button></div><div class="ia-etat"></div></div></div>
           <div class="msg-compose">
             <textarea id="msg-reply" placeholder="Répondre… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
             <button class="btn btn-primary btn-sm" onclick="sendReply()">Envoyer</button>
@@ -1656,7 +1657,7 @@
     <!-- Messages -->
     <h3 style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:14px;">Messages avec le client</h3>
     <div class="msg-thread" id="pd-msgs"></div>
-    <div class="ia-rep" id="ia-pd"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('pd')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('pd','oui')">Oui</button><button type="button" onclick="iaRepondre('pd','non')">Non</button><button type="button" onclick="iaRepondre('pd','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('pd','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('pd','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('pd');}"></div><div class="ia-etat"></div></div></div>
+    <div class="ia-rep" id="ia-pd"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('pd')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-mode"></div><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('pd','oui')">Oui</button><button type="button" onclick="iaRepondre('pd','non')">Non</button><button type="button" onclick="iaRepondre('pd','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('pd','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('pd','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('pd');}"><button class="btn btn-primary btn-sm ia-go" style="display:none" onclick="iaRedigerIA('pd')">Rédiger avec l'IA</button></div><div class="ia-etat"></div></div></div>
     <div class="msg-compose" style="margin-top:12px;">
       <textarea id="pd-reply" placeholder="Répondre au client… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromDetail();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
       <button class="btn btn-primary btn-sm" onclick="sendReplyFromDetail()">Envoyer</button>
@@ -4265,9 +4266,9 @@
   // ── Aide à la réponse (sans IA, gratuite) : un clic (Oui / Non / supplément / je vérifie / délai) + une précision facultative,
   //    et le message est composé à partir de la question du client. C'est un brouillon : il arrive dans la zone de réponse, rien n'est envoyé. ──
   var IA_ZONES = {
-    pd: { ta: 'pd-reply', fil: 'pd-msgs', client: function () { var p = allProjets.find(function (x) { return x.id === currentProjetId; }); return p && p.clients ? p.clients : (p ? allClients.find(function (c) { return c.id === p.client_id; }) : null); } },
-    cd: { ta: 'cd-msg-reply', fil: 'cd-msg-thread', client: function () { return allClients.find(function (c) { return c.id === currentClientId; }); } },
-    msg: { ta: 'msg-reply', fil: 'msg-thread', client: function () { return allClients.find(function (c) { return c.id === activeMsgClientId; }); } }
+    pd: { ta: 'pd-reply', fil: 'pd-msgs', type: 'projet', id: function () { return currentProjetId; }, client: function () { var p = allProjets.find(function (x) { return x.id === currentProjetId; }); return p && p.clients ? p.clients : (p ? allClients.find(function (c) { return c.id === p.client_id; }) : null); } },
+    cd: { ta: 'cd-msg-reply', fil: 'cd-msg-thread', type: 'client', id: function () { return currentClientId; }, client: function () { return allClients.find(function (c) { return c.id === currentClientId; }); } },
+    msg: { ta: 'msg-reply', fil: 'msg-thread', type: 'client', id: function () { return activeMsgClientId; }, client: function () { return allClients.find(function (c) { return c.id === activeMsgClientId; }); } }
   };
   // sujets reconnus dans la question du client (mots-clés → tournure)
   var IA_SUJETS = [
@@ -4276,10 +4277,51 @@
     [/prix|coût|cout|tarif|supplément|supplement|budget|devis/i, 'le prix'], [/dimension|largeur|hauteur|profondeur|taille|mesure|cm\b/i, 'les dimensions'],
     [/pose|installation|montage|monter/i, 'la pose'], [/acompte|paiement|payer|facture|virement/i, 'le paiement'], [/plan de travail|vasque|éclairage|eclairage|led/i, 'cette option']
   ];
-  function iaOuvrir(z) {
+  var _iaStatut = null;   // { actif, fournisseur } : l'IA est-elle configurée sur le serveur ?
+  async function iaStatut() {
+    if (_iaStatut) return _iaStatut;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      var r = await fetch('/api/repondre', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'statut' }) });
+      var j = await r.json().catch(function () { return {}; }); _iaStatut = { actif: !!j.actif, fournisseur: j.fournisseur || '' };
+    } catch (e) { _iaStatut = { actif: false, fournisseur: '' }; }
+    return _iaStatut;
+  }
+  async function iaOuvrir(z) {
     var p = document.querySelector('#ia-' + z + ' .ia-panel'); if (!p) return;
     p.style.display = p.style.display === 'none' ? 'block' : 'none';
-    if (p.style.display === 'block') { iaQuestion(z); var i = p.querySelector('.ia-consigne'); if (i) i.focus(); }
+    if (p.style.display === 'block') {
+      iaQuestion(z); var i = p.querySelector('.ia-consigne'); if (i) i.focus();
+      var st = await iaStatut(), badge = p.querySelector('.ia-mode');
+      if (badge) badge.innerHTML = st.actif ? '✨ <b>IA activée</b> : écris un mot ou deux puis Entrée (ou « Rédiger avec l\'IA »). Les boutons ci-dessous donnent un modèle de phrase instantané.' : 'IA non activée : les boutons donnent un modèle de phrase. Pour activer l\'IA gratuite, ajoute une clé (voir la documentation).';
+      var go = p.querySelector('.ia-go'); if (go) go.style.display = st.actif ? '' : 'none';
+    }
+  }
+  // rédaction par l'IA : question du client + un mot ou deux de l'équipe → brouillon (jamais envoyé)
+  async function iaRedigerIA(z) {
+    var Z = IA_ZONES[z], root = document.getElementById('ia-' + z); if (!Z || !root) return;
+    var inp = root.querySelector('.ia-consigne'), etat = root.querySelector('.ia-etat'), go = root.querySelector('.ia-go'), ta = document.getElementById(Z.ta);
+    var consigne = (inp.value || '').trim(), id = Z.id();
+    if (!id) { etat.innerHTML = '<span class="ia-err">Ouvre d\'abord une conversation.</span>'; return; }
+    if (!consigne) { etat.innerHTML = '<span class="ia-err">Écris un mot ou deux (oui, non, un prix…).</span>'; return; }
+    var txt = go.textContent; go.disabled = true; go.textContent = 'Rédaction…'; etat.textContent = 'L\'IA rédige…';
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      var r = await fetch('/api/repondre', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ type: Z.type, id: id, consigne: consigne, brouillon: (ta.value || '').trim() || undefined }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok) {
+        var erreur = '<span class="ia-err">' + escHtml(j.error || 'Rédaction impossible') + '</span>';
+        if (/^(oui|non|je v|v[ée]rif|d[ée]lai)/i.test(consigne)) { iaDepuisTexte(z, true); etat.innerHTML = erreur + '<br>Un modèle de phrase a été utilisé à la place.<br>' + etat.innerHTML; }   // l'IA est indisponible : on ne laisse pas l'équipe sans brouillon
+        else etat.innerHTML = erreur;
+        return;
+      }
+      if (j.question_equipe) { etat.innerHTML = '<span class="ia-q">Il me manque une précision : ' + escHtml(j.question_equipe) + '</span><br>Complète ta réponse ci-dessus puis relance.'; inp.focus(); return; }
+      if (!j.reponse) { etat.innerHTML = '<span class="ia-err">Pas de réponse rédigée : reformule ta consigne.</span>'; return; }
+      ta.value = j.reponse; autoGrow(ta); ta.focus();
+      etat.innerHTML = '✓ Brouillon rédigé par l\'IA et placé dans la zone de réponse : relis-le avant d\'envoyer. Rien n\'est parti chez le client.' + ((j.points_a_verifier || []).length ? '<ul>' + j.points_a_verifier.map(function (p) { return '<li>' + escHtml(p) + '</li>'; }).join('') + '</ul>' : '');
+    } catch (e) { etat.innerHTML = '<span class="ia-err">Rédaction impossible : ' + escHtml(e.message || String(e)) + '</span>'; }
+    finally { go.disabled = false; go.textContent = txt; }
   }
   function iaDerniereQuestion(z) {   // dernier message du client dans le fil affiché
     var fil = document.getElementById(IA_ZONES[z].fil); if (!fil) return '';
@@ -4291,7 +4333,8 @@
     el.innerHTML = q ? '<b>Question du client :</b> « ' + escHtml(q.length > 160 ? q.slice(0, 160) + '…' : q.replace(/\s+/g, ' ')) + ' »' + (iaSujet(q) ? ' <span style="color:rgba(26,26,26,.5)">(sujet : ' + escHtml(iaSujet(q)) + ')</span>' : '') : '<span style="color:rgba(26,26,26,.5)">Aucun message du client dans ce fil.</span>';
   }
   // « oui », « non, trop profond », « oui 40 € par porte », « je vérifie », « délai » : le premier mot choisit le type de réponse, le reste est la précision
-  function iaDepuisTexte(z) {
+  function iaDepuisTexte(z, sansIA) {
+    if (!sansIA && _iaStatut && _iaStatut.actif) return iaRedigerIA(z);   // IA activée : Entrée → l'IA rédige
     var inp = document.querySelector('#ia-' + z + ' .ia-consigne'), t = (inp.value || '').trim(), etat = document.querySelector('#ia-' + z + ' .ia-etat');
     var mode = null;
     if (/^oui\b/i.test(t)) { t = t.replace(/^oui\b[\s,;:.\-–]*/i, ''); mode = /\d/.test(t) ? 'supplement' : 'oui'; }

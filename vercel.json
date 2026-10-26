@@ -3,6 +3,9 @@
     { "path": "/api/notify?action=rappels-tick", "schedule": "0 7 * * 1-6" },
     { "path": "/api/notify?action=rappels-tick", "schedule": "0 16 * * 1-6" }
   ],
+  "functions": {
+    "api/repondre.js": { "maxDuration": 30 }
+  },
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
