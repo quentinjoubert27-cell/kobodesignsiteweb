@@ -4282,7 +4282,7 @@
     if (_iaStatut) return _iaStatut;
     try {
       const { data: { session } } = await sb.auth.getSession();
-      var r = await fetch('/api/repondre', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'statut' }) });
+      var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'repondre', sous: 'statut' }) });
       var j = await r.json().catch(function () { return {}; }); _iaStatut = { actif: !!j.actif, fournisseur: j.fournisseur || '' };
     } catch (e) { _iaStatut = { actif: false, fournisseur: '' }; }
     return _iaStatut;
@@ -4307,8 +4307,8 @@
     var txt = go.textContent; go.disabled = true; go.textContent = 'Rédaction…'; etat.textContent = 'L\'IA rédige…';
     try {
       const { data: { session } } = await sb.auth.getSession();
-      var r = await fetch('/api/repondre', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ type: Z.type, id: id, consigne: consigne, brouillon: (ta.value || '').trim() || undefined }) });
+      var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'repondre', type: Z.type, id: id, consigne: consigne, brouillon: (ta.value || '').trim() || undefined }) });
       var j = await r.json().catch(function () { return {}; });
       if (!r.ok) {
         var erreur = '<span class="ia-err">' + escHtml(j.error || 'Rédaction impossible') + '</span>';

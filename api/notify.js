@@ -337,6 +337,12 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── ACTION : repondre (aide à la rédaction des réponses de la messagerie : brouillon seulement, rien n'est envoyé) ──
+    if (action === 'repondre') {
+      const r = await require('../lib/repondre-ia.js').traiter(sb, body);
+      return res.status(r.status).json(r.json);
+    }
+
     // ── ACTION : statut ────────────────────────────────────────────
     if (action === 'statut') {
       const { projet_id, statut } = body;
