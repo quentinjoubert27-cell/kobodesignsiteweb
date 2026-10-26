@@ -4362,7 +4362,7 @@
     else if (mode === 'verif') corps = ['Merci pour votre message. Nous vérifions' + (sujet ? ' ' + (sujet.replace(/^les /, 'les ').replace(/^le /, 'le ')) : ' ce point') + ' de notre côté et nous revenons vers vous très rapidement.', phrase(prec)];
     else if (mode === 'delai') corps = ['Merci pour votre message. Notre délai de fabrication est de 3 semaines à réception de l\'acompte, le solde étant à régler avant l\'envoi.', phrase(prec)];
     else return;
-    var msg = (prenom ? 'Bonjour ' + prenom + ',' : 'Bonjour,') + '\n\n' + corps.filter(Boolean).join(' ') + '\n\nN\'hésitez pas si vous avez d\'autres questions.\n\nL\'équipe Kōbō Design';
+    var msg = (prenom ? 'Bonjour ' + prenom + ',' : 'Bonjour,') + '\n\n' + corps.filter(Boolean).join(' ') + '\n\nN\'hésitez pas si vous avez d\'autres questions.\n\nBien cordialement,\nL\'équipe Kōbō Design';
     if ((ta.value || '').trim() && !confirm('La zone de réponse contient déjà un texte.\n\nLe remplacer par ce brouillon ?')) return;
     ta.value = msg; autoGrow(ta); ta.focus();
     etat.innerHTML = '✓ Brouillon placé dans la zone de réponse : relis-le, modifie-le si besoin, puis envoie. Rien n\'est parti chez le client.' + (verif.length ? '<ul><li>' + verif.map(escHtml).join('</li><li>') + '</li></ul>' : '');
