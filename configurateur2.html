@@ -1718,7 +1718,11 @@ function _hasArche(){ try{ return S.archeM>0 || S.nicheM || tvSideLeft.concat(tv
 // Arche de façade (équipe) : le haut des portes qui touchent le haut du caisson suit un arc de cercle sur toute la largeur du caisson ;
 // f = flèche en cm (la moitié de la largeur = demi-cercle). Les coins au-dessus de l'arc sont des pièces de remplissage fixes.
 function _archeCm(rec){ return rec==='M' ? (S.archeM||0) : ((rec&&rec.arche_cm)||0); }
-function _archeCtx(rec,W,H){ var f=_archeCm(rec)/100; f=Math.min(f,W/2,H-0.05); return f>0.005?{f:f,W:W,H:H}:null; }
+function _archeCtx(rec,W,H){
+  var f=_archeCm(rec)/100, n=_nicheOf(rec);
+  if(!(f>0) && n && !(n.bord_cm>=0.5)) f=n.fleche_cm>0?n.fleche_cm/100:W/2;   // niche arquée sans contour : les portes qu'on y pose suivent l'arc de la niche
+  f=Math.min(f,W/2,H-0.05); return f>0.005?{f:f,W:W,H:H}:null;
+}
 function _archeSag(W,f,x){ var R=(W*W/4+f*f)/(2*f); return Math.sqrt(Math.max(0,R*R-x*x))-(R-f); }   // 0 aux bords du caisson, f au centre
 function porteMeshG(w,h,d,mat,A,cx,flush){
   var m;
@@ -4383,7 +4387,7 @@ function _putNiche(side,idx,k,n){ var r=_recAt(side,idx,k); if(r==='M') S.nicheM
 function setNiche(side,idx,k,on){
   if(!_isAdminMode()) return;
   if(on==='non'){ _putNiche(side,idx,k,null); }
-  else { _stripFacades(side,idx,k); var old=_getNiche(side,idx,k); _putNiche(side,idx,k,old||{bord_cm:0,fleche_cm:0}); }
+  else { var old=_getNiche(side,idx,k); _putNiche(side,idx,k,old||{bord_cm:0,fleche_cm:0}); }
   _refreshCols();
 }
 function setNicheP(side,idx,k,champ,v){
@@ -4398,8 +4402,8 @@ function _nicheHtml(r){
   if(n){
     var fld=function(lbl,ch,val,help){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" min="0" max="120" step="0.5" value="'+val+'" onchange="setNicheP('+call+',\''+ch+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
     h+=fld('Contour autour de l\'ouverture (0 = aucun)','bord_cm',n.bord_cm>0?n.bord_cm:0)+fld('Flèche de l\'arc (0 = demi-cercle)','fleche_cm',n.fleche_cm||0)
-      +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Le prix de la niche (découpe de l\'ouverture en arc) n\'est pas pris en compte au-delà de la surface du cadre.</div>'
-      +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">L\'ouverture à haut en arc occupe toute la largeur du caisson (seuls les deux coins au-dessus de l\'arc sont pleins) ; avec un contour, la façade devient un cadre plein ; le caisson reste ouvert derrière (étagères possibles, pas de portes ni de tiroirs). L\'éclairage n\'est pas modélisé.</div>';
+      +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Le prix de la niche (découpe de l\'ouverture en arc) n\'est pas pris en compte (ni celui des éventuelles portes arquées).</div>'
+      +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">L\'ouverture à haut en arc occupe toute la largeur du caisson (seuls les deux coins au-dessus de l\'arc sont pleins) ; avec un contour, la façade devient un cadre plein. Les portes posées dans une niche sans contour suivent l\'arc ; avec un contour elles restent droites. L\'éclairage n\'est pas modélisé.</div>';
   }
   return h;
 }

@@ -516,7 +516,11 @@ def build_furniture(cfg, opt, open_state=False):
             st = (rd.get("portes") or {}).get(str(order_x.index(di)), {})      # style de la porte, de gauche à droite
             dm = blanc if st.get("decor") == "blanc" else wood
             # arche de façade (équipe) : le haut des portes qui touchent le haut du caisson suit un arc de cercle sur toute la largeur du caisson
-            fl = min(spec.get("_arche_mm", 0), W / 2.0, H - 40) if (yt + 1 >= H - ep - 2) else 0
+            _a = spec.get("_arche_mm", 0)
+            _n = spec.get("_niche")
+            if not _a and _n and float(_n.get("bord_cm") or 0) < 5:   # niche arquée sans contour : les portes suivent l'arc de la niche
+                _a = float(_n.get("fleche_cm") or 0) * 10.0 or W / 2.0
+            fl = min(_a, W / 2.0, H - 40) if (yt + 1 >= H - ep - 2) else 0
             def sag(x_):
                 R_ = (W * W / 4.0 + fl * fl) / (2.0 * fl)
                 return math.sqrt(max(0.0, R_ * R_ - (x_ - W / 2.0) ** 2)) - (R_ - fl)
@@ -571,7 +575,7 @@ def build_furniture(cfg, opt, open_state=False):
             nf = float(ni.get("fleche_cm") or 0) * 10.0 or wh / 2.0
             nf = max(10.0, min(nf, wh / 2.0, H - nb - 10.0))
             Rn = (wh * wh / 4.0 + nf * nf) / (2.0 * nf); zo = z_off / mm + oyc[0]; ys = H - nb - nf
-            if nb <= 0:   # sans contour : deux coins pleins au-dessus de l'arc, ouverture sur toute la largeur
+            if nb <= 0 and not remplissage[0]:   # sans contour : deux coins pleins au-dessus de l'arc (déjà posés si une porte arquée les a créés)
                 for sd in (0, 1):
                     xs = 0.0 if sd == 0 else float(W)
                     cp = [(xs, H - nf)]
@@ -581,7 +585,7 @@ def build_furniture(cfg, opt, open_state=False):
                     cp.append((xs, H))
                     o_ = add_prism("niche_coin", [((ox + x_) * mm, -th_n * mm, (z_ + zo) * mm) for x_, z_ in cp], (0, th_n * mm, 0), wood, "v", rnd)
                     if o_: objs.append(o_)
-            else:
+            elif nb > 0:
                 B("niche_montant", 0, nb, 0, H, -th_n, 0, "v"); B("niche_montant", W - nb, W, 0, H, -th_n, 0, "v")   # façade posée devant le caisson
                 pts2 = [(nb, ys)]
                 for i_ in range(1, 41):
