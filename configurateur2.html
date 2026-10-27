@@ -1746,11 +1746,12 @@ function archeFillOnce(g,A,fz,mat){
 function _nicheOf(rec){ return rec==='M' ? (S.nicheM||null) : ((rec&&rec.niche)||null); }
 function _nicheCtx(rec,W,H){
   var n=_nicheOf(rec); if(!n) return null;
-  var b=Math.max(0.02,Math.min((n.bord_cm>0?n.bord_cm:8)/100,W/2-0.10)), wh=W-2*b, f=n.fleche_cm>0?n.fleche_cm/100:wh/2;
+  var b=n.bord_cm>=0.5?Math.min(n.bord_cm/100,W/2-0.10):0, wh=W-2*b, f=n.fleche_cm>0?n.fleche_cm/100:wh/2;   // bord 0 (par défaut) : pas de contour, l'ouverture occupe toute la largeur
   f=Math.max(0.02,Math.min(f,wh/2,H-b-0.1)); return {b:b,wh:wh,f:f,W:W,H:H};
 }
 function nicheFront(g,N,fz,mat){
   if(!N||g.userData.niche) return; g.userData.niche=1;
+  if(N.b<0.005){ archeFillOnce(g,{f:N.f,W:N.W,H:N.H},fz,mat); return; }   // sans contour : seuls les deux coins au-dessus de l'arc sont pleins
   var sh=new THREE.Shape([new THREE.Vector2(-N.W/2,0),new THREE.Vector2(N.W/2,0),new THREE.Vector2(N.W/2,N.H),new THREE.Vector2(-N.W/2,N.H)]);
   var hp=[new THREE.Vector2(-N.wh/2,0),new THREE.Vector2(N.wh/2,0),new THREE.Vector2(N.wh/2,N.H-N.b-N.f)], n=32, i, x;
   for(i=1;i<n;i++){ x=N.wh/2-N.wh*i/n; hp.push(new THREE.Vector2(x,N.H-N.b-N.f+_archeSag(N.wh,N.f,x))); }
@@ -4382,12 +4383,12 @@ function _putNiche(side,idx,k,n){ var r=_recAt(side,idx,k); if(r==='M') S.nicheM
 function setNiche(side,idx,k,on){
   if(!_isAdminMode()) return;
   if(on==='non'){ _putNiche(side,idx,k,null); }
-  else { _stripFacades(side,idx,k); var old=_getNiche(side,idx,k); _putNiche(side,idx,k,old||{bord_cm:8,fleche_cm:0}); }
+  else { _stripFacades(side,idx,k); var old=_getNiche(side,idx,k); _putNiche(side,idx,k,old||{bord_cm:0,fleche_cm:0}); }
   _refreshCols();
 }
 function setNicheP(side,idx,k,champ,v){
   var n=_getNiche(side,idx,k); if(!n||!_isAdminMode()) return;
-  v=Math.max(0,Math.min(120,Math.round(parseFloat(v)*10)/10||0)); if(champ==='bord_cm') v=Math.max(3,v);
+  v=Math.max(0,Math.min(120,Math.round(parseFloat(v)*10)/10||0)); if(champ==='bord_cm'&&v>0) v=Math.max(3,v);
   var m=Object.assign({},n); m[champ]=v; _putNiche(side,idx,k,m); _refreshCols();
 }
 function _nicheHtml(r){
@@ -4396,9 +4397,9 @@ function _nicheHtml(r){
     +'<select onchange="setNiche('+call+',this.value)" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font:600 12px DM Sans,sans-serif;color:var(--text)"><option value="non"'+(n?'':' selected')+'>Non</option><option value="oui"'+(n?' selected':'')+'>Oui</option></select></div>';
   if(n){
     var fld=function(lbl,ch,val,help){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" min="0" max="120" step="0.5" value="'+val+'" onchange="setNicheP('+call+',\''+ch+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
-    h+=fld('Cadre autour de l\'ouverture','bord_cm',n.bord_cm>0?n.bord_cm:8)+fld('Flèche de l\'arc (0 = demi-cercle)','fleche_cm',n.fleche_cm||0)
+    h+=fld('Contour autour de l\'ouverture (0 = aucun)','bord_cm',n.bord_cm>0?n.bord_cm:0)+fld('Flèche de l\'arc (0 = demi-cercle)','fleche_cm',n.fleche_cm||0)
       +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Le prix de la niche (découpe de l\'ouverture en arc) n\'est pas pris en compte au-delà de la surface du cadre.</div>'
-      +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">La façade devient un cadre plein avec une ouverture à haut en arc ; le caisson reste ouvert derrière (étagères possibles, pas de portes ni de tiroirs). L\'éclairage n\'est pas modélisé.</div>';
+      +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">L\'ouverture à haut en arc occupe toute la largeur du caisson (seuls les deux coins au-dessus de l\'arc sont pleins) ; avec un contour, la façade devient un cadre plein ; le caisson reste ouvert derrière (étagères possibles, pas de portes ni de tiroirs). L\'éclairage n\'est pas modélisé.</div>';
   }
   return h;
 }

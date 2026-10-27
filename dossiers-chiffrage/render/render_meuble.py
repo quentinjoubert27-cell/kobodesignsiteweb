@@ -567,20 +567,31 @@ def build_furniture(cfg, opt, open_state=False):
         ni = spec.get("_niche")
         if ni:   # niche arquée : façade pleine = deux montants + une tête à dessous en arc, ouverture jusqu'en bas (même plan que les portes)
             th_n = 20
-            nb = max(20.0, float(ni.get("bord_cm") or 8) * 10.0); wh = W - 2 * nb
+            nb = float(ni.get("bord_cm") or 0) * 10.0; nb = nb if nb >= 5 else 0.0; wh = W - 2 * nb   # bord 0 : pas de contour
             nf = float(ni.get("fleche_cm") or 0) * 10.0 or wh / 2.0
             nf = max(10.0, min(nf, wh / 2.0, H - nb - 10.0))
             Rn = (wh * wh / 4.0 + nf * nf) / (2.0 * nf); zo = z_off / mm + oyc[0]; ys = H - nb - nf
-            B("niche_montant", 0, nb, 0, H, -th_n, 0, "v"); B("niche_montant", W - nb, W, 0, H, -th_n, 0, "v")   # façade posée devant le caisson
-            pts2 = [(nb, ys)]
-            for i_ in range(1, 41):
-                x_ = nb + wh * i_ / 40.0
-                pts2.append((x_, ys + math.sqrt(max(0.0, Rn * Rn - (x_ - W / 2.0) ** 2)) - (Rn - nf)))
-            pts2 += [(W - nb, ys), (W - nb, H), (nb, H)]
-            # contour : de la naissance gauche, arc jusqu'à la naissance droite, puis le haut du cadre
-            poly = [(nb, ys)] + pts2[1:-3] + [(W - nb, ys), (W - nb, H), (nb, H)]
-            o_ = add_prism("niche_tete", [((ox + x_) * mm, -th_n * mm, (z_ + zo) * mm) for x_, z_ in poly], (0, th_n * mm, 0), wood, "v", rnd)
-            if o_: objs.append(o_)
+            if nb <= 0:   # sans contour : deux coins pleins au-dessus de l'arc, ouverture sur toute la largeur
+                for sd in (0, 1):
+                    xs = 0.0 if sd == 0 else float(W)
+                    cp = [(xs, H - nf)]
+                    for i_ in range(1, 41):
+                        x_ = xs + (W / 2.0 - xs) * i_ / 40.0
+                        cp.append((x_, H - nf + math.sqrt(max(0.0, Rn * Rn - (x_ - W / 2.0) ** 2)) - (Rn - nf)))
+                    cp.append((xs, H))
+                    o_ = add_prism("niche_coin", [((ox + x_) * mm, -th_n * mm, (z_ + zo) * mm) for x_, z_ in cp], (0, th_n * mm, 0), wood, "v", rnd)
+                    if o_: objs.append(o_)
+            else:
+                B("niche_montant", 0, nb, 0, H, -th_n, 0, "v"); B("niche_montant", W - nb, W, 0, H, -th_n, 0, "v")   # façade posée devant le caisson
+                pts2 = [(nb, ys)]
+                for i_ in range(1, 41):
+                    x_ = nb + wh * i_ / 40.0
+                    pts2.append((x_, ys + math.sqrt(max(0.0, Rn * Rn - (x_ - W / 2.0) ** 2)) - (Rn - nf)))
+                pts2 += [(W - nb, ys), (W - nb, H), (nb, H)]
+                # contour : de la naissance gauche, arc jusqu'à la naissance droite, puis le haut du cadre
+                poly = [(nb, ys)] + pts2[1:-3] + [(W - nb, ys), (W - nb, H), (nb, H)]
+                o_ = add_prism("niche_tete", [((ox + x_) * mm, -th_n * mm, (z_ + zo) * mm) for x_, z_ in poly], (0, th_n * mm, 0), wood, "v", rnd)
+                if o_: objs.append(o_)
         for d in spec.get("drawers", []):
             th = d.get("drawer_face_thickness_mm", ep)
             xl, xr = d["x_left_mm"] + 1, d["x_right_mm"] - 1
