@@ -100,8 +100,6 @@ def spec_from_elements(W, H, D, ep, elements):
             x_l = ep + round(left * 10); x_r = ep + round(right * 10)
             y_b, y_t = ep + round(bot * 10), ep + round(top * 10)
             rec = {"x_left_mm": x_l, "x_right_mm": x_r, "y_bottom_mm": y_b, "height_mm": y_t - y_b}
-            if t == "porte" and (e.get("arche_cm") or 0) > 0:   # haut de la porte en arche (flèche en mm), réservé à l'équipe
-                rec["arche_mm"] = round(min(float(e["arche_cm"]) * 10, (x_r - x_l) / 2.0, (y_t - y_b) - 20))
             if t == "porte" and e.get("hinge") in ("L", "R"):   # sens d'ouverture choisi par le client
                 rec["hinge_explicit"] = True; rec["door_opening"] = "left" if e["hinge"] == "L" else "right"
             sp["doors" if t == "porte" else "drawers"].append(rec)
@@ -143,6 +141,7 @@ def load_spec(path):
     # caissons empilés (niveau > 0) : posés sur leur colonne, à la hauteur y_cm ; les autres sont des colonnes côte à côte
     spec["_oy_mm"] = round(float((cfg.get("meuble") or {}).get("y_start_cm") or 0) * 10)   # caisson principal suspendu
     if (cfg.get("meuble") or {}).get("bout"): spec["_bout"] = cfg["meuble"]["bout"]   # bout arrondi (réservé à l'équipe)
+    if (cfg.get("meuble") or {}).get("arche_cm"): spec["_arche_mm"] = round(float(cfg["meuble"]["arche_cm"]) * 10)   # arche de façade (équipe)
     mx = (cfg.get("meuble") or {}).get("x_start_cm")   # abscisse du caisson principal quand le JSON donne les positions (espaces libres)
     def absx(r, fallback):
         return round((r["x_cm"] - mx) * 10) if (mx is not None and r.get("x_cm") is not None) else fallback
@@ -155,6 +154,7 @@ def load_spec(path):
         sp0 = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
         sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
         if r.get("bout"): sp0["_bout"] = r["bout"]
+        if r.get("arche_cm"): sp0["_arche_mm"] = round(float(r["arche_cm"]) * 10)
         cais.append((x, sp0))
         if r.get("col") is not None: col_x[r["col"]] = x
     off = Lmain
@@ -164,6 +164,7 @@ def load_spec(path):
         sp0 = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
         sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
         if r.get("bout"): sp0["_bout"] = r["bout"]
+        if r.get("arche_cm"): sp0["_arche_mm"] = round(float(r["arche_cm"]) * 10)
         cais.append((x, sp0))
         if r.get("col") is not None: col_x[r["col"]] = x
         off += W
@@ -173,6 +174,7 @@ def load_spec(path):
         sp = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
         sp["_oy_mm"] = round(float(r.get("y_cm", 0)) * 10)
         if r.get("bout"): sp["_bout"] = r["bout"]
+        if r.get("arche_cm"): sp["_arche_mm"] = round(float(r["arche_cm"]) * 10)
         cais.append((col_x[r["col"]], sp))
     # ponts : caissons suspendus au-dessus d'un espace libre
     for e in (side.get("espaces") or []):

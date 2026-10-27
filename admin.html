@@ -2929,8 +2929,7 @@
     var m = rc.meuble || {}, tv = rc.tvSide || {}, ar = function (v) { return Array.isArray(v) ? v : (v ? [v] : []); };
     if (m.bout) return true;
     if (ar(tv.left).concat(ar(tv.right)).some(function (c) { return c && c.bout; })) return true;
-    var arche = function (els) { return (els || []).some(function (e) { return e && e.type === 'porte' && e.arche_cm > 0; }); };   // porte à haut en arche : découpe courbe non chiffrée
-    if (arche(rc.elements) || arche(rc.caisson2 && rc.caisson2.elements) || ar(tv.left).concat(ar(tv.right)).concat(ar(tv.top)).some(function (c) { return c && arche(c.elements); })) return true;
+    if (m.arche_cm > 0 || ar(tv.left).concat(ar(tv.right)).concat(ar(tv.top)).some(function (c) { return c && c.arche_cm > 0; })) return true;   // arche de façade : découpe en arc non chiffrée
     return (rc.formes_libres || []).some(function (f) { return (f.pieces || []).some(function (p) { return p.cintre; }); });
   }
   function updateDevisAutoTotal() {

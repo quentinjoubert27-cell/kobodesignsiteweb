@@ -508,22 +508,26 @@ def build_furniture(cfg, opt, open_state=False):
             return 98
 
         order_x = sorted(range(len(dlist)), key=lambda i: dlist[i]["x_left_mm"])
+        remplissage = [False]
         for di, d in enumerate(spec.get("doors", [])):
             th = d.get("door_thickness_mm", ep)
             xl, xr = d["x_left_mm"] + 1, d["x_right_mm"] - 1
             yb, yt = d["y_bottom_mm"] + 1, d["y_bottom_mm"] + d["height_mm"] - 1
             st = (rd.get("portes") or {}).get(str(order_x.index(di)), {})      # style de la porte, de gauche à droite
             dm = blanc if st.get("decor") == "blanc" else wood
-            fl = d.get("arche_mm", 0)
+            # arche de façade (équipe) : le haut des portes qui touchent le haut du caisson suit un arc de cercle sur toute la largeur du caisson
+            fl = min(spec.get("_arche_mm", 0), W / 2.0, H - 40) if (yt + 1 >= H - ep - 2) else 0
+            def sag(x_):
+                R_ = (W * W / 4.0 + fl * fl) / (2.0 * fl)
+                return math.sqrt(max(0.0, R_ * R_ - (x_ - W / 2.0) ** 2)) - (R_ - fl)
             def porte_arche(pivot=None, rot=0.0):
-                """Porte dont le haut est un arc de cercle (flèche fl mm) : contour dans le plan (x, z), épaisseur th le long de y."""
-                W_ = xr - xl; R_ = (W_ * W_ / 4.0 + fl * fl) / (2.0 * fl); xc_ = (xl + xr) / 2.0
-                z0_ = (yb + oyc[0]) + z_off / mm; zs_ = (yt - fl) + oyc[0] + z_off / mm
-                pts2 = [(xl, z0_), (xr, z0_), (xr, zs_)]
-                for i_ in range(1, 25):
-                    x_ = xr - W_ * i_ / 24.0
-                    pts2.append((x_, zs_ + (math.sqrt(max(0.0, R_ * R_ - (x_ - xc_) ** 2)) - (R_ - fl))))
-                pts2.append((xl, zs_))
+                """Contour dans le plan (x, z), épaisseur th le long de y ; pivote autour de `pivot` quand la porte est ouverte."""
+                zo = z_off / mm + oyc[0]
+                pts2 = [(xl, yb + zo), (xr, yb + zo)]
+                n_ = max(6, int(24 * (xr - xl) / W))
+                for i_ in range(n_ + 1):
+                    x_ = xr - (xr - xl) * i_ / n_
+                    pts2.append((x_, min(yt, yt - fl + sag(x_)) - 2.5 + zo))   # joint de 2,5 mm sous l arc
                 def tr(x_, y_):
                     if pivot is None: return (ox + x_) * mm, y_ * mm
                     px_, py_ = pivot; dx_, dy_ = (ox + x_) * mm - px_, y_ * mm - py_
@@ -531,10 +535,21 @@ def build_furniture(cfg, opt, open_state=False):
                 P3 = []
                 for x_, z_ in pts2:
                     a_, b_ = tr(x_, 0); P3.append((a_, b_, z_ * mm))
-                a_, b_ = tr(xl + 0, th); a0_, b0_ = tr(xl, 0)
-                vec = (a_ - a0_, b_ - b0_, 0)
-                o_ = add_prism("porte", P3, vec, dm, "v", rnd)
+                a1, b1 = tr(xl, th); a0, b0 = tr(xl, 0)
+                o_ = add_prism("porte", P3, (a1 - a0, b1 - b0, 0), dm, "v", rnd)
                 if o_: objs.append(o_)
+            if fl > 0 and not remplissage[0]:   # deux pièces de remplissage fixes dans les coins au-dessus de l'arc
+                remplissage[0] = True
+                zo = z_off / mm + oyc[0]
+                for sd in (0, 1):
+                    xs = ep if sd == 0 else W - ep
+                    pts2 = [(xs, yt - fl + sag(xs))]
+                    for i_ in range(1, 25):
+                        x_ = xs + (W / 2.0 - xs) * i_ / 24.0
+                        pts2.append((x_, yt - fl + sag(x_)))
+                    pts2.append((xs, yt))
+                    o_ = add_prism("remplissage", [((ox + x_) * mm, 0, (z_ + zo) * mm) for x_, z_ in pts2], (0, th * mm, 0), dm, "v", rnd)
+                    if o_: objs.append(o_)
             if not open_state:
                 if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm)
                 elif fl > 0: porte_arche()
