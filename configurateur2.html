@@ -984,9 +984,26 @@ window.addEventListener('scroll', function(){
           <span class="dim-lbl">Longueur totale</span>
           <span class="dim-val" id="v-L-total" style="font-weight:600;font-size:13px">140 cm</span>
         </div>
-        <!-- Dépassements cachés — plan suit le caisson dans ce configurateur -->
-        <input type="hidden" id="inp-DG" value="0">
-        <input type="hidden" id="inp-DD" value="0">
+        <!-- Le plan peut dépasser le meuble (valeur positive) ou être plus court (valeur négative), à gauche et à droite -->
+        <div class="dim-row">
+          <span class="dim-lbl">Plan vers la gauche</span>
+          <div class="dim-ctrl">
+            <button class="dim-step" onclick="stepDim('inp-DG',setDepassG,-1)" aria-label="Réduire le plan à gauche">−</button>
+            <input class="dim-inp" type="number" id="inp-DG" min="-60" max="100" value="0" oninput="setDepassG(+this.value)" onblur="clampDim(this,setDepassG)">
+            <span class="dim-unit">cm</span>
+            <button class="dim-step" onclick="stepDim('inp-DG',setDepassG,+1)" aria-label="Agrandir le plan à gauche">+</button>
+          </div>
+        </div>
+        <div class="dim-row">
+          <span class="dim-lbl">Plan vers la droite</span>
+          <div class="dim-ctrl">
+            <button class="dim-step" onclick="stepDim('inp-DD',setDepassD,-1)" aria-label="Réduire le plan à droite">−</button>
+            <input class="dim-inp" type="number" id="inp-DD" min="-60" max="100" value="0" oninput="setDepassD(+this.value)" onblur="clampDim(this,setDepassD)">
+            <span class="dim-unit">cm</span>
+            <button class="dim-step" onclick="stepDim('inp-DD',setDepassD,+1)" aria-label="Agrandir le plan à droite">+</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin:-2px 0 10px">+ : le plan dépasse du meuble ; − : le plan est plus court que le meuble de ce côté.</div>
         <div class="dim-row">
           <span class="dim-lbl">Profondeur totale</span>
           <div class="dim-ctrl">
@@ -4497,14 +4514,16 @@ function _updatePlanL(){
   if(S.nbVasques===2 && _planBase()<1.20 && S.L<1.20) setNbVasques(1);
   positionVasque(); buildPlan(); updatePosInfo(); checkAlerts();
 }
+// dépassement du plan (cm) : négatif = plan raccourci de ce côté ; le plan garde au moins 40 cm de long
+function _clampDepass(v,autre){ v=Math.max(-60,Math.min(100,Math.round(v)||0)); var min=Math.round(0.4*100-_planBase()*100-autre*100); return Math.max(v,min); }
 function setDepassG(v){
-  v=Math.max(0,Math.min(100,Math.round(v))); S.depassG=v/100;
-  var inp=document.getElementById('inp-DG'); if(inp) inp.value=v;
+  v=_clampDepass(v,S.depassD); S.depassG=v/100; S._depassTouched=true;
+  var inp=document.getElementById('inp-DG'); if(inp&&document.activeElement!==inp) inp.value=v;
   _updatePlanL();
 }
 function setDepassD(v){
-  v=Math.max(0,Math.min(100,Math.round(v))); S.depassD=v/100;
-  var inp=document.getElementById('inp-DD'); if(inp) inp.value=v;
+  v=_clampDepass(v,S.depassG); S.depassD=v/100; S._depassTouched=true;
+  var inp=document.getElementById('inp-DD'); if(inp&&document.activeElement!==inp) inp.value=v;
   _updatePlanL();
 }
 function setL(v){ // compatibilité — ignoré maintenant, on passe par setDepassG/D
@@ -4878,9 +4897,11 @@ function goStep(n){
   if(n===1) buildCaisson();
   if(currentFT==='sdb'){
     if(n===3){
-      S.depassG=0.10; S.depassD=0.10; S.L=_planBase()+S.depassG+S.depassD;
-      var inpDG=document.getElementById('inp-DG'); if(inpDG) inpDG.value=10;
-      var inpDD=document.getElementById('inp-DD'); if(inpDD) inpDD.value=10;
+      if(!S._depassTouched){   // dépassement par défaut (10 cm de chaque côté) à la première arrivée seulement : ensuite on garde ce que le client a réglé
+        S.depassG=0.10; S.depassD=0.10; S.L=_planBase()+S.depassG+S.depassD;
+        var inpDG=document.getElementById('inp-DG'); if(inpDG) inpDG.value=10;
+        var inpDD=document.getElementById('inp-DD'); if(inpDD) inpDD.value=10;
+      }
       var inpP=document.getElementById('inp-P'); if(inpP) inpP.value=Math.round(S.P*100);
       var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
       buildPlan();
@@ -6319,7 +6340,8 @@ function toggleSDBMode(on){
     currentPanels = ['p1','p-amgt','p2','p3','p4'];
     buildStepper(['Structure','Aménagement','Plan de travail','Vasque','Envoyer']);
     // Caler les dimensions du plan sur le caisson central
-    S.depassG = 0; S.depassD = 0;
+    S.depassG = 0; S.depassD = 0; S._depassTouched = false;
+    var _dg=document.getElementById('inp-DG'), _dd=document.getElementById('inp-DD'); if(_dg) _dg.value=0; if(_dd) _dd.value=0;
     S.L = _planBase();
     S.P = caissonCP();
     var ltot = document.getElementById('v-L-total');
@@ -6442,6 +6464,9 @@ function appliquerConfig(cfg, opts){
     if(ft==='sdb'){
       if(!isSDBMode) toggleSDBMode(true);   // sinon le plan et la vasque ne sont pas recalés sur le caisson (plan flottant, meuble de travers)
       if(cfg.plan){
+        // dépassement du plan à gauche / à droite (négatif = plan raccourci) ; anciens enregistrements : on partage l'écart de longueur à parts égales
+        if(cfg.plan.depassG_cm!=null || cfg.plan.depassD_cm!=null){ setDepassG(cfg.plan.depassG_cm||0); setDepassD(cfg.plan.depassD_cm||0); }
+        else if(cfg.plan.L){ var _ec=Math.round(cfg.plan.L-_planBase()*100); setDepassG(Math.floor(_ec/2)); setDepassD(_ec-Math.floor(_ec/2)); }
         if(cfg.plan.L) setL(Math.round(cfg.plan.L));
         if(cfg.plan.P) setPro(Math.round(cfg.plan.P));
         if(cfg.plan.matLabel){
