@@ -6468,6 +6468,7 @@ function appliquerConfig(cfg, opts){
         // dépassement du plan à gauche / à droite (négatif = plan raccourci) ; anciens enregistrements : on partage l'écart de longueur à parts égales
         if(cfg.plan.depassG_cm!=null || cfg.plan.depassD_cm!=null){ setDepassG(cfg.plan.depassG_cm||0); setDepassD(cfg.plan.depassD_cm||0); }
         else if(cfg.plan.L){ var _ec=Math.round(cfg.plan.L-_planBase()*100); setDepassG(Math.floor(_ec/2)); setDepassD(_ec-Math.floor(_ec/2)); }
+        else { setDepassG(0); setDepassD(0); }   // demande enregistrée avant le réglage du plan à gauche/droite : le plan avait exactement la largeur du meuble, on le garde ainsi
         if(cfg.plan.L) setL(Math.round(cfg.plan.L));
         if(cfg.plan.P) setPro(Math.round(cfg.plan.P));
         if(cfg.plan.matLabel){
