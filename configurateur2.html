@@ -2588,6 +2588,7 @@ var FLOOR_BIBLIO_Y = -0.92;
 
 function normalizeCaisson(){
   if(!caissonGrp) return;
+  caissonGrp.position.set(0,0,0);   // la boîte englobante doit être calculée groupe à l'origine (meuble salle de bain : buildCaisson le décalait avant)
   caissonGrp.updateMatrixWorld(true);
   var bbox=new THREE.Box3().setFromObject(caissonGrp);
   var size=bbox.getSize(new THREE.Vector3());
@@ -2602,7 +2603,7 @@ function normalizeCaisson(){
     // Après scale ns : world = local*ns + position
     // On veut : bbox.min.y*ns + py = FLOOR_BIBLIO_Y  et  bbox.min.z*ns + pz = WALL_BIBLIO_Z
     var py = FLOOR_BIBLIO_Y - bbox.min.y * ns;
-    if(currentFT==='sdb') py += (S.caissonYOff||0) * ns;   // meuble suspendu : le bas du caisson est à « hauteur du bas » du sol, le plan (S.CH inclut cette hauteur) repose dessus
+    if(currentFT==='sdb') py += (S.caissonYOff||0) * ns;   // meuble suspendu : le bas du caisson est à « hauteur du bas » au-dessus du sol (le plan, dont la hauteur S.CH ne l'inclut pas, repose dessus)
     var pz = WALL_BIBLIO_Z  - bbox.min.z * ns;
     caissonGrp.position.set(-center.x * ns, py, pz);
   } else {
@@ -6374,7 +6375,7 @@ function _repositionPlanOnCaisson(){
   // avec la case « Meuble salle de bain » (hors mode sdb d'origine) le plan recouvre le caisson de départ seul ; sinon il est centré sur l'ensemble
   var _cx = (isSDBMode && currentFT!=='sdb') ? 0 : centerX;
   planMesh.position.x = caissonGrp.position.x + (_cx + (S.depassD - S.depassG) / 2) * ns;
-  planMesh.position.y = FLOOR_BIBLIO_Y;
+  planMesh.position.y = FLOOR_BIBLIO_Y + (currentFT==='sdb' ? (S.caissonYOff||0) * ns : 0);   // le plan repose sur le caisson suspendu
   planMesh.position.z = WALL_BIBLIO_Z + S.CairsonP * ns / 2;
 }
 
