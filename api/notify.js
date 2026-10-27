@@ -347,6 +347,12 @@ module.exports = async function handler(req, res) {
       return res.status(r.status).json(r.json);
     }
 
+    // ── ACTION : rediger-proposition (brouillon du mail qui accompagne une proposition : rien n'est envoyé ici) ──
+    if (action === 'rediger-proposition') {
+      const r = await require('../lib/repondre-ia.js').redigerProposition(sb, body);
+      return res.status(r.status).json(r.json);
+    }
+
     // ── ACTION : repondre (aide à la rédaction des réponses de la messagerie : brouillon seulement, rien n'est envoyé) ──
     if (action === 'repondre') {
       const r = await require('../lib/repondre-ia.js').traiter(sb, body);

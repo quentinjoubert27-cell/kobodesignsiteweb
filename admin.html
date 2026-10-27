@@ -1432,7 +1432,15 @@
     <div class="field"><label>1 · Le PDF de la proposition (celui que vous venez de créer et enregistrer)</label>
       <input type="file" id="ep-fichier" accept="application/pdf,.pdf" style="width:100%;padding:10px;border:1.5px dashed rgba(26,26,26,.25);border-radius:8px;font-size:13px;background:#fff;"/>
       <div id="ep-fichier-info" style="font-size:12px;color:rgba(26,26,26,.55);margin-top:4px;">Cliquez sur « Créer le PDF », enregistrez-le (impression → Enregistrer au format PDF), puis choisissez ici ce fichier.</div></div>
-    <div class="field"><label>2 · Message qui accompagne le PDF</label><textarea id="ep-message" rows="9" style="width:100%;padding:12px 14px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;line-height:1.6;"></textarea></div>
+    <div class="field"><label>2 · Message qui accompagne le PDF</label>
+      <div id="ep-ia" style="display:none;margin:2px 0 8px;padding:8px 10px;border:1px dashed rgba(205,62,0,.45);border-radius:8px;background:#fff8f3;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input id="ep-ia-consigne" type="text" maxlength="500" placeholder="Consigne pour l'IA (facultatif) : ton chaleureux, client pressé, délai 6 semaines…" style="flex:1;min-width:200px;padding:8px 10px;border:1.5px solid rgba(26,26,26,.15);border-radius:8px;font-size:13px;font-family:var(--font);" onkeydown="if(event.key==='Enter'){event.preventDefault();epRedigerIA();}"/>
+          <button class="btn btn-ghost btn-sm" id="ep-ia-btn" type="button" onclick="epRedigerIA()">✨ Rédiger avec l'IA</button>
+        </div>
+        <div id="ep-ia-res" style="font-size:12px;line-height:1.5;margin-top:6px;"></div>
+      </div>
+      <textarea id="ep-message" rows="9" style="width:100%;padding:12px 14px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;line-height:1.6;"></textarea></div>
     <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:6px 0 10px;"><input type="checkbox" id="ep-statut" checked/> Passer le projet au statut « Proposition envoyée »</label>
     <p style="font-size:12px;color:rgba(26,26,26,.55);line-height:1.5;">Le PDF choisi est envoyé tel quel par e-mail en pièce jointe, et ajouté dans l'espace client du projet. Vérifiez-le avant d'envoyer : l'envoi est définitif.</p>
     <div id="ep-etat" style="font-size:13px;margin:6px 0;color:var(--accent);"></div>
@@ -2571,9 +2579,36 @@
     document.getElementById('ep-dest').innerHTML = 'Destinataire : <b>' + escHtml((cli.prenom || '') + ' ' + (cli.nom || '')) + '</b> — ' + escHtml(cli.email) + '<br>Projet : ' + escHtml(p.nom || '');
     document.getElementById('ep-message').value = 'Bonjour' + (cli.prenom ? ' ' + cli.prenom : '') + ',\n\nNous vous remercions pour l\'intérêt accordé à notre marque.\n\nCette proposition est un premier chiffrage et nous espérons qu\'elle attirera toute votre attention.\n\nN\'hésitez pas à revenir vers nous par email, ou par téléphone au numéro indiqué en haut à gauche de celle-ci pour toute question ou validation.\n\nNous pourrons l\'optimiser en fonction de vos choix définitifs, dimensions, lieu de livraison.\n\nÀ très bientôt,\nL\'équipe Kōbō Design';
     document.getElementById('ep-etat').textContent = '';
+    _epAvantIA = null; document.getElementById('ep-ia-res').innerHTML = ''; document.getElementById('ep-ia-consigne').value = '';
+    iaStatut().then(function (st) { document.getElementById('ep-ia').style.display = st.actif ? 'block' : 'none'; });
     document.getElementById('ep-fichier').value = '';
     document.getElementById('ep-btn').disabled = false;
     document.getElementById('modal-envoi-prop').classList.add('open');
+  }
+
+  // ── Aide à la rédaction du mail de proposition (IA gratuite, données anonymisées) : brouillon à relire, rien n'est envoyé ──
+  var _epAvantIA = null;
+  async function epRedigerIA() {
+    var btn = document.getElementById('ep-ia-btn'), res = document.getElementById('ep-ia-res'), ta = document.getElementById('ep-message');
+    if (!currentProjetId) return;
+    if (_epAvantIA == null) _epAvantIA = ta.value;   // message d'avant, pour pouvoir y revenir
+    btn.disabled = true; var txt = btn.textContent; btn.textContent = 'Rédaction…'; res.textContent = '';
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'rediger-proposition', projet_id: currentProjetId, consigne: document.getElementById('ep-ia-consigne').value, brouillon: _epAvantIA,
+          prix_ht: (typeof devisSimpleFam !== 'undefined' && devisSimpleFam && devisSimpleFam[0]) ? devisSimpleFam[0].prix : 0 }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok) throw new Error(j.error || ('Erreur ' + r.status));
+      ta.value = j.message;
+      res.innerHTML = '<span style="color:#15803d;font-weight:600;">✨ Brouillon rédigé : relisez-le avant d\'envoyer.</span> <a href="#" onclick="epAnnulerIA();return false;" style="color:var(--accent);">↩ Revenir au message d\'avant</a>'
+        + ((j.points_a_verifier || []).length ? '<div style="color:#b45309;margin-top:4px;">À vérifier : ' + j.points_a_verifier.map(escHtml).join(' · ') + '</div>' : '');
+    } catch (e) { res.innerHTML = '<span style="color:#b91c1c;">' + escHtml(e.message || String(e)) + '</span>'; }
+    btn.disabled = false; btn.textContent = txt;
+  }
+  function epAnnulerIA() {
+    if (_epAvantIA != null) document.getElementById('ep-message').value = _epAvantIA;
+    document.getElementById('ep-ia-res').innerHTML = '<span style="color:rgba(26,26,26,.6);">Message d\'avant rétabli.</span>';
   }
 
   function _loadScriptOnce(src) {
