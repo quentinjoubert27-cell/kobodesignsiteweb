@@ -1348,7 +1348,7 @@ window.addEventListener('scroll', function(){
 var S = {
   step:1,
   // Meuble
-  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, lvM:null, lgM:null, libreM:false, CairsonP:0.36, matCais:0, boutM:null, archeM:null,
+  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, lvM:null, lgM:null, libreM:false, CairsonP:0.36, matCais:0, boutM:null, archeM:null, nicheM:null,
   CL2:1.20,
   caissonOffset:0,
   sdbBaseH:10, caissonYOff:0.10,
@@ -1714,7 +1714,7 @@ function addDoorHinges(pm,porW,porH,hingeLeft){
 
 // ── Bout arrondi (réservé à l'équipe : réglage visible seulement avec ?admin_projet=…, mais tout meuble enregistré avec un bout arrondi s'affiche) ──
 // Le coin avant extérieur d'un caisson d'extrémité est un quart de cercle en vue de dessus ; étagères ouvertes uniquement.
-function _hasArche(){ try{ return S.archeM>0 || tvSideLeft.concat(tvSideRight).some(function(r){ return (r.arche_cm>0)||_stackOf(r).some(function(q){return q&&q.arche_cm>0;}); }); }catch(e){ return false; } }
+function _hasArche(){ try{ return S.archeM>0 || S.nicheM || tvSideLeft.concat(tvSideRight).some(function(r){ return r.niche; }) || tvSideLeft.concat(tvSideRight).some(function(r){ return (r.arche_cm>0)||_stackOf(r).some(function(q){return q&&q.arche_cm>0;}); }); }catch(e){ return false; } }
 // Arche de façade (équipe) : le haut des portes qui touchent le haut du caisson suit un arc de cercle sur toute la largeur du caisson ;
 // f = flèche en cm (la moitié de la largeur = demi-cercle). Les coins au-dessus de l'arc sont des pièces de remplissage fixes.
 function _archeCm(rec){ return rec==='M' ? (S.archeM||0) : ((rec&&rec.arche_cm)||0); }
@@ -1741,6 +1741,23 @@ function archeFillOnce(g,A,fz,mat){
     var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts),{depth:0.020,bevelEnabled:false}); geo.translate(0,0,-0.010);
     var m=new THREE.Mesh(geo,mat); m.position.set(0,0,fz); m.castShadow=true; m.receiveShadow=true; g.add(m);
   });
+}
+// Niche arquée (équipe) : la façade du caisson est un cadre plein percé d'une ouverture à haut en arc (cadre de `bord_cm`, flèche `fleche_cm`, 0 = demi-cercle)
+function _nicheOf(rec){ return rec==='M' ? (S.nicheM||null) : ((rec&&rec.niche)||null); }
+function _nicheCtx(rec,W,H){
+  var n=_nicheOf(rec); if(!n) return null;
+  var b=Math.max(0.02,Math.min((n.bord_cm>0?n.bord_cm:8)/100,W/2-0.10)), wh=W-2*b, f=n.fleche_cm>0?n.fleche_cm/100:wh/2;
+  f=Math.max(0.02,Math.min(f,wh/2,H-b-0.1)); return {b:b,wh:wh,f:f,W:W,H:H};
+}
+function nicheFront(g,N,fz,mat){
+  if(!N||g.userData.niche) return; g.userData.niche=1;
+  var sh=new THREE.Shape([new THREE.Vector2(-N.W/2,0),new THREE.Vector2(N.W/2,0),new THREE.Vector2(N.W/2,N.H),new THREE.Vector2(-N.W/2,N.H)]);
+  var hp=[new THREE.Vector2(-N.wh/2,0),new THREE.Vector2(N.wh/2,0),new THREE.Vector2(N.wh/2,N.H-N.b-N.f)], n=32, i, x;
+  for(i=1;i<n;i++){ x=N.wh/2-N.wh*i/n; hp.push(new THREE.Vector2(x,N.H-N.b-N.f+_archeSag(N.wh,N.f,x))); }
+  hp.push(new THREE.Vector2(-N.wh/2,N.H-N.b-N.f));
+  var hole=new THREE.Path(hp); sh.holes.push(hole);
+  var geo=new THREE.ExtrudeGeometry(sh,{depth:0.020,bevelEnabled:false}); geo.translate(0,0,-0.010);
+  var m=new THREE.Mesh(geo,mat); m.position.set(0,0,fz); m.castShadow=true; m.receiveShadow=true; g.add(m);
 }
 function _isAdminMode(){ try{ return !!new URLSearchParams(location.search).get('admin_projet'); }catch(e){ return false; } }
 function _boutOf(rec,W,CP){
@@ -1857,6 +1874,7 @@ function buildCaisson(){
 
     // Façades par compartiment
     var fz=CP/2+0.001; // collé au meuble (1mm)
+    nicheFront(caissonGrp,_nicheCtx('M',CL,CH),fz,matFacade);
     caissonElements.forEach(function(el,idx){
       if(el.type!=='porte'&&el.type!=='tiroir') return;
       if(_boM) return;   // bout arrondi : étagères ouvertes seulement
@@ -1975,6 +1993,7 @@ function buildCaisson(){
 
     // Façades par compartiment
     var fz=CP/2+0.001; // collé au meuble (1mm)
+    nicheFront(caissonGrp,_nicheCtx('M',CL,CH),fz,matFacade);
     caissonElements.forEach(function(el,idx){
       if(el.type!=='porte'&&el.type!=='tiroir') return;
       var parts=el.key.split('_').map(Number);
@@ -2297,6 +2316,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
     function xcm(v){ return -W/2+ep2+v/100; }
     function ycm(v){ return ep2+v/100; }
 
+    nicheFront(g,_nicheCtx(d.record,W,H),fz,matFacade);
     elems.forEach(function(el,eidx){
 
       if(el.type==='shelf'||el.type==='shelf_simple'){
@@ -4200,7 +4220,7 @@ function renderCaissonWidths(){
           +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
           +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',Hmax)+'</div>'
           +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div>'
-          +(_isAdminMode()?_boutHtml(r)+_archeHtml(r):'');
+          +(_isAdminMode()?_boutHtml(r)+_archeHtml(r)+_nicheHtml(r):'');
       }
     });
     if(currentFT!=='sdb') html+='<div style="text-align:center;margin:6px 0 0"><a href="#" onclick="addLevelAbove(\''+c.side+'\','+c.idx+');return false" style="font-size:11px;color:var(--accent);text-decoration:underline">+ Ajouter un caisson au-dessus'+(total>1?' (caisson '+n+')':'')+'</a></div>';
@@ -4354,6 +4374,32 @@ function _archeHtml(r){
     +'<button class="dim-step" onclick="setArche('+call+','+(cm+5)+')">+</button></div></div>';
   if(cm>0) h+='<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Le prix de l\'arche (découpe en arc des portes et pièces de remplissage) n\'est pas pris en compte.</div>'
     +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Flèche de l\'arc : 0 = pas d\'arche ; la moitié de la largeur du caisson = demi-cercle. Les portes qui touchent le haut du caisson suivent l\'arc (une arche peut couvrir 2 portes) ; deux pièces de remplissage ferment les coins.</div>';
+  return h;
+}
+// niche arquée (équipe seulement) : le caisson devient un cadre à ouverture en arc, sans portes ni tiroirs
+function _getNiche(side,idx,k){ var r=_recAt(side,idx,k); return _nicheOf(r); }
+function _putNiche(side,idx,k,n){ var r=_recAt(side,idx,k); if(r==='M') S.nicheM=n; else if(r){ if(n) r.niche=n; else delete r.niche; } }
+function setNiche(side,idx,k,on){
+  if(!_isAdminMode()) return;
+  if(on==='non'){ _putNiche(side,idx,k,null); }
+  else { _stripFacades(side,idx,k); var old=_getNiche(side,idx,k); _putNiche(side,idx,k,old||{bord_cm:8,fleche_cm:0}); }
+  _refreshCols();
+}
+function setNicheP(side,idx,k,champ,v){
+  var n=_getNiche(side,idx,k); if(!n||!_isAdminMode()) return;
+  v=Math.max(0,Math.min(120,Math.round(parseFloat(v)*10)/10||0)); if(champ==='bord_cm') v=Math.max(3,v);
+  var m=Object.assign({},n); m[champ]=v; _putNiche(side,idx,k,m); _refreshCols();
+}
+function _nicheHtml(r){
+  var n=_getNiche(r.side,r.idx,r.k), call="'"+r.side+"',"+r.idx+","+r.k;
+  var h='<div class="dim-row"><span class="dim-lbl" style="color:var(--accent)">Niche arquée</span>'
+    +'<select onchange="setNiche('+call+',this.value)" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font:600 12px DM Sans,sans-serif;color:var(--text)"><option value="non"'+(n?'':' selected')+'>Non</option><option value="oui"'+(n?' selected':'')+'>Oui</option></select></div>';
+  if(n){
+    var fld=function(lbl,ch,val,help){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" min="0" max="120" step="0.5" value="'+val+'" onchange="setNicheP('+call+',\''+ch+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
+    h+=fld('Cadre autour de l\'ouverture','bord_cm',n.bord_cm>0?n.bord_cm:8)+fld('Flèche de l\'arc (0 = demi-cercle)','fleche_cm',n.fleche_cm||0)
+      +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Le prix de la niche (découpe de l\'ouverture en arc) n\'est pas pris en compte au-delà de la surface du cadre.</div>'
+      +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">La façade devient un cadre plein avec une ouverture à haut en arc ; le caisson reste ouvert derrière (étagères possibles, pas de portes ni de tiroirs). L\'éclairage n\'est pas modélisé.</div>';
+  }
   return h;
 }
 function _refreshCols(){ _syncStack(); updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts(); }
@@ -5831,7 +5877,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
@@ -5852,8 +5898,8 @@ async function submitConfig(){
             // Ancien format (avant les caissons illimités) : un seul objet par côté — admin.html
             // sait encore lire les deux formats pour les anciennes configs déjà en base.
             // left/right : les caissons empilés (niveau > 0) y figurent aussi, avec leur colonne (col), leur niveau et la hauteur de leur bas (y_cm)
-            left:  tvSideLeft.filter(function(r){return !(r.stack&&r.stack.bridge);}).map(function(r){ return { x_cm:_recX(r), W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
-            right: tvSideRight.filter(function(r){return !(r.stack&&r.stack.bridge);}).map(function(r){ return { x_cm:_recX(r), W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            left:  tvSideLeft.filter(function(r){return !(r.stack&&r.stack.bridge);}).map(function(r){ return { x_cm:_recX(r), W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            right: tvSideRight.filter(function(r){return !(r.stack&&r.stack.bridge);}).map(function(r){ return { x_cm:_recX(r), W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
             // espaces libres entre caissons ; chacun peut porter un pont (caisson suspendu) : apres_col = colonne à sa gauche (0 = la plus à gauche)
             espaces: tvGaps.map(function(g){ var cl=_columnsLR(); var b=g.bridge;
               return { apres_col: cl.indexOf(g.after==='M'?'M':(tvSideLeft.concat(tvSideRight).filter(function(r){return r.uid===g.after;})[0]||null)), x_cm:_absX(_layout(S.CL).gapPos[g.uid]?_layout(S.CL).gapPos[g.uid].px:0, g.W/100), L_cm:g.W,
@@ -5869,8 +5915,8 @@ async function submitConfig(){
             _columnsLR().forEach(function(root,ci){
               var base = root==='M' ? { W:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100), els:caissonElements } : { W:root.W, H:root.H, P:root.P||Math.round(S.CairsonP*100), els:root.elems };
               var x0=_recX(root);
-              add(root==='M'?'principal':(ci<_columnsLR().indexOf('M')?'gauche':'droite'), base.W, base.H, base.P, base.els, false, {col:ci, niveau:0, y_start_cm:0, x_start_cm:x0, bout:(root==='M'?S.boutM:root.bout)||undefined, arche_cm:(root==='M'?S.archeM:root.arche_cm)||undefined});
-              _stackOf(root).forEach(function(r){ add('haut', r.W, r.H, r.P||base.P, r.elems, false, {col:ci, niveau:r.stack.lvl, y_start_cm:_yBottomOf(r), x_start_cm:x0, bout:r.bout||undefined, arche_cm:r.arche_cm||undefined}); });
+              add(root==='M'?'principal':(ci<_columnsLR().indexOf('M')?'gauche':'droite'), base.W, base.H, base.P, base.els, false, {col:ci, niveau:0, y_start_cm:0, x_start_cm:x0, bout:(root==='M'?S.boutM:root.bout)||undefined, arche_cm:(root==='M'?S.archeM:root.arche_cm)||undefined, niche:(root==='M'?S.nicheM:root.niche)||undefined});
+              _stackOf(root).forEach(function(r){ add('haut', r.W, r.H, r.P||base.P, r.elems, false, {col:ci, niveau:r.stack.lvl, y_start_cm:_yBottomOf(r), x_start_cm:x0, bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined}); });
             });
             tvGaps.forEach(function(g){ var b=g.bridge; if(b) add('pont', b.W, b.H, b.P||Math.round(S.CairsonP*100), b.elems, false, {col:-1, niveau:0, y_start_cm:b.y||0, x_start_cm:_recX(b)}); });
             if(hasAngle) add('angle', Math.round(S.CL2*100), Math.round(S.CH*100), Math.round(S.CairsonP*100), caissonElements2, true);
@@ -6314,7 +6360,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.archeM=cfg.archeM||null;
+    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null;
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
@@ -6331,7 +6377,7 @@ function appliquerConfig(cfg, opts){
           if(r.niveau>0){ _stacked.push({side:side,r:r}); return; }     // caissons empilés : recréés après leurs colonnes
           addTvSide(side);
           var list=side==='left'?tvSideLeft:tvSideRight, rec=list[list.length-1];
-          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.Htot=rec.H; rec.P=Math.round(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[]; rec.bout=r.bout||null; rec.arche_cm=r.arche_cm||undefined;
+          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.Htot=rec.H; rec.P=Math.round(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[]; rec.bout=r.bout||null; rec.arche_cm=r.arche_cm||undefined; rec.niche=r.niche||undefined;
           if(r.col!=null) _colMap[r.col]=rec;
         });
       });
@@ -6343,7 +6389,7 @@ function appliquerConfig(cfg, opts){
         _stacked.forEach(function(x){
           var root=_colMap[x.r.col]; if(root===undefined) return;
           var below=_last[x.r.col]||root, rec=makeTvRecord(Math.round(x.r.W_cm),Math.round(x.r.H_cm));
-          rec.P=Math.round(x.r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.stack={lvl:x.r.niveau}; rec.below=below;
+          rec.P=Math.round(x.r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.niche=x.r.niche||undefined; rec.stack={lvl:x.r.niveau}; rec.below=below;
           (x.side==='left'?tvSideLeft:tvSideRight).push(rec); _last[x.r.col]=rec;
           if(root==='M') S.CHtot=Math.round((S.CHtot*100+rec.H))/100; else root.Htot=(root.Htot||root.H)+rec.H;
           var ck=x.r.col; _colLv[ck]=_colLv[ck]||[root==='M'?Math.round(S.CH*100):root.H]; _colLv[ck].push(rec.H);
@@ -6435,7 +6481,7 @@ function appliquerConfig(cfg, opts){
       if(!raw) throw new Error('Aucun modèle enregistré sur ce projet : modélisez-le d\'abord.');
       var m=raw.meuble||{};
       if(m.formes_seules || (raw.formes_libres&&raw.formes_libres.length)) throw new Error('ce modèle est en formes libres (importé) : il ne se modifie pas dans le configurateur. Importez une nouvelle version avec « Importer un modèle (JSON) ».');
-      appliquerConfig({ ft:raw.furniture_type||'tv', boutM:m.bout, archeM:m.arche_cm, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
+      appliquerConfig({ ft:raw.furniture_type||'tv', boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
         elements:raw.elements, tvSide:raw.tvSide, caisson2:raw.caisson2, cableHoles:raw.cableHoles, plan:raw.plan, vasques:raw.vasques }, {badge:false});
     }catch(e){ alert('Impossible de recharger le modèle : '+(e.message||e)); }
   })();

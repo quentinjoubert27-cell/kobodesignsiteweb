@@ -2929,6 +2929,7 @@
     var m = rc.meuble || {}, tv = rc.tvSide || {}, ar = function (v) { return Array.isArray(v) ? v : (v ? [v] : []); };
     if (m.bout) return true;
     if (ar(tv.left).concat(ar(tv.right)).some(function (c) { return c && c.bout; })) return true;
+    if (m.niche || ar(tv.left).concat(ar(tv.right)).concat(ar(tv.top)).some(function (c) { return c && c.niche; })) return true;   // niche arquée : découpe en arc non chiffrée
     if (m.arche_cm > 0 || ar(tv.left).concat(ar(tv.right)).concat(ar(tv.top)).some(function (c) { return c && c.arche_cm > 0; })) return true;   // arche de façade : découpe en arc non chiffrée
     return (rc.formes_libres || []).some(function (f) { return (f.pieces || []).some(function (p) { return p.cintre; }); });
   }
@@ -3425,8 +3426,8 @@
     var CH = { all: 'all', trav: 'trav', none: 'none', etag: 'etag', joue: 'joue' };
     // colonne du caisson principal : nombre de colonnes à sa gauche (les caissons empilés, niveau > 0, ne sont pas des colonnes)
     var _leftCols = tvArr(tv.left).filter(function (c) { return c && c.W_cm && !(c.niveau > 0); }).length;
-    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0, ycm: 0, bout: m.bout }];
-    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0, ycm: c.y_cm || 0, bout: c.bout }); }); });
+    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0, ycm: 0, bout: m.bout, niche: m.niche }];
+    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0, ycm: c.y_cm || 0, bout: c.bout, niche: c.niche }); }); });
     tvArr(tv.espaces).forEach(function (e, i) { if (e && e.pont && e.pont.W_cm && e.pont.H_cm) cais.push({ label: 'pont ' + (i + 1), els: e.pont.elements || [], L: e.pont.W_cm * 10, H: e.pont.H_cm * 10, P: (e.pont.P_cm || m.P) * 10, main: false, col: -1, niveau: 0, pont: true }); });
     if (m.formes_seules) cais.shift();   // meuble fait uniquement de formes libres : pas de caisson droit principal
     // caissons empilés : colonne et niveau connus -> joues extérieures sur toute la hauteur, joue dessus seulement tout en haut
@@ -3491,6 +3492,14 @@
         add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
       }
       add('Fond' + suf, H - 38, Math.max(0, L - 38), 1, CH.none);
+      if (c.niche) {   // niche arquée : façade pleine (cadre) percée d'une ouverture à haut en arc ; chiffrée à sa surface réelle (plein moins ouverture), chants extérieurs + contour de l'ouverture
+        var nb = Math.max(20, (c.niche.bord_cm > 0 ? c.niche.bord_cm : 8) * 10), nwh = L - 2 * nb, nf = c.niche.fleche_cm > 0 ? c.niche.fleche_cm * 10 : nwh / 2;
+        nf = Math.max(10, Math.min(nf, nwh / 2, H - nb - 10));
+        var nR = (nwh * nwh / 4 + nf * nf) / (2 * nf), nSeg = nR * nR * Math.acos((nR - nf) / nR) - (nR - nf) * Math.sqrt(Math.max(0, 2 * nR * nf - nf * nf));
+        var nHole = nwh * (H - nb - nf) + nSeg, nArc = 2 * nR * Math.asin(Math.min(1, nwh / (2 * nR))), nSurf = L * H - nHole;
+        pieces.push({ nom: 'Façade niche arquée' + suf, l: Math.round(L), w: Math.round(H), qte: 1, ch: 'all', cat: 'facade', forme: true, surfM2: nSurf / 1e6, perimM: (2 * (L + H)) / 1000, chantM: (2 * (L + H) + 2 * (H - nb - nf) + nArc) / 1000, cintre: true });
+        notes.push('Niche arquée ' + suf.trim() + ' : cadre de ' + Math.round(nb / 10) + ' cm, ouverture de ' + Math.round(nwh / 10) + ' cm à haut en arc (flèche ' + Math.round(nf / 10) + ' cm) ; façade chiffrée à sa surface réelle. ATTENTION : le prix de la découpe en arc n\'est PAS pris en compte.');
+      }
       (opts.joues || []).filter(function (jk) { if (c.pont) return jk === 'dessus' || jk === 'dessous';   // pont : collé aux caissons voisins, seuls le dessus et le dessous se voient
         if (jk === 'dessous') return !!c.gapBelow;   // dessous visible : caisson suspendu au-dessus d'un espace libre
         if (/^caisson du dessus/.test(c.label || '')) return true;   // le caisson posé dessus garde ses joues visibles
