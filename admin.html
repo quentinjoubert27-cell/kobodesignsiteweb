@@ -5969,6 +5969,76 @@ function dedupeEls(els){
       if (blobDoc) showToast('Téléchargé : « ' + base + 'fiche.json » (fiche + document) et le document seul. Si Safari demande d\'autoriser plusieurs téléchargements, accepte, puis dis-le à Claude');
     } catch (e) { showToast('Téléchargement impossible : ' + (e.message || e), 'err'); }
   }
+
+  // ── Photo / plan → modèle : l'IA lit le document, propose des caissons ; l'équipe relit (schéma + hypothèses) avant d'importer ──
+  var _iaPlan = null;
+  async function _iaPlanAppel(corps) {
+    const { data: { session } } = await sb.auth.getSession();
+    var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify(Object.assign({ action: 'analyser-plan' }, corps)) });
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(j.error || ('Erreur ' + r.status));
+    return j;
+  }
+  function _iaPlanSchema(cfg) {
+    var cs = cfg.caissons || [], W = cfg.longueur_totale_cm || 100, H = cfg.hauteur_totale_cm || 100, k = 300 / Math.max(W, H * 1.2), pad = 8;
+    var svg = '<svg viewBox="0 0 ' + (W * k + 2 * pad) + ' ' + (H * k + 2 * pad) + '" style="width:100%;max-width:420px;background:#faf8f5;border:1px solid #e5ded6;border-radius:8px;">';
+    cs.forEach(function (c) {
+      var x = pad + c.x_start_cm * k, y = pad + (H - c.y_start_cm - c.H_cm) * k, w = c.L_cm * k, h = c.H_cm * k, ep = 1.8 * k;
+      svg += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#fff" stroke="#8a6d4b" stroke-width="1.5"/>';
+      (c.elements || []).forEach(function (e) {
+        if (e.type === 'shelf') svg += '<line x1="' + (x + ep) + '" x2="' + (x + w - ep) + '" y1="' + (y + h - (e.y_cm + 1.8) * k) + '" y2="' + (y + h - (e.y_cm + 1.8) * k) + '" stroke="#8a6d4b" stroke-width="1.5"/>';
+        else if (e.key) { var q = e.key.split('_').map(Number); svg += '<rect x="' + (x + ep + q[1] * k) + '" y="' + (y + h - ep - q[2] * k) + '" width="' + ((q[3] - q[1]) * k) + '" height="' + ((q[2] - q[0]) * k) + '" fill="' + (e.type === 'tiroir' ? 'rgba(205,62,0,.18)' : 'rgba(138,109,75,.18)') + '" stroke="#CD3E00" stroke-width="1" stroke-dasharray="3 2"/>'; }
+      });
+    });
+    return svg + '</svg>';
+  }
+  function iaPlanFermer() { var o = document.getElementById('ia-plan-ov'); if (o) o.remove(); _iaPlan = null; }
+  async function iaPlanOuvrir(docId) {
+    var d = _docsProjet[docId]; if (!d) return showToast('Document introuvable', 'err');
+    iaPlanFermer();
+    var ov = document.createElement('div'); ov.id = 'ia-plan-ov';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(20,15,10,.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;';
+    ov.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:640px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><strong style="font-size:17px;">✨ Modéliser « ' + escHtml(d.nom) + ' » avec l\'IA</strong><button class="btn btn-ghost btn-sm" onclick="iaPlanFermer()">✕</button></div>' +
+      '<div style="font-size:13px;color:#6b5f52;margin-bottom:10px;">L\'IA lit la photo ou le plan et propose des caissons. <b>Rien n\'est enregistré</b> tant que tu n\'as pas relu et importé. Seul le document est envoyé à l\'IA (pas le nom du client).</div>' +
+      '<textarea id="ia-plan-note" rows="2" placeholder="Précisions pour l\'IA (facultatif) : ex. « la hauteur sous plafond est 250 cm », « les portes sont celles de droite »…" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #d9d0c5;border-radius:8px;font:inherit;font-size:14px;"></textarea>' +
+      '<div style="margin:10px 0;"><button class="btn btn-primary btn-sm" id="ia-plan-go" onclick="iaPlanLancer(\'' + docId + '\')">Analyser le document</button></div><div id="ia-plan-res"></div></div>';
+    document.body.appendChild(ov);
+    try { var st = await _iaPlanAppel({ sous: 'statut' }); if (!st.actif) document.getElementById('ia-plan-res').innerHTML = '<div style="color:#b91c1c;font-size:13px;">IA non activée : ajoute <b>GEMINI_API_KEY</b> (gratuite, lit aussi les PDF) ou ANTHROPIC_API_KEY dans les variables Vercel.</div>'; } catch (e) {}
+  }
+  async function iaPlanLancer(docId) {
+    var res = document.getElementById('ia-plan-res'), go = document.getElementById('ia-plan-go'); if (!res) return;
+    go.disabled = true; go.textContent = 'Analyse en cours… (10 à 40 s)'; res.innerHTML = '';
+    try {
+      var j = await _iaPlanAppel({ doc_id: docId, note: document.getElementById('ia-plan-note').value });
+      _iaPlan = j;
+      var liste = function (t, a, c) { return a && a.length ? '<div style="margin-top:10px;"><div style="font-weight:600;font-size:13px;' + (c ? 'color:' + c : '') + '">' + t + '</div><ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.5;">' + a.map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' : ''; };
+      var couleur = { haute: '#15803d', moyenne: '#b45309', faible: '#b91c1c' }[j.confiance] || '#b45309';
+      res.innerHTML = '<div style="font-size:14px;margin-bottom:8px;"><b>' + escHtml(j.nom || 'Meuble') + '</b> · confiance <b style="color:' + couleur + '">' + escHtml(j.confiance) + '</b><br>' + escHtml(j.resume) + '</div>' + _iaPlanSchema(j.config) +
+        liste('Cotes lues sur le document', j.cotes_lues) + liste('Hypothèses de l\'IA (à vérifier)', j.hypotheses, '#b45309') + liste('Questions à poser au client', j.questions, '#b45309') +
+        liste('Non modélisé (le prix ne le compte pas)', j.non_modelise, '#b91c1c') + liste('Ajustements automatiques', j.notes) +
+        '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="iaPlanImporter(true)">Importer et ouvrir dans le configurateur</button><button class="btn btn-ghost btn-sm" onclick="iaPlanImporter(false)">Importer sans ouvrir</button></div>' +
+        '<div style="font-size:12px;color:#8a7d6e;margin-top:8px;">Le meuble importé reste modifiable dans le configurateur. Les dimensions et le prix sont des estimations à valider avant d\'envoyer quoi que ce soit au client.</div>';
+    } catch (e) { res.innerHTML = '<div style="color:#b91c1c;font-size:13px;">' + escHtml(e.message || String(e)) + '</div>'; }
+    go.disabled = false; go.textContent = 'Relancer l\'analyse';
+  }
+  async function iaPlanImporter(ouvrir) {
+    if (!_iaPlan || !currentProjetId) return;
+    var cfg = _iaPlan.config;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'attach-config', projet_id: currentProjetId, furniture_type: 'tv', libelle: cfg.nom_modele || undefined, config: cfg }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok || !j.success) return showToast(j.error || 'Import impossible', 'err');
+      var pr = allProjets.find(function (x) { return x.id === currentProjetId; });
+      if (pr && pr.client_id) logActivite(pr.client_id, 'note', 'Modèle créé par l\'IA à partir d\'un document pour le projet « ' + (pr.nom || '') + ' » (' + _iaPlan.resume + ')', { projet_id: currentProjetId, auto: true });
+      var cid = j.configId; iaPlanFermer(); showToast('Modèle importé : à relire dans le configurateur');
+      _meubleIdx[currentProjetId] = Math.max(0, (currentProjetMeubles || []).length);
+      await loadProjetConfig(); renderProjetDevis(currentProjetId);
+      if (ouvrir) modeliserDansConfigurateur(true, cid);
+    } catch (e) { showToast('Import impossible : ' + (e.message || e), 'err'); }
+  }
   async function loadProjetDocs() {
     const { data: docs } = await sb.from('documents').select('*').eq('projet_id', currentProjetId).order('created_at', { ascending: false });
     const container = document.getElementById('pd-docs');
@@ -5998,6 +6068,7 @@ function dedupeEls(els){
           </div>
           <a href="${d.signedUrl}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
           <button class="btn btn-ghost btn-sm" title="Télécharge ce document et une fiche du projet, nommés A-TRAITER__… pour que Claude les traite" onclick="envoyerPourClaude('${d.id}')">→ Claude</button>
+          ${/\.(jpe?g|png|webp|pdf)$/i.test(d.nom || '') ? `<button class="btn btn-ghost btn-sm" title="L'IA lit ce plan ou cette photo et propose un modèle du meuble (rien n'est enregistré avant ta validation)" onclick="iaPlanOuvrir('${d.id}')">✨ IA</button>` : ''}
           <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}','${d.url}')">Supprimer</button>
         </div>`;
     }).join('');
