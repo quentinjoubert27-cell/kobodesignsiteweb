@@ -1417,6 +1417,7 @@ var EP = 0.018;  // épaisseur panneau 18mm
 
 // ── MODE BIBLIO (non-SDB) ──
 var BIBLIO_MODE  = false;
+var isSDBMode    = false;   // case « Meuble salle de bain » / type sdb : plan de travail et vasques
 var hasAngle     = false;
 var caissonGrp2  = null;
 
@@ -2584,6 +2585,7 @@ function normalizeCaisson(){
     // Après scale ns : world = local*ns + position
     // On veut : bbox.min.y*ns + py = FLOOR_BIBLIO_Y  et  bbox.min.z*ns + pz = WALL_BIBLIO_Z
     var py = FLOOR_BIBLIO_Y - bbox.min.y * ns;
+    if(currentFT==='sdb') py += (S.caissonYOff||0) * ns;   // meuble suspendu : le bas du caisson est à « hauteur du bas » du sol, le plan (S.CH inclut cette hauteur) repose dessus
     var pz = WALL_BIBLIO_Z  - bbox.min.z * ns;
     caissonGrp.position.set(-center.x * ns, py, pz);
   } else {
@@ -6308,7 +6310,7 @@ goStep(1);
   if(ft==='sdb') toggleSDBMode(true);
 })();
 
-var isSDBMode = false;
+// (isSDBMode est déclarée plus haut, avant le démarrage ?ft=sdb : la redéclarer ici la remettait à false juste après son activation)
 
 // ── Toggle SDB ──────────────────────────────────────────
 function toggleSDBMode(on){
@@ -6438,6 +6440,7 @@ function appliquerConfig(cfg, opts){
     }
     if(Array.isArray(cfg.cableHoles)&&cfg.cableHoles.length){ tvCableHoles=cfg.cableHoles; buildCaisson(); }
     if(ft==='sdb'){
+      if(!isSDBMode) toggleSDBMode(true);   // sinon le plan et la vasque ne sont pas recalés sur le caisson (plan flottant, meuble de travers)
       if(cfg.plan){
         if(cfg.plan.L) setL(Math.round(cfg.plan.L));
         if(cfg.plan.P) setPro(Math.round(cfg.plan.P));
