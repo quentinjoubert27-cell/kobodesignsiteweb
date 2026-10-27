@@ -4148,7 +4148,7 @@ function _syncStack(){
   newStack.forEach(function(x){ (x.target==='L'?tvSideLeft:tvSideRight).push(x.rec); });
 }
 // Longueur maximale d'un caisson : au-delà, le meuble est automatiquement découpé en plusieurs caissons de même largeur
-var CAISSON_MAX_CM = 120, AUTO_SPLIT = true;
+var CAISSON_MAX_CM = _isAdminMode()?240:120, AUTO_SPLIT = true;   // équipe : jusqu'à 240 cm par caisson (arche ou niche large) ; clients : 120 cm
 function MULTI(){ return currentFT==='tv' || tvSideLeft.length>0 || tvSideRight.length>0; }
 function _syncCaissonSplit(){
   if(!AUTO_SPLIT){ S.CL=S.CLtot; return; }   // aperçu d'une configuration existante : les caissons viennent de la config
