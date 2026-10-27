@@ -514,14 +514,37 @@ def build_furniture(cfg, opt, open_state=False):
             yb, yt = d["y_bottom_mm"] + 1, d["y_bottom_mm"] + d["height_mm"] - 1
             st = (rd.get("portes") or {}).get(str(order_x.index(di)), {})      # style de la porte, de gauche à droite
             dm = blanc if st.get("decor") == "blanc" else wood
+            fl = d.get("arche_mm", 0)
+            def porte_arche(pivot=None, rot=0.0):
+                """Porte dont le haut est un arc de cercle (flèche fl mm) : contour dans le plan (x, z), épaisseur th le long de y."""
+                W_ = xr - xl; R_ = (W_ * W_ / 4.0 + fl * fl) / (2.0 * fl); xc_ = (xl + xr) / 2.0
+                z0_ = (yb + oyc[0]) + z_off / mm; zs_ = (yt - fl) + oyc[0] + z_off / mm
+                pts2 = [(xl, z0_), (xr, z0_), (xr, zs_)]
+                for i_ in range(1, 25):
+                    x_ = xr - W_ * i_ / 24.0
+                    pts2.append((x_, zs_ + (math.sqrt(max(0.0, R_ * R_ - (x_ - xc_) ** 2)) - (R_ - fl))))
+                pts2.append((xl, zs_))
+                def tr(x_, y_):
+                    if pivot is None: return (ox + x_) * mm, y_ * mm
+                    px_, py_ = pivot; dx_, dy_ = (ox + x_) * mm - px_, y_ * mm - py_
+                    return px_ + dx_ * math.cos(rot) - dy_ * math.sin(rot), py_ + dx_ * math.sin(rot) + dy_ * math.cos(rot)
+                P3 = []
+                for x_, z_ in pts2:
+                    a_, b_ = tr(x_, 0); P3.append((a_, b_, z_ * mm))
+                a_, b_ = tr(xl + 0, th); a0_, b0_ = tr(xl, 0)
+                vec = (a_ - a0_, b_ - b0_, 0)
+                o_ = add_prism("porte", P3, vec, dm, "v", rnd)
+                if o_: objs.append(o_)
             if not open_state:
                 if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm)
+                elif fl > 0: porte_arche()
                 else: B("porte", xl, xr, yb, yt, 0, th, "v", dm)
             else:  # charnières sur une joue ou un intercalaire (jamais dans le vide)
                 left = sides[di] == "L"
                 px = (ox + (xl if left else xr)) * mm
                 rot = math.radians(-angle_for(di) if left else angle_for(di))
                 if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm, pivot=(px, 0), rot=rot)
+                elif fl > 0: porte_arche(pivot=(px, 0), rot=rot)
                 else:
                     o = add_box("porte", (ox + xl) * mm, (ox + xr) * mm, 0, th * mm, (yb + oyc[0]) * mm + z_off, (yt + oyc[0]) * mm + z_off, dm, "v", rnd,
                                 pivot=(px, 0), rot_z=rot)

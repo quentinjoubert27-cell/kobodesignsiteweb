@@ -1714,6 +1714,7 @@ function addDoorHinges(pm,porW,porH,hingeLeft){
 
 // ── Bout arrondi (réservé à l'équipe : réglage visible seulement avec ?admin_projet=…, mais tout meuble enregistré avec un bout arrondi s'affiche) ──
 // Le coin avant extérieur d'un caisson d'extrémité est un quart de cercle en vue de dessus ; étagères ouvertes uniquement.
+function _hasArche(){ try{ return [caissonElements].concat(tvSideLeft.concat(tvSideRight).map(function(r){return r.elems||[];})).some(function(es){ return es.some(function(e){ return e.type==='porte'&&e.arche_cm>0; }); }); }catch(e){ return false; } }
 function _isAdminMode(){ try{ return !!new URLSearchParams(location.search).get('admin_projet'); }catch(e){ return false; } }
 function _boutOf(rec,W,CP){
   var b = rec==='M' ? S.boutM : (rec&&rec.bout);
@@ -1788,6 +1789,19 @@ function buildCaisson(){
   var matBarre =new THREE.MeshStandardMaterial({color:0xC8C8C8,roughness:0.10,metalness:0.90});
 
   function box(w,h,d,mat){var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
+  // façade (porte) à haut en arche (équipe) : arc de cercle de flèche f (m) sur la largeur w ; f = 0 → porte droite
+  function _archePts(w,h,f){
+    f=Math.max(0,Math.min(f,w/2,h-0.02)); if(f<0.005) return null;
+    var R=(w*w/4+f*f)/(2*f), pts=[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2-f]], n=24, i, x;
+    for(i=1;i<n;i++){ x=w/2-w*i/n; pts.push([x,h/2-f+(Math.sqrt(Math.max(0,R*R-x*x))-(R-f))]); }
+    pts.push([-w/2,h/2-f]); return pts;
+  }
+  function porteMesh(w,h,d,mat,arche_cm){
+    var pts=arche_cm>0?_archePts(w,h,arche_cm/100):null; if(!pts) return box(w,h,d,mat);
+    var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(function(q){return new THREE.Vector2(q[0],q[1]);})),{depth:d,bevelEnabled:false});
+    geo.translate(0,0,-d/2);
+    var m=new THREE.Mesh(geo,mat); m.castShadow=true; m.receiveShadow=true; return m;
+  }
   // Texture uniforme sur toutes les faces
   function boxBimat(w,h,d,intFaceIdx){return box(w,h,d,matCais);}
 
@@ -1859,7 +1873,7 @@ function buildCaisson(){
           pivot.position.set(porXright-jeu/2, porCy, fz);
           if(isOpen) pivot.rotation.y=Math.PI*0.25;
         }
-        var pm=box(porW,porH,0.020,matFacade);
+        var pm=porteMesh(porW,porH,0.020,matFacade,el.arche_cm);
         pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
         pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
         pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
@@ -1976,7 +1990,7 @@ function buildCaisson(){
           pivot.position.set(porXright-jeu/2, porCy, fz);
           if(isOpen) pivot.rotation.y=Math.PI*0.25;
         }
-        var pm=box(porW,porH,0.020,matFacade);
+        var pm=porteMesh(porW,porH,0.020,matFacade,el.arche_cm);
         pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
         addDoorHinges(pm, porW, porH, hingeLeft);
         pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
@@ -2322,7 +2336,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         var pivot=new THREE.Group();
         pivot.position.set(hingeLeft?pxL+jeuP/2:pxR-jeuP/2,porCy,fz);
         if(isOpen) pivot.rotation.y=hingeLeft?-Math.PI*0.25:Math.PI*0.25;
-        var pm=box(porW,porH,0.020,matFacade);
+        var pm=porteMesh(porW,porH,0.020,matFacade,el.arche_cm);
         pm.position.set(hingeLeft?porW/2:-porW/2,0,0);
         addDoorHinges(pm,porW,porH,hingeLeft);
         pm.userData.elemIdx=eidx; pm.userData.porKey=el.key; pm.userData.isPorte=true;
@@ -3608,6 +3622,15 @@ function applyElementPos(i){
   }
   els[i]=ne; setActiveEls(els); _editingEl=-1; buildCaisson();
 }
+// ── Arche (équipe) : le haut de la porte est un arc de cercle ; flèche en cm (la moitié de la largeur donne un demi-cercle) ──
+function setArche(i,v){
+  if(!_isAdminMode()) return;
+  var els=getActiveEls(), el=els[i]; if(!el||el.type!=='porte') return;
+  var p=String(el.key||'0_0_0_0').split('_').map(Number), w=p[3]-p[1], h=p[2]-p[0];
+  var f=parseFloat(String(v).replace(',','.')); f=isFinite(f)?Math.max(0,Math.min(f,w/2,h-2)):0;
+  pushUndo(); var ne=Object.assign({},el); if(f>=0.5) ne.arche_cm=Math.round(f*10)/10; else delete ne.arche_cm;
+  els[i]=ne; setActiveEls(els); buildCaisson();
+}
 // ── Sens d'ouverture des portes : le client choisit de quel côté elles sont fixées (auto -> gauche -> droite -> auto) ──
 function _hingeInfoForKey(els,key){
   try{ var inf=_supportModel(dedupeEls(els),getActiveCL()*100,getActiveCH()*100).info; for(var i=0;i<inf.length;i++){ if(inf[i].d.key===key) return inf[i]; } }catch(e){}
@@ -3680,6 +3703,9 @@ function updateElementsList(){
         +(IS_TEAM?'<button class="el-list-del" style="'+(el.type==='porte'?'':'margin-left:auto;')+'margin-right:6px;font-size:15px" onclick="editElementPos('+i+')" aria-label="Modifier la position (équipe)" title="Équipe : saisir la position">✎</button>':'')
         +'<button class="el-list-del" onclick="deleteElementAt('+i+')" aria-label="Supprimer cet élément">×</button>'
         +'</div>';
+      if(el.type==='porte' && _isAdminMode()){
+        html+='<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:-2px 0 6px;padding:4px 10px;border:1px dashed var(--border,#d9d0c5);border-radius:8px">Arche (équipe) <input type="number" min="0" step="1" value="'+(el.arche_cm>0?Math.round(el.arche_cm*10)/10:0)+'" style="width:64px;padding:3px 6px;border:1px solid #d9d0c5;border-radius:6px" onchange="setArche('+i+',this.value)"> cm de flèche <span style="opacity:.7">(0 = porte droite)</span></div>';
+      }
       if(hingeAlert) html+='<div style="font-size:11px;line-height:1.4;color:#b91c1c;background:rgba(185,28,28,.07);border-radius:8px;padding:6px 10px;margin:-2px 0 6px">⚠ '+hingeAlert+'</div>';
       if(IS_TEAM && _editingEl===i) html+=_elementEditorHtml(el,i);
     });
@@ -5843,7 +5869,7 @@ async function submitConfig(){
     if(!resp.ok||!data.success) throw new Error(data.error||'Erreur serveur');
     if(ADMIN_PROJET){
       document.getElementById('cfgFormWrap').style.display='none';
-      document.getElementById('cfgSuccess').innerHTML='<span class="cfg-ok-icon">✓</span>Meuble enregistré sur le projet.<br><span style="font-weight:400;color:var(--text2)">Aucun e-mail n\'a été envoyé au client.</span><br>'+((S.boutM||tvSideLeft.concat(tvSideRight).some(function(r){return r.bout;}))?'<span style="display:block;margin:8px 0;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-weight:600;font-size:12px">⚠ Meuble avec arrondi : le prix de l\'arrondi (cintrage, usinage des courbes) n\'est pas pris en compte dans le devis. Ajoute ce supplément à la main dans l\'admin.</span>':'')+'<a href="/admin" style="color:var(--accent);font-weight:700">← Retour à l\'admin</a>';
+      document.getElementById('cfgSuccess').innerHTML='<span class="cfg-ok-icon">✓</span>Meuble enregistré sur le projet.<br><span style="font-weight:400;color:var(--text2)">Aucun e-mail n\'a été envoyé au client.</span><br>'+((S.boutM||tvSideLeft.concat(tvSideRight).some(function(r){return r.bout;})||_hasArche())?'<span style="display:block;margin:8px 0;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-weight:600;font-size:12px">⚠ Meuble avec arrondi ou arche : le prix de la courbe (cintrage, usinage) n\'est pas pris en compte dans le devis. Ajoute ce supplément à la main dans l\'admin.</span>':'')+'<a href="/admin" style="color:var(--accent);font-weight:700">← Retour à l\'admin</a>';
       document.getElementById('cfgSuccess').style.display='block';
       return;
     }

@@ -2929,6 +2929,8 @@
     var m = rc.meuble || {}, tv = rc.tvSide || {}, ar = function (v) { return Array.isArray(v) ? v : (v ? [v] : []); };
     if (m.bout) return true;
     if (ar(tv.left).concat(ar(tv.right)).some(function (c) { return c && c.bout; })) return true;
+    var arche = function (els) { return (els || []).some(function (e) { return e && e.type === 'porte' && e.arche_cm > 0; }); };   // porte à haut en arche : découpe courbe non chiffrée
+    if (arche(rc.elements) || arche(rc.caisson2 && rc.caisson2.elements) || ar(tv.left).concat(ar(tv.right)).concat(ar(tv.top)).some(function (c) { return c && arche(c.elements); })) return true;
     return (rc.formes_libres || []).some(function (f) { return (f.pieces || []).some(function (p) { return p.cintre; }); });
   }
   function updateDevisAutoTotal() {
@@ -2943,7 +2945,7 @@
       '<span style="color:var(--accent)">Prix de vente HT : ' + price.prix_vente.toFixed(2) + ' €</span>';
     try {
       var _liste = (currentProjetMeubles && currentProjetMeubles.length > 1 && !currentProjetRc.manuel) ? currentProjetMeubles.map(function (m) { return rcFromSdb(m); }) : [currentProjetRc];
-      if (!price.fixe && _liste.some(_aArrondi)) resultEl.innerHTML += '<div style="margin-top:8px;padding:9px 12px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.45;">⚠ Meuble avec arrondi : le prix de l\'arrondi (cintrage, usinage des courbes) n\'est PAS pris en compte dans ce montant. Seules les surfaces et les chants sont comptés : ajoute ce supplément à la main avant d\'envoyer la proposition.</div>';
+      if (!price.fixe && _liste.some(_aArrondi)) resultEl.innerHTML += '<div style="margin-top:8px;padding:9px 12px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.45;">⚠ Meuble avec arrondi ou arche : le prix de la courbe (cintrage, découpe en arc, usinage) n\'est PAS pris en compte dans ce montant. Seules les surfaces et les chants sont comptés : ajoute ce supplément à la main avant d\'envoyer la proposition.</div>';
     } catch (e) { console.warn('alerte arrondi', e); }
     try {
       var cmpEl = document.getElementById('devis-compare');

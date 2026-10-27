@@ -100,6 +100,8 @@ def spec_from_elements(W, H, D, ep, elements):
             x_l = ep + round(left * 10); x_r = ep + round(right * 10)
             y_b, y_t = ep + round(bot * 10), ep + round(top * 10)
             rec = {"x_left_mm": x_l, "x_right_mm": x_r, "y_bottom_mm": y_b, "height_mm": y_t - y_b}
+            if t == "porte" and (e.get("arche_cm") or 0) > 0:   # haut de la porte en arche (flèche en mm), réservé à l'équipe
+                rec["arche_mm"] = round(min(float(e["arche_cm"]) * 10, (x_r - x_l) / 2.0, (y_t - y_b) - 20))
             if t == "porte" and e.get("hinge") in ("L", "R"):   # sens d'ouverture choisi par le client
                 rec["hinge_explicit"] = True; rec["door_opening"] = "left" if e["hinge"] == "L" else "right"
             sp["doors" if t == "porte" else "drawers"].append(rec)
