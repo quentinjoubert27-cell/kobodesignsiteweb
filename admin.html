@@ -3319,6 +3319,8 @@
     var row = (currentProjetMeubles || []).find(function (x) { return String(x.id) === String(configId); });
     if (!row || !currentProjetId) return showToast('Meuble introuvable', 'err');
     if (!confirm('Créer une copie modifiable du meuble de la demande ?\n\nLa copie devient la proposition : tu pourras ajouter, retirer ou changer ce que tu veux, et le prix se recalcule. La demande du client reste intacte.')) return;
+    var fen = window.open('', '_blank');   // ouvert tout de suite (sinon bloqué par le navigateur après les attentes réseau), rempli ensuite
+    if (fen) { try { fen.document.write('<p style="font-family:sans-serif;padding:40px;font-size:18px">Préparation de la proposition modifiable…</p>'); } catch (e) {} }
     try {
       var rc = JSON.parse(JSON.stringify(rcFromSdb(row)));
       var n = configCountsFromRc(rc);
@@ -3327,13 +3329,13 @@
       var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
         body: JSON.stringify({ action: 'attach-config', projet_id: currentProjetId, furniture_type: cfg.furniture_type, libelle: 'Proposition', config: cfg }) });
       var j = await r.json().catch(function () { return {}; });
-      if (!r.ok || !j.success) return showToast(j.error || 'Copie impossible', 'err');
+      if (!r.ok || !j.success) { if (fen) fen.close(); return showToast(j.error || 'Copie impossible', 'err'); }
       var pr = allProjets.find(function (x) { return x.id === currentProjetId; });
       if (pr && pr.client_id) logActivite(pr.client_id, 'note', 'Proposition rendue modifiable pour le projet « ' + (pr.nom || '') + ' » (copie de la demande du client)', { projet_id: currentProjetId, auto: true });
       _meubleIdx[currentProjetId] = 0;
       await loadProjetConfig(); renderProjetDevis(currentProjetId);
-      modeliserDansConfigurateur(true, j.configId);
-    } catch (e) { showToast('Copie impossible : ' + (e.message || e), 'err'); }
+      modeliserDansConfigurateur(true, j.configId, fen);
+    } catch (e) { if (fen) fen.close(); showToast('Copie impossible : ' + (e.message || e), 'err'); }
   }
   // ── Devis ferme (envoyé ou plus avancé) : le montant du projet, donc le chiffre d'affaires, ne bouge pas tout seul ; la mise à jour se fait ici, sur demande ──
   async function appliquerPrixAuMontant() {
@@ -3378,11 +3380,15 @@
     };
     inp.click();
   }
-  function modeliserDansConfigurateur(edit, configId) {
+  // fenetre : onglet deja ouvert (vide) au moment du clic ; les navigateurs bloquent window.open() s'il est appele apres des attentes reseau
+  function modeliserDansConfigurateur(edit, configId, fenetre) {
     if (!currentProjetId) return;
     if (edit === true) _propModifiee[currentProjetId] = true;
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
-    window.open('/configurateur2?admin_projet=' + encodeURIComponent(currentProjetId) + '&nom=' + encodeURIComponent(p.nom || '') + (edit === true ? '&edit=1' + (configId ? '&config=' + encodeURIComponent(configId) : '') : ''), '_blank');
+    var url = '/configurateur2?admin_projet=' + encodeURIComponent(currentProjetId) + '&nom=' + encodeURIComponent(p.nom || '') + (edit === true ? '&edit=1' + (configId ? '&config=' + encodeURIComponent(configId) : '') : '');
+    if (fenetre && !fenetre.closed) { fenetre.location.href = url; return; }
+    var w = window.open(url, '_blank');
+    if (!w) showToast('Le navigateur a bloqué l\'ouverture du configurateur : autorise les fenêtres pop-up pour ce site, ou clique sur « Modifier ce meuble ».', 'err');
   }
   async function effacerModele(configId) {
     if (!currentProjetId) return;
@@ -6125,19 +6131,21 @@ function dedupeEls(els){
   async function iaPlanImporter(ouvrir) {
     if (!_iaPlan || !currentProjetId) return;
     var cfg = _iaPlan.config;
+    var fen = ouvrir ? window.open('', '_blank') : null;   // ouvert au clic (sinon bloqué par le navigateur), rempli après l'import
+    if (fen) { try { fen.document.write('<p style="font-family:sans-serif;padding:40px;font-size:18px">Import du modèle…</p>'); } catch (e) {} }
     try {
       const { data: { session } } = await sb.auth.getSession();
       var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
         body: JSON.stringify({ action: 'attach-config', projet_id: currentProjetId, furniture_type: 'tv', libelle: cfg.nom_modele || undefined, config: cfg }) });
       var j = await r.json().catch(function () { return {}; });
-      if (!r.ok || !j.success) return showToast(j.error || 'Import impossible', 'err');
+      if (!r.ok || !j.success) { if (fen) fen.close(); return showToast(j.error || 'Import impossible', 'err'); }
       var pr = allProjets.find(function (x) { return x.id === currentProjetId; });
       if (pr && pr.client_id) logActivite(pr.client_id, 'note', 'Modèle créé par l\'IA à partir d\'un document pour le projet « ' + (pr.nom || '') + ' » (' + _iaPlan.resume + ')', { projet_id: currentProjetId, auto: true });
       var cid = j.configId; iaPlanFermer(); showToast('Modèle importé : à relire dans le configurateur');
       _meubleIdx[currentProjetId] = Math.max(0, (currentProjetMeubles || []).length);
       await loadProjetConfig(); renderProjetDevis(currentProjetId);
-      if (ouvrir) modeliserDansConfigurateur(true, cid);
-    } catch (e) { showToast('Import impossible : ' + (e.message || e), 'err'); }
+      if (ouvrir) modeliserDansConfigurateur(true, cid, fen);
+    } catch (e) { if (fen) fen.close(); showToast('Import impossible : ' + (e.message || e), 'err'); }
   }
   async function loadProjetDocs() {
     const { data: docs } = await sb.from('documents').select('*').eq('projet_id', currentProjetId).order('created_at', { ascending: false });
