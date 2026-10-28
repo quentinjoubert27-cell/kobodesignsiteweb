@@ -1590,6 +1590,7 @@
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
         <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);">Proposition (à envoyer au client)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" id="btn-modif-prop" onclick="modifierPropositionAuto()" title="Modifier le contenu de la proposition : ajouter, retirer ou changer des éléments du meuble">✏️ Modifier la proposition</button>
           <button class="btn btn-primary btn-sm" id="btn-devis-pdf" onclick="openDevisSimplePdf()">📄 Créer le PDF (images + proposition)</button>
           <button class="btn btn-ghost btn-sm" id="btn-send-prop" onclick="openEnvoiProposition()" title="Envoie la proposition en PDF au client (e-mail + espace client)">✉️ Envoyer au client</button>
         </div>
@@ -3336,6 +3337,18 @@
       await loadProjetConfig(); renderProjetDevis(currentProjetId);
       modeliserDansConfigurateur(true, j.configId, fen);
     } catch (e) { if (fen) fen.close(); showToast('Copie impossible : ' + (e.message || e), 'err'); }
+  }
+  // Bouton unique « Modifier la proposition » (à côté de « Créer le PDF ») : choisit tout seul quoi ouvrir selon le projet
+  function modifierPropositionAuto() {
+    if (!currentProjetId) return;
+    var ms = currentProjetMeubles || [];
+    if (currentManuel) return openManuelEditor();                                  // proposition saisie à la main
+    if (ms.length && equipeModele(ms[0])) {                                         // meuble déjà modélisé par l'équipe : on le rouvre
+      var i = Math.max(0, Math.min(_meubleIdx[currentProjetId] || 0, ms.length - 1));
+      return modeliserDansConfigurateur(true, ms[i].id);
+    }
+    if (ms.length) return modifierProposition(ms[0].id);                            // demande client : copie modifiable
+    if (confirm('Ce projet n\'a pas de meuble à modifier (demande reçue par le formulaire ou ancien format).\n\nOuvrir le configurateur pour modéliser le meuble de la proposition ?')) modeliserDansConfigurateur();
   }
   // ── Devis ferme (envoyé ou plus avancé) : le montant du projet, donc le chiffre d'affaires, ne bouge pas tout seul ; la mise à jour se fait ici, sur demande ──
   async function appliquerPrixAuMontant() {
@@ -6175,6 +6188,7 @@ function dedupeEls(els){
             <div class="doc-meta">${d.type} · ${d.uploade_par === 'client' ? 'Envoyé par le client' : 'Kobo Design'} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}${d.taille_kb ? ' · ' + formatSize(d.taille_kb) : ''}</div>
           </div>
           <a href="${d.signedUrl}" target="_blank" class="btn btn-ghost btn-sm">Télécharger</a>
+          ${d.type === 'Proposition' ? `<button class="btn btn-ghost btn-sm" title="Modifier le contenu de la proposition (meuble, éléments), puis recréer le PDF" onclick="modifierPropositionAuto()">✏️ Modifier</button>` : ''}
           <button class="btn btn-ghost btn-sm" title="Télécharge ce document et une fiche du projet, nommés A-TRAITER__… pour que Claude les traite" onclick="envoyerPourClaude('${d.id}')">→ Claude</button>
           ${/\.(jpe?g|png|webp|pdf)$/i.test(d.nom || '') ? `<button class="btn btn-ghost btn-sm" title="L'IA lit ce plan ou cette photo et propose un modèle du meuble (rien n'est enregistré avant ta validation)" onclick="iaPlanOuvrir('${d.id}')">✨ IA</button>` : ''}
           <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}','${d.url}')">Supprimer</button>
