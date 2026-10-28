@@ -1614,6 +1614,7 @@
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
         <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);">Proposition (à envoyer au client)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(26,26,26,.7);padding:0 4px;cursor:pointer;" title="Décoché : le PDF est créé sans les images 3D (aucun rendu n'est fabriqué)"><input type="checkbox" id="chk-rendus" checked onchange="rendusMemoriser()"> Avec les rendus 3D</label>
           <button class="btn btn-ghost btn-sm" id="btn-modif-prop" onclick="modifierPropositionAuto()" title="Modifier le contenu de la proposition : ajouter, retirer ou changer des éléments du meuble">✏️ Modifier la proposition</button>
           <button class="btn btn-primary btn-sm" id="btn-devis-pdf" onclick="openDevisSimplePdf()">📄 Créer le PDF (images + proposition)</button>
           <button class="btn btn-ghost btn-sm" id="btn-send-prop" onclick="openEnvoiProposition()" title="Envoie la proposition en PDF au client (e-mail + espace client)">✉️ Envoyer au client</button>
@@ -2755,19 +2756,20 @@
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
     var total = devisSimpleTotal();
+    var avecRendus = !document.getElementById('chk-rendus') || document.getElementById('chk-rendus').checked;   // case « Avec les rendus 3D »
     var multi = currentProjetMeubles.length > 1 && !(currentProjetRc && currentProjetRc.manuel);   // plusieurs meubles : descriptif de chaque meuble
     // meuble modélisé par l'équipe (un ou plusieurs) : proposition sans rendus, descriptif seulement
     var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !(currentProjetRc && currentProjetRc.manuel));
     var imgs = { ferme: '', ouvert: '', plan: '', vasque: '' }, helperMsg = '', verif = null;
     try {
       var isManuel = !!(currentProjetRc && currentProjetRc.manuel);
-      var j = (currentProjetRc && !isManuel && !sansRendus) ? await devisRendersFromHelper(currentProjetRc, w) : null;
-      if (isManuel) { imgs.ferme = (currentManuel.images || {}).ferme || ''; imgs.ouvert = (currentManuel.images || {}).ouvert || ''; }
+      var j = (currentProjetRc && !isManuel && !sansRendus && avecRendus) ? await devisRendersFromHelper(currentProjetRc, w) : null;
+      if (isManuel && avecRendus) { imgs.ferme = (currentManuel.images || {}).ferme || ''; imgs.ouvert = (currentManuel.images || {}).ouvert || ''; }
       if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; verif = j.verification || null; }
-      else if (!isManuel && !sansRendus) helperMsg = 'Assistant de rendus injoignable : PDF créé sans les images. 1) Vérifie que « Rendus Kōbō » tourne sur ce Mac. 2) Dans Chrome : clique sur le cadenas à gauche de l\'adresse → Paramètres du site → « Accès au réseau local » (ou « Applications sur l\'appareil ») → Autoriser, puis recharge la page et recommence.';
+      else if (!isManuel && !sansRendus && avecRendus) helperMsg = 'Assistant de rendus injoignable : PDF créé sans les images. 1) Vérifie que « Rendus Kōbō » tourne sur ce Mac. 2) Dans Chrome : clique sur le cadenas à gauche de l\'adresse → Paramètres du site → « Accès au réseau local » (ou « Applications sur l\'appareil ») → Autoriser, puis recharge la page et recommence.';
     } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
     var estManuel = !!(currentProjetRc && currentProjetRc.manuel);
-    if (!imgs.ferme && !estManuel && !sansRendus) {  // repli : images déjà ajoutées dans les documents du projet
+    if (!imgs.ferme && !estManuel && !sansRendus && avecRendus) {  // repli : images déjà ajoutées dans les documents du projet
       var { data: docs } = await sb.from('documents').select('nom, url').eq('projet_id', currentProjetId);
       for (var d of (docs || [])) {
         var n = (d.nom || '').toLowerCase();
@@ -2835,7 +2837,7 @@
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 05 56 04 01 81<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
       '<div class="obj"><h4>Objet</h4><h2>' + escHtml(CC.objet_titre) + '</h2><p>' + escHtml(CC.objet_sous_titre) + '</p>' + (CC.objet_texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(CC.objet_texte) + '</p>' : '') + '</div>' +
-      ((sansRendus || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
+      ((sansRendus || !avecRendus || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
       (CC.composition && propositionContenuDe() && propositionContenuDe().composition ? '<div class="compo"><h4>Composition' + (multi ? ' des meubles' : ' du meuble') + '</h4><ul>' + CC.composition.map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' : (multi ? '<div class="compo"><h4>Composition des meubles</h4><ul style="list-style:none;">' + currentProjetMeubles.map(function (m, mi) {
         var rcm = rcFromSdb(m), qm = null; try { qm = buildDevisQuantitiesFromConfig(m); } catch (e) { qm = {}; }
         var dm = devisSimpleDetails(rcm, qm), n1 = qm.doors_count || 0, n2 = qm.drawers_count || 0, t = [];
@@ -2844,9 +2846,9 @@
       }).join('') + '</ul></div>' : '')) +
       (CC.composition && propositionContenuDe() && propositionContenuDe().composition ? '' : multi ? '' : '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, (function () { var qq = currentDevisQuantities || {}, n1 = qq.doors_count || 0, n2 = qq.drawers_count || 0; var t = []; if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : '')); return t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir'; })(), det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>') + foot(1) + '</div>' +
       (pv.length ? '<div class="pg">' + head() + '<div class="obj"><h4>Salle de bain</h4><h2>Plan de travail et vasque</h2></div><div class="pvs">' + pv.map(function (x) {
-        var im2 = imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>');
+        var im2 = !avecRendus ? '' : (imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>'));
         return '<div class="pv">' + im2 + '<h3>' + escHtml(x.titre) + '</h3>' + (x.texture ? '<p class="tx"><b>Texture / finition :</b> ' + escHtml(x.texture) + '</p>' : '') + '<ul>' + x.specs.map(function (t) { return '<li>' + escHtml(t) + '</li>'; }).join('') + '</ul></div>';
-      }).join('') + '</div><p class="nc">Images non contractuelles.</p>' + foot(2) + '</div>' : '') +
+      }).join('') + '</div>' + (avecRendus ? '<p class="nc">Images non contractuelles.</p>' : '') + foot(2) + '</div>' : '') +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(Math.round(total * 20) / 100) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(Math.round(total * 120) / 100) + '</span></div></div>' +
       '<div class="cond"><h4>Conditions</h4><ul>' + (CC.conditions || []).map(function (x) { return '<li>' + mdGras(String(x).replace(/\{\{PAGE_MATIERES\}\}/g, nbPages)) + '</li>'; }).join('') +
@@ -3557,6 +3559,9 @@
     if (ms.length) return modifierProposition(ms[0].id);
     modeliserDansConfigurateur();
   }
+  // case « Avec les rendus 3D » : mémorisée par projet (par défaut cochée)
+  function rendusMemoriser() { try { var c = document.getElementById('chk-rendus'); if (c && currentProjetId) localStorage.setItem('kobo_rendus_' + currentProjetId, c.checked ? '1' : '0'); } catch (e) {} }
+  function rendusRestaurer() { try { var c = document.getElementById('chk-rendus'); if (c) c.checked = localStorage.getItem('kobo_rendus_' + currentProjetId) !== '0'; } catch (e) {} }
   // Bouton unique « Modifier la proposition » (à côté de « Créer le PDF ») : choisit tout seul quoi ouvrir selon le projet
   function modifierPropositionAuto() {
     if (!currentProjetId) return;
@@ -6038,6 +6043,7 @@ function dedupeEls(els){
   }
 
   async function renderProjetDevis(projetId) {
+    rendusRestaurer();
     const el = document.getElementById('pd-devis');
     el.innerHTML = 'Chargement…';
     if (!currentTarifsGlobaux) await preloadTarifsGlobaux();
