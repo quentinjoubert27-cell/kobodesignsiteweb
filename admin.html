@@ -1455,14 +1455,21 @@
 <div class="modal-overlay" id="modal-prop" style="z-index:2000;">
   <div class="modal" style="max-width:760px;">
     <h2 class="modal-title">Modifier la proposition</h2>
-    <p style="font-size:12.5px;color:rgba(26,26,26,.6);margin:-6px 0 12px;line-height:1.5;">Ajoute, retire ou change les lignes de la proposition. Le total devient le <b>montant du projet</b> (donc le chiffre d'affaires) et celui du prochain PDF. Une remise = une ligne avec un prix négatif.</p>
+    <div style="display:flex;gap:6px;margin:-4px 0 12px;"><button class="btn btn-primary btn-sm" type="button" id="pe-tab1" onclick="peOnglet(1)">Lignes et prix</button><button class="btn btn-ghost btn-sm" type="button" id="pe-tab2" onclick="peOnglet(2)">Textes de la proposition</button></div>
+    <div id="pe-p1">
+    <p style="font-size:12.5px;color:rgba(26,26,26,.6);margin:0 0 12px;line-height:1.5;">Ajoute, retire ou change les lignes de la proposition. Le total devient le <b>montant du projet</b> (donc le chiffre d'affaires) et celui du prochain PDF. Une remise = une ligne avec un prix négatif.</p>
     <div id="pe-lignes"></div>
     <div style="margin:8px 0 12px;"><button class="btn btn-ghost btn-sm" type="button" onclick="peAjouter()">+ Ajouter une ligne</button></div>
     <div style="display:flex;justify-content:flex-end;gap:22px;font-size:13px;margin-bottom:10px;"><div>Total HT <b id="pe-ht" style="font-size:16px;color:var(--accent);"></b></div><div style="color:rgba(26,26,26,.6);">TVA 20 % <span id="pe-tva"></span></div><div style="font-weight:700;">TTC <span id="pe-ttc"></span></div></div>
+    </div>
+    <div id="pe-p2" style="display:none;">
+      <p style="font-size:12.5px;color:rgba(26,26,26,.6);margin:0 0 10px;line-height:1.5;">Tous les textes qui apparaissent dans le PDF. Ce qui n'est pas modifié reste automatique (il suit le meuble). Pour effacer un texte, vide son champ.</p>
+      <div id="pe-textes"></div>
+    </div>
     <div id="pe-info" style="font-size:12px;color:rgba(26,26,26,.55);margin-bottom:8px;"></div>
     <div class="field"><label>Note interne (jamais envoyée au client)</label><textarea id="pe-note" rows="2" style="width:100%;padding:9px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;"></textarea></div>
     <div class="modal-actions" style="flex-wrap:wrap;justify-content:space-between;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" type="button" onclick="peMeubleConfigurateur()">🧱 Modifier le meuble (configurateur)</button><button class="btn btn-ghost btn-sm" type="button" id="pe-reset" style="color:#b91c1c;" onclick="peRevenirAuto()">↺ Revenir au calcul automatique</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" type="button" onclick="peMeubleConfigurateur()">🧱 Modifier le meuble (configurateur)</button><button class="btn btn-ghost btn-sm" type="button" id="pe-reset" style="color:#b91c1c;" onclick="peRevenirAuto()">↺ Tout remettre par défaut</button></div>
       <div style="display:flex;gap:8px;"><button class="btn btn-ghost" onclick="closeModal('modal-prop')">Annuler</button><button class="btn btn-primary" id="pe-save" onclick="peEnregistrer()">Enregistrer</button></div>
     </div>
   </div>
@@ -2778,6 +2785,7 @@
     var fr = function (d) { return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }); };
     var numDevis = 'PROP-' + now.getFullYear() + '-' + String(p.id || '').replace(/-/g, '').slice(0, 4).toUpperCase();
     var det0 = devisSimpleDetails(), objet = det0.caisson;
+    var emise = fr(now);
     var rows = devisSimpleFam.map(function (f) {
       return '<tr><td class="d"><b>' + escHtml(f.label) + '</b><div>' + escHtml(f.detail) + '</div></td><td class="n">' + formatCurrency(f.prix) + '</td></tr>';
     }).join('');
@@ -2794,8 +2802,14 @@
     }
     var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
     var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 05 56 04 01 81';
-    var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + fr(now) + '</div></div></div>'; };
+    var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + emise + '</div></div></div>'; };
     var pv = sansRendus ? [] : devisSimplePlanVasque(), nbPages = pv.length ? 4 : 3;
+    // textes de la proposition : valeurs par défaut, ou celles modifiées dans l'éditeur
+    var CC = propositionContenu({ p: p, cli: cli, cl: cl, estManuel: estManuel, multi: multi, sansRendus: sansRendus, pv: pv, nbPages: nbPages, det0: det0 }).c;
+    numDevis = CC.numero || numDevis;
+    if (CC.date) { var dd = new Date(CC.date + 'T12:00:00'); if (!isNaN(dd)) emise = fr(dd); }
+    cliLines = (CC.client || []).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
+    pv = pv.map(function (x) { var o2 = CC.pv && CC.pv[x.key]; return o2 ? Object.assign({}, x, { titre: o2.titre, texture: o2.texture, specs: o2.specs }) : x; });
     var foot = function (n) { return '<div class="foot"><span>' + legal + '</span><span>' + n + ' / ' + nbPages + '</span></div>'; };
     var html = '<!doctype html><meta charset="utf-8"><title>' + numDevis + ' – ' + escHtml(p.nom || '') + (cl ? ' – ' + escHtml(cl) : '') + '</title>' +
       '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"><style>' +
@@ -2820,28 +2834,22 @@
       '<div class="pg">' + head() +
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 05 56 04 01 81<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
-      '<div class="obj"><h4>Objet</h4><h2>' + escHtml((estManuel && currentManuel.titre) || p.nom || 'Meuble sur mesure') + '</h2><p>' + escHtml(multi ? currentProjetMeubles.length + ' meubles sur mesure' : objet) + '</p>' + (estManuel && currentManuel.texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(currentManuel.texte) + '</p>' : '') + '</div>' +
+      '<div class="obj"><h4>Objet</h4><h2>' + escHtml(CC.objet_titre) + '</h2><p>' + escHtml(CC.objet_sous_titre) + '</p>' + (CC.objet_texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(CC.objet_texte) + '</p>' : '') + '</div>' +
       ((sansRendus || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
-      (multi ? '<div class="compo"><h4>Composition des meubles</h4><ul style="list-style:none;">' + currentProjetMeubles.map(function (m, mi) {
+      (CC.composition && propositionContenuDe() && propositionContenuDe().composition ? '<div class="compo"><h4>Composition' + (multi ? ' des meubles' : ' du meuble') + '</h4><ul>' + CC.composition.map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' : (multi ? '<div class="compo"><h4>Composition des meubles</h4><ul style="list-style:none;">' + currentProjetMeubles.map(function (m, mi) {
         var rcm = rcFromSdb(m), qm = null; try { qm = buildDevisQuantitiesFromConfig(m); } catch (e) { qm = {}; }
         var dm = devisSimpleDetails(rcm, qm), n1 = qm.doors_count || 0, n2 = qm.drawers_count || 0, t = [];
         if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : ''));
         return '<li style="margin-bottom:3mm;"><b>' + escHtml(libelleMeuble(m, mi)) + '</b><br>' + escHtml(dm.caisson) + '<br>' + escHtml(t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir') + '<br>' + escHtml(dm.quincaillerie) + '</li>';
-      }).join('') + '</ul></div>' : '') +
-      (multi ? '' : '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, (function () { var qq = currentDevisQuantities || {}, n1 = qq.doors_count || 0, n2 = qq.drawers_count || 0; var t = []; if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : '')); return t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir'; })(), det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>') + foot(1) + '</div>' +
+      }).join('') + '</ul></div>' : '')) +
+      (CC.composition && propositionContenuDe() && propositionContenuDe().composition ? '' : multi ? '' : '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, (function () { var qq = currentDevisQuantities || {}, n1 = qq.doors_count || 0, n2 = qq.drawers_count || 0; var t = []; if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : '')); return t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir'; })(), det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>') + foot(1) + '</div>' +
       (pv.length ? '<div class="pg">' + head() + '<div class="obj"><h4>Salle de bain</h4><h2>Plan de travail et vasque</h2></div><div class="pvs">' + pv.map(function (x) {
         var im2 = imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>');
         return '<div class="pv">' + im2 + '<h3>' + escHtml(x.titre) + '</h3>' + (x.texture ? '<p class="tx"><b>Texture / finition :</b> ' + escHtml(x.texture) + '</p>' : '') + '<ul>' + x.specs.map(function (t) { return '<li>' + escHtml(t) + '</li>'; }).join('') + '</ul></div>';
       }).join('') + '</div><p class="nc">Images non contractuelles.</p>' + foot(2) + '</div>' : '') +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(Math.round(total * 20) / 100) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(Math.round(total * 120) / 100) + '</span></div></div>' +
-      '<div class="cond"><h4>Conditions</h4><ul>' +
-      '<li><b>Proposition non ferme</b> : elle ne devient ferme et définitive qu\'après validation avec le client (dimensions, aménagement, finitions).</li>' +
-      '<li><b>Livraison non comprise dans ce devis</b> : son coût sera confirmé dès communication du lieu de destination.</li>' +
-      '<li><b>Poignées</b> de portes et de tiroirs non comprises dans le prix.</li>' +
-      '<li>Les images présentées dans cette proposition sont <b>non contractuelles</b>.</li>' +
-      '<li><b>Matières</b> : nos meubles sont fabriqués en panneaux (mélaminé, MDF, laqué, stratifié, placage…) et non en bois massif ; le détail de chaque matière figure en page ' + nbPages + '. La matière et le décor définitifs sont choisis avec vous.</li>' +
-      '<li>Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.</li>' +
+      '<div class="cond"><h4>Conditions</h4><ul>' + (CC.conditions || []).map(function (x) { return '<li>' + mdGras(String(x).replace(/\{\{PAGE_MATIERES\}\}/g, nbPages)) + '</li>'; }).join('') +
       '</ul></div>' +
       foot(pv.length ? 3 : 2) + '</div>' +
       fichePageHtml(head(), foot(nbPages));
@@ -3367,6 +3375,49 @@
       modeliserDansConfigurateur(true, j.configId, fen);
     } catch (e) { if (fen) fen.close(); showToast('Copie impossible : ' + (e.message || e), 'err'); }
   }
+  // ── Textes de la proposition (PDF) modifiables : valeurs par défaut calculées, surcharges enregistrées dans raw_config.proposition.contenu ──
+  var COND_DEFAUT = [
+    '**Proposition non ferme** : elle ne devient ferme et définitive qu\'après validation avec le client (dimensions, aménagement, finitions).',
+    '**Livraison non comprise dans ce devis** : son coût sera confirmé dès communication du lieu de destination.',
+    '**Poignées** de portes et de tiroirs non comprises dans le prix.',
+    'Les images présentées dans cette proposition sont **non contractuelles**.',
+    '**Matières** : nos meubles sont fabriqués en panneaux (mélaminé, MDF, laqué, stratifié, placage…) et non en bois massif ; le détail de chaque matière figure en page {{PAGE_MATIERES}}. La matière et le décor définitifs sont choisis avec vous.',
+    'Délai de fabrication : 3 semaines à réception de l\'acompte. Solde avant envoi.'
+  ];
+  function mdGras(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }   // sans toucher aux apostrophes : même rendu que le texte d'origine
+  function propositionContenuDe() { var pr = currentProjetRc && currentProjetRc.proposition; var c = pr && pr.contenu; if (!c) c = ((currentProjetMeubles || []).map(function (m) { return m.raw_config && m.raw_config.proposition && m.raw_config.proposition.contenu; }).filter(Boolean)[0]); return c || null; }
+  // contexte commun à l'éditeur et au PDF : mêmes formules que le PDF
+  function propositionCtx() {
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var cli = allClients.find(function (c) { return c.id === p.client_id; }) || {};
+    var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
+    var estManuel = !!(currentProjetRc && currentProjetRc.manuel);
+    var multi = currentProjetMeubles.length > 1 && !estManuel;
+    var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !estManuel);
+    var pv = sansRendus ? [] : devisSimplePlanVasque();
+    return { p: p, cli: cli, cl: cl, estManuel: estManuel, multi: multi, sansRendus: sansRendus, pv: pv, nbPages: pv.length ? 4 : 3, det0: devisSimpleDetails() };
+  }
+  function propositionContenuDefauts(o) {
+    var qq = currentDevisQuantities || {}, n1 = qq.doors_count || 0, n2 = qq.drawers_count || 0, t = [];
+    if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : ''));
+    var pvd = {}; o.pv.forEach(function (x) { pvd[x.key] = { titre: x.titre, texture: x.texture || '', specs: (x.specs || []).filter(Boolean) }; });
+    return {
+      numero: 'PROP-' + new Date().getFullYear() + '-' + String(o.p.id || '').replace(/-/g, '').slice(0, 4).toUpperCase(),
+      date: '',
+      client: [o.cl, o.cli.societe, o.cli.email, o.cli.telephone, o.cli.code_postal ? 'Code postal : ' + o.cli.code_postal : ''].filter(Boolean),
+      objet_titre: (o.estManuel && currentManuel && currentManuel.titre) || o.p.nom || 'Meuble sur mesure',
+      objet_sous_titre: o.multi ? currentProjetMeubles.length + ' meubles sur mesure' : o.det0.caisson,
+      objet_texte: (o.estManuel && currentManuel && currentManuel.texte) || '',
+      composition: o.multi ? null : [o.det0.caisson, t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir', o.det0.quincaillerie].filter(Boolean),
+      conditions: COND_DEFAUT.slice(),
+      pv: pvd
+    };
+  }
+  function propositionContenu(o) {   // valeurs par défaut + surcharges enregistrées
+    var d = propositionContenuDefauts(o), ov = propositionContenuDe() || {}, c = Object.assign({}, d);
+    Object.keys(ov).forEach(function (k) { if (k === 'pv') { c.pv = Object.assign({}, d.pv); Object.keys(ov.pv || {}).forEach(function (key) { if (c.pv[key]) c.pv[key] = Object.assign({}, c.pv[key], ov.pv[key]); }); } else c[k] = ov[k]; });
+    return { c: c, d: d };
+  }
   // ── Éditeur de la proposition : lignes enregistrées avec le meuble (raw_config.proposition) ──
   var _peLignes = [], _peBase = null;
   function peLigneHtml(l, i) {
@@ -3394,6 +3445,44 @@
   function peMaj(i, champ, v) { if (_peLignes[i]) { _peLignes[i][champ] = (champ === 'nom' || champ === 'detail') ? v : v; peTotaux(); } }
   function peAjouter() { _peLignes.push({ nom: '', detail: '', qte: 1, pu: 0 }); peRender(); var ins = document.querySelectorAll('#pe-lignes input'); if (ins.length) ins[ins.length - 6].focus(); }
   function peSupprimer(i) { _peLignes.splice(i, 1); peRender(); }
+  var _peCtx = null, _peDef = null, _peLignesInit = '';
+  function peOnglet(n) {
+    document.getElementById('pe-p1').style.display = n === 1 ? '' : 'none'; document.getElementById('pe-p2').style.display = n === 2 ? '' : 'none';
+    document.getElementById('pe-tab1').className = 'btn btn-sm ' + (n === 1 ? 'btn-primary' : 'btn-ghost'); document.getElementById('pe-tab2').className = 'btn btn-sm ' + (n === 2 ? 'btn-primary' : 'btn-ghost');
+  }
+  function peChamp(id, lib, val, type, aide) {
+    var st = 'width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font:13px var(--font);';
+    var f = type === 'area' ? '<textarea id="' + id + '" rows="' + (arguments[5] || 3) + '" style="' + st + '">' + escHtml(val) + '</textarea>' : '<input id="' + id + '" type="' + (type || 'text') + '" value="' + escHtml(val) + '" style="' + st + '">';
+    return '<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(26,26,26,.5);margin-bottom:3px;">' + lib + '</div>' + f + (aide ? '<div style="font-size:11px;color:rgba(26,26,26,.5);margin-top:2px;">' + aide + '</div>' : '') + '</div>';
+  }
+  function peTextesRender(c, d) {
+    var h = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' + peChamp('pe-c-numero', 'Numéro de la proposition', c.numero, 'text') + peChamp('pe-c-date', 'Date d\'émission', c.date || '', 'date', 'Vide = date du jour à la création du PDF') + '</div>' +
+      peChamp('pe-c-client', 'Client (une ligne par information, la première en gras)', (c.client || []).join('\n'), 'area', '', 4) +
+      peChamp('pe-c-titre', 'Objet — titre', c.objet_titre, 'text') + peChamp('pe-c-sous', 'Objet — sous-titre', c.objet_sous_titre, 'text') + peChamp('pe-c-texte', 'Objet — texte libre (facultatif)', c.objet_texte || '', 'area', '', 3) +
+      peChamp('pe-c-compo', 'Composition du meuble (une ligne par point)', (c.composition || d.composition || []).join('\n'), 'area', d.composition ? '' : 'Plusieurs meubles : la composition automatique détaille chaque meuble ; si tu modifies ce champ, elle est remplacée par ta liste.', 4) +
+      peChamp('pe-c-cond', 'Conditions (une ligne par condition)', (c.conditions || []).join('\n'), 'area', 'Mets **du texte** entre doubles étoiles pour le passer en gras. {{PAGE_MATIERES}} = numéro de la page des matières.', 7);
+    Object.keys(c.pv || {}).forEach(function (k) {
+      var x = c.pv[k];
+      h += '<div style="margin:6px 0 10px;padding:10px 12px;border:1px solid rgba(26,26,26,.1);border-radius:8px;"><div style="font-size:12px;font-weight:700;margin-bottom:6px;">Page « ' + (k === 'vasque' ? 'Vasque' : 'Plan de travail') + ' »</div>' +
+        peChamp('pe-pv-' + k + '-titre', 'Titre', x.titre, 'text') + peChamp('pe-pv-' + k + '-tex', 'Texture / finition', x.texture || '', 'text') + peChamp('pe-pv-' + k + '-specs', 'Caractéristiques (une ligne par point)', (x.specs || []).join('\n'), 'area', '', 3) + '</div>';
+    });
+    document.getElementById('pe-textes').innerHTML = h;
+  }
+  function peTextesLire() {   // valeurs saisies
+    var g = function (id) { var e = document.getElementById(id); return e ? e.value : ''; }, lines = function (id) { return g(id).split('\n').map(function (x) { return x.trim(); }).filter(Boolean); };
+    var c = { numero: g('pe-c-numero').trim(), date: g('pe-c-date'), client: lines('pe-c-client'), objet_titre: g('pe-c-titre').trim(), objet_sous_titre: g('pe-c-sous').trim(), objet_texte: g('pe-c-texte').trim(), conditions: lines('pe-c-cond'), pv: {} };
+    var comp = lines('pe-c-compo'); c.composition = comp;
+    Object.keys((_peDef && _peDef.pv) || {}).forEach(function (k) { c.pv[k] = { titre: g('pe-pv-' + k + '-titre').trim(), texture: g('pe-pv-' + k + '-tex').trim(), specs: lines('pe-pv-' + k + '-specs') }; });
+    return c;
+  }
+  function peDiff(c, d) {   // ne garde que ce qui diffère de l'automatique
+    var out = {}, same = function (a, b) { return JSON.stringify(a == null ? '' : a) === JSON.stringify(b == null ? '' : b); };
+    ['numero', 'date', 'client', 'objet_titre', 'objet_sous_titre', 'objet_texte', 'conditions'].forEach(function (k) { if (!same(c[k], d[k])) out[k] = c[k]; });
+    if (d.composition ? !same(c.composition, d.composition) : c.composition.length) out.composition = c.composition;
+    var pvo = {}; Object.keys(c.pv || {}).forEach(function (k) { var a = c.pv[k], b = (d.pv || {})[k] || {}, o = {}; ['titre', 'texture'].forEach(function (f) { if (!same(a[f], b[f])) o[f] = a[f]; }); if (!same(a.specs, b.specs)) o.specs = a.specs; if (Object.keys(o).length) pvo[k] = o; });
+    if (Object.keys(pvo).length) out.pv = pvo;
+    return out;
+  }
   function openPropEditor() {
     if (!currentProjetId) return;
     var ms = currentProjetMeubles || []; if (!ms.length) return showToast('Aucune configuration à chiffrer pour ce projet', 'err');
@@ -3407,33 +3496,47 @@
       _peLignes = [{ nom: 'Meuble sur mesure', detail: 'Fourniture et fabrication', qte: 1, pu: Math.round(actuel * 100) / 100 }];
     }
     document.getElementById('pe-note').value = (existante && existante.note) || '';
-    document.getElementById('pe-reset').style.display = existante ? '' : 'none';
+    document.getElementById('pe-reset').style.display = (existante || propositionContenuDe()) ? '' : 'none';
     document.getElementById('pe-info').textContent = existante ? 'Proposition déjà modifiée' + (existante.maj ? ' le ' + new Date(existante.maj).toLocaleDateString('fr-FR') : '') + '. Montant actuel du projet : ' + formatCurrency(parseFloat(pr.montant) || 0) + '.' : 'Les lignes démarrent au prix actuel (' + formatCurrency(_peLignes[0].pu) + ' HT) : découpe-les, ajoute ou retire ce que tu veux.';
+    _peLignesInit = JSON.stringify(_peLignes);
+    _peCtx = propositionCtx();
+    var pc = propositionContenu(_peCtx); _peDef = pc.d;
+    peTextesRender(pc.c, pc.d);
+    peOnglet(1);
     peRender();
     document.getElementById('modal-prop').classList.add('open');
   }
   async function peEnregistrer() {
     var lignes = _peLignes.map(function (l) { return { nom: String(l.nom || '').trim(), detail: String(l.detail || '').trim(), qte: parseFloat(l.qte) || 0, pu: parseFloat(l.pu) || 0 }; }).filter(function (l) { return l.nom || l.pu; });
-    if (!lignes.length) return showToast('Ajoute au moins une ligne (ou clique sur « Revenir au calcul automatique »)', 'err');
     if (lignes.some(function (l) { return !l.nom; })) return showToast('Chaque ligne doit avoir une désignation', 'err');
-    var total = propositionTotal({ lignes: lignes });
     var pr = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     var avant = parseFloat(pr.montant) || 0;
     var rc = Object.assign({}, _peBase.raw_config || {});
-    var ancienne = propositionDe(rc);
-    var hist = (ancienne && ancienne.historique || []).concat([{ date: new Date().toISOString(), avant: avant, apres: total }]).slice(-30);
-    rc.proposition = { lignes: lignes, note: document.getElementById('pe-note').value.trim(), maj: new Date().toISOString(), historique: hist };
+    var ancienne = rc.proposition || {};
+    var lignesChangees = JSON.stringify(_peLignes) !== _peLignesInit;
+    var garderLignes = lignes.length && (propositionDe(rc) || lignesChangees);   // sans changement sur les lignes, le prix reste calculé automatiquement
+    var contenu = peDiff(peTextesLire(), _peDef);
+    var note = document.getElementById('pe-note').value.trim();
+    var total = garderLignes ? propositionTotal({ lignes: lignes }) : null;
+    var prop = { maj: new Date().toISOString() };
+    if (garderLignes) { prop.lignes = lignes; prop.historique = (ancienne.historique || []).concat([{ date: new Date().toISOString(), avant: avant, apres: total }]).slice(-30); }
+    else if (ancienne.historique) prop.historique = ancienne.historique;
+    if (Object.keys(contenu).length) prop.contenu = contenu;
+    if (note) prop.note = note;
+    if (!garderLignes && !prop.contenu && !note) delete rc.proposition; else rc.proposition = prop;
     var btn = document.getElementById('pe-save'); btn.disabled = true;
     try {
       var r1 = await sb.from('configs_sdb').update({ raw_config: rc }).eq('id', _peBase.id);
       if (r1.error) throw new Error(r1.error.message);
-      var r2 = await sb.from('projets').update({ montant: total }).eq('id', currentProjetId);   // le prix de la proposition est le montant du projet, quel que soit le statut
-      if (r2.error) throw new Error(r2.error.message);
-      pr.montant = total;
-      if (Math.abs(avant - total) > 0.004) logPrix('Proposition modifiée : ' + (avant ? formatCurrency(avant) : '—') + ' → ' + formatCurrency(total) + ' HT (' + lignes.length + ' ligne' + (lignes.length > 1 ? 's' : '') + ')');
+      if (garderLignes) {
+        var r2 = await sb.from('projets').update({ montant: total }).eq('id', currentProjetId);   // le prix de la proposition est le montant du projet, quel que soit le statut
+        if (r2.error) throw new Error(r2.error.message);
+        pr.montant = total;
+        if (Math.abs(avant - total) > 0.004) logPrix('Proposition modifiée : ' + (avant ? formatCurrency(avant) : '—') + ' → ' + formatCurrency(total) + ' HT (' + lignes.length + ' ligne' + (lignes.length > 1 ? 's' : '') + ')');
+      }
       closeModal('modal-prop');
-      showToast('Proposition enregistrée : ' + formatCurrency(total) + ' HT (montant du projet mis à jour)');
-      var m = document.getElementById('pd-montant'); if (m) m.value = total;
+      showToast('Proposition enregistrée' + (garderLignes ? ' : ' + formatCurrency(total) + ' HT (montant du projet mis à jour)' : ' (textes) — le prix reste calculé automatiquement'));
+      if (garderLignes) { var m = document.getElementById('pd-montant'); if (m) m.value = total; }
       await renderProjetDevis(currentProjetId);
     } catch (e) { showToast('Enregistrement impossible : ' + (e.message || e), 'err'); }
     btn.disabled = false;
