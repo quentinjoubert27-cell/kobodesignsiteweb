@@ -1451,6 +1451,23 @@
   </div>
 </div>
 
+<!-- Éditeur de proposition : lignes (ajouter / supprimer / modifier) ; le total devient le montant du projet -->
+<div class="modal-overlay" id="modal-prop" style="z-index:2000;">
+  <div class="modal" style="max-width:760px;">
+    <h2 class="modal-title">Modifier la proposition</h2>
+    <p style="font-size:12.5px;color:rgba(26,26,26,.6);margin:-6px 0 12px;line-height:1.5;">Ajoute, retire ou change les lignes de la proposition. Le total devient le <b>montant du projet</b> (donc le chiffre d'affaires) et celui du prochain PDF. Une remise = une ligne avec un prix négatif.</p>
+    <div id="pe-lignes"></div>
+    <div style="margin:8px 0 12px;"><button class="btn btn-ghost btn-sm" type="button" onclick="peAjouter()">+ Ajouter une ligne</button></div>
+    <div style="display:flex;justify-content:flex-end;gap:22px;font-size:13px;margin-bottom:10px;"><div>Total HT <b id="pe-ht" style="font-size:16px;color:var(--accent);"></b></div><div style="color:rgba(26,26,26,.6);">TVA 20 % <span id="pe-tva"></span></div><div style="font-weight:700;">TTC <span id="pe-ttc"></span></div></div>
+    <div id="pe-info" style="font-size:12px;color:rgba(26,26,26,.55);margin-bottom:8px;"></div>
+    <div class="field"><label>Note interne (jamais envoyée au client)</label><textarea id="pe-note" rows="2" style="width:100%;padding:9px 12px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:13px;"></textarea></div>
+    <div class="modal-actions" style="flex-wrap:wrap;justify-content:space-between;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" type="button" onclick="peMeubleConfigurateur()">🧱 Modifier le meuble (configurateur)</button><button class="btn btn-ghost btn-sm" type="button" id="pe-reset" style="color:#b91c1c;" onclick="peRevenirAuto()">↺ Revenir au calcul automatique</button></div>
+      <div style="display:flex;gap:8px;"><button class="btn btn-ghost" onclick="closeModal('modal-prop')">Annuler</button><button class="btn btn-primary" id="pe-save" onclick="peEnregistrer()">Enregistrer</button></div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-elements" style="z-index:2000;">
   <div class="modal" style="max-width:640px;">
     <h2 class="modal-title">Modifier les éléments du meuble</h2>
@@ -2508,9 +2525,14 @@
     var prev = {}; (devisSimpleFam || []).forEach(function (f) { if (f.edited) prev[f.id] = f.prix; });
     // Proposition : un seul prix final (le détail par poste n'apparaît que dans le devis)
     var totalCalc = Math.round(prix.total * 100) / 100;
+    var _prop = propositionDuProjet();
+    if (_prop) {   // proposition modifiée : une ligne par poste (modifiables dans l'éditeur de proposition)
+      devisSimpleFam = _prop.lignes.map(function (l, i) { return { id: 'l' + i, label: l.nom || 'Ligne', detail: ((parseFloat(l.qte) || 0) !== 1 ? (parseFloat(l.qte) || 0) + ' × ' + formatCurrency(parseFloat(l.pu) || 0) + (l.detail ? ' — ' : '') : '') + (l.detail || ''), prix: Math.round((parseFloat(l.qte) || 0) * (parseFloat(l.pu) || 0) * 100) / 100, edited: false, calcPrix: 0, fige: true }; });
+    } else
     devisSimpleFam = [{ id: 'total', label: 'Meuble sur mesure', detail: 'Fourniture et fabrication', prix: prev.total != null ? prev.total : totalCalc, edited: prev.total != null, calcPrix: totalCalc, loggedPrix: prev.total != null ? prev.total : null }];
     var row = 'display:grid;grid-template-columns:1.2fr 2fr 110px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(26,26,26,.08);';
     el.innerHTML = devisSimpleFam.map(function (f) {
+      if (f.fige) return '<div style="' + row + '"><div style="font-size:13px;font-weight:700;">' + escHtml(f.label) + '</div><div style="font-size:12px;color:rgba(26,26,26,.6);">' + escHtml(f.detail) + '</div><div style="text-align:right;font-weight:700;font-size:13px;">' + formatCurrency(f.prix) + '</div></div>';
       return '<div style="' + row + '"><div style="font-size:13px;font-weight:700;">' + escHtml(f.label) + '</div><div style="font-size:12px;color:rgba(26,26,26,.6);">' + escHtml(f.detail) + '</div>' +
         '<div style="display:flex;align-items:center;gap:4px;"><input type="number" step="0.01" min="0" value="' + f.prix + '" data-fam="' + f.id + '" oninput="devisSimpleEdit(this)" onchange="devisSimpleLog(this)" style="width:84px;padding:7px 8px;border:1.5px solid rgba(26,26,26,.14);border-radius:7px;font-family:var(--font);font-size:13px;text-align:right;"/> €</div></div>';
     }).join('') + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,26,26,.5);">Total HT</div><div id="pd-devis-simple-total" style="font-size:18px;font-weight:800;color:var(--accent);"></div></div>' +
@@ -2598,7 +2620,7 @@
       const { data: { session } } = await sb.auth.getSession();
       var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
         body: JSON.stringify({ action: 'rediger-proposition', projet_id: currentProjetId, consigne: document.getElementById('ep-ia-consigne').value, brouillon: _epAvantIA,
-          prix_ht: (typeof devisSimpleFam !== 'undefined' && devisSimpleFam && devisSimpleFam[0]) ? devisSimpleFam[0].prix : 0 }) });
+          prix_ht: (typeof devisSimpleFam !== 'undefined' && devisSimpleFam && devisSimpleFam.length) ? Math.round(devisSimpleFam.reduce(function (t, f) { return t + (f.prix || 0); }, 0) * 100) / 100 : 0 }) });
       var j = await r.json().catch(function () { return {}; });
       if (!r.ok) throw new Error(j.error || ('Erreur ' + r.status));
       ta.value = j.message;
@@ -2941,8 +2963,14 @@
 
   // Calcule le prix automatiquement à partir de la base de tarifs globale — pas de saisie possible ici.
   // Prix du projet = méthode tableur (seule méthode de calcul)
+  // ── Proposition modifiée à la main : lignes (désignation, détail, quantité, prix unitaire HT) enregistrées avec le meuble ; leur total remplace le calcul automatique ──
+  function propositionTotal(p) { return Math.round(((p && p.lignes) || []).reduce(function (s, l) { return s + (parseFloat(l.qte) || 0) * (parseFloat(l.pu) || 0); }, 0) * 100) / 100; }
+  function propositionDe(rc) { var p = rc && rc.proposition; return p && Array.isArray(p.lignes) && p.lignes.length ? p : null; }
+  function propositionDuProjet() { return propositionDe(currentProjetRc) || (currentProjetMeubles || []).map(function (m) { return propositionDe(m.raw_config); }).filter(Boolean)[0] || null; }
   function computeDevisAutoPrice() {
     if (!currentProjetRc) return null;
+    var _pp = propositionDuProjet();
+    if (_pp) return { cost_revient: 0, prix_vente: propositionTotal(_pp), missing_materials: [], fixe: true, proposition: true };
     if (currentProjetRc.manuel && parseFloat(currentProjetRc.manuel.prix_ht) > 0) return { cost_revient: 0, prix_vente: Math.round(parseFloat(currentProjetRc.manuel.prix_ht) * 100) / 100, missing_materials: [], fixe: true };   // prix saisi à la main : aucun calcul
     if (currentProjetMeubles.length > 1 && !currentProjetRc.manuel) {   // plusieurs meubles : le prix du projet est la somme des meubles
       var cout = 0, vente = 0, parts = [];
@@ -2975,7 +3003,8 @@
     var price = computeDevisAutoPrice();
     if (!price) { resultEl.textContent = ''; return; }
     try { renderDevisSimple(); } catch (e) { console.warn('devis simplifié', e); }
-    if (price.fixe) resultEl.innerHTML = '<span style="color:var(--accent)">Prix saisi à la main : ' + price.prix_vente.toFixed(2) + ' € HT</span> <span style="font-weight:400;font-size:12px;color:rgba(26,26,26,.55);">(aucun calcul automatique)</span>';
+    if (price.proposition) resultEl.innerHTML = '<span style="color:var(--accent)">Prix de la proposition : ' + price.prix_vente.toFixed(2) + ' € HT</span> <span style="font-weight:400;font-size:12px;color:rgba(26,26,26,.55);">(proposition modifiée : ses lignes remplacent le calcul automatique)</span>';
+    else if (price.fixe) resultEl.innerHTML = '<span style="color:var(--accent)">Prix saisi à la main : ' + price.prix_vente.toFixed(2) + ' € HT</span> <span style="font-weight:400;font-size:12px;color:rgba(26,26,26,.55);">(aucun calcul automatique)</span>';
     else if (price.multi) resultEl.innerHTML = 'Total des ' + price.multi + ' meubles — coût : ' + price.cost_revient.toFixed(2) + ' € · <span style="color:var(--accent)">Prix de vente HT du projet : ' + price.prix_vente.toFixed(2) + ' €</span>';
     else resultEl.innerHTML = 'Coût de fabrication : ' + price.cost_revient.toFixed(2) + ' € · ' +
       '<span style="color:var(--accent)">Prix de vente HT : ' + price.prix_vente.toFixed(2) + ' €</span>';
@@ -3295,8 +3324,8 @@
   function meubleBarHtml(projetId, idx) {
     var ms = currentProjetMeubles;
     if (ms.length && !equipeModele(ms[0])) {   // meuble de la demande du client : on le copie pour pouvoir tout modifier (la demande d'origine reste intacte)
-      return '<div style="margin-bottom:12px;padding:10px 12px;background:rgba(26,26,26,.03);border-radius:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><div style="font-size:12px;color:rgba(26,26,26,.65);flex:1;min-width:220px;line-height:1.5;">Meuble de la demande du client. Pour <b>ajouter, retirer ou changer</b> des éléments, crée une copie modifiable : elle devient la proposition et le prix se recalcule ; la demande du client reste intacte.</div>' +
-        '<button class="btn btn-primary btn-sm" onclick="modifierProposition(\'' + ms[0].id + '\')">✏️ Modifier la proposition</button></div>';
+      return '<div style="margin-bottom:12px;padding:10px 12px;background:rgba(26,26,26,.03);border-radius:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><div style="font-size:12px;color:rgba(26,26,26,.65);flex:1;min-width:220px;line-height:1.5;">Meuble de la demande du client. Pour <b>ajouter, retirer ou changer</b> des éléments du meuble (caissons, portes, tiroirs…), crée une copie modifiable : elle remplace la demande dans la proposition et le prix se recalcule ; la demande du client reste intacte. (Pour modifier les <b>lignes</b> et le prix de la proposition : bouton « Modifier la proposition » plus bas.)</div>' +
+        '<button class="btn btn-ghost btn-sm" onclick="modifierProposition(\'' + ms[0].id + '\')">🧱 Modifier le meuble (copie modifiable)</button></div>';
     }
     if (!ms.length) return '';
     var btn = function (i) {
@@ -3338,16 +3367,99 @@
       modeliserDansConfigurateur(true, j.configId, fen);
     } catch (e) { if (fen) fen.close(); showToast('Copie impossible : ' + (e.message || e), 'err'); }
   }
+  // ── Éditeur de la proposition : lignes enregistrées avec le meuble (raw_config.proposition) ──
+  var _peLignes = [], _peBase = null;
+  function peLigneHtml(l, i) {
+    var inp = 'padding:7px 8px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font:13px var(--font);width:100%;box-sizing:border-box;';
+    return '<div style="display:grid;grid-template-columns:1.4fr 1.6fr 64px 96px 84px 30px;gap:8px;align-items:center;margin-bottom:6px;">' +
+      '<input style="' + inp + '" placeholder="Désignation" value="' + escHtml(l.nom || '') + '" oninput="peMaj(' + i + ',\'nom\',this.value)">' +
+      '<input style="' + inp + '" placeholder="Détail (facultatif)" value="' + escHtml(l.detail || '') + '" oninput="peMaj(' + i + ',\'detail\',this.value)">' +
+      '<input style="' + inp + '" type="number" step="0.5" value="' + (l.qte == null ? 1 : l.qte) + '" oninput="peMaj(' + i + ',\'qte\',this.value)" title="Quantité">' +
+      '<input style="' + inp + '" type="number" step="0.01" value="' + (l.pu == null ? 0 : l.pu) + '" oninput="peMaj(' + i + ',\'pu\',this.value)" title="Prix unitaire HT">' +
+      '<div id="pe-t' + i + '" style="text-align:right;font-weight:700;font-size:13px;"></div>' +
+      '<button class="btn btn-ghost btn-sm" type="button" style="padding:4px 8px;color:#b91c1c;" onclick="peSupprimer(' + i + ')" title="Supprimer la ligne">×</button></div>';
+  }
+  function peRender() {
+    var head = '<div style="display:grid;grid-template-columns:1.4fr 1.6fr 64px 96px 84px 30px;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,26,26,.45);margin-bottom:4px;"><div>Désignation</div><div>Détail</div><div>Qté</div><div>Prix unit. HT</div><div style="text-align:right;">Total</div><div></div></div>';
+    document.getElementById('pe-lignes').innerHTML = head + _peLignes.map(peLigneHtml).join('');
+    peTotaux();
+  }
+  function peTotaux() {
+    _peLignes.forEach(function (l, i) { var e = document.getElementById('pe-t' + i); if (e) e.textContent = formatCurrency(Math.round((parseFloat(l.qte) || 0) * (parseFloat(l.pu) || 0) * 100) / 100); });
+    var t = propositionTotal({ lignes: _peLignes });
+    document.getElementById('pe-ht').textContent = formatCurrency(t);
+    document.getElementById('pe-tva').textContent = formatCurrency(Math.round(t * 20) / 100);
+    document.getElementById('pe-ttc').textContent = formatCurrency(Math.round(t * 120) / 100);
+  }
+  function peMaj(i, champ, v) { if (_peLignes[i]) { _peLignes[i][champ] = (champ === 'nom' || champ === 'detail') ? v : v; peTotaux(); } }
+  function peAjouter() { _peLignes.push({ nom: '', detail: '', qte: 1, pu: 0 }); peRender(); var ins = document.querySelectorAll('#pe-lignes input'); if (ins.length) ins[ins.length - 6].focus(); }
+  function peSupprimer(i) { _peLignes.splice(i, 1); peRender(); }
+  function openPropEditor() {
+    if (!currentProjetId) return;
+    var ms = currentProjetMeubles || []; if (!ms.length) return showToast('Aucune configuration à chiffrer pour ce projet', 'err');
+    _peBase = ms[0];
+    var pr = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var existante = propositionDuProjet();
+    if (existante) _peLignes = JSON.parse(JSON.stringify(existante.lignes));
+    else {   // première ouverture : une seule ligne au prix actuel (calculé, ou montant du projet s'il est déjà figé)
+      var prix = computeDevisAutoPrice(), actuel = prix ? prix.prix_vente : 0;
+      if (STATUTS_FERMES.indexOf(pr.statut) >= 0 && parseFloat(pr.montant) > 0) actuel = parseFloat(pr.montant);
+      _peLignes = [{ nom: 'Meuble sur mesure', detail: 'Fourniture et fabrication', qte: 1, pu: Math.round(actuel * 100) / 100 }];
+    }
+    document.getElementById('pe-note').value = (existante && existante.note) || '';
+    document.getElementById('pe-reset').style.display = existante ? '' : 'none';
+    document.getElementById('pe-info').textContent = existante ? 'Proposition déjà modifiée' + (existante.maj ? ' le ' + new Date(existante.maj).toLocaleDateString('fr-FR') : '') + '. Montant actuel du projet : ' + formatCurrency(parseFloat(pr.montant) || 0) + '.' : 'Les lignes démarrent au prix actuel (' + formatCurrency(_peLignes[0].pu) + ' HT) : découpe-les, ajoute ou retire ce que tu veux.';
+    peRender();
+    document.getElementById('modal-prop').classList.add('open');
+  }
+  async function peEnregistrer() {
+    var lignes = _peLignes.map(function (l) { return { nom: String(l.nom || '').trim(), detail: String(l.detail || '').trim(), qte: parseFloat(l.qte) || 0, pu: parseFloat(l.pu) || 0 }; }).filter(function (l) { return l.nom || l.pu; });
+    if (!lignes.length) return showToast('Ajoute au moins une ligne (ou clique sur « Revenir au calcul automatique »)', 'err');
+    if (lignes.some(function (l) { return !l.nom; })) return showToast('Chaque ligne doit avoir une désignation', 'err');
+    var total = propositionTotal({ lignes: lignes });
+    var pr = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var avant = parseFloat(pr.montant) || 0;
+    var rc = Object.assign({}, _peBase.raw_config || {});
+    var ancienne = propositionDe(rc);
+    var hist = (ancienne && ancienne.historique || []).concat([{ date: new Date().toISOString(), avant: avant, apres: total }]).slice(-30);
+    rc.proposition = { lignes: lignes, note: document.getElementById('pe-note').value.trim(), maj: new Date().toISOString(), historique: hist };
+    var btn = document.getElementById('pe-save'); btn.disabled = true;
+    try {
+      var r1 = await sb.from('configs_sdb').update({ raw_config: rc }).eq('id', _peBase.id);
+      if (r1.error) throw new Error(r1.error.message);
+      var r2 = await sb.from('projets').update({ montant: total }).eq('id', currentProjetId);   // le prix de la proposition est le montant du projet, quel que soit le statut
+      if (r2.error) throw new Error(r2.error.message);
+      pr.montant = total;
+      if (Math.abs(avant - total) > 0.004) logPrix('Proposition modifiée : ' + (avant ? formatCurrency(avant) : '—') + ' → ' + formatCurrency(total) + ' HT (' + lignes.length + ' ligne' + (lignes.length > 1 ? 's' : '') + ')');
+      closeModal('modal-prop');
+      showToast('Proposition enregistrée : ' + formatCurrency(total) + ' HT (montant du projet mis à jour)');
+      var m = document.getElementById('pd-montant'); if (m) m.value = total;
+      await renderProjetDevis(currentProjetId);
+    } catch (e) { showToast('Enregistrement impossible : ' + (e.message || e), 'err'); }
+    btn.disabled = false;
+  }
+  async function peRevenirAuto() {
+    if (!_peBase) return;
+    if (!confirm('Revenir au calcul automatique ?\n\nLes lignes de la proposition sont supprimées ; le prix redevient celui calculé à partir du meuble.')) return;
+    var rc = Object.assign({}, _peBase.raw_config || {}); delete rc.proposition;
+    var r = await sb.from('configs_sdb').update({ raw_config: rc }).eq('id', _peBase.id);
+    if (r.error) return showToast('Impossible : ' + r.error.message, 'err');
+    closeModal('modal-prop'); showToast('Retour au calcul automatique');
+    await renderProjetDevis(currentProjetId);
+  }
+  function peMeubleConfigurateur() {   // modifier la structure du meuble (portes, caissons, éléments…) dans le configurateur
+    closeModal('modal-prop');
+    var ms = currentProjetMeubles || [];
+    if (ms.length && equipeModele(ms[0])) { var i = Math.max(0, Math.min(_meubleIdx[currentProjetId] || 0, ms.length - 1)); return modeliserDansConfigurateur(true, ms[i].id); }
+    if (ms.length) return modifierProposition(ms[0].id);
+    modeliserDansConfigurateur();
+  }
   // Bouton unique « Modifier la proposition » (à côté de « Créer le PDF ») : choisit tout seul quoi ouvrir selon le projet
   function modifierPropositionAuto() {
     if (!currentProjetId) return;
     var ms = currentProjetMeubles || [];
     if (currentManuel) return openManuelEditor();                                  // proposition saisie à la main
-    if (ms.length && equipeModele(ms[0])) {                                         // meuble déjà modélisé par l'équipe : on le rouvre
-      var i = Math.max(0, Math.min(_meubleIdx[currentProjetId] || 0, ms.length - 1));
-      return modeliserDansConfigurateur(true, ms[i].id);
-    }
-    if (ms.length) return modifierProposition(ms[0].id);                            // demande client : copie modifiable
+    if (ms.length) return openPropEditor();                                         // lignes de la proposition (le meuble se modifie depuis l'éditeur)
     if (confirm('Ce projet n\'a pas de meuble à modifier (demande reçue par le formulaire ou ancien format).\n\nOuvrir le configurateur pour modéliser le meuble de la proposition ?')) modeliserDansConfigurateur();
   }
   // ── Devis ferme (envoyé ou plus avancé) : le montant du projet, donc le chiffre d'affaires, ne bouge pas tout seul ; la mise à jour se fait ici, sur demande ──
@@ -4123,11 +4235,11 @@
   // colonnes des configurations sans l'image d'aperçu (la plus lourde) : pour les listes et les calculs
   var CFG_SDB_LISTE = 'id,created_at,prenom,email,message,type,decouverte,projet_id,telephone,code_postal,meuble_l,meuble_h,meuble_p,meuble_mat,plan_l,plan_p,plan_ep,plan_mat,nb_vasques,vasque_w,vasque_d,vasque_label,nb_tablettes,nb_separateurs,nb_portes,nb_tiroirs';
   // pour le calcul des montants (refait à chaque ouverture du tableau de bord) : seulement les morceaux du JSON utiles au prix, sans l'image d'aperçu ni la liste technique des caissons
-  var CFG_SDB_PRIX = 'id,projet_id,decouverte,created_at,meuble_l,meuble_h,meuble_p,meuble_mat,elements,rc_meuble:raw_config->meuble,rc_elements:raw_config->elements,rc_tvSide:raw_config->tvSide,rc_caisson2:raw_config->caisson2,rc_plan:raw_config->plan,rc_vasques:raw_config->vasques,rc_ov:raw_config->tableur_overrides,rc_ft:raw_config->furniture_type';
+  var CFG_SDB_PRIX = 'id,projet_id,decouverte,created_at,meuble_l,meuble_h,meuble_p,meuble_mat,elements,rc_meuble:raw_config->meuble,rc_prop:raw_config->proposition,rc_elements:raw_config->elements,rc_tvSide:raw_config->tvSide,rc_caisson2:raw_config->caisson2,rc_plan:raw_config->plan,rc_vasques:raw_config->vasques,rc_ov:raw_config->tableur_overrides,rc_ft:raw_config->furniture_type';
   function cfgPrixRow(c) {
     var rc = {};
     if (c.rc_ft != null) rc.furniture_type = c.rc_ft; if (c.rc_meuble != null) rc.meuble = c.rc_meuble; if (c.rc_elements != null) rc.elements = c.rc_elements;
-    if (c.rc_tvSide != null) rc.tvSide = c.rc_tvSide; if (c.rc_caisson2 != null) rc.caisson2 = c.rc_caisson2; if (c.rc_plan != null) rc.plan = c.rc_plan;
+    if (c.rc_prop != null) rc.proposition = c.rc_prop; if (c.rc_tvSide != null) rc.tvSide = c.rc_tvSide; if (c.rc_caisson2 != null) rc.caisson2 = c.rc_caisson2; if (c.rc_plan != null) rc.plan = c.rc_plan;
     if (c.rc_vasques != null) rc.vasques = c.rc_vasques; if (c.rc_ov != null) rc.tableur_overrides = c.rc_ov;
     return Object.assign({}, c, { raw_config: rc });
   }
@@ -4154,7 +4266,9 @@
         var prix;
         try {
           // plusieurs meubles modélisés par l'équipe : prix du projet = somme ; sinon la configuration la plus récente
-          prix = equipe[p.id] ? equipe[p.id].reduce(function (t, m) { return t + (computePrixVenteFromSdb(m) || 0); }, 0) : computePrixVenteFromSdb(c);
+          var _pp = (equipe[p.id] || [c]).map(function (m) { return propositionDe(m.raw_config); }).filter(Boolean)[0];
+          if (_pp) prix = propositionTotal(_pp);
+          else prix = equipe[p.id] ? equipe[p.id].reduce(function (t, m) { return t + (computePrixVenteFromSdb(m) || 0); }, 0) : computePrixVenteFromSdb(c);
         } catch (e) { console.warn('auto-montant', p.id, e); continue; }
         if (!(prix > 0) || Math.abs(prix - (parseFloat(p.montant) || 0)) < 0.005) continue;
         var r = await sb.from('projets').update({ montant: prix }).eq('id', p.id);
