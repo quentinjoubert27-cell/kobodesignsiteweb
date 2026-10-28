@@ -2759,7 +2759,9 @@
     var avecRendus = !document.getElementById('chk-rendus') || document.getElementById('chk-rendus').checked;   // case « Avec les rendus 3D »
     var multi = currentProjetMeubles.length > 1 && !(currentProjetRc && currentProjetRc.manuel);   // plusieurs meubles : descriptif de chaque meuble
     // meuble modélisé par l'équipe (un ou plusieurs) : proposition sans rendus, descriptif seulement
-    var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !(currentProjetRc && currentProjetRc.manuel));
+    // plusieurs meubles : descriptif seul (un rendu ne représente qu'un meuble) ; meuble modélisé par l'équipe : rendu fabriqué si la case « Avec les rendus 3D » est cochée
+    var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !(currentProjetRc && currentProjetRc.manuel) && !avecRendus);
+    if (multi && avecRendus && mode !== 'html') showToast('Plusieurs meubles dans ce projet : la proposition est créée sans rendu 3D (descriptif de chaque meuble).');
     var imgs = { ferme: '', ouvert: '', plan: '', vasque: '' }, helperMsg = '', verif = null;
     try {
       var isManuel = !!(currentProjetRc && currentProjetRc.manuel);
@@ -3395,7 +3397,8 @@
     var cl = p.clients ? (p.clients.prenom + ' ' + p.clients.nom).trim() : '';
     var estManuel = !!(currentProjetRc && currentProjetRc.manuel);
     var multi = currentProjetMeubles.length > 1 && !estManuel;
-    var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !estManuel);
+    var avecRendus = !document.getElementById('chk-rendus') || document.getElementById('chk-rendus').checked;
+    var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !estManuel && !avecRendus);
     var pv = sansRendus ? [] : devisSimplePlanVasque();
     return { p: p, cli: cli, cl: cl, estManuel: estManuel, multi: multi, sansRendus: sansRendus, pv: pv, nbPages: pv.length ? 4 : 3, det0: devisSimpleDetails() };
   }
