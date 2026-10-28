@@ -2989,6 +2989,12 @@
     } catch (e) { console.warn('tableur', e); }
     var _pj = allProjets.find(function (x) { return x.id === currentProjetId; });
     var figé = _pj && STATUTS_FERMES.indexOf(_pj.statut) >= 0;   // devis envoyé ou plus avancé : le montant annoncé ne change pas tout seul
+    if (currentProjetId && figé && _pj && Math.abs(price.prix_vente - (parseFloat(_pj.montant) || 0)) > 0.5 && (parseFloat(_pj.montant) || 0) > 0) {
+      // devis envoyé : le montant (chiffre d'affaires) reste figé tant qu'on ne demande pas la mise à jour ; encart orange si le meuble vient d'être modifié, simple ligne discrète sinon
+      resultEl.innerHTML += _propModifiee[currentProjetId]
+        ? '<div style="margin-top:8px;padding:9px 12px;border:1.5px solid #CD3E00;border-radius:8px;background:#fff4ee;font-size:12px;font-weight:500;line-height:1.5;">Proposition modifiée : elle vaut maintenant <b>' + formatCurrency(price.prix_vente) + ' HT</b>, mais le montant du projet (chiffre d\'affaires) est figé à <b>' + formatCurrency(parseFloat(_pj.montant) || 0) + '</b> car le devis est envoyé. <button class="btn btn-primary btn-sm" style="margin-left:6px;" onclick="appliquerPrixAuMontant()">Mettre à jour le montant du projet</button></div>'
+        : '<div style="margin-top:6px;font-size:11.5px;font-weight:400;color:rgba(26,26,26,.55);">Montant du projet figé à ' + formatCurrency(parseFloat(_pj.montant) || 0) + ' (devis envoyé). <a href="#" onclick="appliquerPrixAuMontant();return false;" style="color:var(--accent);">Utiliser le prix calculé (' + formatCurrency(price.prix_vente) + ')</a></div>';
+    }
     if (currentProjetId && !figé) {
       sb.from('projets').update({ montant: price.prix_vente }).eq('id', currentProjetId)
         .then(function (r) {
@@ -3275,7 +3281,7 @@
     renderProjetDevis(currentProjetId);
   }
   // ── Plusieurs meubles par projet : chaque meuble modélisé par l'équipe est une configuration à part ──
-  var currentProjetMeubles = [], _meubleIdx = {};
+  var currentProjetMeubles = [], _meubleIdx = {}, _propModifiee = {};   // _propModifiee : projets dont le meuble vient d'être modifié depuis l'admin (affiche l'encart de mise à jour du montant)
   function equipeModele(c) { return c && c.decouverte === 'Modélisé par l\'équipe'; }
   function rcFromSdb(sdb) {
     var rc = sdb.raw_config || (sdb.raw_config = {});
@@ -3287,7 +3293,11 @@
   function choisirMeuble(i) { _meubleIdx[currentProjetId] = i; renderProjetDevis(currentProjetId); }
   function meubleBarHtml(projetId, idx) {
     var ms = currentProjetMeubles;
-    if (!ms.length || !equipeModele(ms[0])) return '';
+    if (ms.length && !equipeModele(ms[0])) {   // meuble de la demande du client : on le copie pour pouvoir tout modifier (la demande d'origine reste intacte)
+      return '<div style="margin-bottom:12px;padding:10px 12px;background:rgba(26,26,26,.03);border-radius:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><div style="font-size:12px;color:rgba(26,26,26,.65);flex:1;min-width:220px;line-height:1.5;">Meuble de la demande du client. Pour <b>ajouter, retirer ou changer</b> des éléments, crée une copie modifiable : elle devient la proposition et le prix se recalcule ; la demande du client reste intacte.</div>' +
+        '<button class="btn btn-primary btn-sm" onclick="modifierProposition(\'' + ms[0].id + '\')">✏️ Modifier la proposition</button></div>';
+    }
+    if (!ms.length) return '';
     var btn = function (i) {
       var rc = rcFromSdb(ms[i]), r = null; try { r = tableurFromRc(rc, currentTarifsGlobaux || {}); } catch (e) {}
       return '<button class="btn btn-sm ' + (i === idx ? 'btn-primary' : 'btn-ghost') + '" onclick="choisirMeuble(' + i + ')">' + escHtml(libelleMeuble(ms[i], i)) + '<span style="font-weight:400;font-size:10.5px;margin-left:6px;opacity:.8;">' + (rc.meuble ? Math.round(rc.meuble.L) + '×' + Math.round(rc.meuble.H) : '') + (r ? ' · ' + formatCurrency(r.vente) : '') + '</span></button>';
@@ -3297,6 +3307,47 @@
       '<button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur()">+ Ajouter un meuble</button><button class="btn btn-ghost btn-sm" onclick="importerModele()">⬆ Importer un modèle (JSON)</button></div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur(true,\'' + ms[idx].id + '\')">✏️ Modifier ce meuble</button>' +
       '<button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="effacerModele(\'' + ms[idx].id + '\')">🗑 Effacer ce meuble</button></div></div>';
+  }
+  // retour sur l'onglet admin après une modification dans le configurateur : on recharge le meuble du projet (prix et encart à jour)
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && currentProjetId && _propModifiee[currentProjetId] && document.getElementById('pd-devis-simple')) {
+      loadProjetConfig().then(function () { renderProjetDevis(currentProjetId); }).catch(function () {});
+    }
+  });
+  // ── Modifier la proposition d'une demande client : copie modifiable (modèle d'équipe) puis ouverture dans le configurateur ──
+  async function modifierProposition(configId) {
+    var row = (currentProjetMeubles || []).find(function (x) { return String(x.id) === String(configId); });
+    if (!row || !currentProjetId) return showToast('Meuble introuvable', 'err');
+    if (!confirm('Créer une copie modifiable du meuble de la demande ?\n\nLa copie devient la proposition : tu pourras ajouter, retirer ou changer ce que tu veux, et le prix se recalcule. La demande du client reste intacte.')) return;
+    try {
+      var rc = JSON.parse(JSON.stringify(rcFromSdb(row)));
+      var n = configCountsFromRc(rc);
+      var cfg = Object.assign({ furniture_type: row.type || rc.furniture_type || 'tv', counts: { shelf: n.tablettes, separator: n.separateurs, porte: n.portes, tiroir: n.tiroirs } }, rc);
+      const { data: { session } } = await sb.auth.getSession();
+      var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'attach-config', projet_id: currentProjetId, furniture_type: cfg.furniture_type, libelle: 'Proposition', config: cfg }) });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok || !j.success) return showToast(j.error || 'Copie impossible', 'err');
+      var pr = allProjets.find(function (x) { return x.id === currentProjetId; });
+      if (pr && pr.client_id) logActivite(pr.client_id, 'note', 'Proposition rendue modifiable pour le projet « ' + (pr.nom || '') + ' » (copie de la demande du client)', { projet_id: currentProjetId, auto: true });
+      _meubleIdx[currentProjetId] = 0;
+      await loadProjetConfig(); renderProjetDevis(currentProjetId);
+      modeliserDansConfigurateur(true, j.configId);
+    } catch (e) { showToast('Copie impossible : ' + (e.message || e), 'err'); }
+  }
+  // ── Devis ferme (envoyé ou plus avancé) : le montant du projet, donc le chiffre d'affaires, ne bouge pas tout seul ; la mise à jour se fait ici, sur demande ──
+  async function appliquerPrixAuMontant() {
+    var price = computeDevisAutoPrice(); if (!price || !currentProjetId) return;
+    var pj = allProjets.find(function (x) { return x.id === currentProjetId; }); if (!pj) return;
+    var avant = parseFloat(pj.montant) || 0, apres = Math.round(price.prix_vente * 100) / 100;
+    if (!confirm('Mettre à jour le montant du projet (chiffre d\'affaires) ?\n\n' + formatCurrency(avant) + ' → ' + formatCurrency(apres) + ' HT')) return;
+    var r = await sb.from('projets').update({ montant: apres }).eq('id', currentProjetId);
+    if (r.error) return showToast('Mise à jour impossible : ' + r.error.message, 'err');
+    pj.montant = apres;
+    var m = document.getElementById('pd-montant'); if (m) m.value = apres;
+    if (pj.client_id) logActivite(pj.client_id, 'note', 'Montant du projet « ' + (pj.nom || '') + ' » mis à jour après modification de la proposition : ' + formatCurrency(avant) + ' → ' + formatCurrency(apres) + ' HT', { projet_id: currentProjetId, auto: true });
+    showToast('Montant du projet : ' + formatCurrency(apres));
+    updateDevisAutoTotal();
   }
   // ── Importer un modèle (JSON préparé avec Claude à partir d'une photo ou d'un plan) : il devient un meuble du projet, chiffré comme les autres ──
   function importerModele() {
@@ -3329,6 +3380,7 @@
   }
   function modeliserDansConfigurateur(edit, configId) {
     if (!currentProjetId) return;
+    if (edit === true) _propModifiee[currentProjetId] = true;
     var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
     window.open('/configurateur2?admin_projet=' + encodeURIComponent(currentProjetId) + '&nom=' + encodeURIComponent(p.nom || '') + (edit === true ? '&edit=1' + (configId ? '&config=' + encodeURIComponent(configId) : '') : ''), '_blank');
   }
