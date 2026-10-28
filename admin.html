@@ -2558,7 +2558,7 @@
     if (devisImgCache[key]) return devisImgCache[key];
     var ok = false;
     try {
-      var ctl = new AbortController(); var tm = setTimeout(function () { ctl.abort(); }, 2500);
+      var ctl = new AbortController(); var tm = setTimeout(function () { ctl.abort(); }, 25000);   // Chrome (v142+) peut demander l'autorisation « réseau local » : on lui laisse le temps de répondre ; si l'assistant n'est pas lancé, la connexion est refusée tout de suite
       var pr = await fetch('http://127.0.0.1:8765/ping', { signal: ctl.signal }); clearTimeout(tm); ok = pr.ok;
     } catch (e) { ok = false; }
     if (!ok) return null;
@@ -2734,7 +2734,7 @@
       var j = (currentProjetRc && !isManuel && !sansRendus) ? await devisRendersFromHelper(currentProjetRc, w) : null;
       if (isManuel) { imgs.ferme = (currentManuel.images || {}).ferme || ''; imgs.ouvert = (currentManuel.images || {}).ouvert || ''; }
       if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; verif = j.verification || null; }
-      else if (!isManuel && !sansRendus) helperMsg = 'Assistant de rendus non lancé sur ce Mac : PDF créé sans les images (lance « Rendus Kōbō » puis recommence).';
+      else if (!isManuel && !sansRendus) helperMsg = 'Assistant de rendus injoignable : PDF créé sans les images. 1) Vérifie que « Rendus Kōbō » tourne sur ce Mac. 2) Dans Chrome : clique sur le cadenas à gauche de l\'adresse → Paramètres du site → « Accès au réseau local » (ou « Applications sur l\'appareil ») → Autoriser, puis recharge la page et recommence.';
     } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
     var estManuel = !!(currentProjetRc && currentProjetRc.manuel);
     if (!imgs.ferme && !estManuel && !sansRendus) {  // repli : images déjà ajoutées dans les documents du projet
