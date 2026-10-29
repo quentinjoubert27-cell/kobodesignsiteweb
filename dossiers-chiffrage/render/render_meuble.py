@@ -192,6 +192,19 @@ def add_box(name, x0, x1, y0, y1, z0, z1, mat, grain="v", rnd=None, pivot=None, 
     return ob
 
 
+def pente_haut(pe, W, H, x_):
+    """Hauteur (mm) du dessus d'un caisson à pente de face, à l'abscisse x_ (mm, 0 = bord gauche) ; plat_cm = tronçon plat côté haut."""
+    lo = max(100.0, min(float(pe["h_cm"]) * 10.0, H - 10.0)); pl = max(0.0, min(float(pe.get("plat_cm") or 0) * 10.0, W - 2.0)); L = W - pl
+    if pe["bas"] == "droite":
+        t = max(0.0, min(1.0, (x_ - pl) / L)); return H - (H - lo) * t
+    t = max(0.0, min(1.0, x_ / L)); return lo + (H - lo) * t
+
+
+def pente_coude(pe, W):
+    pl = float(pe.get("plat_cm") or 0) * 10.0
+    return None if pl <= 0 else (pl if pe["bas"] == "droite" else W - pl)
+
+
 def add_prism(name, pts, vec, mat, grain="v", rnd=None):
     """Volume obtenu en extrudant un contour plan (points 3D en mètres) le long de `vec` (mètres). Sert aux formes libres."""
     me = bpy.data.meshes.new(name)
@@ -480,12 +493,14 @@ def build_furniture(cfg, opt, open_state=False):
                 B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
                 B("fond", 0, W, 0, lo, D - 8, D, "v", inside)
             else:                          # pente de face : bas à gauche ou à droite
-                hl, hr = (lo, H) if pe["bas"] == "gauche" else (H, lo)
-                def hf(x_): return hl + (hr - hl) * (x_ / float(W))
+                hf = lambda x_: pente_haut(pe, W, H, x_)
+                kx = pente_coude(pe, W)
                 B("joue_gauche", 0, ep, 0, hf(0), 0, D, "v"); B("joue_droite", W - ep, W, 0, hf(W), 0, D, "v")
-                prisme("traverse_haute", [(ep, 0, hf(ep) - ep), (W - ep, 0, hf(W - ep) - ep), (W - ep, 0, hf(W - ep)), (ep, 0, hf(ep))], (0, D, 0), "h")
+                xs = [ep] + ([kx] if kx and ep < kx < W - ep else []) + [W - ep]
+                prisme("traverse_haute", [(x_, 0, hf(x_) - ep) for x_ in xs] + [(x_, 0, hf(x_)) for x_ in reversed(xs)], (0, D, 0), "h")
                 B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
-                prisme("fond", [(0, D - 8, 0), (W, D - 8, 0), (W, D - 8, hr), (0, D - 8, hl)], (0, 8, 0), "v", inside)
+                xf = [0] + ([kx] if kx and 0 < kx < W else []) + [W]
+                prisme("fond", [(0, D - 8, 0), (W, D - 8, 0)] + [(x_, D - 8, hf(x_)) for x_ in reversed(xf)], (0, 8, 0), "v", inside)
         for p in ([] if pe else spec.get("structural_panels", [])):
             t = p["type"]
             if bo and (t in ("traverse_haute", "traverse_basse") or t == ("joue_droite" if bo["side"] > 0 else "joue_gauche")):
@@ -500,8 +515,7 @@ def build_furniture(cfg, opt, open_state=False):
             yt_s = s_["y_top_mm"]
             _ps = spec.get("_pente")
             if _ps and _ps.get("bas") in ("gauche", "droite") and float(_ps.get("h_cm") or 0) > 0:   # pente : la cloison s'arrête sous le dessus incliné
-                lo_s = max(100.0, min(float(_ps["h_cm"]) * 10.0, H - 10.0)); hl_s, hr_s = (lo_s, H) if _ps["bas"] == "gauche" else (H, lo_s)
-                yt_s = min(yt_s, hl_s + (hr_s - hl_s) * (((s_["x_left_mm"] + s_["x_right_mm"]) / 2.0) / float(W)) - 2 * ep)
+                yt_s = min(yt_s, pente_haut(_ps, W, H, (s_["x_left_mm"] + s_["x_right_mm"]) / 2.0) - 2 * ep)
             if yt_s > s_["y_bottom_mm"] + 10:
                 B("sep", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], yt_s, 0, D - 8, "v")
         door_bays = [(d["x_left_mm"], d["x_right_mm"]) for d in spec.get("doors", [])]
@@ -559,9 +573,9 @@ def build_furniture(cfg, opt, open_state=False):
                 zo = z_off / mm + oyc[0]
                 pts2 = [(xl, yb + zo), (xr, yb + zo)]
                 if slope:   # haut en biais : même pente que le dessus du caisson
-                    lo_ = max(100.0, min(float(_pp["h_cm"]) * 10.0, H - 10.0)); hl_, hr_ = (lo_, H) if _pp["bas"] == "gauche" else (H, lo_)
-                    top_ = lambda x_: yt - (H - (hl_ + (hr_ - hl_) * (x_ / float(W)))) - 2.5 + zo
-                    pts2 += [(xr, top_(xr)), (xl, top_(xl))]
+                    top_ = lambda x_: yt - (H - pente_haut(_pp, W, H, x_)) - 2.5 + zo
+                    kx_ = pente_coude(_pp, W)
+                    pts2 += [(xr, top_(xr))] + ([(kx_, top_(kx_))] if kx_ and xl < kx_ < xr else []) + [(xl, top_(xl))]
                 else:
                   n_ = max(6, int(24 * (xr - xl) / W))
                   for i_ in range(n_ + 1):

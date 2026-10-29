@@ -1747,7 +1747,7 @@ function porteMeshG(w,h,d,mat,A,cx,flush){
   var m;
   if(!A||!flush){ m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); }
   else {
-    var pts=[new THREE.Vector2(-w/2,-h/2),new THREE.Vector2(w/2,-h/2)], n=A.pente?2:Math.max(6,Math.round(24*w/A.W)), i, x;
+    var pts=[new THREE.Vector2(-w/2,-h/2),new THREE.Vector2(w/2,-h/2)], n=A.pente?14:Math.max(6,Math.round(24*w/A.W)), i, x;
     for(i=0;i<=n;i++){ x=w/2-w*i/n; pts.push(new THREE.Vector2(x,Math.max(-h/2+0.02,A.pente?h/2-A.drop(cx+x)-0.003:Math.min(h/2,h/2-A.f+_archeSag(A.W,A.f,cx+x))-0.003))); }
     var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts),{depth:d,bevelEnabled:false}); geo.translate(0,0,-d/2);
     m=new THREE.Mesh(geo,mat);
@@ -1771,10 +1771,18 @@ function _penteOf(rec){ var p=rec==='M'?S.penteM:(rec&&rec.pente); return (p&&p.
 function _penteCtx(rec,W,H){
   var p=_penteOf(rec); if(!p) return null;
   var lo=Math.max(0.2,Math.min(p.h_cm/100,H-0.02)); if(H-lo<0.01) return null;
-  return {bas:p.bas,lo:lo,H:H,W:W};
+  return {bas:p.bas,lo:lo,H:H,W:W,plat:(p.bas==='arriere')?0:Math.max(0,Math.min((p.plat_cm||0)/100,W-0.2))};
 }
 // hauteur du dessus (m) à l'abscisse x (0 = centre du caisson) ; pente de face seulement
-function _penteTop(P,x){ if(P.bas==='arriere') return P.H; var t=Math.max(0,Math.min(1,(x+P.W/2)/P.W)); return P.bas==='gauche'?P.lo+(P.H-P.lo)*t:P.H-(P.H-P.lo)*t; }
+function _penteTop(P,x){   // tronçon plat de longueur P.plat du côté haut, puis pente jusqu'au côté bas
+  if(P.bas==='arriere') return P.H;
+  var u=x+P.W/2, pl=P.plat||0, L=P.W-pl;                                   // u : distance depuis le bord gauche
+  if(P.bas==='droite'){ var t=Math.max(0,Math.min(1,(u-pl)/L)); return P.H-(P.H-P.lo)*t; }
+  var t2=Math.max(0,Math.min(1,(u)/L)); return P.lo+(P.H-P.lo)*t2;         // bas à gauche : la pente occupe le début, le plat est à droite
+}
+function _penteProfil(P,x0,x1){   // points (x,y) du dessus entre x0 et x1, avec le coude s'il est dans l'intervalle
+  var pts=[[x0,_penteTop(P,x0)]]; if(P.plat>0){ var xk=P.bas==='droite'?-P.W/2+P.plat:P.W/2-P.plat; if(xk>x0+0.001&&xk<x1-0.001) pts.push([xk,_penteTop(P,xk)]); } pts.push([x1,_penteTop(P,x1)]); return pts;
+}
 function _penteShapeMesh(pts,depth,mat){   // polygone dans le plan (x,y) extrudé de `depth` selon z (centré)
   var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(function(q){return new THREE.Vector2(q[0],q[1]);})),{depth:depth,bevelEnabled:false}); geo.translate(0,0,-depth/2);
   var m=new THREE.Mesh(geo,mat); m.castShadow=true; m.receiveShadow=true; return m;
@@ -1795,9 +1803,11 @@ function buildPenteCarcass(g,W,H,CP,ep,matCais,matFond,P){
   } else {                  // pente de face : côtés de hauteurs différentes, dessus incliné, fond en trapèze
     var hl=_penteTop(P,-W/2), hr=_penteTop(P,W/2), x0=-W/2+ep, x1=W/2-ep;
     bx(ep,hl,CP,-W/2+ep/2,hl/2,0,matCais); bx(ep,hr,CP,W/2-ep/2,hr/2,0,matCais);
-    g.add(_penteShapeMesh([[x0,_penteTop(P,x0)-ep],[x1,_penteTop(P,x1)-ep],[x1,_penteTop(P,x1)],[x0,_penteTop(P,x0)]],CP,matCais));   // dessus
+    var up=_penteProfil(P,x0,x1);
+    g.add(_penteShapeMesh(up.map(function(q){return [q[0],q[1]-ep];}).concat(up.slice().reverse()),CP,matCais));   // dessus (avec le coude s'il y en a un)
     bx(iW,ep,CP,0,ep/2,0,matCais);                                      // dessous
-    var fm=_penteShapeMesh([[-W/2,0],[W/2,0],[W/2,hr],[-W/2,hl]],0.008,matFond); fm.position.z=-CP/2+0.004; g.add(fm);
+    var fp=_penteProfil(P,-W/2,W/2), fpts=[[-W/2,0],[W/2,0]].concat(fp.slice().reverse());   // fond : bas puis dessus de droite à gauche
+    var fm=_penteShapeMesh(fpts,0.008,matFond); fm.position.z=-CP/2+0.004; g.add(fm);
   }
 }
 // Niche arquée (équipe) : la façade du caisson est un cadre plein percé d'une ouverture à haut en arc (cadre de `bord_cm`, flèche `fleche_cm`, 0 = demi-cercle)
@@ -4483,7 +4493,12 @@ function setPente(side,idx,k,bas){
 function setPenteH(side,idx,k,cm){
   var pe=_getPente(side,idx,k); if(!pe||!_isAdminMode()) return;
   var H=_penteHauteur(side,idx,k); cm=Math.max(10,Math.min(H-1,Math.round(parseFloat(cm))||pe.h_cm));
-  _putPente(side,idx,k,{bas:pe.bas,h_cm:cm}); _refreshCols();
+  var np2={bas:pe.bas,h_cm:cm}; if(pe.plat_cm) np2.plat_cm=pe.plat_cm; _putPente(side,idx,k,np2); _refreshCols();
+}
+function setPenteP(side,idx,k,cm){
+  var pe=_getPente(side,idx,k); if(!pe||!_isAdminMode()||pe.bas==='arriere') return;
+  var r=_recAt(side,idx,k), W=r==='M'?Math.round(S.CL*100):(r?r.W:100); cm=Math.max(0,Math.min(W-20,Math.round(parseFloat(cm))||0));
+  var np={bas:pe.bas,h_cm:pe.h_cm}; if(cm>0) np.plat_cm=cm; _putPente(side,idx,k,np); _refreshCols();
 }
 function _penteHtml(r){
   var pe=_getPente(r.side,r.idx,r.k), call="'"+r.side+"',"+r.idx+","+r.k, bas=pe?pe.bas:'aucune';
@@ -4495,6 +4510,9 @@ function _penteHtml(r){
     h+='<div class="dim-row"><span class="dim-lbl">Hauteur du côté bas</span><div class="dim-ctrl"><button class="dim-step" onclick="setPenteH('+call+','+(pe.h_cm-5)+')">−</button>'
       +'<input class="dim-inp" type="number" min="10" value="'+pe.h_cm+'" onchange="setPenteH('+call+',this.value)"><span class="dim-unit">cm</span>'
       +'<button class="dim-step" onclick="setPenteH('+call+','+(pe.h_cm+5)+')">+</button></div></div>'
+      +(pe.bas==='arriere'?'':'<div class="dim-row"><span class="dim-lbl">Départ de la pente</span><div class="dim-ctrl"><button class="dim-step" onclick="setPenteP('+call+','+((pe.plat_cm||0)-5)+')">−</button>'
+        +'<input class="dim-inp" type="number" min="0" value="'+(pe.plat_cm||0)+'" onchange="setPenteP('+call+',this.value)"><span class="dim-unit">cm</span>'
+        +'<button class="dim-step" onclick="setPenteP('+call+','+((pe.plat_cm||0)+5)+')">+</button></div></div><div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">0 = la pente commence au bord ; sinon le dessus reste plat sur cette longueur, côté haut, puis descend.</div>')
       +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">La « hauteur » du caisson est celle du côté haut. '+(pe.bas==='arriere'?'Le dessus descend vers le fond : les côtés sont en trapèze, les portes restent droites.':'Le dessus est incliné vu de face : les portes qui touchent le haut suivent la pente.')+' Les étagères restent horizontales : vérifie qu\'elles passent sous le côté bas.</div>';
   }
   return h;

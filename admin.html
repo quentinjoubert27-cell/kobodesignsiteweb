@@ -3826,10 +3826,11 @@
           notes.push('Pente vers le fond ' + suf.trim() + ' : hauteur ' + Math.round(H / 10) + ' cm devant, ' + Math.round(pe.lo / 10) + ' cm au fond ; côtés comptés à leur surface en trapèze.');
         } else if (pe) {   // pente de face : côtés de hauteurs différentes, dessus incliné, fond en trapèze, portes en trapèze (comptées en rectangle)
           var hl = pe.bas === 'gauche' ? pe.lo : H, hr = pe.bas === 'gauche' ? H : pe.lo;
-          add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut (pente)' + suf, Math.hypot(Lt, hr - hl), P, 1, CH.trav);
+          var plat = c.pente.plat_cm > 0 ? Math.min(c.pente.plat_cm * 10, Lt - 20) : 0;   // tronçon plat côté haut, puis pente
+          add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut (pente)' + suf, plat + Math.hypot(Lt - plat, H - pe.lo), P, 1, CH.trav);
           add('Montant Gauche' + suf, hl, P, 1, CH.all); add('Montant Droit' + suf, hr, P, 1, CH.all);
-          HF = (hl + hr) / 2 - 38;
-          notes.push('Pente de face ' + suf.trim() + ' : ' + Math.round(hl / 10) + ' cm à gauche, ' + Math.round(hr / 10) + ' cm à droite ; dessus et fond comptés à leur surface en biais, portes comptées en rectangle (découpe en biais non chiffrée).');
+          HF = (plat * H + (L - plat) * (H + pe.lo) / 2) / L - 38;
+          notes.push('Pente de face ' + suf.trim() + ' : ' + Math.round(hl / 10) + ' cm à gauche, ' + Math.round(hr / 10) + ' cm à droite' + (plat ? ' (dessus plat sur ' + Math.round(plat / 10) + ' cm, puis pente)' : '') + ' ; dessus et fond comptés à leur surface en biais, portes comptées en rectangle (découpe en biais non chiffrée).');
         } else {
         add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut' + suf, Lt, P, 1, CH.trav);
         add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
