@@ -3830,7 +3830,7 @@
           add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut (pente)' + suf, plat + Math.hypot(Lt - plat, H - pe.lo), P, 1, CH.trav);
           add('Montant Gauche' + suf, hl, P, 1, CH.all); add('Montant Droit' + suf, hr, P, 1, CH.all);
           HF = (plat * H + (L - plat) * (H + pe.lo) / 2) / L - 38;
-          notes.push('Pente de face ' + suf.trim() + ' : ' + Math.round(hl / 10) + ' cm à gauche, ' + Math.round(hr / 10) + ' cm à droite' + (plat ? ' (dessus plat sur ' + Math.round(plat / 10) + ' cm, puis pente)' : '') + ' ; dessus et fond comptés à leur surface en biais, portes comptées en rectangle (découpe en biais non chiffrée).');
+          notes.push('Pente de face ' + suf.trim() + ' : ' + Math.round(hl / 10) + ' cm à gauche, ' + Math.round(hr / 10) + ' cm à droite' + (plat ? ' (dessus plat sur ' + Math.round(plat / 10) + ' cm, puis pente)' : '') + ' ; dessus et fond comptés à leur surface en biais, portes comptées à leur surface réelle en trapèze (la découpe en biais n\'est pas chiffrée).');
         } else {
         add('Traverse Bas' + suf, Lt, P, 1, CH.trav); add('Traverse Haut' + suf, Lt, P, 1, CH.trav);
         add('Montant Gauche' + suf, H, P, 1, CH.all); add('Montant Droit' + suf, H, P, 1, CH.all);
@@ -3909,6 +3909,14 @@
       els.filter(isDoor).forEach(function (e, di) {
         var g2 = kg(e.key); if (!g2) return; var x = shift(g2.l, g2.r), h = g2.t - g2.b, wTot = x[1] - x[0];
         var full = Math.abs(x[0] - t) <= Math.max(2, t * 0.5) && Math.abs(x[1] - (L - t)) <= Math.max(2, t * 0.5), dbl = full || /double|2_battants|deux_battants/.test(norm(e.type));
+        if (pe && pe.bas !== 'arriere' && g2.t >= H - 2 * t - 5) {   // pente de face : porte en trapèze, comptée à sa surface réelle (hauteur moyenne sous le toit) au lieu du rectangle englobant
+          var platD = c.pente.plat_cm > 0 ? Math.min(c.pente.plat_cm * 10, L - 20) : 0, dropS = 0, nS = 24;
+          for (var iS = 0; iS < nS; iS++) {
+            var xS = x[0] + (x[1] - x[0]) * (iS + 0.5) / nS, hS = pe.bas === 'droite' ? (xS <= platD ? H : H - (H - pe.lo) * (xS - platD) / (L - platD)) : (xS >= L - platD ? H : pe.lo + (H - pe.lo) * xS / (L - platD));
+            dropS += H - hS;
+          }
+          h = Math.max(50, h - dropS / nS);
+        }
         add('Porte Import ' + (di + 1) + suf, h, dbl ? wTot / 2 : wTot, dbl ? 2 : 1, CH.all, 'facade');
       });
       // tiroirs : façade (hauteur du JSON × largeur du caisson − 4), dos et fond selon la zone (Tandembox K)
