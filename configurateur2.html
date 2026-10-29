@@ -2026,9 +2026,11 @@ function buildCaisson(){
       } else if(el.type==='separator'||el.type==='separator_simple'){
         var comp=getCompartment(el.y_cm,el.x_cm,el.type==='separator_simple');
         var h=comp.height_cm/100; if(h<0.01) return;
+        var _cyS=comp.centerY, _pcS=_penteCtx('M',CL,CH);
+        if(_pcS&&_pcS.bas!=='arriere'){ var _capS=(_penteTop(_pcS,xcmToLocal(el.x_cm))-2*ep)*100; if(comp.top_cm>_capS){ h=(_capS-comp.bottom_cm)/100; _cyS=ep+(comp.bottom_cm+_capS)/200; if(h<0.01) return; } }   // pente : la cloison s'arrête sous le dessus incliné
         var tw=ep;
         var m=box(tw,h,CP-ep,matElem);
-        m.position.set(xcmToLocal(el.x_cm),comp.centerY,-ep/2);
+        m.position.set(xcmToLocal(el.x_cm),_cyS,-ep/2);
         m.userData.elemIdx=idx; caissonElemMeshes.push(m); caissonGrp.add(m);
       } else if(el.type==='barre'){
         var iW_cm2=(S.CL-2*EP)*100;
@@ -2398,6 +2400,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         }).map(function(e){return e.y_cm;}).sort(function(a,b){return a-b;});
         var bot=0,top=iHcm;
         sepShelves.forEach(function(s){if(s<el.y_cm&&s>bot)bot=s;if(s>el.y_cm&&s<top)top=s;});
+        if(_peX&&_peX.bas!=='arriere'){ top=Math.min(top,Math.round((_penteTop(_peX,xcm(el.x_cm))-2*ep2)*100)); }   // pente : la cloison s'arrête sous le dessus incliné
         var h=(top-bot)/100; if(h<0.01) return;
         var tw=ep2;
         var m=box(tw,h,CP-ep2,matElem); m.position.set(xcm(el.x_cm),ep2+(bot+top)/200,-ep2/2);

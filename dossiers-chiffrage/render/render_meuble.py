@@ -497,7 +497,13 @@ def build_furniture(cfg, opt, open_state=False):
             else:
                 B(t, p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], 0, D, "h")
         for s_ in spec.get("separators", []):
-            B("sep", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], s_["y_top_mm"], 0, D - 8, "v")
+            yt_s = s_["y_top_mm"]
+            _ps = spec.get("_pente")
+            if _ps and _ps.get("bas") in ("gauche", "droite") and float(_ps.get("h_cm") or 0) > 0:   # pente : la cloison s'arrête sous le dessus incliné
+                lo_s = max(100.0, min(float(_ps["h_cm"]) * 10.0, H - 10.0)); hl_s, hr_s = (lo_s, H) if _ps["bas"] == "gauche" else (H, lo_s)
+                yt_s = min(yt_s, hl_s + (hr_s - hl_s) * (((s_["x_left_mm"] + s_["x_right_mm"]) / 2.0) / float(W)) - 2 * ep)
+            if yt_s > s_["y_bottom_mm"] + 10:
+                B("sep", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], yt_s, 0, D - 8, "v")
         door_bays = [(d["x_left_mm"], d["x_right_mm"]) for d in spec.get("doors", [])]
         for s_ in spec.get("shelves", []):
             cx_ = (s_["x_left_mm"] + s_["x_right_mm"]) / 2
