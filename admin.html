@@ -3864,7 +3864,19 @@
       // étagères partielles : largeur réelle (règle du tableur conservée), profondeur − 19 comme app.py ; pleine largeur = traverse
       var shSpec = buildTechSpec(els, L / 10, H / 10, P / 10).shelves || [], nShelf = 0;
       shSpec.forEach(function (sh) {
-        var w = sh.x_right_mm - sh.x_left_mm;
+        var xl = sh.x_left_mm, xr = sh.x_right_mm;
+        if (pe && pe.bas !== 'arriere') {   // pente : l'étagère s'arrête sous le dessus incliné, elle est comptée à sa longueur réelle
+          var platE = c.pente.plat_cm > 0 ? Math.min(c.pente.plat_cm * 10, L - 20) : 0;
+          var fxE = function (x) { var hx = pe.bas === 'droite' ? (x <= platE ? H : H - (H - pe.lo) * (x - platE) / (L - platE)) : (x >= L - platE ? H : pe.lo + (H - pe.lo) * x / (L - platE)); return hx - t - sh.y_top_mm; };
+          var hiE = pe.bas === 'droite' ? xl : xr, loE = pe.bas === 'droite' ? xr : xl;
+          if (fxE(loE) < 0) {
+            if (fxE(hiE) < 0) return;
+            for (var kE = 0; kE < 30; kE++) { var mE = (hiE + loE) / 2; if (fxE(mE) >= 0) hiE = mE; else loE = mE; }
+            if (pe.bas === 'droite') xr = hiE; else xl = hiE;
+          }
+        }
+        var w = xr - xl;
+        if (w < 5) return;
         if (w >= (L - 2 * 18 - 4)) nShelf++; else add('Etagère partielle' + suf, w, P - 19, 1, CH.etag);
       });
       if (bo && nShelf > 0) {   // étagères pleine largeur : jusqu'au côté ouvert, bord avant suivant la courbe
