@@ -1698,15 +1698,22 @@ function getFacadeFor(comp,bay){
 // ═══════════════════════════════════════════════════════
 // BUILD CAISSON
 // ═══════════════════════════════════════════════════════
-function addDoorHinges(pm,porW,porH,hingeLeft){
+// hauteur de la porte du côté des charnières : plus basse qu'au milieu quand le haut est incliné ou en arc (les charnières doivent rester sur la porte)
+function _hEdgeFor(A,flush,porH,cx,porW,hingeLeft){
+  if(!A||!flush) return porH;
+  var xe=cx+(hingeLeft?-porW/2:porW/2), drop=A.pente?A.drop(xe):Math.max(0,A.f-_archeSag(A.W,A.f,xe));
+  return Math.max(0.12,Math.min(porH,porH-drop));
+}
+function addDoorHinges(pm,porW,porH,hingeLeft,hEdge){
   var matH=new THREE.MeshStandardMaterial({color:0xA6A6A6,roughness:0.18,metalness:0.90});
-  var nH=porH>0.40?3:(porH>0.10?2:1);   // même règle que le calcul : 2 charnières jusqu'à 40 cm
+  var hh=(hEdge>0&&hEdge<porH)?hEdge:porH;   // hauteur utile du côté des charnières
+  var nH=hh>0.40?3:(hh>0.10?2:1);   // même règle que le calcul : 2 charnières jusqu'à 40 cm
   var edgeX=hingeLeft?-porW/2:porW/2;
   var inset=0.022; // 22 mm du bord (standard charnière encastrée)
   var zBack=-0.012; // face arrière porte — visible uniquement depuis l'intérieur
   for(var hi=0;hi<nH;hi++){
     var t=(hi+1)/(nH+1);
-    var hy=-porH/2+porH*t;
+    var hy=-porH/2+hh*t;
     var cupX=hingeLeft?edgeX+inset:edgeX-inset;
 
     // ① Coupe ronde (encastrée dans le dos de la porte, invisible de l'extérieur)
@@ -2098,7 +2105,7 @@ function buildCaisson(){
         }
         var _flush=top>iH_cm2-0.5, _A=_archeCtx('M',CL,CH); var pm=porteMeshG(porW,porH,0.020,matFacade,_A,porCx,_flush); if(_A&&_flush) archeFillOnce(caissonGrp,_A,fz,matFacade);
         pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
-        addDoorHinges(pm, porW, porH, hingeLeft);
+        addDoorHinges(pm, porW, porH, hingeLeft, _hEdgeFor(_A,_flush,porH,porCx,porW,hingeLeft));
         pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
         pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
       } else { // tiroir
@@ -2448,7 +2455,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         if(isOpen) pivot.rotation.y=hingeLeft?-Math.PI*0.25:Math.PI*0.25;
         var _flush=kTop>iHcm-0.5, _A=_archeCtx(d.record,W,H); var pm=porteMeshG(porW,porH,0.020,matFacade,_A,(pxL+pxR)/2,_flush); if(_A&&_flush) archeFillOnce(g,_A,fz,matFacade);
         pm.position.set(hingeLeft?porW/2:-porW/2,0,0);
-        addDoorHinges(pm,porW,porH,hingeLeft);
+        addDoorHinges(pm,porW,porH,hingeLeft,_hEdgeFor(_A,_flush,porH,(pxL+pxR)/2,porW,hingeLeft));
         pm.userData.elemIdx=eidx; pm.userData.porKey=el.key; pm.userData.isPorte=true;
         pivot.add(pm); meshArr.push(pm); g.add(pivot);
 
