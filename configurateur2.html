@@ -1365,7 +1365,7 @@ window.addEventListener('scroll', function(){
 var S = {
   step:1,
   // Meuble
-  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, lvM:null, lgM:null, libreM:false, CairsonP:0.36, matCais:0, boutM:null, archeM:null, nicheM:null,
+  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, lvM:null, lgM:null, libreM:false, CairsonP:0.36, matCais:0, boutM:null, archeM:null, nicheM:null, penteM:null,
   CL2:1.20,
   caissonOffset:0,
   sdbBaseH:10, caissonYOff:0.10,
@@ -1737,6 +1737,7 @@ function _hasArche(){ try{ return S.archeM>0 || S.nicheM || tvSideLeft.concat(tv
 // f = flèche en cm (la moitié de la largeur = demi-cercle). Les coins au-dessus de l'arc sont des pièces de remplissage fixes.
 function _archeCm(rec){ return rec==='M' ? (S.archeM||0) : ((rec&&rec.arche_cm)||0); }
 function _archeCtx(rec,W,H){
+  var P=_penteCtx(rec,W,H); if(P && P.bas!=='arriere' && !(_archeCm(rec)>0) && !(_nicheOf(rec)&&!(_nicheOf(rec).bord_cm>=0.5))) return {pente:true,P:P,W:W,H:H,drop:function(x){ return H-_penteTop(P,x); }};   // pente de face : le haut des portes suit la pente
   var f=_archeCm(rec)/100, n=_nicheOf(rec);
   if(!(f>0) && n && !(n.bord_cm>=0.5)) f=n.fleche_cm>0?n.fleche_cm/100:W/2;   // niche arquée sans contour : les portes qu'on y pose suivent l'arc de la niche
   f=Math.min(f,W/2,H-0.05); return f>0.005?{f:f,W:W,H:H}:null;
@@ -1746,8 +1747,8 @@ function porteMeshG(w,h,d,mat,A,cx,flush){
   var m;
   if(!A||!flush){ m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); }
   else {
-    var pts=[new THREE.Vector2(-w/2,-h/2),new THREE.Vector2(w/2,-h/2)], n=Math.max(6,Math.round(24*w/A.W)), i, x;
-    for(i=0;i<=n;i++){ x=w/2-w*i/n; pts.push(new THREE.Vector2(x,Math.min(h/2,h/2-A.f+_archeSag(A.W,A.f,cx+x))-0.003)); }
+    var pts=[new THREE.Vector2(-w/2,-h/2),new THREE.Vector2(w/2,-h/2)], n=A.pente?2:Math.max(6,Math.round(24*w/A.W)), i, x;
+    for(i=0;i<=n;i++){ x=w/2-w*i/n; pts.push(new THREE.Vector2(x,Math.max(-h/2+0.02,A.pente?h/2-A.drop(cx+x)-0.003:Math.min(h/2,h/2-A.f+_archeSag(A.W,A.f,cx+x))-0.003))); }
     var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts),{depth:d,bevelEnabled:false}); geo.translate(0,0,-d/2);
     m=new THREE.Mesh(geo,mat);
   }
@@ -1755,7 +1756,7 @@ function porteMeshG(w,h,d,mat,A,cx,flush){
 }
 // pièces de remplissage des deux coins au-dessus de l'arc (ajoutées une seule fois par caisson, quand une porte au sommet est arquée)
 function archeFillOnce(g,A,fz,mat){
-  if(!A||g.userData.arcFill) return; g.userData.arcFill=1;
+  if(!A||A.pente||g.userData.arcFill) return; g.userData.arcFill=1;
   [-1,1].forEach(function(sd){
     var pts=[new THREE.Vector2(sd*A.W/2,A.H-A.f)], n=24, i, x;
     for(i=1;i<=n;i++){ x=sd*A.W/2*(1-i/n); pts.push(new THREE.Vector2(x,A.H-A.f+_archeSag(A.W,A.f,x))); }
@@ -1763,6 +1764,41 @@ function archeFillOnce(g,A,fz,mat){
     var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts),{depth:0.020,bevelEnabled:false}); geo.translate(0,0,-0.010);
     var m=new THREE.Mesh(geo,mat); m.position.set(0,0,fz); m.castShadow=true; m.receiveShadow=true; g.add(m);
   });
+}
+// Pente (équipe) : le dessus du caisson est incliné. H = hauteur du côté haut, h_cm = hauteur du côté bas.
+// bas = 'gauche' | 'droite' (pente vue de face : portes en trapèze) ou 'arriere' (dessus qui descend vers le fond : côtés en trapèze, portes droites)
+function _penteOf(rec){ var p=rec==='M'?S.penteM:(rec&&rec.pente); return (p&&p.bas&&p.h_cm>0)?p:null; }
+function _penteCtx(rec,W,H){
+  var p=_penteOf(rec); if(!p) return null;
+  var lo=Math.max(0.2,Math.min(p.h_cm/100,H-0.02)); if(H-lo<0.01) return null;
+  return {bas:p.bas,lo:lo,H:H,W:W};
+}
+// hauteur du dessus (m) à l'abscisse x (0 = centre du caisson) ; pente de face seulement
+function _penteTop(P,x){ if(P.bas==='arriere') return P.H; var t=Math.max(0,Math.min(1,(x+P.W/2)/P.W)); return P.bas==='gauche'?P.lo+(P.H-P.lo)*t:P.H-(P.H-P.lo)*t; }
+function _penteShapeMesh(pts,depth,mat){   // polygone dans le plan (x,y) extrudé de `depth` selon z (centré)
+  var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(function(q){return new THREE.Vector2(q[0],q[1]);})),{depth:depth,bevelEnabled:false}); geo.translate(0,0,-depth/2);
+  var m=new THREE.Mesh(geo,mat); m.castShadow=true; m.receiveShadow=true; return m;
+}
+function buildPenteCarcass(g,W,H,CP,ep,matCais,matFond,P){
+  function bx(w,h,d,x,y,z,mat){ var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; g.add(m); return m; }
+  var iW=W-2*ep;
+  if(P.bas==='arriere'){   // côtés en trapèze (haut devant, bas derrière), dessus incliné, fond de la hauteur basse
+    var side=function(x0){ var pts=[[-CP/2,0],[CP/2,0],[CP/2,H],[-CP/2,P.lo]].map(function(q){ return [-q[0],q[1]]; });   // u = -z : après rotation de 90° autour de Y, la forme se retrouve dans le plan (z,y)
+      var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(function(q){return new THREE.Vector2(q[0],q[1]);})),{depth:ep,bevelEnabled:false}); geo.rotateY(Math.PI/2); geo.translate(x0,0,0);
+      var m=new THREE.Mesh(geo,matCais); m.castShadow=true; m.receiveShadow=true; g.add(m); };
+    side(-W/2); side(W/2-ep);
+    var top=[[CP/2,H-ep],[CP/2,H],[-CP/2,P.lo],[-CP/2,P.lo-ep]].map(function(q){ return [-q[0],q[1]]; });
+    var tg=new THREE.ExtrudeGeometry(new THREE.Shape(top.map(function(q){return new THREE.Vector2(q[0],q[1]);})),{depth:iW,bevelEnabled:false}); tg.rotateY(Math.PI/2); tg.translate(-iW/2,0,0);
+    var tm=new THREE.Mesh(tg,matCais); tm.castShadow=true; tm.receiveShadow=true; g.add(tm);
+    bx(iW,ep,CP,0,ep/2,0,matCais);                                      // dessous
+    bx(W,P.lo,0.008,0,P.lo/2,-CP/2+0.004,matFond);                      // fond
+  } else {                  // pente de face : côtés de hauteurs différentes, dessus incliné, fond en trapèze
+    var hl=_penteTop(P,-W/2), hr=_penteTop(P,W/2), x0=-W/2+ep, x1=W/2-ep;
+    bx(ep,hl,CP,-W/2+ep/2,hl/2,0,matCais); bx(ep,hr,CP,W/2-ep/2,hr/2,0,matCais);
+    g.add(_penteShapeMesh([[x0,_penteTop(P,x0)-ep],[x1,_penteTop(P,x1)-ep],[x1,_penteTop(P,x1)],[x0,_penteTop(P,x0)]],CP,matCais));   // dessus
+    bx(iW,ep,CP,0,ep/2,0,matCais);                                      // dessous
+    var fm=_penteShapeMesh([[-W/2,0],[W/2,0],[W/2,hr],[-W/2,hl]],0.008,matFond); fm.position.z=-CP/2+0.004; g.add(fm);
+  }
 }
 // Niche arquée (équipe) : la façade du caisson est un cadre plein percé d'une ouverture à haut en arc (cadre de `bord_cm`, flèche `fleche_cm`, 0 = demi-cercle)
 function _nicheOf(rec){ return rec==='M' ? (S.nicheM||null) : ((rec&&rec.niche)||null); }
@@ -1862,7 +1898,9 @@ function buildCaisson(){
   // Structure — joue gauche : face int = +x (idx 0), joue droite : face int = -x (idx 1)
   // tablette haute : face int = -y (idx 3), tablette basse : face int = +y (idx 2)
   var _boM=(hasAngle||currentFT==='sdb')?null:_boutOf('M',CL,CP);
+  var _peM=(hasAngle||currentFT==='sdb'||_boM)?null:_penteCtx('M',CL,CH);
   if(_boM){ buildBoutCarcass(caissonGrp,CL,CH,CP,ep,matCais,matFond,_boM); }
+  else if(_peM){ buildPenteCarcass(caissonGrp,CL,CH,CP,ep,matCais,matFond,_peM); }
   else {
   var cg=boxBimat(ep,CH,CP,0); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
   // Joue droite : supprimée quand caisson d'angle (C2 prend sa place)
@@ -2321,7 +2359,9 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
 
     // ── Structure ──
     var _boX=d.isTop?null:_boutOf(d.record,W,CP);
+    var _peX=(d.isTop||_boX)?null:_penteCtx(d.record,W,H);
     if(_boX){ buildBoutCarcass(g,W,H,CP,ep2,matCais,matFond,_boX); }
+    else if(_peX){ buildPenteCarcass(g,W,H,CP,ep2,matCais,matFond,_peX); }
     else {
     var jg=box(ep2,H,CP,matCais); jg.position.set(-W/2+ep2/2,H/2,0); g.add(jg);
     var jd=box(ep2,H,CP,matCais); jd.position.set( W/2-ep2/2,H/2,0); g.add(jd);
@@ -4245,7 +4285,7 @@ function renderCaissonWidths(){
           +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
           +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',Hmax)+'</div>'
           +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div>'
-          +(_isAdminMode()?_boutHtml(r)+_archeHtml(r)+_nicheHtml(r):'');
+          +(_isAdminMode()?_boutHtml(r)+_archeHtml(r)+_nicheHtml(r)+_penteHtml(r):'');
       }
     });
     if(currentFT!=='sdb') html+='<div style="text-align:center;margin:6px 0 0"><a href="#" onclick="addLevelAbove(\''+c.side+'\','+c.idx+');return false" style="font-size:11px;color:var(--accent);text-decoration:underline">+ Ajouter un caisson au-dessus'+(total>1?' (caisson '+n+')':'')+'</a></div>';
@@ -4424,6 +4464,35 @@ function _nicheHtml(r){
     h+=fld('Contour autour de l\'ouverture (0 = aucun)','bord_cm',n.bord_cm>0?n.bord_cm:0)+fld('Flèche de l\'arc (0 = demi-cercle)','fleche_cm',n.fleche_cm||0)
       +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Le prix de la niche (découpe de l\'ouverture en arc) n\'est pas pris en compte (ni celui des éventuelles portes arquées).</div>'
       +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">L\'ouverture à haut en arc occupe toute la largeur du caisson (seuls les deux coins au-dessus de l\'arc sont pleins) ; avec un contour, la façade devient un cadre plein. Les portes posées dans une niche sans contour suivent l\'arc ; avec un contour elles restent droites. L\'éclairage n\'est pas modélisé.</div>';
+  }
+  return h;
+}
+// pente du dessus (équipe seulement)
+function _getPente(side,idx,k){ var r=_recAt(side,idx,k); return _penteOf(r); }
+function _putPente(side,idx,k,pe){ var r=_recAt(side,idx,k); if(r==='M') S.penteM=pe; else if(r){ if(pe) r.pente=pe; else delete r.pente; } }
+function _penteHauteur(side,idx,k){ var r=_recAt(side,idx,k); return r==='M'?Math.round(S.CH*100):(r?(r.H||0):0); }
+function setPente(side,idx,k,bas){
+  if(!_isAdminMode()) return;
+  if(bas==='aucune'){ _putPente(side,idx,k,null); }
+  else { var old=_getPente(side,idx,k), H=_penteHauteur(side,idx,k); _putPente(side,idx,k,{bas:bas,h_cm:old?old.h_cm:Math.max(20,Math.round(H*0.6))}); }
+  _refreshCols();
+}
+function setPenteH(side,idx,k,cm){
+  var pe=_getPente(side,idx,k); if(!pe||!_isAdminMode()) return;
+  var H=_penteHauteur(side,idx,k); cm=Math.max(10,Math.min(H-1,Math.round(parseFloat(cm))||pe.h_cm));
+  _putPente(side,idx,k,{bas:pe.bas,h_cm:cm}); _refreshCols();
+}
+function _penteHtml(r){
+  var pe=_getPente(r.side,r.idx,r.k), call="'"+r.side+"',"+r.idx+","+r.k, bas=pe?pe.bas:'aucune';
+  var opt=function(v,t){ return '<option value="'+v+'"'+(bas===v?' selected':'')+'>'+t+'</option>'; };
+  var h='<div class="dim-row"><span class="dim-lbl" style="color:var(--accent)">Pente du dessus</span>'
+    +'<select onchange="setPente('+call+',this.value)" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font:600 12px DM Sans,sans-serif;color:var(--text)">'
+    +opt('aucune','Aucune')+opt('gauche','Plus bas à gauche')+opt('droite','Plus bas à droite')+opt('arriere','Plus bas vers le fond')+'</select></div>';
+  if(pe){
+    h+='<div class="dim-row"><span class="dim-lbl">Hauteur du côté bas</span><div class="dim-ctrl"><button class="dim-step" onclick="setPenteH('+call+','+(pe.h_cm-5)+')">−</button>'
+      +'<input class="dim-inp" type="number" min="10" value="'+pe.h_cm+'" onchange="setPenteH('+call+',this.value)"><span class="dim-unit">cm</span>'
+      +'<button class="dim-step" onclick="setPenteH('+call+','+(pe.h_cm+5)+')">+</button></div></div>'
+      +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">La « hauteur » du caisson est celle du côté haut. '+(pe.bas==='arriere'?'Le dessus descend vers le fond : les côtés sont en trapèze, les portes restent droites.':'Le dessus est incliné vu de face : les portes qui touchent le haut suivent la pente.')+' Les étagères restent horizontales : vérifie qu\'elles passent sous le côté bas.</div>';
   }
   return h;
 }
@@ -5906,7 +5975,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
@@ -5927,8 +5996,8 @@ async function submitConfig(){
             // Ancien format (avant les caissons illimités) : un seul objet par côté — admin.html
             // sait encore lire les deux formats pour les anciennes configs déjà en base.
             // left/right : les caissons empilés (niveau > 0) y figurent aussi, avec leur colonne (col), leur niveau et la hauteur de leur bas (y_cm)
-            left:  tvSideLeft.filter(function(r){return !(r.stack&&r.stack.bridge);}).map(function(r){ return { x_cm:_recX(r), W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
-            right: tvSideRight.filter(function(r){return !(r.stack&&r.stack.bridge);}).map(function(r){ return { x_cm:_recX(r), W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            left:  tvSideLeft.filter(function(r){return !(r.stack&&r.stack.bridge);}).map(function(r){ return { x_cm:_recX(r), W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined, pente:r.pente||undefined, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
+            right: tvSideRight.filter(function(r){return !(r.stack&&r.stack.bridge);}).map(function(r){ return { x_cm:_recX(r), W_cm:r.W, H_cm:r.H, P_cm:r.P, niveau:r.stack?r.stack.lvl:0, col:_columnsLR().indexOf(_colRoot(r)), y_cm:_yBottomOf(r), bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined, pente:r.pente||undefined, elements:exportElementsWithBounds(r.elems, r.W, r.H) }; }),
             // espaces libres entre caissons ; chacun peut porter un pont (caisson suspendu) : apres_col = colonne à sa gauche (0 = la plus à gauche)
             espaces: tvGaps.map(function(g){ var cl=_columnsLR(); var b=g.bridge;
               return { apres_col: cl.indexOf(g.after==='M'?'M':(tvSideLeft.concat(tvSideRight).filter(function(r){return r.uid===g.after;})[0]||null)), x_cm:_absX(_layout(S.CL).gapPos[g.uid]?_layout(S.CL).gapPos[g.uid].px:0, g.W/100), L_cm:g.W,
@@ -5944,8 +6013,8 @@ async function submitConfig(){
             _columnsLR().forEach(function(root,ci){
               var base = root==='M' ? { W:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100), els:caissonElements } : { W:root.W, H:root.H, P:root.P||Math.round(S.CairsonP*100), els:root.elems };
               var x0=_recX(root);
-              add(root==='M'?'principal':(ci<_columnsLR().indexOf('M')?'gauche':'droite'), base.W, base.H, base.P, base.els, false, {col:ci, niveau:0, y_start_cm:0, x_start_cm:x0, bout:(root==='M'?S.boutM:root.bout)||undefined, arche_cm:(root==='M'?S.archeM:root.arche_cm)||undefined, niche:(root==='M'?S.nicheM:root.niche)||undefined});
-              _stackOf(root).forEach(function(r){ add('haut', r.W, r.H, r.P||base.P, r.elems, false, {col:ci, niveau:r.stack.lvl, y_start_cm:_yBottomOf(r), x_start_cm:x0, bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined}); });
+              add(root==='M'?'principal':(ci<_columnsLR().indexOf('M')?'gauche':'droite'), base.W, base.H, base.P, base.els, false, {col:ci, niveau:0, y_start_cm:0, x_start_cm:x0, bout:(root==='M'?S.boutM:root.bout)||undefined, arche_cm:(root==='M'?S.archeM:root.arche_cm)||undefined, niche:(root==='M'?S.nicheM:root.niche)||undefined, pente:(root==='M'?S.penteM:root.pente)||undefined});
+              _stackOf(root).forEach(function(r){ add('haut', r.W, r.H, r.P||base.P, r.elems, false, {col:ci, niveau:r.stack.lvl, y_start_cm:_yBottomOf(r), x_start_cm:x0, bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined, pente:r.pente||undefined}); });
             });
             tvGaps.forEach(function(g){ var b=g.bridge; if(b) add('pont', b.W, b.H, b.P||Math.round(S.CairsonP*100), b.elems, false, {col:-1, niveau:0, y_start_cm:b.y||0, x_start_cm:_recX(b)}); });
             if(hasAngle) add('angle', Math.round(S.CL2*100), Math.round(S.CH*100), Math.round(S.CairsonP*100), caissonElements2, true);
@@ -6390,7 +6459,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null;
+    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null;
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
@@ -6407,7 +6476,7 @@ function appliquerConfig(cfg, opts){
           if(r.niveau>0){ _stacked.push({side:side,r:r}); return; }     // caissons empilés : recréés après leurs colonnes
           addTvSide(side);
           var list=side==='left'?tvSideLeft:tvSideRight, rec=list[list.length-1];
-          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.Htot=rec.H; rec.P=Math.round(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[]; rec.bout=r.bout||null; rec.arche_cm=r.arche_cm||undefined; rec.niche=r.niche||undefined;
+          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.Htot=rec.H; rec.P=Math.round(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[]; rec.bout=r.bout||null; rec.arche_cm=r.arche_cm||undefined; rec.niche=r.niche||undefined; rec.pente=r.pente||undefined;
           if(r.col!=null) _colMap[r.col]=rec;
         });
       });
@@ -6419,7 +6488,7 @@ function appliquerConfig(cfg, opts){
         _stacked.forEach(function(x){
           var root=_colMap[x.r.col]; if(root===undefined) return;
           var below=_last[x.r.col]||root, rec=makeTvRecord(Math.round(x.r.W_cm),Math.round(x.r.H_cm));
-          rec.P=Math.round(x.r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.niche=x.r.niche||undefined; rec.stack={lvl:x.r.niveau}; rec.below=below;
+          rec.P=Math.round(x.r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.niche=x.r.niche||undefined; rec.pente=x.r.pente||undefined; rec.stack={lvl:x.r.niveau}; rec.below=below;
           (x.side==='left'?tvSideLeft:tvSideRight).push(rec); _last[x.r.col]=rec;
           if(root==='M') S.CHtot=Math.round((S.CHtot*100+rec.H))/100; else root.Htot=(root.Htot||root.H)+rec.H;
           var ck=x.r.col; _colLv[ck]=_colLv[ck]||[root==='M'?Math.round(S.CH*100):root.H]; _colLv[ck].push(rec.H);
@@ -6516,7 +6585,7 @@ function appliquerConfig(cfg, opts){
       if(!raw) throw new Error('Aucun modèle enregistré sur ce projet : modélisez-le d\'abord.');
       var m=raw.meuble||{};
       if(m.formes_seules || (raw.formes_libres&&raw.formes_libres.length)) throw new Error('ce modèle est en formes libres (importé) : il ne se modifie pas dans le configurateur. Importez une nouvelle version avec « Importer un modèle (JSON) ».');
-      appliquerConfig({ ft:raw.furniture_type||'tv', boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
+      appliquerConfig({ ft:raw.furniture_type||'tv', boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, penteM:m.pente, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
         elements:raw.elements, tvSide:raw.tvSide, caisson2:raw.caisson2, cableHoles:raw.cableHoles, plan:raw.plan, vasques:raw.vasques }, {badge:false});
     }catch(e){ alert('Impossible de recharger le modèle : '+(e.message||e)); }
   })();

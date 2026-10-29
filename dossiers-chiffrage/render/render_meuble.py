@@ -464,7 +464,29 @@ def build_furniture(cfg, opt, open_state=False):
             xs0 = ep if bo["side"] > 0 else W - ep          # bord intérieur du côté droit (non arrondi)
             prism("traverse_basse", bout_plan(W, D, bo, xs0, D), 0, ep, "h")
             prism("traverse_haute", bout_plan(W, D, bo, xs0, D), H - ep, H, "h")
-        for p in spec.get("structural_panels", []):
+        pe = spec.get("_pente")
+        pe = pe if (pe and not bo and float(pe.get("h_cm") or 0) > 0 and pe.get("bas")) else None
+        if pe:   # pente du dessus (équipe) : joues, dessus et fond reconstruits ; sinon dessin habituel
+            lo = max(100.0, min(float(pe["h_cm"]) * 10.0, H - 10.0))
+            zo_p = z_off / mm + oyc[0]
+            def P3(x_, y_, z_): return ((ox + x_) * mm, y_ * mm, (z_ + zo_p) * mm)
+            def prisme(nm, pts, vec, grain="h", mt=None):
+                o_ = add_prism(nm, [P3(*q) for q in pts], (vec[0] * mm, vec[1] * mm, vec[2] * mm), mt or wood, grain, rnd)
+                if o_: objs.append(o_)
+            if pe["bas"] == "arriere":     # haut devant (H), bas au fond (lo) : côtés en trapèze, dessus incliné
+                prisme("joue_gauche", [(0, 0, 0), (0, D, 0), (0, D, lo), (0, 0, H)], (ep, 0, 0), "v")
+                prisme("joue_droite", [(W - ep, 0, 0), (W - ep, D, 0), (W - ep, D, lo), (W - ep, 0, H)], (ep, 0, 0), "v")
+                prisme("traverse_haute", [(ep, 0, H - ep), (ep, 0, H), (ep, D, lo), (ep, D, lo - ep)], (W - 2 * ep, 0, 0), "h")
+                B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
+                B("fond", 0, W, 0, lo, D - 8, D, "v", inside)
+            else:                          # pente de face : bas à gauche ou à droite
+                hl, hr = (lo, H) if pe["bas"] == "gauche" else (H, lo)
+                def hf(x_): return hl + (hr - hl) * (x_ / float(W))
+                B("joue_gauche", 0, ep, 0, hf(0), 0, D, "v"); B("joue_droite", W - ep, W, 0, hf(W), 0, D, "v")
+                prisme("traverse_haute", [(ep, 0, hf(ep) - ep), (W - ep, 0, hf(W - ep) - ep), (W - ep, 0, hf(W - ep)), (ep, 0, hf(ep))], (0, D, 0), "h")
+                B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
+                prisme("fond", [(0, D - 8, 0), (W, D - 8, 0), (W, D - 8, hr), (0, D - 8, hl)], (0, 8, 0), "v", inside)
+        for p in ([] if pe else spec.get("structural_panels", [])):
             t = p["type"]
             if bo and (t in ("traverse_haute", "traverse_basse") or t == ("joue_droite" if bo["side"] > 0 else "joue_gauche")):
                 continue
@@ -521,6 +543,8 @@ def build_furniture(cfg, opt, open_state=False):
             if not _a and _n and float(_n.get("bord_cm") or 0) < 5:   # niche arquée sans contour : les portes suivent l'arc de la niche
                 _a = float(_n.get("fleche_cm") or 0) * 10.0 or W / 2.0
             fl = min(_a, W / 2.0, H - 40) if (yt + 1 >= H - ep - 2) else 0
+            _pp = spec.get("_pente")
+            slope = bool(_pp and not fl and _pp.get("bas") in ("gauche", "droite") and float(_pp.get("h_cm") or 0) > 0 and (yt + 1 >= H - ep - 2))   # pente de face : le haut de la porte suit la pente
             def sag(x_):
                 R_ = (W * W / 4.0 + fl * fl) / (2.0 * fl)
                 return math.sqrt(max(0.0, R_ * R_ - (x_ - W / 2.0) ** 2)) - (R_ - fl)
@@ -528,8 +552,13 @@ def build_furniture(cfg, opt, open_state=False):
                 """Contour dans le plan (x, z), épaisseur th le long de y ; pivote autour de `pivot` quand la porte est ouverte."""
                 zo = z_off / mm + oyc[0]
                 pts2 = [(xl, yb + zo), (xr, yb + zo)]
-                n_ = max(6, int(24 * (xr - xl) / W))
-                for i_ in range(n_ + 1):
+                if slope:   # haut en biais : même pente que le dessus du caisson
+                    lo_ = max(100.0, min(float(_pp["h_cm"]) * 10.0, H - 10.0)); hl_, hr_ = (lo_, H) if _pp["bas"] == "gauche" else (H, lo_)
+                    top_ = lambda x_: yt - (H - (hl_ + (hr_ - hl_) * (x_ / float(W)))) - 2.5 + zo
+                    pts2 += [(xr, top_(xr)), (xl, top_(xl))]
+                else:
+                  n_ = max(6, int(24 * (xr - xl) / W))
+                  for i_ in range(n_ + 1):
                     x_ = xr - (xr - xl) * i_ / n_
                     pts2.append((x_, min(yt, yt - fl + sag(x_)) - 2.5 + zo))   # joint de 2,5 mm sous l arc
                 def tr(x_, y_):
@@ -556,14 +585,14 @@ def build_furniture(cfg, opt, open_state=False):
                     if o_: objs.append(o_)
             if not open_state:
                 if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm)
-                elif fl > 0: porte_arche()
+                elif fl > 0 or slope: porte_arche()
                 else: B("porte", xl, xr, yb, yt, 0, th, "v", dm)
             else:  # charnières sur une joue ou un intercalaire (jamais dans le vide)
                 left = sides[di] == "L"
                 px = (ox + (xl if left else xr)) * mm
                 rot = math.radians(-angle_for(di) if left else angle_for(di))
                 if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm, pivot=(px, 0), rot=rot)
-                elif fl > 0: porte_arche(pivot=(px, 0), rot=rot)
+                elif fl > 0 or slope: porte_arche(pivot=(px, 0), rot=rot)
                 else:
                     o = add_box("porte", (ox + xl) * mm, (ox + xr) * mm, 0, th * mm, (yb + oyc[0]) * mm + z_off, (yt + oyc[0]) * mm + z_off, dm, "v", rnd,
                                 pivot=(px, 0), rot_z=rot)
