@@ -1781,6 +1781,17 @@ function _penteCtx(rec,W,H){
   return {bas:p.bas,lo:lo,H:H,W:W,plat:(p.bas==='arriere')?0:Math.max(0,Math.min((p.plat_cm||0)/100,W-0.2))};
 }
 // hauteur du dessus (m) à l'abscisse x (0 = centre du caisson) ; pente de face seulement
+// pente : l'étagère s'arrête là où elle rejoindrait le dessus incliné (bornes en cm intérieurs, retournées [gauche,droite])
+function _penteClipShelf(P,sl,sr,yCm,toLocal,ep){
+  if(!P||P.bas==='arriere') return [sl,sr];
+  var need=yCm+ep*50, f=function(xc){ return (_penteTop(P,toLocal(xc))-ep)*100-need; };
+  var inner=(P.bas==='droite');
+  var a=inner?sl:sr, b=inner?sr:sl;           // a : côté haut, b : côté bas
+  if(f(b)>=0) return [sl,sr];
+  if(f(a)<0) return [sl,sl];
+  for(var i=0;i<30;i++){ var m=(a+b)/2; if(f(m)>=0) a=m; else b=m; }
+  return inner?[sl,a]:[a,sr];
+}
 function _penteTop(P,x){   // tronçon plat de longueur P.plat du côté haut, puis pente jusqu'au côté bas
   if(P.bas==='arriere') return P.H;
   var u=x+P.W/2, pl=P.plat||0, L=P.W-pl;                                   // u : distance depuis le bord gauche
@@ -2033,6 +2044,7 @@ function buildCaisson(){
         var iW_cm2=(S.CL-2*EP)*100;
         var sl=el.x_left_cm!==undefined?el.x_left_cm:0;
         var sr=el.x_right_cm!==undefined?el.x_right_cm:iW_cm2;
+        if(_peM&&_peM.bas!=='arriere'){ var _cl=_penteClipShelf(_peM,sl,sr,el.y_cm,xcmToLocal,ep); sl=_cl[0]; sr=_cl[1]; if(sr-sl<0.5) return; }
         var sw=(sr-sl)/100;
         var scx=xcmToLocal((sl+sr)/2);
         var th=ep;
@@ -2403,6 +2415,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
 
       if(el.type==='shelf'||el.type==='shelf_simple'){
         var sl=el.x_left_cm!==undefined?el.x_left_cm:0, sr=el.x_right_cm!==undefined?el.x_right_cm:iWcm;
+        if(_peX&&_peX.bas!=='arriere'){ var _cl2=_penteClipShelf(_peX,sl,sr,el.y_cm,xcm,ep2); sl=_cl2[0]; sr=_cl2[1]; if(sr-sl<0.5) return; }
         var sw=(sr-sl)/100, scx=xcm((sl+sr)/2), th=ep2;
         var m;
         if(_boutShelf(_boX,sl,sr,iWcm)){ m=_boutPlate(_boX,W,CP,(_boX.side>0?scx-sw/2:scx+sw/2),ycm(el.y_cm)-th/2,th,matElem); }

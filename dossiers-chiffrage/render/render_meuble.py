@@ -527,7 +527,21 @@ def build_furniture(cfg, opt, open_state=False):
                 x0 = s_["x_left_mm"] if bo["side"] > 0 else s_["x_right_mm"]
                 prism("shelf", bout_plan(W, D, bo, x0, min(D - 8, 12 + s_.get("depth_mm", D - ep))), s_["y_bottom_mm"], s_["y_top_mm"], "h", sm_)
             else:
-                B("shelf", s_["x_left_mm"], s_["x_right_mm"], s_["y_bottom_mm"], s_["y_top_mm"], 12, min(D - 8, 12 + s_.get("depth_mm", D - ep)), "h", sm_)
+                xl_, xr_ = s_["x_left_mm"], s_["x_right_mm"]
+                _ps = spec.get("_pente")
+                if _ps and _ps.get("bas") in ("gauche", "droite") and float(_ps.get("h_cm") or 0) > 0:   # pente : l'étagère s'arrête sous le dessus incliné
+                    fx = lambda x_: pente_haut(_ps, W, H, x_) - ep - s_["y_top_mm"]
+                    ha, ba = (xl_, xr_) if _ps["bas"] == "droite" else (xr_, xl_)
+                    if fx(ba) < 0:
+                        if fx(ha) < 0: continue
+                        for _ in range(30):
+                            m_ = (ha + ba) / 2.0
+                            if fx(m_) >= 0: ha = m_
+                            else: ba = m_
+                        if _ps["bas"] == "droite": xr_ = ha
+                        else: xl_ = ha
+                    if xr_ - xl_ < 5: continue
+                B("shelf", xl_, xr_, s_["y_bottom_mm"], s_["y_top_mm"], 12, min(D - 8, 12 + s_.get("depth_mm", D - ep)), "h", sm_)
         for b_ in spec.get("bars", []):
             o = add_cyl("tringle", (ox + b_["x_left_mm"]) * mm, (ox + b_["x_right_mm"]) * mm, 0.5 * D * mm, (b_["y_center_mm"] + oyc[0]) * mm + z_off, b_.get("diameter_mm", 28) * mm / 2, metal)
             objs.append(o)
