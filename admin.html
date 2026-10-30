@@ -3893,7 +3893,7 @@
         if (w < 5) return;
         if (w >= (L - 2 * 18 - 4)) nShelf++; else add('Etagère partielle' + suf, w, P - 19, 1, CH.etag);
       });
-      if (c.main) (m.muraux || []).forEach(function (mu) { add((mu.type === 'intercalaire' ? 'Intercalaire mural' : 'Étagère murale') + ' (libre)' + suf, mu.long_cm * 10, mu.prof_cm * 10, 1, CH.etag); });
+      if (c.main) (m.muraux || []).forEach(function (mu) { if (mu.type === 'facade') add('Façade murale (libre)' + suf, (mu.haut_cm || 0) * 10, mu.long_cm * 10, 1, CH.all, 'facade'); else add((mu.type === 'intercalaire' ? 'Intercalaire mural' : 'Étagère murale') + ' (libre)' + suf, mu.long_cm * 10, mu.prof_cm * 10, 1, CH.etag); });
       if (c.main) (m.tablettes || []).forEach(function (tb) { add('Étagère murale (' + (tb.cote === 'droite' ? 'droite' : 'gauche') + ')' + suf, tb.long_cm * 10, tb.prof_cm * 10, 1, CH.etag); });   // étagères jusqu'au mur (équipe) : à leur longueur réelle
       if (bo && nShelf > 0) {   // étagères pleine largeur : jusqu'au côté ouvert, bord avant suivant la courbe
         pieces.push({ nom: 'Etagère Fixe (bout arrondi)' + suf, l: Math.round(L - t), w: Math.round(gS.surf / (L - t)), qte: nShelf, ch: 'all', cat: 'struct', forme: true, surfM2: gS.surf / 1e6, perimM: gS.perim / 1000, chantM: (gS.front + gS.side) / 1000, cintre: true });
@@ -6043,6 +6043,16 @@ function dedupeEls(els){
 
       q = mergeDevisQuantitiesAdmin(parts);
       (meuble.muraux || []).forEach(function (mu) {   // étagères et intercalaires fixés au mur, sans caisson (équipe) : comptés et chiffrés à leur taille réelle
+        if (mu.type === 'facade') {   // façade fixée au mur : panneau plein compté comme une porte, sans charnières
+          var fw = (parseFloat(mu.long_cm) || 0) * 10, fh = (parseFloat(mu.haut_cm) || 0) * 10; if (!(fw > 0 && fh > 0)) return;
+          var mf = matLabel || 'Non défini';
+          q.panels_porte_m2[mf] = (q.panels_porte_m2[mf] || 0) + fw * fh / 1e6;
+          q.edge_banding_m += 2 * (fw + fh) / 1000; q.edge_banding_ml = Math.round(q.edge_banding_m * 1000) / 1000;
+          q.decoupe_porte_m += 2 * (fw + fh) / 1000;
+          q.doors_count++;
+          q.pieces.push({ type: 'porte', w_mm: Math.round(fw), h_mm: Math.round(fh), perimeter_mm: Math.round(2 * (fw + fh)), group: 'Façade murale (libre)', charnieres: 0 });
+          return;
+        }
         var l = (parseFloat(mu.long_cm) || 0) * 10, d = (parseFloat(mu.prof_cm) || 0) * 10; if (!(l > 0 && d > 0)) return;
         var mt = matLabel || 'Non défini', sep = mu.type === 'intercalaire';
         q.panels_etagere_m2[mt] = (q.panels_etagere_m2[mt] || 0) + l * d / 1e6;

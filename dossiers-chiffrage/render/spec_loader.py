@@ -217,6 +217,8 @@ def load_spec(path):
         if l_ <= 0: continue
         if mx is None: continue
         ax = round((float(u.get("x_cm") or 0) - mx) * 10)
+        if u.get("type") == "facade":   # façade fixée au mur : panneau plein de 20 mm
+            yb_ = round(float(u.get("y_cm") or 0) * 10); mu_.append(("facade", ax, ax + l_, yb_, yb_ + round(float(u.get("haut_cm") or 80) * 10), 20)); continue
         if u.get("type") == "intercalaire": mu_.append(("intercalaire", ax - ep // 2, ax + ep // 2, round(float(u.get("y_cm") or 0) * 10), round(float(u.get("y_cm") or 0) * 10) + l_, pr_))
         else: mu_.append(("etagere", ax, ax + l_, round(float(u.get("y_cm") or 0) * 10) - ep, round(float(u.get("y_cm") or 0) * 10), pr_))
     xmin = min([xmin] + [t[0] for t in tl] + [m[0] for m in murs] + [u[1] for u in mu_])

@@ -712,14 +712,15 @@ def build_furniture(cfg, opt, open_state=False):
             if o: objs.append(o)
     oyc[0] = 0
     for xl_, xr_, yt_, dp_ in cfg.get("_tablettes", []):   # étagères jusqu'au mur : posées contre le fond, un bout contre le meuble
-        box("etagere_murale", 0, xl_, xr_, max(0, yt_ - ep), yt_, 0, min(dp_, D), "h")
+        box("etagere_murale", 0, xl_, xr_, max(0, yt_ - ep), yt_, D - min(dp_, D), D, "h")
     Hm_ = max([sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"]] + [t_[2] for t_ in cfg.get("_tablettes", [])]) + 150
     for xl_, xr_ in cfg.get("_murs_tab", []):   # murs au bout des étagères (elles s'y fixent)
         o_ = add_box("mur_etagere", xl_ * mm, xr_ * mm, 0, (D + 60) * mm, 0, Hm_ * mm, mat_plain("mur_tab", (0.84, 0.82, 0.79), 0.95), "h", rnd)
         if o_: objs.append(o_)
     oyc[0] = 0
     for _t, xl_, xr_, yb_, yt_, pr_ in cfg.get("_muraux", []):   # étagères / intercalaires fixés au mur, sans caisson (équipe)
-        box("mural", 0, xl_, xr_, max(0, yb_), yt_, 0, min(pr_, D), "h" if _t == "etagere" else "v")
+        pr_ = min(pr_, D)
+        box("mural", 0, xl_, xr_, max(0, yb_), yt_, D - pr_, D, "h" if _t == "etagere" else "v")   # collé au mur (le fond du caisson est à z = D)
     Wtot = max([ox + sp["overall_mm"]["width"] for ox, sp in cfg["_caissons"]] + ([hi[0] - lo[0]] if fp else []))
     x0t = min(ox for ox, _ in cfg["_caissons"]) if cfg.get("_tablettes") else 0   # abscisse du meuble quand des étagères murales le décalent
     Htot = max([sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"]] + ([hi[2]] if fp else []))
