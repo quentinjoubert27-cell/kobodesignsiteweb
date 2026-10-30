@@ -2761,10 +2761,20 @@
     // meuble modélisé par l'équipe (un ou plusieurs) : proposition sans rendus, descriptif seulement
     // plusieurs meubles : descriptif seul (un rendu ne représente qu'un meuble) ; meuble modélisé par l'équipe : rendu fabriqué si la case « Avec les rendus 3D » est cochée
     var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !(currentProjetRc && currentProjetRc.manuel) && !avecRendus);
-    if (multi && avecRendus && mode !== 'html') showToast('Plusieurs meubles dans ce projet : la proposition est créée sans rendu 3D (descriptif de chaque meuble).');
+    var imgsMulti = [];   // plusieurs meubles : un rendu fermé / ouvert par meuble, dans la composition
     var imgs = { ferme: '', ouvert: '', plan: '', vasque: '' }, helperMsg = '', verif = null;
     try {
       var isManuel = !!(currentProjetRc && currentProjetRc.manuel);
+      if (multi && avecRendus) {
+        for (var mi0 = 0; mi0 < currentProjetMeubles.length; mi0++) {
+          try {
+            var jm = await devisRendersFromHelper(rcFromSdb(currentProjetMeubles[mi0]), w);
+            imgsMulti[mi0] = jm ? { ferme: jm.ferme || '', ouvert: jm.ouvert || '' } : null;
+            if (!jm) break;   // assistant injoignable : inutile de réessayer pour les autres meubles
+          } catch (e) { imgsMulti[mi0] = null; helperMsg = 'Rendu impossible pour « ' + libelleMeuble(currentProjetMeubles[mi0], mi0) + ' » : ' + (e.message || e); }
+        }
+        if (!imgsMulti.some(Boolean) && !helperMsg) helperMsg = 'Assistant de rendus injoignable : proposition créée sans les images. Vérifie que « Rendus Kōbō » tourne sur ce Mac (et l\'autorisation « réseau local » de Chrome).';
+      }
       var j = (currentProjetRc && !isManuel && !sansRendus && avecRendus) ? await devisRendersFromHelper(currentProjetRc, w) : null;
       if (isManuel && avecRendus) { imgs.ferme = (currentManuel.images || {}).ferme || ''; imgs.ouvert = (currentManuel.images || {}).ouvert || ''; }
       if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; verif = j.verification || null; }
@@ -2807,7 +2817,9 @@
     var cliLines = [cl, cli.societe, cli.email, cli.telephone, cli.code_postal ? 'Code postal : ' + cli.code_postal : ''].filter(Boolean).map(function (x, i) { return i === 0 ? '<b>' + escHtml(x) + '</b>' : escHtml(x); }).join('<br>');
     var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 05 56 04 01 81';
     var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + emise + '</div></div></div>'; };
-    var pv = sansRendus ? [] : devisSimplePlanVasque(), nbPages = pv.length ? 4 : 3;
+    var visIdx = multi ? currentProjetMeubles.map(function (m, i) { return i; }).filter(function (i) { return imgsMulti[i] && (imgsMulti[i].ferme || imgsMulti[i].ouvert); }) : [];
+    var kVis = Math.ceil(visIdx.length / 2);   // plusieurs meubles : une page de visuels pour deux meubles
+    var pv = sansRendus ? [] : devisSimplePlanVasque(), nbPages = (pv.length ? 4 : 3) + kVis;
     // textes de la proposition : valeurs par défaut, ou celles modifiées dans l'éditeur
     var CC = propositionContenu({ p: p, cli: cli, cl: cl, estManuel: estManuel, multi: multi, sansRendus: sansRendus, pv: pv, nbPages: nbPages, det0: det0 }).c;
     numDevis = CC.numero || numDevis;
@@ -2847,17 +2859,27 @@
         return '<li style="margin-bottom:3mm;"><b>' + escHtml(libelleMeuble(m, mi)) + '</b><br>' + escHtml(dm.caisson) + '<br>' + escHtml(t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir') + '<br>' + escHtml(dm.quincaillerie) + '</li>';
       }).join('') + '</ul></div>' : '')) +
       (CC.composition && propositionContenuDe() && propositionContenuDe().composition ? '' : multi ? '' : '<div class="compo"><h4>Composition du meuble</h4><ul>' + [det0.caisson, (function () { var qq = currentDevisQuantities || {}, n1 = qq.doors_count || 0, n2 = qq.drawers_count || 0; var t = []; if (n1) t.push(n1 + ' porte' + (n1 > 1 ? 's' : '')); if (n2) t.push(n2 + ' tiroir' + (n2 > 1 ? 's' : '')); return t.length ? 'Façades : ' + t.join(' et ') : 'Sans porte ni tiroir'; })(), det0.quincaillerie].filter(Boolean).map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>') + foot(1) + '</div>' +
+      (function () {   // plusieurs meubles : pages de visuels (fermé / ouvert), deux meubles par page
+        var out = '';
+        for (var pg = 0; pg < kVis; pg++) {
+          out += '<div class="pg">' + head() + '<div class="obj"><h4>Vos meubles</h4><h2>Visuels</h2></div>' + visIdx.slice(pg * 2, pg * 2 + 2).map(function (i) {
+            var ii = imgsMulti[i];
+            return '<div style="margin-top:6mm;"><h3 style="font-size:12pt;font-weight:600;margin:0 0 2mm;">' + escHtml(libelleMeuble(currentProjetMeubles[i], i)) + '</h3><div class="imgs" style="margin-top:2mm;">' + (ii.ferme ? '<figure><img src="' + ii.ferme + '"><figcaption>Meuble fermé</figcaption></figure>' : '') + (ii.ouvert ? '<figure><img src="' + ii.ouvert + '"><figcaption>Portes et tiroirs ouverts</figcaption></figure>' : '') + '</div></div>';
+          }).join('') + '<p class="nc">Images non contractuelles.</p>' + foot(2 + pg) + '</div>';
+        }
+        return out;
+      })() +
       (pv.length ? '<div class="pg">' + head() + '<div class="obj"><h4>Salle de bain</h4><h2>Plan de travail et vasque</h2></div><div class="pvs">' + pv.map(function (x) {
         var im2 = !avecRendus ? '' : (imgs[x.key] ? '<img src="' + imgs[x.key] + '">' : (x.sans ? '<div class="ph">Pas de vasque</div>' : '<div class="ph">Image non disponible</div>'));
         return '<div class="pv">' + im2 + '<h3>' + escHtml(x.titre) + '</h3>' + (x.texture ? '<p class="tx"><b>Texture / finition :</b> ' + escHtml(x.texture) + '</p>' : '') + '<ul>' + x.specs.map(function (t) { return '<li>' + escHtml(t) + '</li>'; }).join('') + '</ul></div>';
-      }).join('') + '</div>' + (avecRendus ? '<p class="nc">Images non contractuelles.</p>' : '') + foot(2) + '</div>' : '') +
+      }).join('') + '</div>' + (avecRendus ? '<p class="nc">Images non contractuelles.</p>' : '') + foot(2 + kVis) + '</div>' : '') +
       '<div class="pg">' + head() + '<table><thead><tr><th>Désignation</th><th class="n">Prix HT</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div class="tot"><div><span>Total HT</span><span>' + formatCurrency(total) + '</span></div><div><span>TVA 20 %</span><span>' + formatCurrency(Math.round(total * 20) / 100) + '</span></div><div class="ttc"><span>Total TTC</span><span>' + formatCurrency(Math.round(total * 120) / 100) + '</span></div></div>' +
       '<div class="cond"><h4>Conditions</h4><ul>' + (CC.conditions || []).map(function (x) { return '<li>' + mdGras(String(x).replace(/\{\{PAGE_MATIERES\}\}/g, nbPages)) + '</li>'; }).join('') +
       '</ul></div>' +
-      foot(pv.length ? 3 : 2) + '</div>' +
+      foot((pv.length ? 3 : 2) + kVis) + '</div>' +
       fichePageHtml(head(), foot(nbPages));
-    if (mode === 'html') return { html: html, hasImages: !!imgs.ferme, numero: numDevis };
+    if (mode === 'html') return { html: html, hasImages: !!imgs.ferme || imgsMulti.some(Boolean), numero: numDevis };
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 1200);
   }
