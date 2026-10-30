@@ -424,7 +424,7 @@ def build_furniture(cfg, opt, open_state=False):
     mm = 0.001
     spec0 = cfg["_spec"]
     ep = spec0.get("panel_thickness_mm", 18)
-    D = spec0["overall_mm"]["depth"]
+    D = max([spec0["overall_mm"]["depth"]] + [sp_["overall_mm"]["depth"] for _, sp_ in cfg["_caissons"]])   # caissons de profondeurs différentes : fond aligné au mur, la plus grande profondeur sert de référence
     plinth = opt["plinthe"]
     fseules = bool((cfg.get("meuble") or {}).get("formes_seules"))
     if fseules and "plinthe" not in (cfg.get("rendu") or {}) and not opt.get("_plinthe_explicite"): plinth = 0   # formes libres : pas de plinthe sauf demande
@@ -463,7 +463,17 @@ def build_furniture(cfg, opt, open_state=False):
             o = add_box("porte" if pi_ == 0 else "lame", (ox + a) * mm, (ox + b) * mm, 0, th * mm, (c0 + oyc[0]) * mm + z_off, (c1 + oyc[0]) * mm + z_off, mt, "h", rnd, pivot=pivot, rot_z=rot)
             if o: objs.append(o)
 
+    Dmax = D
+    pend = [None]
+    def fin_caisson():   # profondeur propre : tout ce qui vient d'être dessiné est reculé contre le mur
+        if pend[0]:
+            n_, dz_ = pend[0]
+            if dz_:
+                for o_ in objs[n_:]: o_.location.y += dz_ * mm
+            pend[0] = None
     for ox, spec in cfg["_caissons"]:
+        fin_caisson()
+        D = spec["overall_mm"]["depth"]; pend[0] = (len(objs), Dmax - D)
         oyc[0] = spec.get("_oy_mm", 0)
         W = spec["overall_mm"]["width"]; H = spec["overall_mm"]["height"]
         B = lambda nm, xl, xr, yb, yt, d0, d1, grain, mt=None: box(nm, ox, xl, xr, yb, yt, d0, d1, grain, mt)
@@ -692,6 +702,7 @@ def build_furniture(cfg, opt, open_state=False):
             B("tiroir_cote_g", c0, c0 + 12, hb, hb + ht_, y0, y1, "h", inside)
             B("tiroir_cote_d", c1 - 12, c1, hb, hb + ht_, y0, y1, "h", inside)
             B("tiroir_dos", c0, c1, hb, hb + ht_, y1 - 12, y1, "h", inside)
+    fin_caisson(); D = Dmax
     # formes libres (plaques et rubans) : dessinées telles quelles, calées contre la gauche et la façade
     fp = formes_mod.toutes_pieces(cfg)
     mats_decor = {}

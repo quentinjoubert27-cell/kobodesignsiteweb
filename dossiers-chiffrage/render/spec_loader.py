@@ -154,7 +154,7 @@ def load_spec(path):
     for r in left_cols:
         W = round(r["W_cm"] * 10); off += W
         x = absx(r, -off)
-        sp0 = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
+        sp0 = spec_from_elements(W, round(r["H_cm"] * 10), round(float(r.get("P_cm") or D / 10) * 10), ep, r.get("elements", []))
         sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
         if r.get("bout"): sp0["_bout"] = r["bout"]
         if r.get("niche"): sp0["_niche"] = r["niche"]
@@ -166,7 +166,7 @@ def load_spec(path):
     for r in [r for r in (side.get("right") or []) if not r.get("niveau")]:
         W = round(r["W_cm"] * 10)
         x = absx(r, off)
-        sp0 = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
+        sp0 = spec_from_elements(W, round(r["H_cm"] * 10), round(float(r.get("P_cm") or D / 10) * 10), ep, r.get("elements", []))
         sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
         if r.get("bout"): sp0["_bout"] = r["bout"]
         if r.get("niche"): sp0["_niche"] = r["niche"]
@@ -178,7 +178,7 @@ def load_spec(path):
     for r in (side.get("left") or []) + (side.get("right") or []):
         if not r.get("niveau") or r.get("col") not in col_x: continue
         W = round(r["W_cm"] * 10)
-        sp = spec_from_elements(W, round(r["H_cm"] * 10), D, ep, r.get("elements", []))
+        sp = spec_from_elements(W, round(r["H_cm"] * 10), round(float(r.get("P_cm") or D / 10) * 10), ep, r.get("elements", []))
         sp["_oy_mm"] = round(float(r.get("y_cm", 0)) * 10)
         if r.get("bout"): sp["_bout"] = r["bout"]
         if r.get("niche"): sp["_niche"] = r["niche"]
@@ -190,7 +190,7 @@ def load_spec(path):
         pt = e.get("pont")
         if not pt or mx is None or pt.get("x_cm") is None: continue
         W = round(pt["W_cm"] * 10)
-        sp = spec_from_elements(W, round(pt["H_cm"] * 10), D, ep, pt.get("elements", []))
+        sp = spec_from_elements(W, round(pt["H_cm"] * 10), round(float(pt.get("P_cm") or D / 10) * 10), ep, pt.get("elements", []))
         sp["_oy_mm"] = round(float(pt.get("y_cm", 0)) * 10)
         cais.append((round((pt["x_cm"] - mx) * 10), sp))
     if side.get("top"):

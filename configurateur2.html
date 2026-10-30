@@ -4277,9 +4277,9 @@ function _syncStack(){
   var chain=function(colKey, base, W, P, levels, target, gaps){
     var below=base;
     for(var l=1;l<levels.length;l++){
-      var k=colKey+'|'+l, r=keep[k];
-      if(!r||r.W!==W||r.H!==levels[l]||r.P!==P){ var nr=makeTvRecord(W,levels[l]); if(r){ nr.uid=r.uid; } r=nr; }
-      r.W=W; r.H=levels[l]; r.Htot=levels[l]; r.P=P; r.stack={lvl:l}; r.below=below; r.gapBelow=(gaps&&gaps[l])||0;
+      var k=colKey+'|'+l, r=keep[k], pOwn=(r&&r.pCustom&&r.P>0)?r.P:P;   // un caisson empilé garde sa profondeur propre si on la lui a réglée
+      if(!r||r.W!==W||r.H!==levels[l]||r.P!==pOwn){ var nr=makeTvRecord(W,levels[l]); if(r){ nr.uid=r.uid; nr.pCustom=r.pCustom; } r=nr; }
+      r.W=W; r.H=levels[l]; r.Htot=levels[l]; r.P=pOwn; if(pOwn===P) r.pCustom=false; r.stack={lvl:l}; r.below=below; r.gapBelow=(gaps&&gaps[l])||0;
       newStack.push({rec:r,target:target}); below=r;
     }
   };
@@ -4321,9 +4321,9 @@ function _recomputeTotal(delta){
 function renderCaissonWidths(){
   var info=document.getElementById('split-info'); if(!info) return;
   var cols=[];
-  for(var i=tvSideLeft.length-1;i>=0;i--){ var rl=tvSideLeft[i]; if(rl.stack) continue; cols.push({key:rl.uid,side:'left',idx:i,W:rl.W,P:rl.P,lev:_colLevels(rl),libre:_isLibre(rl),gaps:_colGaps(rl)}); }
-  cols.push({key:'M',side:'main',idx:0,W:Math.round(S.CL*100),P:Math.round(S.CairsonP*100),lev:_colLevels('M'),libre:_isLibre('M'),gaps:_colGaps('M')});
-  tvSideRight.forEach(function(r,i){ if(r.stack) return; cols.push({key:r.uid,side:'right',idx:i,W:r.W,P:r.P,lev:_colLevels(r),libre:_isLibre(r),gaps:_colGaps(r)}); });
+  for(var i=tvSideLeft.length-1;i>=0;i--){ var rl=tvSideLeft[i]; if(rl.stack) continue; cols.push({key:rl.uid,side:'left',idx:i,W:rl.W,P:rl.P,lev:_colLevels(rl),levP:_colPs(rl),libre:_isLibre(rl),gaps:_colGaps(rl)}); }
+  cols.push({key:'M',side:'main',idx:0,W:Math.round(S.CL*100),P:Math.round(S.CairsonP*100),lev:_colLevels('M'),levP:_colPs('M'),libre:_isLibre('M'),gaps:_colGaps('M')});
+  tvSideRight.forEach(function(r,i){ if(r.stack) return; cols.push({key:r.uid,side:'right',idx:i,W:r.W,P:r.P,lev:_colLevels(r),levP:_colPs(r),libre:_isLibre(r),gaps:_colGaps(r)}); });
   var total=cols.reduce(function(a,c){return a+c.lev.length;},0)+tvGaps.filter(function(g){return g.bridge;}).length;
   // hors salle de bain : tous les caissons (le 1er compris) sont présentés dans la liste, de la même façon
   var plain=(currentFT!=='sdb'); info.style.cssText=plain?'margin-top:0;font-size:12px;color:var(--text2)':'margin-top:14px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)';
@@ -4369,7 +4369,7 @@ function renderCaissonWidths(){
         html+='<div class="sec" style="margin-top:'+(n>1?18:4)+'px;display:flex;justify-content:space-between;align-items:center"><span>'+ttl+'</span>'+rmBtn(r)+'</div>'
           +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
           +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',Hmax)+'</div>'
-          +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+f(r,'P',120)+'</div>'
+          +'<div class="dim-row"><span class="dim-lbl">Profondeur'+(r.k>0&&c.levP&&c.levP[r.k]&&c.levP[r.k]!==c.P?' <span style="font-weight:400;color:var(--text2)">(propre)</span>':'')+'</span>'+(r.k>0?gf('setLevelP(\''+c.side+'\','+c.idx+','+r.k+',',(c.levP&&c.levP[r.k])||c.P,20,120):f(r,'P',120))+'</div>'
           +(_isAdminMode()?_boutHtml(r)+_archeHtml(r)+_nicheHtml(r)+_penteHtml(r):'');
       }
     });
@@ -4818,6 +4818,15 @@ function setLevelH(side,idx,k,v){
   if(root==='M') S.lvM=lv; else root.lv=lv;
   // les caissons dont la hauteur change repartent vides
   if(lv[0]!==old[0]){ if(root==='M') caissonElements=[]; else { root.elems=[]; root.openState={}; } }
+  _syncStack(); updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
+}
+// profondeur propre d'un caisson empilé (k > 0) : elle peut différer de celle du caisson du dessous ; le fond reste aligné au mur
+function _colPs(root){ var ps=[root==='M'?Math.round(S.CairsonP*100):(root.P||Math.round(S.CairsonP*100))]; _stackOf(root).forEach(function(r){ ps.push(r.P||ps[0]); }); return ps; }
+function setLevelP(side,idx,k,v){
+  var r=_recAt(side,idx,k); if(!r||r==='M'||!r.stack) return;
+  v=Math.max(20,Math.min(120,Math.round(v)||0));
+  var rootP=(function(){ var rt=_colRoot(r); return rt==='M'?Math.round(S.CairsonP*100):(rt.P||Math.round(S.CairsonP*100)); })();
+  r.P=v; r.pCustom=(v!==rootP);
   _syncStack(); updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
 function setCaissonDim(side,idx,dim,v){
@@ -6779,7 +6788,7 @@ function appliquerConfig(cfg, opts){
         _stacked.forEach(function(x){
           var root=_colMap[x.r.col]; if(root===undefined) return;
           var below=_last[x.r.col]||root, rec=makeTvRecord(Math.round(x.r.W_cm),Math.round(x.r.H_cm));
-          rec.P=Math.round(x.r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.niche=x.r.niche||undefined; rec.pente=x.r.pente||undefined; rec.stack={lvl:x.r.niveau}; rec.below=below;
+          rec.P=Math.round(x.r.P_cm||cfg.P||S.CairsonP*100); rec.pCustom=(rec.P!==(root==='M'?Math.round(S.CairsonP*100):(root.P||Math.round(S.CairsonP*100)))); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.niche=x.r.niche||undefined; rec.pente=x.r.pente||undefined; rec.stack={lvl:x.r.niveau}; rec.below=below;
           (x.side==='left'?tvSideLeft:tvSideRight).push(rec); _last[x.r.col]=rec;
           if(root==='M') S.CHtot=Math.round((S.CHtot*100+rec.H))/100; else root.Htot=(root.Htot||root.H)+rec.H;
           var ck=x.r.col; _colLv[ck]=_colLv[ck]||[root==='M'?Math.round(S.CH*100):root.H]; _colLv[ck].push(rec.H);
