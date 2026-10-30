@@ -3266,6 +3266,20 @@
     var coef = (g && g.coefficient_revente) || 2;
     return { pieces: pieces, lignes: lignes, angles: angles, hinges: nHinges, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn };
   }
+  // Étagères posées d'un seul tenant au-dessus d'intercalaires : le configurateur les découpe par baie ; on les compte et on les chiffre comme une seule planche
+  function fusionnerEtageres(shelves, separators) {
+    var arr = (shelves || []).slice().sort(function (a, b) { return (a.y_bottom_mm - b.y_bottom_mm) || (a.x_left_mm - b.x_left_mm); }), out = [];
+    arr.forEach(function (sh) {
+      var last = out[out.length - 1];
+      if (last && Math.abs(last.y_bottom_mm - sh.y_bottom_mm) <= 1 && Math.abs(last.y_top_mm - sh.y_top_mm) <= 1 && last.shelf_type === sh.shelf_type && Math.abs((last.depth_mm || 0) - (sh.depth_mm || 0)) <= 1) {
+        var g0 = last.x_right_mm, g1 = sh.x_left_mm;
+        var coupe = (separators || []).some(function (sp) { var c = (sp.x_left_mm + sp.x_right_mm) / 2; return c >= g0 - 1 && c <= g1 + 1 && sp.y_top_mm > last.y_bottom_mm + 2 && sp.y_bottom_mm < last.y_top_mm - 2; });
+        if (g1 - g0 <= 30 && g1 >= g0 - 1 && !coupe) { out[out.length - 1] = Object.assign({}, last, { x_right_mm: Math.max(last.x_right_mm, sh.x_right_mm) }); return; }
+      }
+      out.push(sh);
+    });
+    return out;
+  }
   function manuelQuantites(m, r) {
     return { doors_count: parseInt(m.nbPortes) || 0, drawers_count: parseInt(m.nbTiroirs) || 0, shelves_count: parseInt(m.nbEtageres) || 0, separators_count: parseInt(m.nbIntercalaires) || 0, separators_doubled: 0,
       bars_count: parseInt(m.nbTringles) || 0, hinges: r ? r.hinges : 0, drawer_mechanisms: parseInt(m.nbTiroirs) || 0, caisson_material: m.matLabel, finitions: [], pieces: [] };
@@ -3862,7 +3876,7 @@
       var els = dedupeEls(c.els || []);
       // étagères : une pièce par élément « shelf » du JSON, longueur = traverse, largeur = profondeur − 19 ; chant avant seul
       // étagères partielles : largeur réelle (règle du tableur conservée), profondeur − 19 comme app.py ; pleine largeur = traverse
-      var shSpec = buildTechSpec(els, L / 10, H / 10, P / 10).shelves || [], nShelf = 0;
+      var _tsP = buildTechSpec(els, L / 10, H / 10, P / 10), shSpec = fusionnerEtageres(_tsP.shelves || [], _tsP.separators || []), nShelf = 0;
       shSpec.forEach(function (sh) {
         var xl = sh.x_left_mm, xr = sh.x_right_mm;
         if (pe && pe.bas !== 'arriere') {   // pente : l'étagère s'arrête sous le dessus incliné, elle est comptée à sa longueur réelle
@@ -6281,7 +6295,7 @@ function dedupeEls(els){
       q.edge_banding_m += h / 1000;
       if (!s.doubled) q.separators_count++; else q.separators_doubled++;
     });
-    (techSpec.shelves || []).forEach(function (sh, idx) {
+    fusionnerEtageres(techSpec.shelves, techSpec.separators).forEach(function (sh, idx) {
       var w = sh.x_right_mm - sh.x_left_mm;
       var fixe = sh.shelf_type === 'fixe';
       addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {
