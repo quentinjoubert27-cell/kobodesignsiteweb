@@ -211,7 +211,17 @@ def load_spec(path):
         sel = [t for t in tl if t[4] == cote]
         if not sel or not mm_.get(flag): continue
         murs.append((min(t[0] for t in sel) - TM, min(t[0] for t in sel)) if cote == "gauche" else (max(t[1] for t in sel), max(t[1] for t in sel) + TM))
-    xmin = min([xmin] + [t[0] for t in tl] + [m[0] for m in murs])
+    mu_ = []   # éléments muraux libres (équipe) : (type, x gauche, x droite, y bas, y haut, profondeur)
+    for u in (mm_.get("muraux") or []):
+        l_ = round(float(u.get("long_cm") or 0) * 10); pr_ = round(float(u.get("prof_cm") or D / 10) * 10)
+        if l_ <= 0: continue
+        if mx is None: continue
+        ax = round((float(u.get("x_cm") or 0) - mx) * 10)
+        if u.get("type") == "intercalaire": mu_.append(("intercalaire", ax - ep // 2, ax + ep // 2, round(float(u.get("y_cm") or 0) * 10), round(float(u.get("y_cm") or 0) * 10) + l_, pr_))
+        else: mu_.append(("etagere", ax, ax + l_, round(float(u.get("y_cm") or 0) * 10) - ep, round(float(u.get("y_cm") or 0) * 10), pr_))
+    xmin = min([xmin] + [t[0] for t in tl] + [m[0] for m in murs] + [u[1] for u in mu_])
+    xmax = max([xmax] + [t[1] for t in tl] + [u[2] for u in mu_])
+    cfg["_muraux"] = [(t, a - xmin, b_ - xmin, yb, yt, pr) for t, a, b_, yb, yt, pr in mu_]
     cfg["_tablettes"] = [(a - xmin, b - xmin, y_, d_) for a, b, y_, d_, _ in tl]
     cfg["_murs_tab"] = [(a - xmin, b - xmin) for a, b in murs]
     cfg["_caissons"] = [(x - xmin, sp) for x, sp in cais]

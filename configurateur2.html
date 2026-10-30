@@ -1365,7 +1365,7 @@ window.addEventListener('scroll', function(){
 var S = {
   step:1,
   // Meuble
-  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, lvM:null, lgM:null, libreM:false, CairsonP:0.36, matCais:0, boutM:null, archeM:null, nicheM:null, penteM:null, tablettes:[],
+  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, lvM:null, lgM:null, libreM:false, CairsonP:0.36, matCais:0, boutM:null, archeM:null, nicheM:null, penteM:null, tablettes:[], muraux:[],
   CL2:1.20,
   caissonOffset:0,
   sdbBaseH:10, caissonYOff:0.10,
@@ -1875,7 +1875,7 @@ function _boutFacade(g,bo,W,H,CP,ep,el,mat){
   var kp=el.key.split('_').map(Number), iWcm=(W-2*ep)*100, iHcm=(H-2*ep)*100, s=bo.side;
   var pxL=kp[1]<0.5?-W/2:-W/2+ep+kp[1]/100-ep/2, pxR=kp[3]>iWcm-0.5?W/2:-W/2+ep+kp[3]/100+ep/2;
   var pyB=kp[0]<0.5?0:ep+kp[0]/100-ep/2, pyT=kp[2]>iHcm-0.5?H:ep+kp[2]/100+ep/2, hh=pyT-pyB-0.003, th=0.020;
-  var touche=s>0?kp[3]>iWcm-0.5:kp[1]<0.5, m;
+  var touche=s>0?kp[3]>iWcm-1.5:kp[1]<1.5, m;
   if(!touche){
     m=new THREE.Mesh(new THREE.BoxGeometry(pxR-pxL-0.003,hh,th),mat); m.position.set((pxL+pxR)/2,(pyB+pyT)/2,CP/2+0.001); m.castShadow=true; g.add(m); return m;
   }
@@ -2201,6 +2201,7 @@ function buildCaisson(){
   // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
   if(MULTI()) buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
   _buildTablettes(matElem, CP, ep);
+  _buildMuraux(matElem, CP, ep);
 
   if(currentFT==='sdb') caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
   scene.add(caissonGrp);
@@ -3061,6 +3062,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && activeCaisson===1){
       // Caisson central bas : étagère, intercalaire, tringle, porte, tiroir
@@ -3073,6 +3075,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && _isTVExtra()){
       // Caissons latéraux / dessus : étagère, intercalaire, tringle, porte, tiroir
@@ -3085,6 +3088,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else {
       btns.innerHTML=selectorHTML+
@@ -3095,6 +3099,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     }
     {
@@ -3126,6 +3131,7 @@ function _rebuildEditBar(){
       cBtn('separator_simple', false, svgSepSimple,  'Sépar. 2nd',    'Séparateur secondaire, non pris en compte par les portes')+
       cBtn('porte',            false, svgPorte,      'Porte',         'Remplit la zone définie par les tablettes + séparateurs')+
       (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
+      (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)'):'')+
       cBtn('tiroir',           false, svgTiroir,     'Tiroir',        'Remplit la zone définie par les tablettes + séparateurs');
   }
   // Injecter le conteneur de liste après les boutons (si pas déjà présent)
@@ -3287,7 +3293,7 @@ var _lastCaissonHit=null; // dernier hit calculé par le ghost (pour placement p
 
 function updateCaissonGhost(e){
   if(!caissonEditMode||S.step!==1) return;
-  var hit=getCaissonHit(e)||_tabOutHit(e);
+  var hit=_hitFor(e);
   _lastCaissonHit=hit; // mémorise pour placeOrRemoveCaisson (évite décalage touchmove→touchend)
   if(!hit){clearCaissonGhost();_hideDragLabel();return;}
   var CP=caissonCP(), ep=EP;
@@ -3296,6 +3302,7 @@ function updateCaissonGhost(e){
   var gW,gH,gX,gY,occupied=false;
 
   if(caissonType==='tablette'){ _tabGhost(hit); return; }
+  if(_isMuralTool()){ _mrGhost(hit); return; }
   if(caissonType==='barre'){
     var bay0b=getBay(hit.x_cm,hit.y_cm);
     var bW0b=(bay0b.right_cm-bay0b.left_cm)/100;
@@ -3450,9 +3457,13 @@ function placeOrRemoveCaisson(e, skipUndo){
 
   // Utilise le dernier hit mémorisé par updateCaissonGhost (cohérence ghost↔placement)
   // sinon recalcule (cas souris sans ghost préalable)
-  var hit=_lastCaissonHit||getCaissonHit(e)||_tabOutHit(e);
+  var hit=_lastCaissonHit||_hitFor(e);
   if(!hit) return false;
 
+  if(_isMuralTool()){
+    var _mh=hit; if(_mh&&_mh.mural){ var _nm=_mrMake(caissonType==='mur_sep'?'intercalaire':'etagere',_mh.xabs,_mh.yabs); S.muraux=_mrAll().concat([_nm]); renderCaissonWidths(); clearCaissonGhost(); buildCaisson(); }
+    return true;
+  }
   if(caissonType==='tablette'){
     var _tp=_tabFromHit(hit); if(!_tabGeom(_tp.cote,_tp.y_cm,0)){ pushUndo&&_undoStack.pop(); return true; }
     S.tablettes=_tabAll().concat([{cote:_tp.cote,y_cm:_tp.y_cm,long_cm:null,prof_cm:Math.round(S.CairsonP*100)}]);
@@ -3533,6 +3544,7 @@ function _elsSnapshot(){
     els2: JSON.parse(JSON.stringify(caissonElements2)),
     tvTop:   JSON.parse(JSON.stringify(tvTopElems)),
     tab:  JSON.parse(JSON.stringify(_tabAll())),
+    mr:   JSON.parse(JSON.stringify(_mrAll())),
     tvL:  JSON.parse(JSON.stringify(tvSideLeft.map(function(r){return r.elems;}))),
     tvR:  JSON.parse(JSON.stringify(tvSideRight.map(function(r){return r.elems;}))),
     os:   JSON.parse(JSON.stringify(caissonOpenState)),
@@ -3551,7 +3563,7 @@ function pushUndo(){
 function undoLast(){
   if(!_undoStack.length) return;
   var snap=_undoStack.pop();
-  caissonElements=snap.els; caissonElements2=snap.els2; tvTopElems=snap.tvTop; if(snap.tab) S.tablettes=snap.tab;
+  caissonElements=snap.els; caissonElements2=snap.els2; tvTopElems=snap.tvTop; if(snap.tab) S.tablettes=snap.tab; if(snap.mr) S.muraux=snap.mr;
   caissonOpenState=snap.os; caissonOpenState2=snap.os2; tvTopOpenState=snap.tvTopO;
   // Ne restaure que si le nombre de caissons latéraux n'a pas changé depuis (l'ajout/suppression
   // de caisson n'est pas dans la pile d'undo, comme avant pour les 2 slots fixes).
@@ -3872,7 +3884,7 @@ function updateElementsList(){
       html+='<p style="font-size:11px;line-height:1.5;color:var(--text2);margin:8px 2px 0">Le bouton « Charnières » de chaque porte permet de changer son sens d\'ouverture.</p>';
     }
   }
-  html+=_tablettesHtml();
+  html+=_tablettesHtml()+_muralHtml();
   containers.forEach(function(c){ c.innerHTML=html; });
 }
 
@@ -3938,7 +3950,7 @@ cvs.addEventListener('pointerdown',function(e){
     // n'est pas encore vrai — on utilise pointerType pour différencier souris et touch
     if(e.pointerType!=='touch'){
       editPickedEl=null; editPickedIdx=-1;
-      var _editHit=getCaissonHit(e)||_tabOutHit(e);
+      var _editHit=_hitFor(e);
       _updateHoverEl(_editHit);
       if(!_editHit){ controls.enabled=true; return; } // pas sur le meuble → orbite libre
       if(_hoverElIdx>=0){
@@ -4049,7 +4061,7 @@ cvs.addEventListener('pointermove',function(e){
   if(S.step===1&&caissonEditMode){
     updateCaissonGhost(e); editMouseLastE=e;
     if(!editMouseDragging){
-      var _hit=getCaissonHit(e)||_tabOutHit(e);
+      var _hit=_hitFor(e);
       _updateHoverEl(_hit);
       controls.enabled=!_hit;
       cvs.style.cursor=_hit?'grab':'crosshair';
@@ -4385,7 +4397,7 @@ function renderCaissonWidths(){
       }
     }
   });
-  html+=_tablettesHtml();
+  html+=_tablettesHtml()+_muralHtml();
   var maxH=0, maxP=0; cols.forEach(function(c){ maxH=Math.max(maxH,c.lev.reduce(function(x,y){return x+y;},0)+c.gaps.reduce(function(x,y){return x+y;},0)); maxP=Math.max(maxP,c.P||0); });
   tvGaps.forEach(function(g){ if(g.bridge) maxH=Math.max(maxH,(g.bridge.y||0)+g.bridge.H); });
   var recap='<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Récapitulatif du meuble</div>'
@@ -4595,6 +4607,14 @@ function _buildTablettes(matElem,CP,ep){
 }
 // clic en dehors du meuble (côté mur) : on pose l'étagère là où l'on pointe, à la hauteur pointée
 function _tabOutHit(e){
+  if(_isMuralTool()&&caissonGrp){   // éléments muraux libres : on pointe le mur (plan du fond), n'importe où
+    toNDC(e); raycaster.setFromCamera(mouse,camera); caissonGrp.updateMatrixWorld(true);
+    var wz=caissonGrp.localToWorld(new THREE.Vector3(0,0,-S.CairsonP/2)), plw=new THREE.Plane(new THREE.Vector3(0,0,1),-wz.z), ptw=new THREE.Vector3();
+    if(!raycaster.ray.intersectPlane(plw,ptw)) return null;
+    var lw=caissonGrp.worldToLocal(ptw.clone()), lyw=_layout(S.CL), eLw=-(lyw.leftW+S.CL/2);
+    if(lw.y<0.02||lw.y>3.6||Math.abs(lw.x)>7) return null;
+    return {x_cm:0,y_cm:0,out:true,mural:true,xabs:(lw.x-eLw)*100,yabs:lw.y*100};
+  }
   if(caissonType!=='tablette'||!caissonGrp||!caissonHitPlane) return null;
   toNDC(e); raycaster.setFromCamera(mouse,camera);
   caissonGrp.updateMatrixWorld(true);
@@ -4634,6 +4654,70 @@ function _tabExport(){
     out.push({cote:t.cote,y_cm:t.y_cm,long_cm:Math.round(g.len*1000)/10,prof_cm:t.prof_cm,x_cm:Math.round((x0-eL)*1000)/10,auto:!(t.long_cm>0)});
   });
   return out;
+}
+// ── Éléments muraux libres (équipe) : étagères et intercalaires fixés au mur, sans caisson ni mur à côté ──
+// {type:'etagere', x_cm (bord gauche), y_cm (dessus), long_cm, prof_cm} · {type:'intercalaire', x_cm (centre), y_cm (bas), long_cm (hauteur), prof_cm} ; x en cm depuis le bord gauche de l'ensemble, y depuis le sol
+function _mrAll(){ return Array.isArray(S.muraux)?S.muraux:[]; }
+function _isMuralTool(){ return (caissonType==='mur_etagere'||caissonType==='mur_sep')&&_isAdminMode(); }
+function _hitFor(e){ if(_isMuralTool()) return _tabOutHit(e); return getCaissonHit(e)||_tabOutHit(e); }
+var _mrLast={etagere:60,intercalaire:40};
+function _mrMake(type,xabs,yabs){
+  var len=_mrLast[type]||50, prof=Math.round(S.CairsonP*100);
+  if(type==='intercalaire') return {type:type,x_cm:Math.round(xabs),y_cm:Math.max(0,Math.round(yabs-len/2)),long_cm:len,prof_cm:prof};
+  return {type:type,x_cm:Math.round(xabs-len/2),y_cm:Math.max(5,Math.round(yabs)),long_cm:len,prof_cm:prof};
+}
+function _mrBox(m,ep){   // [largeur, hauteur, profondeur, xCentre(m depuis bord gauche), yCentre(m)] d'un élément mural
+  var l=m.long_cm/100, d=Math.max(0.05,Math.min(1.5,m.prof_cm/100));
+  if(m.type==='intercalaire') return [ep,l,d,m.x_cm/100,m.y_cm/100+l/2];
+  return [l,ep,d,m.x_cm/100+l/2,m.y_cm/100-ep/2];
+}
+function _buildMuraux(matElem,CP,ep){
+  var T=_mrAll(); if(!T.length||currentFT==='sdb'||!_isAdminMode()) return;
+  var ly=_layout(S.CL), eL=-(ly.leftW+S.CL/2);
+  T.forEach(function(t){
+    var b=_mrBox(t,ep), m=new THREE.Mesh(new THREE.BoxGeometry(b[0],b[1],b[2]),matElem);
+    m.position.set(eL+b[3],b[4],-CP/2+b[2]/2); m.raycast=function(){}; m.userData.mural=true; caissonGrp.add(m);
+  });
+}
+function _mrGhost(hit){
+  var g=getActiveGhost(), ep=EP, CP=S.CairsonP;
+  if(!g||g.parent!==caissonGrp){
+    if(g){ if(g.parent) g.parent.remove(g); if(g.geometry) g.geometry.dispose(); if(g.material) g.material.dispose(); }
+    g=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({transparent:true,opacity:0.5,color:0xc8a050,roughness:0.4,depthWrite:false}));
+    g.renderOrder=1; g.raycast=function(){}; caissonGrp.add(g); setActiveGhost(g);
+  }
+  if(!hit||!hit.mural){ g.visible=false; _hideDragLabel(); return; }
+  var ly=_layout(S.CL), eL=-(ly.leftW+S.CL/2), t=_mrMake(caissonType==='mur_sep'?'intercalaire':'etagere',hit.xabs,hit.yabs), b=_mrBox(t,ep);
+  g.scale.set(b[0],b[1],b[2]); g.position.set(eL+b[3],b[4],-CP/2+b[2]/2); g.visible=true; _hideDragLabel();
+}
+function _mrExport(){ return _mrAll().map(function(t){ return {type:t.type,x_cm:t.x_cm,y_cm:t.y_cm,long_cm:t.long_cm,prof_cm:t.prof_cm}; }); }
+function setMural(i,k,v){
+  var t=_mrAll()[i]; if(!t||!_isAdminMode()) return; v=parseFloat(v); if(!isFinite(v)) return;
+  if(k==='x_cm') v=Math.round(Math.max(-600,Math.min(1200,v)));
+  else if(k==='y_cm') v=Math.round(Math.max(0,Math.min(400,v)));
+  else if(k==='long_cm'){ v=Math.round(Math.max(5,Math.min(400,v))); _mrLast[t.type]=v; }
+  else if(k==='prof_cm') v=Math.round(Math.max(5,Math.min(120,v)));
+  t[k]=v; _tabRefresh();
+}
+function delMural(i){ if(!_isAdminMode()) return; var a=_mrAll().slice(); a.splice(i,1); S.muraux=a; _tabRefresh(); }
+function addMural(type){
+  if(!_isAdminMode()) return;
+  var ly=_layout(S.CL), mid=(ly.leftW+S.CL/2)*100;   // au milieu du meuble par défaut
+  S.muraux=_mrAll().concat([_mrMake(type,mid,Math.round(S.CH*100*0.6))]); _tabRefresh();
+}
+function _muralHtml(){
+  if(!_isAdminMode()||currentFT==='sdb') return '';
+  var inp=function(i,k,v,lbl){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" value="'+v+'" onchange="setMural('+i+',\''+k+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
+  var h='<div class="sec" style="margin-top:18px">Éléments au mur, sans caisson <span style="font-weight:400;color:var(--accent)">(équipe)</span></div>'
+    +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Choisissez « Étagère murale » ou « Intercalaire mural », puis cliquez sur le mur où vous voulez le poser. Toutes les dimensions se règlent ici.</div>';
+  _mrAll().forEach(function(t,i){
+    var sep=t.type==='intercalaire';
+    h+='<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">'+(sep?'Intercalaire mural ':'Étagère murale ')+(i+1)+'</span>'
+      +'<button onclick="delMural('+i+')" title="Retirer" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button></div>'
+      +inp(i,'x_cm',t.x_cm,sep?'Position (centre, depuis la gauche)':'Position (bord gauche)')+inp(i,'y_cm',t.y_cm,sep?'Hauteur du bas':'Hauteur (dessus)')+inp(i,'long_cm',t.long_cm,sep?'Hauteur de l\'intercalaire':'Longueur')+inp(i,'prof_cm',t.prof_cm,'Profondeur')+'</div>';
+  });
+  h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="reset-btn" style="flex:1" onclick="addMural(\'etagere\')">+ Étagère</button><button class="reset-btn" style="flex:1" onclick="addMural(\'intercalaire\')">+ Intercalaire</button></div>';
+  return h;
 }
 function _tabRefresh(){ renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts(); }
 function addTablette(cote){
@@ -6176,7 +6260,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, muraux:(_mrAll().length&&_isAdminMode())?_mrExport():undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
@@ -6660,7 +6744,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100)};}):[];
+    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:t.type==='intercalaire'?'intercalaire':'etagere',x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100)};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100)};}):[];
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
@@ -6786,7 +6870,7 @@ function appliquerConfig(cfg, opts){
       if(!raw) throw new Error('Aucun modèle enregistré sur ce projet : modélisez-le d\'abord.');
       var m=raw.meuble||{};
       if(m.formes_seules || (raw.formes_libres&&raw.formes_libres.length)) throw new Error('ce modèle est en formes libres (importé) : il ne se modifie pas dans le configurateur. Importez une nouvelle version avec « Importer un modèle (JSON) ».');
-      appliquerConfig({ ft:raw.furniture_type||'tv', boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, penteM:m.pente, tablettes:m.tablettes, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
+      appliquerConfig({ ft:raw.furniture_type||'tv', boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, penteM:m.pente, tablettes:m.tablettes, muraux:m.muraux, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
         elements:raw.elements, tvSide:raw.tvSide, caisson2:raw.caisson2, cableHoles:raw.cableHoles, plan:raw.plan, vasques:raw.vasques }, {badge:false});
     }catch(e){ alert('Impossible de recharger le modèle : '+(e.message||e)); }
   })();
