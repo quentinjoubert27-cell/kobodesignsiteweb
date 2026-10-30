@@ -795,8 +795,15 @@ def cam_dx_bout(cfg, dx_defaut):
     """Abscisse de la direction de caméra : quand un caisson a un bout arrondi, on photographie plutôt depuis ce côté pour que la courbe se voie."""
     for _, sp in cfg.get("_caissons", []):
         b = sp.get("_bout")
-        if b and b.get("cote"): return -0.8 if b["cote"] == "gauche" else 0.8
+        if b and b.get("cote"): return -0.55 if b["cote"] == "gauche" else 0.55
     return dx_defaut
+
+
+def centre_bbox(objs, defaut):
+    """Centre de la boîte englobante de tout ce qui est dessiné (meuble + éléments muraux) : on vise le milieu de l'ensemble, pas le milieu du caisson."""
+    pts = [o.matrix_world @ Vector(c) for o in objs for c in o.bound_box]
+    if not pts: return defaut
+    return ((min(p.x for p in pts) + max(p.x for p in pts)) / 2, (min(p.y for p in pts) + max(p.y for p in pts)) / 2, (min(p.z for p in pts) + max(p.z for p in pts)) / 2)
 
 
 def fit_camera(scene, cam, objs, center, fill, direction, fill_w=0.8):
@@ -869,10 +876,10 @@ def render_demande(opt, cfg, out):
     setup_world(scene, (0.92, 0.88, 0.88), 0.30)
     add_area_light((W + 3.2, -3.6, H * 0.9 + 1.0), (W / 2, D, H * 0.4), 6.0, 520)
     cam = make_camera(scene, (0, 0, 0), (0, 0, 0), lens=45)
-    c = (W / 2, D / 2, H / 2)
+    c = centre_bbox(objs, (W / 2, D / 2, H / 2))
     configure_render(scene, 1200, 1735, opt["samples"], opt["scale"])
-    fit_camera(scene, cam, objs, c, 0.56, (cam_dx_bout(cfg, 0.22), -1.0, 0.0), fill_w=0.78)
-    cam.location.z = min(1.35, H * 0.55)
+    fit_camera(scene, cam, objs, c, 0.62, (cam_dx_bout(cfg, 0.22), -1.0, 0.0), fill_w=0.84)
+    cam.location.z = min(1.35, c[2] + 0.1)
     cam.rotation_euler = (Vector(c) - cam.location).to_track_quat("-Z", "Y").to_euler()
     cam.data.shift_y = -0.04
     scene.render.filepath = os.path.join(out, "img_demande.png")
@@ -1040,7 +1047,7 @@ def render_pair(opt, cfg, out):
     add_area_light((W + 3.2, -3.8, H * 0.9 + 1.0), (W / 2, D, H * 0.4), 6.0, 560)
     add_area_light((-W * 0.4 - 1.5, -3.0, H * 0.8 + 0.6), (W / 2, 0, H * 0.4), 5.0, 220)   # contre-jour doux : éclaire l'intérieur
     cam = make_camera(scene, (0, 0, 0), (0, 0, 0), lens=42)
-    c = (W / 2, D / 2, H / 2)
+    c = centre_bbox(objs, (W / 2, D / 2, H / 2))
     configure_render(scene, 1500, 1100, opt["samples"], opt["scale"])
     plan_clair = str((cfg.get("plan") or {}).get("matLabel") or "").strip().lower() in ("miami white", "blanc elysée", "blanc elysee", "linen cream", "white arabesque", "blanc gris", "blanc multicolore")
     if plan_clair and decor_name(cfg, opt).strip().lower() not in LIGHT_DECORS:
@@ -1048,12 +1055,12 @@ def render_pair(opt, cfg, out):
     if decor_name(cfg, opt).strip().lower() in LIGHT_DECORS:
         scene.view_settings.exposure = -1.3
         wall.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.50, 0.46, 0.45, 1)
-    fit_camera(scene, cam, objs, c, 0.60, (cam_dx_bout(cfg, 0.18), -1.0, 0.0), fill_w=0.58)
-    cam.location.z = min(1.45, H * 0.55)
+    fit_camera(scene, cam, objs, c, 0.78, (cam_dx_bout(cfg, 0.18), -1.0, 0.0), fill_w=0.80)
+    cam.location.z = min(1.45, c[2] + 0.1)
     if cfg.get("furniture_type") == "sdb" and (cfg.get("plan") or {}).get("L"):
         pass
     cam.rotation_euler = (Vector(c) - cam.location).to_track_quat("-Z", "Y").to_euler()
-    cam.data.shift_y = -0.03
+    cam.data.shift_y = 0.0
     scene.render.filepath = os.path.join(out, "rendu-ferme.png")
     bpy.ops.render.render(write_still=True)
     for o in objs:
