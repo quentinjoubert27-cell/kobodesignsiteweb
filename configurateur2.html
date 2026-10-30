@@ -3429,7 +3429,8 @@ function placeOrRemoveCaisson(e, skipUndo){
   if(!hit) return false;
 
   if(caissonType==='tablette'){
-    var _tp=_tabFromHit(hit); S.tablettes=_tabAll().concat([{cote:_tp.cote,y_cm:_tp.y_cm,long_cm:_tabDefLong(),prof_cm:Math.round(S.CairsonP*100)}]);
+    var _tp=_tabFromHit(hit); if(!_tabGeom(_tp.cote,_tp.y_cm,0)){ pushUndo&&_undoStack.pop(); return true; }
+    S.tablettes=_tabAll().concat([{cote:_tp.cote,y_cm:_tp.y_cm,long_cm:null,prof_cm:Math.round(S.CairsonP*100)}]);
     renderCaissonWidths(); clearCaissonGhost(); buildCaisson(); return true;
   }
   if(caissonType==='shelf'||caissonType==='shelf_simple'||caissonType==='barre'){
@@ -4536,21 +4537,37 @@ function setPenteP(side,idx,k,cm){
 }
 // Étagères murales (équipe seulement) : une tablette part du côté du meuble et s'accroche au mur ; {cote:'gauche'|'droite', y_cm (dessus, depuis le sol du meuble), long_cm, prof_cm}
 function _tabAll(){ return Array.isArray(S.tablettes)?S.tablettes:[]; }
+// hauteur (cm) du haut d'une colonne de caissons (empilés compris)
+function _colTopCm(root){
+  var top=_recH(root);
+  tvSideLeft.concat(tvSideRight).forEach(function(r){ if(r.stack&&!r.stack.bridge&&_colRoot(r)===root) top=Math.max(top,_yBottomOf(r)+r.H); });
+  return top;
+}
+// géométrie d'une étagère murale : elle va du mur (bord extérieur du meuble) jusqu'au premier caisson plus haut qu'elle, en venant du côté
+// retourne {face (m, abscisse du caisson qui la bloque), edge (m, bord extérieur = mur), span (m), len (m), dir (-1 gauche, +1 droite)} ou null
+function _tabGeom(cote,y_cm,long_cm){
+  var ly=_layout(S.CL), left=cote==='gauche', cols=(left?tvSideLeft:tvSideRight).filter(function(r){return !r.stack;});
+  var edge=left?-(ly.leftW+S.CL/2):(ly.rightW+S.CL/2), face=null;
+  for(var i=cols.length-1;i>=0;i--){
+    var r=cols[i], ps=ly.pos[r.uid]; if(!ps) continue;
+    if(_colTopCm(r)>=y_cm-0.5){ face=left?(ps.px-ps.W/2):(ps.px+ps.W/2); break; }
+  }
+  if(face===null) face=left?-S.CL/2:S.CL/2;
+  var span=left?(face-edge):(edge-face);
+  if(span<0.005) return null;
+  var len=(long_cm>0)?long_cm/100:span;
+  return {face:face,edge:edge,span:span,len:len,dir:left?-1:1};
+}
 function _buildTablettes(matElem,CP,ep){
   var T=_tabAll(); if(!T.length||currentFT==='sdb'||!_isAdminMode()) return;
-  var ly=_layout(S.CL);
   T.forEach(function(t){
-    var len=Math.max(0.05,t.long_cm/100), dep=Math.max(0.05,Math.min(1.5,t.prof_cm/100)), left=t.cote==='gauche';
-    var edge=left?-(ly.leftW+S.CL/2):(ly.rightW+S.CL/2);
-    var m=new THREE.Mesh(new THREE.BoxGeometry(len,ep,dep),matElem);
-    m.position.set(edge+(left?-len/2:len/2), t.y_cm/100-ep/2, -CP/2+dep/2);
+    var g=_tabGeom(t.cote,t.y_cm,t.long_cm); if(!g) return;
+    var dep=Math.max(0.05,Math.min(1.5,t.prof_cm/100));
+    var m=new THREE.Mesh(new THREE.BoxGeometry(g.len,ep,dep),matElem);
+    m.position.set(g.face+g.dir*g.len/2, t.y_cm/100-ep/2, -CP/2+dep/2);
     m.raycast=function(){}; m.userData.tablette=true; caissonGrp.add(m);
   });
-  _buildTabMurs(CP);
 }
-var _tabLongLast=60;
-function _tabDefLong(){ return _tabLongLast; }
-// où tombe une étagère murale posée par un clic dans le caisson actif : côté (gauche/droite) et hauteur du dessus depuis le sol
 // clic en dehors du meuble (côté mur) : on pose l'étagère là où l'on pointe, à la hauteur pointée
 function _tabOutHit(e){
   if(caissonType!=='tablette'||!caissonGrp||!caissonHitPlane) return null;
@@ -4561,7 +4578,7 @@ function _tabOutHit(e){
   if(!raycaster.ray.intersectPlane(pl,pt)) return null;
   var loc=caissonGrp.worldToLocal(pt.clone()), ly=_layout(S.CL), eL=-(ly.leftW+S.CL/2), eR=ly.rightW+S.CL/2;
   if(loc.y<0.03||loc.y>3.2||loc.x<eL-2.5||loc.x>eR+2.5) return null;
-  return {x_cm:0,y_cm:0,out:true,cote:(loc.x<(eL+eR)/2)?'gauche':'droite',yabs:Math.max(5,Math.round(loc.y*100))};
+  return {x_cm:0,y_cm:0,out:true,cote:(loc.x<0)?'gauche':'droite',yabs:Math.max(5,Math.round(loc.y*100))};
 }
 function _tabFromHit(hit){
   if(hit&&hit.out) return {cote:hit.cote,y_cm:hit.yabs};
@@ -4573,50 +4590,53 @@ function _tabFromHit(hit){
   return {cote:cote,y_cm:Math.max(5,Math.round(base+hit.y_cm+EP*100))};
 }
 function _tabGhost(hit){
-  var tp=_tabFromHit(hit), ly=_layout(S.CL), len=_tabDefLong()/100, dep=S.CairsonP, left=tp.cote==='gauche', ep=EP, CP=S.CairsonP;
+  var tp=_tabFromHit(hit), g0=_tabGeom(tp.cote,tp.y_cm,0), dep=S.CairsonP, ep=EP, CP=S.CairsonP;
   var g=getActiveGhost();
   if(!g||g.parent!==caissonGrp){
     if(g){ if(g.parent) g.parent.remove(g); if(g.geometry) g.geometry.dispose(); if(g.material) g.material.dispose(); }
     g=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({transparent:true,opacity:0.5,color:0xc8a050,roughness:0.4,depthWrite:false}));
     g.renderOrder=1; g.raycast=function(){}; caissonGrp.add(g); setActiveGhost(g);
   }
-  var edge=left?-(ly.leftW+S.CL/2):(ly.rightW+S.CL/2);
-  g.scale.set(len,ep,dep); g.position.set(edge+(left?-len/2:len/2), tp.y_cm/100-ep/2, -CP/2+dep/2); g.visible=true;
+  if(!g0){ g.visible=false; _hideDragLabel(); return; }
+  g.scale.set(g0.len,ep,dep); g.position.set(g0.face+g0.dir*g0.len/2, tp.y_cm/100-ep/2, -CP/2+dep/2); g.visible=true;
   _hideDragLabel();
 }
-// murs : un mur à la fin des étagères de chaque côté (les étagères s'y fixent)
-function _buildTabMurs(CP){
-  var T=_tabAll(), ly=_layout(S.CL), H=S.CH;
-  ['gauche','droite'].forEach(function(cote){
-    var l=T.filter(function(t){return t.cote===cote;}); if(!l.length) return;
-    var lmax=Math.max.apply(null,l.map(function(t){return t.long_cm;}))/100, dmax=Math.max.apply(null,l.map(function(t){return t.prof_cm;}))/100, ymax=Math.max.apply(null,l.map(function(t){return t.y_cm;}))/100;
-    var edge=(cote==='gauche')?-(ly.leftW+S.CL/2):(ly.rightW+S.CL/2), th=0.04, h=Math.max(H,ymax)+0.25, d=Math.max(dmax,CP)+0.1;
-    var m=new THREE.Mesh(new THREE.BoxGeometry(th,h,d),new THREE.MeshStandardMaterial({color:0xd8d3ca,roughness:0.95,metalness:0}));
-    var x=(cote==='gauche')?edge-lmax-th/2:edge+lmax+th/2;
-    m.position.set(x,h/2,-CP/2+d/2); m.raycast=function(){}; m.userData.tablette=true; caissonGrp.add(m);
+function _tabExport(){
+  var ly=_layout(S.CL), eL=-(ly.leftW+S.CL/2), out=[];
+  _tabAll().forEach(function(t){
+    var g=_tabGeom(t.cote,t.y_cm,t.long_cm); if(!g) return;
+    var x0=(t.cote==='gauche')?(g.face-g.len):g.face;   // bord gauche de l'étagère (cm depuis le bord gauche de l'ensemble)
+    out.push({cote:t.cote,y_cm:t.y_cm,long_cm:Math.round(g.len*1000)/10,prof_cm:t.prof_cm,x_cm:Math.round((x0-eL)*1000)/10,auto:!(t.long_cm>0)});
   });
+  return out;
 }
 function _tabRefresh(){ renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts(); }
 function addTablette(cote){
   if(!_isAdminMode()) return;
-  S.tablettes=_tabAll().concat([{cote:cote,y_cm:Math.round(S.CH*50),long_cm:60,prof_cm:Math.round(S.CairsonP*100)}]); _tabRefresh();
+  var y=Math.round(S.CH*100*0.8); if(!_tabGeom(cote,y,0)){ var cols=(cote==='gauche'?tvSideLeft:tvSideRight).filter(function(r){return !r.stack;}); y=Math.round((cols.length?_colTopCm(cols[cols.length-1]):S.CH*50)+20); }
+  S.tablettes=_tabAll().concat([{cote:cote,y_cm:y,long_cm:null,prof_cm:Math.round(S.CairsonP*100)}]); _tabRefresh();
 }
 function setTablette(i,k,v){
   var t=_tabAll()[i]; if(!t||!_isAdminMode()) return;
-  v=parseFloat(v); if(!isFinite(v)) return;
-  if(k==='y_cm') v=Math.max(5,Math.min(400,Math.round(v))); else if(k==='long_cm') v=Math.max(5,Math.min(400,Math.round(v))); else if(k==='prof_cm') v=Math.max(5,Math.min(120,Math.round(v)));
-  t[k]=v; if(k==='long_cm') _tabLongLast=v; _tabRefresh();
+  v=parseFloat(v);
+  if(k==='long_cm'){ t.long_cm=(isFinite(v)&&v>=5)?Math.min(400,Math.round(v)):null; _tabRefresh(); return; }
+  if(!isFinite(v)) return;
+  if(k==='y_cm') v=Math.max(5,Math.min(400,Math.round(v))); else if(k==='prof_cm') v=Math.max(5,Math.min(120,Math.round(v)));
+  t[k]=v; _tabRefresh();
 }
 function delTablette(i){ if(!_isAdminMode()) return; var a=_tabAll().slice(); a.splice(i,1); S.tablettes=a; _tabRefresh(); }
 function _tablettesHtml(){
   if(!_isAdminMode()||currentFT==='sdb') return '';
-  var inp=function(i,k,v,lbl){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" min="5" value="'+v+'" onchange="setTablette('+i+',\''+k+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
-  var h='<div class="sec" style="margin-top:18px">Étagères jusqu\'au mur <span style="font-weight:400;color:var(--accent)">(équipe)</span></div>'
-    +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Une tablette part du côté du meuble et se fixe au mur. Elle est chiffrée comme une étagère à sa longueur.</div>';
+  var inp=function(i,k,v,lbl,ph){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" min="5" value="'+(v==null?'':v)+'"'+(ph?' placeholder="'+ph+'"':'')+' onchange="setTablette('+i+',\''+k+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
+  var h='<div class="sec" style="margin-top:18px">Étagères entre le mur et le meuble <span style="font-weight:400;color:var(--accent)">(équipe)</span></div>'
+    +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Cochez « Meuble collé à un mur » du côté voulu, puis posez l\'étagère à côté du meuble, à la hauteur voulue : elle va du mur jusqu\'au premier caisson plus haut qu\'elle.</div>';
   _tabAll().forEach(function(t,i){
+    var g=_tabGeom(t.cote,t.y_cm,0), mur=t.cote==='gauche'?S.murG:S.murD;
     h+='<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">Étagère '+(i+1)+' · à '+(t.cote==='gauche'?'gauche':'droite')+'</span>'
       +'<button onclick="delTablette('+i+')" title="Retirer" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button></div>'
-      +inp(i,'y_cm',t.y_cm,'Hauteur (dessus)')+inp(i,'long_cm',t.long_cm,'Longueur jusqu\'au mur')+inp(i,'prof_cm',t.prof_cm,'Profondeur')+'</div>';
+      +inp(i,'y_cm',t.y_cm,'Hauteur (dessus)')+inp(i,'long_cm',t.long_cm,'Longueur',g?('auto : '+Math.round(g.span*100)):'')+inp(i,'prof_cm',t.prof_cm,'Profondeur')
+      +(!g?'<div style="font-size:11px;color:#b3541e;margin-top:4px">Hors du meuble : à cette hauteur, un caisson occupe toute la place.</div>':'')
+      +(!mur?'<div style="font-size:11px;color:#b3541e;margin-top:4px">Cochez « Meuble collé à un mur à '+(t.cote==='gauche'?'gauche':'droite')+'  » pour la fixer au mur.</div>':'')+'</div>';
   });
   h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="reset-btn" style="flex:1" onclick="addTablette(\'gauche\')">+ À gauche</button><button class="reset-btn" style="flex:1" onclick="addTablette(\'droite\')">+ À droite</button></div>';
   return h;
@@ -6117,7 +6137,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabAll():undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
@@ -6601,7 +6621,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100)};}):[];
+    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100)};}):[];
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){

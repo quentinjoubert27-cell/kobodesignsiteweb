@@ -195,19 +195,24 @@ def load_spec(path):
     if side.get("top"):
         print("Avertissement : caisson « dessus » (tvSide.top) non dessiné.")
     xmin = min(x for x, _ in cais); xmax = max(x + sp["overall_mm"]["width"] for x, sp in cais)
-    tabs = [t for t in ((cfg.get("meuble") or {}).get("tablettes") or []) if t.get("long_cm")]   # étagères jusqu'au mur (équipe)
-    TM = 80   # épaisseur des murs dessinés au bout des étagères
-    lg = max([round(float(t["long_cm"]) * 10) for t in tabs if t.get("cote") != "droite"] + [0])
-    if lg: xmin -= lg + TM
-    lgs = lg + TM if lg else 0
-    lr = max([round(float(t["long_cm"]) * 10) for t in tabs if t.get("cote") == "droite"] + [0])
-    cfg["_tablettes"] = []
+    mm_ = cfg.get("meuble") or {}
+    tabs = [t for t in (mm_.get("tablettes") or []) if t.get("long_cm")]   # étagères entre le mur et le meuble (équipe)
+    TM = 80   # épaisseur du mur dessiné au bout des étagères quand « meuble collé à un mur » est coché
+    tl = []   # (x gauche, x droite, y, profondeur) avant décalage
     for t in tabs:
         l_ = round(float(t["long_cm"]) * 10)
-        if t.get("cote") == "droite": xl, xr = xmax - xmin, xmax - xmin + l_
-        else: xl, xr = lgs - l_, lgs
-        cfg["_tablettes"].append((xl, xr, round(float(t.get("y_cm") or 0) * 10), round(float(t.get("prof_cm") or D / 10) * 10)))
-    cfg["_murs_tab"] = ([(0, TM)] if lg else []) + ([(xmax - xmin + lr, xmax - xmin + lr + TM)] if lr else [])
+        if t.get("x_cm") is not None and mx is not None: xl = round((float(t["x_cm"]) - mx) * 10)
+        elif t.get("cote") == "droite": xl = xmax
+        else: xl = xmin - l_
+        tl.append((xl, xl + l_, round(float(t.get("y_cm") or 0) * 10), round(float(t.get("prof_cm") or D / 10) * 10), t.get("cote")))
+    murs = []
+    for cote, flag in (("gauche", "mur_gauche"), ("droite", "mur_droit")):
+        sel = [t for t in tl if t[4] == cote]
+        if not sel or not mm_.get(flag): continue
+        murs.append((min(t[0] for t in sel) - TM, min(t[0] for t in sel)) if cote == "gauche" else (max(t[1] for t in sel), max(t[1] for t in sel) + TM))
+    xmin = min([xmin] + [t[0] for t in tl] + [m[0] for m in murs])
+    cfg["_tablettes"] = [(a - xmin, b - xmin, y_, d_) for a, b, y_, d_, _ in tl]
+    cfg["_murs_tab"] = [(a - xmin, b - xmin) for a, b in murs]
     cfg["_caissons"] = [(x - xmin, sp) for x, sp in cais]
     return cfg
 
