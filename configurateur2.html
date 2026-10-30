@@ -3262,7 +3262,7 @@ var _lastCaissonHit=null; // dernier hit calculé par le ghost (pour placement p
 
 function updateCaissonGhost(e){
   if(!caissonEditMode||S.step!==1) return;
-  var hit=getCaissonHit(e);
+  var hit=getCaissonHit(e)||_tabOutHit(e);
   _lastCaissonHit=hit; // mémorise pour placeOrRemoveCaisson (évite décalage touchmove→touchend)
   if(!hit){clearCaissonGhost();_hideDragLabel();return;}
   var CP=caissonCP(), ep=EP;
@@ -3425,7 +3425,7 @@ function placeOrRemoveCaisson(e, skipUndo){
 
   // Utilise le dernier hit mémorisé par updateCaissonGhost (cohérence ghost↔placement)
   // sinon recalcule (cas souris sans ghost préalable)
-  var hit=_lastCaissonHit||getCaissonHit(e);
+  var hit=_lastCaissonHit||getCaissonHit(e)||_tabOutHit(e);
   if(!hit) return false;
 
   if(caissonType==='tablette'){
@@ -3912,7 +3912,7 @@ cvs.addEventListener('pointerdown',function(e){
     // n'est pas encore vrai — on utilise pointerType pour différencier souris et touch
     if(e.pointerType!=='touch'){
       editPickedEl=null; editPickedIdx=-1;
-      var _editHit=getCaissonHit(e);
+      var _editHit=getCaissonHit(e)||_tabOutHit(e);
       _updateHoverEl(_editHit);
       if(!_editHit){ controls.enabled=true; return; } // pas sur le meuble → orbite libre
       if(_hoverElIdx>=0){
@@ -4023,7 +4023,7 @@ cvs.addEventListener('pointermove',function(e){
   if(S.step===1&&caissonEditMode){
     updateCaissonGhost(e); editMouseLastE=e;
     if(!editMouseDragging){
-      var _hit=getCaissonHit(e);
+      var _hit=getCaissonHit(e)||_tabOutHit(e);
       _updateHoverEl(_hit);
       controls.enabled=!_hit;
       cvs.style.cursor=_hit?'grab':'crosshair';
@@ -4551,7 +4551,20 @@ function _buildTablettes(matElem,CP,ep){
 var _tabLongLast=60;
 function _tabDefLong(){ return _tabLongLast; }
 // où tombe une étagère murale posée par un clic dans le caisson actif : côté (gauche/droite) et hauteur du dessus depuis le sol
+// clic en dehors du meuble (côté mur) : on pose l'étagère là où l'on pointe, à la hauteur pointée
+function _tabOutHit(e){
+  if(caissonType!=='tablette'||!caissonGrp||!caissonHitPlane) return null;
+  toNDC(e); raycaster.setFromCamera(mouse,camera);
+  caissonGrp.updateMatrixWorld(true);
+  var wp=new THREE.Vector3(); caissonHitPlane.getWorldPosition(wp);
+  var pl=new THREE.Plane(new THREE.Vector3(0,0,1),-wp.z), pt=new THREE.Vector3();
+  if(!raycaster.ray.intersectPlane(pl,pt)) return null;
+  var loc=caissonGrp.worldToLocal(pt.clone()), ly=_layout(S.CL), eL=-(ly.leftW+S.CL/2), eR=ly.rightW+S.CL/2;
+  if(loc.y<0.03||loc.y>3.2||loc.x<eL-2.5||loc.x>eR+2.5) return null;
+  return {x_cm:0,y_cm:0,out:true,cote:(loc.x<(eL+eR)/2)?'gauche':'droite',yabs:Math.max(5,Math.round(loc.y*100))};
+}
 function _tabFromHit(hit){
+  if(hit&&hit.out) return {cote:hit.cote,y_cm:hit.yabs};
   var ac=activeCaisson, cote, base=0;
   if(typeof ac==='string'&&ac.charAt(0)==='L') cote='gauche';
   else if(typeof ac==='string'&&ac.charAt(0)==='R') cote='droite';
