@@ -722,7 +722,7 @@ def build_furniture(cfg, opt, open_state=False):
         pr_ = min(pr_, D)
         box("mural", 0, xl_, xr_, max(0, yb_), yt_, D - pr_, D, "h" if _t == "etagere" else "v")   # collé au mur (le fond du caisson est à z = D)
     Wtot = max([ox + sp["overall_mm"]["width"] for ox, sp in cfg["_caissons"]] + ([hi[0] - lo[0]] if fp else []))
-    x0t = min(ox for ox, _ in cfg["_caissons"]) if cfg.get("_tablettes") else 0   # abscisse du meuble quand des étagères murales le décalent
+    x0t = min(ox for ox, _ in cfg["_caissons"])   # abscisse du meuble quand des étagères murales le décalent
     Htot = max([sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"]] + ([hi[2]] if fp else []))
     # plinthe continue : panneau de façade en retrait (≈ 30 mm), sans retour latéral, sur pieds
     if plinth > 0:
@@ -732,17 +732,17 @@ def build_furniture(cfg, opt, open_state=False):
             b_ = bout_spec(sp_, sp_["overall_mm"]["width"], D, ep)
             if not b_: continue
             if b_["side"] > 0 and ox_ + sp_["overall_mm"]["width"] >= Wtot - 1: ext[1] = b_
-            if b_["side"] < 0 and ox_ <= 1: ext[-1] = b_
+            if b_["side"] < 0 and ox_ <= x0t + 1: ext[-1] = b_
         pl = {}
         for sd_, b_ in ext.items():
             if not b_ or b_["r"] - 30 - ep <= 0: continue
             path = bout_front_path(Wtot, b_["r"], b_["deg"], 30.0, inset=30.0)
             pl[sd_] = (path, path[-1][0])                      # chemin (côté droit) et abscisse où la plinthe droite se raccorde
-        x_a = (Wtot - pl[-1][1]) if -1 in pl else x0t + ep
+        x_a = (x0t + Wtot - pl[-1][1]) if -1 in pl else x0t + ep
         x_b = pl[1][1] if 1 in pl else Wtot - ep
         objs.append(add_box("plinthe", x_a * mm, x_b * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
         for sd_, (path, _) in pl.items():
-            ch = path if sd_ > 0 else [(Wtot - x, y) for x, y in path]
+            ch = path if sd_ > 0 else [(x0t + Wtot - x, y) for x, y in path]   # bout à gauche : symétrique par rapport au meuble (qui peut être décalé par des éléments muraux à gauche)
             poly = formes_mod.contour_ruban({"chemin": [list(q) for q in ch], "ep": ep, "sens": -1 if sd_ > 0 else 1})
             o = add_prism("plinthe", [(x * mm, y * mm, 0.0) for x, y in poly], (0, 0, plinth * mm), wood, "h", rnd)
             if o: objs.append(o)
