@@ -1365,7 +1365,7 @@ window.addEventListener('scroll', function(){
 var S = {
   step:1,
   // Meuble
-  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, lvM:null, lgM:null, libreM:false, CairsonP:0.36, matCais:0, boutM:null, archeM:null, nicheM:null, penteM:null,
+  CL:1.20, CLtot:1.20, CH:0.45, CHtot:0.45, lvM:null, lgM:null, libreM:false, CairsonP:0.36, matCais:0, boutM:null, archeM:null, nicheM:null, penteM:null, tablettes:[],
   CL2:1.20,
   caissonOffset:0,
   sdbBaseH:10, caissonYOff:0.10,
@@ -2181,6 +2181,7 @@ function buildCaisson(){
   }
   // ── Caissons TV extra (gauche=3, droite=4, dessus=5) — construits après ──
   if(MULTI()) buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
+  _buildTablettes(matElem, CP, ep);
 
   if(currentFT==='sdb') caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
   scene.add(caissonGrp);
@@ -4346,6 +4347,7 @@ function renderCaissonWidths(){
       }
     }
   });
+  html+=_tablettesHtml();
   var maxH=0, maxP=0; cols.forEach(function(c){ maxH=Math.max(maxH,c.lev.reduce(function(x,y){return x+y;},0)+c.gaps.reduce(function(x,y){return x+y;},0)); maxP=Math.max(maxP,c.P||0); });
   tvGaps.forEach(function(g){ if(g.bridge) maxH=Math.max(maxH,(g.bridge.y||0)+g.bridge.H); });
   var recap='<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Récapitulatif du meuble</div>'
@@ -4519,6 +4521,44 @@ function setPenteP(side,idx,k,cm){
   var pe=_getPente(side,idx,k); if(!pe||!_isAdminMode()||pe.bas==='arriere') return;
   var r=_recAt(side,idx,k), W=r==='M'?Math.round(S.CL*100):(r?r.W:100); cm=Math.max(0,Math.min(W-20,Math.round(parseFloat(cm))||0));
   var np={bas:pe.bas,h_cm:pe.h_cm}; if(cm>0) np.plat_cm=cm; _putPente(side,idx,k,np); _refreshCols();
+}
+// Étagères murales (équipe seulement) : une tablette part du côté du meuble et s'accroche au mur ; {cote:'gauche'|'droite', y_cm (dessus, depuis le sol du meuble), long_cm, prof_cm}
+function _tabAll(){ return Array.isArray(S.tablettes)?S.tablettes:[]; }
+function _buildTablettes(matElem,CP,ep){
+  var T=_tabAll(); if(!T.length||currentFT==='sdb'||!_isAdminMode()) return;
+  var ly=_layout(S.CL);
+  T.forEach(function(t){
+    var len=Math.max(0.05,t.long_cm/100), dep=Math.max(0.05,Math.min(1.5,t.prof_cm/100)), left=t.cote==='gauche';
+    var edge=left?-(ly.leftW+S.CL/2):(ly.rightW+S.CL/2);
+    var m=new THREE.Mesh(new THREE.BoxGeometry(len,ep,dep),matElem);
+    m.position.set(edge+(left?-len/2:len/2), t.y_cm/100-ep/2, -CP/2+dep/2);
+    m.raycast=function(){}; m.userData.tablette=true; caissonGrp.add(m);
+  });
+}
+function _tabRefresh(){ renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts(); }
+function addTablette(cote){
+  if(!_isAdminMode()) return;
+  S.tablettes=_tabAll().concat([{cote:cote,y_cm:Math.round(S.CH*50),long_cm:60,prof_cm:Math.round(S.CairsonP*100)}]); _tabRefresh();
+}
+function setTablette(i,k,v){
+  var t=_tabAll()[i]; if(!t||!_isAdminMode()) return;
+  v=parseFloat(v); if(!isFinite(v)) return;
+  if(k==='y_cm') v=Math.max(5,Math.min(400,Math.round(v))); else if(k==='long_cm') v=Math.max(5,Math.min(400,Math.round(v))); else if(k==='prof_cm') v=Math.max(5,Math.min(120,Math.round(v)));
+  t[k]=v; _tabRefresh();
+}
+function delTablette(i){ if(!_isAdminMode()) return; var a=_tabAll().slice(); a.splice(i,1); S.tablettes=a; _tabRefresh(); }
+function _tablettesHtml(){
+  if(!_isAdminMode()||currentFT==='sdb') return '';
+  var inp=function(i,k,v,lbl){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" min="5" value="'+v+'" onchange="setTablette('+i+',\''+k+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
+  var h='<div class="sec" style="margin-top:18px">Étagères jusqu\'au mur <span style="font-weight:400;color:var(--accent)">(équipe)</span></div>'
+    +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Une tablette part du côté du meuble et se fixe au mur. Elle est chiffrée comme une étagère à sa longueur.</div>';
+  _tabAll().forEach(function(t,i){
+    h+='<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">Étagère '+(i+1)+' · à '+(t.cote==='gauche'?'gauche':'droite')+'</span>'
+      +'<button onclick="delTablette('+i+')" title="Retirer" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button></div>'
+      +inp(i,'y_cm',t.y_cm,'Hauteur (dessus)')+inp(i,'long_cm',t.long_cm,'Longueur jusqu\'au mur')+inp(i,'prof_cm',t.prof_cm,'Profondeur')+'</div>';
+  });
+  h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="reset-btn" style="flex:1" onclick="addTablette(\'gauche\')">+ À gauche</button><button class="reset-btn" style="flex:1" onclick="addTablette(\'droite\')">+ À droite</button></div>';
+  return h;
 }
 function _penteHtml(r){
   var pe=_getPente(r.side,r.idx,r.k), call="'"+r.side+"',"+r.idx+","+r.k, bas=pe?pe.bas:'aucune';
@@ -6016,7 +6056,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:2, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabAll():undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
@@ -6500,7 +6540,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null;
+    S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100)};}):[];
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
@@ -6626,7 +6666,7 @@ function appliquerConfig(cfg, opts){
       if(!raw) throw new Error('Aucun modèle enregistré sur ce projet : modélisez-le d\'abord.');
       var m=raw.meuble||{};
       if(m.formes_seules || (raw.formes_libres&&raw.formes_libres.length)) throw new Error('ce modèle est en formes libres (importé) : il ne se modifie pas dans le configurateur. Importez une nouvelle version avec « Importer un modèle (JSON) ».');
-      appliquerConfig({ ft:raw.furniture_type||'tv', boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, penteM:m.pente, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
+      appliquerConfig({ ft:raw.furniture_type||'tv', boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, penteM:m.pente, tablettes:m.tablettes, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
         elements:raw.elements, tvSide:raw.tvSide, caisson2:raw.caisson2, cableHoles:raw.cableHoles, plan:raw.plan, vasques:raw.vasques }, {badge:false});
     }catch(e){ alert('Impossible de recharger le modèle : '+(e.message||e)); }
   })();

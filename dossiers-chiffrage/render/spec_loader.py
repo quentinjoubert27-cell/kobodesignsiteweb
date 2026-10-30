@@ -194,7 +194,16 @@ def load_spec(path):
         cais.append((round((pt["x_cm"] - mx) * 10), sp))
     if side.get("top"):
         print("Avertissement : caisson « dessus » (tvSide.top) non dessiné.")
-    xmin = min(x for x, _ in cais)
+    xmin = min(x for x, _ in cais); xmax = max(x + sp["overall_mm"]["width"] for x, sp in cais)
+    tabs = [t for t in ((cfg.get("meuble") or {}).get("tablettes") or []) if t.get("long_cm")]   # étagères jusqu'au mur (équipe)
+    lg = max([round(float(t["long_cm"]) * 10) for t in tabs if t.get("cote") != "droite"] + [0])
+    xmin -= lg
+    cfg["_tablettes"] = []
+    for t in tabs:
+        l_ = round(float(t["long_cm"]) * 10)
+        if t.get("cote") == "droite": xl, xr = xmax - xmin, xmax - xmin + l_
+        else: xl, xr = lg - l_, lg
+        cfg["_tablettes"].append((xl, xr, round(float(t.get("y_cm") or 0) * 10), round(float(t.get("prof_cm") or D / 10) * 10)))
     cfg["_caissons"] = [(x - xmin, sp) for x, sp in cais]
     return cfg
 

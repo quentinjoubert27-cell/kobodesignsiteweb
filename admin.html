@@ -3879,6 +3879,7 @@
         if (w < 5) return;
         if (w >= (L - 2 * 18 - 4)) nShelf++; else add('Etagère partielle' + suf, w, P - 19, 1, CH.etag);
       });
+      if (c.main) (m.tablettes || []).forEach(function (tb) { add('Étagère murale (' + (tb.cote === 'droite' ? 'droite' : 'gauche') + ')' + suf, tb.long_cm * 10, tb.prof_cm * 10, 1, CH.etag); });   // étagères jusqu'au mur (équipe) : à leur longueur réelle
       if (bo && nShelf > 0) {   // étagères pleine largeur : jusqu'au côté ouvert, bord avant suivant la courbe
         pieces.push({ nom: 'Etagère Fixe (bout arrondi)' + suf, l: Math.round(L - t), w: Math.round(gS.surf / (L - t)), qte: nShelf, ch: 'all', cat: 'struct', forme: true, surfM2: gS.surf / 1e6, perimM: gS.perim / 1000, chantM: (gS.front + gS.side) / 1000, cintre: true });
       } else add('Etagère Fixe' + suf, Lt, P - 19, nShelf, CH.etag);

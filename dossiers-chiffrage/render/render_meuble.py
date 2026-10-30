@@ -693,7 +693,11 @@ def build_furniture(cfg, opt, open_state=False):
             P3 = [((q[0] - lo[0]) * mm, (q[1] - lo[1]) * mm, q[2] * mm + z_off) for q in pts]
             o = add_prism("forme|" + pc.get("nom", "pièce"), P3, (v[0] * mm, v[1] * mm, v[2] * mm), mat_piece(pc.get("decor")) if pc.get("decor") else wood, "v" if pc.get("cat") != "struct" or pc["type"] == "ruban" else "h", rnd)
             if o: objs.append(o)
+    oyc[0] = 0
+    for xl_, xr_, yt_, dp_ in cfg.get("_tablettes", []):   # étagères jusqu'au mur : posées contre le fond, un bout contre le meuble
+        box("etagere_murale", 0, xl_, xr_, max(0, yt_ - ep), yt_, 0, min(dp_, D), "h")
     Wtot = max([ox + sp["overall_mm"]["width"] for ox, sp in cfg["_caissons"]] + ([hi[0] - lo[0]] if fp else []))
+    x0t = min(ox for ox, _ in cfg["_caissons"]) if cfg.get("_tablettes") else 0   # abscisse du meuble quand des étagères murales le décalent
     Htot = max([sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"]] + ([hi[2]] if fp else []))
     # plinthe continue : panneau de façade en retrait (≈ 30 mm), sans retour latéral, sur pieds
     if plinth > 0:
@@ -709,7 +713,7 @@ def build_furniture(cfg, opt, open_state=False):
             if not b_ or b_["r"] - 30 - ep <= 0: continue
             path = bout_front_path(Wtot, b_["r"], b_["deg"], 30.0, inset=30.0)
             pl[sd_] = (path, path[-1][0])                      # chemin (côté droit) et abscisse où la plinthe droite se raccorde
-        x_a = (Wtot - pl[-1][1]) if -1 in pl else ep
+        x_a = (Wtot - pl[-1][1]) if -1 in pl else x0t + ep
         x_b = pl[1][1] if 1 in pl else Wtot - ep
         objs.append(add_box("plinthe", x_a * mm, x_b * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
         for sd_, (path, _) in pl.items():
@@ -720,10 +724,10 @@ def build_furniture(cfg, opt, open_state=False):
     top_h = (Htot + plinth) * mm
     if rd.get("plateau"):   # plateau épais en chêne, léger débord
         pt = float(rd["plateau"]) if not isinstance(rd["plateau"], bool) else 40.0
-        objs.append(add_box("plateau", -12 * mm, (Wtot + 12) * mm, -15 * mm, D * mm, top_h, top_h + pt * mm, wood, "h", rnd))
+        objs.append(add_box("plateau", (x0t - 12) * mm, (Wtot + 12) * mm, -15 * mm, D * mm, top_h, top_h + pt * mm, wood, "h", rnd))
         top_h += pt * mm
     # le plan et la vasque ne sont pas dessinés avec le meuble : ils ont leurs propres images (render_parts)
-    return objs, dict(W=Wtot * mm, H=top_h, D=D * mm, plinth=plinth, caissons=cfg["_caissons"])
+    return objs, dict(W=max([Wtot] + [xr for _, xr, _, _ in cfg.get("_tablettes", [])]) * mm, H=top_h, D=D * mm, plinth=plinth, caissons=cfg["_caissons"])
 
 
 # ───────────────────────────── pièce, lumière, caméra ─────────────────────────────
