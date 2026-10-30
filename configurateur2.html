@@ -3034,6 +3034,7 @@ function _rebuildEditBar(){
     if(isDressing){
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale, les portes et tiroirs s\'accrochent dessus')+
+        (_isAdminMode()?cBtn('tablette',false,svgShelf,'Étagère au mur','Part du meuble jusqu\'au mur (équipe)'):'')+
         cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire, non prise en compte par les portes')+
         cBtn('barre',            false, svgBarre,      'Tringle',      'Barre pour suspendre les vêtements')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
@@ -3044,6 +3045,7 @@ function _rebuildEditBar(){
       // Caisson central bas : étagère, intercalaire, tringle, porte, tiroir
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale, les portes et tiroirs s\'accrochent dessus')+
+        (_isAdminMode()?cBtn('tablette',false,svgShelf,'Étagère au mur','Part du meuble jusqu\'au mur (équipe)'):'')+
         cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire, non prise en compte par les portes')+
         cBtn('barre',            false, svgBarre,      'Tringle',      'Barre pour suspendre les vêtements')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
@@ -3054,6 +3056,7 @@ function _rebuildEditBar(){
       // Caissons latéraux / dessus : étagère, intercalaire, tringle, porte, tiroir
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale, les portes et tiroirs s\'accrochent dessus')+
+        (_isAdminMode()?cBtn('tablette',false,svgShelf,'Étagère au mur','Part du meuble jusqu\'au mur (équipe)'):'')+
         cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire, non prise en compte par les portes')+
         cBtn('barre',            false, svgBarre,      'Tringle',      'Barre pour suspendre les vêtements')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
@@ -3063,6 +3066,7 @@ function _rebuildEditBar(){
     } else {
       btns.innerHTML=selectorHTML+
         cBtn('shelf',            true,  svgShelf,      'Étagère',      'Crée une zone horizontale, les portes s\'accrochent dessus')+
+        (_isAdminMode()?cBtn('tablette',false,svgShelf,'Étagère au mur','Part du meuble jusqu\'au mur (équipe)'):'')+
         cBtn('shelf_simple',     false, svgShelfSimple,'Étagère 2nd',  'Étagère secondaire, non prise en compte par les portes')+
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
@@ -3092,6 +3096,7 @@ function _rebuildEditBar(){
   } else {
     btns.innerHTML=
       cBtn('shelf',            true,  svgShelf,      'Tablette',      'Crée une zone horizontale, les portes et tiroirs s\'accrochent dessus')+
+      (_isAdminMode()?cBtn('tablette',false,svgShelf,'Étagère au mur','Part du meuble jusqu\'au mur (équipe)'):'')+
       cBtn('shelf_simple',     false, svgShelfSimple,'Tablette 2nd',  'Tablette secondaire, non prise en compte par les portes')+
       cBtn('separator',        false, svgSep,        'Séparateur',    'Crée une zone latérale, délimite l\'espace pour une porte')+
       cBtn('separator_simple', false, svgSepSimple,  'Sépar. 2nd',    'Séparateur secondaire, non pris en compte par les portes')+
@@ -3265,6 +3270,7 @@ function updateCaissonGhost(e){
   var els=getActiveEls(), grp=getActiveGrp();
   var gW,gH,gX,gY,occupied=false;
 
+  if(caissonType==='tablette'){ _tabGhost(hit); return; }
   if(caissonType==='barre'){
     var bay0b=getBay(hit.x_cm,hit.y_cm);
     var bW0b=(bay0b.right_cm-bay0b.left_cm)/100;
@@ -3422,6 +3428,10 @@ function placeOrRemoveCaisson(e, skipUndo){
   var hit=_lastCaissonHit||getCaissonHit(e);
   if(!hit) return false;
 
+  if(caissonType==='tablette'){
+    var _tp=_tabFromHit(hit); S.tablettes=_tabAll().concat([{cote:_tp.cote,y_cm:_tp.y_cm,long_cm:_tabDefLong(),prof_cm:Math.round(S.CairsonP*100)}]);
+    renderCaissonWidths(); clearCaissonGhost(); buildCaisson(); return true;
+  }
   if(caissonType==='shelf'||caissonType==='shelf_simple'||caissonType==='barre'){
     var bay1=getBay(hit.x_cm,hit.y_cm);
     if(els.some(function(el){
@@ -3496,6 +3506,7 @@ function _elsSnapshot(){
     els:  JSON.parse(JSON.stringify(caissonElements)),
     els2: JSON.parse(JSON.stringify(caissonElements2)),
     tvTop:   JSON.parse(JSON.stringify(tvTopElems)),
+    tab:  JSON.parse(JSON.stringify(_tabAll())),
     tvL:  JSON.parse(JSON.stringify(tvSideLeft.map(function(r){return r.elems;}))),
     tvR:  JSON.parse(JSON.stringify(tvSideRight.map(function(r){return r.elems;}))),
     os:   JSON.parse(JSON.stringify(caissonOpenState)),
@@ -3514,7 +3525,7 @@ function pushUndo(){
 function undoLast(){
   if(!_undoStack.length) return;
   var snap=_undoStack.pop();
-  caissonElements=snap.els; caissonElements2=snap.els2; tvTopElems=snap.tvTop;
+  caissonElements=snap.els; caissonElements2=snap.els2; tvTopElems=snap.tvTop; if(snap.tab) S.tablettes=snap.tab;
   caissonOpenState=snap.os; caissonOpenState2=snap.os2; tvTopOpenState=snap.tvTopO;
   // Ne restaure que si le nombre de caissons latéraux n'a pas changé depuis (l'ajout/suppression
   // de caisson n'est pas dans la pile d'undo, comme avant pour les 2 slots fixes).
@@ -3835,6 +3846,7 @@ function updateElementsList(){
       html+='<p style="font-size:11px;line-height:1.5;color:var(--text2);margin:8px 2px 0">Le bouton « Charnières » de chaque porte permet de changer son sens d\'ouverture.</p>';
     }
   }
+  html+=_tablettesHtml();
   containers.forEach(function(c){ c.innerHTML=html; });
 }
 
@@ -4534,6 +4546,42 @@ function _buildTablettes(matElem,CP,ep){
     m.position.set(edge+(left?-len/2:len/2), t.y_cm/100-ep/2, -CP/2+dep/2);
     m.raycast=function(){}; m.userData.tablette=true; caissonGrp.add(m);
   });
+  _buildTabMurs(CP);
+}
+var _tabLongLast=60;
+function _tabDefLong(){ return _tabLongLast; }
+// où tombe une étagère murale posée par un clic dans le caisson actif : côté (gauche/droite) et hauteur du dessus depuis le sol
+function _tabFromHit(hit){
+  var ac=activeCaisson, cote, base=0;
+  if(typeof ac==='string'&&ac.charAt(0)==='L') cote='gauche';
+  else if(typeof ac==='string'&&ac.charAt(0)==='R') cote='droite';
+  else cote=(hit.x_cm<(getActiveCL()-2*EP)*50)?'gauche':'droite';
+  var r=_tvRecord(); if(r) base=_yBottomOf(r);
+  return {cote:cote,y_cm:Math.max(5,Math.round(base+hit.y_cm+EP*100))};
+}
+function _tabGhost(hit){
+  var tp=_tabFromHit(hit), ly=_layout(S.CL), len=_tabDefLong()/100, dep=S.CairsonP, left=tp.cote==='gauche', ep=EP, CP=S.CairsonP;
+  var g=getActiveGhost();
+  if(!g||g.parent!==caissonGrp){
+    if(g){ if(g.parent) g.parent.remove(g); if(g.geometry) g.geometry.dispose(); if(g.material) g.material.dispose(); }
+    g=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({transparent:true,opacity:0.5,color:0xc8a050,roughness:0.4,depthWrite:false}));
+    g.renderOrder=1; g.raycast=function(){}; caissonGrp.add(g); setActiveGhost(g);
+  }
+  var edge=left?-(ly.leftW+S.CL/2):(ly.rightW+S.CL/2);
+  g.scale.set(len,ep,dep); g.position.set(edge+(left?-len/2:len/2), tp.y_cm/100-ep/2, -CP/2+dep/2); g.visible=true;
+  _hideDragLabel();
+}
+// murs : un mur à la fin des étagères de chaque côté (les étagères s'y fixent)
+function _buildTabMurs(CP){
+  var T=_tabAll(), ly=_layout(S.CL), H=S.CH;
+  ['gauche','droite'].forEach(function(cote){
+    var l=T.filter(function(t){return t.cote===cote;}); if(!l.length) return;
+    var lmax=Math.max.apply(null,l.map(function(t){return t.long_cm;}))/100, dmax=Math.max.apply(null,l.map(function(t){return t.prof_cm;}))/100, ymax=Math.max.apply(null,l.map(function(t){return t.y_cm;}))/100;
+    var edge=(cote==='gauche')?-(ly.leftW+S.CL/2):(ly.rightW+S.CL/2), th=0.04, h=Math.max(H,ymax)+0.25, d=Math.max(dmax,CP)+0.1;
+    var m=new THREE.Mesh(new THREE.BoxGeometry(th,h,d),new THREE.MeshStandardMaterial({color:0xd8d3ca,roughness:0.95,metalness:0}));
+    var x=(cote==='gauche')?edge-lmax-th/2:edge+lmax+th/2;
+    m.position.set(x,h/2,-CP/2+d/2); m.raycast=function(){}; m.userData.tablette=true; caissonGrp.add(m);
+  });
 }
 function _tabRefresh(){ renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts(); }
 function addTablette(cote){
@@ -4544,7 +4592,7 @@ function setTablette(i,k,v){
   var t=_tabAll()[i]; if(!t||!_isAdminMode()) return;
   v=parseFloat(v); if(!isFinite(v)) return;
   if(k==='y_cm') v=Math.max(5,Math.min(400,Math.round(v))); else if(k==='long_cm') v=Math.max(5,Math.min(400,Math.round(v))); else if(k==='prof_cm') v=Math.max(5,Math.min(120,Math.round(v)));
-  t[k]=v; _tabRefresh();
+  t[k]=v; if(k==='long_cm') _tabLongLast=v; _tabRefresh();
 }
 function delTablette(i){ if(!_isAdminMode()) return; var a=_tabAll().slice(); a.splice(i,1); S.tablettes=a; _tabRefresh(); }
 function _tablettesHtml(){

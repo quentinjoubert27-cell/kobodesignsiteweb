@@ -196,14 +196,18 @@ def load_spec(path):
         print("Avertissement : caisson « dessus » (tvSide.top) non dessiné.")
     xmin = min(x for x, _ in cais); xmax = max(x + sp["overall_mm"]["width"] for x, sp in cais)
     tabs = [t for t in ((cfg.get("meuble") or {}).get("tablettes") or []) if t.get("long_cm")]   # étagères jusqu'au mur (équipe)
+    TM = 80   # épaisseur des murs dessinés au bout des étagères
     lg = max([round(float(t["long_cm"]) * 10) for t in tabs if t.get("cote") != "droite"] + [0])
-    xmin -= lg
+    if lg: xmin -= lg + TM
+    lgs = lg + TM if lg else 0
+    lr = max([round(float(t["long_cm"]) * 10) for t in tabs if t.get("cote") == "droite"] + [0])
     cfg["_tablettes"] = []
     for t in tabs:
         l_ = round(float(t["long_cm"]) * 10)
         if t.get("cote") == "droite": xl, xr = xmax - xmin, xmax - xmin + l_
-        else: xl, xr = lg - l_, lg
+        else: xl, xr = lgs - l_, lgs
         cfg["_tablettes"].append((xl, xr, round(float(t.get("y_cm") or 0) * 10), round(float(t.get("prof_cm") or D / 10) * 10)))
+    cfg["_murs_tab"] = ([(0, TM)] if lg else []) + ([(xmax - xmin + lr, xmax - xmin + lr + TM)] if lr else [])
     cfg["_caissons"] = [(x - xmin, sp) for x, sp in cais]
     return cfg
 
