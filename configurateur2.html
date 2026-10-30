@@ -1870,6 +1870,25 @@ function _boutPlate(bo,W,CP,xo,y0,th,mat){
   geo.rotateX(-Math.PI/2);
   var m=new THREE.Mesh(geo,mat); m.position.set(0,y0,0); m.castShadow=true; m.receiveShadow=true; return m;
 }
+// façade fixe sur un caisson à bout arrondi : ruban vertical qui suit le bord avant (droite + arc), épaisseur 20 mm vers l'intérieur ; retourne le mesh
+function _boutFacade(g,bo,W,H,CP,ep,el,mat){
+  var kp=el.key.split('_').map(Number), iWcm=(W-2*ep)*100, iHcm=(H-2*ep)*100, s=bo.side;
+  var pxL=kp[1]<0.5?-W/2:-W/2+ep+kp[1]/100-ep/2, pxR=kp[3]>iWcm-0.5?W/2:-W/2+ep+kp[3]/100+ep/2;
+  var pyB=kp[0]<0.5?0:ep+kp[0]/100-ep/2, pyT=kp[2]>iHcm-0.5?H:ep+kp[2]/100+ep/2, hh=pyT-pyB-0.003, th=0.020;
+  var touche=s>0?kp[3]>iWcm-0.5:kp[1]<0.5, m;
+  if(!touche){
+    m=new THREE.Mesh(new THREE.BoxGeometry(pxR-pxL-0.003,hh,th),mat); m.position.set((pxL+pxR)/2,(pyB+pyT)/2,CP/2+0.001); m.castShadow=true; g.add(m); return m;
+  }
+  var pts=_boutPts(bo,W,CP,s>0?pxL:pxR), path=pts.slice(2).map(function(p){ return [s*p[0],p[1]]; });   // dans le repère « bout à droite »
+  var C=[W/2-bo.r,CP/2-bo.r], P1=path[1]||path[0], sg=1, i, n=path.length, off=[], a, b, tx, tz, l, nx, nz;
+  tx=path[Math.min(2,n-1)][0]-path[0][0]; tz=path[Math.min(2,n-1)][1]-path[0][1]; l=Math.hypot(tx,tz)||1;
+  if(((-tz/l)*(C[0]-P1[0])+(tx/l)*(C[1]-P1[1]))<0) sg=-1;
+  for(i=0;i<n;i++){ a=path[Math.max(0,i-1)]; b=path[Math.min(n-1,i+1)]; tx=b[0]-a[0]; tz=b[1]-a[1]; l=Math.hypot(tx,tz)||1; nx=-tz/l*sg; nz=tx/l*sg; off.push([path[i][0]+nx*th,path[i][1]+nz*th]); }
+  var poly=path.concat(off.reverse()).map(function(p){ return [s*p[0],p[1]]; });
+  var geo=new THREE.ExtrudeGeometry(new THREE.Shape(poly.map(function(p){ return new THREE.Vector2(p[0],-p[1]); })),{depth:hh,bevelEnabled:false});
+  geo.rotateX(-Math.PI/2);
+  m=new THREE.Mesh(geo,mat); m.position.set(0,pyB+0.0015,0); m.castShadow=true; m.receiveShadow=true; g.add(m); return m;
+}
 function buildBoutCarcass(g,W,H,CP,ep,matCais,matFond,bo){
   function bx(w,h,d,x,y,z,mat){ var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; g.add(m); return m; }
   var s=bo.side;
@@ -1966,14 +1985,14 @@ function buildCaisson(){
     nicheFront(caissonGrp,_nicheCtx('M',CL,CH),fz,matFacade);
     caissonElements.forEach(function(el,idx){
       if(el.type!=='porte'&&el.type!=='tiroir') return;
-      if(_boM) return;   // bout arrondi : étagères ouvertes seulement
+      if(_boM){ if(el.type==='porte'&&el.fixe){ var _bf=_boutFacade(caissonGrp,_boM,CL,CH,CP,EP,el,matFacade); _bf.userData.elemIdx=idx; caissonElemMeshes.push(_bf); } return; }   // bout arrondi : étagères ouvertes ; seule la façade fixe épouse le bout
       var parts=el.key.split('_').map(Number);
       var bot=parts[0],left=parts[1],top=parts[2],right=parts[3];
       var w=(right-left)/100, h=(top-bot)/100;
       var cx=xcmToLocal((left+right)/2);
       var jeu=0.003;
       if(el.type==='porte'){
-        var isOpen=!!caissonOpenState[el.key];
+        var isOpen=!el.fixe&&!!caissonOpenState[el.key];
         var iW_cm2=iW*100, iH_cm2=iH*100;
         var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  - EP/2;
         var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) + EP/2;
@@ -2094,7 +2113,7 @@ function buildCaisson(){
       var cx=xcmToLocal((left+right)/2);
       var jeu=0.003;
       if(el.type==='porte'){
-        var isOpen=!!caissonOpenState[el.key];
+        var isOpen=!el.fixe&&!!caissonOpenState[el.key];
         var iW_cm2=iW*100, iH_cm2=iH*100;
         var porXleft  = (left<0.5)         ? -CL/2 : xcmToLocal(left)  + EP/2;
         var porXright = (right>iW_cm2-0.5) ?  CL/2 : xcmToLocal(right) - EP/2;
@@ -2117,7 +2136,7 @@ function buildCaisson(){
         }
         var _flush=top>iH_cm2-0.5, _A=_archeCtx('M',CL,CH); var pm=porteMeshG(porW,porH,0.020,matFacade,_A,porCx,_flush); if(_A&&_flush) archeFillOnce(caissonGrp,_A,fz,matFacade);
         pm.position.set(hingeLeft ? porW/2 : -porW/2, 0, 0);
-        addDoorHinges(pm, porW, porH, hingeLeft, _hEdgeFor(_A,_flush,porH,porCx,porW,hingeLeft));
+        if(!el.fixe) addDoorHinges(pm, porW, porH, hingeLeft, _hEdgeFor(_A,_flush,porH,porCx,porW,hingeLeft));
         pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
         pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
       } else { // tiroir
@@ -2268,7 +2287,7 @@ function buildCaisson2(){
     var cx=xcmToLocal((left+right)/2);
     var jeu=0.003;
     if(el.type==='porte'){
-      var isOpen=!!caissonOpenState2[el.key];
+      var isOpen=!el.fixe&&!!caissonOpenState2[el.key];
       var iW_cm2=iW2*100, iH_cm2=iH2*100;
       var porXleft  = (left<0.5)          ? -CL2/2 : xcmToLocal(left)  - ep/2;
       var porXright = (right>iW_cm2-0.5)  ?  CL2/2 : xcmToLocal(right) + ep/2;
@@ -2282,7 +2301,7 @@ function buildCaisson2(){
       else          { pivot.position.set(porXright-jeu/2,pCy,fz2); if(isOpen) pivot.rotation.y=Math.PI*0.25; }
       var pm=bx2(pW,pH,0.020,matFac);
       pm.position.set(hingeLeft?pW/2:-pW/2,0,0);
-      addDoorHinges(pm, pW, pH, hingeLeft);
+      if(!el.fixe) addDoorHinges(pm, pW, pH, hingeLeft);
       pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
       pivot.add(pm); caissonElemMeshes2.push(pm); caissonGrp2.add(pivot);
     } else {
@@ -2451,7 +2470,8 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         bSupD.position.set(xcm(bsr)-0.010, ycm(el.y_cm), 0); g.add(bSupD);
 
       } else if(_boX && (el.type==='porte'||el.type==='tiroir')){
-        // bout arrondi : étagères ouvertes seulement
+        // bout arrondi : étagères ouvertes ; seule la façade fixe épouse le bout
+        if(el.type==='porte'&&el.fixe){ var _bf2=_boutFacade(g,_boX,W,H,CP,ep2,el,matFacade); _bf2.userData.elemIdx=eidx; meshArr.push(_bf2); }
       } else if(el.type==='porte'){
         var kp=el.key.split('_').map(Number);
         var kBot=kp[0],kLeft=kp[1],kTop=kp[2],kRight=kp[3];
@@ -2463,13 +2483,13 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         var porW=pxR-pxL-jeuP, porH=pyT-pyB-jeuP;
         var porCy=(pyB+pyT)/2;
         var hingeLeft=_hingeLeftFor(elems, Math.round(W*100), Math.round(H*100), el.key, xcm((kLeft+kRight)/2)<xcm(iWcm/2));
-        var isOpen=!!openSt[el.key];
+        var isOpen=!el.fixe&&!!openSt[el.key];
         var pivot=new THREE.Group();
         pivot.position.set(hingeLeft?pxL+jeuP/2:pxR-jeuP/2,porCy,fz);
         if(isOpen) pivot.rotation.y=hingeLeft?-Math.PI*0.25:Math.PI*0.25;
         var _flush=kTop>iHcm-0.5, _A=_archeCtx(d.record,W,H); var pm=porteMeshG(porW,porH,0.020,matFacade,_A,(pxL+pxR)/2,_flush); if(_A&&_flush) archeFillOnce(g,_A,fz,matFacade);
         pm.position.set(hingeLeft?porW/2:-porW/2,0,0);
-        addDoorHinges(pm,porW,porH,hingeLeft,_hEdgeFor(_A,_flush,porH,(pxL+pxR)/2,porW,hingeLeft));
+        if(!el.fixe) addDoorHinges(pm,porW,porH,hingeLeft,_hEdgeFor(_A,_flush,porH,(pxL+pxR)/2,porW,hingeLeft));
         pm.userData.elemIdx=eidx; pm.userData.porKey=el.key; pm.userData.isPorte=true;
         pivot.add(pm); meshArr.push(pm); g.add(pivot);
 
@@ -3040,6 +3060,7 @@ function _rebuildEditBar(){
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
+        (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && activeCaisson===1){
       // Caisson central bas : étagère, intercalaire, tringle, porte, tiroir
@@ -3051,6 +3072,7 @@ function _rebuildEditBar(){
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
+        (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && _isTVExtra()){
       // Caissons latéraux / dessus : étagère, intercalaire, tringle, porte, tiroir
@@ -3062,6 +3084,7 @@ function _rebuildEditBar(){
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
+        (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else {
       btns.innerHTML=selectorHTML+
@@ -3071,6 +3094,7 @@ function _rebuildEditBar(){
         cBtn('separator',        false, svgSep,        'Intercalaire', 'Crée une zone latérale, délimite l\'espace pour une porte')+
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
+        (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     }
     {
@@ -3081,9 +3105,9 @@ function _rebuildEditBar(){
       var allOs=[caissonOpenState,caissonOpenState2,tvTopOpenState]
         .concat(tvSideLeft.map(function(r){return r.openState;}))
         .concat(tvSideRight.map(function(r){return r.openState;}));
-      var hasAny=allEls.some(function(els){ return els.some(function(e){ return e.type==='porte'||e.type==='tiroir'; }); });
+      var hasAny=allEls.some(function(els){ return els.some(function(e){ return (e.type==='porte'&&!e.fixe)||e.type==='tiroir'; }); });
       {
-        var allOpen=allEls.every(function(els){ return els.filter(function(e){ return e.type==='porte'||e.type==='tiroir'; }).every(function(e){ return allOs.some(function(os){ return os[e.key]; }); }); });
+        var allOpen=allEls.every(function(els){ return els.filter(function(e){ return (e.type==='porte'&&!e.fixe)||e.type==='tiroir'; }).every(function(e){ return allOs.some(function(os){ return os[e.key]; }); }); });
         var openBtn=document.createElement('button');
         openBtn.className='reset-btn';
         openBtn.style.marginTop='10px';
@@ -3101,6 +3125,7 @@ function _rebuildEditBar(){
       cBtn('separator',        false, svgSep,        'Séparateur',    'Crée une zone latérale, délimite l\'espace pour une porte')+
       cBtn('separator_simple', false, svgSepSimple,  'Sépar. 2nd',    'Séparateur secondaire, non pris en compte par les portes')+
       cBtn('porte',            false, svgPorte,      'Porte',         'Remplit la zone définie par les tablettes + séparateurs')+
+      (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
       cBtn('tiroir',           false, svgTiroir,     'Tiroir',        'Remplit la zone définie par les tablettes + séparateurs');
   }
   // Injecter le conteneur de liste après les boutons (si pas déjà présent)
@@ -3493,7 +3518,7 @@ function placeOrRemoveCaisson(e, skipUndo){
       els.push({type:'porte',key:k1});
       els.push({type:'porte',key:k2});
     } else {
-      els.push({type:caissonType,key:k});
+      els.push(caissonType==='facade'?{type:'porte',key:k,fixe:true}:{type:caissonType,key:k});
     }
     setActiveEls(els);
   }
@@ -3664,7 +3689,7 @@ function toggleAllDoorsTv(){
   var allEls=[caissonElements, caissonElements2, tvTopElems]
     .concat(tvSideLeft.map(function(r){return r.elems;}))
     .concat(tvSideRight.map(function(r){return r.elems;}));
-  allEls.forEach(function(els){ els.forEach(function(e){ if(e.type==='porte'||e.type==='tiroir') allKeys.push(e.key); }); });
+  allEls.forEach(function(els){ els.forEach(function(e){ if((e.type==='porte'&&!e.fixe)||e.type==='tiroir') allKeys.push(e.key); }); });
   // Si au moins une est fermée → tout ouvrir, sinon tout fermer
   var anyClose=allKeys.some(function(k){ return !allStates.some(function(os){ return os[k]; }); });
   pushUndo();
@@ -3787,7 +3812,7 @@ function _hingeFlash(key,msg){
   clearTimeout(_hingeMsgTimer); _hingeMsgTimer=setTimeout(function(){ _hingeMsg={key:null,msg:''}; updateElementsList(); },4000);
 }
 function cycleHinge(i){
-  var els=getActiveEls(), el=els[i]; if(!el||el.type!=='porte') return;
+  var els=getActiveEls(), el=els[i]; if(!el||el.type!=='porte'||el.fixe) return;
   var sup=_hingeSupport(els,el.key);
   if(sup&&sup.L<0.1&&sup.R<0.1){ _hingeFlash(el.key,'Impossible d\'accrocher cette porte ici : elle ne repose sur aucun montant.'); return; }
   var cur=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
@@ -3823,11 +3848,11 @@ function updateElementsList(){
       else if(el.type==='barre'){ name='Tringle'; sub='à '+Math.round(el.y_cm)+' cm'; }
       else if(el.type==='separator'){ name='Séparateur'; sub='à '+Math.round(el.x_cm)+' cm du bord'; }
       else if(el.type==='separator_simple'){ name='Sépar. 2nd'; sub='à '+Math.round(el.x_cm)+' cm'; }
-      else if(el.type==='porte'){ name='Porte'; sub=el.key?el.key.replace(/_/g,' '):''; }
+      else if(el.type==='porte'){ name=el.fixe?'Façade fixe':'Porte'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else if(el.type==='tiroir'){ name='Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else { name=el.type; }
       var hingeBtn='', hingeAlert='';
-      if(el.type==='porte'){
+      if(el.type==='porte'&&!el.fixe){
         var _hi=_hingeInfoForKey(els,el.key), eff=_hi?_hi.side:null, mode=el.hinge==='L'||el.hinge==='R'?el.hinge:'';
         var _sup=_hingeSupport(els,el.key), _blocked=_sup&&_sup.L<0.1&&_sup.R<0.1;
         hingeBtn='<button class="el-list-del" style="width:auto;padding:0 10px;margin-left:auto;margin-right:6px;font-size:11px;border-radius:14px'+(_blocked?';opacity:.45;cursor:not-allowed':'')+'" onclick="cycleHinge('+i+')" title="'+(_blocked?'Impossible : aucun montant pour fixer cette porte':'Choisir de quel côté la porte est fixée (charnières)')+'">Charnières '+(eff==='R'?'à droite':'à gauche')+(mode?'':' (auto)')+'</button>';
@@ -3925,7 +3950,7 @@ cvs.addEventListener('pointerdown',function(e){
           editPickedIdx=_hoverElIdx;
           pels.splice(_hoverElIdx,1); setActiveEls(pels); buildCaisson();
           document.querySelectorAll('.c-type-btn').forEach(function(b){b.classList.toggle('active',b.dataset.ctype===pel.type);});
-          caissonType=pel.type;
+          caissonType=pel.fixe?'facade':pel.type;
         }
       }
       _hoverElIdx=-1;
@@ -3984,7 +4009,7 @@ cvs.addEventListener('pointerdown',function(e){
 function _sameFamily(a, b){
   var shelves=['shelf','shelf_simple','barre'];
   var seps=['separator','separator_simple'];
-  var doors=['porte','tiroir'];
+  var doors=['porte','tiroir','facade'];
   var inArr=function(t,arr){return arr.indexOf(t)>=0;};
   if(inArr(a,shelves)&&inArr(b,shelves)) return true;
   if(inArr(a,seps)&&inArr(b,seps)) return true;
@@ -5395,7 +5420,7 @@ function buildTechSpec(els, CL, CH, CP){
         x_left_mm:x_l, x_right_mm:x_r,
         y_bottom_mm:y_bot, height_mm:y_top-y_bot,
         door_thickness_mm:ep_mm,
-        door_gap_mm:2, door_type:w>400?'double':'single', is_double_leaf:w>400,
+        door_gap_mm:2, door_type:(w>400&&!e.fixe)?'double':'single', is_double_leaf:(w>400&&!e.fixe), fixe:!!e.fixe,
         door_opening:(_hm[e.key]==='R'?'right':'left'), hinge_explicit:(e.hinge==='L'||e.hinge==='R'), door_model:'standard', fileur_width_mm:0,
         hinge_mode:'default', custom_hinge_positions_mm:[]
       });
@@ -5613,8 +5638,8 @@ function computeDevisQuantities(techSpec, matLabel){
     var w = d.x_right_mm-d.x_left_mm, h = d.height_mm;
     // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
     // règle atelier : plus de 400 mm de hauteur -> 3 charnières, de 100 à 400 mm -> 2, sinon 1
-    var nCharnieres = (h>400) ? 3 : (h>100) ? 2 : 1;
-    addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group:'Porte '+(idx+1), charnieres: nCharnieres }, 'porte');
+    var nCharnieres = d.fixe ? 0 : (h>400) ? 3 : (h>100) ? 2 : 1;   // une façade fixe n'a pas de charnières
+    addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group:(d.fixe?'Façade fixe ':'Porte ')+(idx+1), charnieres: nCharnieres }, 'porte');
     q.edge_banding_m += 2*(w+h)/1000; // 4 côtés visibles
     q.doors_count++;
     q.hinges += nCharnieres;
@@ -5909,7 +5934,7 @@ function _supportModel(els, W, H){
     var c=_cpt(els,e.x_cm,e.y_cm,iW,iH); return {x:e.x_cm,b:c.bot,t:c.top};
   });
   var parse=function(e){ var k=e.key.split('_').map(Number); return {key:e.key,b:k[0],l:k[1],t:k[2],r:k[3],hinge:(e.hinge==='L'||e.hinge==='R')?e.hinge:null}; };
-  var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(parse);
+  var doors=els.filter(function(e){return e.type==='porte'&&e.key&&!e.fixe;}).map(parse);
   var drawers=els.filter(function(e){return e.type==='tiroir'&&e.key;}).map(parse);
   function cover(d,x){   // part de la hauteur de d contre un appui situé en x (joue ou intercalaire)
     if(x<=TOL||x>=iW-TOL) return 1;

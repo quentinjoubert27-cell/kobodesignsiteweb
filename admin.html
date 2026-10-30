@@ -3155,7 +3155,7 @@
       var doors = spec.doors || [], drawers = spec.drawers || [];
       angles += countJunctions(spec).total;
       nDoors += doors.length; nDrawers += drawers.length; nBars += (spec.bars || []).length;
-      doors.forEach(function (dd) { nHinges += hingesApp(dd.height_mm); });
+      doors.forEach(function (dd) { if (!dd.fixe) nHinges += hingesApp(dd.height_mm); });
       // tiroirs : règle du tableur (façade en recouvrement : +19 mm contre un montant / traverse, −1 mm de jeu côté façade voisine) ; le kit comprend le reste
       var L = c.L * 10, H = c.H * 10, E2 = 19, suf = c.label ? ' (' + c.label + ')' : ' (C' + cais.indexOf(c) + ')';
       var nr = function (a, b) { return Math.abs(a - b) <= 8; };
@@ -3935,7 +3935,11 @@
       // portes : une pièce par porte (hauteur et largeur du JSON), pleine largeur = double battant (2 vantaux)
       els.filter(isDoor).forEach(function (e, di) {
         var g2 = kg(e.key); if (!g2) return; var x = shift(g2.l, g2.r), h = g2.t - g2.b, wTot = x[1] - x[0];
-        var full = Math.abs(x[0] - t) <= Math.max(2, t * 0.5) && Math.abs(x[1] - (L - t)) <= Math.max(2, t * 0.5), dbl = full || /double|2_battants|deux_battants/.test(norm(e.type));
+        var full = Math.abs(x[0] - t) <= Math.max(2, t * 0.5) && Math.abs(x[1] - (L - t)) <= Math.max(2, t * 0.5), dbl = !e.fixe && (full || /double|2_battants|deux_battants/.test(norm(e.type)));
+        if (e.fixe && bo) {   // façade fixe sur un bout arrondi : largeur développée (droite + arc), pas la corde
+          var touchB = bo.cote === 'droite' ? Math.abs(x[1] - (L - t)) <= Math.max(2, t * 0.5) : Math.abs(x[0] - t) <= Math.max(2, t * 0.5);
+          if (touchB) { var devB = boutFrontDev({ cote: bo.cote, mm: bo.r, deg: bo.deg }, L, P, t); if (devB > 0) wTot = bo.cote === 'droite' ? devB - (x[0] - t) : devB - (L - t - x[1]); }
+        }
         if (pe && pe.bas !== 'arriere' && g2.t >= H - 2 * t - 5) {   // pente de face : porte en trapèze, comptée à sa surface réelle (hauteur moyenne sous le toit) au lieu du rectangle englobant
           var platD = c.pente.plat_cm > 0 ? Math.min(c.pente.plat_cm * 10, L - 20) : 0, dropS = 0, nS = 24;
           for (var iS = 0; iS < nS; iS++) {
@@ -5205,7 +5209,7 @@ function dedupeEls(els){
       var c=_cpt(els,e.x_cm,e.y_cm,iW,iH); return {x:e.x_cm,b:c.bot,t:c.top};
     });
     var parse=function(e){ var k=e.key.split('_').map(Number); return {key:e.key,b:k[0],l:k[1],t:k[2],r:k[3],hinge:(e.hinge==='L'||e.hinge==='R')?e.hinge:null}; };
-    var doors=els.filter(function(e){return e.type==='porte'&&e.key;}).map(parse);
+    var doors=els.filter(function(e){return e.type==='porte'&&e.key&&!e.fixe;}).map(parse);
     var drawers=els.filter(function(e){return e.type==='tiroir'&&e.key;}).map(parse);
     function cover(d,x){   // part de la hauteur de d contre un appui situé en x (joue ou intercalaire)
       if(x<=TOL||x>=iW-TOL) return 1;
@@ -5762,7 +5766,7 @@ function dedupeEls(els){
         drawers.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, drawer_face_thickness_mm:ep_mm, drawer_gap_mm:2, drawer_system:'blum', drawer_tech_type:'softclose', drawer_handle_type:'sans', applique_mode:false });
       } else {
         const w = x_r-x_l;
-        doors.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, door_thickness_mm:ep_mm, door_gap_mm:2, door_type:w>400?'double':'single', is_double_leaf:w>400, door_opening:(_hm[e.key]==='R'?'right':'left'), hinge_explicit:(e.hinge==='L'||e.hinge==='R'), door_model:'standard', fileur_width_mm:0, hinge_mode:'default', custom_hinge_positions_mm:[] });
+        doors.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, door_thickness_mm:ep_mm, door_gap_mm:2, door_type:(w>400&&!e.fixe)?'double':'single', is_double_leaf:(w>400&&!e.fixe), fixe:!!e.fixe, door_opening:(_hm[e.key]==='R'?'right':'left'), hinge_explicit:(e.hinge==='L'||e.hinge==='R'), door_model:'standard', fileur_width_mm:0, hinge_mode:'default', custom_hinge_positions_mm:[] });
       }
     });
 
@@ -6009,7 +6013,7 @@ function dedupeEls(els){
       const matLabel = meuble.matLabel || sdb.meuble_mat || 'Non défini';
       const elements = rc.elements || sdb.elements || [];
       const spec = buildTechSpec(elements, meuble.L || sdb.meuble_l, meuble.H || sdb.meuble_h, meuble.P || sdb.meuble_p);
-      const parts = [computeDevisQuantitiesAdmin(spec, matLabel)];
+      const parts = [computeDevisQuantitiesAdmin(spec, matLabel, meuble.bout)];
 
       // Caisson d'angle
       if (rc.caisson2 && Array.isArray(rc.caisson2.elements)) {
@@ -6025,7 +6029,7 @@ function dedupeEls(els){
       tvLeftArr.concat(tvRightArr).forEach(function (s) {
         if (s && s.W_cm && s.H_cm) {
           const specSide = buildTechSpec(s.elements || [], s.W_cm, s.H_cm, meuble.P || sdb.meuble_p);
-          parts.push(computeDevisQuantitiesAdmin(specSide, matLabel));
+          parts.push(computeDevisQuantitiesAdmin(specSide, matLabel, s.bout));
         }
       });
       ((rc.tvSide && rc.tvSide.espaces) || []).forEach(function (e) {
@@ -6250,7 +6254,17 @@ function dedupeEls(els){
     return { points: keys.length, total: total, doubles: keys.filter(function (k) { return pts[k] > 1; }).length };
   }
   
-  function computeDevisQuantitiesAdmin(techSpec, matLabel) {
+  // Largeur développée (mm) du bord avant d'un caisson à bout arrondi (droite + arc + droite tangente), mesurée depuis le côté non arrondi : celle d'une façade fixe qui épouse le bout
+  function boutFrontDev(bout, L, P, t) {
+    if (!bout || !bout.cote) return 0;
+    var r = Math.min(bout.mm > 0 ? bout.mm : P, P - 1, L - 2 * t); if (!(r >= 2 * t)) return 0;
+    var deg = Math.max(20, Math.min(90, bout.deg > 0 ? bout.deg : 90)), th = deg * Math.PI / 180, Lp = L - t, cx = Lp - r, cz = P - r;
+    var xE = cx + r * Math.cos(th), zE = cz + r * Math.sin(th), tang = 0;
+    if (th < Math.PI / 2 - 1e-3) tang = (P - zE) / Math.cos(th);
+    var xF = th < Math.PI / 2 - 1e-3 ? xE - tang * Math.sin(th) : cx;
+    return xF + tang + r * th;
+  }
+  function computeDevisQuantitiesAdmin(techSpec, matLabel, bout) {
     var q = { panels_caisson_m2: {}, panels_etagere_m2: {}, panels_porte_m2: {}, panels_tiroir_m2: {}, panels_tiroir_caisse_m2: {},
       edge_banding_m: 0, decoupe_usinage_m: 0, decoupe_etagere_m: 0, decoupe_porte_m: 0, decoupe_tiroir_m: 0, decoupe_tiroir_caisse_m: 0,
       screws: 0, dowels: 0, hinges: 0, drawer_mechanisms: 0, corner_brackets: 4, doors_count: 0, drawers_count: 0, shelves_count: 0, separators_count: 0, separators_doubled: 0, bars_count: 0, junctions: 0, pieces: [] };
@@ -6320,10 +6334,16 @@ function dedupeEls(els){
     });
     (techSpec.doors || []).forEach(function (d, idx) {
       var w = d.x_right_mm - d.x_left_mm, h = d.height_mm;
+      if (d.fixe && bout && bout.cote) {   // façade fixe sur un bout arrondi : largeur développée (droite + arc), pas la corde
+        var Lw = (techSpec.overall_mm && techSpec.overall_mm.width) || 0, tw = techSpec.panel_thickness_mm || 18;
+        var touche = bout.cote === 'droite' ? d.x_right_mm >= Lw - tw - 3 : d.x_left_mm <= tw + 3;
+        var dev = boutFrontDev(bout, Lw, CP_mm, tw);
+        if (touche && dev > 0) w = bout.cote === 'droite' ? dev - (d.x_left_mm - tw) : dev - (Lw - tw - d.x_right_mm);
+      }
       // Règle atelier KoboMeuble (machining_logic.py / get_hinge_y_positions) :
       // >200mm -> 3 charnières, 100-200mm -> 2, sinon 1
-      var nCharnieres = (h > 400) ? 3 : (h > 100) ? 2 : 1;   // 2 charnières jusqu'à 40 cm de hauteur
-      addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group: 'Porte ' + (idx + 1), charnieres: nCharnieres }, 'porte');
+      var nCharnieres = d.fixe ? 0 : (h > 400) ? 3 : (h > 100) ? 2 : 1;   // 2 charnières jusqu'à 40 cm de hauteur ; une façade fixe n'en a pas
+      addPanel(q.panels_porte_m2, mat, w, h, 'porte', { group: (d.fixe ? 'Façade fixe ' : 'Porte ') + (idx + 1), charnieres: nCharnieres }, 'porte');
       q.edge_banding_m += 2 * (w + h) / 1000;
       q.doors_count++;
       q.hinges += nCharnieres;

@@ -411,12 +411,12 @@ def bout_front_path(W, r, deg, front_y, inset=0.0):
     return pts
 
 
-def bout_plan(W, D, bo, x0, y_back):
+def bout_plan(W, D, bo, x0, y_back, inset=0.0):
     """Contour (x, y) d'une pièce horizontale dont le coin avant extérieur est arrondi, façade au ras (y = 0) ; côté arrondi ouvert.
     x0 = bord non arrondi, y_back = fond de la pièce, y en mm depuis la façade."""
     side = bo["side"]
     xr = x0 if side > 0 else W - x0                    # on construit côté droit, puis on retourne pour un bout à gauche
-    pts = [(xr, y_back), (W, y_back), (W, bo["r"])] + bout_front_path(W, bo["r"], bo["deg"], 0.0)[1:] + [(xr, 0.0)]
+    pts = [(xr, y_back), (W - inset, y_back), (W - inset, bo["r"])] + bout_front_path(W, bo["r"], bo["deg"], inset, inset=inset)[1:] + [(xr, inset)]
     return [(x if side > 0 else W - x, y) for x, y in pts]
 
 
@@ -469,6 +469,7 @@ def build_furniture(cfg, opt, open_state=False):
         B = lambda nm, xl, xr, yb, yt, d0, d1, grain, mt=None: box(nm, ox, xl, xr, yb, yt, d0, d1, grain, mt)
         bo = bout_spec(spec, W, D, ep)
         if bo:   # bout arrondi ouvert : plateaux et étagères au contour arrondi, pas de paroi, étagères ouvertes seulement
+            fixes_bo = [d_ for d_ in spec.get("doors", []) if d_.get("fixe")]   # façades fixes : seules « portes » gardées sur un bout arrondi, elles épousent le contour
             spec = dict(spec); spec["doors"] = []; spec["drawers"] = []
             def prism(nm, pts2, zb, zt, grain, mt=None):
                 p3 = [((ox + x) * mm, y * mm, (zb + oyc[0]) * mm + z_off) for x, y in pts2]
@@ -477,6 +478,22 @@ def build_furniture(cfg, opt, open_state=False):
             xs0 = ep if bo["side"] > 0 else W - ep          # bord intérieur du côté droit (non arrondi)
             prism("traverse_basse", bout_plan(W, D, bo, xs0, D), 0, ep, "h")
             prism("traverse_haute", bout_plan(W, D, bo, xs0, D), H - ep, H, "h")
+            inset_fx = max([d_.get("door_thickness_mm", ep) for d_ in fixes_bo if (d_["x_right_mm"] - 1 >= W - ep - 3 if bo["side"] > 0 else d_["x_left_mm"] + 1 <= ep + 3)] + [0])   # étagères en retrait derrière la façade fixe qui épouse le bout
+            for d_ in fixes_bo:   # façade fixe sur bout arrondi : ruban vertical qui suit le bord avant (droite + arc), épaisseur 20 mm vers l'intérieur
+                th_f = d_.get("door_thickness_mm", ep)
+                xl_f, xr_f = d_["x_left_mm"] + 1, d_["x_right_mm"] - 1
+                yb_f, yt_f = d_["y_bottom_mm"] + 1, d_["y_bottom_mm"] + d_["height_mm"] - 1
+                if bo["side"] > 0: touche = xr_f >= W - ep - 3
+                else: touche = xl_f <= ep + 3
+                if not touche:
+                    B("porte", xl_f, xr_f, yb_f, yt_f, 0, th_f, "v"); continue
+                xo_f = xl_f if bo["side"] > 0 else W - xr_f          # bord non arrondi, côté droit (on construit à droite puis on retourne)
+                pf = [q_ for q_ in bout_front_path(W, bo["r"], bo["deg"], 0.0) if q_[0] >= xo_f] + [(xo_f, 0.0)]
+                poly = formes_mod.contour_ruban({"chemin": [list(q_) for q_ in pf], "ep": th_f, "sens": -1})
+                if bo["side"] < 0: poly = [[W - x_, y_] for x_, y_ in poly]
+                zo_f = z_off / mm + oyc[0]
+                o_f = add_prism("porte", [((ox + x_) * mm, y_ * mm, (yb_f + zo_f) * mm) for x_, y_ in poly], (0, 0, (yt_f - yb_f) * mm), wood, "v", rnd)
+                if o_f: objs.append(o_f)
         pe = spec.get("_pente")
         pe = pe if (pe and not bo and float(pe.get("h_cm") or 0) > 0 and pe.get("bas")) else None
         if pe:   # pente du dessus (équipe) : joues, dessus et fond reconstruits ; sinon dessin habituel
@@ -525,7 +542,7 @@ def build_furniture(cfg, opt, open_state=False):
             atteint = bo and ((bo["side"] > 0 and s_["x_right_mm"] >= W - ep - 2) or (bo["side"] < 0 and s_["x_left_mm"] <= ep + 2))
             if atteint:
                 x0 = s_["x_left_mm"] if bo["side"] > 0 else s_["x_right_mm"]
-                prism("shelf", bout_plan(W, D, bo, x0, min(D - 8, 12 + s_.get("depth_mm", D - ep))), s_["y_bottom_mm"], s_["y_top_mm"], "h", sm_)
+                prism("shelf", bout_plan(W, D, bo, x0, min(D - 8, 12 + s_.get("depth_mm", D - ep)), inset=inset_fx), s_["y_bottom_mm"], s_["y_top_mm"], "h", sm_)
             else:
                 xl_, xr_ = s_["x_left_mm"], s_["x_right_mm"]
                 _ps = spec.get("_pente")
@@ -617,7 +634,7 @@ def build_furniture(cfg, opt, open_state=False):
                     pts2.append((xs, yt))
                     o_ = add_prism("remplissage", [((ox + x_) * mm, 0, (z_ + zo) * mm) for x_, z_ in pts2], (0, th * mm, 0), dm, "v", rnd)
                     if o_: objs.append(o_)
-            if not open_state:
+            if not open_state or d.get("fixe"):
                 if st.get("lames"): louvre(ox, xl, xr, yb, yt, th, dm)
                 elif fl > 0 or slope: porte_arche()
                 else: B("porte", xl, xr, yb, yt, 0, th, "v", dm)
