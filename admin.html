@@ -3960,7 +3960,7 @@
         var g2 = kg(e.key); if (!g2) return; var x = shift(g2.l, g2.r), h = g2.t - g2.b, wTot = x[1] - x[0];
         var full = Math.abs(x[0] - t) <= Math.max(2, t * 0.5) && Math.abs(x[1] - (L - t)) <= Math.max(2, t * 0.5), dbl = !e.fixe && (full || /double|2_battants|deux_battants/.test(norm(e.type)));
         if (e.fixe && bo) {   // façade fixe sur un bout arrondi : largeur développée (droite + arc), pas la corde
-          var touchB = bo.cote === 'droite' ? Math.abs(x[1] - (L - t)) <= Math.max(2, t * 0.5) : Math.abs(x[0] - t) <= Math.max(2, t * 0.5);
+          var touchB = bo.cote === 'droite' ? x[1] >= L - t - 15 : x[0] <= t + 15;
           if (touchB) { var devB = boutFrontDev({ cote: bo.cote, mm: bo.r, deg: bo.deg }, L, P, t); if (devB > 0) wTot = bo.cote === 'droite' ? devB - (x[0] - t) : devB - (L - t - x[1]); }
         }
         if (pe && pe.bas !== 'arriere' && g2.t >= H - 2 * t - 5) {   // pente de face : porte en trapèze, comptée à sa surface réelle (hauteur moyenne sous le toit) au lieu du rectangle englobant
@@ -6378,7 +6378,7 @@ function dedupeEls(els){
       var w = d.x_right_mm - d.x_left_mm, h = d.height_mm;
       if (d.fixe && bout && bout.cote) {   // façade fixe sur un bout arrondi : largeur développée (droite + arc), pas la corde
         var Lw = (techSpec.overall_mm && techSpec.overall_mm.width) || 0, tw = techSpec.panel_thickness_mm || 18;
-        var touche = bout.cote === 'droite' ? d.x_right_mm >= Lw - tw - 3 : d.x_left_mm <= tw + 3;
+        var touche = bout.cote === 'droite' ? d.x_right_mm >= Lw - tw - 15 : d.x_left_mm <= tw + 15;
         var dev = boutFrontDev(bout, Lw, CP_mm, tw);
         if (touche && dev > 0) w = bout.cote === 'droite' ? dev - (d.x_left_mm - tw) : dev - (Lw - tw - d.x_right_mm);
       }

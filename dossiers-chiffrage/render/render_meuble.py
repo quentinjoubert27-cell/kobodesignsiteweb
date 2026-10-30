@@ -478,13 +478,13 @@ def build_furniture(cfg, opt, open_state=False):
             xs0 = ep if bo["side"] > 0 else W - ep          # bord intérieur du côté droit (non arrondi)
             prism("traverse_basse", bout_plan(W, D, bo, xs0, D), 0, ep, "h")
             prism("traverse_haute", bout_plan(W, D, bo, xs0, D), H - ep, H, "h")
-            inset_fx = max([d_.get("door_thickness_mm", ep) for d_ in fixes_bo if (d_["x_right_mm"] - 1 >= W - ep - 3 if bo["side"] > 0 else d_["x_left_mm"] + 1 <= ep + 3)] + [0])   # étagères en retrait derrière la façade fixe qui épouse le bout
+            inset_fx = max([d_.get("door_thickness_mm", ep) for d_ in fixes_bo if (d_["x_right_mm"] - 1 >= W - ep - 15 if bo["side"] > 0 else d_["x_left_mm"] + 1 <= ep + 15)] + [0])   # étagères en retrait derrière la façade fixe qui épouse le bout
             for d_ in fixes_bo:   # façade fixe sur bout arrondi : ruban vertical qui suit le bord avant (droite + arc), épaisseur 20 mm vers l'intérieur
                 th_f = d_.get("door_thickness_mm", ep)
                 xl_f, xr_f = d_["x_left_mm"] + 1, d_["x_right_mm"] - 1
                 yb_f, yt_f = d_["y_bottom_mm"] + 1, d_["y_bottom_mm"] + d_["height_mm"] - 1
-                if bo["side"] > 0: touche = xr_f >= W - ep - 3
-                else: touche = xl_f <= ep + 3
+                if bo["side"] > 0: touche = xr_f >= W - ep - 15     # tolérance 1,5 cm : les cotes du configurateur sont arrondies au cm
+                else: touche = xl_f <= ep + 15
                 if not touche:
                     B("porte", xl_f, xr_f, yb_f, yt_f, 0, th_f, "v"); continue
                 xo_f = xl_f if bo["side"] > 0 else W - xr_f          # bord non arrondi, côté droit (on construit à droite puis on retourne)
@@ -791,6 +791,14 @@ def make_camera(scene, loc, target, lens=40, shift=(0, 0)):
     return ob
 
 
+def cam_dx_bout(cfg, dx_defaut):
+    """Abscisse de la direction de caméra : quand un caisson a un bout arrondi, on photographie plutôt depuis ce côté pour que la courbe se voie."""
+    for _, sp in cfg.get("_caissons", []):
+        b = sp.get("_bout")
+        if b and b.get("cote"): return -0.8 if b["cote"] == "gauche" else 0.8
+    return dx_defaut
+
+
 def fit_camera(scene, cam, objs, center, fill, direction, fill_w=0.8):
     """Éloigne/rapproche la caméra le long de `direction` jusqu'à ce que le meuble occupe `fill` de la hauteur du cadre."""
     bbox = [o.matrix_world @ Vector(c) for o in objs for c in o.bound_box]
@@ -863,7 +871,7 @@ def render_demande(opt, cfg, out):
     cam = make_camera(scene, (0, 0, 0), (0, 0, 0), lens=45)
     c = (W / 2, D / 2, H / 2)
     configure_render(scene, 1200, 1735, opt["samples"], opt["scale"])
-    fit_camera(scene, cam, objs, c, 0.56, (0.22, -1.0, 0.0), fill_w=0.78)
+    fit_camera(scene, cam, objs, c, 0.56, (cam_dx_bout(cfg, 0.22), -1.0, 0.0), fill_w=0.78)
     cam.location.z = min(1.35, H * 0.55)
     cam.rotation_euler = (Vector(c) - cam.location).to_track_quat("-Z", "Y").to_euler()
     cam.data.shift_y = -0.04
@@ -1040,7 +1048,7 @@ def render_pair(opt, cfg, out):
     if decor_name(cfg, opt).strip().lower() in LIGHT_DECORS:
         scene.view_settings.exposure = -1.3
         wall.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.50, 0.46, 0.45, 1)
-    fit_camera(scene, cam, objs, c, 0.60, (0.18, -1.0, 0.0), fill_w=0.58)
+    fit_camera(scene, cam, objs, c, 0.60, (cam_dx_bout(cfg, 0.18), -1.0, 0.0), fill_w=0.58)
     cam.location.z = min(1.45, H * 0.55)
     if cfg.get("furniture_type") == "sdb" and (cfg.get("plan") or {}).get("L"):
         pass
