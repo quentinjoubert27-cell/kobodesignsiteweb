@@ -6037,6 +6037,15 @@ function dedupeEls(els){
       }
 
       q = mergeDevisQuantitiesAdmin(parts);
+      (meuble.tablettes || []).forEach(function (tb) {   // étagères entre le mur et le meuble (équipe) : comptées et chiffrées comme des étagères, à leur longueur réelle
+        var l = (parseFloat(tb.long_cm) || 0) * 10, d = (parseFloat(tb.prof_cm) || 0) * 10; if (!(l > 0 && d > 0)) return;
+        var mt = matLabel || 'Non défini';
+        q.panels_etagere_m2[mt] = (q.panels_etagere_m2[mt] || 0) + l * d / 1e6;
+        q.edge_banding_m += l / 1000; q.edge_banding_ml = Math.round(q.edge_banding_m * 1000) / 1000;
+        q.decoupe_etagere_m += 2 * (l + d) / 1000;
+        q.shelves_count++;
+        q.pieces.push({ type: 'etagere', w_mm: Math.round(l), h_mm: Math.round(d), perimeter_mm: Math.round(2 * (l + d)), group: 'Étagère au mur (' + (tb.cote === 'droite' ? 'droite' : 'gauche') + ')', vis: 0, tourillons: 0 });
+      });
 
       // Joues/dessus de finition — config antérieure au système de cases à cocher, donc pas de choix
       // client connu : on calcule chaque face théoriquement exposée, par caisson, cochée par défaut
