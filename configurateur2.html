@@ -5461,6 +5461,20 @@ function buildTechSpec(els, CL, CH, CP){
 // Nombre d'angles / intersections du caisson, chacun compté UNE seule fois (même point = une seule jonction) :
 // 4 coins, bouts d'étagères fixes (contre une joue ou un intercalaire), bouts d'intercalaires (contre une traverse ou une étagère).
 // Là où plusieurs panneaux se rejoignent au même endroit (croisement intercalaire / étagère), c'est un seul point.
+// Étagères posées d'un seul tenant au-dessus d'intercalaires : découpées par baie dans la fiche technique, comptées comme une seule planche
+function fusionnerEtageres(shelves, separators){
+  var arr=(shelves||[]).slice().sort(function(a,b){ return (a.y_bottom_mm-b.y_bottom_mm)||(a.x_left_mm-b.x_left_mm); }), out=[];
+  arr.forEach(function(sh){
+    var last=out[out.length-1];
+    if(last && Math.abs(last.y_bottom_mm-sh.y_bottom_mm)<=1 && Math.abs(last.y_top_mm-sh.y_top_mm)<=1 && last.shelf_type===sh.shelf_type && Math.abs((last.depth_mm||0)-(sh.depth_mm||0))<=1){
+      var g0=last.x_right_mm, g1=sh.x_left_mm;
+      var coupe=(separators||[]).some(function(sp){ var c=(sp.x_left_mm+sp.x_right_mm)/2; return c>=g0-1 && c<=g1+1 && sp.y_top_mm>last.y_bottom_mm+2 && sp.y_bottom_mm<last.y_top_mm-2; });
+      if(g1-g0<=30 && g1>=g0-1 && !coupe){ out[out.length-1]=Object.assign({},last,{x_right_mm:Math.max(last.x_right_mm,sh.x_right_mm)}); return; }
+    }
+    out.push(sh);
+  });
+  return out;
+}
 function countJunctions(spec) {
   var ep = spec.panel_thickness_mm || 18, W = spec.overall_mm.width, H = spec.overall_mm.height, pts = {};
   // chaque point est compté une fois ; poids 2 s'il touche un intercalaire doublé (le panneau en plus a ses propres vis aux mêmes angles)
@@ -5481,7 +5495,7 @@ function countJunctions(spec) {
     if (side === 'L') return { x: Math.abs(xEnd - ep) <= 4 ? 0 : xEnd, w: 1 };
     return { x: Math.abs(xEnd - (W - ep)) <= 4 ? W : xEnd, w: 1 };
   }
-  (spec.shelves || []).filter(function (s) { return s.shelf_type === 'fixe'; }).forEach(function (sh) {
+  fusionnerEtageres(spec.shelves, spec.separators).filter(function (s) { return s.shelf_type === 'fixe'; }).forEach(function (sh) {
     var yc = (sh.y_bottom_mm + sh.y_top_mm) / 2, a = contact(sh.x_left_mm, 'L', yc), b = contact(sh.x_right_mm, 'R', yc);
     add(a.x, yc, a.w); add(b.x, yc, b.w);
   });
@@ -5577,7 +5591,7 @@ function computeDevisQuantities(techSpec, matLabel){
   });
 
   // Étagères
-  (techSpec.shelves||[]).forEach(function(sh, idx){
+  fusionnerEtageres(techSpec.shelves, techSpec.separators).forEach(function(sh, idx){
     var w = sh.x_right_mm - sh.x_left_mm;
     var fixe = sh.shelf_type==='fixe';
     addPanel(q.panels_etagere_m2, mat, w, sh.depth_mm, 'etagere', {

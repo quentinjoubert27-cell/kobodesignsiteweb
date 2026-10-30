@@ -6237,7 +6237,7 @@ function dedupeEls(els){
       if (side === 'L') return { x: Math.abs(xEnd - ep) <= 4 ? 0 : xEnd, w: 1 };
       return { x: Math.abs(xEnd - (W - ep)) <= 4 ? W : xEnd, w: 1 };
     }
-    (spec.shelves || []).filter(function (s) { return s.shelf_type === 'fixe'; }).forEach(function (sh) {
+    fusionnerEtageres(spec.shelves, spec.separators).filter(function (s) { return s.shelf_type === 'fixe'; }).forEach(function (sh) {   // une étagère d'un seul tenant au-dessus d'intercalaires = une seule planche : seules ses extrémités sont des jonctions
       var yc = (sh.y_bottom_mm + sh.y_top_mm) / 2, a = contact(sh.x_left_mm, 'L', yc), b = contact(sh.x_right_mm, 'R', yc);
       add(a.x, yc, a.w); add(b.x, yc, b.w);
     });
