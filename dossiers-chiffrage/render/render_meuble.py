@@ -696,6 +696,12 @@ def build_furniture(cfg, opt, open_state=False):
             yb, yt = d["y_bottom_mm"] + 1, d["y_bottom_mm"] + d["height_mm"] - 1
             sortie = -min(200, D * 0.35) if open_state else 0     # tiroir sorti de 20 cm (assez pour le voir sans cacher les portes voisines)
             if d.get("encastre"): sortie += ep + 2               # encastré : en retrait, la porte se ferme devant
+            if d.get("encastre") and open_state:                 # porte ouverte : son épaisseur dépasse du côté des charnières, le tiroir sorti s'en écarte (pas de traversée)
+                for di_, o_ in enumerate(dlist):
+                    if o_.get("fixe") or min(o_["y_bottom_mm"] + o_["height_mm"], d["y_bottom_mm"] + d["height_mm"]) - max(o_["y_bottom_mm"], d["y_bottom_mm"]) <= 10: continue
+                    px_ = pivot_x(o_, sides[di_])
+                    if abs(px_ - d["x_left_mm"]) <= 3: xl += ep + 3
+                    elif abs(px_ - d["x_right_mm"]) <= 3: xr -= ep + 3
             B("tiroir", xl, xr, yb, yt, sortie, th + sortie, "h")
             # caisse du tiroir : fond + côtés + dos (ouverte sur le dessus)
             prof = min(D - 30, th + 450) - th
