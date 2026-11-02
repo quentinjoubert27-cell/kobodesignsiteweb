@@ -428,6 +428,8 @@ def build_furniture(cfg, opt, open_state=False):
     plinth = opt["plinthe"]
     fseules = bool((cfg.get("meuble") or {}).get("formes_seules"))
     if fseules and "plinthe" not in (cfg.get("rendu") or {}) and not opt.get("_plinthe_explicite"): plinth = 0   # formes libres : pas de plinthe sauf demande
+    susp = float((cfg.get("meuble") or {}).get("suspendu_cm") or 0) * 10   # équipe : meuble décollé du sol, sans plinthe
+    if susp > 0: plinth = susp
     z_off = plinth * mm
     name = decor_name(cfg, opt)
     key = name.strip().lower()
@@ -737,7 +739,7 @@ def build_furniture(cfg, opt, open_state=False):
     x0t = min(ox for ox, _ in cfg["_caissons"])   # abscisse du meuble quand des étagères murales le décalent
     Htot = max([sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"]] + ([hi[2]] if fp else []))
     # plinthe continue : panneau de façade en retrait (≈ 30 mm), sans retour latéral, sur pieds
-    if plinth > 0:
+    if plinth > 0 and not susp > 0:
         # bout arrondi à une extrémité : la plinthe s'arrête au début de la courbe et la suit (arc + droite tangente), en retrait de 30 mm
         ext = {1: None, -1: None}
         for ox_, sp_ in cfg["_caissons"]:
