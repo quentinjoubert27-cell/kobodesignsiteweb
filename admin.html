@@ -5743,7 +5743,7 @@ function dedupeEls(els){
   // Intercalaires à doubler : deux portes (une de chaque côté) pivotent sur le même intercalaire
   
   
-  function buildTechSpec(els, CL_cm, CH_cm, CP_cm) {
+  function buildTechSpec(els, CL_cm, CH_cm, CP_cm, sansFond) {
     els = dedupeEls(els); // un clic répété pouvait enregistrer la même porte plusieurs fois
     const ep_mm = 18;
     const CL_mm = Math.round(CL_cm * 10), CH_mm = Math.round(CH_cm * 10), CP_mm = Math.round(CP_cm * 10);
@@ -5761,6 +5761,7 @@ function dedupeEls(els){
       {type:'traverse_basse', x_left_mm:ep_mm,        x_right_mm:CL_mm-ep_mm, y_bottom_mm:0,          y_top_mm:ep_mm,       thickness_mm:ep_mm, depth_mm:CP_mm},
       {type:'fond',           x_left_mm:0,            x_right_mm:CL_mm,        y_bottom_mm:0,          y_top_mm:CH_mm,       thickness_mm:8,     depth_mm:8},
     ];
+    const structuralF = sansFond ? structural.filter(p => p.type !== 'fond') : structural;
     const separators = (els||[]).filter(e => e.type==='separator'||e.type==='separator_simple').map(e => {
       const cx = ep_mm + Math.round(e.x_cm*10);
       // un intercalaire ne couvre que son compartiment (entre deux étagères), pas toute la hauteur du meuble
@@ -5814,8 +5815,8 @@ function dedupeEls(els){
       panel_thickness_mm:ep_mm,
       overall_mm:{width:CL_mm,height:CH_mm,depth:CP_mm},
       interior_mm:{width:iW_mm,height:iH_mm},
-      structural_panels:structural,
-      panel_state:{has_back_panel:true,has_left_upright:true,has_right_upright:true,has_bottom_traverse:true,has_top_traverse:true},
+      structural_panels:structuralF,
+      panel_state:{has_back_panel:!sansFond,has_left_upright:true,has_right_upright:true,has_bottom_traverse:true,has_top_traverse:true},
       separators, shelves, bars, drawers, doors, zones,
     };
   }
@@ -6040,7 +6041,7 @@ function dedupeEls(els){
       const meuble = rc.meuble || { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
       const matLabel = meuble.matLabel || sdb.meuble_mat || 'Non défini';
       const elements = rc.elements || sdb.elements || [];
-      const spec = buildTechSpec(elements, meuble.L || sdb.meuble_l, meuble.H || sdb.meuble_h, meuble.P || sdb.meuble_p);
+      const spec = buildTechSpec(elements, meuble.L || sdb.meuble_l, meuble.H || sdb.meuble_h, meuble.P || sdb.meuble_p, meuble.sans_fond);
       const parts = [computeDevisQuantitiesAdmin(spec, matLabel, meuble.bout)];
 
       // Caisson d'angle
@@ -6056,12 +6057,12 @@ function dedupeEls(els){
       const tvRightArr = rc.tvSide ? toTvArray(rc.tvSide.right) : [];
       tvLeftArr.concat(tvRightArr).forEach(function (s) {
         if (s && s.W_cm && s.H_cm) {
-          const specSide = buildTechSpec(s.elements || [], s.W_cm, s.H_cm, meuble.P || sdb.meuble_p);
+          const specSide = buildTechSpec(s.elements || [], s.W_cm, s.H_cm, meuble.P || sdb.meuble_p, s.sans_fond);
           parts.push(computeDevisQuantitiesAdmin(specSide, matLabel, s.bout));
         }
       });
       ((rc.tvSide && rc.tvSide.espaces) || []).forEach(function (e) {
-        if (e && e.pont && e.pont.W_cm && e.pont.H_cm) parts.push(computeDevisQuantitiesAdmin(buildTechSpec(e.pont.elements || [], e.pont.W_cm, e.pont.H_cm, e.pont.P_cm || meuble.P || sdb.meuble_p), matLabel));
+        if (e && e.pont && e.pont.W_cm && e.pont.H_cm) parts.push(computeDevisQuantitiesAdmin(buildTechSpec(e.pont.elements || [], e.pont.W_cm, e.pont.H_cm, e.pont.P_cm || meuble.P || sdb.meuble_p, e.pont.sans_fond), matLabel));
       });
       if (rc.tvSide && rc.tvSide.top && rc.tvSide.top.W_cm && rc.tvSide.top.H_cm) {
         const specTop = buildTechSpec(rc.tvSide.top.elements || [], rc.tvSide.top.W_cm, rc.tvSide.top.H_cm, meuble.P || sdb.meuble_p);
