@@ -2150,8 +2150,9 @@ function buildCaisson(){
         pm.userData.elemIdx=idx; pm.userData.isPorte=true; pm.userData.porKey=el.key;
         pivot.add(pm); caissonElemMeshes.push(pm); caissonGrp.add(pivot);
       } else { // tiroir
-        var isOpen=!!caissonOpenState[el.key];
-        var tirZ=isOpen ? fz+CP*0.55 : fz;
+        var _ok=el.enc?'e'+el.key:el.key;   // un tiroir encastré s'ouvre indépendamment de la porte qui le ferme
+        var isOpen=!!caissonOpenState[_ok];
+        var tirZ=(isOpen ? fz+CP*0.55 : fz)-(el.enc?EP+0.012:0);
         var iW_cm=iW*100, iH_cm=iH*100;
         var jeu=0.003;
         var tirXleft  = (left<0.5)        ? -CL/2 : xcmToLocal(left)  + EP/2;
@@ -2163,7 +2164,7 @@ function buildCaisson(){
         var tirCx = (tirXleft + tirXright) / 2;
         var tirCy = (tirYbot  + tirYtop)  / 2;
         var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
-        tm.userData.elemIdx=idx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+        tm.userData.elemIdx=idx; tm.userData.tirKey=_ok; tm.userData.isTiroir=true;
         caissonElemMeshes.push(tm); caissonGrp.add(tm);
         if(isOpen){
           var bep=EP*0.5;
@@ -2171,15 +2172,15 @@ function buildCaisson(){
           var boxDepth=botFront-botBack, boxCz=(botFront+botBack)/2;
           var bBot=box(tirW,bep,boxDepth,matTirInt);
           bBot.position.set(tirCx,tirCy-tirH/2+bep/2,boxCz);
-          bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true;
+          bBot.userData.tirKey=_ok; bBot.userData.isTiroir=true;
           caissonElemMeshes.push(bBot); caissonGrp.add(bBot);
           var bL=box(bep,tirH-bep,boxDepth,matTirInt);
           bL.position.set(tirCx-tirW/2+bep/2,tirCy+bep/2,boxCz);
-          bL.userData.tirKey=el.key; bL.userData.isTiroir=true;
+          bL.userData.tirKey=_ok; bL.userData.isTiroir=true;
           caissonElemMeshes.push(bL); caissonGrp.add(bL);
           var bR=box(bep,tirH-bep,boxDepth,matTirInt);
           bR.position.set(tirCx+tirW/2-bep/2,tirCy+bep/2,boxCz);
-          bR.userData.tirKey=el.key; bR.userData.isTiroir=true;
+          bR.userData.tirKey=_ok; bR.userData.isTiroir=true;
           caissonElemMeshes.push(bR); caissonGrp.add(bR);
         }
       }
@@ -2516,19 +2517,20 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
         var tyT=ktTop>iHcm-0.5   ? H      :ycm(ktTop)  +ep2/2;
         var tirW=txR-txL-jeuT, tirH=tyT-tyB-jeuT;
         var tirCx=(txL+txR)/2, tirCy=(tyB+tyT)/2;
-        var isOpen2=!!openSt[el.key];
-        var tirZ=isOpen2?fz+CP*0.55:fz;
+        var _ok2=el.enc?'e'+el.key:el.key;
+        var isOpen2=!!openSt[_ok2];
+        var tirZ=(isOpen2?fz+CP*0.55:fz)-(el.enc?ep2+0.012:0);
         var tm=box(tirW,tirH,0.020,matFacade); tm.position.set(tirCx,tirCy,tirZ);
-        tm.userData.elemIdx=eidx; tm.userData.tirKey=el.key; tm.userData.isTiroir=true;
+        tm.userData.elemIdx=eidx; tm.userData.tirKey=_ok2; tm.userData.isTiroir=true;
         meshArr.push(tm); g.add(tm);
         if(isOpen2){
           var bep=ep2*0.5, botFt=tirZ-0.010, botBk=-CP/2+0.015, bd=botFt-botBk, bcz=(botFt+botBk)/2;
           var bBot=box(tirW,bep,bd,matTirInt); bBot.position.set(tirCx,tirCy-tirH/2+bep/2,bcz);
-          bBot.userData.tirKey=el.key; bBot.userData.isTiroir=true; meshArr.push(bBot); g.add(bBot);
+          bBot.userData.tirKey=_ok2; bBot.userData.isTiroir=true; meshArr.push(bBot); g.add(bBot);
           var bL=box(bep,tirH-bep,bd,matTirInt); bL.position.set(tirCx-tirW/2+bep/2,tirCy+bep/2,bcz);
-          bL.userData.tirKey=el.key; bL.userData.isTiroir=true; meshArr.push(bL); g.add(bL);
+          bL.userData.tirKey=_ok2; bL.userData.isTiroir=true; meshArr.push(bL); g.add(bL);
           var bR=box(bep,tirH-bep,bd,matTirInt); bR.position.set(tirCx+tirW/2-bep/2,tirCy+bep/2,bcz);
-          bR.userData.tirKey=el.key; bR.userData.isTiroir=true; meshArr.push(bR); g.add(bR);
+          bR.userData.tirKey=_ok2; bR.userData.isTiroir=true; meshArr.push(bR); g.add(bR);
         }
       }
     });
@@ -3152,6 +3154,10 @@ function _rebuildEditBar(){
       (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)'):'')+
       cBtn('tiroir',           false, svgTiroir,     'Tiroir',        'Remplit la zone définie par les tablettes + séparateurs');
   }
+  if(_isAdminMode()){
+    var _bt=btns.querySelector('[data-ctype="tiroir"]');
+    if(_bt) _bt.insertAdjacentHTML('afterend',cBtn('tiroir_enc',false,svgTiroir,'Tiroir encastré','Tiroir derrière une porte : on pose la porte par-dessus (équipe)'));
+  }
   // Équipe : choix du nombre de portes posées d'un clic (auto = coupe en deux au-delà de 60 cm)
   if(_isAdminMode() && btns.querySelector('[data-ctype="porte"]')){
     btns.insertAdjacentHTML('beforeend','<div id="door-mode" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;font-size:11px;color:var(--text2)">Portes (équipe) :'+
@@ -3542,13 +3548,14 @@ function placeOrRemoveCaisson(e, skipUndo){
     var midD=Math.round((bay3.left_cm+bay3.right_cm)/2);
     var kD1=Math.round(comp3.bottom_cm)+'_'+Math.round(bay3.left_cm)+'_'+Math.round(comp3.top_cm)+'_'+midD;
     var kD2=Math.round(comp3.bottom_cm)+'_'+midD+'_'+Math.round(comp3.top_cm)+'_'+Math.round(bay3.right_cm);
-    var existing=els.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&(el.key===k||el.key===kD1||el.key===kD2); });
+    var isEnc=(caissonType==='tiroir_enc');   // tiroir encastré (équipe) : derrière une porte, qui se ferme dessus
+    var existing=els.findIndex(function(el){ return (el.type==='porte'||el.type==='tiroir')&&!!el.enc===isEnc&&(el.key===k||el.key===kD1||el.key===kD2); });
     if(existing>=0){
       // Supprimer — si double battant, supprimer les deux moitiés
       var mid=Math.round((bay3.left_cm+bay3.right_cm)/2);
       var k1=Math.round(comp3.bottom_cm)+'_'+Math.round(bay3.left_cm)+'_'+Math.round(comp3.top_cm)+'_'+mid;
       var k2=Math.round(comp3.bottom_cm)+'_'+mid+'_'+Math.round(comp3.top_cm)+'_'+Math.round(bay3.right_cm);
-      els=els.filter(function(el){ return el.key!==k&&el.key!==k1&&el.key!==k2; });
+      els=els.filter(function(el){ return !!el.enc!==isEnc||(el.key!==k&&el.key!==k1&&el.key!==k2); });
     } else if(caissonType==='porte'&&(_isAdminMode()&&doorMode!=='auto' ? doorMode==='2' : bay3.width_cm>60)){
       // Double battant : couper en deux portes (auto au-delà de 60 cm, ou choix de l'équipe)
       var mid=Math.round((bay3.left_cm+bay3.right_cm)/2);
@@ -3557,7 +3564,7 @@ function placeOrRemoveCaisson(e, skipUndo){
       els.push({type:'porte',key:k1});
       els.push({type:'porte',key:k2});
     } else {
-      els.push(caissonType==='facade'?{type:'porte',key:k,fixe:true}:{type:caissonType,key:k});
+      els.push(caissonType==='facade'?{type:'porte',key:k,fixe:true}:(isEnc?{type:'tiroir',key:k,enc:true}:{type:caissonType,key:k}));
     }
     setActiveEls(els);
   }
@@ -3889,7 +3896,7 @@ function updateElementsList(){
       else if(el.type==='separator'){ name='Séparateur'; sub='à '+Math.round(el.x_cm)+' cm du bord'; }
       else if(el.type==='separator_simple'){ name='Sépar. 2nd'; sub='à '+Math.round(el.x_cm)+' cm'; }
       else if(el.type==='porte'){ name=el.fixe?'Façade fixe':'Porte'; sub=el.key?el.key.replace(/_/g,' '):''; }
-      else if(el.type==='tiroir'){ name='Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
+      else if(el.type==='tiroir'){ name=el.enc?'Tiroir encastré':'Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else { name=el.type; }
       var hingeBtn='', hingeAlert='';
       if(el.type==='porte'&&!el.fixe){
@@ -5540,7 +5547,7 @@ function buildTechSpec(els, CL, CH, CP, sansFond){
         y_bottom_mm:y_bot, height_mm:y_top-y_bot,
         drawer_face_thickness_mm:ep_mm,
         drawer_gap_mm:2, drawer_system:'blum',
-        drawer_tech_type:'softclose', drawer_handle_type:'sans', applique_mode:false
+        drawer_tech_type:'softclose', drawer_handle_type:'sans', applique_mode:false, encastre:!!e.enc
       });
     } else {
       var w=x_r-x_l;
@@ -6027,9 +6034,9 @@ function _sepCompartment(els, e, iW, iH){ return _cpt(els, e.x_cm, e.y_cm, iW, i
 function splitOverlapFacades(els){
   // deux façades superposées (même hauteur, l'une englobant l'autre) : la plus large est réduite à la part non couverte (une de chaque côté)
   var P=function(e){ var k=e.key.split('_').map(Number); return {b:k[0],l:k[1],t:k[2],r:k[3]}; };
-  var fac=els.filter(function(e){ return (e.type==='porte'||e.type==='tiroir')&&e.key; });
+  var fac=els.filter(function(e){ return (e.type==='porte'||e.type==='tiroir')&&e.key&&!e.enc; });
   return els.map(function(e){
-    if(!((e.type==='porte'||e.type==='tiroir')&&e.key)) return e;
+    if(!((e.type==='porte'||e.type==='tiroir')&&e.key)||e.enc) return e;
     var f=P(e), ch=false;
     fac.forEach(function(g){
       if(g===e) return; var q=P(g);

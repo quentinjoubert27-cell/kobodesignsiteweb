@@ -5792,7 +5792,7 @@ function dedupeEls(els){
       const y_bot=ep_mm+Math.round(bot*10), y_top2=ep_mm+Math.round(top*10);
       const x_l=ep_mm+Math.round(left*10), x_r=ep_mm+Math.round(right*10);
       if (e.type==='tiroir') {
-        drawers.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, drawer_face_thickness_mm:ep_mm, drawer_gap_mm:2, drawer_system:'blum', drawer_tech_type:'softclose', drawer_handle_type:'sans', applique_mode:false });
+        drawers.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, drawer_face_thickness_mm:ep_mm, drawer_gap_mm:2, drawer_system:'blum', drawer_tech_type:'softclose', drawer_handle_type:'sans', applique_mode:false, encastre:!!e.enc });
       } else {
         const w = x_r-x_l;
         doors.push({ x_left_mm:x_l, x_right_mm:x_r, y_bottom_mm:y_bot, height_mm:y_top2-y_bot, door_thickness_mm:ep_mm, door_gap_mm:2, door_type:(w>400&&!e.fixe)?'double':'single', is_double_leaf:(w>400&&!e.fixe), fixe:!!e.fixe, door_opening:(_hm[e.key]==='R'?'right':'left'), hinge_explicit:(e.hinge==='L'||e.hinge==='R'), door_model:'standard', fileur_width_mm:0, hinge_mode:'default', custom_hinge_positions_mm:[] });

@@ -103,6 +103,7 @@ def spec_from_elements(W, H, D, ep, elements):
             if t == "porte" and e.get("hinge") in ("L", "R"):   # sens d'ouverture choisi par le client
                 rec["hinge_explicit"] = True; rec["door_opening"] = "left" if e["hinge"] == "L" else "right"
             if t == "porte" and e.get("fixe"): rec["fixe"] = True   # façade fixe : panneau plein, sans charnières, toujours fermé
+            if t == "tiroir" and e.get("enc"): rec["encastre"] = True   # tiroir encastré : derrière une porte (équipe)
             sp["doors" if t == "porte" else "drawers"].append(rec)
     return sp
 
