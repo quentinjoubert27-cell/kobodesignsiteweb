@@ -747,7 +747,8 @@ def build_furniture(cfg, opt, open_state=False):
     x0t = min(ox for ox, _ in cfg["_caissons"])   # abscisse du meuble quand des étagères murales le décalent
     Htot = max([sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"]] + ([hi[2]] if fp else []))
     # plinthe continue : panneau de façade en retrait (≈ 30 mm), sans retour latéral, sur pieds
-    if plinth > 0 and not susp > 0:
+    au_sol = [(ox_, ox_ + sp_["overall_mm"]["width"]) for ox_, sp_ in cfg["_caissons"] if not sp_.get("_oy_mm", 0)]   # caissons posés au sol : la plinthe ne passe pas sous un caisson en hauteur
+    if plinth > 0 and not susp > 0 and au_sol:
         # bout arrondi à une extrémité : la plinthe s'arrête au début de la courbe et la suit (arc + droite tangente), en retrait de 30 mm
         ext = {1: None, -1: None}
         for ox_, sp_ in cfg["_caissons"]:
@@ -760,8 +761,8 @@ def build_furniture(cfg, opt, open_state=False):
             if not b_ or b_["r"] - 30 - ep <= 0: continue
             path = bout_front_path(Wtot, b_["r"], b_["deg"], 30.0, inset=30.0)
             pl[sd_] = (path, path[-1][0])                      # chemin (côté droit) et abscisse où la plinthe droite se raccorde
-        x_a = (x0t + Wtot - pl[-1][1]) if -1 in pl else x0t + ep
-        x_b = pl[1][1] if 1 in pl else Wtot - ep
+        x_a = (x0t + Wtot - pl[-1][1]) if -1 in pl else min(a_ for a_, _ in au_sol) + ep
+        x_b = pl[1][1] if 1 in pl else max(b_ for _, b_ in au_sol) - ep
         objs.append(add_box("plinthe", x_a * mm, x_b * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
         for sd_, (path, _) in pl.items():
             ch = path if sd_ > 0 else [(x0t + Wtot - x, y) for x, y in path]   # bout à gauche : symétrique par rapport au meuble (qui peut être décalé par des éléments muraux à gauche)
