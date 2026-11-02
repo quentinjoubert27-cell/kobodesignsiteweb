@@ -440,6 +440,7 @@ def build_furniture(cfg, opt, open_state=False):
         wood = mat_wood("decor", os.path.join(REPO, "img/BOISCHENE.jpg"))
     rd = cfg.get("rendu") or {}          # options facultatives : portes blanches / à lames, intérieur blanc, plateau épais
     inside = mat_plain("interieur", (0.86, 0.85, 0.83) if rd.get("interieur") == "blanc" else (0.55, 0.53, 0.50), 0.7 if rd.get("interieur") == "blanc" else 0.85)
+    fond_mat = inside if rd.get("interieur") == "blanc" else None   # fond du caisson : dans le décor du meuble (sauf intérieur blanc demandé), visible à l'ouverture des portes
     blanc = mat_wood("blanc", None, (0.88, 0.87, 0.85), 0.5)
     metal = mat_plain("metal", (0.60, 0.60, 0.62), 0.25)
     rnd = random.Random(7)
@@ -518,7 +519,7 @@ def build_furniture(cfg, opt, open_state=False):
                 prisme("joue_droite", [(W - ep, 0, 0), (W - ep, D, 0), (W - ep, D, lo), (W - ep, 0, H)], (ep, 0, 0), "v")
                 prisme("traverse_haute", [(ep, 0, H - ep), (ep, 0, H), (ep, D, lo), (ep, D, lo - ep)], (W - 2 * ep, 0, 0), "h")
                 B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
-                B("fond", 0, W, 0, lo, D - 8, D, "v", inside)
+                B("fond", 0, W, 0, lo, D - 8, D, "v", fond_mat)
             else:                          # pente de face : bas à gauche ou à droite
                 hf = lambda x_: pente_haut(pe, W, H, x_)
                 kx = pente_coude(pe, W)
@@ -527,13 +528,13 @@ def build_furniture(cfg, opt, open_state=False):
                 prisme("traverse_haute", [(x_, 0, hf(x_) - ep) for x_ in xs] + [(x_, 0, hf(x_)) for x_ in reversed(xs)], (0, D, 0), "h")
                 B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
                 xf = [0] + ([kx] if kx and 0 < kx < W else []) + [W]
-                prisme("fond", [(0, D - 8, 0), (W, D - 8, 0)] + [(x_, D - 8, hf(x_)) for x_ in reversed(xf)], (0, 8, 0), "v", inside)
+                prisme("fond", [(0, D - 8, 0), (W, D - 8, 0)] + [(x_, D - 8, hf(x_)) for x_ in reversed(xf)], (0, 8, 0), "v", fond_mat)
         for p in ([] if pe else spec.get("structural_panels", [])):
             t = p["type"]
             if bo and (t in ("traverse_haute", "traverse_basse") or t == ("joue_droite" if bo["side"] > 0 else "joue_gauche")):
                 continue
             if t == "fond":
-                B("fond", p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], D - 8, D, "v", inside)
+                B("fond", p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], D - 8, D, "v", fond_mat)
             elif t.startswith("joue"):
                 B(t, p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], 0, D, "v")
             else:
