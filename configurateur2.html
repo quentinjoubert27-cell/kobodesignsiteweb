@@ -2977,6 +2977,11 @@ function positionVasque(){
 // ═══════════════════════════════════════════════════════
 var MIN_GAP_H=3, MIN_GAP_V=3;
 
+var doorMode='auto';   // équipe : 'auto' | '1' | '2' portes par zone
+function setDoorMode(m){
+  doorMode=m;
+  document.querySelectorAll('#door-mode [data-dm]').forEach(function(b){ b.classList.toggle('on',b.dataset.dm===m); });
+}
 function setCaissonType(t){
   caissonType=t;
   document.querySelectorAll('.c-type-btn').forEach(function(btn){
@@ -3134,6 +3139,13 @@ function _rebuildEditBar(){
       (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
       (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)'):'')+
       cBtn('tiroir',           false, svgTiroir,     'Tiroir',        'Remplit la zone définie par les tablettes + séparateurs');
+  }
+  // Équipe : choix du nombre de portes posées d'un clic (auto = coupe en deux au-delà de 60 cm)
+  if(_isAdminMode() && btns.querySelector('[data-ctype="porte"]')){
+    btns.insertAdjacentHTML('beforeend','<div id="door-mode" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;font-size:11px;color:var(--text2)">Portes (équipe) :'+
+      [['auto','Auto'],['1','1 porte'],['2','2 portes']].map(function(m){
+        return '<button class="facade-btn'+(doorMode===m[0]?' on':'')+'" data-dm="'+m[0]+'" onclick="setDoorMode(\''+m[0]+'\')">'+m[1]+'</button>';
+      }).join('')+'</div>');
   }
   // Injecter le conteneur de liste après les boutons (si pas déjà présent)
   var listContainer=btns.parentNode&&btns.parentNode.querySelector('.elements-placed-list');
@@ -3522,8 +3534,8 @@ function placeOrRemoveCaisson(e, skipUndo){
       var k1=Math.round(comp3.bottom_cm)+'_'+Math.round(bay3.left_cm)+'_'+Math.round(comp3.top_cm)+'_'+mid;
       var k2=Math.round(comp3.bottom_cm)+'_'+mid+'_'+Math.round(comp3.top_cm)+'_'+Math.round(bay3.right_cm);
       els=els.filter(function(el){ return el.key!==k&&el.key!==k1&&el.key!==k2; });
-    } else if(caissonType==='porte'&&bay3.width_cm>60){
-      // Double battant : couper en deux portes de max 60cm
+    } else if(caissonType==='porte'&&(_isAdminMode()&&doorMode!=='auto' ? doorMode==='2' : bay3.width_cm>60)){
+      // Double battant : couper en deux portes (auto au-delà de 60 cm, ou choix de l'équipe)
       var mid=Math.round((bay3.left_cm+bay3.right_cm)/2);
       var k1=Math.round(comp3.bottom_cm)+'_'+Math.round(bay3.left_cm)+'_'+Math.round(comp3.top_cm)+'_'+mid;
       var k2=Math.round(comp3.bottom_cm)+'_'+mid+'_'+Math.round(comp3.top_cm)+'_'+Math.round(bay3.right_cm);
