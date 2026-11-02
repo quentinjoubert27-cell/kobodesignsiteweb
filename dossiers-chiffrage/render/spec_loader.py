@@ -2,12 +2,12 @@
 import json
 
 
-def compartment(els, x, y, iW, iH):
+def compartment(els, x, y, iW, iH, incl=False):
     """Même règle que getCompartment() du configurateur : seules les étagères qui TRAVERSENT x (début < x < fin,
     moitiés d'une même étagère fusionnées) coupent l'intercalaire ; une étagère qui s'arrête contre lui ne le coupe pas."""
     by_y = {}
     for e in els:
-        if e.get("type") != "shelf": continue
+        if e.get("type") != "shelf" and not (incl and e.get("type") == "shelf_simple"): continue   # intercalaire secondaire : coupé aussi par les étagères secondaires
         sl = e["x_left_cm"] if e.get("x_left_cm") is not None else 0
         sr = e["x_right_cm"] if e.get("x_right_cm") is not None else iW
         if sl > x or sr < x: continue
@@ -90,7 +90,7 @@ def spec_from_elements(W, H, D, ep, elements):
                                   "y_bottom_mm": ym, "y_top_mm": ym + ep, "thickness_mm": ep, "depth_mm": D - ep})
         elif t in ("separator", "separator_simple"):
             cx = ep + round(e["x_cm"] * 10)
-            bot, top = compartment(elements, e["x_cm"], e.get("y_cm", 0), iW / 10, iH / 10)
+            bot, top = compartment(elements, e["x_cm"], e.get("y_cm", 0), iW / 10, iH / 10, t == "separator_simple")
             sp["separators"].append({"x_left_mm": cx - ep // 2, "x_right_mm": cx + ep // 2, "y_bottom_mm": ep + bot * 10, "y_top_mm": ep + top * 10})
         elif t == "barre":
             xl = round(e.get("x_left_cm", 0) * 10); xr = round(e.get("x_right_cm", iW / 10) * 10)

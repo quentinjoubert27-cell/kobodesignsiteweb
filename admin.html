@@ -5179,10 +5179,10 @@
     // Compartiment d'un intercalaire — MÊME règle que le configurateur (getCompartment) :
   // seules comptent les étagères qui TRAVERSENT l'intercalaire (début < x < fin, deux moitiés d'une même étagère fusionnées) ;
   // une étagère qui s'arrête contre l'intercalaire ne le coupe pas.
-  function _cpt(els, x, y, iW, iH){
+  function _cpt(els, x, y, iW, iH, incl){   // incl : un intercalaire « secondaire » (separator_simple) est aussi coupé par les étagères secondaires (shelf_simple), comme dans le configurateur
     var byY={};
     els.forEach(function(e){
-      if(e.type!=='shelf') return;
+      if(e.type!=='shelf'&&!(incl&&e.type==='shelf_simple')) return;
       var sl=e.x_left_cm!=null?e.x_left_cm:0, sr=e.x_right_cm!=null?e.x_right_cm:iW;
       if(sl>x||sr<x) return;
       if(!byY[e.y_cm]) byY[e.y_cm]={l:sl,r:sr}; else { byY[e.y_cm].l=Math.min(byY[e.y_cm].l,sl); byY[e.y_cm].r=Math.max(byY[e.y_cm].r,sr); }
@@ -5191,7 +5191,7 @@
     Object.keys(byY).filter(function(k){return byY[k].l<x&&byY[k].r>x;}).map(Number).forEach(function(s){ if(s<y&&s>bot) bot=s; if(s>y&&s<top) top=s; });
     return {bot:bot, top:top};
   }
-  function _sepCompartment(els, e, iW, iH){ return _cpt(els, e.x_cm, e.y_cm, iW, iH); }
+  function _sepCompartment(els, e, iW, iH){ return _cpt(els, e.x_cm, e.y_cm, iW, iH, e.type==='separator_simple'); }
   
   // Éléments sans doublons : mêmes éléments, et intercalaires superposés (même position et même compartiment)
   function splitOverlapFacades(els){
@@ -5220,7 +5220,7 @@ function dedupeEls(els){
     var seenSep={};
     return out.filter(function(e){
       if(e.type!=='separator' && e.type!=='separator_simple') return true;
-      var c=_cpt(out,e.x_cm,e.y_cm,9999,9999), k=e.x_cm+'|'+c.bot+'|'+c.top;
+      var c=_cpt(out,e.x_cm,e.y_cm,9999,9999,e.type==='separator_simple'), k=e.x_cm+'|'+c.bot+'|'+c.top;
       if(seenSep[k]) return false; seenSep[k]=1; return true;
     });
   }
