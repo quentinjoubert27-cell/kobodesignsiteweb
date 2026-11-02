@@ -4474,16 +4474,17 @@
       { count: mc },
       { data: projetsCA },
       { count: configsBiblioCount },
-      { count: configsSdbCount }
+      { data: configsSdbRows }
     ] = await Promise.all([
       sb.from('clients').select('*', { count: 'exact', head: true }),
       sb.from('projets').select('*', { count: 'exact', head: true }).neq('statut', 'Terminé'),
       sb.from('messages_general').select('*', { count: 'exact', head: true }).eq('lu', false).eq('expediteur', 'client'),
       sb.from('projets').select('montant, statut'),
       sb.from('configs_biblio').select('*', { count: 'exact', head: true }),
-      sb.from('configs_sdb').select('*', { count: 'exact', head: true }),
+      sb.from('configs_sdb').select('decouverte'),
     ]);
-    const totalConfigs = (configsBiblioCount || 0) + (configsSdbCount || 0);
+    const configsSdbCount = (configsSdbRows || []).filter(c => c.decouverte !== 'Modélisé par l\'équipe').length;   // un meuble modélisé par l'équipe n'est pas une configuration reçue
+    const totalConfigs = (configsBiblioCount || 0) + configsSdbCount;
     const badge = document.getElementById('nav-configs-badge');
     if (badge && totalConfigs > 0) { badge.textContent = totalConfigs; badge.style.display = ''; }
     else if (badge) badge.style.display = 'none';
@@ -5574,13 +5575,17 @@ function dedupeEls(els){
     // type de meuble et origine de la demande : d'après la configuration liée au projet (le formulaire de contact n'en crée pas)
     try {
       const [{ data: cs }, { data: cb }] = await Promise.all([
-        sb.from('configs_sdb').select('projet_id, type, created_at').order('created_at', { ascending: false }),
+        sb.from('configs_sdb').select('projet_id, type, created_at, decouverte').order('created_at', { ascending: false }),
         sb.from('configs_biblio').select('projet_id'),
       ]);
-      const ft = {};
-      (cs || []).forEach(c => { if (c.projet_id && !ft[c.projet_id]) ft[c.projet_id] = c.type || 'sdb'; });
-      (cb || []).forEach(c => { if (c.projet_id && !ft[c.projet_id]) ft[c.projet_id] = 'biblio'; });
-      allProjets.forEach(p => { p._ft = ft[p.id] || null; });
+      const ft = {}, og = {}, eq = {};   // og : demande envoyée par le client via le configurateur ; eq : meuble modélisé par l'équipe (n'est pas une demande via le configurateur)
+      (cs || []).forEach(c => {
+        if (!c.projet_id) return;
+        if (!ft[c.projet_id]) ft[c.projet_id] = c.type || 'sdb';
+        if (c.decouverte === 'Modélisé par l\'équipe') eq[c.projet_id] = true; else og[c.projet_id] = true;
+      });
+      (cb || []).forEach(c => { if (c.projet_id) { if (!ft[c.projet_id]) ft[c.projet_id] = 'biblio'; og[c.projet_id] = true; } });
+      allProjets.forEach(p => { p._ft = ft[p.id] || null; p._og = !!og[p.id]; p._eq = !!eq[p.id]; });
       renderProjets();
     } catch (e) { console.warn('types de meubles', e); }
   }
@@ -5603,7 +5608,7 @@ function dedupeEls(els){
       if (as_) { const a = p.assigne_a || ''; if (as_ === '__aucun' ? a : as_ === '__moi' ? a !== (adminUser && adminUser.email) : a !== as_) return false; }
       if (ty) { const isPro = p.clients && /pro/i.test(p.clients.type_client || ''); if ((ty === 'pro') !== !!isPro) return false; }
       if (me && (me === 'aucun' ? p._ft : p._ft !== me)) return false;
-      if (og && ((og === 'configurateur') !== !!p._ft)) return false;
+      if (og && ((og === 'configurateur') !== !!p._og)) return false;
       if (mo) { const has = parseFloat(p.montant) > 0; if ((mo === 'avec') !== has) return false; }
       if (dt && (Date.now() - new Date(p.created_at).getTime()) > dt * 86400000) return false;
       if (q) {
@@ -5622,7 +5627,7 @@ function dedupeEls(els){
     if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun projet ne correspond à ces filtres.</td></tr>'; return; }
     tbody.innerHTML = list.map(p => `
       <tr onclick="openProjetDetail('${p.id}','${escHtml(p.nom)}')">
-        <td style="font-weight:600;">${escHtml(p.nom)}<div style="font-size:10.5px;font-weight:500;color:rgba(26,26,26,.45);margin-top:2px;">${p._ft ? escHtml(TYPE_LABELS[p._ft] || 'Meuble') + ' · configurateur' : (p._ft === null ? 'Formulaire' : '')}</div></td>
+        <td style="font-weight:600;">${escHtml(p.nom)}<div style="font-size:10.5px;font-weight:500;color:rgba(26,26,26,.45);margin-top:2px;">${p._og ? escHtml(TYPE_LABELS[p._ft] || 'Meuble') + ' · configurateur' : (p._ft === null ? 'Formulaire' : (p._ft ? 'Formulaire · ' + escHtml(TYPE_LABELS[p._ft] || 'meuble') + ' modélisé par l\'équipe' : ''))}</div></td>
         <td>${p.clients ? `<span style="display:inline-flex;align-items:center;gap:6px;">${escHtml(p.clients.prenom + ' ' + p.clients.nom)}${clientTypeBadge(p.clients)}</span>` : '—'}</td>
         <td><span class="sbadge sb-${statusKey(p.statut)}">${p.statut}</span>${p.assigne_a ? `<div style="font-size:10.5px;font-weight:600;color:rgba(26,26,26,.55);margin-top:3px;">→ ${escHtml(NOMS_EQUIPE[p.assigne_a] || p.assigne_a)}</div>` : ''}</td>
         <td style="font-weight:600;">${p.montant && montantVisible(p) ? formatCurrency(p.montant) : '—'}</td>
@@ -5664,7 +5669,7 @@ function dedupeEls(els){
     ]);
 
     const biblioTagged = (biblio || []).map(c => ({ ...c, _type: 'biblio' }));
-    const sdbTagged   = (sdb   || []).map(c => ({ ...c, _type: 'sdb'   }));
+    const sdbTagged   = (sdb   || []).filter(c => c.decouverte !== 'Modélisé par l\'équipe').map(c => ({ ...c, _type: 'sdb'   }));   // les meubles modélisés par l'équipe restent dans leur projet, pas dans les configurations reçues
     allConfigs = [...biblioTagged, ...sdbTagged].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     document.getElementById('configs-count').textContent = allConfigs.length + ' configuration' + (allConfigs.length > 1 ? 's' : '');
