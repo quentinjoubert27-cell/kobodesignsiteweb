@@ -7362,9 +7362,15 @@ function dedupeEls(els){
     var btn = document.getElementById('camp-btn-send'); btn.disabled = true;
     try {
       var j = await _campCall('send', { confirmCount: n });
-      showToast(j.sent + ' e-mail' + (j.sent > 1 ? 's' : '') + ' envoyé' + (j.sent > 1 ? 's' : '') + (j.failed && j.failed.length ? ' · ' + j.failed.length + ' en échec' : ''), j.failed && j.failed.length ? 'err' : 'ok');
-      closeModal('modal-campagne'); loadCampagnes();
-    } catch (e) { showToast(e.message, 'err'); campCompte(); }
+      var ko = (j.failed || []).length;
+      document.getElementById('camp-liste').innerHTML = '<div style="padding:16px 18px;border-radius:10px;background:' + (ko ? '#fef2f2' : '#f0fdf4') + ';border:1.5px solid ' + (ko ? '#fca5a5' : '#86efac') + ';font-size:14px;line-height:1.6;">' +
+        '<b>' + (ko ? '⚠ ' : '✓ ') + j.sent + ' e-mail' + (j.sent > 1 ? 's' : '') + ' envoyé' + (j.sent > 1 ? 's' : '') + '</b> (« ' + escHtml(document.getElementById('camp-sujet').value) + ' », ' + new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ')' +
+        (ko ? '<br>Échec pour : ' + j.failed.map(escHtml).join(', ') : '') + '<br><span style="font-size:12px;color:rgba(26,26,26,.6);">L\'envoi est noté dans l\'historique des campagnes et dans la fiche de chaque client.</span></div>';
+      document.getElementById('camp-resume').textContent = '';
+      _camp.prevu = false; _camp.recipients = []; btn.disabled = true;
+      showToast(j.sent + ' e-mail' + (j.sent > 1 ? 's' : '') + ' envoyé' + (j.sent > 1 ? 's' : ''), ko ? 'err' : 'ok');
+      loadCampagnes();
+    } catch (e) { showToast(e.message, 'err'); document.getElementById('camp-resume').innerHTML = '<span style="color:#b91c1c;font-weight:700;">Envoi non effectué : ' + escHtml(e.message) + '</span>'; campCompte(); }
   }
   function _campResumeFiltres(f) {
     f = f || {}; var p = [];

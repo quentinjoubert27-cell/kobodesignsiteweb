@@ -676,6 +676,13 @@ module.exports = async function handler(req, res) {
         if (error) failed.push(...chunk.map(r => r.email)); else sent += chunk.length;
       }
       await sb.from('newsletter_envois').insert(lignes);
+      // trace dans l'historique de chaque client (fiche client → activité)
+      try {
+        const echecs = new Set(failed.map(e => e.toLowerCase()));
+        const acts = recipients.filter(r => r.client_id).map(r => ({ client_id: r.client_id, type: 'email', auteur: user.email, auto: true,
+          contenu: (echecs.has(String(r.email).toLowerCase()) ? 'Campagne e-mail NON envoyée (échec) : « ' : 'Campagne e-mail envoyée : « ') + sujet + ' »' }));
+        if (acts.length) await sb.from('crm_activites').insert(acts);
+      } catch (e) { console.warn('campagne : trace client', e.message); }
       await sb.from('newsletter_campagnes').update({ nb_envoyes: sent }).eq('id', camp.id);
       return res.status(200).json({ ok: true, sent, failed });
     }
