@@ -628,7 +628,7 @@ module.exports = async function handler(req, res) {
           </div>${FOOTER}</div>`;
       const bulle = t => `<div style="background:#fff;border-radius:8px;padding:18px 22px;border-left:3px solid #CD3E00;margin-bottom:18px;"><p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${esc(t)}</p></div>`;
       if (type === 'relecture') {
-        const dests = (b.relecteurs || []).filter(e => ADMIN_EMAILS.includes(e) && e !== user.email);
+        const dests = (b.relecteurs || []).filter(e => ADMIN_EMAILS.includes(e));   // TEST : l'auteur peut se relire lui-même (retirer : ajouter && e !== user.email)
         for (const to of dests) {
           await resend.emails.send({
             from: 'Kobo Design <contact@kobo-design.fr>', to,
