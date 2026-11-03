@@ -7237,7 +7237,7 @@ function dedupeEls(els){
         return '<div class="bro"><div class="bro__head">Message à relire · préparé par ' + escHtml(NOMS_EQUIPE[b.auteur] || b.auteur) + ' · ' + new Date(b.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + new Date(b.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</div>' +
           '<div class="bro__txt">' + escHtml(b.contenu) + '</div><div class="bro__rel">' + chips + '</div>' + coms +
           '<div class="bro__actions">' + reponse + '</div>' +
-          '<div class="bro__actions"><button class="btn btn-primary btn-sm" onclick="envoyerBrouillon(\'' + b.id + '\')">Envoyer au client</button><button class="btn btn-ghost btn-sm" onclick="ouvrirBrouillon(\'' + (cibles[i][0] === 'msg-brouillons' ? 'msg' : 'pd') + '\',\'' + b.id + '\')">Modifier</button><button class="btn btn-ghost btn-sm" onclick="supprimerBrouillon(\'' + b.id + '\')">Supprimer</button></div></div>';
+          '<div class="bro__actions"><button class="btn btn-primary btn-sm" onclick="envoyerBrouillon(\'' + b.id + '\')">Envoyer au client</button><button class="btn btn-ghost btn-sm" onclick="reprendreBrouillon(\'' + (cibles[i][0] === 'msg-brouillons' ? 'msg' : 'pd') + '\',\'' + b.id + '\')" title="Recopie le message dans la barre d\'envoi pour l\'envoyer toi-même">Reprendre dans la barre</button><button class="btn btn-ghost btn-sm" onclick="ouvrirBrouillon(\'' + (cibles[i][0] === 'msg-brouillons' ? 'msg' : 'pd') + '\',\'' + b.id + '\')">Modifier</button><button class="btn btn-ghost btn-sm" onclick="supprimerBrouillon(\'' + b.id + '\')">Supprimer</button></div></div>';
       }).join('');
     }
   }
@@ -7271,6 +7271,15 @@ function dedupeEls(els){
     chargerBrouillons(); chargerARelire();
     if (activeMsgClientId === b.client_id) fetchAdminThread();
     if (currentProjetId) loadProjetMsgs();
+  }
+  async function reprendreBrouillon(source, id) {
+    var b = _brouillons[id]; if (!b) return;
+    var ta = document.getElementById(_broContexte(source).ta);
+    if (ta.value.trim() && !confirm('La barre d\'envoi contient déjà du texte. Le remplacer par ce brouillon ?')) return;
+    ta.value = b.contenu; autoGrow(ta); ta.focus();
+    await sb.from('messages_brouillons').delete().eq('id', id);   // le texte est dans la barre : le brouillon disparaît pour ne pas être envoyé deux fois
+    showToast('Message repris dans la barre d\'envoi');
+    chargerBrouillons(); chargerARelire();
   }
   async function supprimerBrouillon(id) {
     if (!confirm('Supprimer ce brouillon ? Le client n\'a rien reçu.')) return;
