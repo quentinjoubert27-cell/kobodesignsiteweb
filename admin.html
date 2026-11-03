@@ -2036,7 +2036,7 @@
       ${matSection('Façades et joues visibles (portes, tiroirs, joues de finition)', 'finition_m2', 'm²', MATS_CAIS_NAMES)}
       ${matSection('Plan de travail', 'panels_plan_m2', 'm²', MATS_PLAN_NAMES)}
       <div class="detail-panel" style="padding:16px 20px;margin-top:8px;">
-        ${fixedRow('Coefficient de vente', 'mp-coefficient', p.coefficient_revente ?? 2, '')}
+        ${fixedRow('Coefficient de vente', 'mp-coefficient', p.coefficient_revente ?? 1.5, '')}
       </div>
     `;
   }
@@ -2048,7 +2048,7 @@
       var v = parseFloat(inp.value);
       if (!isNaN(v)) panelM2[inp.dataset.key] = v; else delete panelM2[inp.dataset.key];
     });
-    var prices = Object.assign({}, old, { panel_m2: panelM2, coefficient_revente: parseFloat(document.getElementById('mp-coefficient').value) || 2 });
+    var prices = Object.assign({}, old, { panel_m2: panelM2, coefficient_revente: parseFloat(document.getElementById('mp-coefficient').value) || 1.5 });
     try {
       const { error } = await sb.from('tarifs_globaux').upsert({ id: 1, prices: prices, updated_at: new Date().toISOString() });
       if (error) throw error;
@@ -2581,7 +2581,7 @@
       </details>`;
     }
 
-    var coefVal = defFixed('coefficient_revente') || 2;
+    var coefVal = defFixed('coefficient_revente') || 1.5;
 
     return `<div style="background:#fff;border:1px solid rgba(26,26,26,.1);border-radius:10px;padding:16px 20px;margin-bottom:16px;">
       <div style="${headStyle}"><div>Élément</div><div>Quantité (modifiable)</div><div>Prix unitaire</div><div style="text-align:right;">Montant</div></div>
@@ -3350,7 +3350,7 @@
     ];
     lignes.forEach(function (l) { l.key = 'l:' + l.id; l.qte0 = l.qte; l.pu0 = l.pu; var o = ov[l.key]; if (o) { if (o.q != null) l.qte = o.q; if (o.pu != null) l.pu = o.pu; } l.modif = !!(o && (o.q != null || o.pu != null)); l.montant = l.qte * l.pu; });
     var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0);
-    var coef = (g && g.coefficient_revente) || 2;
+    var coef = (g && g.coefficient_revente) || 1.5;
     return { pieces: pieces, lignes: lignes, angles: angles, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
   }
   function arrLen(a) { return Array.isArray(a) ? a.length : (a ? 1 : 0); }
@@ -3417,7 +3417,7 @@
     ].concat((m.extras || []).map(function (x, i) { return { id: 'x' + i, lib: x.nom || 'Ligne libre', qte: parseFloat(x.qte) || 0, pu: parseFloat(x.pu) || 0 }; }));
     lignes.forEach(function (l) { l.key = 'l:' + l.id; l.qte0 = l.qte; l.pu0 = l.pu; var o = ov[l.key]; if (o) { if (o.q != null) l.qte = o.q; if (o.pu != null) l.pu = o.pu; } l.modif = !!(o && (o.q != null || o.pu != null)); l.montant = l.qte * l.pu; });
     var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0);
-    var coef = (g && g.coefficient_revente) || 2;
+    var coef = (g && g.coefficient_revente) || 1.5;
     return { pieces: pieces, lignes: lignes, angles: angles, hinges: nHinges, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn };
   }
   // Étagères posées d'un seul tenant au-dessus d'intercalaires : le configurateur les découpe par baie ; on les compte et on les chiffre comme une seule planche
@@ -4193,7 +4193,7 @@
     ln.usinages = angles * T.angle_usinage + (q.drawers_count || 0) * T.coulisse_tiroir + (q.hinges || 0) * (T.usinage_charniere_porte + T.usinage_charniere_caisson);
     ln.quincaillerie = angles * (T.vis_par_angle * T.vis + T.tourillons_par_angle * T.tourillon) + (q.hinges || 0) * T.charniere + (q.bars_count || 0) * (g.bar_unit || 0);
     ln.kits_tiroirs = (q.drawers_count || 0) * T.kit_tiroir;
-    var cost = Object.keys(ln).reduce(function (s2, k) { return s2 + ln[k]; }, 0), coef = g.coefficient_revente || 2;
+    var cost = Object.keys(ln).reduce(function (s2, k) { return s2 + ln[k]; }, 0), coef = g.coefficient_revente || 1.5;
     Object.keys(ln).forEach(function (k) { ln[k] = Math.round(ln[k] * 100) / 100; });
     return { lignes: ln, angles: angles, ml: Math.round(ml * 100) / 100, cout: Math.round(cost * 100) / 100, coef: coef,
       vente: Math.round(cost * coef * 100) / 100, vente_18: Math.round(cost * 1.8 * 100) / 100 };
@@ -4218,7 +4218,7 @@
       var edge = currentDevisOverrides.edge_banding_ml != null ? currentDevisOverrides.edge_banding_ml : (q.edge_banding_ml || 0) + fper;
       if (currentDevisOverrides.finition_m2 != null) fm2 = currentDevisOverrides.finition_m2;
       var old = computeDevisPriceAdmin(Object.assign({}, qo, { edge_banding_ml: edge }), g);
-      var ancien = old ? Math.round((old.cost_revient + fm2 * unit) * (g.coefficient_revente || 2) * 100) / 100 : null;
+      var ancien = old ? Math.round((old.cost_revient + fm2 * unit) * (g.coefficient_revente || 1.5) * 100) / 100 : null;
       var tab = tableurFromRc(rc, g);
       return { ancien: ancien, nouveau: tab ? { vente: tab.vente } : null };
     } finally { currentDevisOverrides = saveOv; }
@@ -4347,7 +4347,7 @@
       + (q.bars_count || 0) * (tarifs.bar_unit || 0);
     return {
       cost_revient: Math.round(cost * 100) / 100,
-      prix_vente: Math.round(cost * (tarifs.coefficient_revente || 2) * 100) / 100,
+      prix_vente: Math.round(cost * (tarifs.coefficient_revente || 1.5) * 100) / 100,
       missing_materials: missingMats,
     };
   }
