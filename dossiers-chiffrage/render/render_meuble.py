@@ -607,9 +607,9 @@ def build_furniture(cfg, opt, open_state=False):
             _n = spec.get("_niche")
             if not _a and _n and float(_n.get("bord_cm") or 0) < 5:   # niche arquée sans contour : les portes suivent l'arc de la niche
                 _a = float(_n.get("fleche_cm") or 0) * 10.0 or W / 2.0
-            fl = min(_a, W / 2.0, H - 40) if (yt + 1 >= H - ep - 2) else 0
+            fl = min(_a, W / 2.0, H - 40) if (yt + 1 >= H - ep - 6) else 0
             _pp = spec.get("_pente")
-            slope = bool(_pp and not fl and _pp.get("bas") in ("gauche", "droite") and float(_pp.get("h_cm") or 0) > 0 and (yt + 1 >= H - ep - 2))   # pente de face : le haut de la porte suit la pente
+            slope = bool(_pp and not fl and _pp.get("bas") in ("gauche", "droite") and float(_pp.get("h_cm") or 0) > 0 and (yt + 1 >= H - ep - 6))   # pente de face : le haut de la porte suit la pente
             def sag(x_):
                 R_ = (W * W / 4.0 + fl * fl) / (2.0 * fl)
                 return math.sqrt(max(0.0, R_ * R_ - (x_ - W / 2.0) ** 2)) - (R_ - fl)
