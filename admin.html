@@ -192,6 +192,20 @@
     .ia-ligne input:focus { outline: none; border-color: var(--accent); }
     .ia-etat { font-size: 12px; line-height: 1.5; margin-top: 8px; color: rgba(26,26,26,.65); }
     .ia-etat .ia-q { color: #9a3412; font-weight: 600; } .ia-etat .ia-err { color: #b91c1c; font-weight: 600; } .ia-etat ul { margin: 4px 0 0 16px; padding: 0; }
+    .brouillons:empty { display: none; }
+    .brouillons { margin-top: 14px; display: grid; gap: 10px; }
+    .bro { border: 1.5px dashed rgba(205,62,0,.45); background: rgba(205,62,0,.04); border-radius: 10px; padding: 12px 14px; }
+    .bro__head { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #CD3E00; margin-bottom: 6px; }
+    .bro__txt { font-size: 13px; line-height: 1.5; white-space: pre-wrap; background: #fff; border-radius: 8px; padding: 10px 12px; }
+    .bro__rel { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .bro__chip { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 99px; background: rgba(26,26,26,.06); }
+    .bro__chip--ok { background: rgba(22,163,74,.14); color: #15803d; }
+    .bro__chip--modif { background: rgba(217,119,6,.16); color: #b45309; }
+    .bro__com { font-size: 12px; color: rgba(26,26,26,.7); margin: 4px 0; }
+    .bro__actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+    .bro__actions input { flex: 1 1 160px; min-width: 120px; padding: 6px 9px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 7px; font-family: var(--font); font-size: 12px; }
+    .bro-chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 11px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 99px; cursor: pointer; }
+    .bro-chk input { margin: 0; }
     .msg-compose { display: flex; gap: 10px; margin-top: 12px; }
     .msg-compose textarea { flex: 1; padding: 10px 13px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--bg); resize: none; height: 42px; }
     .msg-compose textarea:focus { outline: none; border-color: var(--accent); }
@@ -1103,6 +1117,7 @@
       </div>
       <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;">
         <div class="table-wrap" style="overflow:hidden;">
+          <div id="msg-arelire"></div>
           <div id="msg-projet-list" style="max-height:600px;overflow-y:auto;"></div>
         </div>
         <div class="detail-panel" id="msg-thread-panel" style="display:none;">
@@ -1111,8 +1126,10 @@
           </div>
           <div class="msg-thread" id="msg-thread"></div>
           <div class="ia-rep" id="ia-msg"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('msg')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-mode"></div><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('msg','oui')">Oui</button><button type="button" onclick="iaRepondre('msg','non')">Non</button><button type="button" onclick="iaRepondre('msg','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('msg','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('msg','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('msg');}"><button class="btn btn-primary btn-sm ia-go" style="display:none" onclick="iaRedigerIA('msg')">Rédiger avec l'IA</button></div><div class="ia-etat"></div></div></div>
+          <div class="brouillons" id="msg-brouillons"></div>
           <div class="msg-compose">
             <textarea id="msg-reply" placeholder="Répondre… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
+            <button class="btn btn-ghost btn-sm" onclick="ouvrirBrouillon('msg')" title="Préparer le message et le faire relire par l'équipe avant l'envoi">Faire relire</button>
             <button class="btn btn-primary btn-sm" onclick="sendReply()">Envoyer</button>
           </div>
         </div>
@@ -1295,6 +1312,25 @@
 ═══════════════════════════════════════════ -->
 
 <!-- Nouveau projet -->
+<div class="modal-overlay" id="modal-brouillon">
+  <div class="modal">
+    <h2 class="modal-title" id="bro-titre">Faire relire un message</h2>
+    <p style="font-size:12px;color:rgba(26,26,26,.55);margin:-4px 0 14px;">Le client ne reçoit rien tant que le message n'est pas envoyé. Les personnes choisies reçoivent un e-mail interne.</p>
+    <div class="field">
+      <label>Message pour le client</label>
+      <textarea id="bro-texte" style="min-height:140px;" placeholder="Bonjour…"></textarea>
+    </div>
+    <div class="field">
+      <label>À faire relire par</label>
+      <div id="bro-equipe" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-brouillon')">Annuler</button>
+      <button class="btn btn-primary" id="bro-save" onclick="enregistrerBrouillon()">Envoyer en relecture</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-projet">
   <div class="modal">
     <h2 class="modal-title">Nouveau projet</h2>
@@ -1692,8 +1728,10 @@
     <h3 style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);margin-bottom:14px;">Messages avec le client</h3>
     <div class="msg-thread" id="pd-msgs"></div>
     <div class="ia-rep" id="ia-pd"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('pd')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-mode"></div><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('pd','oui')">Oui</button><button type="button" onclick="iaRepondre('pd','non')">Non</button><button type="button" onclick="iaRepondre('pd','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('pd','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('pd','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('pd');}"><button class="btn btn-primary btn-sm ia-go" style="display:none" onclick="iaRedigerIA('pd')">Rédiger avec l'IA</button></div><div class="ia-etat"></div></div></div>
+    <div class="brouillons" id="pd-brouillons"></div>
     <div class="msg-compose" style="margin-top:12px;">
       <textarea id="pd-reply" placeholder="Répondre au client… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReplyFromDetail();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
+      <button class="btn btn-ghost btn-sm" onclick="ouvrirBrouillon('pd')" title="Préparer le message et le faire relire par l'équipe avant l'envoi">Faire relire</button>
       <button class="btn btn-primary btn-sm" onclick="sendReplyFromDetail()">Envoyer</button>
     </div>
   </div>
@@ -6588,6 +6626,7 @@ function dedupeEls(els){
     }
     const all = (msgs || []).concat(gen).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     renderMsgThread('pd-msgs', all);
+    chargerBrouillons();
     loadUnreadCount();
   }
 
@@ -7031,6 +7070,7 @@ function dedupeEls(els){
 
   // ── MESSAGES VIEW ─────────────────────────────────────────────────
   async function loadMessagesView() {
+    chargerARelire();
     const { data: clients } = await sb.from('clients').select('id, prenom, nom, email').order('nom');
     const container = document.getElementById('msg-projet-list');
     if (!clients || !clients.length) { container.innerHTML = '<div class="empty" style="padding:16px;">Aucun client.</div>'; return; }
@@ -7083,6 +7123,7 @@ function dedupeEls(els){
     }).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     renderMsgThread('msg-thread', merged);
+    chargerBrouillons();
     loadUnreadCount();
     loadMessagesView();
   }
@@ -7109,6 +7150,148 @@ function dedupeEls(els){
 
     if (adminMsgPolling) clearInterval(adminMsgPolling);
     adminMsgPolling = setInterval(function () { if (document.visibilityState === 'visible') fetchAdminThread(); }, 15000);
+  }
+
+  // ── MESSAGES À FAIRE RELIRE (brouillon visible de l'équipe ; le client ne reçoit rien tant qu'il n'est pas envoyé) ──
+  var _bro = { source: null, id: null, client: null, projet: null }, _brouillons = {};
+  function _broHeaders(session) { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }; }
+  async function _broMail(brouillonId, type) {
+    try {
+      var { data: { session } } = await sb.auth.getSession();
+      if (!session || !session.access_token) return null;
+      var r = await fetch('/api/notify', { method: 'POST', headers: _broHeaders(session), body: JSON.stringify({ action: 'brouillon', brouillon_id: brouillonId, type: type }) });
+      return r.ok ? await r.json() : null;
+    } catch (e) { console.warn('brouillon mail', e); return null; }
+  }
+  function _broErreur(error) {
+    showToast(/messages_brouillons|relation|does not exist/i.test(error.message || '') ? 'Table manquante : exécute docs/supabase-brouillons-messages.sql dans Supabase' : 'Erreur : ' + error.message, 'err');
+  }
+  function _broContexte(source) {
+    if (source === 'msg') return { client: activeMsgClientId, projet: null, ta: 'msg-reply' };
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; });
+    return { client: p ? p.client_id : null, projet: currentProjetId, ta: 'pd-reply' };
+  }
+  function ouvrirBrouillon(source, id) {
+    var ctx = _broContexte(source);
+    if (!ctx.client) return showToast('Choisis d\'abord un client', 'err');
+    var b = id ? _brouillons[id] : null;
+    _bro = { source: source, id: id || null, client: ctx.client, projet: ctx.projet };
+    document.getElementById('bro-titre').textContent = b ? 'Modifier le message à relire' : 'Faire relire un message';
+    document.getElementById('bro-texte').value = b ? b.contenu : document.getElementById(ctx.ta).value;
+    var sel = b ? (b.relecteurs || []) : [];
+    document.getElementById('bro-equipe').innerHTML = Object.keys(NOMS_EQUIPE).filter(function (e) { return e !== adminUser.email; }).map(function (e) {
+      return '<label class="bro-chk"><input type="checkbox" value="' + escHtml(e) + '"' + (sel.indexOf(e) >= 0 ? ' checked' : '') + '>' + escHtml(NOMS_EQUIPE[e]) + '</label>';
+    }).join('');
+    document.getElementById('modal-brouillon').classList.add('open');
+    document.getElementById('bro-texte').focus();
+  }
+  async function enregistrerBrouillon() {
+    var contenu = document.getElementById('bro-texte').value.trim();
+    var rel = Array.prototype.map.call(document.querySelectorAll('#bro-equipe input:checked'), function (i) { return i.value; });
+    if (!contenu) return showToast('Écris le message', 'err');
+    if (!rel.length) return showToast('Choisis au moins une personne pour relire', 'err');
+    var btn = document.getElementById('bro-save'); btn.disabled = true;
+    var id = _bro.id, error;
+    if (id) {
+      ({ error } = await sb.from('messages_brouillons').update({ contenu: contenu, relecteurs: rel, updated_at: new Date().toISOString() }).eq('id', id));
+      if (!error) await sb.from('messages_brouillons_avis').delete().eq('brouillon_id', id);   // le texte a changé : chacun relit à nouveau
+    } else {
+      var ins = await sb.from('messages_brouillons').insert([{ client_id: _bro.client, projet_id: _bro.projet, auteur: adminUser.email, contenu: contenu, relecteurs: rel }]).select('id').single();
+      error = ins.error; id = ins.data && ins.data.id;
+    }
+    btn.disabled = false;
+    if (error) return _broErreur(error);
+    closeModal('modal-brouillon');
+    if (!_bro.id) { var ta = document.getElementById(_broContexte(_bro.source).ta); if (ta) { ta.value = ''; autoGrow(ta); } }
+    var j = await _broMail(id, 'relecture');
+    showToast(j && j.mails ? 'Envoyé en relecture : ' + j.mails + ' e-mail' + (j.mails > 1 ? 's' : '') + ' (le client n\'a rien reçu)' : 'Brouillon enregistré');
+    chargerBrouillons();
+  }
+  async function chargerBrouillons() {
+    var cibles = [];
+    if (activeMsgClientId && document.getElementById('msg-brouillons')) cibles.push(['msg-brouillons', activeMsgClientId]);
+    var p = currentProjetId && allProjets.find(function (x) { return x.id === currentProjetId; });
+    if (p && p.client_id) cibles.push(['pd-brouillons', p.client_id]);
+    for (var i = 0; i < cibles.length; i++) {
+      var el = document.getElementById(cibles[i][0]);
+      var { data: bs, error } = await sb.from('messages_brouillons').select('*').eq('client_id', cibles[i][1]).eq('statut', 'a_relire').order('created_at', { ascending: true });
+      if (error || !bs || !bs.length) { el.innerHTML = ''; el.dataset.sig = ''; continue; }
+      var { data: avis } = await sb.from('messages_brouillons_avis').select('*').in('brouillon_id', bs.map(function (b) { return b.id; }));
+      var sig = JSON.stringify([bs, avis]);   // l'écran se rafraîchit toutes les 15 s : on ne redessine que si quelque chose a changé (sinon un commentaire en cours de saisie serait effacé)
+      if (el.dataset.sig === sig) continue;
+      el.dataset.sig = sig;
+      el.innerHTML = bs.map(function (b) {
+        _brouillons[b.id] = b;
+        var av = {}; (avis || []).filter(function (a) { return a.brouillon_id === b.id; }).forEach(function (a) { av[a.relecteur] = a; });
+        b._av = av;
+        var chips = (b.relecteurs || []).map(function (e) {
+          var a = av[e], cl = a ? 'bro__chip--' + a.avis : '';
+          return '<span class="bro__chip ' + cl + '">' + (a ? (a.avis === 'ok' ? '✓ ' : '✎ ') : '… ') + escHtml(NOMS_EQUIPE[e] || e) + '</span>';
+        }).join('');
+        var coms = (b.relecteurs || []).filter(function (e) { return av[e] && av[e].commentaire; }).map(function (e) {
+          return '<div class="bro__com"><b>' + escHtml(NOMS_EQUIPE[e] || e) + ' :</b> ' + escHtml(av[e].commentaire) + '</div>';
+        }).join('');
+        var moi = (b.relecteurs || []).indexOf(adminUser.email) >= 0;
+        var reponse = moi ? '<input type="text" id="bro-com-' + b.id + '" maxlength="500" placeholder="Commentaire (facultatif)" value="' + escHtml(av[adminUser.email] ? av[adminUser.email].commentaire || '' : '') + '">' +
+          '<button class="btn btn-ghost btn-sm" onclick="avisBrouillon(\'' + b.id + '\',\'ok\')">✓ C\'est bon</button><button class="btn btn-ghost btn-sm" onclick="avisBrouillon(\'' + b.id + '\',\'modif\')">✎ À modifier</button>' : '';
+        return '<div class="bro"><div class="bro__head">Message à relire · préparé par ' + escHtml(NOMS_EQUIPE[b.auteur] || b.auteur) + ' · ' + new Date(b.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + new Date(b.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</div>' +
+          '<div class="bro__txt">' + escHtml(b.contenu) + '</div><div class="bro__rel">' + chips + '</div>' + coms +
+          '<div class="bro__actions">' + reponse + '</div>' +
+          '<div class="bro__actions"><button class="btn btn-primary btn-sm" onclick="envoyerBrouillon(\'' + b.id + '\')">Envoyer au client</button><button class="btn btn-ghost btn-sm" onclick="ouvrirBrouillon(\'' + (cibles[i][0] === 'msg-brouillons' ? 'msg' : 'pd') + '\',\'' + b.id + '\')">Modifier</button><button class="btn btn-ghost btn-sm" onclick="supprimerBrouillon(\'' + b.id + '\')">Supprimer</button></div></div>';
+      }).join('');
+    }
+  }
+  async function avisBrouillon(id, avis) {
+    var com = (document.getElementById('bro-com-' + id) || {}).value || '';
+    if (avis === 'modif' && !com.trim()) return showToast('Dis ce qu\'il faut changer dans le commentaire', 'err');
+    var { error } = await sb.from('messages_brouillons_avis').upsert([{ brouillon_id: id, relecteur: adminUser.email, avis: avis, commentaire: com.trim() || null, created_at: new Date().toISOString() }], { onConflict: 'brouillon_id,relecteur' });
+    if (error) return _broErreur(error);
+    await _broMail(id, 'avis');
+    showToast(avis === 'ok' ? 'Validé' : 'Modification demandée');
+    chargerBrouillons(); chargerARelire();
+  }
+  async function posterMessageClient(clientId, contenu, projetId) {
+    var { error } = await sb.from('messages_general').insert([{ client_id: clientId, expediteur: 'admin', contenu: contenu, lu: true }]);
+    if (error) return error;
+    var pid = projetId;
+    if (!pid) { var { data: ps } = await sb.from('projets').select('id').eq('client_id', clientId).order('created_at', { ascending: false }).limit(1); pid = ps && ps[0] && ps[0].id; }
+    if (pid) await sb.from('messages').insert([{ projet_id: pid, expediteur: 'kobo', contenu: contenu, lu: true }]);
+    notifyClient(clientId, contenu);
+    return null;
+  }
+  async function envoyerBrouillon(id) {
+    var b = _brouillons[id]; if (!b) return;
+    var attente = (b.relecteurs || []).filter(function (e) { return !b._av[e] || b._av[e].avis !== 'ok'; });
+    var msg = attente.length ? 'Pas encore validé par : ' + attente.map(function (e) { return NOMS_EQUIPE[e] || e; }).join(', ') + '.\n\nEnvoyer quand même au client ?' : 'Tout le monde a validé. Envoyer ce message au client maintenant ?';
+    if (!confirm(msg)) return;
+    var error = await posterMessageClient(b.client_id, b.contenu, b.projet_id);
+    if (error) return showToast('Erreur envoi : ' + error.message, 'err');
+    await sb.from('messages_brouillons').update({ statut: 'envoye', envoye_par: adminUser.email, envoye_at: new Date().toISOString() }).eq('id', id);
+    showToast('Message envoyé au client');
+    chargerBrouillons(); chargerARelire();
+    if (activeMsgClientId === b.client_id) fetchAdminThread();
+    if (currentProjetId) loadProjetMsgs();
+  }
+  async function supprimerBrouillon(id) {
+    if (!confirm('Supprimer ce brouillon ? Le client n\'a rien reçu.')) return;
+    await sb.from('messages_brouillons').delete().eq('id', id);
+    chargerBrouillons(); chargerARelire();
+  }
+  // Liste « à relire » en haut de la messagerie : les brouillons où je suis tagué et où je n'ai pas encore répondu
+  async function chargerARelire() {
+    var el = document.getElementById('msg-arelire'); if (!el || !adminUser) return;
+    var { data: bs, error } = await sb.from('messages_brouillons').select('id, client_id, auteur, contenu, created_at').eq('statut', 'a_relire').contains('relecteurs', [adminUser.email]);
+    if (error || !bs || !bs.length) { el.innerHTML = ''; return; }
+    var { data: mine } = await sb.from('messages_brouillons_avis').select('brouillon_id').eq('relecteur', adminUser.email).in('brouillon_id', bs.map(function (b) { return b.id; }));
+    var faits = {}; (mine || []).forEach(function (a) { faits[a.brouillon_id] = 1; });
+    var todo = bs.filter(function (b) { return !faits[b.id]; });
+    if (!todo.length) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div style="padding:10px 16px;background:rgba(205,62,0,.08);border-bottom:1px solid rgba(26,26,26,.08);"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#CD3E00;margin-bottom:6px;">À relire (' + todo.length + ')</div>' +
+      todo.map(function (b) {
+        var c = allClients.find(function (x) { return x.id === b.client_id; });
+        var nom = c ? c.prenom + ' ' + c.nom : 'Client';
+        return '<div onclick="openMsgThread(\'' + b.client_id + '\',\'' + escHtml(nom).replace(/'/g, '&#39;') + '\')" style="font-size:12px;padding:5px 0;cursor:pointer;"><b>' + escHtml(nom) + '</b> · de ' + escHtml(NOMS_EQUIPE[b.auteur] || b.auteur) + '<div style="color:rgba(26,26,26,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(b.contenu) + '</div></div>';
+      }).join('') + '</div>';
   }
 
   async function sendReply() {

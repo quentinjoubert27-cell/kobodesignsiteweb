@@ -1,5 +1,5 @@
 // api/notify.js — Endpoint unifié pour toutes les notifications email client
-// actions : message | statut | assigner | document | email-libre | bulk-email | rappels-digest (+ GET rappels-tick pour le planificateur)
+// actions : message | statut | assigner | brouillon | document | email-libre | bulk-email | rappels-digest (+ GET rappels-tick pour le planificateur)
 // ── Rappels clients : récap du matin et point « pas encore rappelés » de fin de journée ──
 const escH = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 function parisNow() {
@@ -609,6 +609,51 @@ module.exports = async function handler(req, res) {
         </div>`,
       });
       return res.status(200).json({ ok: true });
+    }
+
+    // ── ACTION : brouillon (message client préparé, mails INTERNES aux relecteurs : le client ne reçoit rien) ──
+    if (action === 'brouillon') {
+      const { brouillon_id, type } = body;
+      if (!brouillon_id) return res.status(400).json({ error: 'Brouillon manquant' });
+      const { data: b } = await sb.from('messages_brouillons').select('*').eq('id', brouillon_id).maybeSingle();
+      if (!b) return res.status(404).json({ error: 'Brouillon introuvable' });
+      const { data: client } = await sb.from('clients').select('prenom, nom').eq('id', b.client_id).maybeSingle();
+      const cl = client ? ((client.prenom || '') + ' ' + (client.nom || '')).trim() : '';
+      const NOMS = { 'quentin.joubert@icloud.com': 'Quentin', 'pascal@symetry.fr': 'Pascal', 'lena@symetry.fr': 'Léna', 'mathilde@symetry.fr': 'Mathilde', 'armelle@symetry.fr': 'Armelle' };
+      const nom = e => NOMS[e] || e;
+      const cadre = (titre, sous, corps) => `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#1A1A1A;">
+          ${HEADER(titre, sous)}
+          <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">${corps}
+            ${BTN('https://www.kobo-design.fr/admin', 'Ouvrir l\'admin')}
+          </div>${FOOTER}</div>`;
+      const bulle = t => `<div style="background:#fff;border-radius:8px;padding:18px 22px;border-left:3px solid #CD3E00;margin-bottom:18px;"><p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${esc(t)}</p></div>`;
+      if (type === 'relecture') {
+        const dests = (b.relecteurs || []).filter(e => ADMIN_EMAILS.includes(e) && e !== user.email);
+        for (const to of dests) {
+          await resend.emails.send({
+            from: 'Kobo Design <contact@kobo-design.fr>', to,
+            subject: 'À relire avant envoi' + (cl ? ' : message pour ' + cl : ''),
+            html: cadre('Un message client attend ta relecture', 'Préparé par ' + esc(nom(b.auteur)),
+              `${cl ? `<p style="font-size:14px;margin:0 0 14px"><strong>Pour :</strong> ${esc(cl)}</p>` : ''}${bulle(b.contenu)}
+               <p style="font-size:13px;color:#555;margin:0 0 22px">Le client n'a rien reçu. Dans l'admin : Messages → le client → « Messages à relire », réponds « C'est bon » ou « À modifier ».</p>`),
+          });
+        }
+        return res.status(200).json({ ok: true, mails: dests.length });
+      }
+      if (type === 'avis') {
+        const { data: a } = await sb.from('messages_brouillons_avis').select('*').eq('brouillon_id', brouillon_id).eq('relecteur', user.email).maybeSingle();
+        if (!a) return res.status(404).json({ error: 'Avis introuvable' });
+        if (b.auteur === user.email) return res.status(200).json({ ok: true, mail: false });
+        await resend.emails.send({
+          from: 'Kobo Design <contact@kobo-design.fr>', to: b.auteur,
+          subject: nom(user.email) + (a.avis === 'ok' ? ' valide ton message' : ' demande une modification') + (cl ? ' (' + cl + ')' : ''),
+          html: cadre(a.avis === 'ok' ? nom(user.email) + ' valide ton message' : nom(user.email) + ' demande une modification', cl ? 'Message pour ' + esc(cl) : '',
+            `${a.commentaire ? `<p style="font-size:13px;font-weight:700;margin:0 0 6px">Son commentaire</p>${bulle(a.commentaire)}` : ''}
+             <p style="font-size:13px;font-weight:700;margin:0 0 6px">Ton message</p>${bulle(b.contenu)}`),
+        });
+        return res.status(200).json({ ok: true, mail: true });
+      }
+      return res.status(400).json({ error: 'Type inconnu' });
     }
 
     // ── ACTION : message-save ──────────────────────────────────────
