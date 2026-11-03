@@ -7356,22 +7356,37 @@ function dedupeEls(els){
     if (!document.getElementById('camp-sujet').value.trim() || !document.getElementById('camp-message').value.trim()) return showToast('Écris l\'objet et le message', 'err');
     try { var j = await _campCall('test'); showToast('Test envoyé à ' + j.sentTo); } catch (e) { showToast(e.message, 'err'); }
   }
+  var _campArme = null;
+  function _campRendreBouton() { var b = document.getElementById('camp-btn-send'); b.textContent = 'Envoyer'; b.classList.remove('btn-danger'); _campArme = null; }
   async function campSend() {
-    var n = campCompte();
-    if (!document.getElementById('camp-sujet').value.trim() || !document.getElementById('camp-message').value.trim()) return showToast('Écris l\'objet et le message', 'err');
-    if (!confirm('Envoyer cette campagne à ' + n + ' personne' + (n > 1 ? 's' : '') + ' ?\n\nL\'envoi est définitif.')) return;
-    var btn = document.getElementById('camp-btn-send'); btn.disabled = true;
+    var etat = document.getElementById('camp-resume'), btn = document.getElementById('camp-btn-send');
     try {
+      var n = campCompte();
+      if (!document.getElementById('camp-sujet').value.trim() || !document.getElementById('camp-message').value.trim()) { etat.innerHTML = '<span style="color:#b91c1c;font-weight:700;">Écris l\'objet et le message avant d\'envoyer.</span>'; return; }
+      if (!n) { etat.innerHTML = '<span style="color:#b91c1c;font-weight:700;">Aucun destinataire : clique d\'abord sur « Voir les destinataires ».</span>'; return; }
+      if (!_campArme) {   // première pression : on demande confirmation dans la page (pas de fenêtre du navigateur, parfois bloquée)
+        btn.textContent = 'Confirmer : envoyer à ' + n + ' personne' + (n > 1 ? 's' : ''); btn.classList.add('btn-danger');
+        etat.innerHTML = '<span style="color:#b45309;font-weight:700;">Clique encore une fois sur le bouton pour envoyer à ' + n + ' personne' + (n > 1 ? 's' : '') + ' (envoi définitif).</span>';
+        _campArme = setTimeout(_campRendreBouton, 10000);
+        return;
+      }
+      clearTimeout(_campArme); _campRendreBouton();
+      btn.disabled = true; btn.textContent = 'Envoi en cours…';
+      etat.innerHTML = '<b>Envoi en cours à ' + n + ' personne' + (n > 1 ? 's' : '') + '… ne ferme pas la fenêtre.</b>';
       var j = await _campCall('send', { confirmCount: n });
       var ko = (j.failed || []).length;
       document.getElementById('camp-liste').innerHTML = '<div style="padding:16px 18px;border-radius:10px;background:' + (ko ? '#fef2f2' : '#f0fdf4') + ';border:1.5px solid ' + (ko ? '#fca5a5' : '#86efac') + ';font-size:14px;line-height:1.6;">' +
         '<b>' + (ko ? '⚠ ' : '✓ ') + j.sent + ' e-mail' + (j.sent > 1 ? 's' : '') + ' envoyé' + (j.sent > 1 ? 's' : '') + '</b> (« ' + escHtml(document.getElementById('camp-sujet').value) + ' », ' + new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ')' +
         (ko ? '<br>Échec pour : ' + j.failed.map(escHtml).join(', ') : '') + '<br><span style="font-size:12px;color:rgba(26,26,26,.6);">L\'envoi est noté dans l\'historique des campagnes et dans la fiche de chaque client.</span></div>';
-      document.getElementById('camp-resume').textContent = '';
-      _camp.prevu = false; _camp.recipients = []; btn.disabled = true;
+      etat.textContent = '';
+      _camp.prevu = false; _camp.recipients = []; btn.textContent = 'Envoyer'; btn.disabled = true;
       showToast(j.sent + ' e-mail' + (j.sent > 1 ? 's' : '') + ' envoyé' + (j.sent > 1 ? 's' : ''), ko ? 'err' : 'ok');
       loadCampagnes();
-    } catch (e) { showToast(e.message, 'err'); document.getElementById('camp-resume').innerHTML = '<span style="color:#b91c1c;font-weight:700;">Envoi non effectué : ' + escHtml(e.message) + '</span>'; campCompte(); }
+    } catch (e) {
+      etat.innerHTML = '<span style="color:#b91c1c;font-weight:700;">Envoi non effectué : ' + escHtml(e && e.message || String(e)) + '</span>';
+      showToast('Envoi non effectué : ' + (e && e.message || e), 'err');
+      btn.textContent = 'Envoyer'; campCompte();
+    }
   }
   function _campResumeFiltres(f) {
     f = f || {}; var p = [];
