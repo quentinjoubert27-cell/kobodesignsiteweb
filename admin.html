@@ -192,6 +192,20 @@
     .ia-ligne input:focus { outline: none; border-color: var(--accent); }
     .ia-etat { font-size: 12px; line-height: 1.5; margin-top: 8px; color: rgba(26,26,26,.65); }
     .ia-etat .ia-q { color: #9a3412; font-weight: 600; } .ia-etat .ia-err { color: #b91c1c; font-weight: 600; } .ia-etat ul { margin: 4px 0 0 16px; padding: 0; }
+    .camp-bloc { border: 1.5px solid rgba(26,26,26,.1); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+    .camp-titre { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #CD3E00; margin-bottom: 10px; }
+    .camp-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 18px; }
+    .camp-grille > div > label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .camp-grille select { width: 100%; padding: 8px 10px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-size: 13px; background: #fff; }
+    .camp-chk { display: flex; flex-wrap: wrap; gap: 5px 12px; }
+    .camp-chk label { font-size: 12.5px; font-weight: 400; display: inline-flex; align-items: center; gap: 5px; margin: 0; text-transform: none; letter-spacing: 0; white-space: nowrap; }
+    .camp-chk input { width: auto; margin: 0; }
+    .camp-ligne { font-size: 12.5px; margin-top: 6px; color: rgba(26,26,26,.75); }
+    .camp-ligne input { width: 64px; padding: 5px 7px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 6px; font-size: 12.5px; }
+    .camp-tab { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .camp-tab th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: rgba(26,26,26,.5); padding: 6px 8px; position: sticky; top: 0; background: #fff; }
+    .camp-tab td { padding: 6px 8px; border-top: 1px solid rgba(26,26,26,.07); vertical-align: top; }
+    .camp-tab .vide { color: rgba(26,26,26,.35); }
     .brouillons:empty { display: none; }
     .brouillons { margin-top: 14px; display: grid; gap: 10px; }
     .bro { border: 1.5px dashed rgba(205,62,0,.45); background: rgba(205,62,0,.04); border-radius: 10px; padding: 12px 14px; }
@@ -1229,6 +1243,17 @@
           <h1 class="view-title">Newsletter</h1>
         </div>
       </div>
+      <div class="detail-panel" style="padding:18px 20px;margin-bottom:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+          <div>
+            <p class="section-title" style="margin:0 0 4px;">✉ Campagnes e-mail</p>
+            <p style="font-size:12.5px;color:rgba(26,26,26,.5);margin:0;">Choisis un groupe précis (statut, prix déjà envoyé, dernier contact…), vérifie le détail de chaque personne, teste, puis envoie. Chaque mail contient un lien de désinscription.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openCampagne()">+ Nouvelle campagne</button>
+        </div>
+        <div id="camp-historique" style="font-size:13px;">Chargement…</div>
+      </div>
+
       <p style="font-size:13px;color:rgba(26,26,26,.6);max-width:70ch;margin:-8px 0 20px;">
         Deux sources bien distinctes : les adresses laissées via le popup jeu concours (opt-in newsletter explicite),
         et les adresses des clients qui ont un projet chez Kōbō (qui n'ont pas forcément coché de case newsletter).
@@ -1312,6 +1337,60 @@
 ═══════════════════════════════════════════ -->
 
 <!-- Nouveau projet -->
+<div class="modal-overlay" id="modal-campagne">
+  <div class="modal" style="max-width:980px;width:100%;max-height:92vh;overflow-y:auto;">
+    <h2 class="modal-title">Nouvelle campagne</h2>
+
+    <div class="camp-bloc">
+      <div class="camp-titre">1 · Qui reçoit le mail ?</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+        <select id="camp-seg" onchange="campChargerGroupe()" style="padding:8px 10px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-size:13px;"><option value="">Groupes enregistrés…</option></select>
+        <button class="btn btn-ghost btn-sm" onclick="campEnregistrerGroupe()">Enregistrer ce groupe</button>
+        <button class="btn btn-ghost btn-sm" onclick="campSupprimerGroupe()">Supprimer le groupe</button>
+        <button class="btn btn-ghost btn-sm" onclick="campReinit()">Tout décocher</button>
+      </div>
+      <div class="camp-grille">
+        <div><label>Statut du projet</label><div class="camp-chk" id="camp-statuts"></div></div>
+        <div><label>Type de projet</label><div class="camp-chk" id="camp-types"></div></div>
+        <div><label>Prix (proposition ou devis)</label>
+          <select id="camp-prix" onchange="campChange()"><option value="tous">Peu importe</option><option value="envoye">Prix déjà envoyé</option><option value="jamais">Jamais de prix envoyé</option></select>
+          <div class="camp-ligne">envoyé il y a au moins <input type="number" id="camp-pmin" min="0" oninput="campChange()"> jours</div>
+          <div class="camp-ligne">et au plus <input type="number" id="camp-pmax" min="0" oninput="campChange()"> jours</div>
+        </div>
+        <div><label>Relance</label>
+          <div class="camp-ligne">sans contact depuis <input type="number" id="camp-cmin" min="0" oninput="campChange()"> jours</div>
+          <div class="camp-ligne">sans campagne depuis <input type="number" id="camp-rmin" min="0" oninput="campChange()"> jours</div>
+        </div>
+        <div><label>Température</label><div class="camp-chk" id="camp-temps"></div></div>
+        <div><label>Origine du contact</label><div class="camp-chk" id="camp-sources"></div></div>
+        <div><label>Étiquettes</label><div class="camp-chk" id="camp-tags"></div></div>
+        <div><label>Jeu concours</label>
+          <select id="camp-concours" onchange="campChange()"><option value="non">Ne pas inclure</option><option value="avec">Inclure ceux qui ont accepté la newsletter</option><option value="seulement">Seulement eux</option></select>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="campPreview()">Voir les destinataires</button>
+        <span id="camp-resume" style="font-size:13px;color:rgba(26,26,26,.7);"></span>
+      </div>
+      <div id="camp-liste" style="margin-top:10px;max-height:300px;overflow:auto;"></div>
+    </div>
+
+    <div class="camp-bloc">
+      <div class="camp-titre">2 · Le message</div>
+      <div class="field"><label>Objet</label><input type="text" id="camp-sujet" maxlength="200"/></div>
+      <div class="field"><label>Titre dans le mail (facultatif, sinon l'objet)</label><input type="text" id="camp-titre" maxlength="120"/></div>
+      <div class="field"><label>Message (après « Bonjour Prénom, »)</label><textarea id="camp-message" rows="9" style="width:100%;padding:12px 14px;border:1.5px solid rgba(26,26,26,.12);border-radius:8px;font-family:var(--font);font-size:14px;line-height:1.6;" oninput="campChange(true)"></textarea>
+        <div style="font-size:11.5px;color:rgba(26,26,26,.5);margin-top:4px;">Variables : <code>{{prenom}}</code> et <code>{{projet}}</code> sont remplacées pour chaque personne. Le lien « Se désinscrire » est ajouté en bas automatiquement.</div></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-campagne')">Fermer</button>
+      <button class="btn btn-ghost" id="camp-btn-test" onclick="campTest()">M'envoyer un test</button>
+      <button class="btn btn-primary" id="camp-btn-send" onclick="campSend()" disabled>Envoyer</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-brouillon" style="z-index:700;">
   <div class="modal">
     <h2 class="modal-title" id="bro-titre">Faire relire un message</h2>
@@ -2035,6 +2114,7 @@
   }
 
   async function loadNewsletter() {
+    loadCampagnes();
     document.getElementById('nl-concours-content').innerHTML = 'Chargement…';
     document.getElementById('nl-clients-content').innerHTML = 'Chargement…';
     loadConcoursPopupStatus();
@@ -7164,6 +7244,146 @@ function dedupeEls(els){
 
     if (adminMsgPolling) clearInterval(adminMsgPolling);
     adminMsgPolling = setInterval(function () { if (document.visibilityState === 'visible') fetchAdminThread(); }, 15000);
+  }
+
+  // ── CAMPAGNES E-MAIL : groupes ciblés, détail par client, test, envoi, historique ──
+  var CAMP_STATUTS = ['En étude', 'Analyse en cours', 'Prix validé', 'Proposition envoyée', 'En attente de réponse client', 'Devis en cours', 'Devis envoyé', 'Fabrication', 'Commandé', 'Livraison', 'Terminé'];
+  var CAMP_TYPES = [['mobilier', 'Mobilier'], ['biblio', 'Bibliothèque'], ['dressing', 'Dressing'], ['tv', 'Meuble sur mesure'], ['sdb', 'Salle de bain']];
+  var CAMP_TEMPS = [['chaud', 'Chaud'], ['tiede', 'Tiède'], ['froid', 'Froid']];
+  var _camp = { recipients: [], coches: {}, segments: [], prevu: false };
+  function _campChk(id, items, prefixe) {
+    document.getElementById(id).innerHTML = items.map(function (it) {
+      var v = Array.isArray(it) ? it[0] : it, l = Array.isArray(it) ? it[1] : it;
+      return '<label><input type="checkbox" value="' + escHtml(v) + '" onchange="campChange()">' + escHtml(l) + '</label>';
+    }).join('') || '<span style="font-size:12px;color:rgba(26,26,26,.4);">Aucun</span>';
+  }
+  function _campVals(id) { return Array.prototype.map.call(document.querySelectorAll('#' + id + ' input:checked'), function (i) { return i.value; }); }
+  function campFiltres() {
+    var n = function (id) { var v = document.getElementById(id).value; return v === '' ? null : +v; };
+    return { statuts: _campVals('camp-statuts'), types: _campVals('camp-types'), temperatures: _campVals('camp-temps'), sources: _campVals('camp-sources'), tags: _campVals('camp-tags'),
+      prix: document.getElementById('camp-prix').value, prix_jours_min: n('camp-pmin'), prix_jours_max: n('camp-pmax'), contact_jours_min: n('camp-cmin'), pas_recu_jours: n('camp-rmin'), concours: document.getElementById('camp-concours').value };
+  }
+  function campAppliquer(f) {
+    f = f || {};
+    ['statuts', 'types', 'temps', 'sources', 'tags'].forEach(function (k) {
+      var cle = k === 'temps' ? 'temperatures' : k;
+      document.querySelectorAll('#camp-' + k + ' input').forEach(function (i) { i.checked = (f[cle] || []).indexOf(i.value) >= 0; });
+    });
+    document.getElementById('camp-prix').value = f.prix || 'tous';
+    document.getElementById('camp-pmin').value = f.prix_jours_min == null ? '' : f.prix_jours_min;
+    document.getElementById('camp-pmax').value = f.prix_jours_max == null ? '' : f.prix_jours_max;
+    document.getElementById('camp-cmin').value = f.contact_jours_min == null ? '' : f.contact_jours_min;
+    document.getElementById('camp-rmin').value = f.pas_recu_jours == null ? '' : f.pas_recu_jours;
+    document.getElementById('camp-concours').value = f.concours || 'non';
+    campChange();
+  }
+  function campReinit() { document.getElementById('camp-seg').value = ''; campAppliquer({}); }
+  function campChange(messageSeul) {
+    if (!messageSeul) { _camp.prevu = false; document.getElementById('camp-resume').textContent = 'Les critères ont changé : clique sur « Voir les destinataires ».'; document.getElementById('camp-liste').innerHTML = ''; }
+    document.getElementById('camp-btn-send').disabled = true;
+  }
+  async function openCampagne() {
+    _campChk('camp-statuts', CAMP_STATUTS); _campChk('camp-types', CAMP_TYPES); _campChk('camp-temps', CAMP_TEMPS);
+    var cl = allClients || [];
+    var uniq = function (a) { return a.filter(function (v, i) { return v && a.indexOf(v) === i; }).sort(); };
+    _campChk('camp-sources', uniq(cl.map(function (c) { return c.source; })));
+    _campChk('camp-tags', uniq([].concat.apply([], cl.map(function (c) { return c.tags || []; }))));
+    campAppliquer({});
+    document.getElementById('camp-resume').textContent = ''; document.getElementById('camp-liste').innerHTML = '';
+    await campChargerGroupes();
+    document.getElementById('modal-campagne').classList.add('open');
+  }
+  async function campChargerGroupes() {
+    var r = await sb.from('newsletter_segments').select('*').order('nom');
+    _camp.segments = r.data || [];
+    document.getElementById('camp-seg').innerHTML = '<option value="">Groupes enregistrés…</option>' + _camp.segments.map(function (g) { return '<option value="' + g.id + '">' + escHtml(g.nom) + '</option>'; }).join('');
+  }
+  function campChargerGroupe() {
+    var g = _camp.segments.find(function (x) { return x.id === document.getElementById('camp-seg').value; });
+    if (g) campAppliquer(g.filtres);
+  }
+  async function campEnregistrerGroupe() {
+    var nom = (prompt('Nom du groupe (ex. « Prix envoyé il y a plus de 15 jours ») :') || '').trim();
+    if (!nom) return;
+    var r = await sb.from('newsletter_segments').insert([{ nom: nom, filtres: campFiltres(), created_by: adminUser.email }]);
+    if (r.error) return showToast(/newsletter_segments|relation|does not exist/i.test(r.error.message) ? 'Tables manquantes : exécute docs/supabase-campagnes.sql dans Supabase' : 'Erreur : ' + r.error.message, 'err');
+    showToast('Groupe enregistré'); await campChargerGroupes();
+  }
+  async function campSupprimerGroupe() {
+    var id = document.getElementById('camp-seg').value; if (!id) return showToast('Choisis d\'abord un groupe', 'err');
+    if (!confirm('Supprimer ce groupe enregistré ?')) return;
+    await sb.from('newsletter_segments').delete().eq('id', id); document.getElementById('camp-seg').value = ''; await campChargerGroupes();
+  }
+  async function _campCall(mode, extra) {
+    var { data: { session } } = await sb.auth.getSession();
+    var exclure = _camp.recipients.filter(function (r) { return _camp.coches[r.email] === false; }).map(function (r) { return r.email; });
+    var r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify(Object.assign({ action: 'campagne', mode: mode, filtres: campFiltres(), exclure: exclure, sujet: document.getElementById('camp-sujet').value, titre: document.getElementById('camp-titre').value, message: document.getElementById('camp-message').value }, extra || {})) });
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(j.error || ('Erreur ' + r.status));
+    return j;
+  }
+  function _campDate(iso) {
+    if (!iso) return '<span class="vide">jamais</span>';
+    var j = Math.floor((Date.now() - new Date(iso).getTime()) / 864e5);
+    return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) + '<br><span class="vide">il y a ' + j + ' j</span>';
+  }
+  function campCompte() {
+    var n = _camp.recipients.filter(function (r) { return _camp.coches[r.email] !== false; }).length;
+    document.getElementById('camp-resume').innerHTML = '<b>' + n + ' destinataire' + (n > 1 ? 's' : '') + '</b> sur ' + _camp.recipients.length + ' (les personnes désinscrites sont déjà retirées)';
+    document.getElementById('camp-btn-send').disabled = !_camp.prevu || n === 0;
+    return n;
+  }
+  function campCoche(email, ok) { _camp.coches[email] = ok; campCompte(); }
+  async function campPreview() {
+    document.getElementById('camp-resume').textContent = 'Calcul…';
+    try {
+      var j = await _campCall('preview');
+      _camp.recipients = j.recipients || []; _camp.coches = {}; _camp.prevu = true;
+      if (j.tables_manquantes) showToast('Tables de campagne absentes : exécute docs/supabase-campagnes.sql (désinscriptions et historique inactifs)', 'err');
+      document.getElementById('camp-liste').innerHTML = _camp.recipients.length ? '<table class="camp-tab"><thead><tr><th></th><th>Personne</th><th>Projet</th><th>Prix envoyé</th><th>Dernier contact</th><th>Dernière campagne</th></tr></thead><tbody>' +
+        _camp.recipients.map(function (r) {
+          return '<tr><td><input type="checkbox" checked onchange="campCoche(\'' + escHtml(r.email).replace(/'/g, '&#39;') + '\', this.checked)"></td><td><b>' + escHtml((r.prenom + ' ' + r.nom).trim() || '—') + '</b><br><span class="vide">' + escHtml(r.email) + '</span></td>' +
+            '<td>' + (r.projet ? escHtml(r.projet) + '<br><span class="vide">' + escHtml(r.statut) + (r.nb_projets > 1 ? ' · ' + r.nb_projets + ' projets' : '') + '</span>' : '<span class="vide">' + escHtml(r.statut || '—') + '</span>') + '</td>' +
+            '<td>' + _campDate(r.prix_le) + '</td><td>' + _campDate(r.contact_le) + '</td><td>' + _campDate(r.recu_le) + '</td></tr>';
+        }).join('') + '</tbody></table>' : '<div class="empty" style="padding:12px 0;">Personne ne correspond à ces critères.</div>';
+      campCompte();
+      if (j.count > _camp.recipients.length) document.getElementById('camp-resume').innerHTML += ' · liste tronquée à ' + _camp.recipients.length + ' lignes';
+    } catch (e) { document.getElementById('camp-resume').textContent = ''; showToast(e.message, 'err'); }
+  }
+  async function campTest() {
+    if (!document.getElementById('camp-sujet').value.trim() || !document.getElementById('camp-message').value.trim()) return showToast('Écris l\'objet et le message', 'err');
+    try { var j = await _campCall('test'); showToast('Test envoyé à ' + j.sentTo); } catch (e) { showToast(e.message, 'err'); }
+  }
+  async function campSend() {
+    var n = campCompte();
+    if (!document.getElementById('camp-sujet').value.trim() || !document.getElementById('camp-message').value.trim()) return showToast('Écris l\'objet et le message', 'err');
+    if (!confirm('Envoyer cette campagne à ' + n + ' personne' + (n > 1 ? 's' : '') + ' ?\n\nL\'envoi est définitif.')) return;
+    var btn = document.getElementById('camp-btn-send'); btn.disabled = true;
+    try {
+      var j = await _campCall('send', { confirmCount: n });
+      showToast(j.sent + ' e-mail' + (j.sent > 1 ? 's' : '') + ' envoyé' + (j.sent > 1 ? 's' : '') + (j.failed && j.failed.length ? ' · ' + j.failed.length + ' en échec' : ''), j.failed && j.failed.length ? 'err' : 'ok');
+      closeModal('modal-campagne'); loadCampagnes();
+    } catch (e) { showToast(e.message, 'err'); campCompte(); }
+  }
+  function _campResumeFiltres(f) {
+    f = f || {}; var p = [];
+    if ((f.statuts || []).length) p.push('statut : ' + f.statuts.join(', '));
+    if ((f.types || []).length) p.push('type : ' + f.types.join(', '));
+    if (f.prix === 'envoye') p.push('prix déjà envoyé'); if (f.prix === 'jamais') p.push('jamais de prix');
+    if (f.prix_jours_min != null) p.push('prix il y a ≥ ' + f.prix_jours_min + ' j'); if (f.prix_jours_max != null) p.push('prix il y a ≤ ' + f.prix_jours_max + ' j');
+    if (f.contact_jours_min != null) p.push('sans contact ≥ ' + f.contact_jours_min + ' j');
+    if (f.concours && f.concours !== 'non') p.push('jeu concours');
+    return p.join(' · ') || 'Tous les clients';
+  }
+  async function loadCampagnes() {
+    var el = document.getElementById('camp-historique'); if (!el) return;
+    var r = await sb.from('newsletter_campagnes').select('*').order('created_at', { ascending: false }).limit(15);
+    if (r.error) { el.innerHTML = '<span style="color:rgba(26,26,26,.5);">Historique indisponible : exécute <code>docs/supabase-campagnes.sql</code> dans Supabase.</span>'; return; }
+    if (!r.data.length) { el.innerHTML = '<span style="color:rgba(26,26,26,.45);">Aucune campagne envoyée pour l\'instant.</span>'; return; }
+    el.innerHTML = '<table class="camp-tab"><thead><tr><th>Date</th><th>Objet</th><th>Groupe</th><th>Envoyés</th><th>Par</th></tr></thead><tbody>' + r.data.map(function (c) {
+      return '<tr><td>' + new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) + '</td><td><b>' + escHtml(c.sujet) + '</b></td><td>' + escHtml(_campResumeFiltres(c.filtres)) + '</td><td>' + c.nb_envoyes + ' / ' + c.nb_destinataires + '</td><td>' + escHtml(NOMS_EQUIPE[c.envoye_par] || c.envoye_par || '') + '</td></tr>';
+    }).join('') + '</tbody></table>';
   }
 
   // ── MESSAGES À FAIRE RELIRE (brouillon visible de l'équipe ; le client ne reçoit rien tant qu'il n'est pas envoyé) ──

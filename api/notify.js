@@ -1,5 +1,5 @@
 // api/notify.js — Endpoint unifié pour toutes les notifications email client
-// actions : message | statut | assigner | brouillon | document | email-libre | bulk-email | rappels-digest (+ GET rappels-tick pour le planificateur)
+// actions : message | statut | assigner | brouillon | campagne | document | email-libre | bulk-email | rappels-digest (+ GET rappels-tick pour le planificateur)
 // ── Rappels clients : récap du matin et point « pas encore rappelés » de fin de journée ──
 const escH = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 function parisNow() {
@@ -93,6 +93,87 @@ async function runRappelsTick(sb, resend, admins) {
 // Destinataire des récaps de rappels (modifiable via la variable RAPPELS_EMAIL)
 const RAPPELS_TO = () => (process.env.RAPPELS_EMAIL || 'contact@kobo-design.fr').split(',').map(e => e.trim()).filter(Boolean);
 
+
+// ── Campagnes : lien de désinscription signé + audience ciblée ──
+const SITE = 'https://www.kobo-design.fr';
+function tokenDesinscription(email) {
+  return require('crypto').createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY || '').update(String(email).toLowerCase()).digest('hex').slice(0, 32);
+}
+function lienDesinscription(email) {
+  return SITE + '/api/notify?action=desinscription&e=' + encodeURIComponent(email) + '&t=' + tokenDesinscription(email);
+}
+// Retourne { recipients, tables_manquantes } selon les filtres (clients, projets, prix déjà envoyé, dernier contact, déjà reçu, concours)
+async function resoudreAudience(sb, f, exclure) {
+  f = f || {};
+  const arr = v => Array.isArray(v) ? v.filter(x => typeof x === 'string' && x) : [];
+  const num = v => (v === '' || v == null || isNaN(+v)) ? null : +v;
+  const statuts = arr(f.statuts), types = arr(f.types), sources = arr(f.sources), temps = arr(f.temperatures), tags = arr(f.tags);
+  const prix = ['envoye', 'jamais'].includes(f.prix) ? f.prix : 'tous';
+  const pMin = num(f.prix_jours_min), pMax = num(f.prix_jours_max), cMin = num(f.contact_jours_min), rMin = num(f.pas_recu_jours);
+  const concours = ['avec', 'seulement'].includes(f.concours) ? f.concours : 'non';
+  const DAY = 864e5, now = Date.now();
+  const tout = async (q) => { const { data, error } = await q.limit(5000); if (error) throw new Error(error.message); return data || []; };
+  let tablesManquantes = false;
+  const optionnel = async (q) => { const { data, error } = await q.limit(5000); if (error) { tablesManquantes = true; return []; } return data || []; };
+
+  const [clients, projets, docs, acts, desinscrits, envois] = await Promise.all([
+    tout(sb.from('clients').select('id, prenom, nom, email, source, temperature, tags')),
+    tout(sb.from('projets').select('id, client_id, nom, statut, type, created_at, updated_at').order('created_at', { ascending: false })),
+    tout(sb.from('documents').select('projet_id, type, created_at').in('type', ['Proposition', 'Devis']).eq('uploade_par', 'kobo')),
+    tout(sb.from('crm_activites').select('client_id, created_at').eq('auto', false).order('created_at', { ascending: false })),
+    optionnel(sb.from('newsletter_desinscrits').select('email')),
+    optionnel(sb.from('newsletter_envois').select('email, created_at').eq('statut', 'envoye').order('created_at', { ascending: false })),
+  ]);
+  const bloques = new Set(desinscrits.map(d => String(d.email).toLowerCase()));
+  (Array.isArray(exclure) ? exclure : []).forEach(e => { e = String(e).trim().toLowerCase(); if (e) bloques.add(e); });
+  const recuLe = {}; envois.forEach(e => { const k = String(e.email).toLowerCase(); if (!recuLe[k]) recuLe[k] = e.created_at; });
+  const contactLe = {}; acts.forEach(a => { if (!contactLe[a.client_id]) contactLe[a.client_id] = a.created_at; });
+  const projetClient = {}; projets.forEach(p => { projetClient[p.id] = p.client_id; });
+  const prixLe = {}; docs.forEach(d => { const c = projetClient[d.projet_id]; if (c && (!prixLe[c] || d.created_at > prixLe[c])) prixLe[c] = d.created_at; });
+  const parClient = {}; projets.forEach(p => { (parClient[p.client_id] = parClient[p.client_id] || []).push(p); });
+  const jours = iso => iso ? (now - new Date(iso).getTime()) / DAY : null;
+
+  const vus = new Set(), recipients = [];
+  const ajoute = r => {
+    const k = String(r.email || '').toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(k) || bloques.has(k) || vus.has(k)) return;
+    vus.add(k); recipients.push(r);
+  };
+  {
+    for (const c of (concours === 'seulement' ? [] : clients)) {
+      const ps = parClient[c.id] || [];
+      const retenus = ps.filter(p => (!statuts.length || statuts.includes(p.statut)) && (!types.length || types.includes(p.type)));
+      if ((statuts.length || types.length) && !retenus.length) continue;
+      if (sources.length && !sources.includes(c.source)) continue;
+      if (temps.length && !temps.includes(c.temperature)) continue;
+      if (tags.length && !(c.tags || []).some(t => tags.includes(t))) continue;
+      const jp = jours(prixLe[c.id]);
+      if (prix === 'jamais' && jp != null) continue;
+      if (prix === 'envoye' && jp == null) continue;
+      if ((pMin != null || pMax != null) && jp == null) continue;   // une durée depuis « prix envoyé » ne concerne que ceux qui en ont reçu un
+      if (pMin != null && jp < pMin) continue;
+      if (pMax != null && jp > pMax) continue;
+      const jc = jours(contactLe[c.id]);
+      if (cMin != null && jc != null && jc < cMin) continue;
+      const jr = jours(recuLe[String(c.email || '').toLowerCase()]);
+      if (rMin != null && jr != null && jr < rMin) continue;
+      const base = retenus.length ? retenus : ps;
+      ajoute({ origine: 'client', client_id: c.id, prenom: c.prenom || '', nom: c.nom || '', email: c.email, projet: (base[0] || {}).nom || '', statut: (base[0] || {}).statut || '', nb_projets: ps.length,
+        prix_le: prixLe[c.id] || null, contact_le: contactLe[c.id] || null, recu_le: recuLe[String(c.email || '').toLowerCase()] || null, source: c.source || '', temperature: c.temperature || '' });
+    }
+  }
+  if (concours !== 'non') {
+    const leads = await optionnel(sb.from('concours_leads').select('nom, email, newsletter_consent').eq('newsletter_consent', true));
+    for (const l of leads) {
+      const jr = jours(recuLe[String(l.email || '').toLowerCase()]);
+      if (rMin != null && jr != null && jr < rMin) continue;
+      const [prenom, ...reste] = String(l.nom || '').trim().split(/\s+/);
+      ajoute({ origine: 'concours', client_id: null, prenom: prenom || '', nom: reste.join(' '), email: l.email, projet: '', statut: 'Jeu concours', nb_projets: 0, prix_le: null, contact_le: null, recu_le: recuLe[String(l.email || '').toLowerCase()] || null, source: 'Jeu concours', temperature: '' });
+    }
+  }
+  return { recipients, tables_manquantes: tablesManquantes };
+}
+
 const DEFAULT_ADMINS = 'quentin.joubert@icloud.com,pascal@symetry.fr,lena@symetry.fr,mathilde@symetry.fr,armelle@symetry.fr';
 
 module.exports = async function handler(req, res) {
@@ -111,6 +192,19 @@ module.exports = async function handler(req, res) {
       const out = await runRappelsTick(sbc, new Resend(process.env.RESEND_API_KEY), RAPPELS_TO());
       return res.status(200).json({ ok: true, ...out });
     } catch (err) { console.error('rappels-tick cron:', err); return res.status(500).json({ error: err.message }); }
+  }
+  // Lien « Se désinscrire » des campagnes : public, protégé par une signature
+  if (req.method === 'GET' && req.query && req.query.action === 'desinscription') {
+    const e = String(req.query.e || '').trim().toLowerCase(), t = String(req.query.t || '');
+    const page = (titre, texte) => res.status(200).setHeader('Content-Type', 'text/html; charset=utf-8').send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titre}</title><body style="font-family:sans-serif;background:#F2EDE3;color:#1A1A1A;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:24px"><div style="max-width:440px;background:#fff;border-radius:10px;padding:32px;text-align:center"><p style="color:#CD3E00;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 10px">Kobo Design</p><h1 style="font-size:20px;margin:0 0 12px">${titre}</h1><p style="font-size:14px;line-height:1.6;color:#555;margin:0">${texte}</p></div></body>`);
+    if (!e || t !== tokenDesinscription(e)) return page('Lien invalide', 'Ce lien de désinscription n\'est pas valide. Écrivez-nous à contact@kobo-design.fr et nous vous retirerons de la liste.');
+    try {
+      const { createClient } = require('@supabase/supabase-js');
+      const sbu = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { error } = await sbu.from('newsletter_desinscrits').upsert([{ email: e }], { onConflict: 'email' });
+      if (error) throw new Error(error.message);
+      return page('Vous êtes désinscrit', 'Nous ne vous enverrons plus d\'e-mails d\'information. Les messages liés à un projet en cours vous parviendront toujours.');
+    } catch (err) { console.error('desinscription:', err); return page('Une erreur est survenue', 'Réessayez dans un instant ou écrivez-nous à contact@kobo-design.fr.'); }
   }
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -533,6 +627,57 @@ module.exports = async function handler(req, res) {
       }
       return res.status(200).json({ ok: true, sent, failed });
 
+    }
+
+    // ── ACTION : campagne (e-mail à un groupe ciblé : aperçu détaillé, test, envoi, historique, désinscription) ──
+    if (action === 'campagne') {
+      const mode = body.mode;
+      if (!['preview', 'test', 'send'].includes(mode)) return res.status(400).json({ error: 'Mode invalide' });
+      const sujet = String(body.sujet || '').trim().slice(0, 200);
+      const message = String(body.message || '').trim().slice(0, 8000);
+      const filtres = body.filtres && typeof body.filtres === 'object' ? body.filtres : {};
+      if (mode !== 'preview' && (!sujet || !message)) return res.status(400).json({ error: 'Objet et message obligatoires' });
+      const { recipients, tables_manquantes } = await resoudreAudience(sb, filtres, body.exclure);
+      if (mode === 'preview') return res.status(200).json({ count: recipients.length, recipients: recipients.slice(0, 1500), tables_manquantes });
+
+      const perso = (t, r) => String(t).replace(/\{\{\s*prenom\s*\}\}/gi, r.prenom || '').replace(/\{\{\s*projet\s*\}\}/gi, r.projet || 'votre projet');
+      const html = (r) => {
+        const paragraphs = perso(message, r).split(/\n{2,}/).map(p => `<p style="font-size:14px;line-height:1.8;margin:0 0 16px;color:#333">${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+        return `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#1A1A1A;">
+        <div style="background:#1A1A1A;padding:28px 32px;border-radius:8px 8px 0 0;">
+          <p style="color:#CD3E00;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px">Kobo Design</p>
+          <h1 style="color:#FFFAF0;font-size:22px;font-weight:800;margin:0;line-height:1.25">${esc(perso(body.titre || sujet, r))}</h1>
+        </div>
+        <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">
+          <p style="font-size:15px;margin:0 0 20px;line-height:1.7">Bonjour${r.prenom ? ' <strong>' + esc(r.prenom) + '</strong>' : ''},</p>
+          ${paragraphs}
+          <p style="font-size:14px;line-height:1.8;margin:8px 0 0;color:#333">À très bientôt,<br><strong>L'équipe Kobo Design</strong></p>
+        </div>
+        <p style="text-align:center;font-size:11px;color:#aaa;margin:20px 0 0">Kobo Design · 76 Rue Mandron · 33000 Bordeaux · <a href="${SITE}" style="color:#CD3E00;text-decoration:none;">kobo-design.fr</a><br>Vous ne souhaitez plus recevoir nos e-mails d'information ? <a href="${lienDesinscription(r.email)}" style="color:#aaa;">Se désinscrire</a></p>
+      </div>`;
+      };
+      const from = 'Kobo Design <contact@kobo-design.fr>';
+      const entetes = r => ({ 'List-Unsubscribe': '<' + lienDesinscription(r.email) + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' });
+      if (mode === 'test') {
+        const ex = recipients[0] || { prenom: 'Prénom', projet: 'Nom du projet', email: user.email };
+        await resend.emails.send({ from, to: user.email, subject: '[TEST] ' + perso(sujet, ex), html: html({ ...ex, email: user.email }) });
+        return res.status(200).json({ ok: true, sentTo: user.email });
+      }
+      if (tables_manquantes) return res.status(500).json({ error: 'Tables manquantes : exécute docs/supabase-campagnes.sql dans Supabase', tables_manquantes: true });
+      if (Number(body.confirmCount) !== recipients.length) return res.status(409).json({ error: 'La liste a changé depuis l\'aperçu (' + recipients.length + ' destinataires). Relance l\'aperçu.' });
+      if (!recipients.length) return res.status(400).json({ error: 'Aucun destinataire' });
+      const { data: camp, error: cErr } = await sb.from('newsletter_campagnes').insert([{ sujet, message, filtres, nb_destinataires: recipients.length, nb_envoyes: 0, envoye_par: user.email }]).select('id').single();
+      if (cErr) return res.status(500).json({ error: cErr.message, tables_manquantes: true });
+      let sent = 0; const failed = [], lignes = [];
+      for (let i = 0; i < recipients.length; i += 50) {
+        const chunk = recipients.slice(i, i + 50);
+        const { error } = await resend.batch.send(chunk.map(r => ({ from, to: r.email, subject: perso(sujet, r), html: html(r), headers: entetes(r) })));
+        chunk.forEach(r => lignes.push({ campagne_id: camp.id, email: r.email, client_id: r.client_id, statut: error ? 'echec' : 'envoye' }));
+        if (error) failed.push(...chunk.map(r => r.email)); else sent += chunk.length;
+      }
+      await sb.from('newsletter_envois').insert(lignes);
+      await sb.from('newsletter_campagnes').update({ nb_envoyes: sent }).eq('id', camp.id);
+      return res.status(200).json({ ok: true, sent, failed });
     }
 
     // ── ACTION : document ──────────────────────────────────────────
