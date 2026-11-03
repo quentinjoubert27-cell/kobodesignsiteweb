@@ -7179,8 +7179,8 @@ function dedupeEls(els){
     document.getElementById('bro-titre').textContent = b ? 'Modifier le message à relire' : 'Faire relire un message';
     document.getElementById('bro-texte').value = b ? b.contenu : document.getElementById(ctx.ta).value;
     var sel = b ? (b.relecteurs || []) : [];
-    document.getElementById('bro-equipe').innerHTML = Object.keys(NOMS_EQUIPE).map(function (e) {   // TEST : on peut se tagger soi-même (pour retirer : remettre .filter(function (e) { return e !== adminUser.email; }) avant .map)
-      return '<label class="bro-chk"><input type="checkbox" value="' + escHtml(e) + '"' + (sel.indexOf(e) >= 0 ? ' checked' : '') + '>' + escHtml(NOMS_EQUIPE[e]) + (e === adminUser.email ? ' (moi, test)' : '') + '</label>';
+    document.getElementById('bro-equipe').innerHTML = Object.keys(NOMS_EQUIPE).filter(function (e) { return e !== adminUser.email; }).map(function (e) {
+      return '<label class="bro-chk"><input type="checkbox" value="' + escHtml(e) + '"' + (sel.indexOf(e) >= 0 ? ' checked' : '') + '>' + escHtml(NOMS_EQUIPE[e]) + '</label>';
     }).join('');
     document.getElementById('modal-brouillon').classList.add('open');
     document.getElementById('bro-texte').focus();
