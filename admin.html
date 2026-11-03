@@ -7279,7 +7279,8 @@ function dedupeEls(els){
   }
   function campReinit() { document.getElementById('camp-seg').value = ''; campAppliquer({}); }
   function campChange(messageSeul) {
-    if (!messageSeul) { _camp.prevu = false; document.getElementById('camp-resume').textContent = 'Les critères ont changé : clique sur « Voir les destinataires ».'; document.getElementById('camp-liste').innerHTML = ''; }
+    if (messageSeul) return;   // écrire le message ne change pas la liste : le bouton Envoyer reste actif
+    _camp.prevu = false; document.getElementById('camp-resume').textContent = 'Les critères ont changé : clique sur « Voir les destinataires ».'; document.getElementById('camp-liste').innerHTML = '';
     document.getElementById('camp-btn-send').disabled = true;
   }
   async function openCampagne() {
