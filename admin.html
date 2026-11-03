@@ -1859,6 +1859,20 @@
     loadProjets();
     loadUnreadCount();
     preloadTarifsGlobaux();
+    ouvrirDepuisLien();
+  }
+
+  // Lien des e-mails de relecture : /admin?message=<id du client> ouvre directement sa conversation
+  async function ouvrirDepuisLien() {
+    var cid = new URLSearchParams(location.search).get('message');
+    if (!cid) return;
+    try {
+      var { data: c } = await sb.from('clients').select('id, prenom, nom').eq('id', cid).maybeSingle();
+      if (!c) return showToast('Client introuvable', 'err');
+      showView('messages-view', document.getElementById('nav-msgs'));
+      await openMsgThread(c.id, (c.prenom || '') + ' ' + (c.nom || ''));
+      history.replaceState(null, '', location.pathname);
+    } catch (e) { console.warn('lien message', e); }
   }
 
   // Charge la base de prix globale au démarrage pour pouvoir pré-remplir n'importe quelle

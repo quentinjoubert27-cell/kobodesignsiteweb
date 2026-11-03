@@ -624,7 +624,7 @@ module.exports = async function handler(req, res) {
       const cadre = (titre, sous, corps) => `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;color:#1A1A1A;">
           ${HEADER(titre, sous)}
           <div style="background:#F2EDE3;padding:32px;border-radius:0 0 8px 8px;">${corps}
-            ${BTN('https://www.kobo-design.fr/admin', 'Ouvrir l\'admin')}
+            ${BTN('https://www.kobo-design.fr/admin?message=' + encodeURIComponent(b.client_id), 'Ouvrir la conversation du client')}
           </div>${FOOTER}</div>`;
       const bulle = t => `<div style="background:#fff;border-radius:8px;padding:18px 22px;border-left:3px solid #CD3E00;margin-bottom:18px;"><p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${esc(t)}</p></div>`;
       if (type === 'relecture') {
@@ -635,7 +635,7 @@ module.exports = async function handler(req, res) {
             subject: 'À relire avant envoi' + (cl ? ' : message pour ' + cl : ''),
             html: cadre('Un message client attend ta relecture', 'Préparé par ' + esc(nom(b.auteur)),
               `${cl ? `<p style="font-size:14px;margin:0 0 14px"><strong>Pour :</strong> ${esc(cl)}</p>` : ''}${bulle(b.contenu)}
-               <p style="font-size:13px;color:#555;margin:0 0 22px">Le client n'a rien reçu. Dans l'admin : Messages → le client → « Messages à relire », réponds « C'est bon » ou « À modifier ».</p>`),
+               <p style="font-size:13px;color:#555;margin:0 0 22px">Le client n'a rien reçu. Le bouton ci-dessous ouvre la conversation du client : réponds « C'est bon » ou « À modifier » sous le brouillon.</p>`),
           });
         }
         return res.status(200).json({ ok: true, mails: dests.length });
