@@ -152,6 +152,7 @@ def load_spec(path):
         return round((r["x_cm"] - mx) * 10) if (mx is not None and r.get("x_cm") is not None) else fallback
     left_cols = [r for r in (side.get("left") or []) if not r.get("niveau")]
     col_x = {len(left_cols): 0}
+    col_xcm = {len(left_cols): mx}   # abscisse (cm) du bord gauche de chaque colonne, pour décaler un caisson du dessus aligné à droite / centré
     off = 0
     for r in left_cols:
         W = round(r["W_cm"] * 10); off += W
@@ -164,7 +165,7 @@ def load_spec(path):
         if r.get("pente"): sp0["_pente"] = r["pente"]
         if r.get("arche_cm"): sp0["_arche_mm"] = round(float(r["arche_cm"]) * 10)
         cais.append((x, sp0))
-        if r.get("col") is not None: col_x[r["col"]] = x
+        if r.get("col") is not None: col_x[r["col"]] = x; col_xcm[r["col"]] = r.get("x_cm")
     off = Lmain
     for r in [r for r in (side.get("right") or []) if not r.get("niveau")]:
         W = round(r["W_cm"] * 10)
@@ -177,7 +178,7 @@ def load_spec(path):
         if r.get("pente"): sp0["_pente"] = r["pente"]
         if r.get("arche_cm"): sp0["_arche_mm"] = round(float(r["arche_cm"]) * 10)
         cais.append((x, sp0))
-        if r.get("col") is not None: col_x[r["col"]] = x
+        if r.get("col") is not None: col_x[r["col"]] = x; col_xcm[r["col"]] = r.get("x_cm")
         off += W
     for r in (side.get("left") or []) + (side.get("right") or []):
         if not r.get("niveau") or r.get("col") not in col_x: continue
@@ -189,7 +190,8 @@ def load_spec(path):
         if r.get("niche"): sp["_niche"] = r["niche"]
         if r.get("pente"): sp["_pente"] = r["pente"]
         if r.get("arche_cm"): sp["_arche_mm"] = round(float(r["arche_cm"]) * 10)
-        cais.append((col_x[r["col"]], sp))
+        bx = col_xcm.get(r["col"]); dx = round((r["x_cm"] - bx) * 10) if (bx is not None and r.get("x_cm") is not None) else 0   # alignement propre au caisson du dessus
+        cais.append((col_x[r["col"]] + dx, sp))
     # ponts : caissons suspendus au-dessus d'un espace libre
     for e in (side.get("espaces") or []):
         pt = e.get("pont")
