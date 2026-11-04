@@ -2607,6 +2607,7 @@
 
 
   // ── DEVIS SIMPLIFIÉ (client) : quantités par famille + un prix par grande famille ──────────
+  var devisSimpleProjet = null; // projet auquel appartiennent les prix modifiés de devisSimpleFam
   var devisSimpleFam = null; // [{id,label,detail,prix}] état courant (prix modifiables)
 
   function devisFamiliesCompute() {
@@ -2662,6 +2663,7 @@
     if (!prix) { el.innerHTML = '<div class="empty" style="padding:6px 0;font-size:12px;">Pas de configuration liée à ce projet.</div>'; return; }
     var det = devisSimpleDetails();
     var labels = { caisson: 'Caissons', finitions: 'Finitions', quincaillerie: 'Quincaillerie et accessoires', plan: 'Plan de travail' };
+    if (devisSimpleProjet !== currentProjetId) { devisSimpleFam = null; devisSimpleProjet = currentProjetId; }   // un prix modifié sur un projet ne doit pas passer sur le suivant
     var prev = {}; (devisSimpleFam || []).forEach(function (f) { if (f.edited) prev[f.id] = f.prix; });
     // Proposition : un seul prix final (le détail par poste n'apparaît que dans le devis)
     var totalCalc = Math.round(prix.total * 100) / 100;
