@@ -4320,7 +4320,7 @@ function _syncStack(){
     var below=base;
     for(var l=1;l<levels.length;l++){
       var k=colKey+'|'+l, r=keep[k], pOwn=(r&&r.pCustom&&r.P>0)?r.P:P;   // un caisson empilé garde sa profondeur propre si on la lui a réglée
-      if(!r||r.W!==W||r.H!==levels[l]||r.P!==pOwn){ var nr=makeTvRecord(W,levels[l]); if(r){ nr.uid=r.uid; nr.pCustom=r.pCustom; } r=nr; }
+      if(!r||r.W!==W||r.H!==levels[l]||r.P!==pOwn){ var nr=makeTvRecord(W,levels[l]); if(r){ nr.uid=r.uid; nr.pCustom=r.pCustom; ['bout','arche_cm','niche','pente','sansFond'].forEach(function(p){ if(r[p]) nr[p]=r[p]; }); } r=nr; }   // les formes (arche, niche, bout, pente) survivent à un changement de dimension
       r.W=W; r.H=levels[l]; r.Htot=levels[l]; r.P=pOwn; if(pOwn===P) r.pCustom=false; r.stack={lvl:l}; r.below=below; r.gapBelow=(gaps&&gaps[l])||0;
       newStack.push({rec:r,target:target}); below=r;
     }
@@ -4533,7 +4533,7 @@ function setBoutDeg(side,idx,k,deg){
 }
 function _boutHtml(r){
   var b=_getBout(r.side,r.idx,r.k), cote=b?b.cote:'aucun', call="'"+r.side+"',"+r.idx+","+r.k;
-  var enG=(r.ci===0), enD=(r.ci===r.nc-1); if(!enG&&!enD&&!b) return '';
+  var enG=(r.ci===0||r.k>0), enD=(r.ci===r.nc-1||r.k>0);   // un caisson posé au-dessus peut dépasser des voisins : bout proposé des deux côtés if(!enG&&!enD&&!b) return '';
   var opt=function(v,t){ return '<option value="'+v+'"'+(cote===v?' selected':'')+'>'+t+'</option>'; };
   var h='<div class="dim-row"><span class="dim-lbl" style="color:var(--accent)">Bout arrondi</span>'
     +'<select onchange="setBout('+call+',this.value)" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font:600 12px DM Sans,sans-serif;color:var(--text)">'
