@@ -3351,9 +3351,11 @@
       { id: 'kits', lib: 'Kits tiroirs', qte: nDrawers, pu: T.kitTiroir }
     ];
     lignes.forEach(function (l) { l.key = 'l:' + l.id; l.qte0 = l.qte; l.pu0 = l.pu; var o = ov[l.key]; if (o) { if (o.q != null) l.qte = o.q; if (o.pu != null) l.pu = o.pu; } l.modif = !!(o && (o.q != null || o.pu != null)); l.montant = l.qte * l.pu; });
-    var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0);
+    // compléments atelier : ce que le configurateur ne sait pas chiffrer (prix de fabrication, avant coefficient) ; invisibles pour le client, fondus dans le total
+    var complements = (rc.complements || []).map(function (x, i) { var q = parseFloat(x.qte) || 0, pu = parseFloat(x.pu) || 0; return { i: i, nom: x.nom || 'Complément', qte: q, pu: pu, montant: q * pu }; });
+    var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0) + complements.reduce(function (a, c) { return a + c.montant; }, 0);
     var coef = (g && g.coefficient_revente) || 1.5;
-    return { pieces: pieces, lignes: lignes, angles: angles, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
+    return { pieces: pieces, lignes: lignes, complements: complements, angles: angles, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
   }
   function arrLen(a) { return Array.isArray(a) ? a.length : (a ? 1 : 0); }
 
@@ -4164,15 +4166,69 @@
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + f2(r.cml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
       '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
       '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + (rc && rc.manuel ? '<button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">Modifier la proposition</button><button class="btn btn-ghost btn-sm" onclick="ajouterLigneManuelle()">Ajouter une ligne</button><button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="supprimerManuel()">Supprimer la proposition</button>' : '<button class="btn btn-ghost btn-sm" onclick="ouvrirEditeurElements()" title="Avancé : remplacer la liste des éléments du meuble (sauvegarde faite avant)">Modifier les éléments (avancé)</button>') + (rc && !rc.manuel && portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
+      complementsHtml(r) +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
       '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
       (r.warn.length ? '<div style="margin-top:6px;color:#b45309;">⚠ ' + r.warn.map(escHtml).join('<br>⚠ ') + '</div>' : '') + '</div>';
+  }
+  // Compléments atelier : lignes libres (libellé, quantité, prix de fabrication) pour ce que le configurateur ne chiffre pas ; le coefficient s'applique, le client ne voit que le total
+  function complementsHtml(r) {
+    if (!r.complements) return '';   // propositions manuelles : elles ont déjà leurs lignes libres
+    var inpS = 'padding:4px 6px;border:1.5px solid rgba(26,26,26,.14);border-radius:6px;font:inherit;font-size:12px;';
+    var rows = (r.complements || []).map(function (c) {
+      return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:4px 6px;">' + escHtml(c.nom) + '</td>' +
+        '<td style="padding:4px 6px;text-align:right;"><input type="number" step="any" min="0" value="' + c.qte + '" onchange="complementSet(' + c.i + ',\'qte\',this.value)" style="width:60px;' + inpS + '"></td>' +
+        '<td style="padding:4px 6px;text-align:right;"><input type="number" step="any" min="0" value="' + c.pu + '" onchange="complementSet(' + c.i + ',\'pu\',this.value)" style="width:80px;' + inpS + '"> €</td>' +
+        '<td style="padding:4px 6px;text-align:right;white-space:nowrap;">' + formatCurrency(c.montant) + '</td>' +
+        '<td style="padding:4px 6px;text-align:right;"><button class="btn btn-ghost btn-sm" onclick="complementDel(' + c.i + ')" title="Supprimer cette ligne">✕</button></td></tr>';
+    }).join('');
+    return '<div style="margin-top:10px;padding-top:8px;border-top:2px solid rgba(26,26,26,.25);"><b>Compléments atelier</b> <span style="color:rgba(26,26,26,.55);">— ce que le configurateur ne chiffre pas (arche, cintrage, complexité…). Prix de fabrication : le coefficient s\'applique. Le client ne voit pas le détail.</span>' +
+      (rows ? '<table style="width:100%;border-collapse:collapse;margin-top:4px;"><tbody>' + rows + '</tbody></table>' : '') +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;">' +
+      '<input id="cmp-nom" type="text" placeholder="Libellé (ex. : complexité)" style="flex:1;min-width:150px;' + inpS + '">' +
+      '<input id="cmp-qte" type="number" step="any" min="0" value="1" title="Quantité" style="width:60px;' + inpS + '">' +
+      '<input id="cmp-pu" type="number" step="any" min="0" placeholder="Prix fab. €" style="width:90px;' + inpS + '">' +
+      '<button class="btn btn-ghost btn-sm" onclick="complementAdd()">+ Ajouter</button></div></div>';
+  }
+  async function _saveComplements(liste, texte) {
+    if (!currentProjetSdbId) return showToast('Enregistrement impossible (projet sans configuration)', 'err');
+    var { data, error } = await sb.from('configs_sdb').select('raw_config').eq('id', currentProjetSdbId).maybeSingle();
+    if (error || !data) return showToast('Enregistrement impossible', 'err');
+    var rcDb = Object.assign({}, data.raw_config || {});
+    if (liste.length) rcDb.complements = liste; else delete rcDb.complements;
+    var up = await sb.from('configs_sdb').update({ raw_config: rcDb }).eq('id', currentProjetSdbId);
+    if (up.error) showToast('Enregistrement impossible : ' + up.error.message, 'err');
+    else if (texte) logPrix(texte);
+  }
+  function _complementsChange(liste, texte) {
+    if (liste.length) currentProjetRc.complements = liste; else delete currentProjetRc.complements;
+    updateDevisAutoTotal();
+    _saveComplements(liste, texte);
+  }
+  function complementAdd() {
+    if (!currentProjetRc) return;
+    var nom = (document.getElementById('cmp-nom').value || '').trim(), qte = parseFloat((document.getElementById('cmp-qte').value || '').replace(',', '.')), pu = parseFloat((document.getElementById('cmp-pu').value || '').replace(',', '.'));
+    if (!nom) return showToast('Donne un libellé à la ligne', 'err');
+    if (!(qte > 0) || !(pu >= 0)) return showToast('Quantité et prix de fabrication à renseigner', 'err');
+    _complementsChange((currentProjetRc.complements || []).concat([{ nom: nom, qte: qte, pu: pu }]), 'Complément atelier ajouté : ' + nom + ' (' + qte + ' × ' + formatCurrency(pu) + ' de fabrication)');
+  }
+  function complementSet(i, champ, v) {
+    var l = ((currentProjetRc && currentProjetRc.complements) || []).map(function (x) { return Object.assign({}, x); });
+    v = parseFloat(String(v).replace(',', '.')); if (!l[i] || !(v >= 0)) return;
+    l[i][champ] = v;
+    _complementsChange(l, 'Complément atelier modifié : ' + l[i].nom + ' (' + l[i].qte + ' × ' + formatCurrency(l[i].pu) + ' de fabrication)');
+  }
+  function complementDel(i) {
+    var l = ((currentProjetRc && currentProjetRc.complements) || []).slice(), x = l[i]; if (!x) return;
+    l.splice(i, 1);
+    _complementsChange(l, 'Complément atelier supprimé : ' + x.nom);
   }
   function downloadTableurCsv() {
     if (!_tabRes) return;
     var f = function (x) { return String(Math.round(x * 100) / 100).replace('.', ','); }, out = [['Pièce', 'Longueur mm', 'Largeur mm', 'Qté', 'Surface m²', 'Prix m²', 'Bois €', 'ml découpe', 'ml chant', 'Découpe+chant €']];
     _tabRes.pieces.forEach(function (p) { out.push([p.nom, p.l, p.w, p.qte, f(p.surface), f(p.pu), f(p.bois), f(p.ml), f(p.cml), f(p.chantDecoupe)]); });
     _tabRes.lignes.forEach(function (l) { out.push([l.lib + ' (qté ' + l.qte + ' × ' + f(l.pu) + ' €)', '', '', '', '', '', '', '', f(l.montant)]); });
+    (_tabRes.complements || []).forEach(function (c) { out.push(['Complément atelier : ' + c.nom + ' (qté ' + c.qte + ' × ' + f(c.pu) + ' €)', '', '', '', '', '', '', '', f(c.montant)]); });
     out.push(['Total fabrication', '', '', '', '', '', '', '', f(_tabRes.cout)], ['Vente HT (coef ' + _tabRes.coef + ')', '', '', '', '', '', '', '', f(_tabRes.vente)]);
     var csv = '﻿' + out.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'methode-tableur.csv'; a.click();
@@ -4558,12 +4614,12 @@
   // colonnes des configurations sans l'image d'aperçu (la plus lourde) : pour les listes et les calculs
   var CFG_SDB_LISTE = 'id,created_at,prenom,email,message,type,decouverte,projet_id,telephone,code_postal,meuble_l,meuble_h,meuble_p,meuble_mat,plan_l,plan_p,plan_ep,plan_mat,nb_vasques,vasque_w,vasque_d,vasque_label,nb_tablettes,nb_separateurs,nb_portes,nb_tiroirs';
   // pour le calcul des montants (refait à chaque ouverture du tableau de bord) : seulement les morceaux du JSON utiles au prix, sans l'image d'aperçu ni la liste technique des caissons
-  var CFG_SDB_PRIX = 'id,projet_id,decouverte,created_at,meuble_l,meuble_h,meuble_p,meuble_mat,elements,rc_meuble:raw_config->meuble,rc_prop:raw_config->proposition,rc_elements:raw_config->elements,rc_tvSide:raw_config->tvSide,rc_caisson2:raw_config->caisson2,rc_plan:raw_config->plan,rc_vasques:raw_config->vasques,rc_ov:raw_config->tableur_overrides,rc_ft:raw_config->furniture_type';
+  var CFG_SDB_PRIX = 'id,projet_id,decouverte,created_at,meuble_l,meuble_h,meuble_p,meuble_mat,elements,rc_meuble:raw_config->meuble,rc_prop:raw_config->proposition,rc_elements:raw_config->elements,rc_tvSide:raw_config->tvSide,rc_caisson2:raw_config->caisson2,rc_plan:raw_config->plan,rc_vasques:raw_config->vasques,rc_ov:raw_config->tableur_overrides,rc_comp:raw_config->complements,rc_ft:raw_config->furniture_type';
   function cfgPrixRow(c) {
     var rc = {};
     if (c.rc_ft != null) rc.furniture_type = c.rc_ft; if (c.rc_meuble != null) rc.meuble = c.rc_meuble; if (c.rc_elements != null) rc.elements = c.rc_elements;
     if (c.rc_prop != null) rc.proposition = c.rc_prop; if (c.rc_tvSide != null) rc.tvSide = c.rc_tvSide; if (c.rc_caisson2 != null) rc.caisson2 = c.rc_caisson2; if (c.rc_plan != null) rc.plan = c.rc_plan;
-    if (c.rc_vasques != null) rc.vasques = c.rc_vasques; if (c.rc_ov != null) rc.tableur_overrides = c.rc_ov;
+    if (c.rc_vasques != null) rc.vasques = c.rc_vasques; if (c.rc_ov != null) rc.tableur_overrides = c.rc_ov; if (c.rc_comp != null) rc.complements = c.rc_comp;
     return Object.assign({}, c, { raw_config: rc });
   }
   async function autoRecalcMontants(force) {
