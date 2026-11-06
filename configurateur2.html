@@ -6396,7 +6396,7 @@ async function submitConfig(){
             espaces: tvGaps.map(function(g){ var cl=_columnsLR(); var b=g.bridge;
               return { apres_col: cl.indexOf(g.after==='M'?'M':(tvSideLeft.concat(tvSideRight).filter(function(r){return r.uid===g.after;})[0]||null)), x_cm:_absX(_layout(S.CL).gapPos[g.uid]?_layout(S.CL).gapPos[g.uid].px:0, g.W/100), L_cm:g.W,
                 pont: b ? { x_cm:_recX(b), W_cm:b.W, H_cm:b.H, P_cm:b.P, y_cm:b.y||0, elements:exportElementsWithBounds(b.elems, b.W, b.H) } : null }; }),
-            top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   elements:exportElementsWithBounds(tvTopElems, S_tvSide.topW, S_tvSide.topH) } : null,
+            top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   topX:S_tvSide.topX||undefined, topY:S_tvSide.topY||undefined, elements:exportElementsWithBounds(tvTopElems, S_tvSide.topW, S_tvSide.topH) } : null,
           } : undefined,
           // liste COMPLÈTE de tous les caissons, de gauche à droite (principal compris) : chacun avec ses cotes, ses éléments bornés et son technical_spec
           caissons: (function(){
@@ -6853,7 +6853,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade')?t.type:'etagere',x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100)};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
+    S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade')?t.type:'etagere',x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.type!=='intercalaire'&&t.type!=='facade'&&(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux'))?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
@@ -6912,6 +6912,12 @@ function appliquerConfig(cfg, opts){
             b.P=Math.round(e.pont.P_cm||cfg.P||S.CairsonP*100); b.y=Math.round(e.pont.y_cm||0); b.elems=Array.isArray(e.pont.elements)?e.pont.elements:[]; b.stack={lvl:1,bridge:true}; b.below=g; g.bridge=b; tvSideRight.push(b);
           }
         });
+      }
+      if(cfg.tvSide.top && cfg.tvSide.top.W_cm && !S_tvSide.topActive){
+        S_tvSide.topW=Math.round(cfg.tvSide.top.W_cm); S_tvSide.topH=Math.round(cfg.tvSide.top.H_cm||S_tvSide.topH);
+        S_tvSide.topX=+cfg.tvSide.top.topX||0; S_tvSide.topY=+cfg.tvSide.top.topY||0;
+        tvTopElems=Array.isArray(cfg.tvSide.top.elements)?cfg.tvSide.top.elements:[];
+        toggleTVTop();
       }
       activeCaisson=1; buildCaisson(); if(typeof renderTvSideList==='function') renderTvSideList();
       S.CLtot=S.CL+_gapsW()/100+tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W/100;},0);
