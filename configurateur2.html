@@ -6899,6 +6899,14 @@ function appliquerConfig(cfg, opts){
           else if(rt){ if(libre){ _setColLibre(rt,lv,g); } else { rt.lv=lv; } }
         });
         _syncStack();   // applique les espaces en hauteur aux caissons empilés
+        // _syncStack recrée un caisson empilé dont les cotes diffèrent : on lui redonne ce qui était enregistré (éléments, façades fixes, formes)
+        _stacked.forEach(function(x){
+          var root=_colMap[x.r.col]; if(root===undefined) return;
+          var rec=tvSideLeft.concat(tvSideRight).filter(function(q){return q.stack&&!q.stack.bridge&&q.stack.lvl===x.r.niveau&&_colRoot(q)===root;})[0];
+          if(!rec) return;
+          rec.elems=Array.isArray(x.r.elements)?x.r.elements:[];
+          rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.niche=x.r.niche||undefined; rec.pente=x.r.pente||undefined; if(x.r.sans_fond) rec.sansFond=true; rec.align=x.r.align||undefined;
+        });
       }
       // espaces libres et ponts (suspendus au-dessus d'un espace)
       if(Array.isArray(cfg.tvSide.espaces)){
