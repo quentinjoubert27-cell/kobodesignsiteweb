@@ -3504,6 +3504,14 @@
     return rc;
   }
   function libelleMeuble(m, i) { return (m.raw_config && m.raw_config.libelle) || ('Meuble ' + (i + 1)); }
+  // télécharge le JSON du meuble choisi (celui que le configurateur a enregistré) : chaque meuble du projet a le sien
+  function telechargerMeubleJson(i) {
+    var m = currentProjetMeubles[i]; if (!m) return showToast('Meuble introuvable', 'err');
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var nom = ((p.nom || 'projet') + '-' + libelleMeuble(m, i)).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'meuble';
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(rcFromSdb(m), null, 2)], { type: 'application/json' })); a.download = nom + '.json'; a.click();
+    showToast('JSON téléchargé : ' + nom + '.json');
+  }
   function choisirMeuble(i) { _meubleIdx[currentProjetId] = i; renderProjetDevis(currentProjetId); }
   function meubleBarHtml(projetId, idx) {
     var ms = currentProjetMeubles;
@@ -3520,6 +3528,7 @@
       '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' + ms.map(function (m, i) { return btn(i); }).join('') +
       '<button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur()">+ Ajouter un meuble</button><button class="btn btn-ghost btn-sm" onclick="importerModele()">⬆ Importer un modèle (JSON)</button></div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur(true,\'' + ms[idx].id + '\')">✏️ Modifier ce meuble</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="telechargerMeubleJson(' + idx + ')">⬇ Télécharger le JSON</button>' +
       '<button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="effacerModele(\'' + ms[idx].id + '\')">🗑 Effacer ce meuble</button></div></div>';
   }
   // retour sur l'onglet admin après une modification dans le configurateur : on recharge le meuble du projet (prix et encart à jour)
