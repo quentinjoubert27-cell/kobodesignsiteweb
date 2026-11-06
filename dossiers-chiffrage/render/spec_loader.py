@@ -232,6 +232,11 @@ def load_spec(path):
             ar_ = u.get("arrondi") if u.get("arrondi") in ("gauche", "droit", "deux") else None   # coins avant arrondis de l'étagère
             mu_.append(("etagere", ax, ax + l_, round(float(u.get("y_cm") or 0) * 10) - ep, round(float(u.get("y_cm") or 0) * 10), pr_,
                         {"arrondi": ar_, "r": round(float(u.get("rayon_cm") or 0) * 10)} if ar_ else None))
+    for e in (side.get("espaces") or []):   # appareils (frigo, four…) logés dans un espace libre : ils en prennent la largeur
+        ap = e.get("appareil")
+        if not ap or mx is None or e.get("x_cm") is None: continue
+        ax = round((float(e["x_cm"]) - mx) * 10); yb_ = round(float(ap.get("y_cm") or 0) * 10)
+        mu_.append(("appareil", ax, ax + round(float(e.get("L_cm") or ap.get("L_cm") or 0) * 10), yb_, yb_ + round(float(ap.get("H_cm") or 0) * 10), round(float(ap.get("P_cm") or D / 10) * 10), {"kind": ap.get("type"), "porte": bool(ap.get("porte"))}))
     xmin = min([xmin] + [t[0] for t in tl] + [m[0] for m in murs] + [u[1] for u in mu_])
     xmax = max([xmax] + [t[1] for t in tl] + [u[2] for u in mu_])
     cfg["_muraux"] = [(t, a - xmin, b_ - xmin, yb, yt, pr, ex) for t, a, b_, yb, yt, pr, ex in mu_]

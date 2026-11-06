@@ -2220,6 +2220,7 @@ function buildCaisson(){
   if(MULTI()) buildTVExtraCaissons(box, matCais, matFond, matElem, matFacade, matTirInt, CL, CH, CP, ep);
   _buildTablettes(matElem, CP, ep);
   _buildMuraux(matElem, CP, ep);
+  _buildAppareils(CP, matFacade);
 
   if(currentFT==='sdb') caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
   else if(S.suspenduCm>0||S.baseYM>0) caissonGrp.position.y=((S.suspenduCm||0)+(S.baseYM||0))/100;   // équipe : meuble décollé du sol, sans plinthe
@@ -4426,6 +4427,7 @@ function renderCaissonWidths(){
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">Espace libre</span>'
           +'<button onclick="removeGap(\''+g.uid+'\')" title="Retirer l\'espace" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button></div>'
           +'<div class="dim-row"><span class="dim-lbl">Largeur du vide</span>'+gf('setGapW(\''+g.uid+'\',',g.W,10,400)+'</div>'
+          +_gapAppHtml(g,gf)
           +(g.bridge?'':'<button class="reset-btn" style="margin-top:8px;width:100%" onclick="addBridge(\''+g.uid+'\')">+ Ajouter un pont au-dessus</button>')
           +'</div>';
         if(g.bridge){
@@ -4466,6 +4468,49 @@ function _afterLayoutChange(){ updateElementsList(); renderCaissonWidths(); buil
 function _removeBridgeRec(g){
   if(!g||!g.bridge) return;
   var b=g.bridge; tvSideLeft=tvSideLeft.filter(function(r){return r!==b;}); tvSideRight=tvSideRight.filter(function(r){return r!==b;}); g.bridge=null; activeCaisson=1;
+}
+// appareils (frigo, four…) logés dans un espace libre : réservés à l'équipe, ils prennent la largeur du vide, aucun prix
+var APPAREILS={frigo:{n:'Frigo',h:185,p:65,y:0},congelateur:{n:'Congélateur',h:85,p:65,y:0},four:{n:'Four',h:60,p:56,y:90},micro_ondes:{n:'Micro-ondes',h:30,p:40,y:110},lave_vaisselle:{n:'Lave-vaisselle',h:82,p:60,y:0},lave_linge:{n:'Lave-linge',h:85,p:60,y:0},autre:{n:'Autre appareil',h:90,p:60,y:0}};
+function setGapApp(uid,type){
+  if(!_isAdminMode()) return; var g=_gapByUid(uid); if(!g) return;
+  var a=APPAREILS[type]; g.app=a?{type:type,haut_cm:a.h,y_cm:a.y,prof_cm:a.p}:null; _afterLayoutChange();
+}
+function setGapAppPorte(uid,on){ var g=_gapByUid(uid); if(!g||!g.app||!_isAdminMode()) return; g.app.porte=!!on; _afterLayoutChange(); }
+function setGapAppDim(uid,field,v){
+  var g=_gapByUid(uid); if(!g||!g.app||!_isAdminMode()) return; v=Math.round(+v)||0;
+  if(field==='H') g.app.haut_cm=Math.max(5,Math.min(400,v)); else if(field==='y') g.app.y_cm=Math.max(0,Math.min(400,v)); else if(field==='P') g.app.prof_cm=Math.max(5,Math.min(120,v));
+  _afterLayoutChange();
+}
+function _gapAppHtml(g,gf){
+  if(!_isAdminMode()) return '';
+  var cur=g.app?g.app.type:'', opt=Object.keys(APPAREILS).map(function(k){ return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+APPAREILS[k].n+'</option>'; }).join('');
+  var h='<div class="dim-row" style="margin-top:8px"><span class="dim-lbl" style="color:var(--accent)">Appareil</span>'
+    +'<select onchange="setGapApp(\''+g.uid+'\',this.value)" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font:600 12px DM Sans,sans-serif;color:var(--text)"><option value="">Aucun</option>'+opt+'</select></div>';
+  if(g.app){
+    h+='<div class="dim-row"><span class="dim-lbl">Largeur</span><span style="font-size:13px;font-weight:600">'+g.W+' cm <span style="font-weight:400;color:var(--text2)">(celle du vide)</span></span></div>'
+      +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+gf('setGapAppDim(\''+g.uid+'\',\'H\',',g.app.haut_cm,5,400)+'</div>'
+      +'<div class="dim-row"><span class="dim-lbl">Hauteur du sol</span>'+gf('setGapAppDim(\''+g.uid+'\',\'y\',',g.app.y_cm||0,0,400)+'</div>'
+      +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+gf('setGapAppDim(\''+g.uid+'\',\'P\',',g.app.prof_cm,5,120)+'</div>'
+      +'<label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:6px 0"><input type="checkbox" '+(g.app.porte?'checked ':'')+'onchange="setGapAppPorte(\''+g.uid+'\',this.checked)"> Porte par-dessus (appareil encastré)</label>'
+      +'<div style="font-size:11px;color:var(--text2);margin:2px 0 6px">Repère visuel et rendu : l\'appareil remplit la largeur du vide. Il n\'est pas compté dans le prix.</div>';
+  }
+  return h;
+}
+// volume d'un appareil dans son espace libre (repère visuel, jamais cliquable)
+function _buildAppareils(CP,matFacade){
+  tvGaps.forEach(function(g){
+    var a=g.app; if(!a||!APPAREILS[a.type]) return;
+    var gp=_layout(S.CL).gapPos[g.uid]; if(!gp) return;
+    var W=g.W/100, H=a.haut_cm/100, P=a.prof_cm/100, y0=((a.y_cm||0)-(S.baseYM||0))/100, zc=-CP/2+P/2;
+    var inox=new THREE.MeshStandardMaterial({color:0xb9bec3,metalness:0.7,roughness:0.35}), noir=new THREE.MeshStandardMaterial({color:0x1d1f22,metalness:0.2,roughness:0.25});
+    var add=function(w,h,d,x,y,z,mat){ var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); m.raycast=function(){}; m.userData.appareil=true; caissonGrp.add(m); };
+    add(W,H,P,gp.px,y0+H/2,zc,inox);
+    var fz=-CP/2+P+0.004;
+    if(a.porte){ add(Math.max(0.01,W-0.004),H,0.02,gp.px,y0+H/2,CP/2-0.01,matFacade||inox); return; }   // appareil encastré : une porte pleine par-dessus, au nu des caissons
+    if(a.type==='four'||a.type==='micro_ondes') add(W*0.76,H*0.5,0.008,gp.px,y0+H*0.45,fz,noir);
+    else if(a.type==='lave_vaisselle'||a.type==='lave_linge') { add(W*0.8,0.03,0.012,gp.px,y0+H-0.06,fz,noir); }
+    else add(0.025,Math.min(0.5,H*0.35),0.03,gp.px+W/2-0.05,y0+H*0.62,fz+0.01,noir);
+  });
 }
 // insère un espace libre à droite d'une colonne ('M' ou uid du caisson)
 function addGap(afterKey){
@@ -6395,7 +6440,8 @@ async function submitConfig(){
             // espaces libres entre caissons ; chacun peut porter un pont (caisson suspendu) : apres_col = colonne à sa gauche (0 = la plus à gauche)
             espaces: tvGaps.map(function(g){ var cl=_columnsLR(); var b=g.bridge;
               return { apres_col: cl.indexOf(g.after==='M'?'M':(tvSideLeft.concat(tvSideRight).filter(function(r){return r.uid===g.after;})[0]||null)), x_cm:_absX(_layout(S.CL).gapPos[g.uid]?_layout(S.CL).gapPos[g.uid].px:0, g.W/100), L_cm:g.W,
-                pont: b ? { x_cm:_recX(b), W_cm:b.W, H_cm:b.H, P_cm:b.P, y_cm:b.y||0, elements:exportElementsWithBounds(b.elems, b.W, b.H) } : null }; }),
+                pont: b ? { x_cm:_recX(b), W_cm:b.W, H_cm:b.H, P_cm:b.P, y_cm:b.y||0, elements:exportElementsWithBounds(b.elems, b.W, b.H) } : null,
+                appareil: (g.app&&APPAREILS[g.app.type]&&_isAdminMode()) ? { type:g.app.type, nom:APPAREILS[g.app.type].n, L_cm:g.W, H_cm:g.app.haut_cm, y_cm:g.app.y_cm||0, P_cm:g.app.prof_cm, porte:g.app.porte||undefined } : undefined }; }),
             top:   S_tvSide.topActive   ? { W_cm:S_tvSide.topW,   H_cm:S_tvSide.topH,   topX:S_tvSide.topX||undefined, topY:S_tvSide.topY||undefined, elements:exportElementsWithBounds(tvTopElems, S_tvSide.topW, S_tvSide.topH) } : null,
           } : undefined,
           // liste COMPLÈTE de tous les caissons, de gauche à droite (principal compris) : chacun avec ses cotes, ses éléments bornés et son technical_spec
@@ -6915,6 +6961,7 @@ function appliquerConfig(cfg, opts){
           if(e.apres_col==null||e.apres_col<0) return;
           var root=_cl[e.apres_col]; if(root===undefined||root===null) return;
           var g={uid:'g'+(++_tvUid), after:(root==='M'?'M':root.uid), W:Math.round(e.L_cm), bridge:null}; tvGaps.push(g);
+          if(e.appareil&&APPAREILS[e.appareil.type]){ var _ap=APPAREILS[e.appareil.type]; g.app={type:e.appareil.type,haut_cm:+e.appareil.H_cm||_ap.h,y_cm:+e.appareil.y_cm||0,prof_cm:+e.appareil.P_cm||_ap.p,porte:!!e.appareil.porte}; }
           if(e.pont){
             var b=makeTvRecord(Math.round(e.pont.W_cm||g.W),Math.round(e.pont.H_cm||40));
             b.P=Math.round(e.pont.P_cm||cfg.P||S.CairsonP*100); b.y=Math.round(e.pont.y_cm||0); b.elems=Array.isArray(e.pont.elements)?e.pont.elements:[]; b.stack={lvl:1,bridge:true}; b.below=g; g.bridge=b; tvSideRight.push(b);

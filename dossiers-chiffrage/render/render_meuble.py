@@ -742,6 +742,21 @@ def build_furniture(cfg, opt, open_state=False):
     oyc[0] = 0
     for _t, xl_, xr_, yb_, yt_, pr_, ex_ in cfg.get("_muraux", []):   # étagères / intercalaires fixés au mur, sans caisson (équipe)
         pr_ = min(pr_, D)
+        if _t == "appareil":   # frigo, four… : volume inox posé au sol (hauteur du sol = yb_), plaqué au mur
+            k_ = (ex_ or {}).get("kind"); hh_ = yt_ - yb_; ww_ = xr_ - xl_
+            inox_ = mat_plain("appareil_inox", (0.72, 0.74, 0.76), 0.35); noir_ = mat_plain("appareil_noir", (0.07, 0.08, 0.09), 0.25)
+            if (ex_ or {}).get("porte"):   # appareil encastré : porte pleine par-dessus, au nu des caissons
+                box("appareil_porte", 0, xl_ + 2, xr_ - 2, yb_ - z_off / mm, yt_ - z_off / mm, 0, 20, "v", wood)
+                objs.append(add_box("appareil_fond", xl_ * mm, xr_ * mm, max(D - pr_, 22) * mm, D * mm, yb_ * mm, yt_ * mm, inox_, "h", rnd))
+                continue
+            ap_ = [add_box("appareil", xl_ * mm, xr_ * mm, (D - pr_) * mm, D * mm, yb_ * mm, yt_ * mm, inox_, "h", rnd)]
+            yf_ = (D - pr_ - 3) * mm
+            if k_ in ("four", "micro_ondes"): ap_.append(add_box("appareil_vitre", (xl_ + ww_ * 0.12) * mm, (xr_ - ww_ * 0.12) * mm, yf_, (D - pr_) * mm, (yb_ + hh_ * 0.2) * mm, (yb_ + hh_ * 0.7) * mm, noir_, "h", rnd))
+            elif k_ in ("lave_vaisselle", "lave_linge"): ap_.append(add_box("appareil_bandeau", (xl_ + ww_ * 0.1) * mm, (xr_ - ww_ * 0.1) * mm, yf_, (D - pr_) * mm, (yt_ - 70) * mm, (yt_ - 40) * mm, noir_, "h", rnd))
+            else: ap_.append(add_box("appareil_poignee", (xr_ - 50) * mm, (xr_ - 25) * mm, (D - pr_ - 25) * mm, (D - pr_) * mm, (yb_ + hh_ * 0.45) * mm, (yb_ + hh_ * 0.45 + min(500, hh_ * 0.35)) * mm, noir_, "h", rnd))
+            objs.extend(o_ for o_ in ap_ if o_)
+            continue
+        pr_ = min(pr_, D)
         if ex_ and ex_.get("arrondi"):   # étagère à coins avant arrondis : plaque extrudée sur son contour vu de dessus (x, profondeur)
             r_ = min(ex_["r"] or pr_, pr_, (xr_ - xl_) / 2.0)
             rl_ = r_ if ex_["arrondi"] in ("gauche", "deux") else 0.0
@@ -776,7 +791,14 @@ def build_furniture(cfg, opt, open_state=False):
             pl[sd_] = (path, path[-1][0])                      # chemin (côté droit) et abscisse où la plinthe droite se raccorde
         x_a = (x0t + Wtot - pl[-1][1]) if -1 in pl else min(a_ for a_, _ in au_sol) + ep
         x_b = pl[1][1] if 1 in pl else max(b_ for _, b_ in au_sol) - ep
-        objs.append(add_box("plinthe", x_a * mm, x_b * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
+        segs_, cur_ = [], x_a   # pas de plinthe devant un appareil qui touche le sol
+        for ax_, bx_ in sorted((m_[1], m_[2]) for m_ in cfg.get("_muraux", []) if m_[0] == "appareil" and m_[3] <= 0):
+            if bx_ <= cur_ or ax_ >= x_b: continue
+            if ax_ > cur_: segs_.append((cur_, ax_))
+            cur_ = max(cur_, bx_)
+        if cur_ < x_b: segs_.append((cur_, x_b))
+        for sa_, sb_ in segs_:
+            objs.append(add_box("plinthe", sa_ * mm, sb_ * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
         for sd_, (path, _) in pl.items():
             ch = path if sd_ > 0 else [(x0t + Wtot - x, y) for x, y in path]   # bout à gauche : symétrique par rapport au meuble (qui peut être décalé par des éléments muraux à gauche)
             poly = formes_mod.contour_ruban({"chemin": [list(q) for q in ch], "ep": ep, "sens": -1 if sd_ > 0 else 1})
