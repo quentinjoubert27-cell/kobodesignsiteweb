@@ -1662,6 +1662,7 @@
   <div class="modal" style="max-width:660px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <h2 class="modal-title" id="pd-title" style="margin:0;">—</h2>
+      <button class="btn btn-ghost btn-sm" onclick="renommerProjet()" title="Renommer le projet" style="padding:6px 10px;margin-right:auto;margin-left:8px;">✎</button>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-projet-detail')" style="padding:6px 10px;">✕</button>
     </div>
 
@@ -2704,6 +2705,19 @@
     if (error) return showToast('Erreur', 'err');
     var m = document.getElementById('pd-montant'), st = document.getElementById('pd-statut'); if (m && st && STATUTS_MONTANT.indexOf(st.value) >= 0) m.value = t;
     showToast('Montant du projet : ' + formatCurrency(t));
+  }
+
+  // renomme le projet ouvert (le nouveau nom est aussi celui que voit le client)
+  async function renommerProjet() {
+    if (!currentProjetId) return;
+    var p = allProjets.find(function (x) { return x.id === currentProjetId; }) || {};
+    var nv = prompt('Nom du projet :', p.nom || (document.getElementById('pd-title') || {}).textContent || ''); if (nv === null) return;
+    nv = nv.trim(); if (!nv) return showToast('Le nom ne peut pas être vide', 'err');
+    var up = await sb.from('projets').update({ nom: nv }).eq('id', currentProjetId);
+    if (up.error) return showToast('Renommage impossible : ' + up.error.message, 'err');
+    p.nom = nv; document.getElementById('pd-title').textContent = nv;
+    try { renderProjets(); } catch (e) {}
+    showToast('Projet renommé');
   }
 
   function downloadProjetJson() {
