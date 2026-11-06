@@ -481,6 +481,17 @@ def build_furniture(cfg, opt, open_state=False):
         W = spec["overall_mm"]["width"]; H = spec["overall_mm"]["height"]
         B = lambda nm, xl, xr, yb, yt, d0, d1, grain, mt=None: box(nm, ox, xl, xr, yb, yt, d0, d1, grain, mt)
         bo = bout_spec(spec, W, D, ep)
+        for ap_ in spec.get("appareils", []):   # frigo, four… dans un compartiment : volume inox qui remplit la zone, poignée ou vitre noire devant
+            k_ = ap_["kind"]; prof_ = {"frigo": 650, "congelateur": 650, "four": 560, "micro_ondes": 400, "lave_vaisselle": 600, "lave_linge": 600}.get(k_, 600)
+            d1_ = D - 10; d0_ = max(40, d1_ - min(prof_, D - 70))
+            xl_, xr_, yb_, yt_ = ap_["x_left_mm"] + 2, ap_["x_right_mm"] - 2, ap_["y_bottom_mm"] + 2, ap_["y_top_mm"] - 2
+            hh_, ww_ = yt_ - yb_, xr_ - xl_
+            if hh_ <= 0 or ww_ <= 0: continue
+            inox_ = mat_plain("appareil_inox", (0.72, 0.74, 0.76), 0.35); noir_ = mat_plain("appareil_noir", (0.07, 0.08, 0.09), 0.25)
+            B("appareil", xl_, xr_, yb_, yt_, d0_, d1_, "h", inox_)
+            if k_ in ("four", "micro_ondes"): B("appareil_vitre", xl_ + ww_ * 0.12, xr_ - ww_ * 0.12, yb_ + hh_ * 0.2, yb_ + hh_ * 0.7, d0_ - 3, d0_, "h", noir_)
+            elif k_ in ("lave_vaisselle", "lave_linge"): B("appareil_bandeau", xl_ + ww_ * 0.1, xr_ - ww_ * 0.1, yt_ - 70, yt_ - 40, d0_ - 3, d0_, "h", noir_)
+            else: B("appareil_poignee", xr_ - 50, xr_ - 25, yb_ + hh_ * 0.45, yb_ + hh_ * 0.45 + min(500, hh_ * 0.35), d0_ - 25, d0_, "h", noir_)
         if bo:   # bout arrondi ouvert : plateaux et étagères au contour arrondi, pas de paroi, étagères ouvertes seulement
             fixes_bo = [d_ for d_ in spec.get("doors", []) if d_.get("fixe")]   # façades fixes : seules « portes » gardées sur un bout arrondi, elles épousent le contour
             spec = dict(spec); spec["doors"] = []; spec["drawers"] = []

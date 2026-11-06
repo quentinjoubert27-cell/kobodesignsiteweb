@@ -80,7 +80,7 @@ def spec_from_elements(W, H, D, ep, elements):
               {"type": "traverse_haute", "x_left_mm": ep, "x_right_mm": W - ep, "y_bottom_mm": H - ep, "y_top_mm": H},
               {"type": "traverse_basse", "x_left_mm": ep, "x_right_mm": W - ep, "y_bottom_mm": 0, "y_top_mm": ep},
               {"type": "fond", "x_left_mm": 0, "x_right_mm": W, "y_bottom_mm": 0, "y_top_mm": H}],
-          "separators": [], "shelves": [], "bars": [], "doors": [], "drawers": []}
+          "separators": [], "shelves": [], "bars": [], "doors": [], "drawers": [], "appareils": []}
     shelves_cm = [e for e in elements if e.get("type") == "shelf"]
     for e in elements:
         t = e.get("type")
@@ -95,6 +95,9 @@ def spec_from_elements(W, H, D, ep, elements):
         elif t == "barre":
             xl = round(e.get("x_left_cm", 0) * 10); xr = round(e.get("x_right_cm", iW / 10) * 10)
             sp["bars"].append({"x_left_mm": ep + xl, "x_right_mm": ep + xr, "y_center_mm": ep + round(e["y_cm"] * 10), "diameter_mm": 28})
+        elif t == "appareil" and e.get("key"):   # frigo, four… dans un compartiment : il en prend toute la place
+            bot, left, top, right = [float(v) for v in e["key"].split("_")]
+            sp["appareils"].append({"x_left_mm": ep + round(left * 10), "x_right_mm": ep + round(right * 10), "y_bottom_mm": ep + round(bot * 10), "y_top_mm": ep + round(top * 10), "kind": e.get("kind") or "autre"})
         elif t in ("porte", "tiroir"):
             bot, left, top, right = [float(v) for v in e["key"].split("_")]
             x_l = ep + round(left * 10); x_r = ep + round(right * 10)

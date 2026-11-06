@@ -2121,6 +2121,7 @@ function buildCaisson(){
     // Façades par compartiment
     var fz=CP/2+0.001; // collé au meuble (1mm)
     nicheFront(caissonGrp,_nicheCtx('M',CL,CH),fz,matFacade);
+    _buildAppareilsEls(caissonGrp,caissonElements,CL,CH,CP,EP);
     caissonElements.forEach(function(el,idx){
       if(el.type!=='porte'&&el.type!=='tiroir') return;
       if(_boM){ if(el.type==='porte'&&el.fixe){ var _bfM=_boutFacade(caissonGrp,_boM,CL,CH,CP,EP,el,matFacade); _bfM.userData.elemIdx=idx; caissonElemMeshes.push(_bfM); } return; }   // bout arrondi : seule la façade fixe épouse le bout
@@ -2449,6 +2450,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
     var elems=d.isTop?tvTopElems:d.record.elems, openSt=d.isTop?tvTopOpenState:d.record.openState;
     var meshArr=[];
     if(d.isTop) tvTopMeshes=meshArr; else d.record.meshes=meshArr;
+    _buildAppareilsEls(g,elems,W,H,CP,ep2);
 
     function xcm(v){ return -W/2+ep2+v/100; }
     function ycm(v){ return ep2+v/100; }
@@ -3165,7 +3167,8 @@ function _rebuildEditBar(){
   }
   if(_isAdminMode()){
     var _bt=btns.querySelector('[data-ctype="tiroir"]');
-    if(_bt) _bt.insertAdjacentHTML('afterend',cBtn('tiroir_enc',false,svgTiroir,'Tiroir encastré','Tiroir derrière une porte : on pose la porte par-dessus (équipe)'));
+    if(_bt) _bt.insertAdjacentHTML('afterend',cBtn('tiroir_enc',false,svgTiroir,'Tiroir encastré','Tiroir derrière une porte : on pose la porte par-dessus (équipe)')+cBtn('appareil',false,svgTiroir,'Appareil','Frigo, four… : remplit la zone entre étagères et intercalaires, on peut poser une porte par-dessus (équipe)'));
+    btns.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;display:flex;align-items:center;gap:6px;margin-top:4px;font-size:11px;color:var(--text2)">Appareil (équipe) : <select onchange="appareilKind=this.value" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font:600 12px DM Sans,sans-serif;color:var(--text)">'+Object.keys(APPAREILS).map(function(k){ return '<option value="'+k+'"'+(k===appareilKind?' selected':'')+'>'+APPAREILS[k].n+'</option>'; }).join('')+'</select></div>');
   }
   // Équipe : choix du nombre de portes posées d'un clic (auto = coupe en deux au-delà de 60 cm)
   if(_isAdminMode() && btns.querySelector('[data-ctype="porte"]')){
@@ -3394,6 +3397,7 @@ function updateCaissonGhost(e){
     var bay2=getBay(hit.x_cm,hit.y_cm);
     if(comp2.height_cm<1||bay2.width_cm<1){clearCaissonGhost();return;}
     occupied=!!getFacadeFor(comp2,bay2);
+    if(caissonType==='appareil'){ var _kg=mkKey(comp2,bay2); occupied=els.some(function(el){ return el.type==='appareil'&&el.key===_kg; }); }
     var w2=bay2.width_cm/100, h2=comp2.height_cm/100;
     gW=w2-0.003; gH=h2-0.003;
     gX=bay2.centerX; gY=comp2.centerY;
@@ -3548,6 +3552,12 @@ function placeOrRemoveCaisson(e, skipUndo){
     } else {
       setActiveEls(els);
     }
+  } else if(caissonType==='appareil'){
+    var compA=getCompartment(hit.y_cm,hit.x_cm), bayA=getBay(hit.x_cm,hit.y_cm);
+    if(compA.height_cm<1||bayA.width_cm<1) return true;
+    var kA=mkKey(compA,bayA), iA=els.findIndex(function(el){ return el.type==='appareil'&&el.key===kA; });
+    if(iA>=0) els.splice(iA,1); else els.push({type:'appareil',key:kA,kind:appareilKind});
+    setActiveEls(els);
   } else {
     // porte / tiroir
     var comp3=getCompartment(hit.y_cm,hit.x_cm);
@@ -3906,6 +3916,7 @@ function updateElementsList(){
       else if(el.type==='separator_simple'){ name='Sépar. 2nd'; sub='à '+Math.round(el.x_cm)+' cm'; }
       else if(el.type==='porte'){ name=el.fixe?'Façade fixe':'Porte'; sub=el.key?el.key.replace(/_/g,' '):''; }
       else if(el.type==='tiroir'){ name=el.enc?'Tiroir encastré':'Tiroir'; sub=el.key?el.key.replace(/_/g,' '):''; }
+      else if(el.type==='appareil'){ name=(APPAREILS[el.kind]||APPAREILS.autre).n; sub=el.key?el.key.replace(/_/g,' '):''; }
       else { name=el.type; }
       var hingeBtn='', hingeAlert='';
       if(el.type==='porte'&&!el.fixe){
@@ -4470,6 +4481,7 @@ function _removeBridgeRec(g){
   var b=g.bridge; tvSideLeft=tvSideLeft.filter(function(r){return r!==b;}); tvSideRight=tvSideRight.filter(function(r){return r!==b;}); g.bridge=null; activeCaisson=1;
 }
 // appareils (frigo, four…) logés dans un espace libre : réservés à l'équipe, ils prennent la largeur du vide, aucun prix
+var appareilKind='frigo';
 var APPAREILS={frigo:{n:'Frigo',h:185,p:65,y:0},congelateur:{n:'Congélateur',h:85,p:65,y:0},four:{n:'Four',h:60,p:56,y:90},micro_ondes:{n:'Micro-ondes',h:30,p:40,y:110},lave_vaisselle:{n:'Lave-vaisselle',h:82,p:60,y:0},lave_linge:{n:'Lave-linge',h:85,p:60,y:0},autre:{n:'Autre appareil',h:90,p:60,y:0}};
 function setGapApp(uid,type){
   if(!_isAdminMode()) return; var g=_gapByUid(uid); if(!g) return;
@@ -4496,20 +4508,36 @@ function _gapAppHtml(g,gf){
   }
   return h;
 }
-// volume d'un appareil dans son espace libre (repère visuel, jamais cliquable)
+// volume d'un appareil (repère visuel, jamais cliquable) : parent, type, centre x, bas, largeur, hauteur, profondeur, centre z du volume, plan de la façade
+var _appMats=null;
+function _appareilShape(parent,kind,cx,yb,W,H,P,zc,frontZ){
+  if(!_appMats) _appMats={inox:new THREE.MeshStandardMaterial({color:0xb9bec3,metalness:0.7,roughness:0.35}),noir:new THREE.MeshStandardMaterial({color:0x1d1f22,metalness:0.2,roughness:0.25})};
+  var add=function(w,h,d,x,y,z,mat){ var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); m.raycast=function(){}; m.userData.appareil=true; parent.add(m); };
+  add(W,H,P,cx,yb+H/2,zc,_appMats.inox);
+  if(kind==='four'||kind==='micro_ondes') add(W*0.76,H*0.5,0.008,cx,yb+H*0.45,frontZ,_appMats.noir);
+  else if(kind==='lave_vaisselle'||kind==='lave_linge') add(W*0.8,0.03,0.012,cx,yb+H-0.06,frontZ,_appMats.noir);
+  else add(0.025,Math.min(0.5,H*0.35),0.03,cx+W/2-0.05,yb+H*0.62,frontZ+0.01,_appMats.noir);
+}
 function _buildAppareils(CP,matFacade){
   tvGaps.forEach(function(g){
     var a=g.app; if(!a||!APPAREILS[a.type]) return;
     var gp=_layout(S.CL).gapPos[g.uid]; if(!gp) return;
-    var W=g.W/100, H=a.haut_cm/100, P=a.prof_cm/100, y0=((a.y_cm||0)-(S.baseYM||0))/100, zc=-CP/2+P/2;
-    var inox=new THREE.MeshStandardMaterial({color:0xb9bec3,metalness:0.7,roughness:0.35}), noir=new THREE.MeshStandardMaterial({color:0x1d1f22,metalness:0.2,roughness:0.25});
-    var add=function(w,h,d,x,y,z,mat){ var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); m.raycast=function(){}; m.userData.appareil=true; caissonGrp.add(m); };
-    add(W,H,P,gp.px,y0+H/2,zc,inox);
-    var fz=-CP/2+P+0.004;
-    if(a.porte){ add(Math.max(0.01,W-0.004),H,0.02,gp.px,y0+H/2,CP/2-0.01,matFacade||inox); return; }   // appareil encastré : une porte pleine par-dessus, au nu des caissons
-    if(a.type==='four'||a.type==='micro_ondes') add(W*0.76,H*0.5,0.008,gp.px,y0+H*0.45,fz,noir);
-    else if(a.type==='lave_vaisselle'||a.type==='lave_linge') { add(W*0.8,0.03,0.012,gp.px,y0+H-0.06,fz,noir); }
-    else add(0.025,Math.min(0.5,H*0.35),0.03,gp.px+W/2-0.05,y0+H*0.62,fz+0.01,noir);
+    var W=g.W/100, H=a.haut_cm/100, P=a.prof_cm/100, y0=((a.y_cm||0)-(S.baseYM||0))/100;
+    if(a.porte){
+      var m=new THREE.Mesh(new THREE.BoxGeometry(Math.max(0.01,W-0.004),H,0.02),matFacade||new THREE.MeshStandardMaterial({color:0xb9bec3})); m.position.set(gp.px,y0+H/2,CP/2-0.01); m.raycast=function(){}; m.userData.appareil=true; caissonGrp.add(m); return;   // appareil encastré : une porte pleine par-dessus, au nu des caissons
+    }
+    _appareilShape(caissonGrp,a.type,gp.px,y0,W,H,P,-CP/2+P/2,-CP/2+P+0.004);
+  });
+}
+// appareils posés dans un compartiment d'un caisson (clé bas_gauche_haut_droite, comme une porte) : ils prennent toute la place entre étagères et intercalaires
+function _buildAppareilsEls(g,elems,W,H,CP,ep){
+  (elems||[]).forEach(function(el){
+    if(el.type!=='appareil'||!el.key) return;
+    var a=APPAREILS[el.kind]||APPAREILS.autre, k=el.key.split('_').map(Number);
+    var xl=-W/2+ep+k[1]/100, xr=-W/2+ep+k[3]/100, yb=ep+k[0]/100, yt=ep+k[2]/100;
+    var w=xr-xl-0.004, h=yt-yb-0.004; if(w<=0.01||h<=0.01) return;
+    var P=Math.max(0.05,Math.min(a.p/100,CP-0.06));
+    _appareilShape(g,el.kind,(xl+xr)/2,yb+0.002,w,h,P,-CP/2+0.01+P/2,-CP/2+0.01+P+0.004);
   });
 }
 // insère un espace libre à droite d'une colonne ('M' ou uid du caisson)
