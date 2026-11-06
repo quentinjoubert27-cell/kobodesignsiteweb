@@ -226,12 +226,15 @@ def load_spec(path):
         if mx is None: continue
         ax = round((float(u.get("x_cm") or 0) - mx) * 10)
         if u.get("type") == "facade":   # façade fixée au mur : panneau plein de 20 mm
-            yb_ = round(float(u.get("y_cm") or 0) * 10); mu_.append(("facade", ax, ax + l_, yb_, yb_ + round(float(u.get("haut_cm") or 80) * 10), 20)); continue
-        if u.get("type") == "intercalaire": mu_.append(("intercalaire", ax - ep // 2, ax + ep // 2, round(float(u.get("y_cm") or 0) * 10), round(float(u.get("y_cm") or 0) * 10) + l_, pr_))
-        else: mu_.append(("etagere", ax, ax + l_, round(float(u.get("y_cm") or 0) * 10) - ep, round(float(u.get("y_cm") or 0) * 10), pr_))
+            yb_ = round(float(u.get("y_cm") or 0) * 10); mu_.append(("facade", ax, ax + l_, yb_, yb_ + round(float(u.get("haut_cm") or 80) * 10), 20, None)); continue
+        if u.get("type") == "intercalaire": mu_.append(("intercalaire", ax - ep // 2, ax + ep // 2, round(float(u.get("y_cm") or 0) * 10), round(float(u.get("y_cm") or 0) * 10) + l_, pr_, None))
+        else:
+            ar_ = u.get("arrondi") if u.get("arrondi") in ("gauche", "droit", "deux") else None   # coins avant arrondis de l'étagère
+            mu_.append(("etagere", ax, ax + l_, round(float(u.get("y_cm") or 0) * 10) - ep, round(float(u.get("y_cm") or 0) * 10), pr_,
+                        {"arrondi": ar_, "r": round(float(u.get("rayon_cm") or 0) * 10)} if ar_ else None))
     xmin = min([xmin] + [t[0] for t in tl] + [m[0] for m in murs] + [u[1] for u in mu_])
     xmax = max([xmax] + [t[1] for t in tl] + [u[2] for u in mu_])
-    cfg["_muraux"] = [(t, a - xmin, b_ - xmin, yb, yt, pr) for t, a, b_, yb, yt, pr in mu_]
+    cfg["_muraux"] = [(t, a - xmin, b_ - xmin, yb, yt, pr, ex) for t, a, b_, yb, yt, pr, ex in mu_]
     cfg["_tablettes"] = [(a - xmin, b - xmin, y_, d_) for a, b, y_, d_, _ in tl]
     cfg["_murs_tab"] = [(a - xmin, b - xmin) for a, b in murs]
     cfg["_caissons"] = [(x - xmin, sp) for x, sp in cais]

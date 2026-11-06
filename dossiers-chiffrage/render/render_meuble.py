@@ -740,8 +740,21 @@ def build_furniture(cfg, opt, open_state=False):
         o_ = add_box("mur_etagere", xl_ * mm, xr_ * mm, 0, (D + 60) * mm, 0, Hm_ * mm, mat_plain("mur_tab", (0.84, 0.82, 0.79), 0.95), "h", rnd)
         if o_: objs.append(o_)
     oyc[0] = 0
-    for _t, xl_, xr_, yb_, yt_, pr_ in cfg.get("_muraux", []):   # étagères / intercalaires fixés au mur, sans caisson (équipe)
+    for _t, xl_, xr_, yb_, yt_, pr_, ex_ in cfg.get("_muraux", []):   # étagères / intercalaires fixés au mur, sans caisson (équipe)
         pr_ = min(pr_, D)
+        if ex_ and ex_.get("arrondi"):   # étagère à coins avant arrondis : plaque extrudée sur son contour vu de dessus (x, profondeur)
+            r_ = min(ex_["r"] or pr_, pr_, (xr_ - xl_) / 2.0)
+            rl_ = r_ if ex_["arrondi"] in ("gauche", "deux") else 0.0
+            rr_ = r_ if ex_["arrondi"] in ("droit", "deux") else 0.0
+            yf_ = D - pr_   # bord avant (le mur est à y = D)
+            pts_ = [(xl_, D), (xr_, D)]
+            if rr_ > 0: pts_ += [(xr_ - rr_ + rr_ * math.cos(math.radians(a_)), yf_ + rr_ - rr_ * math.sin(math.radians(a_))) for a_ in range(0, 91, 6)]
+            else: pts_.append((xr_, yf_))
+            if rl_ > 0: pts_ += [(xl_ + rl_ + rl_ * math.cos(math.radians(a_)), yf_ + rl_ - rl_ * math.sin(math.radians(a_))) for a_ in range(90, 181, 6)]
+            else: pts_.append((xl_, yf_))
+            o_ = add_prism("mural", [(x * mm, y * mm, (max(0, yb_) + oyc[0]) * mm + z_off) for x, y in pts_], (0, 0, (yt_ - max(0, yb_)) * mm), wood, "h", rnd)
+            if o_: objs.append(o_)
+            continue
         box("mural", 0, xl_, xr_, max(0, yb_), yt_, D - pr_, D, "h" if _t == "etagere" else "v")   # collé au mur (le fond du caisson est à z = D)
     Wtot = max([ox + sp["overall_mm"]["width"] for ox, sp in cfg["_caissons"]] + ([hi[0] - lo[0]] if fp else []))
     x0t = min(ox for ox, _ in cfg["_caissons"])   # abscisse du meuble quand des étagères murales le décalent
