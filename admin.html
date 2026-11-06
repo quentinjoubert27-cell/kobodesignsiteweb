@@ -3512,6 +3512,21 @@
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(rcFromSdb(m), null, 2)], { type: 'application/json' })); a.download = nom + '.json'; a.click();
     showToast('JSON téléchargé : ' + nom + '.json');
   }
+  // renomme le meuble choisi (« Meuble 3 » → « Meuble salon », etc.) : le nom est gardé dans la configuration du meuble
+  async function renommerMeuble(i) {
+    var m = currentProjetMeubles[i]; if (!m) return;
+    var nv = prompt('Nom du meuble :', libelleMeuble(m, i)); if (nv === null) return;
+    nv = nv.trim();
+    var { data, error } = await sb.from('configs_sdb').select('raw_config').eq('id', m.id).maybeSingle();
+    if (error || !data) return showToast('Renommage impossible', 'err');
+    var rcDb = Object.assign({}, data.raw_config || {});
+    if (nv) rcDb.libelle = nv; else delete rcDb.libelle;
+    var up = await sb.from('configs_sdb').update({ raw_config: rcDb }).eq('id', m.id);
+    if (up.error) return showToast('Renommage impossible : ' + up.error.message, 'err');
+    var rc = rcFromSdb(m); if (nv) rc.libelle = nv; else delete rc.libelle;
+    renderProjetDevis(currentProjetId);
+    showToast('Meuble renommé');
+  }
   function choisirMeuble(i) { _meubleIdx[currentProjetId] = i; renderProjetDevis(currentProjetId); }
   function meubleBarHtml(projetId, idx) {
     var ms = currentProjetMeubles;
@@ -3528,6 +3543,7 @@
       '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' + ms.map(function (m, i) { return btn(i); }).join('') +
       '<button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur()">+ Ajouter un meuble</button><button class="btn btn-ghost btn-sm" onclick="importerModele()">⬆ Importer un modèle (JSON)</button></div>' +
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="modeliserDansConfigurateur(true,\'' + ms[idx].id + '\')">✏️ Modifier ce meuble</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="renommerMeuble(' + idx + ')">✎ Renommer ce meuble</button>' +
       '<button class="btn btn-ghost btn-sm" onclick="telechargerMeubleJson(' + idx + ')">⬇ Télécharger le JSON</button>' +
       '<button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="effacerModele(\'' + ms[idx].id + '\')">🗑 Effacer ce meuble</button></div></div>';
   }
