@@ -3093,7 +3093,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && activeCaisson===1){
       // Caisson central bas : étagère, intercalaire, tringle, porte, tiroir
@@ -3106,7 +3106,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && _isTVExtra()){
       // Caissons latéraux / dessus : étagère, intercalaire, tringle, porte, tiroir
@@ -3119,7 +3119,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else {
       btns.innerHTML=selectorHTML+
@@ -3130,7 +3130,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     }
     {
@@ -3162,7 +3162,7 @@ function _rebuildEditBar(){
       cBtn('separator_simple', false, svgSepSimple,  'Sépar. 2nd',    'Séparateur secondaire, non pris en compte par les portes')+
       cBtn('porte',            false, svgPorte,      'Porte',         'Remplit la zone définie par les tablettes + séparateurs')+
       (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-      (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)'):'')+
+      (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
       cBtn('tiroir',           false, svgTiroir,     'Tiroir',        'Remplit la zone définie par les tablettes + séparateurs');
   }
   if(_isAdminMode()){
@@ -4777,17 +4777,19 @@ function _tabExport(){
 // ── Éléments muraux libres (équipe) : étagères et intercalaires fixés au mur, sans caisson ni mur à côté ──
 // {type:'etagere', x_cm (bord gauche), y_cm (dessus), long_cm, prof_cm} · {type:'intercalaire', x_cm (centre), y_cm (bas), long_cm (hauteur), prof_cm} ; x en cm depuis le bord gauche de l'ensemble, y depuis le sol
 function _mrAll(){ return Array.isArray(S.muraux)?S.muraux:[]; }
-function _isMuralTool(){ return (caissonType==='mur_etagere'||caissonType==='mur_sep'||caissonType==='mur_facade')&&_isAdminMode(); }
-function _mrTypeOfTool(){ return caissonType==='mur_sep'?'intercalaire':(caissonType==='mur_facade'?'facade':'etagere'); }
+function _isMuralTool(){ return (caissonType==='mur_etagere'||caissonType==='mur_sep'||caissonType==='mur_facade'||caissonType==='mur_tete')&&_isAdminMode(); }
+function _mrTypeOfTool(){ return caissonType==='mur_sep'?'intercalaire':(caissonType==='mur_facade'?'facade':(caissonType==='mur_tete'?'tete':'etagere')); }
 function _hitFor(e){ if(_isMuralTool()) return _tabOutHit(e); return getCaissonHit(e)||_tabOutHit(e); }
-var _mrLast={etagere:60,intercalaire:40,facade:60};
+var _mrLast={etagere:60,intercalaire:40,facade:60,tete:160};
 function _mrMake(type,xabs,yabs){
   var len=_mrLast[type]||50, prof=Math.round(S.CairsonP*100);
+  if(type==='tete') return {type:type,x_cm:Math.round(xabs-len/2),y_cm:Math.max(0,Math.round(yabs-60)),long_cm:len,haut_cm:120,prof_cm:2,mat:null};   // tête de lit : panneau derrière le meuble
   if(type==='facade') return {type:type,x_cm:Math.round(xabs-len/2),y_cm:Math.max(0,Math.round(yabs-40)),long_cm:len,haut_cm:80,prof_cm:2};
   if(type==='intercalaire') return {type:type,x_cm:Math.round(xabs),y_cm:Math.max(0,Math.round(yabs-len/2)),long_cm:len,prof_cm:prof};
   return {type:type,x_cm:Math.round(xabs-len/2),y_cm:Math.max(5,Math.round(yabs)),long_cm:len,prof_cm:prof};
 }
 function _mrBox(m,ep){   // [largeur, hauteur, profondeur, xCentre(m depuis bord gauche), yCentre(m)] d'un élément mural
+  if(m.type==='tete'){ var lt=m.long_cm/100, ht=(m.haut_cm||120)/100, et=Math.max(0.01,Math.min(0.1,m.prof_cm/100)); return [lt,ht,et,m.x_cm/100+lt/2,m.y_cm/100+ht/2]; }   // panneau mural d'épaisseur réglable
   var l=m.long_cm/100, d=Math.max(0.05,Math.min(1.5,m.prof_cm/100));
   if(m.type==='facade'){ var hf=(m.haut_cm||80)/100; return [l,hf,0.020,m.x_cm/100+l/2,m.y_cm/100+hf/2]; }   // panneau plein de 20 mm collé au mur
   if(m.type==='intercalaire') return [ep,l,d,m.x_cm/100,m.y_cm/100+l/2];
@@ -4807,11 +4809,31 @@ function _mrShelfPts(l,d,rl,rr){
   if(rl>0){ for(a=0;a<=n;a++){ var t2=Math.PI/2+Math.PI/2*a/n; pts.push([-l/2+rl+rl*Math.cos(t2), z0-rl+rl*Math.sin(t2)]); } pts.push([-l/2,z0-rl]); } else pts.push([-l/2,z0]);
   return pts;
 }
+var _teteLoading={};
+function _teteMat(t,w,h){   // matériau propre à la tête de lit (sinon : celui du meuble)
+  var i=(t.mat!=null&&MATS_CAIS[t.mat])?t.mat:S.matCais, md=MATS_CAIS[i], tex=_caisTexCache[i];
+  if(!tex&&md.src&&!_teteLoading[i]){
+    _teteLoading[i]=true;
+    new THREE.TextureLoader().load(md.src,function(tx){
+      tx.wrapS=tx.wrapT=THREE.RepeatWrapping;
+      try{tx.colorSpace=THREE.SRGBColorSpace;}catch(e){tx.encoding=THREE.sRGBEncoding;}
+      _caisTexCache[i]=tx; buildCaisson();
+    });
+  }
+  if(tex){
+    var tc=tex.clone(); tc.needsUpdate=true;
+    if(md.panel){ tc.wrapS=tc.wrapT=THREE.ClampToEdgeWrapping; tc.repeat.set(1,1); } else tc.repeat.set(Math.max(w,0.01)/0.40,Math.max(h,0.01)/0.40);
+    return new THREE.MeshStandardMaterial({map:tc,roughness:md.r,metalness:0.02});
+  }
+  return new THREE.MeshStandardMaterial({color:new THREE.Color(md.color||'#D4A96A'),roughness:md.r,metalness:0.02});
+}
+function _mrZ(t,b,CP){ return t.type==='tete'?(-CP/2-b[2]/2):(-CP/2+b[2]/2); }   // la tête de lit est derrière le meuble, contre le mur
 function _buildMuraux(matElem,CP,ep){
   var T=_mrAll(); if(!T.length||currentFT==='sdb'||!_isAdminMode()) return;
   var ly=_layout(S.CL), eL=-(ly.leftW+S.CL/2);
   T.forEach(function(t){
     var b=_mrBox(t,ep), ar=_mrArrondi(t), m;
+    if(t.type==='tete'){ m=new THREE.Mesh(new THREE.BoxGeometry(b[0],b[1],b[2]),_teteMat(t,b[0],b[1])); m.position.set(eL+b[3],b[4],_mrZ(t,b,CP)); m.raycast=function(){}; m.userData.mural=true; caissonGrp.add(m); return; }
     if(ar){   // étagère à coins avant arrondis : plaque extrudée sur son contour vu de dessus
       var pts=_mrShelfPts(b[0],b[2],ar.rl,ar.rr);
       var geo=new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(function(p){ return new THREE.Vector2(p[0],-p[1]); })),{depth:ep,bevelEnabled:false});
@@ -4830,11 +4852,12 @@ function _mrGhost(hit){
   }
   if(!hit||!hit.mural){ g.visible=false; _hideDragLabel(); return; }
   var ly=_layout(S.CL), eL=-(ly.leftW+S.CL/2), t=_mrMake(_mrTypeOfTool(),hit.xabs,hit.yabs), b=_mrBox(t,ep);
-  g.scale.set(b[0],b[1],b[2]); g.position.set(eL+b[3],b[4],-CP/2+b[2]/2); g.visible=true; _hideDragLabel();
+  g.scale.set(b[0],b[1],b[2]); g.position.set(eL+b[3],b[4],_mrZ(t,b,CP)); g.visible=true; _hideDragLabel();
 }
-function _mrExport(){ return _mrAll().map(function(t){ var o={type:t.type,x_cm:t.x_cm,y_cm:t.y_cm,long_cm:t.long_cm,prof_cm:t.prof_cm}; if(t.type==='facade') o.haut_cm=t.haut_cm||80; if(t.type==='etagere'&&t.arrondi&&t.arrondi!=='aucun'){ o.arrondi=t.arrondi; o.rayon_cm=t.rayon_cm||0; } return o; }); }
+function _mrExport(){ return _mrAll().map(function(t){ var o={type:t.type,x_cm:t.x_cm,y_cm:t.y_cm,long_cm:t.long_cm,prof_cm:t.prof_cm}; if(t.type==='facade') o.haut_cm=t.haut_cm||80; if(t.type==='tete'){ o.haut_cm=t.haut_cm||120; var _ti=(t.mat!=null&&MATS_CAIS[t.mat])?t.mat:S.matCais; o.mat=t.mat!=null?t.mat:undefined; o.mat_nom=MATS_CAIS[_ti].n; } if(t.type==='etagere'&&t.arrondi&&t.arrondi!=='aucun'){ o.arrondi=t.arrondi; o.rayon_cm=t.rayon_cm||0; } return o; }); }
 function setMural(i,k,v){
   var t=_mrAll()[i]; if(!t||!_isAdminMode()) return;
+  if(k==='mat'){ t.mat=(v===''||v==null)?null:(MATS_CAIS[+v]?+v:null); _tabRefresh(); return; }
   if(k==='arrondi'){ t.arrondi=(v==='gauche'||v==='droit'||v==='deux')?v:undefined; if(t.arrondi&&!(t.rayon_cm>0)) t.rayon_cm=Math.max(2,Math.round(Math.min(t.prof_cm,t.long_cm/2))); _tabRefresh(); return; }
   v=parseFloat(v); if(!isFinite(v)) return;
   if(k==='rayon_cm') v=Math.round(Math.max(1,Math.min(120,v)));
@@ -4842,7 +4865,7 @@ function setMural(i,k,v){
   else if(k==='y_cm') v=Math.round(Math.max(0,Math.min(400,v)));
   else if(k==='long_cm'){ v=Math.round(Math.max(5,Math.min(400,v))); _mrLast[t.type]=v; }
   else if(k==='haut_cm') v=Math.round(Math.max(5,Math.min(400,v)));
-  else if(k==='prof_cm') v=Math.round(Math.max(5,Math.min(120,v)));
+  else if(k==='prof_cm') v=(t.type==='tete')?Math.round(Math.max(1,Math.min(10,v))*2)/2:Math.round(Math.max(5,Math.min(120,v)));
   t[k]=v; _tabRefresh();
 }
 function delMural(i){ if(!_isAdminMode()) return; var a=_mrAll().slice(); a.splice(i,1); S.muraux=a; _tabRefresh(); }
@@ -4857,20 +4880,28 @@ function _mrArrondiHtml(t,i,inp){
     +(a!=='aucun'?inp(i,'rayon_cm',t.rayon_cm||Math.round(Math.min(t.prof_cm,t.long_cm/2)),'Rayon (max : profondeur, ou la moitié de la longueur)')
       +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Le prix de l\'arrondi (découpe et chant courbe) n\'est pas pris en compte : à ajouter dans les compléments atelier.</div>':'');
 }
+function _teteMatHtml(t,i){
+  var o=function(v,l,sel){ return '<option value="'+v+'"'+(sel?' selected':'')+'>'+l+'</option>'; };
+  var opts=o('','Comme le meuble ('+MATS_CAIS[S.matCais].n+')',t.mat==null)+MATS_CAIS.map(function(m,j){ return o(j,m.n,t.mat===j); }).join('');
+  var m2=(t.long_cm/100)*((t.haut_cm||120)/100);
+  return '<div class="dim-row"><span class="dim-lbl">Matériau</span><select onchange="setMural('+i+',\'mat\',this.value)" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font:600 12px DM Sans,sans-serif;color:var(--text)">'+opts+'</select></div>'
+    +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Surface : '+m2.toFixed(2).replace('.',',')+' m². La tête de lit n\'est pas chiffrée automatiquement : à ajouter dans les compléments atelier.</div>';
+}
 function _muralHtml(){
   if(!_isAdminMode()||currentFT==='sdb') return '';
   var inp=function(i,k,v,lbl){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" value="'+v+'" onchange="setMural('+i+',\''+k+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
   var h='<div class="sec" style="margin-top:18px">Éléments au mur, sans caisson <span style="font-weight:400;color:var(--accent)">(équipe)</span></div>'
-    +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Choisissez « Étagère murale », « Intercalaire mural » ou « Façade murale », puis cliquez sur le mur où vous voulez le poser. Toutes les dimensions se règlent ici.</div>';
+    +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Choisissez « Étagère murale », « Intercalaire mural », « Façade murale » ou « Tête de lit » (panneau derrière le meuble), puis cliquez sur le mur où vous voulez le poser. Toutes les dimensions se règlent ici.</div>';
   _mrAll().forEach(function(t,i){
-    var sep=t.type==='intercalaire', fac=t.type==='facade';
-    h+='<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">'+(fac?'Façade murale ':(sep?'Intercalaire mural ':'Étagère murale '))+(i+1)+'</span>'
+    var sep=t.type==='intercalaire', fac=t.type==='facade', tet=t.type==='tete';
+    h+='<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">'+(tet?'Tête de lit ':(fac?'Façade murale ':(sep?'Intercalaire mural ':'Étagère murale ')))+(i+1)+'</span>'
       +'<button onclick="delMural('+i+')" title="Retirer" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button></div>'
-      +inp(i,'x_cm',t.x_cm,sep?'Position (centre, depuis la gauche)':'Position (bord gauche)')+inp(i,'y_cm',t.y_cm,(sep||fac)?'Hauteur du bas':'Hauteur (dessus)')
-      +(fac?inp(i,'long_cm',t.long_cm,'Largeur')+inp(i,'haut_cm',t.haut_cm||80,'Hauteur'):inp(i,'long_cm',t.long_cm,sep?'Hauteur de l\'intercalaire':'Longueur')+inp(i,'prof_cm',t.prof_cm,'Profondeur'))
-      +((!sep&&!fac)?_mrArrondiHtml(t,i,inp):'')+'</div>';
+      +inp(i,'x_cm',t.x_cm,sep?'Position (centre, depuis la gauche)':'Position (bord gauche)')+inp(i,'y_cm',t.y_cm,(sep||fac||tet)?'Hauteur du bas':'Hauteur (dessus)')
+      +(tet?inp(i,'long_cm',t.long_cm,'Largeur')+inp(i,'haut_cm',t.haut_cm||120,'Hauteur')+inp(i,'prof_cm',t.prof_cm,'Épaisseur')+_teteMatHtml(t,i)
+      :fac?inp(i,'long_cm',t.long_cm,'Largeur')+inp(i,'haut_cm',t.haut_cm||80,'Hauteur'):inp(i,'long_cm',t.long_cm,sep?'Hauteur de l\'intercalaire':'Longueur')+inp(i,'prof_cm',t.prof_cm,'Profondeur'))
+      +((!sep&&!fac&&!tet)?_mrArrondiHtml(t,i,inp):'')+'</div>';
   });
-  h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="reset-btn" style="flex:1" onclick="addMural(\'etagere\')">+ Étagère</button><button class="reset-btn" style="flex:1" onclick="addMural(\'intercalaire\')">+ Intercalaire</button><button class="reset-btn" style="flex:1" onclick="addMural(\'facade\')">+ Façade</button></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="reset-btn" style="flex:1" onclick="addMural(\'etagere\')">+ Étagère</button><button class="reset-btn" style="flex:1" onclick="addMural(\'intercalaire\')">+ Intercalaire</button><button class="reset-btn" style="flex:1" onclick="addMural(\'facade\')">+ Façade</button><button class="reset-btn" style="flex:1" onclick="addMural(\'tete\')">+ Tête de lit</button></div>';
   return h;
 }
 function _tabRefresh(){ renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts(); }
@@ -6927,7 +6958,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade')?t.type:'etagere',x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.type!=='intercalaire'&&t.type!=='facade'&&(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux'))?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
+    S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade'||t.type==='tete')?t.type:'etagere',mat:(t.type==='tete'&&t.mat!=null&&MATS_CAIS[+t.mat])?+t.mat:null,x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.type!=='intercalaire'&&t.type!=='facade'&&t.type!=='tete'&&(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux'))?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){

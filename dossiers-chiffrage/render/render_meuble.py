@@ -752,6 +752,14 @@ def build_furniture(cfg, opt, open_state=False):
         if o_: objs.append(o_)
     oyc[0] = 0
     for _t, xl_, xr_, yb_, yt_, pr_, ex_ in cfg.get("_muraux", []):   # étagères / intercalaires fixés au mur, sans caisson (équipe)
+        if _t == "tete":   # tête de lit : panneau derrière le meuble, entre le meuble et le mur (le mur est reculé d'autant), matériau propre
+            k_ = ((ex_ or {}).get("mat") or "").strip().lower(); tex_ = DECORS.get(k_)
+            if tex_: mt_ = mat_wood("tete_de_lit", os.path.join(REPO, tex_))
+            elif k_ in FLAT_COLORS: mt_ = mat_wood("tete_de_lit", None, FLAT_COLORS[k_], 0.6)
+            else: mt_ = wood
+            o_ = add_box("tete_de_lit", xl_ * mm, xr_ * mm, D * mm, (D + pr_) * mm, max(0, yb_) * mm, yt_ * mm, mt_, "h", rnd)
+            if o_: objs.append(o_)
+            continue
         pr_ = min(pr_, D)
         if _t == "appareil":   # frigo, four… : volume inox posé au sol (hauteur du sol = yb_), plaqué au mur
             k_ = (ex_ or {}).get("kind"); hh_ = yt_ - yb_; ww_ = xr_ - xl_
@@ -821,7 +829,8 @@ def build_furniture(cfg, opt, open_state=False):
         objs.append(add_box("plateau", (x0t - 12) * mm, (Wtot + 12) * mm, -15 * mm, D * mm, top_h, top_h + pt * mm, wood, "h", rnd))
         top_h += pt * mm
     # le plan et la vasque ne sont pas dessinés avec le meuble : ils ont leurs propres images (render_parts)
-    return objs, dict(W=max([Wtot] + [xr for _, xr in cfg.get("_murs_tab", [])] + [u_[2] for u_ in cfg.get("_muraux", [])]) * mm, H=top_h, D=D * mm, plinth=plinth, caissons=cfg["_caissons"])
+    ep_tete = max([u_[5] for u_ in cfg.get("_muraux", []) if u_[0] == "tete"] + [0])   # le mur recule de l'épaisseur de la plus épaisse tête de lit
+    return objs, dict(W=max([Wtot] + [xr for _, xr in cfg.get("_murs_tab", [])] + [u_[2] for u_ in cfg.get("_muraux", [])]) * mm, H=max([top_h] + [u_[4] * mm for u_ in cfg.get("_muraux", []) if u_[0] == "tete"]), D=D * mm, Dw=(D + ep_tete) * mm, plinth=plinth, caissons=cfg["_caissons"])
 
 
 # ───────────────────────────── pièce, lumière, caméra ─────────────────────────────
@@ -938,10 +947,11 @@ def render_demande(opt, cfg, out):
     scene = reset_scene()
     objs, info = build_furniture(cfg, opt)
     W, H, D = info["W"], info["H"], info["D"]
+    Dw = info.get("Dw", D)
     wall = mat_plain("mur", (0.66, 0.60, 0.59), 0.95)
     floor = mat_plain("sol", (0.74, 0.72, 0.69), 0.85)
-    add_plane("mur", (-30, D, -1), (30, D, -1), (30, D, 12), (-30, D, 12), wall)
-    add_plane("sol", (-30, -40, 0), (30, -40, 0), (30, D, 0), (-30, D, 0), floor)
+    add_plane("mur", (-30, Dw, -1), (30, Dw, -1), (30, Dw, 12), (-30, Dw, 12), wall)
+    add_plane("sol", (-30, -40, 0), (30, -40, 0), (30, Dw, 0), (-30, Dw, 0), floor)
     setup_world(scene, (0.92, 0.88, 0.88), 0.30)
     add_area_light((W + 3.2, -3.6, H * 0.9 + 1.0), (W / 2, D, H * 0.4), 6.0, 520)
     cam = make_camera(scene, (0, 0, 0), (0, 0, 0), lens=45)
@@ -959,13 +969,14 @@ def render_ambiance(opt, cfg, out):
     scene = reset_scene()
     objs, info = build_furniture(cfg, opt)
     W, H, D = info["W"], info["H"], info["D"]
+    Dw = info.get("Dw", D)
     white = mat_plain("mur_blanc", (0.92, 0.92, 0.91), 0.95)
     lilas = mat_plain("mur_gris", (0.42, 0.42, 0.52), 0.95)
     ceil_z = max(2.75, H + 0.45)
-    add_plane("mur_fond", (-4, D, -0.01), (W + 12, D, -0.01), (W + 12, D, ceil_z), (-4, D, ceil_z), white)
-    add_plane("mur_gauche", (0, -14, -0.01), (0, D, -0.01), (0, D, ceil_z), (0, -14, ceil_z), lilas)
-    add_plane("sol", (-4, -14, 0), (W + 12, -14, 0), (W + 12, D, 0), (-4, D, 0), mat_parquet("parquet"))
-    add_plane("plafond", (-4, -14, ceil_z), (W + 12, -14, ceil_z), (W + 12, D, ceil_z), (-4, D, ceil_z), white)
+    add_plane("mur_fond", (-4, Dw, -0.01), (W + 12, Dw, -0.01), (W + 12, Dw, ceil_z), (-4, Dw, ceil_z), white)
+    add_plane("mur_gauche", (0, -14, -0.01), (0, Dw, -0.01), (0, Dw, ceil_z), (0, -14, ceil_z), lilas)
+    add_plane("sol", (-4, -14, 0), (W + 12, -14, 0), (W + 12, Dw, 0), (-4, Dw, 0), mat_parquet("parquet"))
+    add_plane("plafond", (-4, -14, ceil_z), (W + 12, -14, ceil_z), (W + 12, Dw, ceil_z), (-4, Dw, ceil_z), white)
     setup_world(scene, (0.9, 0.92, 0.95), 0.30)
     add_area_light((W + 3.0, -2.8, 2.3), (W / 2, D, H * 0.4), 5.0, 300)
     cam = make_camera(scene, (0, 0, 0), (0, 0, 0), lens=38)
@@ -1107,11 +1118,12 @@ def render_pair(opt, cfg, out):
     scene = reset_scene()
     objs, info = build_furniture(cfg, opt, open_state=False)
     W, H, D = info["W"], info["H"], info["D"]
+    Dw = info.get("Dw", D)
     verifier(cfg, objs, out)
     wall = mat_plain("mur", (0.66, 0.60, 0.59), 0.95)
     floor = mat_plain("sol", (0.74, 0.72, 0.69), 0.85)
-    add_plane("mur", (-30, D, -1), (30, D, -1), (30, D, 12), (-30, D, 12), wall)
-    add_plane("sol", (-30, -40, 0), (30, -40, 0), (30, D, 0), (-30, D, 0), floor)
+    add_plane("mur", (-30, Dw, -1), (30, Dw, -1), (30, Dw, 12), (-30, Dw, 12), wall)
+    add_plane("sol", (-30, -40, 0), (30, -40, 0), (30, Dw, 0), (-30, Dw, 0), floor)
     setup_world(scene, (0.92, 0.88, 0.88), 0.35)
     add_area_light((W + 3.2, -3.8, H * 0.9 + 1.0), (W / 2, D, H * 0.4), 6.0, 560)
     add_area_light((-W * 0.4 - 1.5, -3.0, H * 0.8 + 0.6), (W / 2, 0, H * 0.4), 5.0, 220)   # contre-jour doux : éclaire l'intérieur

@@ -228,6 +228,8 @@ def load_spec(path):
         if l_ <= 0: continue
         if mx is None: continue
         ax = round((float(u.get("x_cm") or 0) - mx) * 10)
+        if u.get("type") == "tete":   # tête de lit : panneau derrière le meuble (contre le mur), matériau propre
+            yb_ = round(float(u.get("y_cm") or 0) * 10); mu_.append(("tete", ax, ax + l_, yb_, yb_ + round(float(u.get("haut_cm") or 120) * 10), max(5, round(float(u.get("prof_cm") or 2) * 10)), {"mat": u.get("mat_nom")})); continue
         if u.get("type") == "facade":   # façade fixée au mur : panneau plein de 20 mm
             yb_ = round(float(u.get("y_cm") or 0) * 10); mu_.append(("facade", ax, ax + l_, yb_, yb_ + round(float(u.get("haut_cm") or 80) * 10), 20, None)); continue
         if u.get("type") == "intercalaire": mu_.append(("intercalaire", ax - ep // 2, ax + ep // 2, round(float(u.get("y_cm") or 0) * 10), round(float(u.get("y_cm") or 0) * 10) + l_, pr_, None))
