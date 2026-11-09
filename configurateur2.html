@@ -3093,7 +3093,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Panneau','Panneau au mur derrière le meuble (tête de lit, fond…), matériau au choix (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && activeCaisson===1){
       // Caisson central bas : étagère, intercalaire, tringle, porte, tiroir
@@ -3106,7 +3106,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Panneau','Panneau au mur derrière le meuble (tête de lit, fond…), matériau au choix (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else if(isTV && _isTVExtra()){
       // Caissons latéraux / dessus : étagère, intercalaire, tringle, porte, tiroir
@@ -3119,7 +3119,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Panneau','Panneau au mur derrière le meuble (tête de lit, fond…), matériau au choix (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     } else {
       btns.innerHTML=selectorHTML+
@@ -3130,7 +3130,7 @@ function _rebuildEditBar(){
         cBtn('separator_simple', false, svgSepSimple,  'Intercal. 2nd','Intercalaire secondaire, non pris en compte par les portes')+
         cBtn('porte',            false, svgPorte,      'Porte',        'Remplit la zone définie par les étagères + intercalaires')+
         (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
+        (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Panneau','Panneau au mur derrière le meuble (tête de lit, fond…), matériau au choix (équipe)'):'')+
         cBtn('tiroir',           false, svgTiroir,     'Tiroir',       'Remplit la zone définie par les étagères + intercalaires');
     }
     {
@@ -3162,7 +3162,7 @@ function _rebuildEditBar(){
       cBtn('separator_simple', false, svgSepSimple,  'Sépar. 2nd',    'Séparateur secondaire, non pris en compte par les portes')+
       cBtn('porte',            false, svgPorte,      'Porte',         'Remplit la zone définie par les tablettes + séparateurs')+
       (_isAdminMode()?cBtn('facade',false,svgPorte,'Façade fixe','Panneau plein sans charnières, compté comme une porte (équipe)'):'')+
-      (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Tête de lit','Panneau mural derrière le meuble, matériau au choix (équipe)'):'')+
+      (_isAdminMode()?cBtn('mur_etagere',false,svgShelf,'Étagère murale','Posée au mur, sans caisson (équipe)')+cBtn('mur_sep',false,svgSep,'Intercalaire mural','Posé au mur, sans caisson (équipe)')+cBtn('mur_facade',false,svgPorte,'Façade murale','Panneau plein fixé au mur, compté comme une porte (équipe)')+cBtn('mur_tete',false,svgPorte,'Panneau','Panneau au mur derrière le meuble (tête de lit, fond…), matériau au choix (équipe)'):'')+
       cBtn('tiroir',           false, svgTiroir,     'Tiroir',        'Remplit la zone définie par les tablettes + séparateurs');
   }
   if(_isAdminMode()){
@@ -4885,23 +4885,23 @@ function _teteMatHtml(t,i){
   var opts=o('','Comme le meuble ('+MATS_CAIS[S.matCais].n+')',t.mat==null)+MATS_CAIS.map(function(m,j){ return o(j,m.n,t.mat===j); }).join('');
   var m2=(t.long_cm/100)*((t.haut_cm||120)/100);
   return '<div class="dim-row"><span class="dim-lbl">Matériau</span><select onchange="setMural('+i+',\'mat\',this.value)" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font:600 12px DM Sans,sans-serif;color:var(--text)">'+opts+'</select></div>'
-    +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Surface : '+m2.toFixed(2).replace('.',',')+' m². La tête de lit n\'est pas chiffrée automatiquement : à ajouter dans les compléments atelier.</div>';
+    +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Surface : '+m2.toFixed(2).replace('.',',')+' m². Le panneau n\'est pas chiffré automatiquement : à ajouter dans les compléments atelier.</div>';
 }
 function _muralHtml(){
   if(!_isAdminMode()||currentFT==='sdb') return '';
   var inp=function(i,k,v,lbl){ return '<div class="dim-row"><span class="dim-lbl">'+lbl+'</span><div class="dim-ctrl"><input class="dim-inp" type="number" value="'+v+'" onchange="setMural('+i+',\''+k+'\',this.value)"><span class="dim-unit">cm</span></div></div>'; };
   var h='<div class="sec" style="margin-top:18px">Éléments au mur, sans caisson <span style="font-weight:400;color:var(--accent)">(équipe)</span></div>'
-    +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Choisissez « Étagère murale », « Intercalaire mural », « Façade murale » ou « Tête de lit » (panneau derrière le meuble), puis cliquez sur le mur où vous voulez le poser. Toutes les dimensions se règlent ici.</div>';
+    +'<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Choisissez « Étagère murale », « Intercalaire mural », « Façade murale » ou « Panneau » (derrière le meuble, ex. tête de lit), puis cliquez sur le mur où vous voulez le poser. Toutes les dimensions se règlent ici.</div>';
   _mrAll().forEach(function(t,i){
     var sep=t.type==='intercalaire', fac=t.type==='facade', tet=t.type==='tete';
-    h+='<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">'+(tet?'Tête de lit ':(fac?'Façade murale ':(sep?'Intercalaire mural ':'Étagère murale ')))+(i+1)+'</span>'
+    h+='<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;font-weight:700;color:var(--text2)">'+(tet?'Panneau ':(fac?'Façade murale ':(sep?'Intercalaire mural ':'Étagère murale ')))+(i+1)+'</span>'
       +'<button onclick="delMural('+i+')" title="Retirer" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button></div>'
       +inp(i,'x_cm',t.x_cm,sep?'Position (centre, depuis la gauche)':'Position (bord gauche)')+inp(i,'y_cm',t.y_cm,(sep||fac||tet)?'Hauteur du bas':'Hauteur (dessus)')
       +(tet?inp(i,'long_cm',t.long_cm,'Largeur')+inp(i,'haut_cm',t.haut_cm||120,'Hauteur')+inp(i,'prof_cm',t.prof_cm,'Épaisseur')+_teteMatHtml(t,i)
       :fac?inp(i,'long_cm',t.long_cm,'Largeur')+inp(i,'haut_cm',t.haut_cm||80,'Hauteur'):inp(i,'long_cm',t.long_cm,sep?'Hauteur de l\'intercalaire':'Longueur')+inp(i,'prof_cm',t.prof_cm,'Profondeur'))
       +((!sep&&!fac&&!tet)?_mrArrondiHtml(t,i,inp):'')+'</div>';
   });
-  h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="reset-btn" style="flex:1" onclick="addMural(\'etagere\')">+ Étagère</button><button class="reset-btn" style="flex:1" onclick="addMural(\'intercalaire\')">+ Intercalaire</button><button class="reset-btn" style="flex:1" onclick="addMural(\'facade\')">+ Façade</button><button class="reset-btn" style="flex:1" onclick="addMural(\'tete\')">+ Tête de lit</button></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="reset-btn" style="flex:1" onclick="addMural(\'etagere\')">+ Étagère</button><button class="reset-btn" style="flex:1" onclick="addMural(\'intercalaire\')">+ Intercalaire</button><button class="reset-btn" style="flex:1" onclick="addMural(\'facade\')">+ Façade</button><button class="reset-btn" style="flex:1" onclick="addMural(\'tete\')">+ Panneau</button></div>';
   return h;
 }
 function _tabRefresh(){ renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts(); }
