@@ -1877,6 +1877,9 @@ function _boutPts(bo,W,CP,xo){
   var xE=cx+r*Math.cos(th), zE=Cz+r*Math.sin(th);
   if(th<Math.PI/2-1e-3){ var len=(zf-zE)/Math.cos(th); pts.push([xE-len*Math.sin(th), zf]); }
   pts.push([X,zf]);
+  // pièce plus étroite que le coin arrondi : on coupe le contour au bord non arrondi (sinon l'arc dépasse de la cloison)
+  var cl=[]; pts.forEach(function(a,i){ var b=pts[(i+1)%pts.length], ia=a[0]>=X-1e-9, ib=b[0]>=X-1e-9; if(ia) cl.push(a); if(ia!==ib){ var t=(X-a[0])/(b[0]-a[0]); cl.push([X,a[1]+t*(b[1]-a[1])]); } });
+  pts=cl;
   return pts.map(function(p){ return [s*p[0],p[1]]; });
 }
 function _boutPlate(bo,W,CP,xo,y0,th,mat){

@@ -417,7 +417,12 @@ def bout_plan(W, D, bo, x0, y_back, inset=0.0):
     side = bo["side"]
     xr = x0 if side > 0 else W - x0                    # on construit côté droit, puis on retourne pour un bout à gauche
     pts = [(xr, y_back), (W - inset, y_back), (W - inset, bo["r"])] + bout_front_path(W, bo["r"], bo["deg"], inset, inset=inset)[1:] + [(xr, inset)]
-    return [(x if side > 0 else W - x, y) for x, y in pts]
+    cl = []   # pièce plus étroite que le coin arrondi : on coupe le contour au bord non arrondi (sinon l'arc dépasse de la cloison)
+    for i_, a_ in enumerate(pts):
+        b_ = pts[(i_ + 1) % len(pts)]; ia_ = a_[0] >= xr - 1e-6; ib_ = b_[0] >= xr - 1e-6
+        if ia_: cl.append(a_)
+        if ia_ != ib_: t_ = (xr - a_[0]) / (b_[0] - a_[0]); cl.append((xr, a_[1] + t_ * (b_[1] - a_[1])))
+    return [(x if side > 0 else W - x, y) for x, y in cl]
 
 
 def build_furniture(cfg, opt, open_state=False):
