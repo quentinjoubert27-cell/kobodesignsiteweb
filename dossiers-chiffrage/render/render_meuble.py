@@ -430,6 +430,7 @@ def build_furniture(cfg, opt, open_state=False):
     if fseules and "plinthe" not in (cfg.get("rendu") or {}) and not opt.get("_plinthe_explicite"): plinth = 0   # formes libres : pas de plinthe sauf demande
     susp = float((cfg.get("meuble") or {}).get("suspendu_cm") or 0) * 10   # équipe : meuble décollé du sol, sans plinthe
     if susp > 0: plinth = susp
+    if cfg.get("_panneau_seul"): plinth = 0
     z_off = plinth * mm
     name = decor_name(cfg, opt)
     key = name.strip().lower()
@@ -751,6 +752,7 @@ def build_furniture(cfg, opt, open_state=False):
         o_ = add_box("mur_etagere", xl_ * mm, xr_ * mm, 0, (D + 60) * mm, 0, Hm_ * mm, mat_plain("mur_tab", (0.84, 0.82, 0.79), 0.95), "h", rnd)
         if o_: objs.append(o_)
     oyc[0] = 0
+    n_cais = len(objs)
     for _t, xl_, xr_, yb_, yt_, pr_, ex_ in cfg.get("_muraux", []):   # étagères / intercalaires fixés au mur, sans caisson (équipe)
         if _t == "tete":   # tête de lit : panneau derrière le meuble, entre le meuble et le mur (le mur est reculé d'autant), matériau propre
             k_ = ((ex_ or {}).get("mat") or "").strip().lower(); tex_ = DECORS.get(k_)
@@ -829,6 +831,11 @@ def build_furniture(cfg, opt, open_state=False):
         objs.append(add_box("plateau", (x0t - 12) * mm, (Wtot + 12) * mm, -15 * mm, D * mm, top_h, top_h + pt * mm, wood, "h", rnd))
         top_h += pt * mm
     # le plan et la vasque ne sont pas dessinés avec le meuble : ils ont leurs propres images (render_parts)
+    if cfg.get("_panneau_seul"):   # panneau seul : on retire le meuble, il ne reste que les éléments muraux
+        for o_ in objs[:n_cais]:
+            if o_ is not None: bpy.data.objects.remove(o_, do_unlink=True)
+        objs = objs[n_cais:]
+        Wtot = max(u_[2] for u_ in cfg.get("_muraux", [])); top_h = max(u_[4] for u_ in cfg.get("_muraux", [])) * mm
     ep_tete = max([u_[5] for u_ in cfg.get("_muraux", []) if u_[0] == "tete"] + [0])   # le mur recule de l'épaisseur de la plus épaisse tête de lit
     return objs, dict(W=max([Wtot] + [xr for _, xr in cfg.get("_murs_tab", [])] + [u_[2] for u_ in cfg.get("_muraux", [])]) * mm, H=max([top_h] + [u_[4] * mm for u_ in cfg.get("_muraux", []) if u_[0] == "tete"]), D=D * mm, Dw=(D + ep_tete) * mm, plinth=plinth, caissons=cfg["_caissons"])
 

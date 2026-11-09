@@ -244,6 +244,7 @@ def load_spec(path):
         mu_.append(("appareil", ax, ax + round(float(e.get("L_cm") or ap.get("L_cm") or 0) * 10), yb_, yb_ + round(float(ap.get("H_cm") or 0) * 10), round(float(ap.get("P_cm") or D / 10) * 10), {"kind": ap.get("type"), "porte": bool(ap.get("porte"))}))
     xmin = min([xmin] + [t[0] for t in tl] + [m[0] for m in murs] + [u[1] for u in mu_])
     xmax = max([xmax] + [t[1] for t in tl] + [u[2] for u in mu_])
+    cfg["_panneau_seul"] = bool(mm_.get("panneau_seul")) and any(t[0] == "tete" for t in mu_)   # panneau mural seul : le meuble n'est pas dessiné
     cfg["_muraux"] = [(t, a - xmin, b_ - xmin, yb, yt, pr, ex) for t, a, b_, yb, yt, pr, ex in mu_]
     cfg["_tablettes"] = [(a - xmin, b - xmin, y_, d_) for a, b, y_, d_, _ in tl]
     cfg["_murs_tab"] = [(a - xmin, b - xmin) for a, b in murs]

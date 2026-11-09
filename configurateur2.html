@@ -2222,6 +2222,7 @@ function buildCaisson(){
   _buildTablettes(matElem, CP, ep);
   _buildMuraux(matElem, CP, ep);
   _buildAppareils(CP, matFacade);
+  if(_panneauSeul()) caissonGrp.children.slice().forEach(function(c){ if(!c.userData.mural) caissonGrp.remove(c); });   // panneau seul : on ne garde que les panneaux muraux
 
   if(currentFT==='sdb') caissonGrp.position.set(S.caissonOffset,S.caissonYOff,caissCZ());
   else if(S.suspenduCm>0||S.baseYM>0) caissonGrp.position.y=((S.suspenduCm||0)+(S.baseYM||0))/100;   // équipe : meuble décollé du sol, sans plinthe
@@ -4880,6 +4881,8 @@ function _mrArrondiHtml(t,i,inp){
     +(a!=='aucun'?inp(i,'rayon_cm',t.rayon_cm||Math.round(Math.min(t.prof_cm,t.long_cm/2)),'Rayon (max : profondeur, ou la moitié de la longueur)')
       +'<div style="margin:4px 0 8px;padding:8px 10px;border:1.5px solid #b91c1c;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:600;line-height:1.4">⚠ Le prix de l\'arrondi (découpe et chant courbe) n\'est pas pris en compte : à ajouter dans les compléments atelier.</div>':'');
 }
+function _panneauSeul(){ return !!S.panneauSeul&&_isAdminMode()&&currentFT!=='sdb'&&_mrAll().some(function(t){return t.type==='tete';}); }
+function setPanneauSeul(v){ if(!_isAdminMode()) return; S.panneauSeul=!!v; _tabRefresh(); }
 function _teteMatHtml(t,i){
   var o=function(v,l,sel){ return '<option value="'+v+'"'+(sel?' selected':'')+'>'+l+'</option>'; };
   var opts=o('','Comme le meuble ('+MATS_CAIS[S.matCais].n+')',t.mat==null)+MATS_CAIS.map(function(m,j){ return o(j,m.n,t.mat===j); }).join('');
@@ -4901,6 +4904,7 @@ function _muralHtml(){
       :fac?inp(i,'long_cm',t.long_cm,'Largeur')+inp(i,'haut_cm',t.haut_cm||80,'Hauteur'):inp(i,'long_cm',t.long_cm,sep?'Hauteur de l\'intercalaire':'Longueur')+inp(i,'prof_cm',t.prof_cm,'Profondeur'))
       +((!sep&&!fac&&!tet)?_mrArrondiHtml(t,i,inp):'')+'</div>';
   });
+  if(_mrAll().some(function(t){return t.type==='tete';})) h+='<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:12px;font-weight:600;color:var(--text)"><input type="checkbox" '+(S.panneauSeul?'checked ':'')+'onchange="setPanneauSeul(this.checked)"> Panneau seul (sans meuble)</label><div style="font-size:11px;color:var(--text2);margin:2px 0 0 24px">Le meuble disparaît de la vue et du rendu. Son prix reste calculé : à corriger dans les compléments atelier.</div>';
   h+='<div style="display:flex;gap:8px;margin-top:8px"><button class="reset-btn" style="flex:1" onclick="addMural(\'etagere\')">+ Étagère</button><button class="reset-btn" style="flex:1" onclick="addMural(\'intercalaire\')">+ Intercalaire</button><button class="reset-btn" style="flex:1" onclick="addMural(\'facade\')">+ Façade</button><button class="reset-btn" style="flex:1" onclick="addMural(\'tete\')">+ Panneau</button></div>';
   return h;
 }
@@ -6473,7 +6477,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ version_calcul:2, y_start_cm:(S.baseYM>0)?S.baseYM:undefined, sans_fond:(S.sansFondM&&_isAdminMode())?true:undefined, suspendu_cm:(S.suspenduCm>0&&_isAdminMode())?S.suspenduCm:undefined, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, muraux:(_mrAll().length&&_isAdminMode())?_mrExport():undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:2, y_start_cm:(S.baseYM>0)?S.baseYM:undefined, sans_fond:(S.sansFondM&&_isAdminMode())?true:undefined, suspendu_cm:(S.suspenduCm>0&&_isAdminMode())?S.suspenduCm:undefined, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, muraux:(_mrAll().length&&_isAdminMode())?_mrExport():undefined, panneau_seul:_panneauSeul()?true:undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
@@ -6958,7 +6962,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade'||t.type==='tete')?t.type:'etagere',mat:(t.type==='tete'&&t.mat!=null&&MATS_CAIS[+t.mat])?+t.mat:null,x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.type!=='intercalaire'&&t.type!=='facade'&&t.type!=='tete'&&(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux'))?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
+    S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.panneauSeul=!!cfg.panneauSeul; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade'||t.type==='tete')?t.type:'etagere',mat:(t.type==='tete'&&t.mat!=null&&MATS_CAIS[+t.mat])?+t.mat:null,x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.type!=='intercalaire'&&t.type!=='facade'&&t.type!=='tete'&&(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux'))?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
@@ -7099,7 +7103,7 @@ function appliquerConfig(cfg, opts){
       if(!raw) throw new Error('Aucun modèle enregistré sur ce projet : modélisez-le d\'abord.');
       var m=raw.meuble||{};
       if(m.formes_seules || (raw.formes_libres&&raw.formes_libres.length)) throw new Error('ce modèle est en formes libres (importé) : il ne se modifie pas dans le configurateur. Importez une nouvelle version avec « Importer un modèle (JSON) ».');
-      appliquerConfig({ ft:raw.furniture_type||'tv', suspenduCm:m.suspendu_cm, sansFondM:m.sans_fond, baseYM:m.y_start_cm, boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, penteM:m.pente, tablettes:m.tablettes, muraux:m.muraux, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
+      appliquerConfig({ ft:raw.furniture_type||'tv', suspenduCm:m.suspendu_cm, sansFondM:m.sans_fond, baseYM:m.y_start_cm, boutM:m.bout, archeM:m.arche_cm, nicheM:m.niche, penteM:m.pente, tablettes:m.tablettes, muraux:m.muraux, panneauSeul:m.panneau_seul, L:m.L, H:m.H, P:m.P, matLabel:m.matLabel, mur_gauche:m.mur_gauche, mur_droit:m.mur_droit,
         elements:raw.elements, tvSide:raw.tvSide, caisson2:raw.caisson2, cableHoles:raw.cableHoles, plan:raw.plan, vasques:raw.vasques }, {badge:false});
     }catch(e){ alert('Impossible de recharger le modèle : '+(e.message||e)); }
   })();
