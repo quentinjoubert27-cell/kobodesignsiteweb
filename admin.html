@@ -4054,7 +4054,12 @@
         pieces.push({ nom: (nb > 0 ? 'Façade niche arquée' : 'Coins de niche arquée') + suf, l: Math.round(L), w: Math.round(nb > 0 ? H : nf), qte: 1, ch: 'all', cat: 'facade', forme: true, surfM2: nSurf / 1e6, perimM: nb > 0 ? (2 * (L + H)) / 1000 : (nChant + L) / 1000, chantM: nChant / 1000, cintre: true });
         notes.push('Niche arquée ' + suf.trim() + ' : ' + (nb > 0 ? 'cadre de ' + Math.round(nb / 10) + ' cm' : 'sans contour') + ', ouverture de ' + Math.round(nwh / 10) + ' cm à haut en arc (flèche ' + Math.round(nf / 10) + ' cm) ; façade chiffrée à sa surface réelle. ATTENTION : le prix de la découpe en arc n\'est PAS pris en compte.');
       }
-      (opts.joues || []).filter(function (jk) { if (c.pont) return jk === 'dessus' || jk === 'dessous';   // pont : collé aux caissons voisins, seuls le dessus et le dessous se voient
+      // dès 2 m 10 (ou à la hauteur du plafond renseigné) : jamais de joue sur le dessus ; la hauteur est celle de la colonne entière, caissons empilés compris
+      var _hautCol = 0; cais.forEach(function (x) { if (c.col == null || c.col < 0 ? x === c : x.col === c.col) _hautCol = Math.max(_hautCol, (x.ycm || 0) * 10 + x.H); });
+      _hautCol += (parseFloat(m.suspendu_cm) || 0) * 10;
+      var _plafMm = (parseFloat(m.plafond_cm) || 0) * 10, _dessusMasque = _hautCol >= 2100 || (_plafMm > 0 && _hautCol >= _plafMm - 10);
+      (opts.joues || []).filter(function (jk) { if (jk === 'dessus' && !c.pont && _dessusMasque) return false;
+        if (c.pont) return jk === 'dessus' || jk === 'dessous';   // pont : collé aux caissons voisins, seuls le dessus et le dessous se voient
         if (jk === 'dessous') return !!c.gapBelow;   // dessous visible : caisson suspendu au-dessus d'un espace libre
         if (/^caisson du dessus/.test(c.label || '')) return true;   // le caisson posé dessus garde ses joues visibles
         if (_hasCols) {
