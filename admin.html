@@ -2552,7 +2552,9 @@
       // ligne séparée du "Caisson".
       var finitionPriceKey = q.caisson_material ? ('finition_m2|' + q.caisson_material) : null;
       var finitionPriceVal = finitionPriceKey ? defVal(finitionPriceKey) : null;
-      finitionRows = q.finitions.map(finRow).join('') +
+      var plafondRow = row('Hauteur du plafond <span style="font-weight:400;color:rgba(26,26,26,.45);">(0 = non précisé ; un caisson qui l\'atteint n\'a pas de dessus compté)</span>',
+        '<input type="number" min="0" max="600" step="1" value="' + (q.plafond_cm || 0) + '" onchange="setPlafondAdmin(this.value)" style="width:70px;padding:4px 6px;border:1px solid rgba(26,26,26,.15);border-radius:6px;font-size:12px;"> cm', '');
+      finitionRows = plafondRow + q.finitions.map(finRow).join('') +
         row(
           'Joues' + finMatSuffix + ' <span style="font-weight:400;color:rgba(26,26,26,.45);">(prix propre)</span>',
           `<span id="devis-fin-total-qty" style="display:none;">0.00</span><span>${qtyInput('finition_m2', 0, 'm²', finitionPriceVal, true, 'finition').replace('data-ov="finition_m2"', 'id="devis-fin-input" data-ov="finition_m2"')}</span>`,
@@ -3068,6 +3070,16 @@
       var { error } = await sb.from('configs_sdb').update({ raw_config: currentProjetRc }).eq('id', currentProjetSdbId);
       if (error) showToast('Corrections non enregistrées : ' + error.message, 'err');
     }, 600);
+  }
+  async function setPlafondAdmin(v) {
+    if (!currentProjetSdbId || !currentProjetRc) return showToast('Aucune configuration liée', 'err');
+    v = Math.max(0, Math.min(600, Math.round(+v) || 0));
+    if (!currentProjetRc.meuble) currentProjetRc.meuble = {};
+    if (v > 0) currentProjetRc.meuble.plafond_cm = v; else delete currentProjetRc.meuble.plafond_cm;
+    var { error } = await sb.from('configs_sdb').update({ raw_config: currentProjetRc }).eq('id', currentProjetSdbId);
+    if (error) return showToast('Plafond non enregistré : ' + error.message, 'err');
+    await renderProjetDevis(currentProjetId);
+    showToast(v > 0 ? 'Plafond enregistré : ' + v + ' cm' : 'Plafond retiré');
   }
   async function recalcDevisFromConfig() {
     if (!currentProjetSdbId || !currentProjetRc) return showToast('Aucune configuration liée', 'err');
@@ -4289,7 +4301,7 @@
       var q = buildDevisQuantitiesFromConfig(sdb), stored = rc.devis_quantities;
       if (stored && Array.isArray(stored.finitions) && Array.isArray(q.finitions)) {
         var vis = {}; stored.finitions.forEach(function (f) { vis[f.id] = f.visible; });
-        q.finitions.forEach(function (f) { if (vis[f.id] !== undefined) f.visible = !!vis[f.id]; });
+        q.finitions.forEach(function (f) { if (vis[f.id] !== undefined && !f.plaf) f.visible = !!vis[f.id]; });
       }
       var qo = applyDevisOverrides(q), g = currentTarifsGlobaux || {};
       var fm2 = 0, fper = 0;
@@ -6322,12 +6334,14 @@ function dedupeEls(els){
       q.caisson_material = matLabel;
       q.finitions = [];
       // dim1/dim2 en cm — la joue a du chant plaqué sur tout son périmètre (4 côtés)
-      function addFinAdmin(id, label, dim1_cm, dim2_cm, visible) {
+      const plafondCm = parseFloat(meuble.plafond_cm) || 0, suspCm = parseFloat(meuble.suspendu_cm) || 0;
+      q.plafond_cm = plafondCm;
+      function addFinAdmin(id, label, dim1_cm, dim2_cm, visible, plaf) {
         q.finitions.push({
-          id: id, label: label,
+          id: id, label: label, plaf: !!plaf,
           m2: Math.round(dim1_cm * dim2_cm) / 10000,
           perimeter_m: Math.round(2 * (dim1_cm + dim2_cm) * 10) / 1000,
-          visible: visible
+          visible: visible && !plaf
         });
       }
       if (rc.caisson2 && rc.caisson2.L_cm) {
@@ -6336,11 +6350,12 @@ function dedupeEls(els){
       }
       // Rangée gauche→droite : caissons gauche (du plus loin au plus proche) + principal + caissons droite.
       const tvRow = tvLeftArr.slice().reverse().map(function (s, i) {
-        return { label: 'caisson gauche ' + (tvLeftArr.length - i), H: s.H_cm, W: s.W_cm };
-      }).concat([{ label: 'caisson principal', H: mainH, W: mainL }])
-        .concat(tvRightArr.map(function (s, i) { return { label: 'caisson droit ' + (i + 1), H: s.H_cm, W: s.W_cm }; }));
+        return { label: 'caisson gauche ' + (tvLeftArr.length - i), H: s.H_cm, W: s.W_cm, top: (s.y_cm || 0) + s.H_cm };
+      }).concat([{ label: 'caisson principal', H: mainH, W: mainL, top: (meuble.y_start_cm || 0) + mainH }])
+        .concat(tvRightArr.map(function (s, i) { return { label: 'caisson droit ' + (i + 1), H: s.H_cm, W: s.W_cm, top: (s.y_cm || 0) + s.H_cm }; }));
       tvRow.forEach(function (entry, i) {
-        addFinAdmin('dessus_' + i, 'Dessus — ' + entry.label, entry.W, CPcm, true);
+        const auPlafond = plafondCm > 0 && suspCm + entry.top >= plafondCm - 1;   // le haut du caisson touche le plafond : pas de dessus visible
+        addFinAdmin('dessus_' + i, 'Dessus — ' + entry.label + (auPlafond ? ' (au plafond : non compté)' : ''), entry.W, CPcm, true, auPlafond);
       });
       addFinAdmin('bout_gauche', 'Joue gauche — ' + tvRow[0].label + ' (bout extérieur)', tvRow[0].H, CPcm, true);
       addFinAdmin('bout_droit', 'Joue droite — ' + tvRow[tvRow.length - 1].label + ' (bout extérieur)', tvRow[tvRow.length - 1].H, CPcm, true);
@@ -6420,7 +6435,7 @@ function dedupeEls(els){
       // on garde le choix du client pour les faces visibles (joues/dessus de finition) enregistré à l'envoi
       if (storedQ && Array.isArray(storedQ.finitions) && Array.isArray(q.finitions)) {
         const visFin = {}; storedQ.finitions.forEach(function (f) { visFin[f.id] = f.visible; });
-        q.finitions.forEach(function (f) { if (visFin[f.id] !== undefined) f.visible = !!visFin[f.id]; });
+        q.finitions.forEach(function (f) { if (visFin[f.id] !== undefined && !f.plaf) f.visible = !!visFin[f.id]; });
       }
       currentDevisQuantities = q;
       if (!rc.meuble) rc.meuble = { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
