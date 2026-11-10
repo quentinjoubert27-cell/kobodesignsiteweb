@@ -6349,12 +6349,15 @@ function dedupeEls(els){
         addFinAdmin('angle_dessus', "Dessus — caisson d'angle", rc.caisson2.L_cm, CPcm, true);
       }
       // Rangée gauche→droite : caissons gauche (du plus loin au plus proche) + principal + caissons droite.
+      const mainCol = new Set(tvLeftArr.filter(function (s) { return !s.niveau; }).map(function (s) { return s.col; })).size;   // numéro de colonne du caisson principal (colonnes comptées de gauche à droite)
       const tvRow = tvLeftArr.slice().reverse().map(function (s, i) {
-        return { label: 'caisson gauche ' + (tvLeftArr.length - i), H: s.H_cm, W: s.W_cm, top: (s.y_cm || 0) + s.H_cm };
-      }).concat([{ label: 'caisson principal', H: mainH, W: mainL, top: (meuble.y_start_cm || 0) + mainH }])
-        .concat(tvRightArr.map(function (s, i) { return { label: 'caisson droit ' + (i + 1), H: s.H_cm, W: s.W_cm, top: (s.y_cm || 0) + s.H_cm }; }));
+        return { label: 'caisson gauche ' + (tvLeftArr.length - i), H: s.H_cm, W: s.W_cm, col: s.col, top: (s.y_cm || 0) + s.H_cm };
+      }).concat([{ label: 'caisson principal', H: mainH, W: mainL, col: mainCol, top: (meuble.y_start_cm || 0) + mainH }])
+        .concat(tvRightArr.map(function (s, i) { return { label: 'caisson droit ' + (i + 1), H: s.H_cm, W: s.W_cm, col: s.col, top: (s.y_cm || 0) + s.H_cm }; }));
+      const colTop = {};   // haut de chaque colonne, caissons empilés compris
+      tvRow.forEach(function (e) { colTop[e.col] = Math.max(colTop[e.col] || 0, e.top); });
       tvRow.forEach(function (entry, i) {
-        const auPlafond = plafondCm > 0 && suspCm + entry.top >= plafondCm - 1;   // le haut du caisson touche le plafond : pas de dessus visible
+        const auPlafond = plafondCm > 0 && suspCm + colTop[entry.col] >= plafondCm - 1;   // la colonne atteint le plafond : aucun dessus visible (celui du bas est caché par les caissons empilés)   // le haut du caisson touche le plafond : pas de dessus visible
         addFinAdmin('dessus_' + i, 'Dessus — ' + entry.label + (auPlafond ? ' (au plafond : non compté)' : ''), entry.W, CPcm, true, auPlafond);
       });
       addFinAdmin('bout_gauche', 'Joue gauche — ' + tvRow[0].label + ' (bout extérieur)', tvRow[0].H, CPcm, true);
