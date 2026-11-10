@@ -6053,7 +6053,7 @@ function computeFullDevisQuantities(){
   // reçoit automatiquement une finition — pas de choix à faire côté client, l'admin peut décocher si besoin.
   {
     var row=[];
-    var _off=(S.suspenduCm||0)+(S.baseYM||0), _atCeil=function(root){ return S.plafondCm>0 && _off+_colTopCm(root)>=S.plafondCm-1; };   // la colonne (empilés compris) touche le plafond
+    var _atCeil=function(root){ return S.plafondCm>0 && (S.suspenduCm||0)+Math.max(_yBottomOf(root)+_recH(root),_colTopCm(root))>=S.plafondCm-1; };   // la colonne (empilés compris) touche le plafond
     if(MULTI()) for(var li=tvSideLeft.length-1; li>=0; li--){ if(tvSideLeft[li].stack) continue; row.push({label:'caisson gauche '+(li+1), H:tvSideLeft[li].H/100, W:tvSideLeft[li].W/100, plaf:_atCeil(tvSideLeft[li])}); }
     row.push({label:'caisson principal', H:S.CH, W:S.CL, plaf:_atCeil('M')});
     if(MULTI()) tvSideRight.forEach(function(r,ri){ if(r.stack) return; row.push({label:'caisson droit '+(ri+1), H:r.H/100, W:r.W/100, plaf:_atCeil(r)}); });
