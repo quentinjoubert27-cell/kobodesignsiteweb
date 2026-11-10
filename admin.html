@@ -6357,8 +6357,8 @@ function dedupeEls(els){
       const colTop = {};   // haut de chaque colonne, caissons empilés compris
       tvRow.forEach(function (e) { colTop[e.col] = Math.max(colTop[e.col] || 0, e.top); });
       tvRow.forEach(function (entry, i) {
-        const auPlafond = plafondCm > 0 && suspCm + colTop[entry.col] >= plafondCm - 1;   // la colonne atteint le plafond : aucun dessus visible (celui du bas est caché par les caissons empilés)   // le haut du caisson touche le plafond : pas de dessus visible
-        addFinAdmin('dessus_' + i, 'Dessus — ' + entry.label + (auPlafond ? ' (au plafond : non compté)' : ''), entry.W, CPcm, true, auPlafond);
+        const auPlafond = suspCm + colTop[entry.col] >= 210 || (plafondCm > 0 && suspCm + colTop[entry.col] >= plafondCm - 1);   // dès 2 m 10 : jamais de dessus compté (règle atelier)   // la colonne atteint le plafond : aucun dessus visible (celui du bas est caché par les caissons empilés)   // le haut du caisson touche le plafond : pas de dessus visible
+        addFinAdmin('dessus_' + i, 'Dessus — ' + entry.label + (auPlafond ? ' (à partir de 2 m 10 ou au plafond : non compté)' : ''), entry.W, CPcm, true, auPlafond);
       });
       addFinAdmin('bout_gauche', 'Joue gauche — ' + tvRow[0].label + ' (bout extérieur)', tvRow[0].H, CPcm, true);
       addFinAdmin('bout_droit', 'Joue droite — ' + tvRow[tvRow.length - 1].label + ' (bout extérieur)', tvRow[tvRow.length - 1].H, CPcm, true);

@@ -6053,13 +6053,13 @@ function computeFullDevisQuantities(){
   // reçoit automatiquement une finition — pas de choix à faire côté client, l'admin peut décocher si besoin.
   {
     var row=[];
-    var _atCeil=function(root){ return S.plafondCm>0 && (S.suspenduCm||0)+Math.max(_yBottomOf(root)+_recH(root),_colTopCm(root))>=S.plafondCm-1; };   // la colonne (empilés compris) touche le plafond
+    var _atCeil=function(root){ var _t=(S.suspenduCm||0)+Math.max(_yBottomOf(root)+_recH(root),_colTopCm(root)); return _t>=210 || (S.plafondCm>0 && _t>=S.plafondCm-1); };   // dès 2 m 10 : jamais de dessus compté (règle atelier)   // la colonne (empilés compris) touche le plafond
     if(MULTI()) for(var li=tvSideLeft.length-1; li>=0; li--){ if(tvSideLeft[li].stack) continue; row.push({label:'caisson gauche '+(li+1), H:tvSideLeft[li].H/100, W:tvSideLeft[li].W/100, plaf:_atCeil(tvSideLeft[li])}); }
     row.push({label:'caisson principal', H:S.CH, W:S.CL, plaf:_atCeil('M')});
     if(MULTI()) tvSideRight.forEach(function(r,ri){ if(r.stack) return; row.push({label:'caisson droit '+(ri+1), H:r.H/100, W:r.W/100, plaf:_atCeil(r)}); });
 
     row.forEach(function(entry,i){
-      addFin('dessus_'+i, 'Dessus — '+entry.label+(entry.plaf?' (au plafond : non compté)':''), entry.W, CPm, !entry.plaf);
+      addFin('dessus_'+i, 'Dessus — '+entry.label+(entry.plaf?' (à partir de 2 m 10 ou au plafond : non compté)':''), entry.W, CPm, !entry.plaf);
     });
     // Bout gauche de toute la rangée
     addFin('bout_gauche', 'Joue gauche — '+row[0].label+' (bout extérieur)', row[0].H, CPm, true);
