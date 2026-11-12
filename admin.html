@@ -3381,7 +3381,7 @@
     var complements = (rc.complements || []).map(function (x, i) { var q = parseFloat(x.qte) || 0, pu = parseFloat(x.pu) || 0; return { i: i, nom: x.nom || 'Complément', qte: q, pu: pu, montant: q * pu }; });
     var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0) + complements.reduce(function (a, c) { return a + c.montant; }, 0);
     var coef = (g && g.coefficient_revente) || 1.5;
-    return { pieces: pieces, lignes: lignes, complements: complements, angles: angles, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, vente: Math.round(cout * coef * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
+    return { pieces: pieces, lignes: lignes, complements: complements, angles: angles, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, venteBase: Math.round(cout * coef * 100) / 100, petit: (cout * coef < 1500 && cout > 0), vente: Math.round(cout * coef * (cout * coef < 1500 && cout > 0 ? 1.25 : 1) * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
   }
   function arrLen(a) { return Array.isArray(a) ? a.length : (a ? 1 : 0); }
 
@@ -4208,7 +4208,8 @@
       '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + (rc && rc.manuel ? '<button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">Modifier la proposition</button><button class="btn btn-ghost btn-sm" onclick="ajouterLigneManuelle()">Ajouter une ligne</button><button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="supprimerManuel()">Supprimer la proposition</button>' : '<button class="btn btn-ghost btn-sm" onclick="ouvrirEditeurElements()" title="Avancé : remplacer la liste des éléments du meuble (sauvegarde faite avant)">Modifier les éléments (avancé)</button>') + (rc && !rc.manuel && portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
       complementsHtml(r) +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
-      '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
+      (r.petit ? '<div style="display:flex;justify-content:space-between;color:#b45309;"><span>Petit projet (moins de 1 500 € HT) : complexité +25 %</span><span>' + eur(r.vente - r.venteBase) + '</span></div>' : '') +
+      '<div style="display:flex;justify-content:space-between;font-weight:700;"><span>× coefficient ' + r.coef + (r.petit ? ' + 25 % complexité' : '') + ' = VENTE HT (tableur)</span><span style="color:var(--accent);">' + eur(r.vente) + '</span></div>' +
       (r.warn.length ? '<div style="margin-top:6px;color:#b45309;">⚠ ' + r.warn.map(escHtml).join('<br>⚠ ') + '</div>' : '') + '</div>';
   }
   // Compléments atelier : lignes libres (libellé, quantité, prix de fabrication) pour ce que le configurateur ne chiffre pas ; le coefficient s'applique, le client ne voit que le total
