@@ -880,7 +880,7 @@ window.addEventListener('scroll', function(){
             <span class="dim-lbl">Longueur</span>
             <div class="dim-ctrl">
               <button class="dim-step" onclick="stepDim('inp-CL',setCL,-1)">−</button>
-              <input class="dim-inp" type="number" id="inp-CL" min="40" max="220" value="120" oninput="setCL(+this.value)" onblur="clampDim(this,setCL)">
+              <input class="dim-inp" type="number" step="0.01" id="inp-CL" min="40" max="220" value="120" oninput="setCL(+this.value)" onblur="clampDim(this,setCL)">
               <span class="dim-unit">cm</span>
               <button class="dim-step" onclick="stepDim('inp-CL',setCL,+1)">+</button>
             </div>
@@ -890,7 +890,7 @@ window.addEventListener('scroll', function(){
             <span class="dim-lbl">Hauteur</span>
             <div class="dim-ctrl">
               <button class="dim-step" onclick="stepDim('inp-CH',setCH,-1)">−</button>
-              <input class="dim-inp" type="number" id="inp-CH" min="30" max="70" value="45" oninput="setCH(+this.value)" onblur="clampDim(this,setCH)">
+              <input class="dim-inp" type="number" step="0.01" id="inp-CH" min="30" max="70" value="45" oninput="setCH(+this.value)" onblur="clampDim(this,setCH)">
               <span class="dim-unit">cm</span>
               <button class="dim-step" onclick="stepDim('inp-CH',setCH,+1)">+</button>
             </div>
@@ -899,7 +899,7 @@ window.addEventListener('scroll', function(){
             <span class="dim-lbl">Profondeur</span>
             <div class="dim-ctrl">
               <button class="dim-step" onclick="stepDim('inp-CP',setCP,-1)">−</button>
-              <input class="dim-inp" type="number" id="inp-CP" min="36" max="60" value="36" oninput="setCP(+this.value)" onblur="clampDim(this,setCP)">
+              <input class="dim-inp" type="number" step="0.01" id="inp-CP" min="36" max="60" value="36" oninput="setCP(+this.value)" onblur="clampDim(this,setCP)">
               <span class="dim-unit">cm</span>
               <button class="dim-step" onclick="stepDim('inp-CP',setCP,+1)">+</button>
             </div>
@@ -1430,6 +1430,7 @@ var MATS_CAIS = [
 ];
 var _caisTexCache={};
 
+function R2(v){ return Math.round(v*100)/100; }   // cotes au 0,01 cm
 var EP = 0.019;  // épaisseur panneau 19mm
 
 // ── MODE BIBLIO (non-SDB) ──
@@ -1474,7 +1475,7 @@ function _layout(mainCL){
 }
 var S_lvDummy=null;
 function makeTvRecord(W_cm, H_cm){
-  return { uid:'u'+(++_tvUid), bout:null, Htot:H_cm, lv:null, lg:null, libre:false, gapBelow:0, stack:null, below:null, W:W_cm, H:H_cm, P:Math.round(S.CairsonP*100), elems:[], openState:{}, meshes:[], hp:null, guides:null, ghost:null, grp:null };
+  return { uid:'u'+(++_tvUid), bout:null, Htot:H_cm, lv:null, lg:null, libre:false, gapBelow:0, stack:null, below:null, W:W_cm, H:H_cm, P:R2(S.CairsonP*100), elems:[], openState:{}, meshes:[], hp:null, guides:null, ghost:null, grp:null };
 }
 var tvSideLeft = [];   // [{W,H,elems,openState,meshes,hp,guides,ghost,grp}, ...] — index 0 = collé au principal
 var tvSideRight = [];  // idem, côté droit
@@ -2578,7 +2579,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
 
 // ── Passages câbles TV ──
 function addCableHole(){
-  var maxX=Math.max(1,Math.round(S.CL*100)-4);
+  var maxX=Math.max(1,R2(S.CL*100)-4);
   var midY=Math.max(1,Math.round(S.CH*50));
   tvCableHoles.push({x:Math.round(maxX/2), y:midY, r:3});
   renderCableHolesUI();
@@ -2598,8 +2599,8 @@ function renderCableHolesUI(){
   var el=document.getElementById('tv-cable-list');
   if(!el) return;
   if(tvCableHoles.length===0){el.innerHTML='';return;}
-  var maxX=Math.max(1,Math.round(S.CL*100)-4);
-  var maxY=Math.max(1,Math.round(S.CH*100)-4);
+  var maxX=Math.max(1,R2(S.CL*100)-4);
+  var maxY=Math.max(1,R2(S.CH*100)-4);
   el.innerHTML=tvCableHoles.map(function(h,i){
     var dBtns=[4,6,8].map(function(d){
       var sel=h.r===d/2;
@@ -3532,7 +3533,7 @@ function placeOrRemoveCaisson(e, skipUndo){
   }
   if(caissonType==='tablette'){
     var _tp=_tabFromHit(hit); if(!_tabGeom(_tp.cote,_tp.y_cm,0)){ pushUndo&&_undoStack.pop(); return true; }
-    S.tablettes=_tabAll().concat([{cote:_tp.cote,y_cm:_tp.y_cm,long_cm:null,prof_cm:Math.round(S.CairsonP*100)}]);
+    S.tablettes=_tabAll().concat([{cote:_tp.cote,y_cm:_tp.y_cm,long_cm:null,prof_cm:R2(S.CairsonP*100)}]);
     renderCaissonWidths(); clearCaissonGhost(); buildCaisson(); return true;
   }
   if(caissonType==='shelf'||caissonType==='shelf_simple'||caissonType==='barre'){
@@ -4298,13 +4299,13 @@ function stepDim(id,fn,delta){
   inp.value=v; fn(v);
 }
 function clampDim(inp,fn){
-  var v=Math.min(+inp.max,Math.max(+inp.min,Math.round(+inp.value)||+inp.min));
+  var v=Math.min(+inp.max,Math.max(+inp.min,R2(+inp.value)||+inp.min));
   inp.value=v; fn(v);
 }
 function _clearCaissonEls(){ caissonElements=[]; caissonElements2=[]; updateElementsList(); }
 // Hauteur maximale d'un caisson : au-delà, un caisson supplémentaire se pose au-dessus et la hauteur se coupe en parts égales (300 = 150 + 150)
 var CAISSON_MAX_H = 280, CAISSON_MAX_TOTAL_H = 560;
-function _recH(r){ return r==='M' ? Math.round(S.CH*100) : r.H; }
+function _recH(r){ return r==='M' ? R2(S.CH*100) : r.H; }
 function _yBottomOf(r){ if(r==='M') return S.baseYM||0; if(!r.stack) return r.baseY||0; if(r.stack.bridge) return r.y||0; var b=r.below; return _yBottomOf(b)+_recH(b)+(r.gapBelow||0); }
 function _colRoot(r){ var b=r, g=0; while(b && b!=='M' && b.stack && g++<50) b=b.below; return b; }
 // colonnes de gauche à droite : [{root:'M'|record}] ; les caissons empilés sont rattachés à leur colonne
@@ -4323,13 +4324,13 @@ function _colGaps(root){
 }
 function _colTotal(root){ var l=_colLevels(root), g=_colGaps(root); return l.reduce(function(a,b){return a+b;},0)+g.reduce(function(a,b){return a+b;},0); }
 function _setColLibre(root,lv,lg){
-  if(root==='M'){ S.libreM=true; S.lvM=lv; S.lgM=lg; S.CHtot=(lv.reduce(function(a,b){return a+b;},0)+lg.reduce(function(a,b){return a+b;},0))/100; var ih=document.getElementById('inp-CH'); if(ih) ih.value=Math.round(S.CHtot*100); }
+  if(root==='M'){ S.libreM=true; S.lvM=lv; S.lgM=lg; S.CHtot=(lv.reduce(function(a,b){return a+b;},0)+lg.reduce(function(a,b){return a+b;},0))/100; var ih=document.getElementById('inp-CH'); if(ih) ih.value=R2(S.CHtot*100); }
   else { root.libre=true; root.lv=lv; root.lg=lg; root.Htot=lv.reduce(function(a,b){return a+b;},0)+lg.reduce(function(a,b){return a+b;},0); }
 }
 function _resetColAuto(root){ if(root==='M'){ S.libreM=false; S.lvM=null; S.lgM=null; } else { root.libre=false; root.lv=null; root.lg=null; } }
 function _colLevels(root){
   if(_isLibre(root)){ var lf=(root==='M'?S.lvM:root.lv); if(lf&&lf.length) return lf.slice(); }
-  var tot=root==='M'?Math.round(S.CHtot*100):(root.Htot||root.H), lv=root==='M'?S.lvM:root.lv, auto=_levelHeights(tot);
+  var tot=root==='M'?R2(S.CHtot*100):(root.Htot||root.H), lv=root==='M'?S.lvM:root.lv, auto=_levelHeights(tot);
   if(lv && lv.length===auto.length && lv.reduce(function(a,b){return a+b;},0)===tot && lv.every(function(h){return h>=20&&h<=CAISSON_MAX_H;})) return lv.slice();
   return auto;
 }
@@ -4360,9 +4361,9 @@ function _syncStack(){
   var lv=_colLevels('M');
   S.CH=lv[0]/100;
   if(S.libreM){ S.CHtot=_colTotal('M')/100; }
-  chain('M','M',Math.round(S.CL*100),Math.round(S.CairsonP*100),lv,'R',_colGaps('M'));
-  tvSideLeft.forEach(function(r){ var l2=_colLevels(r); r.H=l2[0]; if(r.libre) r.Htot=_colTotal(r); chain(r.uid,r,r.W,r.P||Math.round(S.CairsonP*100),l2,'L',_colGaps(r)); });
-  tvSideRight.forEach(function(r){ var l2=_colLevels(r); r.H=l2[0]; if(r.libre) r.Htot=_colTotal(r); chain(r.uid,r,r.W,r.P||Math.round(S.CairsonP*100),l2,'R',_colGaps(r)); });
+  chain('M','M',R2(S.CL*100),R2(S.CairsonP*100),lv,'R',_colGaps('M'));
+  tvSideLeft.forEach(function(r){ var l2=_colLevels(r); r.H=l2[0]; if(r.libre) r.Htot=_colTotal(r); chain(r.uid,r,r.W,r.P||R2(S.CairsonP*100),l2,'L',_colGaps(r)); });
+  tvSideRight.forEach(function(r){ var l2=_colLevels(r); r.H=l2[0]; if(r.libre) r.Htot=_colTotal(r); chain(r.uid,r,r.W,r.P||R2(S.CairsonP*100),l2,'R',_colGaps(r)); });
   newStack.forEach(function(x){ (x.target==='L'?tvSideLeft:tvSideRight).push(x.rec); });
 }
 // Longueur maximale d'un caisson : au-delà, le meuble est automatiquement découpé en plusieurs caissons de même largeur
@@ -4374,14 +4375,14 @@ function _syncCaissonSplit(){
   for(var i=0;i<n;i++) w.push(base+(i<rem?1:0));
   S.CL=w[0]/100;
   tvSideLeft=[]; tvGaps=[];
-  tvSideRight=w.slice(1).map(function(x){ return makeTvRecord(x, Math.round(S.CHtot*100)); });
+  tvSideRight=w.slice(1).map(function(x){ return makeTvRecord(x, R2(S.CHtot*100)); });
   _syncStack();
   activeCaisson=1;
   renderCaissonWidths();
   if(typeof renderTvSideList==='function') renderTvSideList();
 }
 // Liste unifiée des caissons (de gauche à droite) : longueur (120 cm max) et hauteur modifiables pour chacun
-function _sumW(){ return Math.round(S.CL*100)+tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W;},0)+_gapsW(); }
+function _sumW(){ return R2(S.CL*100)+tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W;},0)+_gapsW(); }
 // La longueur totale est un plafond : la somme des caissons ne peut pas la dépasser. Ajouter / retirer un caisson la fait varier de sa largeur.
 // largeur du meuble que recouvre le plan de travail : avec la case « Meuble salle de bain » cochée, c'est le caisson de départ seul ; en mode salle de bain d'origine, tout le meuble
 function _planBase(){ return (isSDBMode && currentFT!=='sdb') ? S.CL : S.CLtot; }
@@ -4395,7 +4396,7 @@ function renderCaissonWidths(){
   var info=document.getElementById('split-info'); if(!info) return;
   var cols=[];
   for(var i=tvSideLeft.length-1;i>=0;i--){ var rl=tvSideLeft[i]; if(rl.stack) continue; cols.push({key:rl.uid,side:'left',idx:i,W:rl.W,P:rl.P,lev:_colLevels(rl),levP:_colPs(rl),libre:_isLibre(rl),gaps:_colGaps(rl)}); }
-  cols.push({key:'M',side:'main',idx:0,W:Math.round(S.CL*100),P:Math.round(S.CairsonP*100),lev:_colLevels('M'),levP:_colPs('M'),libre:_isLibre('M'),gaps:_colGaps('M')});
+  cols.push({key:'M',side:'main',idx:0,W:R2(S.CL*100),P:R2(S.CairsonP*100),lev:_colLevels('M'),levP:_colPs('M'),libre:_isLibre('M'),gaps:_colGaps('M')});
   tvSideRight.forEach(function(r,i){ if(r.stack) return; cols.push({key:r.uid,side:'right',idx:i,W:r.W,P:r.P,lev:_colLevels(r),levP:_colPs(r),libre:_isLibre(r),gaps:_colGaps(r)}); });
   var total=cols.reduce(function(a,c){return a+c.lev.length;},0)+tvGaps.filter(function(g){return g.bridge;}).length;
   // hors salle de bain : tous les caissons (le 1er compris) sont présentés dans la liste, de la même façon
@@ -4406,12 +4407,12 @@ function renderCaissonWidths(){
   info.style.display='';
   var f=function(r,dim,max){
     var set = (dim==='W'&&r.k>0) ? 'setLevelW(\''+r.side+'\','+r.idx+','+r.k+',' : dim==='H' ? (r.libre ? 'setLevelFree(\''+r.side+'\','+r.idx+','+r.k+',' : (r.n>1 ? 'setLevelH(\''+r.side+'\','+r.idx+','+r.k+',' : 'setCaissonDim(\''+r.side+'\','+r.idx+',\'H\',')) : 'setCaissonDim(\''+r.side+'\','+r.idx+',\''+dim+'\',';
-    return '<div class="dim-ctrl"><button class="dim-step" onclick="'+set+(r[dim]-1)+')">−</button>'
-    +'<input class="dim-inp" type="number" min="20" max="'+max+'" value="'+r[dim]+'" onchange="'+set+'+this.value)">'
-    +'<span class="dim-unit">cm</span><button class="dim-step" onclick="'+set+(r[dim]+1)+')">+</button></div>'; };
+    return '<div class="dim-ctrl"><button class="dim-step" onclick="'+set+R2(r[dim]-1)+')">−</button>'
+    +'<input class="dim-inp" type="number" step="0.01" min="20" max="'+max+'" value="'+r[dim]+'" onchange="'+set+'+this.value)">'
+    +'<span class="dim-unit">cm</span><button class="dim-step" onclick="'+set+R2(r[dim]+1)+')">+</button></div>'; };
   // champ numérique générique : fn(valeur) = nom de fonction + arguments déjà fixés
   var gf=function(call,val,min,max){ return '<div class="dim-ctrl"><button class="dim-step" onclick="'+call+(val-1)+')">−</button>'
-    +'<input class="dim-inp" type="number" min="'+min+'" max="'+max+'" value="'+val+'" onchange="'+call+'+this.value)">'
+    +'<input class="dim-inp" type="number" step="0.01" min="'+min+'" max="'+max+'" value="'+val+'" onchange="'+call+'+this.value)">'
     +'<span class="dim-unit">cm</span><button class="dim-step" onclick="'+call+(val+1)+')">+</button></div>'; };
   var rmBtn=function(r){
     if(r.k>0) return '<button onclick="'+(r.libre?'removeLevelAt(\''+r.side+'\','+r.idx+','+r.k+')':'removeLevel(\''+r.side+'\','+r.idx+')')+'" title="Retirer ce caisson du dessus" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button>';
@@ -4469,7 +4470,7 @@ function renderCaissonWidths(){
             +'<div class="dim-row"><span class="dim-lbl">Largeur</span><span style="font-size:13px;font-weight:600">'+b.W+' cm <span style="font-weight:400;color:var(--text2)">(celle du vide)</span></span></div>'
             +'<div class="dim-row"><span class="dim-lbl">Hauteur du pont</span>'+gf('setBridgeDim(\''+g.uid+'\',\'H\',',b.H,20,CAISSON_MAX_H)+'</div>'
             +'<div class="dim-row"><span class="dim-lbl">Hauteur libre dessous</span>'+gf('setBridgeDim(\''+g.uid+'\',\'y\',',b.y||0,0,400)+'</div>'
-            +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+gf('setBridgeDim(\''+g.uid+'\',\'P\',',b.P||Math.round(S.CairsonP*100),20,120)+'</div></div>';
+            +'<div class="dim-row"><span class="dim-lbl">Profondeur</span>'+gf('setBridgeDim(\''+g.uid+'\',\'P\',',b.P||R2(S.CairsonP*100),20,120)+'</div></div>';
         }
       }
     }
@@ -4580,7 +4581,7 @@ function removeGap(uid,silent){
 // pont : caisson collé aux deux caissons voisins, suspendu au-dessus de l'espace
 function addBridge(uid){
   var g=_gapByUid(uid); if(!g||g.bridge) return;
-  var r=makeTvRecord(g.W,40); r.P=Math.round(S.CairsonP*100); r.y=120; r.stack={lvl:1,bridge:true}; r.below=g; g.bridge=r;
+  var r=makeTvRecord(g.W,40); r.P=R2(S.CairsonP*100); r.y=120; r.stack={lvl:1,bridge:true}; r.below=g; g.bridge=r;
   tvSideRight.push(r); _afterLayoutChange();
 }
 function setBridgeDim(uid,field,v){
@@ -4694,7 +4695,7 @@ function _nicheHtml(r){
 // pente du dessus (équipe seulement)
 function _getPente(side,idx,k){ var r=_recAt(side,idx,k); return _penteOf(r); }
 function _putPente(side,idx,k,pe){ var r=_recAt(side,idx,k); if(r==='M') S.penteM=pe; else if(r){ if(pe) r.pente=pe; else delete r.pente; } }
-function _penteHauteur(side,idx,k){ var r=_recAt(side,idx,k); return r==='M'?Math.round(S.CH*100):(r?(r.H||0):0); }
+function _penteHauteur(side,idx,k){ var r=_recAt(side,idx,k); return r==='M'?R2(S.CH*100):(r?(r.H||0):0); }
 function setPente(side,idx,k,bas){
   if(!_isAdminMode()) return;
   if(bas==='aucune'){ _putPente(side,idx,k,null); }
@@ -4708,7 +4709,7 @@ function setPenteH(side,idx,k,cm){
 }
 function setPenteP(side,idx,k,cm){
   var pe=_getPente(side,idx,k); if(!pe||!_isAdminMode()||pe.bas==='arriere') return;
-  var r=_recAt(side,idx,k), W=r==='M'?Math.round(S.CL*100):(r?r.W:100); cm=Math.max(0,Math.min(W-20,Math.round(parseFloat(cm))||0));
+  var r=_recAt(side,idx,k), W=r==='M'?R2(S.CL*100):(r?r.W:100); cm=Math.max(0,Math.min(W-20,Math.round(parseFloat(cm))||0));
   var np={bas:pe.bas,h_cm:pe.h_cm}; if(cm>0) np.plat_cm=cm; _putPente(side,idx,k,np); _refreshCols();
 }
 // Étagères murales (équipe seulement) : une tablette part du côté du meuble et s'accroche au mur ; {cote:'gauche'|'droite', y_cm (dessus, depuis le sol du meuble), long_cm, prof_cm}
@@ -4802,7 +4803,7 @@ function _mrTypeOfTool(){ return caissonType==='mur_sep'?'intercalaire':(caisson
 function _hitFor(e){ if(_isMuralTool()) return _tabOutHit(e); return getCaissonHit(e)||_tabOutHit(e); }
 var _mrLast={etagere:60,intercalaire:40,facade:60,tete:160};
 function _mrMake(type,xabs,yabs){
-  var len=_mrLast[type]||50, prof=Math.round(S.CairsonP*100);
+  var len=_mrLast[type]||50, prof=R2(S.CairsonP*100);
   if(type==='tete') return {type:type,x_cm:Math.round(xabs-len/2),y_cm:Math.max(0,Math.round(yabs-60)),long_cm:len,haut_cm:120,prof_cm:2,mat:null};   // tête de lit : panneau derrière le meuble
   if(type==='facade') return {type:type,x_cm:Math.round(xabs-len/2),y_cm:Math.max(0,Math.round(yabs-40)),long_cm:len,haut_cm:80,prof_cm:2};
   if(type==='intercalaire') return {type:type,x_cm:Math.round(xabs),y_cm:Math.max(0,Math.round(yabs-len/2)),long_cm:len,prof_cm:prof};
@@ -4931,7 +4932,7 @@ function _tabRefresh(){ renderCaissonWidths(); buildCaisson(); if(planMesh) buil
 function addTablette(cote){
   if(!_isAdminMode()) return;
   var y=Math.round(S.CH*100*0.8); if(!_tabGeom(cote,y,0)){ var cols=(cote==='gauche'?tvSideLeft:tvSideRight).filter(function(r){return !r.stack;}); y=Math.round((cols.length?_colTopCm(cols[cols.length-1]):S.CH*50)+20); }
-  S.tablettes=_tabAll().concat([{cote:cote,y_cm:y,long_cm:null,prof_cm:Math.round(S.CairsonP*100)}]); _tabRefresh();
+  S.tablettes=_tabAll().concat([{cote:cote,y_cm:y,long_cm:null,prof_cm:R2(S.CairsonP*100)}]); _tabRefresh();
 }
 function setTablette(i,k,v){
   var t=_tabAll()[i]; if(!t||!_isAdminMode()) return;
@@ -4992,20 +4993,20 @@ function removeLevelAt(side,idx,k){
 }
 function setLevelFree(side,idx,k,v){
   var root=_colRoot2(side,idx); if(!root) return;
-  var lv=_colLevels(root), lg=_colGaps(root); v=Math.max(20,Math.min(CAISSON_MAX_H,Math.round(v)||0));
+  var lv=_colLevels(root), lg=_colGaps(root); v=Math.max(20,Math.min(CAISSON_MAX_H,R2(v)||0));
   if(lv[k]===v) return; lv[k]=v; _clearLevelElems(root,k); _setColLibre(root,lv,lg); _refreshCols();
 }
 // espace libre sous le caisson k (k >= 1), en cm ; 0 le supprime
 function setColGap(side,idx,k,v){
   var root=_colRoot2(side,idx); if(!root) return;
   var lv=_colLevels(root), lg=_colGaps(root); if(k<1||k>=lv.length) return;
-  lg[k]=Math.max(0,Math.min(400,Math.round(v)||0)); _setColLibre(root,lv,lg); _refreshCols();
+  lg[k]=Math.max(0,Math.min(400,R2(v)||0)); _setColLibre(root,lv,lg); _refreshCols();
 }
 function insertColGap(side,idx,k){ setColGap(side,idx,k,80); }
 function setLevelH(side,idx,k,v){
   var root = side==='main' ? 'M' : (side==='left'?tvSideLeft:tvSideRight)[idx]; if(!root) return;
   var lv=_colLevels(root), tot=lv.reduce(function(a,b){return a+b;},0);
-  v=Math.max(20,Math.min(CAISSON_MAX_H,Math.round(v)||0));
+  v=Math.max(20,Math.min(CAISSON_MAX_H,R2(v)||0));
   var delta=v-lv[k], need=delta, order=[], i;
   for(i=k+1;i<lv.length;i++) order.push(i); for(i=k-1;i>=0;i--) order.push(i);
   // le reste se répartit sur les autres niveaux (celui du dessus d'abord), entre 20 et 280 cm chacun
@@ -5023,11 +5024,11 @@ function setLevelH(side,idx,k,v){
   _syncStack(); updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
 // profondeur propre d'un caisson empilé (k > 0) : elle peut différer de celle du caisson du dessous ; le fond reste aligné au mur
-function _colPs(root){ var ps=[root==='M'?Math.round(S.CairsonP*100):(root.P||Math.round(S.CairsonP*100))]; _stackOf(root).forEach(function(r){ ps.push(r.P||ps[0]); }); return ps; }
+function _colPs(root){ var ps=[root==='M'?R2(S.CairsonP*100):(root.P||R2(S.CairsonP*100))]; _stackOf(root).forEach(function(r){ ps.push(r.P||ps[0]); }); return ps; }
 function setLevelP(side,idx,k,v){
   var r=_recAt(side,idx,k); if(!r||r==='M'||!r.stack) return;
-  v=Math.max(20,Math.min(120,Math.round(v)||0));
-  var rootP=(function(){ var rt=_colRoot(r); return rt==='M'?Math.round(S.CairsonP*100):(rt.P||Math.round(S.CairsonP*100)); })();
+  v=Math.max(20,Math.min(120,R2(v)||0));
+  var rootP=(function(){ var rt=_colRoot(r); return rt==='M'?R2(S.CairsonP*100):(rt.P||R2(S.CairsonP*100)); })();
   r.P=v; r.pCustom=(v!==rootP);
   _syncStack(); updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
@@ -5043,13 +5044,13 @@ function _alignHtml(r){
 }
 function setLevelW(side,idx,k,v){
   var r=_recAt(side,idx,k); if(!r||r==='M'||!r.stack) return;
-  v=Math.max(20,Math.min(CAISSON_MAX_CM,Math.round(v)||0));
-  var rt=_colRoot(r), rootW=rt==='M'?Math.round(S.CL*100):rt.W;
+  v=Math.max(20,Math.min(CAISSON_MAX_CM,R2(v)||0));
+  var rt=_colRoot(r), rootW=rt==='M'?R2(S.CL*100):rt.W;
   r.W=v; r.wCustom=(v!==rootW); r.elems=[]; r.openState={};
   _syncStack(); updateElementsList(); renderCaissonWidths(); buildCaisson(); if(planMesh) buildPlan(); checkAlerts();
 }
 function setCaissonDim(side,idx,dim,v){
-  v=Math.round(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:dim==='P'?120:(currentFT==='sdb'?280:CAISSON_MAX_TOTAL_H),v));
+  v=R2(v)||0; v=Math.max(20,Math.min(dim==='W'?CAISSON_MAX_CM:dim==='P'?120:(currentFT==='sdb'?280:CAISSON_MAX_TOTAL_H),v));
   if(dim==='W'){
     // chaque caisson a sa propre longueur : la longueur totale n'est qu'une indication
   }
@@ -5117,7 +5118,7 @@ function _sdbComputeCH(){
 }
 function _updateSdbInfo(){
   if(currentFT!=='sdb') return;
-  var ch=Math.round(S.CH*100);
+  var ch=R2(S.CH*100);
   var el=document.getElementById('v-sdb-ch'); if(el) el.textContent=ch;
   var sub=document.getElementById('sdb-pose-sub');
   if(sub) sub.textContent = S.sdbBaseH<=10
@@ -5564,7 +5565,7 @@ function buildRecapStr(){
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
   var cfg=currentFT&&FT_CONFIGS[currentFT];
   var s='• Type : '+(cfg?cfg.label:'—')+'\n'
-       +'• Meuble : '+Math.round(S.CLtot*100)+'L × '+Math.round(S.CHtot*100)+'H × '+Math.round(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n';
+       +'• Meuble : '+Math.round(S.CLtot*100)+'L × '+R2(S.CHtot*100)+'H × '+R2(S.CairsonP*100)+'P cm, '+MATS_CAIS[S.matCais].n+'\n';
   if(currentFT==='sdb'){
     s+='• Plan : '+Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n+'\n';
     s+='• Vasque : '+(_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+', '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm\n';
@@ -5576,7 +5577,7 @@ function buildRecap(){
   var counts={shelf:0,separator:0,porte:0,tiroir:0};
   caissonElements.forEach(function(e){if(counts[e.type]!==undefined) counts[e.type]++;});
   var rows=[
-    ['Meuble', Math.round(S.CLtot*100)+'×'+Math.round(S.CHtot*100)+'×'+Math.round(S.CairsonP*100)+' cm, '+MATS_CAIS[S.matCais].n],
+    ['Meuble', Math.round(S.CLtot*100)+'×'+R2(S.CHtot*100)+'×'+R2(S.CairsonP*100)+' cm, '+MATS_CAIS[S.matCais].n],
     ['Plan',   Math.round(S.L*100)+'×'+Math.round(S.P*100)+' cm, '+MATS_PLAN[S.matPlan].n],
     ['Vasque', (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{label:_vasqueSelected}).label+', '+Math.round(S.vasqueW*100)+'×'+Math.round(S.vasqueD*100)+' cm'],
     ['Tablettes',  counts.shelf+' tablette'+(counts.shelf!==1?'s':'')],
@@ -5596,7 +5597,7 @@ function buildRecap4(){
 
   var rows=[
     ['Type de meuble', cfg?cfg.label:'—'],
-    ['Dimensions', Math.round(S.CLtot*100)+' × '+Math.round(S.CHtot*100)+' × '+Math.round(S.CairsonP*100)+' cm'],
+    ['Dimensions', Math.round(S.CLtot*100)+' × '+R2(S.CHtot*100)+' × '+R2(S.CairsonP*100)+' cm'],
     ['Murs', (S.murG&&S.murD)?'Collé à un mur à gauche et à droite':S.murG?'Collé à un mur à gauche':S.murD?'Collé à un mur à droite':'Aucun mur latéral'],
     ['Matière', MATS_CAIS[S.matCais].n],
   ];
@@ -6342,8 +6343,8 @@ function _doubledSeparatorFlags(els, W, H){
 // (même règle que l'admin Kōbō) — évite d'envoyer un meuble dont des portes « flotteraient ».
 function _supCaissons(){
   var out=[];
-  out.push({label:'Caisson principal', W:Math.round(S.CL*100), H:Math.round(S.CH*100), els:caissonElements});
-  if(hasAngle) out.push({label:"Caisson d'angle", W:Math.round(S.CL2*100), H:Math.round(S.CH*100), els:caissonElements2});
+  out.push({label:'Caisson principal', W:R2(S.CL*100), H:R2(S.CH*100), els:caissonElements});
+  if(hasAngle) out.push({label:"Caisson d'angle", W:Math.round(S.CL2*100), H:R2(S.CH*100), els:caissonElements2});
   if(MULTI()){
     tvSideLeft.forEach(function(r,i){ out.push({label:(r.stack?(r.stack.bridge?'Pont ':'Caisson haut '):'Caisson gauche ')+(i+1), W:r.W, H:r.H, els:r.elems}); });
     tvSideRight.forEach(function(r,i){ out.push({label:(r.stack?(r.stack.bridge?'Pont ':'Caisson haut '):'Caisson droit ')+(i+1), W:r.W, H:r.H, els:r.elems}); });
@@ -6466,7 +6467,7 @@ async function submitConfig(){
   var submitFT = isSDBMode ? 'sdb' : currentFT;
   var ftLabels={biblio:'Bibliothèque',tv:'Meuble',dressing:'Dressing',sdb:'Meuble salle de bain'};
   var ftLabel = ftLabels[submitFT] || submitFT;
-  var projetNom = ftLabel + ' sur mesure, ' + Math.round(S.CLtot*100) + 'x' + Math.round(S.CHtot*100) + ' cm';
+  var projetNom = ftLabel + ' sur mesure, ' + Math.round(S.CLtot*100) + 'x' + R2(S.CHtot*100) + ' cm';
   var tvSideDesc = [];
   if(MULTI()){
     tvSideLeft.forEach(function(r,i){ tvSideDesc.push((r.stack?(r.stack.bridge?'Pont ':'Caisson haut '):'Caisson gauche ')+(i+1)+' : '+r.W+'×'+r.H+' cm ('+r.elems.length+' él.)'); });
@@ -6475,7 +6476,7 @@ async function submitConfig(){
   }
   var projetDesc = [
     'Type : ' + ftLabel,
-    'Dimensions caisson central : ' + Math.round(S.CL*100) + ' × ' + Math.round(S.CH*100) + ' × ' + Math.round(S.CairsonP*100) + ' cm',
+    'Dimensions caisson central : ' + R2(S.CL*100) + ' × ' + R2(S.CH*100) + ' × ' + R2(S.CairsonP*100) + ' cm',
     tvSideDesc.length ? tvSideDesc.join('\n') : '',
     'Matière caisson : ' + (MATS_CAIS[S.matCais]?.n || S.matCais),
     (currentFT==='tv' && tvCableHoles.length>0) ? 'Passages câbles : ' + tvCableHoles.map(function(h,i){ return 'n°'+(i+1)+' : '+h.x+'cm depuis gauche, hauteur '+h.y+'cm, Ø'+(h.r*2)+'cm'; }).join(' / ') : '',
@@ -6498,7 +6499,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ version_calcul:3, y_start_cm:(S.baseYM>0)?S.baseYM:undefined, sans_fond:(S.sansFondM&&_isAdminMode())?true:undefined, sans_bas:(S.sansBasM&&_isAdminMode())?true:undefined, plafond_cm:(S.plafondCm>0&&_isAdminMode())?S.plafondCm:undefined, suspendu_cm:(S.suspenduCm>0&&_isAdminMode())?S.suspenduCm:undefined, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, muraux:(_mrAll().length&&_isAdminMode())?_mrExport():undefined, panneau_seul:_panneauSeul()?true:undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:3, y_start_cm:(S.baseYM>0)?S.baseYM:undefined, sans_fond:(S.sansFondM&&_isAdminMode())?true:undefined, sans_bas:(S.sansBasM&&_isAdminMode())?true:undefined, plafond_cm:(S.plafondCm>0&&_isAdminMode())?S.plafondCm:undefined, suspendu_cm:(S.suspenduCm>0&&_isAdminMode())?S.suspenduCm:undefined, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, muraux:(_mrAll().length&&_isAdminMode())?_mrExport():undefined, panneau_seul:_panneauSeul()?true:undefined, L:R2(S.CL*100), L_total:Math.round(S.CLtot*100), H:R2(S.CH*100), H_total:R2(S.CHtot*100), x_start_cm:_recX('M'), P:R2(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
@@ -6535,18 +6536,18 @@ async function submitConfig(){
                 elements:exportElementsWithBounds(els, W, H), technical_spec: buildTechSpec(els, W/100, H/100, P/100, (extra||{}).sans_fond, (extra||{}).sans_bas) }, extra||{}));
             };
             _columnsLR().forEach(function(root,ci){
-              var base = root==='M' ? { W:Math.round(S.CL*100), H:Math.round(S.CH*100), P:Math.round(S.CairsonP*100), els:caissonElements } : { W:root.W, H:root.H, P:root.P||Math.round(S.CairsonP*100), els:root.elems };
+              var base = root==='M' ? { W:R2(S.CL*100), H:R2(S.CH*100), P:R2(S.CairsonP*100), els:caissonElements } : { W:root.W, H:root.H, P:root.P||R2(S.CairsonP*100), els:root.elems };
               var x0=_recX(root);
               add(root==='M'?'principal':(ci<_columnsLR().indexOf('M')?'gauche':'droite'), base.W, base.H, base.P, base.els, false, {col:ci, niveau:0, y_start_cm:_yBottomOf(root), x_start_cm:x0, bout:(root==='M'?S.boutM:root.bout)||undefined, arche_cm:(root==='M'?S.archeM:root.arche_cm)||undefined, niche:(root==='M'?S.nicheM:root.niche)||undefined, pente:(root==='M'?S.penteM:root.pente)||undefined, sans_fond:_sansFondOf(root)||undefined, sans_bas:_sansBasOf(root)||undefined});
               _stackOf(root).forEach(function(r){ add('haut', r.W, r.H, r.P||base.P, r.elems, false, {col:ci, niveau:r.stack.lvl, y_start_cm:_yBottomOf(r), x_start_cm:_recX(r), align:r.align||undefined, bout:r.bout||undefined, arche_cm:r.arche_cm||undefined, niche:r.niche||undefined, pente:r.pente||undefined, sans_fond:r.sansFond||undefined, sans_bas:r.sansBas||undefined}); });
             });
-            tvGaps.forEach(function(g){ var b=g.bridge; if(b) add('pont', b.W, b.H, b.P||Math.round(S.CairsonP*100), b.elems, false, {col:-1, niveau:0, y_start_cm:b.y||0, x_start_cm:_recX(b)}); });
-            if(hasAngle) add('angle', Math.round(S.CL2*100), Math.round(S.CH*100), Math.round(S.CairsonP*100), caissonElements2, true);
-            if(S_tvSide.topActive) add('dessus', S_tvSide.topW, S_tvSide.topH, Math.round(S.CairsonP*100), tvTopElems, true);
+            tvGaps.forEach(function(g){ var b=g.bridge; if(b) add('pont', b.W, b.H, b.P||R2(S.CairsonP*100), b.elems, false, {col:-1, niveau:0, y_start_cm:b.y||0, x_start_cm:_recX(b)}); });
+            if(hasAngle) add('angle', Math.round(S.CL2*100), R2(S.CH*100), R2(S.CairsonP*100), caissonElements2, true);
+            if(S_tvSide.topActive) add('dessus', S_tvSide.topW, S_tvSide.topH, R2(S.CairsonP*100), tvTopElems, true);
             return rows;
           })(),
           longueur_totale_cm: _sumW(),
-          hauteur_totale_cm: Math.max.apply(null, _columnsLR().map(function(r){ return _colTotal(r); }).concat([Math.round(S.CHtot*100)])),
+          hauteur_totale_cm: Math.max.apply(null, _columnsLR().map(function(r){ return _colTotal(r); }).concat([R2(S.CHtot*100)])),
           cableHoles: tvCableHoles.length>0 ? tvCableHoles : undefined,
           devis_quantities: computeFullDevisQuantities(),
           counts:counts
@@ -6983,7 +6984,7 @@ function appliquerConfig(cfg, opts){
     if(cfg.H) _setCHauto(Math.round(cfg.H));
     if(cfg.P) _setCPauto(Math.round(cfg.P));
     if(cfg.boutM) S.boutM=cfg.boutM;
-    S.plafondCm=(+cfg.plafondCm>0)?+cfg.plafondCm:0; S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.sansBasM=!!cfg.sansBasM; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.panneauSeul=!!cfg.panneauSeul; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade'||t.type==='tete')?t.type:'etagere',mat:(t.type==='tete'&&t.mat!=null&&MATS_CAIS[+t.mat])?+t.mat:null,x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.type!=='intercalaire'&&t.type!=='facade'&&t.type!=='tete'&&(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux'))?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||Math.round(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
+    S.plafondCm=(+cfg.plafondCm>0)?+cfg.plafondCm:0; S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.sansBasM=!!cfg.sansBasM; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.panneauSeul=!!cfg.panneauSeul; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade'||t.type==='tete')?t.type:'etagere',mat:(t.type==='tete'&&t.mat!=null&&MATS_CAIS[+t.mat])?+t.mat:null,x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||R2(S.CairsonP*100),arrondi:(t.type!=='intercalaire'&&t.type!=='facade'&&t.type!=='tete'&&(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux'))?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||R2(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
     if(cfg.matLabel){
@@ -7000,7 +7001,7 @@ function appliquerConfig(cfg, opts){
           if(r.niveau>0){ _stacked.push({side:side,r:r}); return; }     // caissons empilés : recréés après leurs colonnes
           addTvSide(side);
           var list=side==='left'?tvSideLeft:tvSideRight, rec=list[list.length-1];
-          rec.W=Math.round(r.W_cm); rec.H=Math.round(r.H_cm||cfg.H||240); rec.Htot=rec.H; rec.P=Math.round(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[]; rec.bout=r.bout||null; rec.arche_cm=r.arche_cm||undefined; rec.niche=r.niche||undefined; rec.pente=r.pente||undefined; if(r.sans_fond) rec.sansFond=true; if(r.sans_bas) rec.sansBas=true; if(r.y_cm>0) rec.baseY=r.y_cm;
+          rec.W=R2(r.W_cm); rec.H=R2(r.H_cm||cfg.H||240); rec.Htot=rec.H; rec.P=R2(r.P_cm||cfg.P||S.CairsonP*100); rec.elems=Array.isArray(r.elements)?r.elements:[]; rec.bout=r.bout||null; rec.arche_cm=r.arche_cm||undefined; rec.niche=r.niche||undefined; rec.pente=r.pente||undefined; if(r.sans_fond) rec.sansFond=true; if(r.sans_bas) rec.sansBas=true; if(r.y_cm>0) rec.baseY=r.y_cm;
           if(r.col!=null) _colMap[r.col]=rec;
         });
       });
@@ -7012,10 +7013,10 @@ function appliquerConfig(cfg, opts){
         _stacked.forEach(function(x){
           var root=_colMap[x.r.col]; if(root===undefined) return;
           var below=_last[x.r.col]||root, rec=makeTvRecord(Math.round(x.r.W_cm),Math.round(x.r.H_cm));
-          rec.P=Math.round(x.r.P_cm||cfg.P||S.CairsonP*100); rec.align=x.r.align||undefined; rec.wCustom=(rec.W!==(root==='M'?Math.round(S.CL*100):root.W)); rec.pCustom=(rec.P!==(root==='M'?Math.round(S.CairsonP*100):(root.P||Math.round(S.CairsonP*100)))); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.niche=x.r.niche||undefined; rec.pente=x.r.pente||undefined; if(x.r.sans_fond) rec.sansFond=true; if(x.r.sans_bas) rec.sansBas=true; rec.stack={lvl:x.r.niveau}; rec.below=below;
+          rec.P=R2(x.r.P_cm||cfg.P||S.CairsonP*100); rec.align=x.r.align||undefined; rec.wCustom=(rec.W!==(root==='M'?R2(S.CL*100):root.W)); rec.pCustom=(rec.P!==(root==='M'?R2(S.CairsonP*100):(root.P||R2(S.CairsonP*100)))); rec.elems=Array.isArray(x.r.elements)?x.r.elements:[]; rec.bout=x.r.bout||null; rec.arche_cm=x.r.arche_cm||undefined; rec.niche=x.r.niche||undefined; rec.pente=x.r.pente||undefined; if(x.r.sans_fond) rec.sansFond=true; if(x.r.sans_bas) rec.sansBas=true; rec.stack={lvl:x.r.niveau}; rec.below=below;
           (x.side==='left'?tvSideLeft:tvSideRight).push(rec); _last[x.r.col]=rec;
           if(root==='M') S.CHtot=Math.round((S.CHtot*100+rec.H))/100; else root.Htot=(root.Htot||root.H)+rec.H;
-          var ck=x.r.col; _colLv[ck]=_colLv[ck]||[root==='M'?Math.round(S.CH*100):root.H]; _colLv[ck].push(rec.H);
+          var ck=x.r.col; _colLv[ck]=_colLv[ck]||[root==='M'?R2(S.CH*100):root.H]; _colLv[ck].push(rec.H);
           _colY[ck]=_colY[ck]||[0]; _colY[ck].push(Math.round(x.r.y_cm||0));
         });
         // hauteurs de niveaux telles qu'enregistrées (réglées à la main ou automatiques)
@@ -7061,7 +7062,7 @@ function appliquerConfig(cfg, opts){
       activeCaisson=1; buildCaisson(); if(typeof renderTvSideList==='function') renderTvSideList();
       S.CLtot=S.CL+_gapsW()/100+tvSideLeft.concat(tvSideRight).filter(function(r){return !r.stack;}).reduce(function(a,r){return a+r.W/100;},0);
       var _ic=document.getElementById('inp-CL'); if(_ic) _ic.value=Math.round(S.CLtot*100);
-      var _ih=document.getElementById('inp-CH'); if(_ih) _ih.value=Math.round(S.CHtot*100);
+      var _ih=document.getElementById('inp-CH'); if(_ih) _ih.value=R2(S.CHtot*100);
       buildCaisson();
     }
     if(cfg.caisson2&&Array.isArray(cfg.caisson2.elements)){
