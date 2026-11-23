@@ -1788,7 +1788,7 @@ function _basHtml(r){
 }
 // Espace utile à l'intérieur : les cotes saisies sont extérieures, les panneaux (EP) sont compris dedans
 function _utileHtml(r){
-  var e=EP*100, sb=_sansBasOf(_recAt(r.side,r.idx,r.k)), w=(+r.W||0)-2*e, h=(+r.H||0)-(sb?1:2)*e, fm=function(v){ return String(Math.round(v*10)/10).replace('.',','); };
+  var e=EP*100, sb=_sansBasOf(_recAt(r.side,r.idx,r.k)), w=(+r.W||0)-2*e, h=(+r.H||0)-(sb?1:2)*e, fm=function(v){ return String(Math.round(v*100)/100).replace('.',','); };
   if(w<=0||h<=0) return '';
   return '<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Utile à l\'intérieur : '+fm(w)+' × '+fm(h)+' cm (panneaux de '+fm(e)+' cm compris dans les cotes)</div>';
 }
