@@ -4434,9 +4434,9 @@ function renderCaissonWidths(){
     +'<input class="dim-inp" type="number" step="0.01" min="20" max="'+max+'" value="'+r[dim]+'" onchange="'+set+'+this.value)">'
     +'<span class="dim-unit">cm</span><button class="dim-step" onclick="'+set+R2(r[dim]+1)+')">+</button></div>'; };
   // champ numérique générique : fn(valeur) = nom de fonction + arguments déjà fixés
-  var gf=function(call,val,min,max){ return '<div class="dim-ctrl"><button class="dim-step" onclick="'+call+(val-1)+')">−</button>'
+  var gf=function(call,val,min,max){ return '<div class="dim-ctrl"><button class="dim-step" onclick="'+call+R2(val-1)+')">−</button>'
     +'<input class="dim-inp" type="number" step="0.01" min="'+min+'" max="'+max+'" value="'+val+'" onchange="'+call+'+this.value)">'
-    +'<span class="dim-unit">cm</span><button class="dim-step" onclick="'+call+(val+1)+')">+</button></div>'; };
+    +'<span class="dim-unit">cm</span><button class="dim-step" onclick="'+call+R2(val+1)+')">+</button></div>'; };
   var rmBtn=function(r){
     if(r.k>0) return '<button onclick="'+(r.libre?'removeLevelAt(\''+r.side+'\','+r.idx+','+r.k+')':'removeLevel(\''+r.side+'\','+r.idx+')')+'" title="Retirer ce caisson du dessus" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button>';
     if(r.side!=='main') return '<button onclick="removeTvSide(\''+r.side+'\','+r.idx+')" style="border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2)">✕</button>';
@@ -4533,7 +4533,7 @@ function setGapApp(uid,type){
 }
 function setGapAppPorte(uid,on){ var g=_gapByUid(uid); if(!g||!g.app||!_isAdminMode()) return; g.app.porte=!!on; _afterLayoutChange(); }
 function setGapAppDim(uid,field,v){
-  var g=_gapByUid(uid); if(!g||!g.app||!_isAdminMode()) return; v=Math.round(+v)||0;
+  var g=_gapByUid(uid); if(!g||!g.app||!_isAdminMode()) return; v=R2(+v)||0;
   if(field==='H') g.app.haut_cm=Math.max(5,Math.min(400,v)); else if(field==='y') g.app.y_cm=Math.max(0,Math.min(400,v)); else if(field==='P') g.app.prof_cm=Math.max(5,Math.min(120,v));
   _afterLayoutChange();
 }
@@ -4592,7 +4592,7 @@ function addGap(afterKey){
 }
 function setGapW(uid,v){
   var g=_gapByUid(uid); if(!g) return;
-  v=Math.max(10,Math.min(400,Math.round(v)||0)); var d=v-g.W; g.W=v; _recomputeTotal(d);
+  v=Math.max(10,Math.min(400,R2(v)||0)); var d=v-g.W; g.W=v; _recomputeTotal(d);
   if(g.bridge){ g.bridge.W=v; g.bridge.elems=[]; g.bridge.openState={}; }
   _afterLayoutChange();
 }
@@ -4609,7 +4609,7 @@ function addBridge(uid){
 }
 function setBridgeDim(uid,field,v){
   var g=_gapByUid(uid), r=g&&g.bridge; if(!r) return;
-  v=Math.round(v)||0;
+  v=R2(v)||0;
   if(field==='H'){ r.H=Math.max(20,Math.min(CAISSON_MAX_H,v)); r.Htot=r.H; }
   else if(field==='y'){ r.y=Math.max(0,Math.min(400,v)); }
   else if(field==='P'){ r.P=Math.max(20,Math.min(120,v)); }
@@ -7068,11 +7068,11 @@ function appliquerConfig(cfg, opts){
         cfg.tvSide.espaces.forEach(function(e){
           if(e.apres_col==null||e.apres_col<0) return;
           var root=_cl[e.apres_col]; if(root===undefined||root===null) return;
-          var g={uid:'g'+(++_tvUid), after:(root==='M'?'M':root.uid), W:Math.round(e.L_cm), bridge:null}; tvGaps.push(g);
+          var g={uid:'g'+(++_tvUid), after:(root==='M'?'M':root.uid), W:R2(e.L_cm), bridge:null}; tvGaps.push(g);
           if(e.appareil&&APPAREILS[e.appareil.type]){ var _ap=APPAREILS[e.appareil.type]; g.app={type:e.appareil.type,haut_cm:+e.appareil.H_cm||_ap.h,y_cm:+e.appareil.y_cm||0,prof_cm:+e.appareil.P_cm||_ap.p,porte:!!e.appareil.porte}; }
           if(e.pont){
-            var b=makeTvRecord(Math.round(e.pont.W_cm||g.W),Math.round(e.pont.H_cm||40));
-            b.P=Math.round(e.pont.P_cm||cfg.P||S.CairsonP*100); b.y=Math.round(e.pont.y_cm||0); b.elems=Array.isArray(e.pont.elements)?e.pont.elements:[]; b.stack={lvl:1,bridge:true}; b.below=g; g.bridge=b; tvSideRight.push(b);
+            var b=makeTvRecord(R2(e.pont.W_cm||g.W),R2(e.pont.H_cm||40));
+            b.P=R2(e.pont.P_cm||cfg.P||S.CairsonP*100); b.y=R2(e.pont.y_cm||0); b.elems=Array.isArray(e.pont.elements)?e.pont.elements:[]; b.stack={lvl:1,bridge:true}; b.below=g; g.bridge=b; tvSideRight.push(b);
           }
         });
       }
