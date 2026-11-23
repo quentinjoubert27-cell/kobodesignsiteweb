@@ -146,6 +146,7 @@ def load_spec(path):
     # caissons empilés (niveau > 0) : posés sur leur colonne, à la hauteur y_cm ; les autres sont des colonnes côte à côte
     spec["_oy_mm"] = round(float((cfg.get("meuble") or {}).get("y_start_cm") or 0) * 10)   # caisson principal suspendu
     if (cfg.get("meuble") or {}).get("sans_fond"): spec["_sans_fond"] = True   # caisson ouvert à l'arrière (équipe)
+    spec["_pieds_mm"] = round(float((cfg.get("meuble") or {}).get("pieds_cm") or 0) * 10)   # pieds propres à ce caisson (0 = au sol)
     if (cfg.get("meuble") or {}).get("sans_bas"): spec["_sans_bas"] = True   # caisson sans traverse basse (électroménager au sol)
     if (cfg.get("meuble") or {}).get("bout"): spec["_bout"] = cfg["meuble"]["bout"]   # bout arrondi (réservé à l'équipe)
     if (cfg.get("meuble") or {}).get("niche"): spec["_niche"] = cfg["meuble"]["niche"]   # niche arquée (équipe)
@@ -157,6 +158,7 @@ def load_spec(path):
     left_cols = [r for r in (side.get("left") or []) if not r.get("niveau")]
     col_x = {len(left_cols): 0}
     col_sb = {len(left_cols): bool((cfg.get("meuble") or {}).get("sans_bas"))}   # colonnes dont le bas est un caisson sans bas (leurs côtés touchent le sol)
+    col_pd = {len(left_cols): round(float((cfg.get("meuble") or {}).get("pieds_cm") or 0) * 10)}   # pieds de chaque colonne (mm)
     col_xcm = {len(left_cols): mx}   # abscisse (cm) du bord gauche de chaque colonne, pour décaler un caisson du dessus aligné à droite / centré
     off = 0
     for r in left_cols:
@@ -164,6 +166,7 @@ def load_spec(path):
         x = absx(r, -off)
         sp0 = spec_from_elements(W, round(r["H_cm"] * 10), round(float(r.get("P_cm") or D / 10) * 10), ep, r.get("elements", []))
         sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
+        sp0["_pieds_mm"] = 0 if r.get("y_cm") else round(float(r.get("pieds_cm") or 0) * 10)
         if r.get("sans_fond"): sp0["_sans_fond"] = True
         if r.get("sans_bas"): sp0["_sans_bas"] = True
         if r.get("bout"): sp0["_bout"] = r["bout"]
@@ -171,13 +174,14 @@ def load_spec(path):
         if r.get("pente"): sp0["_pente"] = r["pente"]
         if r.get("arche_cm"): sp0["_arche_mm"] = round(float(r["arche_cm"]) * 10)
         cais.append((x, sp0))
-        if r.get("col") is not None: col_x[r["col"]] = x; col_xcm[r["col"]] = r.get("x_cm"); col_sb[r["col"]] = bool(r.get("sans_bas"))
+        if r.get("col") is not None: col_x[r["col"]] = x; col_xcm[r["col"]] = r.get("x_cm"); col_sb[r["col"]] = bool(r.get("sans_bas")); col_pd[r["col"]] = sp0["_pieds_mm"]
     off = Lmain
     for r in [r for r in (side.get("right") or []) if not r.get("niveau")]:
         W = round(r["W_cm"] * 10)
         x = absx(r, off)
         sp0 = spec_from_elements(W, round(r["H_cm"] * 10), round(float(r.get("P_cm") or D / 10) * 10), ep, r.get("elements", []))
         sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
+        sp0["_pieds_mm"] = 0 if r.get("y_cm") else round(float(r.get("pieds_cm") or 0) * 10)
         if r.get("sans_fond"): sp0["_sans_fond"] = True
         if r.get("sans_bas"): sp0["_sans_bas"] = True
         if r.get("bout"): sp0["_bout"] = r["bout"]
@@ -185,7 +189,7 @@ def load_spec(path):
         if r.get("pente"): sp0["_pente"] = r["pente"]
         if r.get("arche_cm"): sp0["_arche_mm"] = round(float(r["arche_cm"]) * 10)
         cais.append((x, sp0))
-        if r.get("col") is not None: col_x[r["col"]] = x; col_xcm[r["col"]] = r.get("x_cm"); col_sb[r["col"]] = bool(r.get("sans_bas"))
+        if r.get("col") is not None: col_x[r["col"]] = x; col_xcm[r["col"]] = r.get("x_cm"); col_sb[r["col"]] = bool(r.get("sans_bas")); col_pd[r["col"]] = sp0["_pieds_mm"]
         off += W
     for r in (side.get("left") or []) + (side.get("right") or []):
         if not r.get("niveau") or r.get("col") not in col_x: continue
@@ -199,6 +203,7 @@ def load_spec(path):
         if r.get("pente"): sp["_pente"] = r["pente"]
         if r.get("arche_cm"): sp["_arche_mm"] = round(float(r["arche_cm"]) * 10)
         if col_sb.get(r["col"]): sp["_col_sans_bas"] = True
+        sp["_col_pieds_mm"] = col_pd.get(r["col"], 0)
         bx = col_xcm.get(r["col"]); dx = round((r["x_cm"] - bx) * 10) if (bx is not None and r.get("x_cm") is not None) else 0   # alignement propre au caisson du dessus
         cais.append((col_x[r["col"]] + dx, sp))
     # ponts : caissons suspendus au-dessus d'un espace libre

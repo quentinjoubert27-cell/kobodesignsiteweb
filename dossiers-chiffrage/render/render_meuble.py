@@ -437,9 +437,10 @@ def build_furniture(cfg, opt, open_state=False):
     if susp > 0: plinth = susp
     pieds = float((cfg.get("meuble") or {}).get("pieds_cm") or 0) * 10   # pieds : meuble levé, 4 pieds par caisson posé au sol, pas de plinthe
     if pieds > 0 and not susp > 0: plinth = pieds
-    if pieds > 0 and not susp > 0:   # colonne sans bas : ses côtés touchent le sol (le meuble est levé sur pieds, elle redescend)
+    if not susp > 0:   # pieds propres à chaque colonne : le meuble est levé de ceux du principal, les autres colonnes redescendent à leur propre hauteur (sans bas / ponts : au sol)
         for _x, _sp in cfg["_caissons"]:
-            if _sp.get("_sans_bas") or _sp.get("_col_sans_bas"): _sp["_oy_mm"] = _sp.get("_oy_mm", 0) - pieds
+            _own = 0 if (_sp.get("_sans_bas") or _sp.get("_col_sans_bas")) else (_sp.get("_pieds_mm") or _sp.get("_col_pieds_mm") or 0)
+            _sp["_oy_mm"] = _sp.get("_oy_mm", 0) + _own - pieds
     if cfg.get("_panneau_seul"): plinth = 0
     z_off = plinth * mm
     name = decor_name(cfg, opt)
@@ -836,14 +837,15 @@ def build_furniture(cfg, opt, open_state=False):
             poly = formes_mod.contour_ruban({"chemin": [list(q) for q in ch], "ep": ep, "sens": -1 if sd_ > 0 else 1})
             o = add_prism("plinthe", [(x * mm, y * mm, 0.0) for x, y in poly], (0, 0, plinth * mm), wood, "h", rnd)
             if o: objs.append(o)
-    if pieds > 0 and not susp > 0:   # 4 pieds carrés par caisson posé au sol
+    if not susp > 0:   # 4 pieds carrés par colonne qui en a
         pied_mat = mat_plain("pied", (0.12, 0.12, 0.12), 0.45)
         for ox_, sp_ in cfg["_caissons"]:
-            if sp_.get("_oy_mm", 0) or sp_.get("_sans_bas"): continue
+            ph_ = sp_.get("_pieds_mm") or 0
+            if ph_ <= 0 or sp_.get("_sans_bas"): continue
             w_ = sp_["overall_mm"]["width"]; d_ = sp_["overall_mm"]["depth"]; a_ = 60; e_ = 44
             for xa in (a_, w_ - a_ - e_):
                 for ya in (a_, d_ - a_ - e_):
-                    objs.append(add_box("pied", (ox_ + xa) * mm, (ox_ + xa + e_) * mm, ya * mm, (ya + e_) * mm, 0, pieds * mm, pied_mat, "v", rnd))
+                    objs.append(add_box("pied", (ox_ + xa) * mm, (ox_ + xa + e_) * mm, ya * mm, (ya + e_) * mm, 0, ph_ * mm, pied_mat, "v", rnd))
     top_h = (Htot + plinth) * mm
     if rd.get("plateau"):   # plateau épais en chêne, léger débord
         pt = float(rd["plateau"]) if not isinstance(rd["plateau"], bool) else 40.0

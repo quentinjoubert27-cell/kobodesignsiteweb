@@ -3963,8 +3963,8 @@ function showApp() {
     var CH = { all: 'all', trav: 'trav', none: 'none', etag: 'etag', joue: 'joue' };
     // colonne du caisson principal : nombre de colonnes à sa gauche (les caissons empilés, niveau > 0, ne sont pas des colonnes)
     var _leftCols = tvArr(tv.left).filter(function (c) { return c && c.W_cm && !(c.niveau > 0); }).length;
-    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0, ycm: 0, bout: m.bout, niche: m.niche, pente: m.pente, sansBas: !!m.sans_bas }];
-    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0, ycm: c.y_cm || 0, bout: c.bout, niche: c.niche, pente: c.pente, sansBas: !!c.sans_bas }); }); });
+    var cais = [{ label: '', els: rc.elements || [], L: m.L * 10, H: m.H * 10, P: m.P * 10, main: true, col: _leftCols, niveau: 0, ycm: 0, bout: m.bout, niche: m.niche, pente: m.pente, sansBas: !!m.sans_bas, pieds: parseFloat(m.pieds_cm) || 0 }];
+    ['left', 'right', 'top'].forEach(function (side) { tvArr(tv[side]).forEach(function (c, i) { if (c && c.W_cm && c.H_cm) cais.push({ label: (side === 'left' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson gauche ') : side === 'right' ? (c.niveau > 0 ? 'caisson haut ' : 'caisson droit ') : 'caisson du dessus ') + (i + 1), els: c.elements || [], L: c.W_cm * 10, H: c.H_cm * 10, P: (c.P_cm || m.P) * 10, main: false, col: c.col, niveau: c.niveau || 0, ycm: c.y_cm || 0, bout: c.bout, niche: c.niche, pente: c.pente, sansBas: !!c.sans_bas, pieds: parseFloat(c.pieds_cm) || 0 }); }); });
     tvArr(tv.espaces).forEach(function (e, i) { if (e && e.pont && e.pont.W_cm && e.pont.H_cm) cais.push({ label: 'pont ' + (i + 1), els: e.pont.elements || [], L: e.pont.W_cm * 10, H: e.pont.H_cm * 10, P: (e.pont.P_cm || m.P) * 10, main: false, col: -1, niveau: 0, pont: true }); });
     if (m.formes_seules) cais.shift();   // meuble fait uniquement de formes libres : pas de caisson droit principal
     // caissons empilés : colonne et niveau connus -> joues extérieures sur toute la hauteur, joue dessus seulement tout en haut
@@ -4000,7 +4000,8 @@ function showApp() {
     // caissons aux extrémités : si le meuble est collé à un mur de ce côté, la joue extérieure ne se voit pas, elle n'est pas comptée
     var outerG = 0, outerD = 0;
     cais.forEach(function (c, i) { if (/^caisson gauche/.test(c.label || '')) outerG = i; if (/^caisson droit/.test(c.label || '')) outerD = i; });
-    if (parseFloat(m.pieds_cm) > 0) notes.push('Pieds de ' + fmtCm(m.pieds_cm) + ' cm : ' + (4 * cais.filter(function (c) { return !((c.ycm || 0) > 0) && !c.pont && !(c.niveau > 0) && !c.sansBas; }).length) + ' pieds (4 par caisson posé au sol, aucun sous un caisson sans bas), pas de plinthe. ATTENTION : le prix des pieds n\'est PAS pris en compte.');
+    var _pdC = cais.filter(function (c) { return !c.sansBas && !c.pont && !(c.niveau > 0) && !((c.ycm || 0) > 0) && c.pieds > 0; });
+    if (_pdC.length) notes.push('Pieds : ' + _pdC.map(function (c) { return (c.label || 'caisson principal') + ' ' + fmtCm(c.pieds) + ' cm'; }).join(', ') + ' (4 pieds par caisson concerné ; les autres restent au sol, pas de plinthe sous les pieds). ATTENTION : le prix des pieds n\'est PAS pris en compte.');
     if (m.mur_gauche || m.mur_droit) notes.push('Meuble collé à un mur : ' + [m.mur_gauche ? 'joue gauche' : '', m.mur_droit ? 'joue droite' : ''].filter(Boolean).join(' et ') + ' non comptée(s).');
     cais.forEach(function (c, ci) {
       var L = c.L, H = c.H, P = c.P, suf = c.label ? ' (' + c.label + ')' : ' (C' + ci + ')', Lt = Math.max(0, L - 2 * t), interior = Math.max(0, L - 2 * t);
