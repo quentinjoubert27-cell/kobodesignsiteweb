@@ -146,6 +146,7 @@ def load_spec(path):
     # caissons empilés (niveau > 0) : posés sur leur colonne, à la hauteur y_cm ; les autres sont des colonnes côte à côte
     spec["_oy_mm"] = round(float((cfg.get("meuble") or {}).get("y_start_cm") or 0) * 10)   # caisson principal suspendu
     if (cfg.get("meuble") or {}).get("sans_fond"): spec["_sans_fond"] = True   # caisson ouvert à l'arrière (équipe)
+    if (cfg.get("meuble") or {}).get("sans_bas"): spec["_sans_bas"] = True   # caisson sans traverse basse (électroménager au sol)
     if (cfg.get("meuble") or {}).get("bout"): spec["_bout"] = cfg["meuble"]["bout"]   # bout arrondi (réservé à l'équipe)
     if (cfg.get("meuble") or {}).get("niche"): spec["_niche"] = cfg["meuble"]["niche"]   # niche arquée (équipe)
     if (cfg.get("meuble") or {}).get("pente"): spec["_pente"] = cfg["meuble"]["pente"]   # pente du dessus (équipe)
@@ -163,6 +164,7 @@ def load_spec(path):
         sp0 = spec_from_elements(W, round(r["H_cm"] * 10), round(float(r.get("P_cm") or D / 10) * 10), ep, r.get("elements", []))
         sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
         if r.get("sans_fond"): sp0["_sans_fond"] = True
+        if r.get("sans_bas"): sp0["_sans_bas"] = True
         if r.get("bout"): sp0["_bout"] = r["bout"]
         if r.get("niche"): sp0["_niche"] = r["niche"]
         if r.get("pente"): sp0["_pente"] = r["pente"]
@@ -176,6 +178,7 @@ def load_spec(path):
         sp0 = spec_from_elements(W, round(r["H_cm"] * 10), round(float(r.get("P_cm") or D / 10) * 10), ep, r.get("elements", []))
         sp0["_oy_mm"] = round(float(r.get("y_cm") or 0) * 10)
         if r.get("sans_fond"): sp0["_sans_fond"] = True
+        if r.get("sans_bas"): sp0["_sans_bas"] = True
         if r.get("bout"): sp0["_bout"] = r["bout"]
         if r.get("niche"): sp0["_niche"] = r["niche"]
         if r.get("pente"): sp0["_pente"] = r["pente"]
@@ -189,6 +192,7 @@ def load_spec(path):
         sp = spec_from_elements(W, round(r["H_cm"] * 10), round(float(r.get("P_cm") or D / 10) * 10), ep, r.get("elements", []))
         sp["_oy_mm"] = round(float(r.get("y_cm", 0)) * 10)
         if r.get("sans_fond"): sp["_sans_fond"] = True
+        if r.get("sans_bas"): sp["_sans_bas"] = True
         if r.get("bout"): sp["_bout"] = r["bout"]
         if r.get("niche"): sp["_niche"] = r["niche"]
         if r.get("pente"): sp["_pente"] = r["pente"]
@@ -203,6 +207,7 @@ def load_spec(path):
         sp = spec_from_elements(W, round(pt["H_cm"] * 10), round(float(pt.get("P_cm") or D / 10) * 10), ep, pt.get("elements", []))
         sp["_oy_mm"] = round(float(pt.get("y_cm", 0)) * 10)
         if pt.get("sans_fond"): sp["_sans_fond"] = True
+        if pt.get("sans_bas"): sp["_sans_bas"] = True
         cais.append((round((pt["x_cm"] - mx) * 10), sp))
     if side.get("top"):
         print("Avertissement : caisson « dessus » (tvSide.top) non dessiné.")

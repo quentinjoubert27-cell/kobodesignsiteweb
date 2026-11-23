@@ -506,7 +506,7 @@ def build_furniture(cfg, opt, open_state=False):
                 o = add_prism(nm, p3, (0, 0, (zt - zb) * mm), mt or wood, grain, rnd)
                 if o: objs.append(o)
             xs0 = ep if bo["side"] > 0 else W - ep          # bord intérieur du côté droit (non arrondi)
-            prism("traverse_basse", bout_plan(W, D, bo, xs0, D), 0, ep, "h")
+            (None if spec.get("_sans_bas") else prism("traverse_basse", bout_plan(W, D, bo, xs0, D), 0, ep, "h"))
             prism("traverse_haute", bout_plan(W, D, bo, xs0, D), H - ep, H, "h")
             inset_fx = max([d_.get("door_thickness_mm", ep) for d_ in fixes_bo if (d_["x_right_mm"] - 1 >= W - ep - 15 if bo["side"] > 0 else d_["x_left_mm"] + 1 <= ep + 15)] + [0])   # étagères en retrait derrière la façade fixe qui épouse le bout
             for d_ in fixes_bo:   # façade fixe sur bout arrondi : ruban vertical qui suit le bord avant (droite + arc), épaisseur 20 mm vers l'intérieur
@@ -537,7 +537,7 @@ def build_furniture(cfg, opt, open_state=False):
                 prisme("joue_gauche", [(0, 0, 0), (0, D, 0), (0, D, lo), (0, 0, H)], (ep, 0, 0), "v")
                 prisme("joue_droite", [(W - ep, 0, 0), (W - ep, D, 0), (W - ep, D, lo), (W - ep, 0, H)], (ep, 0, 0), "v")
                 prisme("traverse_haute", [(ep, 0, H - ep), (ep, 0, H), (ep, D, lo), (ep, D, lo - ep)], (W - 2 * ep, 0, 0), "h")
-                B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
+                if not spec.get("_sans_bas"): B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
                 if not spec.get("_sans_fond"): B("fond", 0, W, 0, lo, D - 8, D, "v", fond_mat)
             else:                          # pente de face : bas à gauche ou à droite
                 hf = lambda x_: pente_haut(pe, W, H, x_)
@@ -545,13 +545,14 @@ def build_furniture(cfg, opt, open_state=False):
                 B("joue_gauche", 0, ep, 0, hf(0), 0, D, "v"); B("joue_droite", W - ep, W, 0, hf(W), 0, D, "v")
                 xs = [ep] + ([kx] if kx and ep < kx < W - ep else []) + [W - ep]
                 prisme("traverse_haute", [(x_, 0, hf(x_) - ep) for x_ in xs] + [(x_, 0, hf(x_)) for x_ in reversed(xs)], (0, D, 0), "h")
-                B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
+                if not spec.get("_sans_bas"): B("traverse_basse", ep, W - ep, 0, ep, 0, D, "h")
                 xf = [0] + ([kx] if kx and 0 < kx < W else []) + [W]
                 if not spec.get("_sans_fond"): prisme("fond", [(0, D - 8, 0), (W, D - 8, 0)] + [(x_, D - 8, hf(x_)) for x_ in reversed(xf)], (0, 8, 0), "v", fond_mat)
         for p in ([] if pe else spec.get("structural_panels", [])):
             t = p["type"]
             if bo and (t in ("traverse_haute", "traverse_basse") or t == ("joue_droite" if bo["side"] > 0 else "joue_gauche")):
                 continue
+            if t == "traverse_basse" and spec.get("_sans_bas"): continue   # sans bas : électroménager posé au sol
             if t == "fond":
                 if spec.get("_sans_fond"): continue
                 B("fond", p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], D - 8, D, "v", fond_mat)
