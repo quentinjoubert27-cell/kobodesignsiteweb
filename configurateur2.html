@@ -4388,7 +4388,7 @@ function _sumW(){ return R2(S.CL*100)+tvSideLeft.concat(tvSideRight).filter(func
 function _planBase(){ return (isSDBMode && currentFT!=='sdb') ? S.CL : S.CLtot; }
 function _recomputeTotal(delta){
   S.CLtot=_sumW()/100;   // le total n'est qu'une indication : il suit les caissons
-  var inp=document.getElementById('inp-CL'); if(inp) inp.value=Math.round(currentFT==='sdb'?S.CLtot*100:S.CL*100);
+  var inp=document.getElementById('inp-CL'); if(inp&&document.activeElement!==inp) inp.value=R2(currentFT==='sdb'?S.CLtot*100:S.CL*100);   // pas pendant la frappe : sinon « 86, » redevient « 86 »
   S.L=_planBase()+S.depassG+S.depassD;
   var el=document.getElementById('v-L-total'); if(el) el.textContent=Math.round(S.L*100)+' cm';
 }
@@ -5055,7 +5055,7 @@ function setCaissonDim(side,idx,dim,v){
     // chaque caisson a sa propre longueur : la longueur totale n'est qu'une indication
   }
   if(side==='main'){
-    if(dim==='W') S.CL=v/100; else if(dim==='P'){ S.CairsonP=v/100; var ip=document.getElementById('inp-CP'); if(ip) ip.value=v; } else { S.CHtot=v/100; S.CH=v/100; S.lvM=null; S.lgM=null; S.libreM=false; var ih=document.getElementById('inp-CH'); if(ih) ih.value=v; }
+    if(dim==='W') S.CL=v/100; else if(dim==='P'){ S.CairsonP=v/100; var ip=document.getElementById('inp-CP'); if(ip&&document.activeElement!==ip) ip.value=v; } else { S.CHtot=v/100; S.CH=v/100; S.lvM=null; S.lgM=null; S.libreM=false; var ih=document.getElementById('inp-CH'); if(ih&&document.activeElement!==ih) ih.value=v; }
     caissonElements=[];
   } else {
     var r=(side==='left'?tvSideLeft:tvSideRight)[idx]; if(!r) return;
