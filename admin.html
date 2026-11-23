@@ -4144,7 +4144,7 @@ function showApp() {
     var isSep = function (e) { return ['separator', 'separateur'].indexOf(norm(e.type)) >= 0; };   // « separator_simple » n'est pas reconnu par l'import
     // épaisseur déduite des étagères : (largeur du meuble − fin de l'étagère) / 2 ; 18 mm sinon
     var cand = []; (rc.elements || []).filter(isShelf).forEach(function (e) { var xl = e.x_left_cm != null ? e.x_left_cm : 0, xr = e.x_right_cm != null ? e.x_right_cm : m.L; if (Math.abs(xl) > 0.2) return; var t = (m.L - xr) / 2 * 10; if (t >= 12 && t <= 30) cand.push(t); });
-    var t = cand.length ? Math.round(cand.reduce(function (a, b) { return a + b; }, 0) / cand.length * 10) / 10 : 18;
+    var t = cand.length ? Math.round(cand.reduce(function (a, b) { return a + b; }, 0) / cand.length * 10) / 10 : (m.version_calcul >= 3 ? 19 : 18);
     var pieces = [], add = function (nom, l, w, qte, chants, cat) { if (qte > 0 && l > 0 && w > 0) pieces.push({ nom: nom, l: Math.round(l * 10) / 10, w: Math.round(w * 10) / 10, qte: qte, ch: chants, cat: cat || 'struct' }); };
     var CH = { all: 'all', trav: 'trav', none: 'none', etag: 'etag', joue: 'joue' };
     // colonne du caisson principal : nombre de colonnes à sa gauche (les caissons empilés, niveau > 0, ne sont pas des colonnes)
@@ -6161,9 +6161,10 @@ function dedupeEls(els){
   // Intercalaires à doubler : deux portes (une de chaque côté) pivotent sur le même intercalaire
   
   
+  var _epAdminMm = 18;
   function buildTechSpec(els, CL_cm, CH_cm, CP_cm, sansFond, sansBas) {
     els = dedupeEls(els); // un clic répété pouvait enregistrer la même porte plusieurs fois
-    const ep_mm = 18;
+    const ep_mm = _epAdminMm;   // 18 mm pour les projets déjà enregistrés, 19 mm pour les nouveaux (version_calcul 3)
     const CL_mm = Math.round(CL_cm * 10), CH_mm = Math.round(CH_cm * 10), CP_mm = Math.round(CP_cm * 10);
     const iW_mm = CL_mm - 2*ep_mm, iH_mm = CH_mm - 2*ep_mm;
     const seps = (els||[]).filter(e => e.type==='separator'||e.type==='separator_simple').map(e => e.x_cm).sort((a,b) => a-b);
@@ -6459,6 +6460,7 @@ function dedupeEls(els){
       const meuble = rc.meuble || { L: sdb.meuble_l, H: sdb.meuble_h, P: sdb.meuble_p, matLabel: sdb.meuble_mat };
       const matLabel = meuble.matLabel || sdb.meuble_mat || 'Non défini';
       const elements = rc.elements || sdb.elements || [];
+      _epAdminMm = (meuble.version_calcul >= 3) ? 19 : 18;
       const spec = buildTechSpec(elements, meuble.L || sdb.meuble_l, meuble.H || sdb.meuble_h, meuble.P || sdb.meuble_p, meuble.sans_fond, meuble.sans_bas);
       const parts = [computeDevisQuantitiesAdmin(spec, matLabel, meuble.bout)];
 

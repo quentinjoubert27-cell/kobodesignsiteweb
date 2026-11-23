@@ -1430,7 +1430,7 @@ var MATS_CAIS = [
 ];
 var _caisTexCache={};
 
-var EP = 0.018;  // épaisseur panneau 18mm
+var EP = 0.019;  // épaisseur panneau 19mm
 
 // ── MODE BIBLIO (non-SDB) ──
 var BIBLIO_MODE  = false;
@@ -1784,6 +1784,12 @@ function setBas(side,idx,k,avec){ pushUndo(); _putBas(side,idx,k,!avec); _refres
 function _basHtml(r){
   var sans=_sansBasOf(_recAt(r.side,r.idx,r.k));
   return '<div class="dim-row"><span class="dim-lbl" style="color:var(--accent)">Bas du caisson</span><label style="display:flex;align-items:center;gap:6px;font:600 12px DM Sans,sans-serif"><input type="checkbox"'+(sans?'':' checked')+' onchange="setBas(\''+r.side+'\','+r.idx+','+r.k+',this.checked)"> avec traverse basse (décocher : électroménager posé au sol)</label></div>';
+}
+// Espace utile à l'intérieur : les cotes saisies sont extérieures, les panneaux (EP) sont compris dedans
+function _utileHtml(r){
+  var e=EP*100, sb=_sansBasOf(_recAt(r.side,r.idx,r.k)), w=(+r.W||0)-2*e, h=(+r.H||0)-(sb?1:2)*e, fm=function(v){ return String(Math.round(v*10)/10).replace('.',','); };
+  if(w<=0||h<=0) return '';
+  return '<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Utile à l\'intérieur : '+fm(w)+' × '+fm(h)+' cm (panneaux de '+fm(e)+' cm compris dans les cotes)</div>';
 }
 function _fondHtml(r){
   var sans=_sansFondOf(_recAt(r.side,r.idx,r.k));
@@ -4437,6 +4443,7 @@ function renderCaissonWidths(){
           +'<div class="dim-row"><span class="dim-lbl">Longueur</span>'+f(r,'W',CAISSON_MAX_CM)+'</div>'
           +(r.k>0?_alignHtml(r):'')
           +'<div class="dim-row"><span class="dim-lbl">Hauteur</span>'+f(r,'H',Hmax)+'</div>'
+          +_utileHtml(r)
           +'<div class="dim-row"><span class="dim-lbl">Profondeur'+(r.k>0&&c.levP&&c.levP[r.k]&&c.levP[r.k]!==c.P?' <span style="font-weight:400;color:var(--text2)">(propre)</span>':'')+'</span>'+(r.k>0?gf('setLevelP(\''+c.side+'\','+c.idx+','+r.k+',',(c.levP&&c.levP[r.k])||c.P,20,120):f(r,'P',120))+'</div>'
           +(_isAdminMode()?_boutHtml(r)+_archeHtml(r)+_nicheHtml(r)+_penteHtml(r)+_fondHtml(r)+_basHtml(r)+_baseYHtml(r):'');
       }
@@ -6491,7 +6498,7 @@ async function submitConfig(){
         thumbnail: thumbSrc,
         config:{
           furniture_type: submitFT,
-          meuble:{ version_calcul:2, y_start_cm:(S.baseYM>0)?S.baseYM:undefined, sans_fond:(S.sansFondM&&_isAdminMode())?true:undefined, sans_bas:(S.sansBasM&&_isAdminMode())?true:undefined, plafond_cm:(S.plafondCm>0&&_isAdminMode())?S.plafondCm:undefined, suspendu_cm:(S.suspenduCm>0&&_isAdminMode())?S.suspenduCm:undefined, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, muraux:(_mrAll().length&&_isAdminMode())?_mrExport():undefined, panneau_seul:_panneauSeul()?true:undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
+          meuble:{ version_calcul:3, y_start_cm:(S.baseYM>0)?S.baseYM:undefined, sans_fond:(S.sansFondM&&_isAdminMode())?true:undefined, sans_bas:(S.sansBasM&&_isAdminMode())?true:undefined, plafond_cm:(S.plafondCm>0&&_isAdminMode())?S.plafondCm:undefined, suspendu_cm:(S.suspenduCm>0&&_isAdminMode())?S.suspenduCm:undefined, bout:S.boutM||undefined, arche_cm:S.archeM||undefined, niche:S.nicheM||undefined, pente:S.penteM||undefined, tablettes:(_tabAll().length&&_isAdminMode())?_tabExport():undefined, muraux:(_mrAll().length&&_isAdminMode())?_mrExport():undefined, panneau_seul:_panneauSeul()?true:undefined, L:Math.round(S.CL*100), L_total:Math.round(S.CLtot*100), H:Math.round(S.CH*100), H_total:Math.round(S.CHtot*100), x_start_cm:_recX('M'), P:Math.round(S.CairsonP*100),
                    matLabel:MATS_CAIS[S.matCais].n, matId:S.matCais, mur_gauche:!!S.murG, mur_droit:!!S.murD },
           ...(isSDBMode ? {
             plan:{ L:Math.round(S.L*100), P:Math.round(S.P*100), Ep:Math.round(S.Ep*10)/10, Ep_cm:Math.round(S.Ep*100), depassG_cm:Math.round(S.depassG*100), depassD_cm:Math.round(S.depassD*100),
