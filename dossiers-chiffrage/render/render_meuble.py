@@ -435,6 +435,11 @@ def build_furniture(cfg, opt, open_state=False):
     if fseules and "plinthe" not in (cfg.get("rendu") or {}) and not opt.get("_plinthe_explicite"): plinth = 0   # formes libres : pas de plinthe sauf demande
     susp = float((cfg.get("meuble") or {}).get("suspendu_cm") or 0) * 10   # équipe : meuble décollé du sol, sans plinthe
     if susp > 0: plinth = susp
+    pieds = float((cfg.get("meuble") or {}).get("pieds_cm") or 0) * 10   # pieds : meuble levé, 4 pieds par caisson posé au sol, pas de plinthe
+    if pieds > 0 and not susp > 0: plinth = pieds
+    if pieds > 0 and not susp > 0:   # colonne sans bas : ses côtés touchent le sol (le meuble est levé sur pieds, elle redescend)
+        for _x, _sp in cfg["_caissons"]:
+            if _sp.get("_sans_bas") or _sp.get("_col_sans_bas"): _sp["_oy_mm"] = _sp.get("_oy_mm", 0) - pieds
     if cfg.get("_panneau_seul"): plinth = 0
     z_off = plinth * mm
     name = decor_name(cfg, opt)
@@ -803,7 +808,7 @@ def build_furniture(cfg, opt, open_state=False):
     Htot = max([sp["overall_mm"]["height"] + sp.get("_oy_mm", 0) for _, sp in cfg["_caissons"]] + ([hi[2]] if fp else []))
     # plinthe continue : panneau de façade en retrait (≈ 30 mm), sans retour latéral, sur pieds
     au_sol = [(ox_, ox_ + sp_["overall_mm"]["width"]) for ox_, sp_ in cfg["_caissons"] if not sp_.get("_oy_mm", 0)]   # caissons posés au sol : la plinthe ne passe pas sous un caisson en hauteur
-    if plinth > 0 and not susp > 0 and au_sol:
+    if plinth > 0 and not susp > 0 and not pieds > 0 and au_sol:
         # bout arrondi à une extrémité : la plinthe s'arrête au début de la courbe et la suit (arc + droite tangente), en retrait de 30 mm
         ext = {1: None, -1: None}
         for ox_, sp_ in cfg["_caissons"]:
@@ -831,6 +836,14 @@ def build_furniture(cfg, opt, open_state=False):
             poly = formes_mod.contour_ruban({"chemin": [list(q) for q in ch], "ep": ep, "sens": -1 if sd_ > 0 else 1})
             o = add_prism("plinthe", [(x * mm, y * mm, 0.0) for x, y in poly], (0, 0, plinth * mm), wood, "h", rnd)
             if o: objs.append(o)
+    if pieds > 0 and not susp > 0:   # 4 pieds carrés par caisson posé au sol
+        pied_mat = mat_plain("pied", (0.12, 0.12, 0.12), 0.45)
+        for ox_, sp_ in cfg["_caissons"]:
+            if sp_.get("_oy_mm", 0) or sp_.get("_sans_bas"): continue
+            w_ = sp_["overall_mm"]["width"]; d_ = sp_["overall_mm"]["depth"]; a_ = 60; e_ = 44
+            for xa in (a_, w_ - a_ - e_):
+                for ya in (a_, d_ - a_ - e_):
+                    objs.append(add_box("pied", (ox_ + xa) * mm, (ox_ + xa + e_) * mm, ya * mm, (ya + e_) * mm, 0, pieds * mm, pied_mat, "v", rnd))
     top_h = (Htot + plinth) * mm
     if rd.get("plateau"):   # plateau épais en chêne, léger débord
         pt = float(rd["plateau"]) if not isinstance(rd["plateau"], bool) else 40.0

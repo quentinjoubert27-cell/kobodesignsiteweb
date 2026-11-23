@@ -4000,6 +4000,7 @@ function showApp() {
     // caissons aux extrémités : si le meuble est collé à un mur de ce côté, la joue extérieure ne se voit pas, elle n'est pas comptée
     var outerG = 0, outerD = 0;
     cais.forEach(function (c, i) { if (/^caisson gauche/.test(c.label || '')) outerG = i; if (/^caisson droit/.test(c.label || '')) outerD = i; });
+    if (parseFloat(m.pieds_cm) > 0) notes.push('Pieds de ' + fmtCm(m.pieds_cm) + ' cm : ' + (4 * cais.filter(function (c) { return !((c.ycm || 0) > 0) && !c.pont && !(c.niveau > 0) && !c.sansBas; }).length) + ' pieds (4 par caisson posé au sol, aucun sous un caisson sans bas), pas de plinthe. ATTENTION : le prix des pieds n\'est PAS pris en compte.');
     if (m.mur_gauche || m.mur_droit) notes.push('Meuble collé à un mur : ' + [m.mur_gauche ? 'joue gauche' : '', m.mur_droit ? 'joue droite' : ''].filter(Boolean).join(' et ') + ' non comptée(s).');
     cais.forEach(function (c, ci) {
       var L = c.L, H = c.H, P = c.P, suf = c.label ? ' (' + c.label + ')' : ' (C' + ci + ')', Lt = Math.max(0, L - 2 * t), interior = Math.max(0, L - 2 * t);
