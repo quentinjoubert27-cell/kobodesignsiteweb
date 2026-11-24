@@ -1551,6 +1551,7 @@ sun.shadow.camera.far=20; sun.shadow.bias=-0.0003;
 scene.add(sun);
 var dl2=new THREE.DirectionalLight(0xffffff,0.15); dl2.position.set(-3,3,4); scene.add(dl2);
 var dl3=new THREE.DirectionalLight(0xffffff,0.10); dl3.position.set(3,2,4); scene.add(dl3);
+var dlBack=new THREE.DirectionalLight(0xffffff,0); dlBack.position.set(-2,3,-5); scene.add(dlBack);   // éclaire le dos quand le meuble n'est pas collé au mur
 
 var solMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x242018,roughness:0.92,metalness:0.05}));
 solMesh.rotation.x=-Math.PI/2; solMesh.receiveShadow=true; scene.add(solMesh);
@@ -2008,7 +2009,7 @@ function buildCaisson(){
   if(!hasAngle){ var cd=boxBimat(ep,CH,CP,1); cd.position.set(CL/2-ep/2,CH/2,0); caissonGrp.add(cd); }
   var dt=boxBimat(iW,ep,CP,3); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
   if(!_sbM){ var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db); }
-  if(!_sfM){ var _bt=_libreOn()?ep:0.008, fd=box(CL,CH,_bt,_libreOn()?matCais:matFond); fd.position.set(0,CH/2,-CP/2+_bt/2); caissonGrp.add(fd); }   // meuble non collé au mur : le dos se voit, joue arrière pleine épaisseur dans la matière du meuble
+  if(!_sfM){ var _bt=_libreOn()?ep+0.001:0.008, fd=box(CL,CH,_bt,_libreOn()?matCais:matFond); fd.position.set(0,CH/2,-CP/2+_bt/2-(_libreOn()?0.001:0)); caissonGrp.add(fd); }   // meuble non collé au mur : le dos se voit, joue arrière pleine épaisseur dans la matière du meuble
   if(!_sbM) _addPieds(caissonGrp,CL,CP,_piedsOf('M'));
   }
 
@@ -2484,7 +2485,7 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
     var jd=box(ep2,H,CP,matCais); jd.position.set( W/2-ep2/2,H/2,0); g.add(jd);
     var tt=box(iWc,ep2,CP,matCais); tt.position.set(0,H-ep2/2,0); g.add(tt);
     if(!_sbX){ var bb=box(iWc,ep2,CP,matCais); bb.position.set(0,ep2/2,0); g.add(bb); }
-    if(!_sfX){ var _bt=_libreOn()?ep2:0.008, fd=box(W,H,_bt,_libreOn()?matCais:matFond); fd.position.set(0,H/2,-CP/2+_bt/2); g.add(fd); }
+    if(!_sfX){ var _bt=_libreOn()?ep2+0.001:0.008, fd=box(W,H,_bt,_libreOn()?matCais:matFond); fd.position.set(0,H/2,-CP/2+_bt/2-(_libreOn()?0.001:0)); g.add(fd); }
     if(!d.isTop&&!_csb&&!(d.py>0.001)&&!d.record.stack) _addPieds(g,W,CP,_piedsOf(d.record));
     }
 
@@ -4931,6 +4932,7 @@ var _libreWas=false, _libreCam=null;
 function _libreSync(){
   var on=_libreOn();
   try{ wallBiblio.visible=!on && !!BIBLIO_MODE; }catch(e){}
+  dlBack.intensity=on?0.55:0;
   if(on===_libreWas) return;
   _libreWas=on;
   if(on){
