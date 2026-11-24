@@ -28,8 +28,10 @@ def rendre(cfg_text):
     with tempfile.TemporaryDirectory() as tmp:
         js = Path(tmp) / "meuble.json"
         js.write_text(cfg_text, encoding="utf-8")
-        has_plan = bool((json.loads(cfg_text).get("plan") or {}).get("L"))
-        r = subprocess.run([BLENDER, "-b", "-P", str(HERE / "render" / "render_meuble.py"), "--", str(js), tmp, "--only", "pair,parts" if has_plan else "pair", "--samples", "16"],
+        cfg_ = json.loads(cfg_text)
+        apercu = bool(cfg_.get("_apercu"))   # aperçu rapide des angles choisis : petite image, peu d'échantillons, pas de photos plan / vasque
+        has_plan = bool((cfg_.get("plan") or {}).get("L")) and not apercu
+        r = subprocess.run([BLENDER, "-b", "-P", str(HERE / "render" / "render_meuble.py"), "--", str(js), tmp, "--only", "pair,parts" if has_plan else "pair", "--samples", "4" if apercu else "16"] + (["--scale", "0.4"] if apercu else []),
                            capture_output=True, text=True, timeout=300)
         out = {}
         for k, f in (("ferme", "rendu-ferme.png"), ("ouvert", "rendu-ouvert.png")):

@@ -1817,6 +1817,7 @@
         <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,26,26,.4);">Proposition (à envoyer au client)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(26,26,26,.7);padding:0 4px;cursor:pointer;" title="Décoché : le PDF est créé sans les images 3D (aucun rendu n'est fabriqué)"><input type="checkbox" id="chk-rendus" checked onchange="rendusMemoriser()"> Avec les rendus 3D</label>
+          <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(26,26,26,.7);" title="Angle de caméra des rendus 3D : « Auto » garde le cadrage habituel"><span>Angle fermé</span><select id="vue-ferme" onchange="vuesMemoriser()" style="padding:3px 5px;border:1px solid rgba(26,26,26,.2);border-radius:6px;font-size:12px;"><option value="auto">Auto</option><option value="face">Face</option><option value="gauche">3/4 gauche</option><option value="droite">3/4 droite</option><option value="plongee">Plongée</option><option value="dessus">Dessus</option><option value="zoom_gauche">Gros plan gauche</option><option value="zoom_centre">Gros plan centre</option><option value="zoom_droit">Gros plan droite</option></select><span>ouvert</span><select id="vue-ouvert" onchange="vuesMemoriser()" style="padding:3px 5px;border:1px solid rgba(26,26,26,.2);border-radius:6px;font-size:12px;"><option value="auto">Auto</option><option value="face">Face</option><option value="gauche">3/4 gauche</option><option value="droite">3/4 droite</option><option value="plongee">Plongée</option><option value="dessus">Dessus</option><option value="zoom_gauche">Gros plan gauche</option><option value="zoom_centre">Gros plan centre</option><option value="zoom_droit">Gros plan droite</option></select><button class="btn btn-ghost btn-sm" onclick="rendusApercu()" title="Rendu rapide (quelques secondes) pour voir les angles choisis">Aperçu</button></span>
           <button class="btn btn-ghost btn-sm" id="btn-modif-prop" onclick="modifierPropositionAuto()" title="Modifier le contenu de la proposition : ajouter, retirer ou changer des éléments du meuble">✏️ Modifier la proposition</button>
           <button class="btn btn-primary btn-sm" id="btn-devis-pdf" onclick="openDevisSimplePdf()">📄 Créer le PDF (images + proposition)</button>
           <button class="btn btn-ghost btn-sm" id="btn-send-prop" onclick="openEnvoiProposition()" title="Envoie la proposition en PDF au client (e-mail + espace client)">✉️ Envoyer au client</button>
@@ -2821,6 +2822,7 @@ function showApp() {
   var devisImgCache = {}; // empreinte du JSON -> {ferme, ouvert}
 
   async function devisRendersFromHelper(rc, w) {
+    if (!rc._apercu) rc = avecVues(rc, false);   // angles choisis (fermé / ouvert) envoyés avec le meuble
     var txt = JSON.stringify(rc);
     var key = txt.length + ':' + txt.slice(0, 80) + txt.slice(-80);
     if (devisImgCache[key]) return devisImgCache[key];
@@ -2830,7 +2832,7 @@ function showApp() {
       var pr = await fetch('http://127.0.0.1:8765/ping', { signal: ctl.signal }); clearTimeout(tm); ok = pr.ok;
     } catch (e) { ok = false; }
     if (!ok) return null;
-    w.document.body.innerHTML = '<p style="font-family:sans-serif;padding:40px;font-size:18px">Fabrication des rendus 3D (fermé / ouvert, plus plan et vasque en salle de bain)… 30 secondes à 1 minute.</p>';
+    if (w) w.document.body.innerHTML = '<p style="font-family:sans-serif;padding:40px;font-size:18px">Fabrication des rendus 3D (fermé / ouvert, plus plan et vasque en salle de bain)… 30 secondes à 1 minute.</p>';
     var r = await fetch('http://127.0.0.1:8765/rendre', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: txt });
     var j = await r.json().catch(function () { return {}; });
     if (!r.ok) throw new Error((j && j.error) ? String(j.error).slice(0, 220) : 'rendu impossible (' + r.status + ')');
@@ -3869,8 +3871,26 @@ function showApp() {
     modeliserDansConfigurateur();
   }
   // case « Avec les rendus 3D » : mémorisée par projet (par défaut cochée)
+  // Angles de caméra des rendus (fermé / ouvert), mémorisés par projet
+  function vuesMemoriser() { try { if (currentProjetId) localStorage.setItem('kobo_vues_' + currentProjetId, JSON.stringify({ ferme: document.getElementById('vue-ferme').value, ouvert: document.getElementById('vue-ouvert').value })); } catch (e) {} }
+  function vuesRestaurer() { try { var v = JSON.parse(localStorage.getItem('kobo_vues_' + currentProjetId) || '{}'); var f = document.getElementById('vue-ferme'), o = document.getElementById('vue-ouvert'); if (f) f.value = v.ferme || 'auto'; if (o) o.value = v.ouvert || 'auto'; } catch (e) {} }
+  function vuesChoisies() { var f = document.getElementById('vue-ferme'), o = document.getElementById('vue-ouvert'); var v = { ferme: f ? f.value : 'auto', ouvert: o ? o.value : 'auto' }; return (v.ferme === 'auto' && v.ouvert === 'auto') ? null : v; }
+  function avecVues(rc, apercu) { var v = vuesChoisies(); if (!v && !apercu) return rc; var c = Object.assign({}, rc); if (v) c.rendu = Object.assign({}, rc.rendu || {}, { vues: v }); if (apercu) c._apercu = true; return c; }
+  async function rendusApercu() {
+    if (!currentProjetRc) return showToast('Aucun meuble modélisé sur ce projet', 'err');
+    var ov = document.createElement('div'); ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,17,21,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    ov.onclick = function (e) { if (e.target === ov) ov.remove(); };
+    ov.innerHTML = '<div style="background:#fff;border-radius:12px;padding:18px;max-width:900px;width:100%;font-size:13px;"><div id="apercu-corps">Fabrication de l\'aperçu…</div></div>';
+    document.body.appendChild(ov);
+    var corps = ov.querySelector('#apercu-corps');
+    try {
+      var j = await devisRendersFromHelper(avecVues(currentProjetRc, true), null);
+      if (!j) { corps.innerHTML = 'L\'assistant de rendus ne répond pas : lance-le sur ton Mac (voir le guide d\'installation).'; return; }
+      corps.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><figure style="margin:0"><img src="' + j.ferme + '" style="width:100%;border-radius:8px"><figcaption>Fermé</figcaption></figure><figure style="margin:0"><img src="' + j.ouvert + '" style="width:100%;border-radius:8px"><figcaption>Ouvert</figcaption></figure></div><div style="margin-top:8px;color:rgba(26,26,26,.55)">Aperçu rapide, basse qualité. Le PDF utilisera les mêmes angles en pleine qualité.</div>';
+    } catch (e) { corps.textContent = 'Aperçu impossible : ' + (e.message || e); }
+  }
   function rendusMemoriser() { try { var c = document.getElementById('chk-rendus'); if (c && currentProjetId) localStorage.setItem('kobo_rendus_' + currentProjetId, c.checked ? '1' : '0'); } catch (e) {} }
-  function rendusRestaurer() { try { var c = document.getElementById('chk-rendus'); if (c) c.checked = localStorage.getItem('kobo_rendus_' + currentProjetId) !== '0'; } catch (e) {} }
+  function rendusRestaurer() { try { var c = document.getElementById('chk-rendus'); if (c) c.checked = localStorage.getItem('kobo_rendus_' + currentProjetId) !== '0'; vuesRestaurer(); } catch (e) {} }
   // Bouton unique « Modifier la proposition » (à côté de « Créer le PDF ») : choisit tout seul quoi ouvrir selon le projet
   function modifierPropositionAuto() {
     if (!currentProjetId) return;

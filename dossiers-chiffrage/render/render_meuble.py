@@ -1145,6 +1145,32 @@ def render_parts(opt, cfg, out):
             bpy.ops.render.render(write_still=True)
 
 
+# Vues choisies dans l'admin (cfg["rendu"]["vues"] = {"ferme": ..., "ouvert": ...}) : direction de la caméra (x, y, z) depuis le meuble
+VUES = {"face": (0.0, -1.0, 0.0), "gauche": (-0.55, -1.0, 0.0), "droite": (0.55, -1.0, 0.0), "plongee": (0.25, -1.0, 1.1), "dessus": (0.0, -0.4, 1.0),
+        "zoom_gauche": (-0.3, -1.0, 0.1), "zoom_centre": (0.0, -1.0, 0.1), "zoom_droit": (0.3, -1.0, 0.1)}
+ZOOM_X = {"zoom_gauche": 1 / 6.0, "zoom_centre": 0.5, "zoom_droit": 5 / 6.0}
+
+
+def placer_camera(scene, cam, objs, c, W, cfg, vue):
+    """Cadre le meuble selon la vue demandée ; « auto » (ou vue inconnue) garde le cadrage habituel."""
+    d = VUES.get(vue or "auto")
+    if not d:
+        fit_camera(scene, cam, objs, c, 0.78, (cam_dx_bout(cfg, 0.18), -1.0, 0.0), fill_w=0.80)
+        cam.location.z = min(1.45, c[2] + 0.1)
+        cam.rotation_euler = (Vector(c) - cam.location).to_track_quat("-Z", "Y").to_euler()
+        return
+    fit_camera(scene, cam, objs, c, 0.78, d, fill_w=0.80)
+    tgt = Vector(c)
+    if vue in ZOOM_X:   # gros plan : on se rapproche d'un tiers du meuble (gauche, centre, droite)
+        cs = cfg.get("_caissons") or []   # on vise un tiers des CAISSONS (pas du plan ni des étagères murales qui dépassent)
+        x0 = min([ox for ox, _ in cs] or [0]) * 0.001; x1 = max([ox + sp["overall_mm"]["width"] for ox, sp in cs] or [W * 1000]) * 0.001
+        tgt = Vector((x0 + ZOOM_X[vue] * (x1 - x0), c[1], c[2]))
+        cam.location = tgt + (cam.location - Vector(c)) * 0.5
+    elif d[2] == 0:
+        cam.location.z = min(1.45, c[2] + 0.1)
+    cam.rotation_euler = (tgt - cam.location).to_track_quat("-Z", "Y").to_euler()
+
+
 def render_pair(opt, cfg, out):
     """Deux images rapides pour le devis : meuble fermé, puis portes et tiroirs ouverts (même caméra)."""
     scene = reset_scene()
@@ -1168,17 +1194,16 @@ def render_pair(opt, cfg, out):
     if decor_name(cfg, opt).strip().lower() in LIGHT_DECORS:
         scene.view_settings.exposure = -1.3
         wall.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.50, 0.46, 0.45, 1)
-    fit_camera(scene, cam, objs, c, 0.78, (cam_dx_bout(cfg, 0.18), -1.0, 0.0), fill_w=0.80)
-    cam.location.z = min(1.45, c[2] + 0.1)
-    if cfg.get("furniture_type") == "sdb" and (cfg.get("plan") or {}).get("L"):
-        pass
-    cam.rotation_euler = (Vector(c) - cam.location).to_track_quat("-Z", "Y").to_euler()
+    vues = (cfg.get("rendu") or {}).get("vues") or {}
+    placer_camera(scene, cam, objs, c, W, cfg, vues.get("ferme"))
     cam.data.shift_y = 0.0
     scene.render.filepath = os.path.join(out, "rendu-ferme.png")
     bpy.ops.render.render(write_still=True)
     for o in objs:
         bpy.data.objects.remove(o, do_unlink=True)
-    build_furniture(cfg, opt, open_state=True)
+    objs, _info = build_furniture(cfg, opt, open_state=True)
+    if vues.get("ouvert") != vues.get("ferme"):   # vue différente pour l'image ouverte : on recadre
+        placer_camera(scene, cam, objs, c, W, cfg, vues.get("ouvert"))
     scene.render.filepath = os.path.join(out, "rendu-ouvert.png")
     bpy.ops.render.render(write_still=True)
 
