@@ -561,7 +561,7 @@ def build_furniture(cfg, opt, open_state=False):
             if t == "traverse_basse" and spec.get("_sans_bas"): continue   # sans bas : électroménager posé au sol
             if t == "fond":
                 if spec.get("_sans_fond"): continue
-                B("fond", p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], D - (ep if spec.get("_dos_libre") else 8), D, "v", fond_mat)
+                B("fond", p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], D - (ep if spec.get("_dos_libre") else 8), D + (0.6 if spec.get("_dos_libre") else 0), "v", fond_mat)
             elif t.startswith("joue"):
                 B(t, p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], 0, D, "v")
             else:
@@ -837,6 +837,10 @@ def build_furniture(cfg, opt, open_state=False):
         if cur_ < x_b: segs_.append((cur_, x_b))
         for sa_, sb_ in segs_:
             objs.append(add_box("plinthe", sa_ * mm, sb_ * mm, 30 * mm, (30 + ep) * mm, 0, plinth * mm, wood, "h", rnd))
+        if cfg.get("_libre") and not pl:   # meuble non collé au mur : plinthe sur les quatre côtés (derrière et retours latéraux, en retrait de 30 mm comme devant)
+            objs.append(add_box("plinthe", x_a * mm, x_b * mm, (D - 30 - ep) * mm, (D - 30) * mm, 0, plinth * mm, wood, "h", rnd))
+            for xa_, xb_ in ((x_a, x_a + ep), (x_b - ep, x_b)):
+                objs.append(add_box("plinthe", xa_ * mm, xb_ * mm, (30 + ep) * mm, (D - 30 - ep) * mm, 0, plinth * mm, wood, "h", rnd))
         for sd_, (path, _) in pl.items():
             ch = path if sd_ > 0 else [(x0t + Wtot - x, y) for x, y in path]   # bout à gauche : symétrique par rapport au meuble (qui peut être décalé par des éléments muraux à gauche)
             poly = formes_mod.contour_ruban({"chemin": [list(q) for q in ch], "ep": ep, "sens": -1 if sd_ > 0 else 1})
