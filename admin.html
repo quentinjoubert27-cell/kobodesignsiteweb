@@ -3416,14 +3416,6 @@ function showApp() {
       var pu = fp.cat === 'facade' ? puFacade : (/^Fond/.test(fp.nom) ? puEl('fond', puStruct) : puStruct);
       pieces.push({ nom: fp.nom, l: fp.l, w: fp.w, qte: 1, pu: pu, note: fp.cintre ? 'cintré' : '', ch: 'all', forme: true, surfM2: fp.surfM2, perimM: fp.perimM, chantM: fp.chantM });
     });
-    // plan de travail (tout meuble hors salle de bain) : même matière que le meuble, chant sur le pourtour ; au-delà de 19 mm, panneaux de doublage collés (sans chant)
-    if (m.plan_travail && m.plan_travail.long_cm && m.plan_travail.prof_cm) {
-      var ptv = m.plan_travail, ptc = Math.max(1, ptv.couches || 1);
-      var puPlan = ptv.mat_nom ? (pm['panels_plan_m2|' + ptv.mat_nom] || pm['finition_m2|' + ptv.mat_nom] || pm['panels_porte_m2|' + ptv.mat_nom] || 0) : puFacade;   // autre matière : son prix, sinon 0 (à renseigner)
-      var ptn = ptv.mat_nom ? ' en ' + ptv.mat_nom : '';
-      pieces.push({ nom: 'Plan de travail' + ptn, l: Math.round(ptv.long_cm * 10), w: Math.round(ptv.prof_cm * 10), qte: 1, pu: puPlan, note: '', ch: 'all' });
-      if (ptc > 1) pieces.push({ nom: 'Plan de travail' + ptn + ' (doublage, ' + (ptc - 1) + ' panneau' + (ptc > 2 ? 'x' : '') + ' collé' + (ptc > 2 ? 's' : '') + ')', l: Math.round(ptv.long_cm * 10), w: Math.round(ptv.prof_cm * 10), qte: ptc - 1, pu: puPlan, note: '', ch: 'none' });
-    }
     // meuble non collé au mur du fond : une joue arrière de finition par caisson
     if (m.dos_libre) cais.forEach(function (c, ci) {
       pieces.push({ nom: 'Joue arrière (' + (c.label || 'caisson principal') + ')', l: Math.round(c.H * 10), w: Math.round(c.L * 10), qte: 1, pu: puFacade, note: '', ch: 'all' });
@@ -3477,6 +3469,14 @@ function showApp() {
       { id: 'tringles', lib: 'Tringles (tout compris)', qte: nBars, pu: T.tringle },
       { id: 'kits', lib: 'Kits tiroirs', qte: nDrawers, pu: T.kitTiroir }
     ];
+    // éléments que le configurateur ne sait pas chiffrer : mesurés ici, prix à saisir par l'équipe (qté et prix modifiables, comme les autres lignes)
+    var fmtN = function (v) { return String(Math.round(v * 10) / 10).replace('.', ','); };
+    if (m.plan_travail && m.plan_travail.long_cm) {
+      var ptl = m.plan_travail;
+      lignes.push({ id: 'plan_travail', aChiffrer: true, lib: 'Plan de travail : ' + fmtN(ptl.long_cm) + ' × ' + fmtN(ptl.prof_cm) + ' cm, ép. ' + fmtN(ptl.ep_cm) + ' cm, ' + fmtN(ptl.long_cm * ptl.prof_cm / 10000) + ' m²' + (ptl.mat_nom ? ', en ' + ptl.mat_nom : ', même matière que le meuble') + (((ptl.depasse_g_cm || 0) + (ptl.depasse_d_cm || 0) + (ptl.depasse_av_cm || 0) + (ptl.depasse_ar_cm || 0)) > 0 ? ' (débords : G ' + fmtN(ptl.depasse_g_cm || 0) + ' / D ' + fmtN(ptl.depasse_d_cm || 0) + ' / devant ' + fmtN(ptl.depasse_av_cm || 0) + ' / derrière ' + fmtN(ptl.depasse_ar_cm || 0) + ' cm)' : ''), qte: 1, pu: 0 });
+    }
+    var pdRecs = [{ lab: 'caisson principal', h: parseFloat(m.pieds_cm) || 0 }].concat(tvArr(tv.left).concat(tvArr(tv.right)).filter(function (c) { return c && !(c.niveau > 0) && !(c.y_cm > 0); }).map(function (c, i) { return { lab: 'colonne ' + (c.col != null ? c.col : i + 1), h: parseFloat(c.pieds_cm) || 0 }; })).filter(function (x) { return x.h > 0; });
+    if (pdRecs.length) lignes.push({ id: 'pieds', aChiffrer: true, lib: 'Pieds : ' + pdRecs.map(function (x) { return fmtN(x.h) + ' cm (' + x.lab + ')'; }).join(', '), qte: pdRecs.length, pu: 0 });
     lignes.forEach(function (l) { l.key = 'l:' + l.id; l.qte0 = l.qte; l.pu0 = l.pu; var o = ov[l.key]; if (o) { if (o.q != null) l.qte = o.q; if (o.pu != null) l.pu = o.pu; } l.modif = !!(o && (o.q != null || o.pu != null)); l.montant = l.qte * l.pu; });
     // compléments atelier : ce que le configurateur ne sait pas chiffrer (prix de fabrication, avant coefficient) ; invisibles pour le client, fondus dans le total
     var complements = (rc.complements || []).map(function (x, i) { var q = parseFloat(x.qte) || 0, pu = parseFloat(x.pu) || 0; return { i: i, nom: x.nom || 'Complément', qte: q, pu: pu, montant: q * pu }; });
@@ -4120,6 +4120,7 @@ function showApp() {
     cais.forEach(function (c, i) { if (/^caisson gauche/.test(c.label || '')) outerG = i; if (/^caisson droit/.test(c.label || '')) outerD = i; });
     var _pdC = cais.filter(function (c) { return !c.sansBas && !c.pont && !(c.niveau > 0) && !((c.ycm || 0) > 0) && c.pieds > 0; });
     if (_pdC.length) notes.push('Pieds : ' + _pdC.map(function (c) { return (c.label || 'caisson principal') + ' ' + fmtCm(c.pieds) + ' cm'; }).join(', ') + ' (4 pieds par caisson concerné ; les autres restent au sol, pas de plinthe sous les pieds). ATTENTION : le prix des pieds n\'est PAS pris en compte.');
+    if (m.plan_travail && m.plan_travail.long_cm) notes.push('Plan de travail : ' + fmtCm(m.plan_travail.long_cm) + ' × ' + fmtCm(m.plan_travail.prof_cm) + ' cm. ATTENTION : son prix n\'est PAS compté, à saisir dans la ligne « Plan de travail » du calcul.');
     if (m.mur_gauche || m.mur_droit) notes.push('Meuble collé à un mur : ' + [m.mur_gauche ? 'joue gauche' : '', m.mur_droit ? 'joue droite' : ''].filter(Boolean).join(' et ') + ' non comptée(s).');
     cais.forEach(function (c, ci) {
       var L = c.L, H = c.H, P = c.P, suf = c.label ? ' (' + c.label + ')' : ' (C' + ci + ')', Lt = Math.max(0, L - 2 * t), interior = Math.max(0, L - 2 * t);
@@ -4325,7 +4326,7 @@ function showApp() {
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:13px;">Calcul du prix (méthode tableur)</b><span style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="downloadTableurXlsx()">Télécharger (Excel)</button><button class="btn btn-ghost btn-sm" onclick="downloadTableurCsv()">CSV</button></span></div>' +
       '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe</th><th style="' + th + '">Chant</th><th style="' + th + '">Découpe + chant</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + f2(r.cml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
-      '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
+      '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + (l.aChiffrer && !(l.pu > 0) ? ' <span style="color:#b91c1c;font-weight:600;">⚠ prix à saisir</span>' : '') + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
       '<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:rgba(26,26,26,.55);"><span>Les dimensions, quantités et prix en cases sont modifiables (en orange : modifié à la main pour ce projet).</span>' + (nbModif ? '<button class="btn btn-ghost btn-sm" onclick="tableurResetOv()">Revenir au calcul automatique (' + nbModif + ')</button>' : '') + (rc && rc.manuel ? '<button class="btn btn-ghost btn-sm" onclick="openManuelEditor()">Modifier la proposition</button><button class="btn btn-ghost btn-sm" onclick="ajouterLigneManuelle()">Ajouter une ligne</button><button class="btn btn-ghost btn-sm" style="color:#b91c1c;" onclick="supprimerManuel()">Supprimer la proposition</button>' : '<button class="btn btn-ghost btn-sm" onclick="ouvrirEditeurElements()" title="Avancé : remplacer la liste des éléments du meuble (sauvegarde faite avant)">Modifier les éléments (avancé)</button>') + (rc && !rc.manuel && portesFusionnables(rc) ? '<button class="btn btn-ghost btn-sm" onclick="fusionnerPortes()" title="Remplace les portes empilées par des portes pleine hauteur (sauvegarde faite avant)">Fusionner les portes superposées</button>' : '') + '</div>' +
       complementsHtml(r) +
       '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(26,26,26,.15);margin-top:4px;padding-top:4px;font-weight:700;"><span>Total fabrication</span><span>' + eur(r.cout) + '</span></div>' +
@@ -6619,12 +6620,7 @@ function dedupeEls(els){
       addFinAdmin('bout_droit', 'Joue droite — ' + tvRow[tvRow.length - 1].label + ' (bout extérieur)', tvRow[tvRow.length - 1].H, CPcm, true);
       // Meuble non collé au mur du fond : joue arrière de finition par caisson
       if (meuble.dos_libre) tvRow.forEach(function (entry, i) { addFinAdmin('dos_' + i, 'Joue arrière — ' + entry.label, entry.W, entry.H, true); });
-      // Plan de travail (tous meubles sauf salle de bain) : même matière que le meuble, chant sur le pourtour, plusieurs panneaux si épais
-      if (meuble.plan_travail && meuble.plan_travail.long_cm && !meuble.plan_travail.mat_nom) {
-        const pt = meuble.plan_travail, cou = pt.couches || 1;
-        addFinAdmin('plan_travail', 'Plan de travail — ' + pt.long_cm + ' × ' + pt.prof_cm + ' cm, ép. ' + pt.ep_cm + ' cm' + (cou > 1 ? ' (' + cou + ' panneaux collés)' : ''), pt.long_cm * cou, pt.prof_cm, true);
-        q.finitions[q.finitions.length - 1].perimeter_m = Math.round(2 * (pt.long_cm + pt.prof_cm) * 10) / 1000;
-      }
+      // Plan de travail : non compté automatiquement (prix saisi par l'équipe dans la ligne « à chiffrer » du calcul)
       for (let i = 0; i < tvRow.length - 1; i++) {
         const a = tvRow[i], b = tvRow[i + 1];
         if (Math.abs(a.H - b.H) < 0.5) continue; // même hauteur (à 0.5cm près) → côté caché
@@ -6638,11 +6634,6 @@ function dedupeEls(els){
 
       // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
       q.panels_plan_m2 = {};
-      if (meuble.plan_travail && meuble.plan_travail.long_cm && meuble.plan_travail.mat_nom) {   // plan de travail d'une autre matière que le meuble : au m² de sa matière
-        const ptm = meuble.plan_travail;
-        q.panels_plan_m2[ptm.mat_nom] = (ptm.long_cm * ptm.prof_cm * (ptm.couches || 1)) / 10000;
-        q.edge_banding_ml = (q.edge_banding_ml || 0) + 2 * (ptm.long_cm + ptm.prof_cm) / 100;
-      }
       const ft = rc.furniture_type || sdb.type;
       if (ft === 'sdb' && rc.plan && rc.plan.L && rc.plan.P) {
         const planMat = rc.plan.matLabel || sdb.plan_mat || 'Non défini';

@@ -935,7 +935,7 @@ window.addEventListener('scroll', function(){
                 <span id="pt-ar-l">Dépasse derrière (cm)</span><input type="number" id="pt-ar" min="0" max="200" step="1" value="0" onchange="setPlanTv('ar',this.value)" style="padding:5px 6px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:inherit">
               </div>
               <div id="pt-info" style="margin-top:8px;line-height:1.4"></div>
-              <div style="margin-top:4px;line-height:1.4">Le plan couvre les caissons voisins de même hauteur que le principal. Une partie peut rester dans le vide (sans meuble dessous). Matière au choix (par défaut celle du meuble) ; épaisseur au-delà de 1,9 cm : plusieurs panneaux collés.</div>
+              <div style="margin-top:4px;line-height:1.4">Le plan couvre les caissons voisins de même hauteur que le principal. Une partie peut rester dans le vide (sans meuble dessous). Matière au choix (par défaut celle du meuble). Le prix du plan n'est pas compris dans le prix affiché : il est établi par l'équipe.</div>
             </div>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:10px 0 6px;cursor:pointer"><input type="checkbox" id="chk-dos-libre" onchange="setPlanTv('dos',this.checked)"> Meuble non collé au mur du fond (joue arrière, plan qui peut dépasser derrière, vue à 360°)</label>
           </div>
@@ -6218,12 +6218,7 @@ function computeFullDevisQuantities(){
       row.forEach(function(entry,i){ addFin('dos_'+i, 'Joue arrière — '+entry.label, entry.W, entry.H, true); });
       var _dk=0; (MULTI()?tvSideLeft.concat(tvSideRight):[]).forEach(function(r){ if(!r.stack) return; addFin('dos_s'+(_dk++), 'Joue arrière — caisson empilé', r.W/100, r.H/100, true); });
     }
-    // Plan de travail : même matière que le meuble, chant sur tout le pourtour ; épaisseur forte = plusieurs panneaux collés
-    var _pg=_planTvGeo();
-    if(_pg){
-      if(_pg.mat==null) addFin('plan_travail', 'Plan de travail — '+_pg.long_cm+' × '+_pg.prof_cm+' cm, ép. '+_pg.ep_cm+' cm'+(_pg.couches>1?' ('+_pg.couches+' panneaux collés)':''), _pg.long_cm/100*_pg.couches, _pg.prof_cm/100, true);
-      if(_pg.mat==null) merged.finitions[merged.finitions.length-1].perimeter_m = Math.round(2*(_pg.long_cm+_pg.prof_cm)/100*1000)/1000;
-    }
+    // Plan de travail : volontairement NON compté ici (prix fixé par l'équipe dans l'admin, ligne « à chiffrer »)
     // Bout gauche de toute la rangée
     addFin('bout_gauche', 'Joue gauche — '+row[0].label+' (bout extérieur)', row[0].H, CPm, true);
     // Bout droit de toute la rangée
@@ -6252,11 +6247,6 @@ function computeFullDevisQuantities(){
     merged.vasque_model = (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{}).label || null;
   }
 
-  // Plan de travail d'une autre matière que le meuble : au m² de SA matière (catégorie plan), chant sur le pourtour
-  if(_pg && _pg.mat!=null){
-    merged.panels_plan_m2[_pg.mat_nom] = (merged.panels_plan_m2[_pg.mat_nom]||0) + (_pg.long_cm/100*_pg.prof_cm/100*_pg.couches);
-    merged.edge_banding_m += 2*(_pg.long_cm+_pg.prof_cm)/100;
-  }
   // Chant plaqué de base (caisson/étagères/portes/tiroirs/plan), en mètre linéaire.
   // Le chant des joues de finition (périmètre complet, 4 côtés) est tracké séparément par ligne
   // (finition.perimeter_m) et recalculé dynamiquement dans l'admin selon les cases cochées.
