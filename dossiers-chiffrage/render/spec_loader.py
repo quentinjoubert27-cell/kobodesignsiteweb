@@ -249,6 +249,10 @@ def load_spec(path):
             ar_ = u.get("arrondi") if u.get("arrondi") in ("gauche", "droit", "deux") else None   # coins avant arrondis de l'étagère
             mu_.append(("etagere", ax, ax + l_, round(float(u.get("y_cm") or 0) * 10) - ep, round(float(u.get("y_cm") or 0) * 10), pr_,
                         {"arrondi": ar_, "r": round(float(u.get("rayon_cm") or 0) * 10)} if ar_ else None))
+    pl_ = mm_.get("plan_travail")   # plan de travail posé sur le meuble : peut dépasser à gauche, à droite et devant (partie dans le vide)
+    if pl_ and mx is not None and pl_.get("long_cm"):
+        th_ = max(10, round(float(pl_.get("ep_cm") or 3.8) * 10)); ax = round((float(pl_.get("x_cm") or 0) - mx) * 10); yb_ = round(float(pl_.get("y_cm") or 0) * 10)   # dessous du plan = dessus du caisson
+        mu_.append(("plan", ax, ax + round(float(pl_["long_cm"]) * 10), yb_, yb_ + th_, round(float(pl_.get("prof_cm") or D / 10) * 10), None))
     for e in (side.get("espaces") or []):   # appareils (frigo, four…) logés dans un espace libre : ils en prennent la largeur
         ap = e.get("appareil")
         if not ap or mx is None or e.get("x_cm") is None: continue

@@ -3414,6 +3414,16 @@ function showApp() {
       var pu = fp.cat === 'facade' ? puFacade : (/^Fond/.test(fp.nom) ? puEl('fond', puStruct) : puStruct);
       pieces.push({ nom: fp.nom, l: fp.l, w: fp.w, qte: 1, pu: pu, note: fp.cintre ? 'cintré' : '', ch: 'all', forme: true, surfM2: fp.surfM2, perimM: fp.perimM, chantM: fp.chantM });
     });
+    // plan de travail (tout meuble hors salle de bain) : même matière que le meuble, chant sur le pourtour ; au-delà de 19 mm, panneaux de doublage collés (sans chant)
+    if (m.plan_travail && m.plan_travail.long_cm && m.plan_travail.prof_cm) {
+      var ptv = m.plan_travail, ptc = Math.max(1, ptv.couches || 1);
+      pieces.push({ nom: 'Plan de travail', l: Math.round(ptv.long_cm * 10), w: Math.round(ptv.prof_cm * 10), qte: 1, pu: puFacade, note: '', ch: 'all' });
+      if (ptc > 1) pieces.push({ nom: 'Plan de travail (doublage, ' + (ptc - 1) + ' panneau' + (ptc > 2 ? 'x' : '') + ' collé' + (ptc > 2 ? 's' : '') + ')', l: Math.round(ptv.long_cm * 10), w: Math.round(ptv.prof_cm * 10), qte: ptc - 1, pu: puFacade, note: '', ch: 'none' });
+    }
+    // meuble non collé au mur du fond : une joue arrière de finition par caisson
+    if (m.dos_libre) cais.forEach(function (c, ci) {
+      pieces.push({ nom: 'Joue arrière (' + (c.label || 'caisson principal') + ')', l: Math.round(c.H * 10), w: Math.round(c.L * 10), qte: 1, pu: puFacade, note: '', ch: 'all' });
+    });
     var qc = rc.quincaillerie || {};   // décomptes saisis pour les formes libres (tiroirs, charnières, angles d'assemblage, tringles)
     angles += qc.angles || 0; nDrawers += qc.tiroirs || 0; nHinges += qc.charnieres || 0; nDoors += qc.portes || 0; nBars += qc.tringles || 0;
     if ((rc.formes_libres || []).length) warn.push('Formes libres : chiffrage au m² réel et chant réel. ATTENTION : le prix du cintrage et de l\'usinage des courbes n\'est PAS pris en compte.');
@@ -3468,7 +3478,7 @@ function showApp() {
     var complements = (rc.complements || []).map(function (x, i) { var q = parseFloat(x.qte) || 0, pu = parseFloat(x.pu) || 0; return { i: i, nom: x.nom || 'Complément', qte: q, pu: pu, montant: q * pu }; });
     var cout = bois + decChant + lignes.reduce(function (a, l) { return a + l.montant; }, 0) + complements.reduce(function (a, c) { return a + c.montant; }, 0);
     var coef = (g && g.coefficient_revente) || 1.5;
-    return { pieces: pieces, lignes: lignes, complements: complements, angles: angles, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, venteBase: Math.round(cout * coef * 100) / 100, petit: (cout * coef < 1500 && cout > 0), vente: Math.round(cout * coef * (cout * coef < 1500 && cout > 0 ? 1.25 : 1) * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
+    return { puStruct: puStruct, puFacade: puFacade, mat: m.matLabel || '', pieces: pieces, lignes: lignes, complements: complements, angles: angles, ml: ml, cml: cml, decChant: decChant, surface: surf, bois: bois, cout: cout, coef: coef, venteBase: Math.round(cout * coef * 100) / 100, petit: (cout * coef < 1500 && cout > 0), vente: Math.round(cout * coef * (cout * coef < 1500 && cout > 0 ? 1.25 : 1) * 100) / 100, warn: warn.filter(function (w, i, a) { return a.indexOf(w) === i; }) };
   }
   function arrLen(a) { return Array.isArray(a) ? a.length : (a ? 1 : 0); }
 
@@ -4290,7 +4300,7 @@ function showApp() {
     var nbModif = r.pieces.filter(function (p) { return p.modif; }).length + r.lignes.filter(function (l) { return l.modif; }).length;
     var ecart = prixAncien ? Math.round((r.vente - prixAncien) / prixAncien * 1000) / 10 : null;
     return '<div style="margin-top:12px;padding:12px 14px;border:1.5px solid rgba(205,62,0,.35);border-radius:10px;font-size:12px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:13px;">Calcul du prix (méthode tableur)</b><button class="btn btn-ghost btn-sm" onclick="downloadTableurCsv()">Télécharger (CSV)</button></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b style="font-size:13px;">Calcul du prix (méthode tableur)</b><span style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="downloadTableurXlsx()">Télécharger (Excel)</button><button class="btn btn-ghost btn-sm" onclick="downloadTableurCsv()">CSV</button></span></div>' +
       '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr><th style="' + th + 'text-align:left;">Pièce</th><th style="' + th + '">Long. mm</th><th style="' + th + '">Larg. mm</th><th style="' + th + '">Qté</th><th style="' + th + '">Surface</th><th style="' + th + '">Prix m²</th><th style="' + th + '">Bois</th><th style="' + th + '">Découpe</th><th style="' + th + '">Chant</th><th style="' + th + '">Découpe + chant</th></tr></thead><tbody>' + rows +
       '<tr style="border-top:2px solid rgba(26,26,26,.25);font-weight:700;"><td style="padding:4px 6px;">Panneaux, découpe et chant</td><td colspan="3"></td><td style="' + td + '">' + f2(r.surface) + ' m²</td><td></td><td style="' + td + '">' + eur(r.bois) + '</td><td style="' + td + '">' + f2(r.ml) + ' ml</td><td style="' + td + '">' + f2(r.cml) + ' ml</td><td style="' + td + '">' + eur(r.decChant) + '</td></tr></tbody></table></div>' +
       '<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="' + th + 'text-align:left;">Usinages et quincaillerie</th><th style="' + th + '">Qté</th><th style="' + th + '">Prix unit.</th><th style="' + th + '">Montant</th></tr></thead><tbody>' + r.lignes.map(function (l) { return '<tr style="border-top:1px solid rgba(26,26,26,.07);"><td style="padding:3px 6px;">' + escHtml(l.lib) + '</td><td style="' + td + '">' + inp(l.key, 'q', l.qte, 56, l.qte !== l.qte0) + '</td><td style="' + td + '">' + inp(l.key, 'pu', l.pu, 64, l.pu !== l.pu0) + ' €</td><td style="' + td + 'font-weight:600;">' + eur(l.montant) + '</td></tr>'; }).join('') + '</tbody></table>' +
@@ -4352,6 +4362,69 @@ function showApp() {
     var l = ((currentProjetRc && currentProjetRc.complements) || []).slice(), x = l[i]; if (!x) return;
     l.splice(i, 1);
     _complementsChange(l, 'Complément atelier supprimé : ' + x.nom);
+  }
+  // Export Excel (.xlsx) de tout le calcul de prix : pièces, usinages, quincaillerie, compléments, coefficient. Formules vivantes : on peut changer les prix, quantités et dimensions dans Excel.
+  async function downloadTableurXlsx() {
+    if (!_tabRes) { showToast('Aucun calcul à exporter', 'err'); return; }
+    try {
+      if (!window.ExcelJS) await new Promise(function (res, rej) { var sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'; sc.onload = res; sc.onerror = function () { rej(new Error('bibliothèque Excel indisponible')); }; document.head.appendChild(sc); });
+      var r = _tabRes, T = TABLEUR, wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('Calcul du prix', { views: [{ state: 'frozen', ySplit: 0 }] });
+      var ORANGE = 'FFCD3E00', GRIS = 'FFF1F2F4', EUR = '#,##0.00 "€"', N2 = '#,##0.00', N3 = '#,##0.000';
+      var head = function (row) { row.font = { bold: true, color: { argb: 'FFFFFFFF' } }; row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: ORANGE } }; row.alignment = { vertical: 'middle', wrapText: true }; };
+      var saisie = function (cell) { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF4D6' } }; };   // cases jaunes = à modifier
+      ws.columns = [{ width: 46 }, { width: 13 }, { width: 13 }, { width: 8 }, { width: 13 }, { width: 11 }, { width: 13 }, { width: 13 }, { width: 13 }, { width: 16 }];
+      ws.getCell('A1').value = 'Calcul du prix — méthode tableur'; ws.getCell('A1').font = { bold: true, size: 14 };
+      ws.getCell('A2').value = 'Export du ' + new Date().toLocaleDateString('fr-FR') + '. Cases jaunes = à modifier ; tout le reste se recalcule.'; ws.getCell('A2').font = { italic: true, color: { argb: 'FF666666' } };
+      var P = [['Coefficient de revente', r.coef, N2], ['Découpe (€ / ml)', T.decoupe, N2], ['Chant (€ / ml)', T.chant, N2], ['Seuil « petit projet » (€ HT)', 1500, EUR], ['Majoration petit projet', 0.25, '0%']];
+      var hasMat = r.puStruct !== undefined;
+      if (hasMat) { P.push(['Prix m² structure — ' + (r.mat || 'matière') + (r.puStruct > 0 ? '' : '  ⚠ PRIX À REMPLIR'), r.puStruct, EUR]); P.push(['Prix m² façades, joues, plan — ' + (r.mat || 'matière') + (r.puFacade > 0 ? '' : '  ⚠ PRIX À REMPLIR'), r.puFacade, EUR]); }
+      P.forEach(function (x, i) { var rw = 4 + i; ws.getCell('A' + rw).value = x[0]; var c = ws.getCell('B' + rw); c.value = x[1]; c.numFmt = x[2]; saisie(c); if (!(x[1] > 0)) c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } }; });
+      // pièces
+      var h0 = hasMat ? 12 : 10; ws.getRow(h0).values = ['Pièce', 'Longueur mm', 'Largeur mm', 'Qté', 'Surface m²', 'Prix m²', 'Bois €', 'ml découpe', 'ml chant', 'Découpe + chant €']; head(ws.getRow(h0));
+      var r0 = h0 + 1, rr = r0;
+      r.pieces.forEach(function (p) {
+        var row = ws.getRow(rr);
+        row.getCell(1).value = p.nom + (p.note ? ' (' + p.note + ')' : '');
+        row.getCell(2).value = p.l; row.getCell(3).value = p.w; row.getCell(4).value = p.qte;
+        row.getCell(5).value = p.forme ? p.surface : { formula: 'D' + rr + '*B' + rr + '*C' + rr + '/1000000', result: p.surface };
+        var _fac = /^(Joue|Façade|Porte|Plan de travail|Dessus|Dessous)/.test(p.nom), _ref = hasMat ? (_fac ? '$B$10' : '$B$9') : null, _refPu = hasMat ? (_fac ? r.puFacade : r.puStruct) : null;
+        row.getCell(6).value = (_ref && Math.abs(p.pu - _refPu) < 1e-9) ? { formula: _ref, result: p.pu } : p.pu;   // le prix suit la cellule de la matière, sauf s'il a été modifié à la main pour cette pièce
+        if (!(p.pu > 0)) row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } };
+        row.getCell(7).value = { formula: 'E' + rr + '*F' + rr, result: p.bois };
+        var mlAtt = p.qte * (p.l + p.w) * 2 / 1000;
+        row.getCell(8).value = (p.forme || Math.abs(p.ml - mlAtt) > 1e-6) ? p.ml : { formula: 'D' + rr + '*(B' + rr + '+C' + rr + ')*2/1000', result: p.ml };
+        row.getCell(9).value = p.cml;
+        row.getCell(10).value = { formula: 'H' + rr + '*$B$5+I' + rr + '*$B$6', result: p.chantDecoupe };
+        [2, 3, 4, 9].forEach(function (c) { saisie(row.getCell(c)); }); if (p.pu > 0 && !(row.getCell(6).value && row.getCell(6).value.formula)) saisie(row.getCell(6));
+        row.getCell(5).numFmt = N3; row.getCell(6).numFmt = N2; row.getCell(7).numFmt = EUR; row.getCell(8).numFmt = N3; row.getCell(9).numFmt = N3; row.getCell(10).numFmt = EUR;
+        rr++;
+      });
+      var r1 = rr - 1, tp = rr;
+      var sum = function (col) { return r1 >= r0 ? { formula: 'SUM(' + col + r0 + ':' + col + r1 + ')' } : 0; };
+      ws.getCell('A' + tp).value = 'Panneaux, découpe et chant'; ['E', 'G', 'H', 'I', 'J'].forEach(function (c) { var cell = ws.getCell(c + tp); cell.value = r1 >= r0 ? { formula: 'SUM(' + c + r0 + ':' + c + r1 + ')', result: ({ E: r.surface, G: r.bois, H: r.ml, I: r.cml, J: r.decChant })[c] } : 0; });
+      ws.getRow(tp).font = { bold: true }; ws.getRow(tp).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRIS } };
+      ws.getCell('E' + tp).numFmt = N3; ws.getCell('G' + tp).numFmt = EUR; ws.getCell('H' + tp).numFmt = N3; ws.getCell('I' + tp).numFmt = N3; ws.getCell('J' + tp).numFmt = EUR;
+      // usinages et quincaillerie
+      var hl = tp + 2; ws.getRow(hl).values = ['Usinages et quincaillerie', 'Qté', 'Prix unit. €', 'Montant €']; head(ws.getRow(hl));
+      var l0 = hl + 1, ll = l0;
+      var ligne = function (lib, q, pu, montant) { var row = ws.getRow(ll); row.getCell(1).value = lib; row.getCell(2).value = q; row.getCell(3).value = pu; row.getCell(4).value = { formula: 'B' + ll + '*C' + ll, result: montant }; saisie(row.getCell(2)); saisie(row.getCell(3)); if (!(pu > 0)) row.getCell(3).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } }; row.getCell(3).numFmt = N2; row.getCell(4).numFmt = EUR; ll++; };
+      r.lignes.forEach(function (l) { ligne(l.lib, l.qte, l.pu, l.montant); });
+      (r.complements || []).forEach(function (c) { ligne('Complément atelier : ' + c.nom, c.qte, c.pu, c.montant); });
+      var l1 = ll - 1, tl = ll;
+      ws.getCell('A' + tl).value = 'Total usinages, quincaillerie et compléments'; ws.getCell('D' + tl).value = { formula: 'SUM(D' + l0 + ':D' + l1 + ')', result: r.lignes.reduce(function (a, l) { return a + l.montant; }, 0) + (r.complements || []).reduce(function (a, c) { return a + c.montant; }, 0) }; ws.getCell('D' + tl).numFmt = EUR;
+      ws.getRow(tl).font = { bold: true }; ws.getRow(tl).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRIS } };
+      // totaux
+      var t1 = tl + 2;
+      ws.getCell('A' + t1).value = 'Total fabrication (coût de revient)'; ws.getCell('D' + t1).value = { formula: 'G' + tp + '+J' + tp + '+D' + tl, result: r.cout }; ws.getCell('D' + t1).numFmt = EUR;
+      ws.getCell('A' + (t1 + 1)).value = 'Prix de vente HT (coefficient, majoration si petit projet)';
+      ws.getCell('D' + (t1 + 1)).value = { formula: 'ROUND(D' + t1 + '*$B$4*IF(AND(D' + t1 + '>0,D' + t1 + '*$B$4<$B$7),1+$B$8,1),2)', result: r.vente }; ws.getCell('D' + (t1 + 1)).numFmt = EUR;
+      [t1, t1 + 1].forEach(function (rw) { ws.getRow(rw).font = { bold: true, size: 12 }; });
+      if (r.warn && r.warn.length) { ws.getCell('A' + (t1 + 3)).value = 'À savoir'; ws.getCell('A' + (t1 + 3)).font = { bold: true }; r.warn.forEach(function (w, i) { ws.getCell('A' + (t1 + 4 + i)).value = w; }); }
+      var buf = await wb.xlsx.writeBuffer();
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      a.download = 'calcul-prix-' + new Date().toISOString().slice(0, 10) + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
+      showToast('Excel exporté');
+    } catch (err) { console.error(err); showToast('Erreur export Excel : ' + (err.message || err), 'err'); }
   }
   function downloadTableurCsv() {
     if (!_tabRes) return;
@@ -6522,6 +6595,14 @@ function dedupeEls(els){
       });
       addFinAdmin('bout_gauche', 'Joue gauche — ' + tvRow[0].label + ' (bout extérieur)', tvRow[0].H, CPcm, true);
       addFinAdmin('bout_droit', 'Joue droite — ' + tvRow[tvRow.length - 1].label + ' (bout extérieur)', tvRow[tvRow.length - 1].H, CPcm, true);
+      // Meuble non collé au mur du fond : joue arrière de finition par caisson
+      if (meuble.dos_libre) tvRow.forEach(function (entry, i) { addFinAdmin('dos_' + i, 'Joue arrière — ' + entry.label, entry.W, entry.H, true); });
+      // Plan de travail (tous meubles sauf salle de bain) : même matière que le meuble, chant sur le pourtour, plusieurs panneaux si épais
+      if (meuble.plan_travail && meuble.plan_travail.long_cm) {
+        const pt = meuble.plan_travail, cou = pt.couches || 1;
+        addFinAdmin('plan_travail', 'Plan de travail — ' + pt.long_cm + ' × ' + pt.prof_cm + ' cm, ép. ' + pt.ep_cm + ' cm' + (cou > 1 ? ' (' + cou + ' panneaux collés)' : ''), pt.long_cm * cou, pt.prof_cm, true);
+        q.finitions[q.finitions.length - 1].perimeter_m = Math.round(2 * (pt.long_cm + pt.prof_cm) * 10) / 1000;
+      }
       for (let i = 0; i < tvRow.length - 1; i++) {
         const a = tvRow[i], b = tvRow[i + 1];
         if (Math.abs(a.H - b.H) < 0.5) continue; // même hauteur (à 0.5cm près) → côté caché

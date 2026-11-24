@@ -271,7 +271,7 @@ def hinge_sides(spec, ep):
 
     def neigh(d, side):
         for o in doors:
-            if o is d: continue
+            if o is d or o.get("fixe"): continue   # comme le configurateur : une façade fixe ne compte pas comme voisine
             adj = abs(o["x_right_mm"] - d["x_left_mm"]) <= TOL if side == "L" else abs(o["x_left_mm"] - d["x_right_mm"]) <= TOL
             ov = min(o["y_bottom_mm"] + o["height_mm"], d["y_bottom_mm"] + d["height_mm"]) - max(o["y_bottom_mm"], d["y_bottom_mm"])
             if adj and ov > 10: return True
@@ -285,8 +285,8 @@ def hinge_sides(spec, ep):
         nl, nr = neigh(d, "L"), neigh(d, "R")
         if nl and not nr: side = "R"
         elif nr and not nl: side = "L"
-        elif cl != cr: side = "L" if cl > cr else "R"
-        else: side = "L" if (d["x_left_mm"] + d["x_right_mm"]) / 2 < W / 2 else "R"
+        elif max(cl, cr) < 0.1: side = "L" if (d["x_left_mm"] + d["x_right_mm"]) / 2 < W / 2 else "R"   # aucun appui : position
+        else: side = "R" if cr > cl else "L"   # même règle que le configurateur : égalité = charnières à gauche
         out.append(side)
     return out
 
@@ -774,6 +774,8 @@ def build_furniture(cfg, opt, open_state=False):
             o_ = add_box("tete_de_lit", xl_ * mm, xr_ * mm, D * mm, (D + pr_) * mm, max(0, yb_) * mm, yt_ * mm, mt_, "h", rnd)
             if o_: objs.append(o_)
             continue
+        if _t == "plan":   # plan de travail : au nu du fond, peut dépasser devant le meuble (pas de limite à la profondeur du caisson)
+            box("plan", 0, xl_, xr_, max(0, yb_), yt_, D - pr_, D, "h"); continue
         pr_ = min(pr_, D)
         if _t == "appareil":   # frigo, four… : volume inox posé au sol (hauteur du sol = yb_), plaqué au mur
             k_ = (ex_ or {}).get("kind"); hh_ = yt_ - yb_; ww_ = xr_ - xl_
