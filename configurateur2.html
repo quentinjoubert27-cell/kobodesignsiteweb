@@ -2000,15 +2000,15 @@ function buildCaisson(){
   // tablette haute : face int = -y (idx 3), tablette basse : face int = +y (idx 2)
   var _boM=(hasAngle||currentFT==='sdb')?null:_boutOf('M',CL,CP);
   var _peM=(hasAngle||currentFT==='sdb'||_boM)?null:_penteCtx('M',CL,CH);
-  if(_boM){ buildBoutCarcass(caissonGrp,CL,CH,CP,ep,matCais,_sfM?null:matFond,_boM); }
-  else if(_peM){ buildPenteCarcass(caissonGrp,CL,CH,CP,ep,matCais,_sfM?null:matFond,_peM); }
+  if(_boM){ buildBoutCarcass(caissonGrp,CL,CH,CP,ep,matCais,_sfM?null:(_libreOn()?matCais:matFond),_boM); }
+  else if(_peM){ buildPenteCarcass(caissonGrp,CL,CH,CP,ep,matCais,_sfM?null:(_libreOn()?matCais:matFond),_peM); }
   else {
   var cg=boxBimat(ep,CH,CP,0); cg.position.set(-CL/2+ep/2,CH/2,0); caissonGrp.add(cg);
   // Joue droite : supprimée quand caisson d'angle (C2 prend sa place)
   if(!hasAngle){ var cd=boxBimat(ep,CH,CP,1); cd.position.set(CL/2-ep/2,CH/2,0); caissonGrp.add(cd); }
   var dt=boxBimat(iW,ep,CP,3); dt.position.set(0,CH-ep/2,0); caissonGrp.add(dt);
   if(!_sbM){ var db=boxBimat(iW,ep,CP,2); db.position.set(0,ep/2,0); caissonGrp.add(db); }
-  if(!_sfM){ var fd=box(CL,CH,0.008,matFond); fd.position.set(0,CH/2,-CP/2+0.004); caissonGrp.add(fd); }
+  if(!_sfM){ var _bt=_libreOn()?ep:0.008, fd=box(CL,CH,_bt,_libreOn()?matCais:matFond); fd.position.set(0,CH/2,-CP/2+_bt/2); caissonGrp.add(fd); }   // meuble non collé au mur : le dos se voit, joue arrière pleine épaisseur dans la matière du meuble
   if(!_sbM) _addPieds(caissonGrp,CL,CP,_piedsOf('M'));
   }
 
@@ -2477,14 +2477,14 @@ function buildTVExtraCaissons(box,matCais,matFond,matElem,matFacade,matTirInt,ma
     var _sfX=d.isTop?false:_sansFondOf(d.record), _sbX=d.isTop?false:_sansBasOf(d.record);
     var _boX=d.isTop?null:_boutOf(d.record,W,CP);
     var _peX=(d.isTop||_boX)?null:_penteCtx(d.record,W,H);
-    if(_boX){ buildBoutCarcass(g,W,H,CP,ep2,matCais,_sfX?null:matFond,_boX); }
-    else if(_peX){ buildPenteCarcass(g,W,H,CP,ep2,matCais,_sfX?null:matFond,_peX); }
+    if(_boX){ buildBoutCarcass(g,W,H,CP,ep2,matCais,_sfX?null:(_libreOn()?matCais:matFond),_boX); }
+    else if(_peX){ buildPenteCarcass(g,W,H,CP,ep2,matCais,_sfX?null:(_libreOn()?matCais:matFond),_peX); }
     else {
     var jg=box(ep2,H,CP,matCais); jg.position.set(-W/2+ep2/2,H/2,0); g.add(jg);
     var jd=box(ep2,H,CP,matCais); jd.position.set( W/2-ep2/2,H/2,0); g.add(jd);
     var tt=box(iWc,ep2,CP,matCais); tt.position.set(0,H-ep2/2,0); g.add(tt);
     if(!_sbX){ var bb=box(iWc,ep2,CP,matCais); bb.position.set(0,ep2/2,0); g.add(bb); }
-    if(!_sfX){ var fd=box(W,H,0.008,matFond); fd.position.set(0,H/2,-CP/2+0.004); g.add(fd); }
+    if(!_sfX){ var _bt=_libreOn()?ep2:0.008, fd=box(W,H,_bt,_libreOn()?matCais:matFond); fd.position.set(0,H/2,-CP/2+_bt/2); g.add(fd); }
     if(!d.isTop&&!_csb&&!(d.py>0.001)&&!d.record.stack) _addPieds(g,W,CP,_piedsOf(d.record));
     }
 
