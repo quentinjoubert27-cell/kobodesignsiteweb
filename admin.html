@@ -3008,7 +3008,7 @@ function showApp() {
         for (var mi0 = 0; mi0 < currentProjetMeubles.length; mi0++) {
           try {
             var jm = await devisRendersFromHelper(rcFromSdb(currentProjetMeubles[mi0]), w);
-            imgsMulti[mi0] = jm ? { ferme: jm.ferme || '', ouvert: jm.ouvert || '' } : null;
+            imgsMulti[mi0] = jm ? { ferme: jm.ferme || '', ouvert: jm.ouvert || '', arriere: jm.arriere || '' } : null;
             if (!jm) break;   // assistant injoignable : inutile de réessayer pour les autres meubles
           } catch (e) { imgsMulti[mi0] = null; helperMsg = 'Rendu impossible pour « ' + libelleMeuble(currentProjetMeubles[mi0], mi0) + ' » : ' + (e.message || e); }
         }
@@ -3057,7 +3057,9 @@ function showApp() {
     var legal = 'Symetry Wheels (Kōbō Design) · SAS au capital de 1 000 € · SIRET 893 579 136 00019 · RCS Toulouse · TVA FR24893579136 · 76 Rue Mandron, 33000 Bordeaux · contact@kobo-design.fr · 05 56 04 01 81';
     var head = function (n) { return '<div class="top"><img class="logo" src="https://www.kobo-design.fr/img/logo-kobo.png"><div class="meta"><div class="dv">PROPOSITION</div><div>N° ' + numDevis + '</div><div>Émise le ' + emise + '</div></div></div>'; };
     var visIdx = multi ? currentProjetMeubles.map(function (m, i) { return i; }).filter(function (i) { return imgsMulti[i] && (imgsMulti[i].ferme || imgsMulti[i].ouvert); }) : [];
-    var kVis = Math.ceil(visIdx.length / 2);   // plusieurs meubles : une page de visuels pour deux meubles
+    // plusieurs meubles : deux meubles par page ; un meuble avec vue arrière (3 images) occupe une page entière
+    var visPages = []; visIdx.forEach(function (i) { var lourd = !!(imgsMulti[i] && imgsMulti[i].arriere), last = visPages[visPages.length - 1]; if (last && !lourd && !last.lourd && last.idx.length < 2) last.idx.push(i); else visPages.push({ idx: [i], lourd: lourd }); });
+    var kVis = visPages.length;
     var pv = sansRendus ? [] : devisSimplePlanVasque(), nbPages = (pv.length ? 4 : 3) + kVis;
     // textes de la proposition : valeurs par défaut, ou celles modifiées dans l'éditeur
     var CC = propositionContenu({ p: p, cli: cli, cl: cl, estManuel: estManuel, multi: multi, sansRendus: sansRendus, pv: pv, nbPages: nbPages, det0: det0 }).c;
@@ -3101,9 +3103,9 @@ function showApp() {
       (function () {   // plusieurs meubles : pages de visuels (fermé / ouvert), deux meubles par page
         var out = '';
         for (var pg = 0; pg < kVis; pg++) {
-          out += '<div class="pg">' + head() + '<div class="obj"><h4>Vos meubles</h4><h2>Visuels</h2></div>' + visIdx.slice(pg * 2, pg * 2 + 2).map(function (i) {
+          out += '<div class="pg">' + head() + '<div class="obj"><h4>Vos meubles</h4><h2>Visuels</h2></div>' + visPages[pg].idx.map(function (i) {
             var ii = imgsMulti[i];
-            return '<div style="margin-top:6mm;"><h3 style="font-size:12pt;font-weight:600;margin:0 0 2mm;">' + escHtml(libelleMeuble(currentProjetMeubles[i], i)) + '</h3><div class="imgs" style="margin-top:2mm;">' + (ii.ferme ? '<figure><img src="' + ii.ferme + '"><figcaption>Meuble fermé</figcaption></figure>' : '') + (ii.ouvert ? '<figure><img src="' + ii.ouvert + '"><figcaption>Portes et tiroirs ouverts</figcaption></figure>' : '') + '</div></div>';
+            return '<div style="margin-top:6mm;"><h3 style="font-size:12pt;font-weight:600;margin:0 0 2mm;">' + escHtml(libelleMeuble(currentProjetMeubles[i], i)) + '</h3><div class="imgs" style="margin-top:2mm;">' + (ii.ferme ? '<figure><img src="' + ii.ferme + '"><figcaption>Meuble fermé</figcaption></figure>' : '') + (ii.ouvert ? '<figure><img src="' + ii.ouvert + '"><figcaption>Portes et tiroirs ouverts</figcaption></figure>' : '') + (ii.arriere ? '<figure><img src="' + ii.arriere + '"><figcaption>Vue arrière</figcaption></figure>' : '') + '</div></div>';
           }).join('') + '<p class="nc">Images non contractuelles.</p>' + foot(2 + pg) + '</div>';
         }
         return out;
