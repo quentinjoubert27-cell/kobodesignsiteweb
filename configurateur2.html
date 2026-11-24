@@ -4965,7 +4965,7 @@ function _planTvRow(){
 }
 function _planTvGeo(){
   if(!S.ptOn||currentFT==='sdb'||isSDBMode) return null;
-  var r=_planTvRow(), g=S.murG?0:Math.max(0,+S.ptG||0), d=S.murD?0:Math.max(0,+S.ptD||0), av=Math.max(0,+S.ptAv||0), ar=_libreOn()?Math.max(0,+S.ptAr||0):0, ep=+S.ptEp>0?+S.ptEp:3.8;
+  var r=_planTvRow(), g=Math.max(0,+S.ptG||0), d=Math.max(0,+S.ptD||0), av=Math.max(0,+S.ptAv||0), ar=_libreOn()?Math.max(0,+S.ptAr||0):0, ep=+S.ptEp>0?+S.ptEp:3.8;
   var mi=(S.ptMat!=null&&MATS_CAIS[S.ptMat])?S.ptMat:null, own=(mi!=null&&MATS_CAIS[mi].n!==MATS_CAIS[S.matCais].n);
   return {mat:own?mi:null, mat_nom:own?MATS_CAIS[mi].n:null, x_cm:R2(r.x-g), long_cm:R2(r.long+g+d), prof_cm:R2(r.P+av+ar), ep_cm:ep, y_cm:r.yTop, couches:Math.max(1,Math.ceil(ep/1.9-0.05)), g:g, d:d, av:av, ar:ar, n:r.n};
 }
@@ -4990,7 +4990,7 @@ function _planTvSync(){
   var sm=document.getElementById('pt-mat'); if(sm){ if(!sm.options.length) sm.innerHTML='<option value="">Même matière que le meuble</option>'+MATS_CAIS.map(function(m,i){return '<option value="'+i+'">'+m.n+'</option>';}).join(''); if(document.activeElement!==sm) sm.value=(S.ptMat!=null)?String(S.ptMat):''; }
   [['pt-ep',S.ptEp],['pt-g',S.ptG],['pt-d',S.ptD],['pt-av',S.ptAv],['pt-ar',S.ptAr]].forEach(function(a){ var e=document.getElementById(a[0]); if(e&&document.activeElement!==e) e.value=a[1]; });
   var g=_planTvGeo(), inf=document.getElementById('pt-info');
-  if(inf) inf.textContent=g?('Plan : '+g.long_cm+' × '+g.prof_cm+' cm, épaisseur '+g.ep_cm+' cm'+(g.couches>1?' ('+g.couches+' panneaux collés)':'')+(S.murG&&+S.ptG>0?' · à gauche, le mur empêche tout débord':'')+(S.murD&&+S.ptD>0?' · à droite, le mur empêche tout débord':'')+'.'):'';
+  if(inf) inf.textContent=g?('Plan : '+g.long_cm+' × '+g.prof_cm+' cm, épaisseur '+g.ep_cm+' cm'+(g.couches>1?' ('+g.couches+' panneaux collés)':'')+'.'):'';
 }
 function setPlanTv(k,v){
   if(k==='on') S.ptOn=!!v;
