@@ -775,7 +775,9 @@ def build_furniture(cfg, opt, open_state=False):
             if o_: objs.append(o_)
             continue
         if _t == "plan":   # plan de travail : au nu du fond, peut dépasser devant le meuble (pas de limite à la profondeur du caisson)
-            box("plan", 0, xl_, xr_, max(0, yb_), yt_, D - pr_, D, "h"); continue
+            k_ = ((ex_ or {}).get("mat") or "").strip().lower(); tex_ = DECORS.get(k_)   # matière propre au plan (sinon : celle du meuble)
+            mt_ = mat_wood("plan_travail", os.path.join(REPO, tex_)) if tex_ else (mat_wood("plan_travail", None, FLAT_COLORS[k_], 0.6) if k_ in FLAT_COLORS else None)
+            box("plan", 0, xl_, xr_, max(0, yb_), yt_, D - pr_, D, "h", mt_); continue
         pr_ = min(pr_, D)
         if _t == "appareil":   # frigo, four… : volume inox posé au sol (hauteur du sol = yb_), plaqué au mur
             k_ = (ex_ or {}).get("kind"); hh_ = yt_ - yb_; ww_ = xr_ - xl_

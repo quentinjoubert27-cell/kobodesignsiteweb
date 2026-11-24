@@ -2122,7 +2122,7 @@ function showApp() {
       ${singlePriceRow('Caisson : prix par défaut (utilisé quand la matière n\'a pas de prix ci-dessous)', 'panels_caisson_m2|Caisson', 'm²')}
       ${matSection('Caisson : structure selon la matière (montants, traverses, étagères, intercalaires, fond)', 'structure_m2', 'm²', MATS_CAIS_NAMES)}
       ${matSection('Façades et joues visibles (portes, tiroirs, joues de finition)', 'finition_m2', 'm²', MATS_CAIS_NAMES)}
-      ${matSection('Plan de travail', 'panels_plan_m2', 'm²', MATS_PLAN_NAMES)}
+      ${matSection('Plan de travail', 'panels_plan_m2', 'm²', MATS_PLAN_NAMES.concat(MATS_CAIS_NAMES))}
       <div class="detail-panel" style="padding:16px 20px;margin-top:8px;">
         ${fixedRow('Coefficient de vente', 'mp-coefficient', p.coefficient_revente ?? 1.5, '')}
       </div>
@@ -3417,8 +3417,10 @@ function showApp() {
     // plan de travail (tout meuble hors salle de bain) : même matière que le meuble, chant sur le pourtour ; au-delà de 19 mm, panneaux de doublage collés (sans chant)
     if (m.plan_travail && m.plan_travail.long_cm && m.plan_travail.prof_cm) {
       var ptv = m.plan_travail, ptc = Math.max(1, ptv.couches || 1);
-      pieces.push({ nom: 'Plan de travail', l: Math.round(ptv.long_cm * 10), w: Math.round(ptv.prof_cm * 10), qte: 1, pu: puFacade, note: '', ch: 'all' });
-      if (ptc > 1) pieces.push({ nom: 'Plan de travail (doublage, ' + (ptc - 1) + ' panneau' + (ptc > 2 ? 'x' : '') + ' collé' + (ptc > 2 ? 's' : '') + ')', l: Math.round(ptv.long_cm * 10), w: Math.round(ptv.prof_cm * 10), qte: ptc - 1, pu: puFacade, note: '', ch: 'none' });
+      var puPlan = ptv.mat_nom ? (pm['panels_plan_m2|' + ptv.mat_nom] || pm['finition_m2|' + ptv.mat_nom] || pm['panels_porte_m2|' + ptv.mat_nom] || 0) : puFacade;   // autre matière : son prix, sinon 0 (à renseigner)
+      var ptn = ptv.mat_nom ? ' en ' + ptv.mat_nom : '';
+      pieces.push({ nom: 'Plan de travail' + ptn, l: Math.round(ptv.long_cm * 10), w: Math.round(ptv.prof_cm * 10), qte: 1, pu: puPlan, note: '', ch: 'all' });
+      if (ptc > 1) pieces.push({ nom: 'Plan de travail' + ptn + ' (doublage, ' + (ptc - 1) + ' panneau' + (ptc > 2 ? 'x' : '') + ' collé' + (ptc > 2 ? 's' : '') + ')', l: Math.round(ptv.long_cm * 10), w: Math.round(ptv.prof_cm * 10), qte: ptc - 1, pu: puPlan, note: '', ch: 'none' });
     }
     // meuble non collé au mur du fond : une joue arrière de finition par caisson
     if (m.dos_libre) cais.forEach(function (c, ci) {
@@ -6598,7 +6600,7 @@ function dedupeEls(els){
       // Meuble non collé au mur du fond : joue arrière de finition par caisson
       if (meuble.dos_libre) tvRow.forEach(function (entry, i) { addFinAdmin('dos_' + i, 'Joue arrière — ' + entry.label, entry.W, entry.H, true); });
       // Plan de travail (tous meubles sauf salle de bain) : même matière que le meuble, chant sur le pourtour, plusieurs panneaux si épais
-      if (meuble.plan_travail && meuble.plan_travail.long_cm) {
+      if (meuble.plan_travail && meuble.plan_travail.long_cm && !meuble.plan_travail.mat_nom) {
         const pt = meuble.plan_travail, cou = pt.couches || 1;
         addFinAdmin('plan_travail', 'Plan de travail — ' + pt.long_cm + ' × ' + pt.prof_cm + ' cm, ép. ' + pt.ep_cm + ' cm' + (cou > 1 ? ' (' + cou + ' panneaux collés)' : ''), pt.long_cm * cou, pt.prof_cm, true);
         q.finitions[q.finitions.length - 1].perimeter_m = Math.round(2 * (pt.long_cm + pt.prof_cm) * 10) / 1000;
@@ -6616,6 +6618,11 @@ function dedupeEls(els){
 
       // Plan de travail (salle de bain uniquement — rc.plan est toujours présent ({} vide) sur les autres types)
       q.panels_plan_m2 = {};
+      if (meuble.plan_travail && meuble.plan_travail.long_cm && meuble.plan_travail.mat_nom) {   // plan de travail d'une autre matière que le meuble : au m² de sa matière
+        const ptm = meuble.plan_travail;
+        q.panels_plan_m2[ptm.mat_nom] = (ptm.long_cm * ptm.prof_cm * (ptm.couches || 1)) / 10000;
+        q.edge_banding_ml = (q.edge_banding_ml || 0) + 2 * (ptm.long_cm + ptm.prof_cm) / 100;
+      }
       const ft = rc.furniture_type || sdb.type;
       if (ft === 'sdb' && rc.plan && rc.plan.L && rc.plan.P) {
         const planMat = rc.plan.matLabel || sdb.plan_mat || 'Non défini';

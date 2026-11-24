@@ -925,6 +925,8 @@ window.addEventListener('scroll', function(){
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="chk-plan-tv" onchange="setPlanTv('on',this.checked)"> Ajouter un plan de travail sur le meuble</label>
             <div id="plan-tv-opts" style="display:none;margin:4px 0 10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)">
               <div style="display:grid;grid-template-columns:1fr 84px;gap:6px 10px;align-items:center">
+                <span>Matière</span>
+                <select id="pt-mat" onchange="setPlanTv('mat',this.value)" style="padding:5px 6px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:inherit"></select>
                 <span>Épaisseur</span>
                 <select id="pt-ep" onchange="setPlanTv('ep',this.value)" style="padding:5px 6px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:inherit"><option value="1.9">1,9 cm</option><option value="3.8" selected>3,8 cm</option><option value="5.7">5,7 cm</option></select>
                 <span>Dépasse à gauche (cm)</span><input type="number" id="pt-g" min="0" max="300" step="1" value="0" onchange="setPlanTv('g',this.value)" style="padding:5px 6px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:inherit">
@@ -932,7 +934,7 @@ window.addEventListener('scroll', function(){
                 <span>Dépasse devant (cm)</span><input type="number" id="pt-av" min="0" max="100" step="1" value="2" onchange="setPlanTv('av',this.value)" style="padding:5px 6px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:inherit">
               </div>
               <div id="pt-info" style="margin-top:8px;line-height:1.4"></div>
-              <div style="margin-top:4px;line-height:1.4">Le plan couvre les caissons voisins de même hauteur que le principal. Une partie peut rester dans le vide (sans meuble dessous). Même matière que le meuble ; épaisseur au-delà de 1,9 cm : plusieurs panneaux collés.</div>
+              <div style="margin-top:4px;line-height:1.4">Le plan couvre les caissons voisins de même hauteur que le principal. Une partie peut rester dans le vide (sans meuble dessous). Matière au choix (par défaut celle du meuble) ; épaisseur au-delà de 1,9 cm : plusieurs panneaux collés.</div>
             </div>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:10px 0 6px;cursor:pointer"><input type="checkbox" id="chk-dos-libre" onchange="setPlanTv('dos',this.checked)"> Meuble non collé au mur du fond (ajoute une joue arrière)</label>
           </div>
@@ -1388,7 +1390,7 @@ var S = {
   // Plan
   L:1.40, P:0.55, Ep:0.04, matPlan:0,
   depassG:0.10, depassD:0.10, // dépassement gauche/droite (m)
-  ptOn:false, ptEp:3.8, ptG:0, ptD:0, ptAv:2, dosLibre:false,   // plan de travail sur le meuble (hors salle de bain) ; meuble non collé au mur du fond
+  ptOn:false, ptMat:null, ptEp:3.8, ptG:0, ptD:0, ptAv:2, dosLibre:false,   // plan de travail sur le meuble (hors salle de bain) ; meuble non collé au mur du fond
   murG:false, murD:false,     // meuble collé à un mur à gauche / à droite
   // Vasque
   vx:0, vz:0, vx2:0, vz2:0, nbVasques:1,
@@ -4935,16 +4937,17 @@ function _planTvRow(){
 function _planTvGeo(){
   if(!S.ptOn||currentFT==='sdb'||isSDBMode) return null;
   var r=_planTvRow(), g=S.murG?0:Math.max(0,+S.ptG||0), d=S.murD?0:Math.max(0,+S.ptD||0), av=Math.max(0,+S.ptAv||0), ep=+S.ptEp>0?+S.ptEp:3.8;
-  return {x_cm:R2(r.x-g), long_cm:R2(r.long+g+d), prof_cm:R2(r.P+av), ep_cm:ep, y_cm:r.yTop, couches:Math.max(1,Math.ceil(ep/1.9-0.05)), g:g, d:d, av:av, n:r.n};
+  var mi=(S.ptMat!=null&&MATS_CAIS[S.ptMat])?S.ptMat:null, own=(mi!=null&&MATS_CAIS[mi].n!==MATS_CAIS[S.matCais].n);
+  return {mat:own?mi:null, mat_nom:own?MATS_CAIS[mi].n:null, x_cm:R2(r.x-g), long_cm:R2(r.long+g+d), prof_cm:R2(r.P+av), ep_cm:ep, y_cm:r.yTop, couches:Math.max(1,Math.ceil(ep/1.9-0.05)), g:g, d:d, av:av, n:r.n};
 }
 function _planTvExport(){
   var g=_planTvGeo(); if(!g) return undefined;
-  return {x_cm:g.x_cm, long_cm:g.long_cm, prof_cm:g.prof_cm, ep_cm:g.ep_cm, y_cm:g.y_cm, couches:g.couches, depasse_g_cm:g.g, depasse_d_cm:g.d, depasse_av_cm:g.av};
+  return {x_cm:g.x_cm, long_cm:g.long_cm, prof_cm:g.prof_cm, ep_cm:g.ep_cm, y_cm:g.y_cm, couches:g.couches, mat:g.mat!=null?g.mat:undefined, mat_nom:g.mat_nom||undefined, depasse_g_cm:g.g, depasse_d_cm:g.d, depasse_av_cm:g.av};
 }
 function _buildPlanTv(matElem,CP){
   var g=_planTvGeo(); if(!g) return;
   var ly=_layout(S.CL), eL=-(ly.leftW+S.CL/2), l=g.long_cm/100, d=g.prof_cm/100, th=g.ep_cm/100;
-  var m=new THREE.Mesh(new THREE.BoxGeometry(l,th,d),matElem);
+  var m=new THREE.Mesh(new THREE.BoxGeometry(l,th,d),(g.mat!=null)?_teteMat({mat:g.mat},l,d):matElem);
   m.position.set(eL+g.x_cm/100+l/2, R2(S.CH*100)/100+th/2, -CP/2+d/2);
   m.castShadow=true; m.raycast=function(){}; m.userData.mural=true; caissonGrp.add(m);
 }
@@ -4954,6 +4957,7 @@ function _planTvSync(){
   var c=document.getElementById('chk-plan-tv'); if(c) c.checked=!!S.ptOn;
   var o=document.getElementById('plan-tv-opts'); if(o) o.style.display=S.ptOn?'':'none';
   var dl=document.getElementById('chk-dos-libre'); if(dl) dl.checked=!!S.dosLibre;
+  var sm=document.getElementById('pt-mat'); if(sm){ if(!sm.options.length) sm.innerHTML='<option value="">Même matière que le meuble</option>'+MATS_CAIS.map(function(m,i){return '<option value="'+i+'">'+m.n+'</option>';}).join(''); if(document.activeElement!==sm) sm.value=(S.ptMat!=null)?String(S.ptMat):''; }
   [['pt-ep',S.ptEp],['pt-g',S.ptG],['pt-d',S.ptD],['pt-av',S.ptAv]].forEach(function(a){ var e=document.getElementById(a[0]); if(e&&document.activeElement!==e) e.value=a[1]; });
   var g=_planTvGeo(), inf=document.getElementById('pt-info');
   if(inf) inf.textContent=g?('Plan : '+g.long_cm+' × '+g.prof_cm+' cm, épaisseur '+g.ep_cm+' cm'+(g.couches>1?' ('+g.couches+' panneaux collés)':'')+(S.murG&&+S.ptG>0?' · à gauche, le mur empêche tout débord':'')+(S.murD&&+S.ptD>0?' · à droite, le mur empêche tout débord':'')+'.'):'';
@@ -4961,6 +4965,7 @@ function _planTvSync(){
 function setPlanTv(k,v){
   if(k==='on') S.ptOn=!!v;
   else if(k==='dos') S.dosLibre=!!v;
+  else if(k==='mat'){ S.ptMat=(v===''||v==null||!MATS_CAIS[+v])?null:+v; }
   else if(k==='ep'){ v=parseFloat(v); S.ptEp=(v>0)?Math.max(1.9,Math.min(8,v)):3.8; }
   else { v=parseFloat(v); v=isFinite(v)?Math.max(0,Math.min(k==='av'?100:300,v)):0; if(k==='g') S.ptG=v; else if(k==='d') S.ptD=v; else if(k==='av') S.ptAv=v; }
   buildCaisson(); _planTvSync(); try{ refreshPriceBadge(); }catch(e){}
@@ -6186,8 +6191,8 @@ function computeFullDevisQuantities(){
     // Plan de travail : même matière que le meuble, chant sur tout le pourtour ; épaisseur forte = plusieurs panneaux collés
     var _pg=_planTvGeo();
     if(_pg){
-      addFin('plan_travail', 'Plan de travail — '+_pg.long_cm+' × '+_pg.prof_cm+' cm, ép. '+_pg.ep_cm+' cm'+(_pg.couches>1?' ('+_pg.couches+' panneaux collés)':''), _pg.long_cm/100*_pg.couches, _pg.prof_cm/100, true);
-      merged.finitions[merged.finitions.length-1].perimeter_m = Math.round(2*(_pg.long_cm+_pg.prof_cm)/100*1000)/1000;
+      if(_pg.mat==null) addFin('plan_travail', 'Plan de travail — '+_pg.long_cm+' × '+_pg.prof_cm+' cm, ép. '+_pg.ep_cm+' cm'+(_pg.couches>1?' ('+_pg.couches+' panneaux collés)':''), _pg.long_cm/100*_pg.couches, _pg.prof_cm/100, true);
+      if(_pg.mat==null) merged.finitions[merged.finitions.length-1].perimeter_m = Math.round(2*(_pg.long_cm+_pg.prof_cm)/100*1000)/1000;
     }
     // Bout gauche de toute la rangée
     addFin('bout_gauche', 'Joue gauche — '+row[0].label+' (bout extérieur)', row[0].H, CPm, true);
@@ -6217,6 +6222,11 @@ function computeFullDevisQuantities(){
     merged.vasque_model = (_vasqueModels.find(function(m){return m.id===_vasqueSelected;})||{}).label || null;
   }
 
+  // Plan de travail d'une autre matière que le meuble : au m² de SA matière (catégorie plan), chant sur le pourtour
+  if(_pg && _pg.mat!=null){
+    merged.panels_plan_m2[_pg.mat_nom] = (merged.panels_plan_m2[_pg.mat_nom]||0) + (_pg.long_cm/100*_pg.prof_cm/100*_pg.couches);
+    merged.edge_banding_m += 2*(_pg.long_cm+_pg.prof_cm)/100;
+  }
   // Chant plaqué de base (caisson/étagères/portes/tiroirs/plan), en mètre linéaire.
   // Le chant des joues de finition (périmètre complet, 4 côtés) est tracké séparément par ligne
   // (finition.perimeter_m) et recalculé dynamiquement dans l'admin selon les cases cochées.
@@ -7099,7 +7109,7 @@ function appliquerConfig(cfg, opts){
     S.plafondCm=(+cfg.plafondCm>0)?+cfg.plafondCm:0; S.suspenduCm=(+cfg.suspenduCm>0)?+cfg.suspenduCm:0; S.sansFondM=!!cfg.sansFondM; S.sansBasM=!!cfg.sansBasM; S.piedsCm=(+cfg.piedsCm>0)?+cfg.piedsCm:0; S.baseYM=(+cfg.baseYM>0)?+cfg.baseYM:0; S.archeM=cfg.archeM||null; S.nicheM=cfg.nicheM||null; S.penteM=cfg.penteM||null; S.panneauSeul=!!cfg.panneauSeul; S.muraux=Array.isArray(cfg.muraux)?cfg.muraux.map(function(t){return {type:(t.type==='intercalaire'||t.type==='facade'||t.type==='tete')?t.type:'etagere',mat:(t.type==='tete'&&t.mat!=null&&MATS_CAIS[+t.mat])?+t.mat:null,x_cm:+t.x_cm||0,y_cm:+t.y_cm||50,long_cm:+t.long_cm||40,haut_cm:+t.haut_cm||80,prof_cm:+t.prof_cm||R2(S.CairsonP*100),arrondi:(t.type!=='intercalaire'&&t.type!=='facade'&&t.type!=='tete'&&(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux'))?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[]; S.tablettes=Array.isArray(cfg.tablettes)?cfg.tablettes.map(function(t){return {cote:t.cote==='droite'?'droite':'gauche',y_cm:+t.y_cm||50,long_cm:(t.auto===true)?null:((+t.long_cm>0)?+t.long_cm:null),prof_cm:+t.prof_cm||R2(S.CairsonP*100),arrondi:(t.arrondi==='gauche'||t.arrondi==='droit'||t.arrondi==='deux')?t.arrondi:undefined,rayon_cm:+t.rayon_cm||undefined};}):[];
     if(cfg.mur_gauche) setMur('G',true);
     if(cfg.mur_droit) setMur('D',true);
-    S.dosLibre=!!cfg.dos_libre; var _pt=cfg.plan_travail; S.ptOn=!!(_pt&&_pt.long_cm); if(_pt&&_pt.long_cm){ S.ptEp=+_pt.ep_cm>0?+_pt.ep_cm:3.8; S.ptG=+_pt.depasse_g_cm||0; S.ptD=+_pt.depasse_d_cm||0; S.ptAv=+_pt.depasse_av_cm||0; }
+    S.dosLibre=!!cfg.dos_libre; var _pt=cfg.plan_travail; S.ptOn=!!(_pt&&_pt.long_cm); if(_pt&&_pt.long_cm){ S.ptEp=+_pt.ep_cm>0?+_pt.ep_cm:3.8; S.ptMat=null; if(_pt.mat_nom){ for(var _pi=0;_pi<MATS_CAIS.length;_pi++){ if(MATS_CAIS[_pi].n===_pt.mat_nom){ S.ptMat=_pi; break; } } } S.ptG=+_pt.depasse_g_cm||0; S.ptD=+_pt.depasse_d_cm||0; S.ptAv=+_pt.depasse_av_cm||0; }
     if(cfg.matLabel){
       var mi=-1; for(var _i=0;_i<MATS_CAIS.length;_i++){ if(MATS_CAIS[_i].n===cfg.matLabel){mi=_i;break;} }
       if(mi>=0) setMatCais(mi);
