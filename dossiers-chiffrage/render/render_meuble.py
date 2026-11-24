@@ -561,7 +561,7 @@ def build_furniture(cfg, opt, open_state=False):
             if t == "traverse_basse" and spec.get("_sans_bas"): continue   # sans bas : électroménager posé au sol
             if t == "fond":
                 if spec.get("_sans_fond"): continue
-                B("fond", p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], D - 8, D, "v", fond_mat)
+                B("fond", p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], D - (ep if spec.get("_dos_libre") else 8), D, "v", fond_mat)
             elif t.startswith("joue"):
                 B(t, p["x_left_mm"], p["x_right_mm"], p["y_bottom_mm"], p["y_top_mm"], 0, D, "v")
             else:
@@ -777,7 +777,8 @@ def build_furniture(cfg, opt, open_state=False):
         if _t == "plan":   # plan de travail : au nu du fond, peut dépasser devant le meuble (pas de limite à la profondeur du caisson)
             k_ = ((ex_ or {}).get("mat") or "").strip().lower(); tex_ = DECORS.get(k_)   # matière propre au plan (sinon : celle du meuble)
             mt_ = mat_wood("plan_travail", os.path.join(REPO, tex_)) if tex_ else (mat_wood("plan_travail", None, FLAT_COLORS[k_], 0.6) if k_ in FLAT_COLORS else None)
-            box("plan", 0, xl_, xr_, max(0, yb_), yt_, D - pr_, D, "h", mt_); continue
+            ar_ = (ex_ or {}).get("ar", 0)   # débord derrière (meuble non collé au mur)
+            box("plan", 0, xl_, xr_, max(0, yb_), yt_, D - pr_ + ar_, D + ar_, "h", mt_); continue
         pr_ = min(pr_, D)
         if _t == "appareil":   # frigo, four… : volume inox posé au sol (hauteur du sol = yb_), plaqué au mur
             k_ = (ex_ or {}).get("kind"); hh_ = yt_ - yb_; ww_ = xr_ - xl_
@@ -982,8 +983,9 @@ def render_demande(opt, cfg, out):
     Dw = info.get("Dw", D)
     wall = mat_plain("mur", (0.66, 0.60, 0.59), 0.95)
     floor = mat_plain("sol", (0.74, 0.72, 0.69), 0.85)
-    add_plane("mur", (-30, Dw, -1), (30, Dw, -1), (30, Dw, 12), (-30, Dw, 12), wall)
-    add_plane("sol", (-30, -40, 0), (30, -40, 0), (30, Dw, 0), (-30, Dw, 0), floor)
+    if not cfg.get("_libre"): add_plane("mur", (-30, Dw, -1), (30, Dw, -1), (30, Dw, 12), (-30, Dw, 12), wall)   # meuble non collé au mur : pas de mur, on peut en faire le tour
+    add_plane("sol", (-30, -40, 0), (30, -40, 0), (30, Dw + (30 if cfg.get("_libre") else 0), 0), (-30, Dw + (30 if cfg.get("_libre") else 0), 0), floor)
+    if cfg.get("_libre"): add_area_light((W / 2, Dw + 3.5, H * 0.9 + 1.0), (W / 2, D / 2, H * 0.4), 5.0, 300)   # lumière côté dos pour les vues arrière
     setup_world(scene, (0.92, 0.88, 0.88), 0.30)
     add_area_light((W + 3.2, -3.6, H * 0.9 + 1.0), (W / 2, D, H * 0.4), 6.0, 520)
     cam = make_camera(scene, (0, 0, 0), (0, 0, 0), lens=45)
@@ -1146,7 +1148,7 @@ def render_parts(opt, cfg, out):
 
 
 # Vues choisies dans l'admin (cfg["rendu"]["vues"] = {"ferme": ..., "ouvert": ...}) : direction de la caméra (x, y, z) depuis le meuble
-VUES = {"face": (0.0, -1.0, 0.0), "gauche": (-0.55, -1.0, 0.0), "droite": (0.55, -1.0, 0.0), "plongee": (0.25, -1.0, 1.1), "dessus": (0.0, -0.4, 1.0),
+VUES = {"arriere": (0.0, 1.0, 0.0), "arriere_gauche": (-0.55, 1.0, 0.0), "arriere_droite": (0.55, 1.0, 0.0), "face": (0.0, -1.0, 0.0), "gauche": (-0.55, -1.0, 0.0), "droite": (0.55, -1.0, 0.0), "plongee": (0.25, -1.0, 1.1), "dessus": (0.0, -0.4, 1.0),
         "zoom_gauche": (-0.3, -1.0, 0.1), "zoom_centre": (0.0, -1.0, 0.1), "zoom_droit": (0.3, -1.0, 0.1)}
 ZOOM_X = {"zoom_gauche": 1 / 6.0, "zoom_centre": 0.5, "zoom_droit": 5 / 6.0}
 
@@ -1180,8 +1182,9 @@ def render_pair(opt, cfg, out):
     verifier(cfg, objs, out)
     wall = mat_plain("mur", (0.66, 0.60, 0.59), 0.95)
     floor = mat_plain("sol", (0.74, 0.72, 0.69), 0.85)
-    add_plane("mur", (-30, Dw, -1), (30, Dw, -1), (30, Dw, 12), (-30, Dw, 12), wall)
-    add_plane("sol", (-30, -40, 0), (30, -40, 0), (30, Dw, 0), (-30, Dw, 0), floor)
+    if not cfg.get("_libre"): add_plane("mur", (-30, Dw, -1), (30, Dw, -1), (30, Dw, 12), (-30, Dw, 12), wall)   # meuble non collé au mur : pas de mur, on peut en faire le tour
+    add_plane("sol", (-30, -40, 0), (30, -40, 0), (30, Dw + (30 if cfg.get("_libre") else 0), 0), (-30, Dw + (30 if cfg.get("_libre") else 0), 0), floor)
+    if cfg.get("_libre"): add_area_light((W / 2, Dw + 3.5, H * 0.9 + 1.0), (W / 2, D / 2, H * 0.4), 5.0, 300)   # lumière côté dos pour les vues arrière
     setup_world(scene, (0.92, 0.88, 0.88), 0.35)
     add_area_light((W + 3.2, -3.8, H * 0.9 + 1.0), (W / 2, D, H * 0.4), 6.0, 560)
     add_area_light((-W * 0.4 - 1.5, -3.0, H * 0.8 + 0.6), (W / 2, 0, H * 0.4), 5.0, 220)   # contre-jour doux : éclaire l'intérieur
