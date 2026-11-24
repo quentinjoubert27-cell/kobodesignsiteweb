@@ -1788,6 +1788,7 @@ function _basHtml(r){
 }
 // Espace utile à l'intérieur : les cotes saisies sont extérieures, les panneaux (EP) sont compris dedans
 function _utileHtml(r){
+  if(!_isAdminMode()) return '';   // réservé à l'équipe
   var e=EP*100, sb=_sansBasOf(_recAt(r.side,r.idx,r.k)), w=(+r.W||0)-2*e, h=(+r.H||0)-(sb?1:2)*e, fm=function(v){ return String(Math.round(v*100)/100).replace('.',','); };
   if(w<=0||h<=0) return '';
   return '<div style="font-size:11px;color:var(--text2);margin:-2px 0 6px">Utile à l\'intérieur : '+fm(w)+' × '+fm(h)+' cm (panneaux de '+fm(e)+' cm compris dans les cotes)</div>';
@@ -3037,7 +3038,7 @@ function _addPieds(g,W,CP,hcm){
   });
 }
 function _piedsColHtml(r){
-  if(r.k!==0||currentFT==='sdb') return '';
+  if(!_isAdminMode()||r.k!==0||currentFT==='sdb') return '';
   var rec=_recAt(r.side,r.idx,0), v=(rec==='M'?S.piedsCm:(rec&&rec.pieds))||0, sb=_sansBasOf(rec);
   var opts=[[0,'aucun'],[8,'8 cm'],[10,'10 cm'],[12,'12 cm'],[15,'15 cm'],[20,'20 cm']].map(function(o){
     return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>';
@@ -3571,6 +3572,13 @@ function placeOrRemoveCaisson(e, skipUndo){
       return Math.abs(el.y_cm-hit.y_cm)<MIN_GAP_H&&sl<bay1.right_cm&&sr>bay1.left_cm;
     })) return true;
     els.push({type:caissonType,y_cm:hit.y_cm,x_left_cm:bay1.left_cm,x_right_cm:bay1.right_cm});
+    if(caissonType!=='barre'){   // une porte ou un tiroir qui serait coupé en deux par la nouvelle étagère est retiré (sinon il reste en double avec ceux posés dans les nouveaux compartiments)
+      els=els.filter(function(el){
+        if((el.type!=='porte'&&el.type!=='tiroir')||el.enc||!el.key) return true;
+        var q=String(el.key).split('_').map(Number); if(q.length!==4||q.some(isNaN)) return true;
+        return !(q[0]<hit.y_cm-0.01&&q[2]>hit.y_cm+0.01&&q[1]<bay1.right_cm&&q[3]>bay1.left_cm);
+      });
+    }
     setActiveEls(els);
   } else if(caissonType==='separator'||caissonType==='separator_simple'){
     var _incS2=caissonType==='separator_simple';
