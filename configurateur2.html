@@ -7153,6 +7153,7 @@ function appliquerConfig(cfg, opts){
         _colMap[_leftN]='M';
         _stacked.sort(function(a,b){return a.r.niveau-b.r.niveau;});
         var _last={}, _colLv={}, _colY={};
+        var _rootY=function(ck){ var rt=_colMap[ck]; if(rt==='M') return Math.round(+S.baseYM||0); var f=(Array.isArray(cfg.tvSide.left)?cfg.tvSide.left:[]).concat(Array.isArray(cfg.tvSide.right)?cfg.tvSide.right:[]).filter(function(r){return r&&r.col==ck&&!(r.niveau>0);})[0]; return Math.round(+(f&&f.y_cm)||0); };
         _stacked.forEach(function(x){
           var root=_colMap[x.r.col]; if(root===undefined) return;
           var below=_last[x.r.col]||root, rec=makeTvRecord(Math.round(x.r.W_cm),Math.round(x.r.H_cm));
@@ -7160,7 +7161,7 @@ function appliquerConfig(cfg, opts){
           (x.side==='left'?tvSideLeft:tvSideRight).push(rec); _last[x.r.col]=rec;
           if(root==='M') S.CHtot=Math.round((S.CHtot*100+rec.H))/100; else root.Htot=(root.Htot||root.H)+rec.H;
           var ck=x.r.col; _colLv[ck]=_colLv[ck]||[root==='M'?R2(S.CH*100):root.H]; _colLv[ck].push(rec.H);
-          _colY[ck]=_colY[ck]||[0]; _colY[ck].push(Math.round(x.r.y_cm||0));
+          _colY[ck]=_colY[ck]||[_rootY(ck)]; _colY[ck].push(Math.round(x.r.y_cm||0));   // le bas de la colonne peut être décollé du sol : y_cm des étages est absolu, on part donc de la hauteur du bas
         });
         // hauteurs de niveaux telles qu'enregistrées (réglées à la main ou automatiques)
         Object.keys(_colLv).forEach(function(ck){
