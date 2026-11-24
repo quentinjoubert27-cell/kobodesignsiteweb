@@ -3001,7 +3001,7 @@ function showApp() {
     // plusieurs meubles : descriptif seul (un rendu ne représente qu'un meuble) ; meuble modélisé par l'équipe : rendu fabriqué si la case « Avec les rendus 3D » est cochée
     var sansRendus = multi || (currentProjetMeubles.length > 0 && equipeModele(currentProjetMeubles[0]) && !(currentProjetRc && currentProjetRc.manuel) && !avecRendus);
     var imgsMulti = [];   // plusieurs meubles : un rendu fermé / ouvert par meuble, dans la composition
-    var imgs = { ferme: '', ouvert: '', plan: '', vasque: '' }, helperMsg = '', verif = null;
+    var imgs = { ferme: '', ouvert: '', plan: '', vasque: '', arriere: '' }, helperMsg = '', verif = null;
     try {
       var isManuel = !!(currentProjetRc && currentProjetRc.manuel);
       if (multi && avecRendus) {
@@ -3016,7 +3016,7 @@ function showApp() {
       }
       var j = (currentProjetRc && !isManuel && !sansRendus && avecRendus) ? await devisRendersFromHelper(currentProjetRc, w) : null;
       if (isManuel && avecRendus) { imgs.ferme = (currentManuel.images || {}).ferme || ''; imgs.ouvert = (currentManuel.images || {}).ouvert || ''; }
-      if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; verif = j.verification || null; }
+      if (j) { imgs.ferme = j.ferme; imgs.ouvert = j.ouvert; imgs.plan = j.plan || ''; imgs.vasque = j.vasque || ''; imgs.arriere = j.arriere || ''; verif = j.verification || null; }
       else if (!isManuel && !sansRendus && avecRendus) helperMsg = 'Assistant de rendus injoignable : PDF créé sans les images. 1) Vérifie que « Rendus Kōbō » tourne sur ce Mac. 2) Dans Chrome : clique sur le cadenas à gauche de l\'adresse → Paramètres du site → « Accès au réseau local » (ou « Applications sur l\'appareil ») → Autoriser, puis recharge la page et recommence.';
     } catch (e) { helperMsg = 'Rendus impossibles : ' + (e.message || e); }
     var estManuel = !!(currentProjetRc && currentProjetRc.manuel);
@@ -3075,7 +3075,7 @@ function showApp() {
       '.parties{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:8mm}.box{border:.25mm solid #ddd;border-radius:2mm;padding:4mm 5mm;font-size:9pt;line-height:1.6;font-weight:300}' +
       '.box h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:1.5mm}' +
       '.obj{margin-top:8mm}.obj h4{font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:#d96c2c;font-weight:600;margin-bottom:1.5mm}.obj h2{font-size:14pt;font-weight:600}.obj p{font-weight:300;color:#555;margin-top:1mm;font-size:9.5pt}' +
-      '.imgs{display:grid;grid-template-columns:1fr 1fr;gap:6mm;margin-top:7mm}figure img,.ph{width:100%;aspect-ratio:1500/1100;object-fit:cover;display:block;background:#f4f1ee;border-radius:1.5mm}.ph{display:flex;align-items:center;justify-content:center;color:#999}' +
+      '.imgs{display:grid;grid-template-columns:1fr 1fr;gap:6mm;margin-top:7mm}.imgs figure:nth-child(3):last-child{grid-column:1/-1;width:50%;justify-self:center}figure img,.ph{width:100%;aspect-ratio:1500/1100;object-fit:cover;display:block;background:#f4f1ee;border-radius:1.5mm}.ph{display:flex;align-items:center;justify-content:center;color:#999}' +
       'figcaption{margin-top:2mm;font-size:8.5pt;color:#555}.nc{margin-top:3mm;font-size:8pt;color:#777;font-style:italic}' +
       'table{width:100%;border-collapse:collapse;margin-top:8mm}th{font-size:7.5pt;letter-spacing:.12em;text-transform:uppercase;color:#777;text-align:left;font-weight:600;padding:2mm 0;border-bottom:.4mm solid #231a20}th.n{text-align:right}' +
       'td{padding:4mm 0;border-bottom:.25mm solid #e3e3e3;vertical-align:top}td.d b{font-weight:600;font-size:10.5pt}td.d div{font-weight:300;color:#666;font-size:9pt;margin-top:.8mm}td.n{text-align:right;white-space:nowrap;font-size:10.5pt}' +
@@ -3090,7 +3090,7 @@ function showApp() {
       '<div class="parties"><div class="box"><h4>Émetteur</h4><b>Kōbō Design</b> (Symetry Wheels)<br>76 Rue Mandron, 33000 Bordeaux<br>contact@kobo-design.fr · 05 56 04 01 81<br>SIRET 893 579 136 00019 · TVA FR24893579136</div>' +
       '<div class="box"><h4>Client</h4>' + (cliLines || '—') + '</div></div>' +
       '<div class="obj"><h4>Objet</h4><h2>' + escHtml(CC.objet_titre) + '</h2><p>' + escHtml(CC.objet_sous_titre) + '</p>' + (CC.objet_texte ? '<p style="white-space:pre-wrap;margin-top:3mm;color:#231a20;font-weight:400;">' + escHtml(CC.objet_texte) + '</p>' : '') + '</div>' +
-      ((sansRendus || !avecRendus || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
+      ((sansRendus || !avecRendus || (estManuel && !imgs.ferme && !imgs.ouvert)) ? '' : '<div class="imgs">' + (imgs.ferme || !estManuel ? im('ferme', 'Meuble fermé') : '') + (imgs.ouvert || !estManuel ? im('ouvert', 'Portes et tiroirs ouverts') : '') + (imgs.arriere ? im('arriere', 'Vue arrière') : '') + '</div><p class="nc">Images non contractuelles.</p>') +
       (CC.composition && propositionContenuDe() && propositionContenuDe().composition ? '<div class="compo"><h4>Composition' + (multi ? ' des meubles' : ' du meuble') + '</h4><ul>' + CC.composition.map(function (x) { return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul></div>' : (multi ? '<div class="compo"><h4>Composition des meubles</h4><ul style="list-style:none;">' + currentProjetMeubles.map(function (m, mi) {
         var rcm = rcFromSdb(m), qm = null; try { qm = buildDevisQuantitiesFromConfig(m); } catch (e) { qm = {}; }
         var dm = devisSimpleDetails(rcm, qm), n1 = qm.doors_count || 0, n2 = qm.drawers_count || 0, t = [];
@@ -3886,7 +3886,7 @@ function showApp() {
     try {
       var j = await devisRendersFromHelper(avecVues(currentProjetRc, true), null);
       if (!j) { corps.innerHTML = 'L\'assistant de rendus ne répond pas : lance-le sur ton Mac (voir le guide d\'installation).'; return; }
-      corps.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><figure style="margin:0"><img src="' + j.ferme + '" style="width:100%;border-radius:8px"><figcaption>Fermé</figcaption></figure><figure style="margin:0"><img src="' + j.ouvert + '" style="width:100%;border-radius:8px"><figcaption>Ouvert</figcaption></figure></div><div style="margin-top:8px;color:rgba(26,26,26,.55)">Aperçu rapide, basse qualité. Le PDF utilisera les mêmes angles en pleine qualité.</div>';
+      corps.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><figure style="margin:0"><img src="' + j.ferme + '" style="width:100%;border-radius:8px"><figcaption>Fermé</figcaption></figure><figure style="margin:0"><img src="' + j.ouvert + '" style="width:100%;border-radius:8px"><figcaption>Ouvert</figcaption></figure>' + (j.arriere ? '<figure style="margin:0"><img src="' + j.arriere + '" style="width:100%;border-radius:8px"><figcaption>Arrière</figcaption></figure>' : '') + '</div><div style="margin-top:8px;color:rgba(26,26,26,.55)">Aperçu rapide, basse qualité. Le PDF utilisera les mêmes angles en pleine qualité.</div>';
     } catch (e) { corps.textContent = 'Aperçu impossible : ' + (e.message || e); }
   }
   function rendusMemoriser() { try { var c = document.getElementById('chk-rendus'); if (c && currentProjetId) localStorage.setItem('kobo_rendus_' + currentProjetId, c.checked ? '1' : '0'); } catch (e) {} }

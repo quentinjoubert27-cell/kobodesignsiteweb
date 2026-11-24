@@ -1209,6 +1209,13 @@ def render_pair(opt, cfg, out):
         placer_camera(scene, cam, objs, c, W, cfg, vues.get("ouvert"))
     scene.render.filepath = os.path.join(out, "rendu-ouvert.png")
     bpy.ops.render.render(write_still=True)
+    if cfg.get("_libre"):   # meuble non collé au mur : on montre aussi le dos (meuble fermé, vue arrière)
+        for o in objs:
+            bpy.data.objects.remove(o, do_unlink=True)
+        objs, _info = build_furniture(cfg, opt, open_state=False)
+        placer_camera(scene, cam, objs, c, W, cfg, vues.get("arriere") or "arriere_gauche")
+        scene.render.filepath = os.path.join(out, "rendu-arriere.png")
+        bpy.ops.render.render(write_still=True)
 
 
 def render_cotes(opt, cfg, out):

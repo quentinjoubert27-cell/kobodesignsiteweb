@@ -41,7 +41,7 @@ def rendre(cfg_text):
             buf = io.BytesIO()
             Image.open(p).convert("RGB").save(buf, "JPEG", quality=90)
             out[k] = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
-        for k, f in (("plan", "rendu-plan.png"), ("vasque", "rendu-vasque.png")):   # salle de bain : photos séparées du plan et de la vasque
+        for k, f in (("plan", "rendu-plan.png"), ("vasque", "rendu-vasque.png"), ("arriere", "rendu-arriere.png")):   # salle de bain : photos séparées du plan et de la vasque
             p = Path(tmp) / f
             if p.exists():
                 buf = io.BytesIO()
