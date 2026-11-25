@@ -243,6 +243,49 @@
     .bro__actions input { flex: 1 1 160px; min-width: 120px; padding: 6px 9px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 7px; font-family: var(--font); font-size: 12px; }
     .bro-chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 11px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 99px; cursor: pointer; }
     .bro-chk input { margin: 0; }
+
+    /* ── Messagerie : liste de conversations à gauche, fil à droite ── */
+    .inbox { display: grid; grid-template-columns: 340px minmax(0, 1fr); height: calc(100vh - 200px); min-height: 520px; background: #fff; border: 1px solid rgba(26,26,26,.08); border-radius: 14px; overflow: hidden; }
+    .inbox-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid rgba(26,26,26,.08); }
+    .inbox-tools { padding: 12px 12px 8px; border-bottom: 1px solid rgba(26,26,26,.06); }
+    .inbox-tools input { width: 100%; padding: 9px 12px; border: 1px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--bg); }
+    .inbox-tools input:focus { outline: none; border-color: var(--accent); background: #fff; }
+    .inbox-tabs { display: flex; gap: 4px; margin-top: 10px; }
+    .inbox-tabs button { flex: 1; padding: 6px 8px; border: 0; border-radius: 7px; background: transparent; font-family: var(--font); font-size: 12px; color: rgba(26,26,26,.6); cursor: pointer; white-space: nowrap; }
+    .inbox-tabs button:hover { background: rgba(26,26,26,.05); }
+    .inbox-tabs button.active { background: rgba(26,26,26,.08); color: #1a1a1a; font-weight: 600; }
+    .inbox-tabs span:not(:empty) { margin-left: 4px; padding: 1px 6px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 600; }
+    .inbox-rows { flex: 1; min-height: 0; overflow-y: auto; }
+    .inbox-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 2px 10px; padding: 11px 12px; border-bottom: 1px solid rgba(26,26,26,.05); cursor: pointer; }
+    .inbox-row:hover { background: rgba(26,26,26,.03); }
+    .inbox-row.actif { background: rgba(205,62,0,.07); box-shadow: inset 3px 0 0 var(--accent); }
+    .inbox-av { grid-row: 1 / span 2; align-self: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(26,26,26,.07); color: rgba(26,26,26,.65); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+    .inbox-nom { font-size: 13px; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .inbox-row.nonlu .inbox-nom { font-weight: 700; }
+    .inbox-date { font-size: 11px; color: rgba(26,26,26,.4); align-self: center; }
+    .inbox-row.nonlu .inbox-date { color: var(--accent); font-weight: 600; }
+    .inbox-apercu { grid-column: 2; font-size: 12px; color: rgba(26,26,26,.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .inbox-row.nonlu .inbox-apercu { color: rgba(26,26,26,.85); }
+    .inbox-pastille { grid-column: 3; justify-self: end; min-width: 18px; padding: 1px 6px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 600; text-align: center; }
+    .inbox-projet { grid-column: 2 / span 2; font-size: 11px; color: rgba(26,26,26,.38); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .inbox-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+    .inbox-vide { margin: auto; color: rgba(26,26,26,.4); font-size: 13px; padding: 20px; text-align: center; }
+    .inbox-thread { display: flex; flex-direction: column; min-height: 0; flex: 1; padding: 0 20px 16px; }
+    .inbox-head { display: flex; align-items: center; gap: 12px; padding: 14px 0 12px; border-bottom: 1px solid rgba(26,26,26,.07); flex-wrap: wrap; }
+    .inbox-head__id { min-width: 0; flex: 1; }
+    .inbox-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+    .inbox-head__sub { font-size: 12px; color: rgba(26,26,26,.45); margin-top: 2px; overflow-wrap: anywhere; }
+    .inbox-head__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .inbox-retour { display: none; }
+    .inbox .msg-thread { flex: 1; min-height: 0; max-height: none; padding-top: 16px; }
+    .inbox .msg-compose { margin-top: 10px; align-items: flex-end; }
+    @media (max-width: 900px) {
+      .inbox { grid-template-columns: 1fr; height: calc(100vh - 150px); }
+      .inbox .inbox-main { display: none; }
+      .inbox.has-thread .inbox-list { display: none; }
+      .inbox.has-thread .inbox-main { display: flex; }
+      .inbox-retour { display: inline-flex; }
+    }
     .msg-compose { display: flex; gap: 10px; margin-top: 12px; }
     .msg-compose textarea { flex: 1; padding: 10px 13px; border: 1.5px solid rgba(26,26,26,.12); border-radius: 8px; font-family: var(--font); font-size: 13px; background: var(--bg); resize: none; height: 42px; }
     .msg-compose textarea:focus { outline: none; border-color: var(--accent); }
@@ -1215,24 +1258,37 @@
           <h1 class="view-title">Messages</h1>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;">
-        <div class="table-wrap" style="overflow:hidden;">
+      <div class="inbox" id="inbox">
+        <aside class="inbox-list">
+          <div class="inbox-tools">
+            <input type="search" id="msg-search" placeholder="Rechercher un client ou un message" oninput="msgFiltrer()" autocomplete="off">
+            <div class="inbox-tabs" id="msg-onglets">
+              <button class="active" data-f="actifs" onclick="msgOnglet(this)">Conversations</button>
+              <button data-f="nonlus" onclick="msgOnglet(this)">Non lus <span id="msg-n-nonlus"></span></button>
+              <button data-f="tous" onclick="msgOnglet(this)">Tous les clients</button>
+            </div>
+          </div>
           <div id="msg-arelire"></div>
-          <div id="msg-projet-list" style="max-height:600px;overflow-y:auto;"></div>
-        </div>
-        <div class="detail-panel" id="msg-thread-panel" style="display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 style="margin:0;" id="msg-thread-title">—</h3>
-          </div>
-          <div class="msg-thread" id="msg-thread"></div>
-          <div class="ia-rep" id="ia-msg"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('msg')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-mode"></div><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('msg','oui')">Oui</button><button type="button" onclick="iaRepondre('msg','non')">Non</button><button type="button" onclick="iaRepondre('msg','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('msg','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('msg','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('msg');}"><button class="btn btn-primary btn-sm ia-go" style="display:none" onclick="iaRedigerIA('msg')">Rédiger avec l'IA</button></div><div class="ia-etat"></div></div></div>
+          <div class="inbox-rows" id="msg-projet-list"></div>
+        </aside>
+        <section class="inbox-main">
+          <div class="inbox-vide" id="msg-vide">Choisis une conversation pour la lire et y répondre.</div>
+          <div class="inbox-thread" id="msg-thread-panel" style="display:none;">
+            <header class="inbox-head">
+              <button class="btn btn-ghost btn-sm inbox-retour" onclick="msgRetour()">← Conversations</button>
+              <div class="inbox-head__id"><h3 id="msg-thread-title">—</h3><div class="inbox-head__sub" id="msg-thread-sub"></div></div>
+              <div class="inbox-head__actions" id="msg-thread-actions"></div>
+            </header>
+            <div class="msg-thread" id="msg-thread"></div>
+            <div class="ia-rep" id="ia-msg"><button class="btn btn-ghost btn-sm" onclick="iaOuvrir('msg')">✨ Aide à la réponse</button><div class="ia-panel" style="display:none"><div class="ia-mode"></div><div class="ia-quest"></div><div class="ia-chips"><button type="button" onclick="iaRepondre('msg','oui')">Oui</button><button type="button" onclick="iaRepondre('msg','non')">Non</button><button type="button" onclick="iaRepondre('msg','supplement')">Oui, avec supplément</button><button type="button" onclick="iaRepondre('msg','verif')">Je vérifie et je reviens vers vous</button><button type="button" onclick="iaRepondre('msg','delai')">Délai</button></div><div class="ia-ligne"><input type="text" class="ia-consigne" maxlength="300" placeholder="Un mot ou deux, puis Entrée : « oui », « non, trop profond », « oui 40 € par porte »…" onkeydown="if(event.key==='Enter'){event.preventDefault();iaDepuisTexte('msg');}"><button class="btn btn-primary btn-sm ia-go" style="display:none" onclick="iaRedigerIA('msg')">Rédiger avec l'IA</button></div><div class="ia-etat"></div></div></div>
           <div class="brouillons" id="msg-brouillons"></div>
-          <div class="msg-compose">
-            <textarea id="msg-reply" placeholder="Répondre… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
-            <button class="btn btn-ghost btn-sm" onclick="ouvrirBrouillon('msg')" title="Préparer le message et le faire relire par l'équipe avant l'envoi">Faire relire</button>
-            <button class="btn btn-primary btn-sm" onclick="sendReply()">Envoyer</button>
+            <div class="msg-compose">
+              <textarea id="msg-reply" placeholder="Répondre… (Maj+Entrée : nouvelle ligne)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply();}" oninput="autoGrow(this)" title="Entrée : envoyer · Maj + Entrée : retour à la ligne"></textarea>
+              <button class="btn btn-ghost btn-sm" onclick="ouvrirBrouillon('msg')" title="Préparer le message et le faire relire par l'équipe avant l'envoi">Faire relire</button>
+              <button class="btn btn-primary btn-sm" onclick="sendReply()">Envoyer</button>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
 
@@ -7523,30 +7579,86 @@ function dedupeEls(els){
   }
 
   // ── MESSAGES VIEW ─────────────────────────────────────────────────
+  // ── Messagerie : conversations triées par dernier message, recherche, onglets (conversations / non lus / tous) ──
+  var _msgConvs = [], _msgOnglet = 'actifs';
+  function msgDateCourte(iso) {
+    if (!iso) return '';
+    var d = new Date(iso), n = new Date(), jour = function (x) { return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime(); };
+    var ecart = Math.round((jour(n) - jour(d)) / 86400000);
+    if (ecart <= 0) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    if (ecart === 1) return 'Hier';
+    if (ecart < 7) return d.toLocaleDateString('fr-FR', { weekday: 'short' });
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  }
   async function loadMessagesView() {
     chargerARelire();
-    const { data: clients } = await sb.from('clients').select('id, prenom, nom, email').order('nom');
+    const [rc, rg, rm, rp] = await Promise.all([
+      sb.from('clients').select('id, prenom, nom, email').order('nom'),
+      sb.from('messages_general').select('client_id, expediteur, contenu, created_at, lu').order('created_at', { ascending: false }).limit(2000),
+      sb.from('messages').select('projet_id, expediteur, contenu, created_at').order('created_at', { ascending: false }).limit(1500),
+      sb.from('projets').select('id, client_id, nom').order('created_at', { ascending: false }),
+    ]);
+    const clients = rc.data || [];
     const container = document.getElementById('msg-projet-list');
-    if (!clients || !clients.length) { container.innerHTML = '<div class="empty" style="padding:16px;">Aucun client.</div>'; return; }
-
-    const { data: unreads } = await sb.from('messages_general')
-      .select('client_id')
-      .eq('expediteur', 'client')
-      .eq('lu', false);
-    const unreadMap = {};
-    (unreads || []).forEach(m => { unreadMap[m.client_id] = (unreadMap[m.client_id] || 0) + 1; });
-
-    container.innerHTML = clients.map(c => {
-      const unread = unreadMap[c.id] || 0;
-      return `<div onclick="openMsgThread('${c.id}','${escHtml(c.prenom + ' ' + c.nom)}')" style="padding:14px 16px;border-bottom:1px solid rgba(26,26,26,.06);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(205,62,0,.03)'" onmouseout="this.style.background=''">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:13px;font-weight:${unread ? 700 : 400};">${escHtml(c.prenom + ' ' + c.nom)}</div>
-          ${unread ? `<span class="nav-badge">${unread}</span>` : ''}
-        </div>
-        <div style="font-size:11px;color:rgba(26,26,26,.4);margin-top:3px;">${escHtml(c.email)}</div>
-      </div>`;
+    if (!clients.length) { container.innerHTML = '<div class="empty" style="padding:16px;">Aucun client.</div>'; return; }
+    const projets = rp.data || [], projClient = {};
+    projets.forEach(p => { projClient[p.id] = p.client_id; });
+    const map = {};
+    clients.forEach(c => { map[c.id] = { c: c, last: null, nonlus: 0, projets: projets.filter(p => p.client_id === c.id).map(p => p.nom) }; });
+    const garder = (cid, m) => { const e = map[cid]; if (e && (!e.last || new Date(m.created_at) > new Date(e.last.created_at))) e.last = m; };
+    (rg.data || []).forEach(m => { garder(m.client_id, m); if (m.expediteur === 'client' && m.lu === false && map[m.client_id]) map[m.client_id].nonlus++; });
+    (rm.data || []).forEach(m => { const cid = projClient[m.projet_id]; if (cid) garder(cid, m); });
+    _msgConvs = Object.keys(map).map(k => map[k]).sort((a, b) => {
+      if (a.last && b.last) return new Date(b.last.created_at) - new Date(a.last.created_at);
+      if (a.last) return -1; if (b.last) return 1;
+      return (a.c.nom || '').localeCompare(b.c.nom || '', 'fr');
+    });
+    const nl = _msgConvs.reduce((t, e) => t + (e.nonlus ? 1 : 0), 0), span = document.getElementById('msg-n-nonlus');
+    if (span) span.textContent = nl || '';
+    msgFiltrer();
+  }
+  function msgOnglet(btn) {
+    _msgOnglet = btn.dataset.f;
+    document.querySelectorAll('#msg-onglets button').forEach(b => b.classList.toggle('active', b === btn));
+    msgFiltrer();
+  }
+  function msgFiltrer() {
+    const container = document.getElementById('msg-projet-list'); if (!container) return;
+    const q = ((document.getElementById('msg-search') || {}).value || '').trim().toLowerCase();
+    const liste = _msgConvs.filter(e => {
+      if (_msgOnglet === 'actifs' && !e.last) return false;
+      if (_msgOnglet === 'nonlus' && !e.nonlus) return false;
+      if (!q) return true;
+      return ((e.c.prenom || '') + ' ' + (e.c.nom || '') + ' ' + (e.c.email || '') + ' ' + (e.last ? e.last.contenu : '') + ' ' + e.projets.join(' ')).toLowerCase().indexOf(q) >= 0;
+    });
+    if (!liste.length) {
+      container.innerHTML = '<div class="empty" style="padding:20px 16px;font-size:12px;">' + (q ? 'Aucun résultat.' : _msgOnglet === 'nonlus' ? 'Aucun message non lu.' : _msgOnglet === 'actifs' ? 'Aucune conversation. Les clients sans message sont dans « Tous les clients ».' : 'Aucun client.') + '</div>';
+      return;
+    }
+    container.innerHTML = liste.map(e => {
+      const c = e.c, nom = ((c.prenom || '') + ' ' + (c.nom || '')).trim() || c.email || 'Client';
+      const ini = ((c.prenom || '').charAt(0) + (c.nom || '').charAt(0)).toUpperCase() || '?';
+      const l = e.last, moi = l && l.expediteur !== 'client';
+      const apercu = l ? (moi ? 'Vous : ' : '') + String(l.contenu || '').replace(/\s+/g, ' ').slice(0, 90) : 'Aucun message';
+      const pj = e.projets.length ? e.projets[0] + (e.projets.length > 1 ? ' +' + (e.projets.length - 1) : '') : '';
+      return '<div class="inbox-row' + (e.nonlus ? ' nonlu' : '') + (activeMsgClientId === c.id ? ' actif' : '') + '" onclick="openMsgThread(\'' + c.id + '\',\'' + escHtml(nom).replace(/'/g, '&#39;') + '\')">' +
+        '<div class="inbox-av">' + escHtml(ini) + '</div>' +
+        '<div class="inbox-nom">' + escHtml(nom) + '</div><div class="inbox-date">' + (l ? msgDateCourte(l.created_at) : '') + '</div>' +
+        '<div class="inbox-apercu">' + escHtml(apercu) + '</div>' + (e.nonlus ? '<div class="inbox-pastille">' + e.nonlus + '</div>' : '') +
+        (pj ? '<div class="inbox-projet">' + escHtml(pj) + '</div>' : '') + '</div>';
     }).join('');
   }
+  function msgEntete(clientId) {
+    const e = _msgConvs.find(x => x.c.id === clientId), c = e ? e.c : (allClients.find(x => x.id === clientId) || {});
+    const sub = document.getElementById('msg-thread-sub'), act = document.getElementById('msg-thread-actions');
+    if (sub) sub.textContent = [c.email, (e && e.projets.length) ? e.projets.length + ' projet' + (e.projets.length > 1 ? 's' : '') : ''].filter(Boolean).join(' · ');
+    if (act) {
+      const pjs = allProjets.filter(p => p.client_id === clientId).slice(0, 3);
+      act.innerHTML = '<button class="btn btn-ghost btn-sm" onclick="openClientDetail(\'' + clientId + '\')">Fiche client</button>' +
+        pjs.map(p => '<button class="btn btn-ghost btn-sm" title="Ouvrir le projet" onclick="openProjetDetail(\'' + p.id + '\',\'' + escHtml(p.nom || '').replace(/'/g, '&#39;') + '\')">' + escHtml((p.nom || 'Projet').slice(0, 22)) + '</button>').join('');
+    }
+  }
+  function msgRetour() { document.getElementById('inbox').classList.remove('has-thread'); }
 
   async function fetchAdminThread() {
     if (!activeMsgClientId) return;
@@ -7585,7 +7697,10 @@ function dedupeEls(els){
   async function openMsgThread(clientId, nom) {
     activeMsgClientId = clientId;
     document.getElementById('msg-thread-title').textContent = nom;
-    document.getElementById('msg-thread-panel').style.display = 'block';
+    document.getElementById('msg-thread-panel').style.display = 'flex';
+    document.getElementById('msg-vide').style.display = 'none';
+    document.getElementById('inbox').classList.add('has-thread');
+    msgEntete(clientId);
     await fetchAdminThread();
 
     if (adminMsgChannel) sb.removeChannel(adminMsgChannel);
