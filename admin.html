@@ -279,6 +279,22 @@
     .inbox-retour { display: none; }
     .inbox .msg-thread { flex: 1; min-height: 0; max-height: none; padding-top: 16px; }
     .inbox .msg-compose { margin-top: 10px; align-items: flex-end; }
+    /* fil de la messagerie : jours séparés, messages groupés, bulles sobres */
+    .inbox .msg-thread { gap: 2px; padding: 16px 4px 12px; }
+    .inbox .msg-jour { align-self: center; margin: 14px 0 8px; padding: 3px 12px; border-radius: 10px; background: rgba(26,26,26,.06); color: rgba(26,26,26,.55); font-size: 11px; font-weight: 500; }
+    .inbox .msg-jour:first-child { margin-top: 2px; }
+    .inbox .msg-projet-tag { align-self: flex-start; margin: 10px 0 4px; font-size: 11px; color: rgba(26,26,26,.5); }
+    .inbox .msg { max-width: 68%; }
+    .inbox .msg--kobo + .msg--client, .inbox .msg--admin + .msg--client, .inbox .msg--client + .msg--kobo, .inbox .msg--client + .msg--admin { margin-top: 10px; }
+    .inbox .msg__bubble { padding: 9px 14px; font-size: 13.5px; font-weight: 400; line-height: 1.55; }
+    .inbox .msg--client .msg__bubble { background: #F1F2F4; color: #1a1a1a; }
+    .inbox .msg--kobo .msg__bubble, .inbox .msg--admin .msg__bubble { background: #23262F; color: #fff; }
+    .inbox .msg__meta { font-size: 10.5px; margin: 3px 4px 0; }
+    .inbox .msg--groupe { margin-top: 0; }
+    .inbox .msg--client.msg--groupe .msg__bubble { border-radius: 4px 12px 12px 4px; }
+    .inbox .msg--kobo.msg--groupe .msg__bubble, .inbox .msg--admin.msg--groupe .msg__bubble { border-radius: 12px 4px 4px 12px; }
+    .inbox .msg-compose textarea { background: #F7F8FA; border-color: rgba(26,26,26,.1); border-radius: 10px; padding: 11px 14px; min-height: 44px; }
+    .inbox .msg-compose textarea:focus { background: #fff; }
     @media (max-width: 900px) {
       .inbox { grid-template-columns: 1fr; height: calc(100vh - 150px); }
       .inbox .inbox-main { display: none; }
@@ -7140,6 +7156,29 @@ function dedupeEls(els){
     loadUnreadCount();
   }
 
+  // fil de la messagerie (admin) : séparateurs de jour, messages du même auteur groupés, projet indiqué quand il change
+  function renderMsgInbox(containerId, msgs, noms) {
+    const el = document.getElementById(containerId);
+    if (!msgs.length) { el.innerHTML = '<div class="empty" style="padding:16px 0;">Aucun message.</div>'; return; }
+    const cle = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(), auj = cle(new Date());
+    const jourLib = d => { const e = Math.round((auj - cle(d)) / 86400000); return e === 0 ? 'Aujourd\'hui' : e === 1 ? 'Hier' : d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }); };
+    let out = '', dernierJour = null, prev = null, dernierProjet = undefined;
+    msgs.forEach((m, i) => {
+      const d = new Date(m.created_at), j = cle(d), next = msgs[i + 1];
+      if (j !== dernierJour) { out += '<div class="msg-jour">' + escHtml(jourLib(d)) + '</div>'; dernierJour = j; prev = null; }
+      const cote = m.expediteur === 'client' ? 'client' : 'kobo';
+      const memeAuteur = (x) => x && (x.expediteur === 'client' ? 'client' : 'kobo') === cote && cle(new Date(x.created_at)) === j && Math.abs(new Date(x.created_at) - d) < 5 * 60000;
+      const groupe = memeAuteur(prev), finGroupe = !(next && memeAuteur(next) && Math.abs(new Date(next.created_at) - d) < 5 * 60000);
+      const pj = m.projet_id ? (noms[m.projet_id] || '') : '';
+      if (pj !== dernierProjet && (pj || dernierProjet)) { if (pj) out += '<div class="msg-projet-tag">Projet : ' + escHtml(pj) + '</div>'; dernierProjet = pj; }
+      out += '<div class="msg msg--' + m.expediteur + (groupe ? ' msg--groupe' : '') + '"><div class="msg__bubble">' + escHtml(m.contenu) + '</div>' +
+        (finGroupe ? '<div class="msg__meta">' + (cote === 'client' ? 'Client' : 'Kobo Design') + ' · ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '</div>' : '') + '</div>';
+      prev = m;
+    });
+    el.innerHTML = out;
+    el.scrollTop = el.scrollHeight;
+  }
+
   function renderMsgThread(containerId, msgs) {
     const el = document.getElementById(containerId);
     if (!msgs.length) { el.innerHTML = '<div class="empty" style="padding:16px 0;">Aucun message.</div>'; return; }
@@ -7670,7 +7709,8 @@ function dedupeEls(els){
       .select('*').eq('client_id', activeMsgClientId);
 
     // Récupérer aussi les messages liés aux projets du client (table messages)
-    const { data: projets } = await sb.from('projets').select('id').eq('client_id', activeMsgClientId);
+    const { data: projets } = await sb.from('projets').select('id, nom').eq('client_id', activeMsgClientId);
+    const nomsProjets = {}; (projets || []).forEach(p => { nomsProjets[p.id] = p.nom; });
     let msgsProjet = [];
     if (projets?.length) {
       const projetIds = projets.map(p => p.id);
@@ -7688,7 +7728,7 @@ function dedupeEls(els){
       return true;
     }).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    renderMsgThread('msg-thread', merged);
+    renderMsgInbox('msg-thread', merged, nomsProjets);
     chargerBrouillons();
     loadUnreadCount();
     loadMessagesView();
